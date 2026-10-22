@@ -1,0 +1,61 @@
+/*
+ * ECO-COMS Card Generator Script
+ *
+ * Generates structured card info maps for the Shell Org Manager page cards.
+ *
+ * To use this script module in a PMD:
+ * 1. Add to the include section: "include": ["comsCardGenerator.script"]
+ * 2. Call functions using: comsCardGenerator.appContextInfo(appName)
+ *                          comsCardGenerator.statusGuideInfo(status)
+ *
+ * Functions:
+ *   appContextInfo(appName) - Returns info map for the Application Context card
+ *   statusGuideInfo(status) - Returns info map for the Status Guide card
+ */
+
+const appContextInfo = function(appName) {
+  if (empty(appName) || appName == 'No application selected') {
+    return {
+      "title": "Application Context",
+      "subtitle": "No application selected",
+      "icon": "wd-accent-worksheets",
+      "indicatorLabel": "Select an application above",
+      "indicatorColor": "gray",
+      "body": "Select an application from the Application Context dropdown above to view and manage its shell organizations."
+    };
+  }
+  return {
+    "title": "Application Context",
+    "subtitle": appName,
+    "icon": "wd-accent-checkmarked-page",
+    "indicatorLabel": "Active",
+    "indicatorColor": "green",
+    "body": "Viewing shell organizations for " + appName + ". You can only see and manage shell organizations within this application namespace."
+  };
+};
+
+const statusGuideInfo = function(status) {
+  if (status == 'Inactive') {
+    return {
+      "title": "Pattern Status",
+      "subtitle": "Active vs Inactive",
+      "icon": "wd-accent-clipboard-checklist",
+      "indicatorLabel": "Inactive",
+      "indicatorColor": "red",
+      "body": "Inactive patterns cannot be newly assigned to role assignments. Existing role assignments that reference this shell org are unaffected."
+    };
+  }
+  return {
+    "title": "Pattern Status",
+    "subtitle": "Active vs Inactive",
+    "icon": "wd-accent-clipboard-checklist",
+    "indicatorLabel": "Active",
+    "indicatorColor": "green",
+    "body": "Active patterns can be assigned to role assignments in Workday. Change Status to Inactive and save to deactivate a pattern."
+  };
+};
+
+{
+  "appContextInfo": appContextInfo,
+  "statusGuideInfo": statusGuideInfo
+}
