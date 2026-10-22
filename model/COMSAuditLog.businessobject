@@ -1,0 +1,70 @@
+{
+  "id": 4,
+  "name": "COMSAuditLog",
+  "label": "COMS Audit Log",
+  "defaultSecurityDomains": [
+    "ViewCOMSAuditLog"
+  ],
+  "defaultCollection": {
+    "name": "comsAuditLogs",
+    "label": "COMS Audit Logs"
+  },
+  "fields": [
+    {
+      "id": 1,
+      "name": "timestamp",
+      "label": "Timestamp ISO 8601",
+      "type": "TEXT"
+    },
+    {
+      "id": 2,
+      "name": "worker",
+      "label": "Worker",
+      "type": "SINGLE_INSTANCE",
+      "target": "WORKER",
+      "secureByTarget": false
+    },
+    {
+      "id": 3,
+      "name": "action",
+      "label": "Action",
+      "type": "TEXT"
+    },
+    {
+      "id": 4,
+      "name": "coReferenceId",
+      "label": "CO ID",
+      "type": "TEXT"
+    },
+    {
+      "id": 5,
+      "name": "coName",
+      "label": "CO Name",
+      "type": "TEXT"
+    },
+    {
+      "id": 6,
+      "name": "application",
+      "label": "Application",
+      "type": "SINGLE_INSTANCE",
+      "target": "COMSApplication"
+    },
+    {
+      "id": 7,
+      "name": "triggeredBy",
+      "label": "Triggered By",
+      "type": "TEXT"
+    },
+    {
+      "id": 8,
+      "name": "details",
+      "label": "Details",
+      "type": "TEXT"
+    },
+    { "id": 9, 
+      "name": "objectType", 
+      "label": "Object Type", 
+      "type": "TEXT" 
+      }
+  ]
+}
