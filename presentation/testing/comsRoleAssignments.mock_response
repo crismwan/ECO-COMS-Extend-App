@@ -1,0 +1,36 @@
+{
+  "id": "comsRoleAssignments",
+  "responseCode": 200,
+  "responseBody": {
+    "data": [
+      {
+        "id": "b2000000000000000000000000000001",
+        "worker": {"id": "3aa5550b7fe348b98d7b5741afc65534", "descriptor": "Lawrence Chen"},
+        "application": {"id": "a1000000000000000000000000000001", "descriptor": "X:CLW"},
+        "comsRole": "Application Admin",
+        "effectiveDate": "2025-09-01",
+        "grantedBy": {"id": "c3000000000000000000000000000099", "descriptor": "ISC Security Admin"},
+        "active": true
+      },
+      {
+        "id": "b2000000000000000000000000000002",
+        "worker": {"id": "d4000000000000000000000000000010", "descriptor": "Anne Kim"},
+        "application": {"id": "a1000000000000000000000000000001", "descriptor": "X:CLW"},
+        "comsRole": "Department Editor",
+        "effectiveDate": "2025-09-15",
+        "grantedBy": {"id": "3aa5550b7fe348b98d7b5741afc65534", "descriptor": "Lawrence Chen"},
+        "active": true
+      },
+      {
+        "id": "b2000000000000000000000000000003",
+        "worker": {"id": "f6000000000000000000000000000030", "descriptor": "Priya Nair"},
+        "application": {"id": "a1000000000000000000000000000002", "descriptor": "X:BPMS(AOC)"},
+        "comsRole": "Application Admin",
+        "effectiveDate": "2026-01-10",
+        "grantedBy": {"id": "c3000000000000000000000000000099", "descriptor": "ISC Security Admin"},
+        "active": false
+      }
+    ],
+    "total": 3
+  }
+}
