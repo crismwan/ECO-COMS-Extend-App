@@ -1,0 +1,6 @@
+{
+  "id": 4,
+  "name": "ViewCOMSAuditLog",
+  "label": "View: COMS Audit Log",
+  "enabledForPageSecurity": true
+}
