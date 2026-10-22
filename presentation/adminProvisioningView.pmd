@@ -1,0 +1,247 @@
+{
+  "id": "adminProvisioningView",
+  "securityDomains": [
+    "ManageCOMSAdminProvisioning"
+  ],
+  "endPoints": [
+    {
+      "name": "comsAssignableRoles",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "url": "/comsAssignableRoles",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true"
+    }
+  ],
+  "presentation": {
+    "pageType": "view",
+    "headerSize": "VPS_DEFAULT",
+    "title": {
+      "type": "title",
+      "label": "ECO-COMS: Admin Provisioning",
+      "enabled": false
+    },
+    "body": {
+      "type": "areaLayout",
+      "primaryArea": [
+        {
+          "type": "richText",
+          "id": "ubcPageHeader",
+          "value": "<span style=\"color:#002145;font-size:11px;font-weight:700;letter-spacing:1px;\">UNIVERSITY OF BRITISH COLUMBIA \u2014 ADMIN PROVISIONING</span>"
+        },
+        {
+          "type": "section",
+          "horizontal": true,
+          "children": [
+            {
+              "type": "section",
+              "horizontal": false,
+              "children": [
+                {
+                  "type": "button",
+                  "label": "Submit AAA Role Request",
+                  "taskReference": {
+                    "taskId": "adminProvisioning"
+                  },
+                  "action": "PRIMARY",
+                  "tooltip": "Open the form to submit a new AAA role request for ISC review."
+                }
+              ]
+            },
+            {
+              "type": "section",
+              "horizontal": false,
+              "children": [
+                {
+                  "type": "button",
+                  "label": "Home",
+                  "taskReference": {
+                    "taskId": "home"
+                  },
+                  "action": "AUXILIARY",
+                  "tooltip": "Return to the ECO-COMS home page."
+                }
+              ]
+            }
+          ],
+          "columnWidthRatios": [
+            0.2,
+            0.2,
+            0.2,
+            0.2,
+            0.2
+          ]
+        },
+        {
+          "type": "richText",
+          "id": "pageDesc",
+          "value": "Admin Provisioning controls who can manage shell orgs and submit role requests in ECO-COMS for each application. These are <b>AAA (Organizations and Roles Assignment Administrator)</b> roles. To submit a new AAA role request for ISC review, click <b>Submit AAA Role Request</b> above."
+        },
+        {
+          "type": "readOnlyText",
+          "id": "pendingNoticeYes",
+          "value": "There are AAA role requests currently pending ISC review. Use the Maintain action on a row below to process pending requests.",
+          "visible": "<% size(comsAssignableRoles.data.filter(r => r.roleName.startsWith('Organizations and Roles Assignment Administrator') && r.status == 'Pending ISC Review')) > 0 %>"
+        },
+        {
+          "type": "readOnlyText",
+          "id": "pendingNoticeNo",
+          "value": "There are no AAA role requests pending ISC review.",
+          "visible": "<% size(comsAssignableRoles.data.filter(r => r.roleName.startsWith('Organizations and Roles Assignment Administrator') && r.status == 'Pending ISC Review')) == 0 %>"
+        },
+        {
+          "type": "fieldSet",
+          "id": "aaaRolesSection",
+          "label": "AAA Role Requests",
+          "collapsible": true,
+          "collapsed": false,
+          "children": [
+            {
+              "type": "readOnlyText",
+              "id": "emptyStateMsg",
+              "value": "There are no AAA role requests to display. Click Submit AAA Role Request above to create one.",
+              "visible": "<% size(comsAssignableRoles.data.filter(r => r.roleName.startsWith('Organizations and Roles Assignment Administrator'))) == 0 %>"
+            },
+            {
+              "type": "grid",
+              "gridType": "LIST",
+              "multiViewStylingEnabled": true,
+              "id": "aaaRolesGrid",
+              "rows": "<% comsAssignableRoles.data.filter(r => r.roleName.startsWith('Organizations and Roles Assignment Administrator')) %>",
+              "rowVariableName": "role",
+              "enabled": false,
+              "label": "AAA Role Requests",
+              "autoPaging": true,
+              "defaultSortColumnId": "colRequestedDate",
+              "defaultSortOrder": "DESCENDING",
+              "visible": "<% size(comsAssignableRoles.data.filter(r => r.roleName.startsWith('Organizations and Roles Assignment Administrator'))) > 0 %>",
+              "columns": [
+                {
+                  "type": "column",
+                  "id": "colApplication",
+                  "columnId": "colApplication",
+                  "label": "Application",
+                  "sortableAndFilterable": "true",
+                  "cellTemplate": {
+                    "type": "text",
+                    "value": "<% role.application ?? '' %>",
+                    "enabled": false
+                  }
+                },
+                {
+                  "type": "column",
+                  "id": "colRoleName",
+                  "columnId": "colRoleName",
+                  "label": "Role Name",
+                  "sortableAndFilterable": "true",
+                  "cellTemplate": {
+                    "type": "text",
+                    "value": "<% role.roleName ?? '' %>",
+                    "enabled": false
+                  }
+                },
+                {
+                  "type": "column",
+                  "id": "colStatus",
+                  "columnId": "colStatus",
+                  "label": "Status",
+                  "sortableAndFilterable": "true",
+                  "cellTemplate": {
+                    "type": "richText",
+                    "value": "<% role.status == 'Pending ISC Review' ? '<span style=\"color:#b45309;font-weight:600\">\u23f3 Pending ISC Review</span>' : role.status == 'Approved' ? '<span style=\"color:#15803d;font-weight:600\">\u2713 Approved</span>' : role.status == 'Inactive' ? '<span style=\"color:#6b7280;font-weight:600\">\u25cb Inactive</span>' : role.status ?? '' %>"
+                  }
+                },
+                {
+                  "type": "column",
+                  "id": "colEnabledFor",
+                  "columnId": "colEnabledFor",
+                  "label": "Enabled For",
+                  "cellTemplate": {
+                    "type": "text",
+                    "value": "<% role.enabledForOrganizationTypes ?? '' %>",
+                    "enabled": false
+                  }
+                },
+                {
+                  "type": "column",
+                  "id": "colEffDate",
+                  "columnId": "colEffDate",
+                  "label": "Effective Date",
+                  "cellTemplate": {
+                    "type": "text",
+                    "value": "<% role.effectiveDate ?? '' %>",
+                    "enabled": false
+                  }
+                },
+                {
+                  "type": "column",
+                  "id": "colRequestedBy",
+                  "columnId": "colRequestedBy",
+                  "label": "Requested By",
+                  "cellTemplate": {
+                    "type": "text",
+                    "value": "<% role.requestedBy.descriptor ?? '' %>",
+                    "enabled": false
+                  }
+                },
+                {
+                  "type": "column",
+                  "id": "colRequestedDate",
+                  "columnId": "colRequestedDate",
+                  "label": "Requested Date",
+                  "sortableAndFilterable": "true",
+                  "cellTemplate": {
+                    "type": "text",
+                    "value": "<% role.requestedDate ?? '' %>",
+                    "enabled": false
+                  }
+                },
+                {
+                  "type": "column",
+                  "id": "colActions",
+                  "columnId": "colActions",
+                  "label": "Actions",
+                  "cellTemplate": {
+                    "type": "section",
+                    "horizontal": true,
+                    "children": [
+                      {
+                        "type": "section",
+                        "horizontal": false,
+                        "children": [
+                          {
+                            "type": "button",
+                            "action": "AUXILIARY",
+                            "label": "Maintain",
+                            "visible": "<% role.status == 'Pending ISC Review' %>",
+                            "tooltip": "Process or update this pending AAA role request.",
+                            "taskReference": {
+                              "taskId": "assignableRoleManagerMaintain",
+                              "parameterBindings": {
+                                "roleId": "<% role.id %>",
+                                "roleName": "<% role.roleName %>"
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "footer": {
+      "type": "footer",
+      "children": [
+        {
+          "type": "pod",
+          "podId": "ecoComsFooter"
+        }
+      ]
+    }
+  }
+}
