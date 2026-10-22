@@ -1,0 +1,10 @@
+{
+  "id": 9,
+  "name": "NewShellOrgPattern",
+  "label": "New Shell Org Pattern",
+  "securityDomains": [
+    "ManageCOMSShellOrgs"
+  ],
+  "routePath": "/newShellOrgPattern",
+  "businessObject": "COMSShellOrgRequest"
+}
