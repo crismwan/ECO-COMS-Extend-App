@@ -1,0 +1,243 @@
+{
+  "id": "auditLogViewer",
+  "securityDomains": [
+    "ViewCOMSAuditLog"
+  ],
+  "endPoints": [
+    {
+      "name": "auditLogs",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "url": "/comsAuditLogs",
+      "authType": "sso",
+      "isCollection": true
+    }
+  ],
+  "presentation": {
+    "headerSize": "VPS_DEFAULT",
+    "title": {
+      "type": "title",
+      "label": "ECO-COMS: Audit Log Viewer",
+      "enabled": false
+    },
+    "body": {
+      "type": "section",
+      "horizontal": false,
+      "children": [
+        {
+          "type": "richText",
+          "id": "ubcPageHeader",
+          "value": "<span style=\"color:#002145;font-size:11px;font-weight:700;letter-spacing:1px;\">UNIVERSITY OF BRITISH COLUMBIA \u2014 AUDIT LOG</span>"
+        },
+        {
+          "type": "section",
+          "horizontal": true,
+          "children": [
+            {
+              "type": "section",
+              "horizontal": false,
+              "children": [
+                {
+                  "type": "button",
+                  "label": "Home",
+                  "taskReference": {
+                    "taskId": "home"
+                  },
+                  "action": "AUXILIARY"
+                }
+              ]
+            }
+          ],
+          "columnWidthRatios": [
+            0.25,
+            0.25,
+            0.25,
+            0.25
+          ]
+        },
+        {
+          "type": "fieldSet",
+          "id": "aboutFieldSet",
+          "label": "About this page",
+          "collapsible": true,
+          "children": [
+            {
+              "type": "readOnlyText",
+              "id": "pageDescriptionText",
+              "value": "Immutable, searchable log of every COMS-initiated Custom Organization change (Create / Inactivate). Replaces the Log Tab in the legacy MSC Tool. Records cannot be deleted."
+            }
+          ]
+        }
+      ]
+    },
+    "footer": {
+      "type": "footer",
+      "children": [
+        {
+          "type": "pod",
+          "podId": "ecoComsFooter"
+        }
+      ]
+    },
+    "tabs": [
+      {
+        "type": "section",
+        "label": "Audit Log",
+        "children": [
+          {
+            "type": "grid",
+            "gridType": "LIST",
+            "multiViewStylingEnabled": true,
+            "id": "AuditLogGrid",
+            "rows": "<% auditLogs.data %>",
+            "rowVariableName": "logEntry",
+            "enabled": false,
+            "label": "Audit Log",
+            "columns": [
+              {
+                "type": "column",
+                "id": "columnTimestamp",
+                "columnId": "columnTimestamp",
+                "label": "Timestamp",
+                "cellTemplate": {
+                  "type": "text",
+                  "value": "<% logEntry.timestamp %>",
+                  "enabled": false
+                },
+                "sortableAndFilterable": "true"
+              },
+              {
+                "type": "column",
+                "id": "columnObjectType",
+                "columnId": "columnObjectType",
+                "label": "Object Type",
+                "cellTemplate": {
+                  "type": "text",
+                  "value": "<% logEntry.objectType %>",
+                  "enabled": false
+                },
+                "sortableAndFilterable": "true"
+              },
+              {
+                "type": "column",
+                "id": "columnWorker",
+                "columnId": "columnWorker",
+                "label": "Worker",
+                "cellTemplate": {
+                  "type": "text",
+                  "value": "<% logEntry.worker.descriptor %>",
+                  "enabled": false
+                },
+                "sortableAndFilterable": "true"
+              },
+              {
+                "type": "column",
+                "id": "columnAction",
+                "columnId": "columnAction",
+                "label": "Action",
+                "cellTemplate": {
+                  "type": "text",
+                  "value": "<% logEntry.action %>",
+                  "enabled": false
+                },
+                "sortableAndFilterable": "true"
+              },
+              {
+                "type": "column",
+                "id": "columnCoReferenceId",
+                "columnId": "columnCoReferenceId",
+                "label": "CO ID",
+                "cellTemplate": {
+                  "type": "text",
+                  "value": "<% logEntry.coReferenceId %>",
+                  "enabled": false
+                },
+                "sortableAndFilterable": "true"
+              },
+              {
+                "type": "column",
+                "id": "columnCoName",
+                "columnId": "columnCoName",
+                "label": "CO Name (Pattern String)",
+                "cellTemplate": {
+                  "type": "text",
+                  "value": "<% logEntry.coName %>",
+                  "enabled": false
+                },
+                "sortableAndFilterable": "true"
+              },
+              {
+                "type": "column",
+                "id": "columnApplication",
+                "columnId": "columnApplication",
+                "label": "Application",
+                "cellTemplate": {
+                  "type": "text",
+                  "value": "<% logEntry.application.descriptor %>",
+                  "enabled": false
+                },
+                "sortableAndFilterable": "true"
+              },
+              {
+                "type": "column",
+                "id": "columnTriggeredBy",
+                "columnId": "columnTriggeredBy",
+                "label": "Triggered By",
+                "cellTemplate": {
+                  "type": "text",
+                  "value": "<% logEntry.triggeredBy %>",
+                  "enabled": false
+                },
+                "sortableAndFilterable": "true"
+              },
+              {
+                "type": "column",
+                "id": "columnDetails",
+                "columnId": "columnDetails",
+                "label": "Details",
+                "cellTemplate": {
+                  "type": "text",
+                  "value": "<% logEntry.details %>",
+                  "enabled": false
+                },
+                "sortableAndFilterable": "true"
+              }
+            ]
+          },
+          {
+            "type": "readOnlyText",
+            "id": "exportNote",
+            "value": "Use the grid's built-in export action to download these results as CSV for compliance reporting."
+          }
+        ]
+      },
+      {
+        "type": "section",
+        "label": "Filter",
+        "children": [
+          {
+            "type": "dropdown",
+            "id": "filterAction",
+            "label": "Filter by Action",
+            "required": false,
+            "instanceList": [
+              {
+                "id": "CREATE",
+                "descriptor": "Create"
+              },
+              {
+                "id": "INACTIVATE",
+                "descriptor": "Inactivate"
+              }
+            ]
+          },
+          {
+            "type": "readOnlyText",
+            "id": "filterNote",
+            "value": "Filtering by Application or Action is not yet available on this page. Use the grid's built-in column sort and the export action to narrow results."
+          }
+        ]
+      }
+    ],
+    "pageType": "view"
+  }
+}
