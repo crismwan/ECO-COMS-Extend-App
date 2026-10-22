@@ -1,0 +1,16 @@
+{
+  "id": "newShellOrgPatternSuccess",
+  "presentation": {
+    "microConclusion": "true",
+    "body": {
+      "type": "section",
+      "children": [
+        {
+          "type": "readOnlyText",
+          "id": "successMessage",
+          "value": "<% 'Shell Org Pattern ' + (flowVariables.patternName ?? '') + ' has been added successfully.' %>"
+        }
+      ]
+    }
+  }
+}
