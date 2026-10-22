@@ -14,17 +14,15 @@ jobs:
 
       - name: Get Workday Developer OAuth token
         id: auth
-        env:
-          TENANT: ubc_wcpdev2
         run: |
-          # Workday client_credentials requires Authorization: ID (not Basic)
-          # and tenant_alias in the body for tenant mapping
+          # Developer Portal OAuth clients use api.us.wcp.workday.com/auth/v1/token
+          # with client_credentials grant. Auth is Basic base64(clientId:clientSecret)
           ENCODED=$(printf '%s:%s' "${{ secrets.WD_CLIENT_ID }}" "${{ secrets.WD_CLIENT_SECRET }}" | base64 -w 0)
 
-          TOKEN_RESPONSE=$(curl -s -X POST "https://auth.api.workday.com/v1/token" \
+          TOKEN_RESPONSE=$(curl -s -X POST "https://api.us.wcp.workday.com/auth/v1/token" \
             -H "Content-Type: application/x-www-form-urlencoded" \
-            -H "Authorization: ID ${ENCODED}" \
-            -d "grant_type=client_credentials&tenant_alias=${TENANT}")
+            -H "Authorization: Basic ${ENCODED}" \
+            -d "grant_type=client_credentials")
 
           echo "Token response: ${TOKEN_RESPONSE}"
           ACCESS_TOKEN=$(echo "${TOKEN_RESPONSE}" | jq -r '.access_token // empty')
