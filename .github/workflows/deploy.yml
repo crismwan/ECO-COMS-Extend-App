@@ -35,23 +35,26 @@ jobs:
       - name: Get latest app version ID
         id: version
         run: |
-          EXTEND_BASE=$(echo "${{ secrets.WD_EXTEND_ENDPOINT }}" | sed 's|/api/v1/|/api/extend/v1/|')
+          TENANT=$(echo "${{ secrets.WD_EXTEND_ENDPOINT }}" | grep -oP '(?<=/v1/)[^/]+')
+          EXTEND_BASE="https://api.workday.com/api/extend/v1/${TENANT}"
+          echo "Using Extend base: ${EXTEND_BASE}"
+
           VERSIONS_RESPONSE=$(curl -s \
-            "$EXTEND_BASE/apps/${{ secrets.WD_APP_ID }}/versions?limit=1" \
+            "${EXTEND_BASE}/apps/${{ secrets.WD_APP_ID }}/versions?limit=1" \
             -H "Authorization: Bearer ${{ steps.auth.outputs.access_token }}")
 
-          echo "VERSIONS_RESPONSE=$VERSIONS_RESPONSE"
-          VERSION_ID=$(echo $VERSIONS_RESPONSE | jq -r '.data[0].id // .versions[0].id // empty')
+          echo "VERSIONS_RESPONSE=${VERSIONS_RESPONSE}"
+          VERSION_ID=$(echo ${VERSIONS_RESPONSE} | jq -r '.data[0].id // .versions[0].id // empty')
 
-          if [ -z "$VERSION_ID" ]; then
+          if [ -z "${VERSION_ID}" ]; then
             echo "Could not find version ID. Full response:"
-            echo $VERSIONS_RESPONSE
+            echo ${VERSIONS_RESPONSE}
             exit 1
           fi
 
-          echo "version_id=$VERSION_ID" >> $GITHUB_OUTPUT
-          echo "extend_base=$EXTEND_BASE" >> $GITHUB_OUTPUT
-          echo "Latest version: $VERSION_ID"
+          echo "version_id=${VERSION_ID}" >> $GITHUB_OUTPUT
+          echo "extend_base=${EXTEND_BASE}" >> $GITHUB_OUTPUT
+          echo "Latest version: ${VERSION_ID}"
 
       - name: Deploy to Workday sandbox
         run: |
@@ -61,6 +64,6 @@ jobs:
             -H "Content-Type: application/json" \
             -d "{\"versionId\": \"${{ steps.version.outputs.version_id }}\", \"environment\": \"sandbox\"}")
 
-          echo "DEPLOY_RESPONSE=$DEPLOY_RESPONSE"
-          STATUS=$(echo $DEPLOY_RESPONSE | jq -r '.status // .error // "unknown"')
-          echo "Deploy status: $STATUS"
+          echo "DEPLOY_RESPONSE=${DEPLOY_RESPONSE}"
+          STATUS=$(echo ${DEPLOY_RESPONSE} | jq -r '.status // .error // "unknown"')
+          echo "Deploy status: ${STATUS}"
