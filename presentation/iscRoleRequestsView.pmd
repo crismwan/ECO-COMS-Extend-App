@@ -1,0 +1,326 @@
+{
+  "id": "iscRoleRequestsView",
+  "include": [
+    "comsValidations.script"
+  ],
+  "securityDomains": [
+    "MaintainCOMSAssignableRoles"
+  ],
+  "endPoints": [
+    {
+      "name": "selectedWorker",
+      "baseUrlType": "COMMON",
+      "url": "/workers/me",
+      "authType": "sso"
+    },
+    {
+      "name": "comsAssignableRoles",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "url": "/comsAssignableRoles",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true"
+    },
+    {
+      "name": "customOrganizations",
+      "baseUrlType": "workday-wql",
+      "url": "data",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "wqlQuery": {
+        "queryId": "customOrganizations"
+      }
+    },
+    {
+      "name": "positions",
+      "baseUrlType": "workday-staffing-v6",
+      "url": "jobs",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true"
+    }
+  ],
+  "outboundData": {
+    "outboundEndPoints": [],
+    "responseErrorDetail": {
+      "errorSummary": "<% error %>",
+      "errors": "<% empty errors ? [] : errors.map(err => { err.error }) %>"
+    }
+  },
+  "presentation": {
+    "pageType": "view",
+    "title": {
+      "type": "title",
+      "label": "ECO-COMS: All Pending Role Requests (ISC)"
+    },
+    "body": {
+      "type": "section",
+      "horizontal": false,
+      "children": [
+        {
+          "type": "richText",
+          "id": "ubcPageHeader",
+          "value": "<span style=\"color:#002145;font-size:11px;font-weight:700;letter-spacing:1px;\">UNIVERSITY OF BRITISH COLUMBIA \u2014 PENDING ISC REQUESTS</span>"
+        },
+        {
+          "type": "section",
+          "horizontal": true,
+          "children": [
+            {
+              "type": "section",
+              "horizontal": false,
+              "children": [
+                {
+                  "type": "button",
+                  "label": "Home",
+                  "taskReference": {
+                    "taskId": "home"
+                  },
+                  "action": "AUXILIARY"
+                }
+              ]
+            },
+            {
+              "type": "section",
+              "horizontal": false,
+              "children": [
+                {
+                  "type": "button",
+                  "label": "Assignable Role Manager",
+                  "taskReference": {
+                    "taskId": "assignableRoleManager"
+                  },
+                  "action": "AUXILIARY"
+                }
+              ]
+            },
+            {
+              "type": "section",
+              "horizontal": false,
+              "children": [
+                {
+                  "type": "button",
+                  "label": "Admin Provisioning",
+                  "taskReference": {
+                    "taskId": "adminProvisioning"
+                  },
+                  "action": "AUXILIARY"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "readOnlyText",
+          "id": "pageDesc",
+          "value": "ISC Security: View all pending Assignable Role requests from both Assignable Role Manager and Admin Provisioning. Click Maintain to approve or deny a request."
+        },
+        {
+          "type": "grid",
+          "gridType": "LIST",
+          "multiViewStylingEnabled": true,
+          "id": "allPendingGrid",
+          "rows": "<% comsAssignableRoles.data.filter(r => { r.status == 'Pending ISC Review' }) %>",
+          "rowVariableName": "role",
+          "enabled": false,
+          "label": "All Pending ISC Review Requests",
+          "columns": [
+            {
+              "type": "column",
+              "id": "colOrgApp",
+              "columnId": "colOrgApp",
+              "label": "Organization / Application",
+              "sortableAndFilterable": "true",
+              "cellTemplate": {
+                "type": "instanceList",
+                "view": false,
+                "instanceList": [
+                  {
+                    "descriptor": "<% role.shellOrgCode ?? role.application ?? '' %>",
+                    "wid": "<% role.shellOrgWid ?? '' %>"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "column",
+              "id": "colRoleName",
+              "columnId": "colRoleName",
+              "label": "Role Name",
+              "sortableAndFilterable": "true",
+              "cellTemplate": {
+                "type": "text",
+                "value": "<% role.roleName ?? '' %>",
+                "enabled": false
+              }
+            },
+            {
+              "type": "column",
+              "id": "colWdRoleName",
+              "columnId": "colWdRoleName",
+              "label": "Workday Assignable Role",
+              "cellTemplate": {
+                "type": "instanceList",
+                "view": false,
+                "instanceList": [
+                  {
+                    "descriptor": "<% role.workdayRoleId ?? '' %>",
+                    "wid": "<% role.workdayAssignableRole ?? '' %>"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "column",
+              "id": "colStatus",
+              "columnId": "colStatus",
+              "label": "Status",
+              "cellTemplate": {
+                "type": "text",
+                "value": "<% role.status ?? '' %>",
+                "enabled": false
+              }
+            },
+            {
+              "type": "column",
+              "id": "colEnabledFor",
+              "columnId": "colEnabledFor",
+              "label": "Enabled For",
+              "cellTemplate": {
+                "type": "instanceList",
+                "view": false,
+                "instanceList": [
+                  {
+                    "descriptor": "<% role.enabledForOrganizationTypes ?? 'Academic Unit - University of British Columbia' %>",
+                    "wid": "<% role.enabledForWid ?? '' %>"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "column",
+              "id": "colEffDate",
+              "columnId": "colEffDate",
+              "label": "Effective Date",
+              "cellTemplate": {
+                "type": "text",
+                "value": "<% role.effectiveDate ?? '' %>",
+                "enabled": false
+              }
+            },
+            {
+              "type": "column",
+              "id": "colPositions",
+              "columnId": "colPositions",
+              "label": "Positions / Delegated Roles",
+              "cellTemplate": {
+                "type": "instanceList",
+                "id": "colPositionsList",
+                "view": true,
+                "relatedTask": true,
+                "enabled": false,
+                "values": "<% empty(role.positions) ? [] : positions.data.filter(p => { role.positions.contains(p.id) }) %>",
+                "widKey": "id"
+              }
+            },
+            {
+              "type": "column",
+              "id": "colRequestedBy",
+              "columnId": "colRequestedBy",
+              "label": "Requested By",
+              "cellTemplate": {
+                "type": "instanceList",
+                "view": false,
+                "instanceList": [
+                  {
+                    "descriptor": "<% role.requestedBy.descriptor ?? '' %>",
+                    "wid": "<% role.requestedBy.id ?? '' %>"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "column",
+              "id": "colRequestedDate",
+              "columnId": "colRequestedDate",
+              "label": "Requested Date",
+              "cellTemplate": {
+                "type": "text",
+                "value": "<% role.requestedDate ?? '' %>",
+                "enabled": false
+              }
+            },
+            {
+              "type": "column",
+              "id": "colApprovedBy",
+              "columnId": "colApprovedBy",
+              "label": "Approved By",
+              "cellTemplate": {
+                "type": "instanceList",
+                "view": false,
+                "instanceList": [
+                  {
+                    "descriptor": "<% role.approvedBy.descriptor ?? '' %>",
+                    "wid": "<% role.approvedBy.id ?? '' %>"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "column",
+              "id": "colApprovedDate",
+              "columnId": "colApprovedDate",
+              "label": "Approved Date",
+              "cellTemplate": {
+                "type": "text",
+                "value": "<% role.approvedDate ?? '' %>",
+                "enabled": false
+              }
+            },
+            {
+              "type": "column",
+              "id": "colActions",
+              "columnId": "colActions",
+              "label": "Actions",
+              "cellTemplate": {
+                "type": "section",
+                "horizontal": true,
+                "children": [
+                  {
+                    "type": "section",
+                    "horizontal": false,
+                    "children": [
+                      {
+                        "type": "button",
+                        "action": "PRIMARY",
+                        "label": "Maintain",
+                        "taskReference": {
+                          "taskId": "assignableRoleManagerMaintain",
+                          "parameterBindings": {
+                            "roleId": "<% role.id %>",
+                            "orgWid": "<% role.shellOrgWid ?? '' %>"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "footer": {
+      "type": "footer",
+      "children": [
+        {
+          "type": "richText",
+          "enabled": "false",
+          "value": "Powered By Workday Extend"
+        }
+      ]
+    }
+  }
+}
