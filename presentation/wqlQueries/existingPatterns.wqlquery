@@ -1,0 +1,4 @@
+{
+  "id": "existingPatterns",
+  "query": "SELECT workdayID, organizationByName, code FROM topLevelOrganizations WHERE code contains 'PATTERN'"
+}
