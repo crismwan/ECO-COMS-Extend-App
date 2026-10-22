@@ -1,0 +1,91 @@
+{
+  "id": 3,
+  "name": "COMSRoleAssignment",
+  "label": "COMS Role Assignment",
+  "defaultSecurityDomains": [
+    "ManageCOMSAdminProvisioning"
+  ],
+  "defaultCollection": {
+    "name": "comsRoleAssignments",
+    "label": "COMS Role Assignments"
+  },
+  "fields": [
+    {
+      "id": 1,
+      "name": "worker",
+      "label": "Worker",
+      "type": "SINGLE_INSTANCE",
+      "target": "WORKER",
+      "secureByTarget": true
+    },
+    {
+      "id": 2,
+      "name": "application",
+      "label": "Application",
+      "type": "SINGLE_INSTANCE",
+      "target": "COMSApplication"
+    },
+    {
+      "id": 3,
+      "name": "comsRole",
+      "label": "COMS Role",
+      "type": "TEXT"
+    },
+    {
+      "id": 4,
+      "name": "effectiveDate",
+      "label": "Effective Date",
+      "type": "DATE",
+      "precision": "DAY"
+    },
+    {
+      "id": 5,
+      "name": "notes",
+      "label": "Notes",
+      "type": "TEXT"
+    },
+    {
+      "id": 6,
+      "name": "grantedBy",
+      "label": "Granted By",
+      "type": "SINGLE_INSTANCE",
+      "target": "WORKER",
+      "secureByTarget": false
+    },
+    {
+      "id": 7,
+      "name": "active",
+      "label": "Active",
+      "type": "BOOLEAN"
+    },
+    {
+      "id": 8,
+      "name": "referenceId",
+      "label": "Reference ID",
+      "type": "TEXT",
+      "isReferenceId": true
+    },
+    {
+      "name": "revokedBy",
+      "label": "Revoked By",
+      "type": "SINGLE_INSTANCE",
+      "target": "WORKER",
+      "secureByTarget": false,
+      "id": 9
+    },
+    {
+      "name": "revokedDate",
+      "label": "Revoked Date",
+      "type": "DATE",
+      "precision": "DAY",
+      "id": 10
+    },
+    {
+      "name": "expiryDate",
+      "label": "Expiry Date",
+      "type": "DATE",
+      "precision": "DAY",
+      "id": 11
+    }
+  ]
+}
