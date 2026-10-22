@@ -1,0 +1,131 @@
+{
+  "id": "newShellOrgPatternConfirm",
+  "endPoints": [],
+  "outboundData": {
+    "outboundEndPoints": [
+      {
+        "name": "triggerAddShellOrgPattern",
+        "baseUrlType": "orchestration",
+        "url": "<% '/AddShellOrgPattern/launch?comsAppId=' + (flowVariables.comsAppId ?? '') + '&patternName=' + (flowVariables.patternName ?? '') + '&workerId=' + (flowVariables.workerId ?? '') + '&attribute1=' + (flowVariables.attribute1 ?? '') + '&attribute2=' + (flowVariables.attribute2 ?? '') + '&attribute3=' + (flowVariables.attribute3 ?? '') + '&attribute5=' + (flowVariables.attribute5 ?? '') + '&effectiveDate=' + (flowVariables.effectiveDate ?? '') %>",
+        "authType": "SSO",
+        "httpMethod": "POST",
+        "onSend": "<% {} %>",
+        "headers": [
+          {
+            "name": "content-type",
+            "value": "application/json"
+          }
+        ],
+        "values": [
+          {
+            "outboundPath": "patternName",
+            "value": "<% flowVariables.patternName %>"
+          }
+        ],
+        "failOnStatusCodes": [
+          {
+            "code": 400
+          },
+          {
+            "code": 403
+          },
+          {
+            "code": 404
+          },
+          {
+            "code": 429
+          },
+          {
+            "code": 500
+          }
+        ]
+      }
+    ],
+    "responseErrorDetail": {
+      "errorSummary": "<% error %>",
+      "errors": "<% empty errors ? [] : [error].join(errors.map(err => { err.error })) %>"
+    }
+  },
+  "presentation": {
+    "title": {
+      "type": "title",
+      "label": "Confirm: Add Shell Org Pattern"
+    },
+    "body": {
+      "type": "section",
+      "horizontal": false,
+      "children": [
+        {
+          "type": "text",
+          "id": "hiddenPatternName",
+          "label": "Pattern",
+          "enabled": false,
+          "value": "<% flowVariables.patternName %>",
+          "valuesOut": [
+            {
+              "value": "<% self.value %>",
+              "valueOutBinding": "triggerAddShellOrgPattern.patternName"
+            }
+          ]
+        },
+        {
+          "type": "readOnlyText",
+          "id": "confirmHelp",
+          "value": "Please confirm the new Shell Org Pattern below. This will create a new pattern in COMS. The Orchestration will sync it to Workday automatically."
+        },
+        {
+          "type": "text",
+          "label": "Pattern Name",
+          "enabled": false,
+          "value": "<% flowVariables.patternName %>"
+        },
+        {
+          "type": "text",
+          "label": "Application",
+          "enabled": false,
+          "value": "<% flowVariables.applicationCode %>"
+        },
+        {
+          "type": "text",
+          "label": "Subject",
+          "enabled": false,
+          "value": "<% flowVariables.attribute1 %>"
+        },
+        {
+          "type": "text",
+          "label": "Course",
+          "enabled": false,
+          "value": "<% flowVariables.attribute2 %>"
+        },
+        {
+          "type": "text",
+          "label": "Section",
+          "enabled": false,
+          "value": "<% flowVariables.attribute3 %>"
+        },
+        {
+          "type": "text",
+          "label": "Academic Period",
+          "enabled": false,
+          "value": "<% flowVariables.attribute5 %>"
+        },
+        {
+          "type": "text",
+          "label": "Effective Date",
+          "enabled": false,
+          "value": "<% flowVariables.effectiveDate %>"
+        }
+      ]
+    },
+    "footer": {
+      "type": "footer",
+      "children": [
+        {
+          "type": "pod",
+          "podId": "ecoComsFooter"
+        }
+      ]
+    },
+    "pageType": "edit"
+  }
+}
