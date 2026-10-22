@@ -35,8 +35,9 @@ jobs:
       - name: Get latest app version ID
         id: version
         run: |
+          EXTEND_BASE=$(echo "${{ secrets.WD_EXTEND_ENDPOINT }}" | sed 's|/api/v1/|/api/extend/v1/|')
           VERSIONS_RESPONSE=$(curl -s \
-            "https://api.workday.com/extend/v1/apps/${{ secrets.WD_APP_ID }}/versions?limit=1" \
+            "$EXTEND_BASE/apps/${{ secrets.WD_APP_ID }}/versions?limit=1" \
             -H "Authorization: Bearer ${{ steps.auth.outputs.access_token }}")
 
           echo "VERSIONS_RESPONSE=$VERSIONS_RESPONSE"
@@ -49,12 +50,13 @@ jobs:
           fi
 
           echo "version_id=$VERSION_ID" >> $GITHUB_OUTPUT
+          echo "extend_base=$EXTEND_BASE" >> $GITHUB_OUTPUT
           echo "Latest version: $VERSION_ID"
 
       - name: Deploy to Workday sandbox
         run: |
           DEPLOY_RESPONSE=$(curl -s -X POST \
-            "https://api.workday.com/extend/v1/apps/${{ secrets.WD_APP_ID }}/deployments" \
+            "${{ steps.version.outputs.extend_base }}/apps/${{ secrets.WD_APP_ID }}/deployments" \
             -H "Authorization: Bearer ${{ steps.auth.outputs.access_token }}" \
             -H "Content-Type: application/json" \
             -d "{\"versionId\": \"${{ steps.version.outputs.version_id }}\", \"environment\": \"sandbox\"}")
