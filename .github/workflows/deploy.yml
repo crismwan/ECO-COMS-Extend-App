@@ -3,15 +3,12 @@ name: Deploy to Workday Extend
 on:
   push:
     branches: [main]
-  workflow_dispatch:  # Allow manual trigger from GitHub UI
+  workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
       - name: Get Workday OAuth token
         id: auth
         run: |
@@ -23,55 +20,43 @@ jobs:
             -d "client_id=${{ secrets.WD_CLIENT_ID }}" \
             -d "client_secret=${{ secrets.WD_CLIENT_SECRET }}")
 
-          echo "TOKEN_RESPONSE=$TOKEN_RESPONSE"
           ACCESS_TOKEN=$(echo $TOKEN_RESPONSE | jq -r '.access_token')
 
           if [ -z "$ACCESS_TOKEN" ] || [ "$ACCESS_TOKEN" == "null" ]; then
-            echo "Failed to get access token"
-            echo $TOKEN_RESPONSE
+            echo "Failed to get access token: $TOKEN_RESPONSE"
             exit 1
           fi
 
           echo "access_token=$ACCESS_TOKEN" >> $GITHUB_OUTPUT
           echo "Got access token"
 
-      - name: Package app as ZIP
+      - name: Get current deployed version ID
+        id: version
         run: |
-          zip -r app.zip . \
-            --exclude "*.git*" \
-            --exclude ".github/*" \
-            --exclude "*.md" \
-            --exclude "presentation/assets/sprite-preview.png"
-          echo "Created app.zip"
+          APP_RESPONSE=$(curl -s \
+            "${{ secrets.WD_EXTEND_ENDPOINT }}/apps/${{ secrets.WD_APP_ID }}" \
+            -H "Authorization: Bearer ${{ steps.auth.outputs.access_token }}")
 
-      - name: Upload new version to Workday Extend
-        id: upload
-        run: |
-          UPLOAD_RESPONSE=$(curl -s -X POST \
-            "${{ secrets.WD_EXTEND_ENDPOINT }}/apps/${{ secrets.WD_APP_ID }}/versions" \
-            -H "Authorization: Bearer ${{ steps.auth.outputs.access_token }}" \
-            -F "file=@app.zip")
+          echo "APP_RESPONSE=$APP_RESPONSE"
+          VERSION_ID=$(echo $APP_RESPONSE | jq -r '.currentVersion.id // .deployedVersion.id // .versionId // empty')
 
-          echo "UPLOAD_RESPONSE=$UPLOAD_RESPONSE"
-          VERSION_ID=$(echo $UPLOAD_RESPONSE | jq -r '.id')
-
-          if [ -z "$VERSION_ID" ] || [ "$VERSION_ID" == "null" ]; then
-            echo "Failed to upload version"
-            echo $UPLOAD_RESPONSE
+          if [ -z "$VERSION_ID" ]; then
+            echo "Could not find current version ID. Full response:"
+            echo $APP_RESPONSE
             exit 1
           fi
 
           echo "version_id=$VERSION_ID" >> $GITHUB_OUTPUT
-          echo "Uploaded version: $VERSION_ID"
+          echo "Current version: $VERSION_ID"
 
-      - name: Deploy version to Workday
+      - name: Redeploy current version to Workday sandbox
         run: |
           DEPLOY_RESPONSE=$(curl -s -X POST \
             "${{ secrets.WD_EXTEND_ENDPOINT }}/apps/${{ secrets.WD_APP_ID }}/deployments" \
             -H "Authorization: Bearer ${{ steps.auth.outputs.access_token }}" \
             -H "Content-Type: application/json" \
-            -d "{\"versionId\": \"${{ steps.upload.outputs.version_id }}\", \"environment\": \"sandbox\"}")
+            -d "{\"versionId\": \"${{ steps.version.outputs.version_id }}\", \"environment\": \"sandbox\"}")
 
           echo "DEPLOY_RESPONSE=$DEPLOY_RESPONSE"
           STATUS=$(echo $DEPLOY_RESPONSE | jq -r '.status // .error // "unknown"')
-          echo "Deploy initiated - status: $STATUS"
+          echo "Deploy status: $STATUS"
