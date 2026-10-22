@@ -1,0 +1,46 @@
+{
+  "id": "errorPage",
+  "endPoints": [],
+  "presentation": {
+    "headerSize": "STANDARD",
+    "title": {
+      "type": "title",
+      "label": "Whoops!"
+    },
+    "body": {
+      "type": "section",
+      "horizontal": false,
+      "children": [
+        {
+          "type": "text",
+          "id": "errorSummary401",
+          "visible": "<% errorCode == '401' %>",
+          "label": "Error Message",
+          "value": "We couldn't verify your identity, or you don't have access to this page. If you believe you should have access to ECO-COMS, contact your COMS Administrator."
+        },
+        {
+          "type": "text",
+          "id": "errorSummary403",
+          "visible": "<% errorCode == '403' %>",
+          "label": "Error Message",
+          "value": "You don't have permission to manage this application's shell organizations. COMS access is scoped per application."
+        },
+        {
+          "type": "text",
+          "id": "errorSummary404",
+          "visible": "<% errorCode == '404' %>",
+          "label": "Error Message",
+          "value": "We couldn't find the page you're looking for."
+        },
+        {
+          "type": "text",
+          "id": "errorSummaryDefault",
+          "visible": "<% errorCode != '401' && errorCode != '403' && errorCode != '404' %>",
+          "label": "Error Message",
+          "value": "Something went wrong. Please try again, or contact your COMS Administrator if the problem persists."
+        }
+      ]
+    },
+    "pageType": "edit"
+  }
+}
