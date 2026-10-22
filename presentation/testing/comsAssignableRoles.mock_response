@@ -1,0 +1,63 @@
+{
+  "id": "comsAssignableRoles",
+  "responseCode": 200,
+  "responseBody": {
+    "data": [
+      {
+        "id": "f1000000000000000000000000000001",
+        "referenceId": "20250901120000",
+        "application": {"id": "a1000000000000000000000000000001", "descriptor": "X:CLW"},
+        "roleName": "CLW Coordinator",
+        "roleDescription": "Clockwork exam coordinator. Grants downstream Clockwork access for assigned shell org patterns.",
+        "orgType": "X:CLW",
+        "enabledForCompany": false,
+        "enabledForCompanyHierarchy": false,
+        "status": "Active",
+        "workdayRoleId": "CLW_Coordinator_v1",
+        "requestedBy": {"id": "3aa5550b7fe348b98d7b5741afc65534", "descriptor": "Lawrence Chen"},
+        "requestedDate": "2025-09-01",
+        "approvedBy": {"id": "3aa5550b7fe348b98d7b5741afc65534", "descriptor": "Lawrence Chen"},
+        "approvedDate": "2025-09-10",
+        "iscTicketReference": "INC0012345",
+        "notes": ""
+      },
+      {
+        "id": "f1000000000000000000000000000002",
+        "referenceId": "20260613090000",
+        "application": {"id": "a1000000000000000000000000000001", "descriptor": "X:CLW"},
+        "roleName": "CLW Invigilator",
+        "roleDescription": "Clockwork exam invigilator. Read-only access for invigilation assignments.",
+        "orgType": "X:CLW",
+        "enabledForCompany": false,
+        "enabledForCompanyHierarchy": false,
+        "status": "Pending ISC Review",
+        "workdayRoleId": "",
+        "requestedBy": {"id": "d4000000000000000000000000000010", "descriptor": "Anne Kim"},
+        "requestedDate": "2026-06-13",
+        "approvedBy": null,
+        "approvedDate": null,
+        "iscTicketReference": "",
+        "notes": "Required for Fall 2026 exams"
+      },
+      {
+        "id": "f1000000000000000000000000000003",
+        "referenceId": "20260801140000",
+        "application": {"id": "a1000000000000000000000000000002", "descriptor": "X:BPMS(AOC)"},
+        "roleName": "AOC Reviewer",
+        "roleDescription": "Assessment outcomes reviewer. Can view and comment on assessment results.",
+        "orgType": "X:BPMS(AOC)",
+        "enabledForCompany": true,
+        "enabledForCompanyHierarchy": false,
+        "status": "Denied",
+        "workdayRoleId": "",
+        "requestedBy": {"id": "d4000000000000000000000000000011", "descriptor": "Bob Smith"},
+        "requestedDate": "2026-08-01",
+        "approvedBy": {"id": "3aa5550b7fe348b98d7b5741afc65534", "descriptor": "Lawrence Chen"},
+        "approvedDate": "2026-08-15",
+        "iscTicketReference": "INC0012399",
+        "notes": "Duplicate of existing role"
+      }
+    ],
+    "total": 3
+  }
+}
