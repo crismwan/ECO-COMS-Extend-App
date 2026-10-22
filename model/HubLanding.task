@@ -1,0 +1,9 @@
+{
+  "id": 8,
+  "name": "HubLanding",
+  "label": "ECO-COMS Hub Landing",
+  "securityDomains": [
+    "ManageCOMSShellOrgs"
+  ],
+  "routePath": "/hubLanding"
+}
