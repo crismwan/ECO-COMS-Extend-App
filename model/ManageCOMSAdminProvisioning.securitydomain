@@ -1,0 +1,6 @@
+{
+  "id": 2,
+  "name": "ManageCOMSAdminProvisioning",
+  "label": "Manage: COMS Admin Provisioning",
+  "enabledForPageSecurity": true
+}
