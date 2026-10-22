@@ -14,21 +14,24 @@ jobs:
 
       - name: Get Workday Developer OAuth token
         id: auth
+        env:
+          TENANT: ubc_wcpdev2
         run: |
-          # Developer Portal OAuth clients use api.us.wcp.workday.com/auth/v1/token
-          # with client_credentials grant. Auth is Basic base64(clientId:clientSecret)
+          # Workday client_credentials requires:
+          #   Authorization: ID <base64(clientId:clientSecret)>  (NOT "Basic")
+          #   Body: grant_type=client_credentials&tenant_alias=<tenant>
           ENCODED=$(printf '%s:%s' "${{ secrets.WD_CLIENT_ID }}" "${{ secrets.WD_CLIENT_SECRET }}" | base64 -w 0)
 
-          TOKEN_RESPONSE=$(curl -s -X POST "https://api.us.wcp.workday.com/auth/v1/token" \
+          TOKEN_RESPONSE=$(curl -s -X POST "https://auth.api.workday.com/v1/token" \
             -H "Content-Type: application/x-www-form-urlencoded" \
-            -H "Authorization: Basic ${ENCODED}" \
-            -d "grant_type=client_credentials")
+            -H "Authorization: ID ${ENCODED}" \
+            -d "grant_type=client_credentials&tenant_alias=${TENANT}")
 
           echo "Token response: ${TOKEN_RESPONSE}"
           ACCESS_TOKEN=$(echo "${TOKEN_RESPONSE}" | jq -r '.access_token // empty')
 
           if [ -z "${ACCESS_TOKEN}" ]; then
-            echo "Failed: Developer OAuth failed. Response: ${TOKEN_RESPONSE}"
+            echo "Developer OAuth failed. Response: ${TOKEN_RESPONSE}"
             exit 1
           fi
 
@@ -42,33 +45,13 @@ jobs:
           APPHUB_BASE: https://api.us.wcp.workday.com/apphub/v1
         run: |
           TOKEN="${{ steps.auth.outputs.access_token }}"
-
-          VERSIONS=$(curl -s \
-            -H "Authorization: Bearer ${TOKEN}" \
-            "${APPHUB_BASE}/apps/${APP_ID}/versions?limit=1")
-          echo "Versions: ${VERSIONS}"
-
+          VERSIONS=$(curl -s -H "Authorization: Bearer ${TOKEN}" "${APPHUB_BASE}/apps/${APP_ID}/versions?limit=1")
           VERSION_ID=$(echo "${VERSIONS}" | jq -r '.data[0].id // empty')
-          if [ -z "${VERSION_ID}" ]; then
-            echo "Could not get version ID"
-            exit 1
-          fi
-          echo "Version ID: ${VERSION_ID}"
-
-          BUILDS=$(curl -s \
-            -H "Authorization: Bearer ${TOKEN}" \
-            "${APPHUB_BASE}/versions/${VERSION_ID}/builds?desc=true&limit=1")
-          echo "Builds: ${BUILDS}"
-
+          if [ -z "${VERSION_ID}" ]; then echo "Could not get version ID"; exit 1; fi
+          BUILDS=$(curl -s -H "Authorization: Bearer ${TOKEN}" "${APPHUB_BASE}/versions/${VERSION_ID}/builds?desc=true&limit=1")
           BUILD_ID=$(echo "${BUILDS}" | jq -r '.data[0].id // empty')
           BUILD_STATUS=$(echo "${BUILDS}" | jq -r '.data[0].status // empty')
-
-          if [ -z "${BUILD_ID}" ]; then
-            echo "Could not get build ID"
-            exit 1
-          fi
-          echo "Build ID: ${BUILD_ID} (status: ${BUILD_STATUS})"
-
+          if [ -z "${BUILD_ID}" ]; then echo "Could not get build ID"; exit 1; fi
           echo "version_id=${VERSION_ID}" >> $GITHUB_OUTPUT
           echo "build_id=${BUILD_ID}" >> $GITHUB_OUTPUT
           echo "build_status=${BUILD_STATUS}" >> $GITHUB_OUTPUT
@@ -83,24 +66,19 @@ jobs:
           STATUS="${{ steps.build.outputs.build_status }}"
           MAX_ATTEMPTS=20
           ATTEMPT=0
-
           while [ "${STATUS}" != "COMPLETE" ] && [ "${STATUS}" != "SUCCESS" ] && [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
             sleep 10
             ATTEMPT=$((ATTEMPT + 1))
-            BUILD_RESP=$(curl -s \
-              -H "Authorization: Bearer ${TOKEN}" \
-              "${APPHUB_BASE}/builds/${BUILD_ID}")
+            BUILD_RESP=$(curl -s -H "Authorization: Bearer ${TOKEN}" "${APPHUB_BASE}/builds/${BUILD_ID}")
             STATUS=$(echo "${BUILD_RESP}" | jq -r '.status // empty')
             echo "Attempt ${ATTEMPT}: Build status = ${STATUS}"
           done
-
           if [ "${STATUS}" = "COMPLETE" ] || [ "${STATUS}" = "SUCCESS" ]; then
             echo "Build ready: ${BUILD_ID}"
-            echo "build_ready=true" >> $GITHUB_OUTPUT
           else
             echo "Build status: ${STATUS} - attempting deploy anyway"
-            echo "build_ready=true" >> $GITHUB_OUTPUT
           fi
+          echo "build_ready=true" >> $GITHUB_OUTPUT
 
       - name: Deploy to ubc_wcpdev2
         env:
@@ -111,15 +89,12 @@ jobs:
         run: |
           TOKEN="${{ steps.auth.outputs.access_token }}"
           BUILD_ID="${{ steps.build.outputs.build_id }}"
-
           DEPLOY_RESPONSE=$(curl -s -X POST \
             -H "Authorization: Bearer ${TOKEN}" \
             -H "Content-Type: application/json" \
             "${APPHUB_BASE}/builds/${BUILD_ID}/deployments" \
             -d "{\"tenantAlias\": \"${TENANT}\", \"organizationId\": \"${ORG_ID}\"}")
-
           echo "Deploy response: ${DEPLOY_RESPONSE}"
-
           DEPLOY_ERROR=$(echo "${DEPLOY_RESPONSE}" | jq -r '.error // .detail // empty')
           if [ -n "${DEPLOY_ERROR}" ]; then
             echo "Deploy failed: ${DEPLOY_ERROR}"
@@ -130,14 +105,9 @@ jobs:
               -d "{\"buildId\": \"${BUILD_ID}\", \"tenantAlias\": \"${TENANT}\", \"organizationId\": \"${ORG_ID}\"}")
             echo "Alternate deploy response: ${DEPLOY_RESPONSE2}"
             DEPLOY_ERROR2=$(echo "${DEPLOY_RESPONSE2}" | jq -r '.error // .detail // empty')
-            if [ -n "${DEPLOY_ERROR2}" ]; then
-              echo "Both deploy attempts failed"
-              exit 1
-            fi
+            if [ -n "${DEPLOY_ERROR2}" ]; then echo "Both deploy attempts failed"; exit 1; fi
           fi
-
-          DEPLOY_STATUS=$(echo "${DEPLOY_RESPONSE}" | jq -r '.status // empty')
-          echo "Deploy initiated: ${DEPLOY_STATUS}"
+          echo "Deploy initiated"
 
       - name: Verify deploy succeeded
         env:
@@ -146,11 +116,6 @@ jobs:
         run: |
           TOKEN="${{ steps.auth.outputs.access_token }}"
           sleep 15
-
-          DEPLOYS=$(curl -s \
-            -H "Authorization: Bearer ${TOKEN}" \
-            "${APPHUB_BASE}/apps/${APP_ID}/deployments?limit=1")
-          echo "Recent deployment: ${DEPLOYS}"
-
+          DEPLOYS=$(curl -s -H "Authorization: Bearer ${TOKEN}" "${APPHUB_BASE}/apps/${APP_ID}/deployments?limit=1")
           STATUS=$(echo "${DEPLOYS}" | jq -r '.data[0].status // empty')
           echo "Latest deployment status: ${STATUS}"
