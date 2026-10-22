@@ -1,0 +1,34 @@
+{
+  "id": "QuickLinksCard",
+  "parameters": [
+    "title"
+  ],
+  "header": {
+    "title": "<% title %>",
+    "icon": "wd-accent-megaphone"
+  },
+  "body": {
+    "type": "pillCard",
+    "pills": [
+      {
+        "label": "Add Pattern",
+        "taskReference": {
+          "taskId": "newShellOrgPattern"
+        }
+      },
+      {
+        "label": "Audit Log",
+        "taskReference": {
+          "taskId": "auditLogViewer"
+        }
+      },
+      {
+        "label": "Admin Provisioning",
+        "taskReference": {
+          "taskId": "adminProvisioning"
+        }
+      }
+    ]
+  },
+  "footer": []
+}
