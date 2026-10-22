@@ -1,0 +1,20 @@
+{
+    "id": 6,
+    "name": "AllPositions",
+    "label": "Custom Organization Management All Positions",
+    "businessObject": "COMSAssignableRole",
+    "defaultSecurityDomains": ["ManageCOMSAssignableRoles"],
+    "sortConfigs": [
+      { "id": 1, "order": "a", "field": "workdayPositionId", "direction": "ASCENDING" }
+    ],
+    "columns": [
+      { "id": 1, "name": "Workday Position ID",  "order": "a", "field": "workdayPositionId" },
+      { "id": 2, "name": "Shell Org Code",        "order": "b", "field": "shellOrgCode" },
+      { "id": 3, "name": "Role Name",             "order": "c", "field": "roleName" },
+      { "id": 4, "name": "Org Type",              "order": "d", "field": "orgType" },
+      { "id": 5, "name": "Positions",             "order": "e", "field": "positions" },
+      { "id": 6, "name": "Position Is Filled",    "order": "f", "field": "positionIsFilled" },
+      { "id": 7, "name": "Active",                "order": "g", "field": "active" },
+      { "id": 8, "name": "Status",                "order": "h", "field": "status" }
+    ]
+  }
