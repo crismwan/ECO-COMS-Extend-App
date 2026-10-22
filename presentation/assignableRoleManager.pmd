@@ -1,0 +1,598 @@
+{
+  "id": "assignableRoleManager",
+  "endPoints": [
+    {
+      "name": "selectedWorker",
+      "baseUrlType": "COMMON",
+      "url": "/workers/me",
+      "authType": "sso",
+      "bestEffort": "true"
+    },
+    {
+      "name": "comsAssignableRoles",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "url": "/comsAssignableRoles",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true"
+    },
+    {
+      "name": "shellOrgPatterns",
+      "baseUrlType": "workday-wql",
+      "url": "data",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "wqlQuery": {
+        "queryId": "customOrganizations"
+      }
+    },
+    {
+      "name": "selectedShellOrg",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "url": "<% empty(selectedShellOrgId.value) ? '/comsShellOrgRequests/none' : '/comsShellOrgRequests/' + selectedShellOrgId.value[0] %>",
+      "authType": "sso",
+      "bestEffort": "true",
+      "exclude": "<% true %>"
+    },
+    {
+      "name": "customOrganizationsFUH",
+      "baseUrlType": "workday-wql",
+      "url": "data",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "wqlQuery": {
+        "queryId": "customOrganizationsFUH"
+      }
+    },
+    {
+      "name": "academicUnits",
+      "baseUrlType": "workday-wql",
+      "url": "data",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "wqlQuery": {
+        "queryId": "academicUnits"
+      }
+    },
+    {
+      "name": "positions",
+      "baseUrlType": "workday-staffing-v6",
+      "url": "jobs",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true"
+    },
+    {
+      "name": "allShellRoles",
+      "baseUrlType": "workday-wql",
+      "url": "<% 'data?query=' + string:pathEncode('SELECT role FROM assignableRoles WHERE roleName contains \\':ROLE:\\' AND roleName not contains \\'Organizations and Roles Assignment Administrator\\'') %>",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true"
+    },
+    {
+      "name": "positionsSearch",
+      "baseUrlType": "workday-wql",
+      "url": "<% 'data?query=' + string:pathEncode('SELECT workdayID, position_PositionManagement FROM allPositions WHERE cf_PositionID contains \\'' + instanceListQuery + '\\'') %>",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "deferred": "true",
+      "exclude": "<% empty instanceListQuery %>"
+    }
+  ],
+  "outboundData": {
+    "outboundEndPoints": [
+      {
+        "name": "postAssignableRole",
+        "baseUrlType": "BUSINESS-OBJECT",
+        "url": "/comsAssignableRoles",
+        "httpMethod": "POST",
+        "authType": "sso",
+        "onSend": "<% self.data %>",
+        "values": [
+          {
+            "outboundPath": "status",
+            "value": "Pending ISC Review"
+          },
+          {
+            "outboundPath": "requestedDate",
+            "value": "<% date:now().format('yyyy-MM-dd') %>"
+          },
+          {
+            "outboundPath": "requestedBy.id",
+            "value": "<% selectedWorker.id %>"
+          },
+          {
+            "outboundPath": "referenceId",
+            "value": "<% date:now().format('yyyyMMddHHmmss') %>"
+          },
+          {
+            "outboundPath": "shellOrgCode",
+            "value": "<% !empty(selectedShellOrgId.value) ? selectedShellOrgId.selectedEntries[0].descriptor : '' %>"
+          },
+          {
+            "outboundPath": "active",
+            "value": "<% false %>"
+          },
+          {
+            "outboundPath": "positionWids",
+            "value": "<% positionsList.value.join(',') %>"
+          },
+          {
+            "outboundPath": "workdayRoleId",
+            "value": "<% generatedRoleName.value ?? '' %>"
+          }
+        ]
+      },
+      {
+        "name": "postAuditLog",
+        "baseUrlType": "BUSINESS-OBJECT",
+        "url": "/comsAuditLogs",
+        "httpMethod": "POST",
+        "authType": "sso",
+        "values": [
+          {
+            "outboundPath": "timestamp",
+            "value": "<% date:now().format(\"yyyy-MM-dd'T'HH:mm:ss'Z'\") %>"
+          },
+          {
+            "outboundPath": "objectType",
+            "value": "COMSAssignableRole"
+          },
+          {
+            "outboundPath": "action",
+            "value": "ADD"
+          },
+          {
+            "outboundPath": "worker",
+            "value": "<% selectedWorker.id %>"
+          },
+          {
+            "outboundPath": "application",
+            "value": "<% applicationDropdown.value ?? '' %>"
+          },
+          {
+            "outboundPath": "coReferenceId",
+            "value": "<% generatedRoleName.value ?? '' %>"
+          },
+          {
+            "outboundPath": "coName",
+            "value": "<% !empty(selectedShellOrgId.value) ? selectedShellOrgId.selectedEntries[0].descriptor : (roleName.value ?? '') %>"
+          },
+          {
+            "outboundPath": "details",
+            "value": "<% 'Assignable role request submitted: ' + (generatedRoleName.value ?? '') + ' for org ' + (!empty(selectedShellOrgId.value) ? selectedShellOrgId.selectedEntries[0].descriptor : '') %>"
+          },
+          {
+            "outboundPath": "triggeredBy",
+            "value": "<% selectedWorker.descriptor %>"
+          }
+        ],
+        "failOnStatusCodes": [
+          {
+            "code": 400
+          },
+          {
+            "code": 403
+          },
+          {
+            "code": 429
+          },
+          {
+            "code": 500
+          }
+        ]
+      }
+    ]
+  },
+  "presentation": {
+    "pageType": "edit",
+    "title": {
+      "type": "title",
+      "label": "ECO-COMS: Assignable Role Manager"
+    },
+    "body": {
+      "type": "section",
+      "horizontal": false,
+      "children": [
+        {
+          "type": "section",
+          "horizontal": true,
+          "children": [
+            {
+              "type": "section",
+              "horizontal": false,
+              "children": [
+                {
+                  "type": "button",
+                  "label": "Home",
+                  "taskReference": {
+                    "taskId": "home"
+                  },
+                  "action": "AUXILIARY"
+                }
+              ]
+            }
+          ],
+          "columnWidthRatios": [
+            0.2,
+            0.2,
+            0.2,
+            0.2,
+            0.2
+          ]
+        },
+        {
+          "type": "readOnlyText",
+          "id": "pageDesc",
+          "value": "Manage Assignable Roles for Custom Organizations. Review pending role requests or submit a new role request for ISC review."
+        },
+        {
+          "type": "fieldSet",
+          "id": "pendingRolesSection",
+          "label": "1. Pending ISC Review",
+          "children": [
+            {
+              "type": "readOnlyText",
+              "id": "pendingDesc",
+              "value": "The following Assignable Role requests are awaiting ISC review. Click Maintain to approve or deny a request."
+            },
+            {
+              "type": "grid",
+              "gridType": "LIST",
+              "multiViewStylingEnabled": true,
+              "id": "assignableRolesGrid",
+              "rows": "<% comsAssignableRoles.data.filter(r => { r.status == 'Pending ISC Review' && !r.roleName.startsWith('Organizations and Roles Assignment Administrator') && r.requestedBy.id == selectedWorker.id }) %>",
+              "rowVariableName": "role",
+              "enabled": false,
+              "label": "Pending Assignable Roles",
+              "columns": [
+                {
+                  "type": "column",
+                  "id": "colOrgApp",
+                  "columnId": "colOrgApp",
+                  "label": "Organization / Application",
+                  "sortableAndFilterable": "true",
+                  "cellTemplate": {
+                    "type": "text",
+                    "value": "<% role.shellOrgCode ?? role.application ?? '' %>",
+                    "enabled": false
+                  }
+                },
+                {
+                  "type": "column",
+                  "id": "colRoleName",
+                  "columnId": "colRoleName",
+                  "label": "Role Name",
+                  "sortableAndFilterable": "true",
+                  "cellTemplate": {
+                    "type": "text",
+                    "value": "<% role.roleName ?? '' %>",
+                    "enabled": false
+                  }
+                },
+                {
+                  "type": "column",
+                  "id": "colWdRoleName",
+                  "columnId": "colWdRoleName",
+                  "label": "Generated Workday Role Name",
+                  "cellTemplate": {
+                    "type": "text",
+                    "value": "<% role.workdayRoleId ?? '' %>",
+                    "enabled": false
+                  }
+                },
+                {
+                  "type": "column",
+                  "id": "colStatus",
+                  "columnId": "colStatus",
+                  "label": "Status",
+                  "cellTemplate": {
+                    "type": "text",
+                    "value": "<% role.status ?? '' %>",
+                    "enabled": false
+                  }
+                },
+                {
+                  "type": "column",
+                  "id": "colEnabledFor",
+                  "columnId": "colEnabledFor",
+                  "label": "Enabled For",
+                  "cellTemplate": {
+                    "type": "text",
+                    "value": "<% role.enabledForOrganizationTypes ?? 'Academic Unit - University of British Columbia' %>",
+                    "enabled": false
+                  }
+                },
+                {
+                  "type": "column",
+                  "id": "colEffDate",
+                  "columnId": "colEffDate",
+                  "label": "Effective Date",
+                  "cellTemplate": {
+                    "type": "text",
+                    "value": "<% role.effectiveDate ?? '' %>",
+                    "enabled": false
+                  }
+                },
+                {
+                  "type": "column",
+                  "id": "colPositions",
+                  "columnId": "colPositions",
+                  "label": "Positions / Delegated Roles",
+                  "cellTemplate": {
+                    "type": "text",
+                    "value": "<% empty(role.positions) || empty(positions.data) ? '' : positions.data.filter(p => { role.positions.contains(p.id) }).map(p => { p.descriptor }).join(', ') %>",
+                    "enabled": false
+                  }
+                },
+                {
+                  "type": "column",
+                  "id": "colRequestedBy",
+                  "columnId": "colRequestedBy",
+                  "label": "Requested By",
+                  "cellTemplate": {
+                    "type": "text",
+                    "value": "<% role.requestedBy.descriptor ?? '' %>",
+                    "enabled": false
+                  }
+                },
+                {
+                  "type": "column",
+                  "id": "colRequestedDate",
+                  "columnId": "colRequestedDate",
+                  "label": "Requested Date",
+                  "cellTemplate": {
+                    "type": "text",
+                    "value": "<% role.requestedDate ?? '' %>",
+                    "enabled": false
+                  }
+                },
+                {
+                  "type": "column",
+                  "id": "colActions",
+                  "columnId": "colActions",
+                  "label": "Actions",
+                  "cellTemplate": {
+                    "type": "section",
+                    "horizontal": true,
+                    "children": [
+                      {
+                        "type": "section",
+                        "horizontal": false,
+                        "children": [
+                          {
+                            "type": "button",
+                            "action": "AUXILIARY",
+                            "label": "Maintain",
+                            "taskReference": {
+                              "taskId": "assignableRoleManagerMaintain",
+                              "parameterBindings": {
+                                "roleId": "<% role.id %>",
+                                "roleName": "<% role.roleName %>"
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "fieldSet",
+          "id": "addNewRoleSection",
+          "label": "2. Submit New Assignable Role Request",
+          "children": [
+            {
+              "type": "readOnlyText",
+              "id": "addNewDesc",
+              "value": "Submit a new Assignable Role request. Select the Custom Organization, provide role details and select positions. Once submitted, status will be set to Pending ISC Review."
+            },
+            {
+              "type": "instanceList",
+              "id": "selectedShellOrgId",
+              "label": "Custom Organization",
+              "required": true,
+              "helpText": "Select the Custom Organization this role applies to.",
+              "values": "<% shellOrgPatterns.data.map(org => { {'id': org.organizationByName.id, 'descriptor': org.code, 'workdayID': org.workdayID} }) %>",
+              "onChange": "<%\n            roleName.setValue(null);\n            delegatedRoles.setValue([]);\n            generatedRoleName.setValue('');\n            if (!empty(self.value)) {\n              let orgCode = self.selectedEntries[0].descriptor;\n              let appCode = orgCode.contains('(') ?\n                orgCode.substringAfter('(').substringBefore(')') :\n                (orgCode.substringAfter(':').contains(':') ?\n                  orgCode.substringBefore(':') + ':' + orgCode.substringAfter(':').substringBefore(':') :\n                  orgCode);\n              let matched = shellOrgPatterns.data.filter(o => {\n                let c = o.code;\n                let ac = c.contains('(') ?\n                  c.substringAfter('(').substringBefore(')') :\n                  (c.substringAfter(':').contains(':') ?\n                    c.substringBefore(':') + ':' + c.substringAfter(':').substringBefore(':') :\n                    c);\n                ac == appCode;\n              });\n              if (matched.size() > 0) {\n                applicationDropdown.setValue([matched[0].workdayID]);\n              }\n              let orgMatched = shellOrgPatterns.data.filter(o => { o.code == orgCode });\n              if (orgMatched.size() > 0) {\n                shellOrgWidBinding.setValue(orgMatched[0].workdayID ?? '');\n              }\n            }\n          %>"
+            },
+            {
+              "type": "dropdown",
+              "id": "applicationDropdown",
+              "label": "Application",
+              "visible": false,
+              "valuesOut": [
+                {
+                  "value": "<% self.value[0] %>",
+                  "valueOutBinding": "postAssignableRole.application"
+                }
+              ],
+              "values": "<%\n  let appCodes = [];\n  let result = [];\n  for (var org : shellOrgPatterns.data) {\n    let code = org.code;\n    let appCode = code.contains('(') ?\n      code.substringAfter('(').substringBefore(')') :\n      (code.substringAfter(':').contains(':') ?\n        code.substringBefore(':') + ':' + code.substringAfter(':').substringBefore(':') :\n        code);\n    if (!appCodes.contains(appCode)) {\n      appCodes.add(appCode);\n      result.add({'id': org.workdayID, 'descriptor': appCode});\n    }\n  }\n  result;\n%>"
+            },
+            {
+              "type": "instanceList",
+              "id": "delegatedRoles",
+              "label": "Delegated Roles",
+              "required": false,
+              "multiSelect": true,
+              "values": "<% allShellRoles.data.map(r => { {'id': r.role.id, 'descriptor': r.role.descriptor.substringAfter(':ROLE:')} }) %>",
+              "valuesOut": [
+                {
+                  "value": "<% self.selectedEntries.map(r => { r.descriptor }).join(',') %>",
+                  "valueOutBinding": "postAssignableRole.enabledForOrganizationTypes"
+                }
+              ],
+              "onChange": "<%\n            self.clearError();\n            let orgCode = !empty(selectedShellOrgId.value) ? selectedShellOrgId.selectedEntries[0].descriptor : '';\n            if (!empty(self.value)) {\n              generatedRoleName.setValue(orgCode + ':ROLE:' + self.selectedEntries[0].descriptor);\n            } else if (!empty(roleName.value)) {\n              generatedRoleName.setValue(orgCode + ':ROLE:' + roleName.value);\n            } else {\n              generatedRoleName.setValue('');\n            }\n          %>",
+              "helpText": "Select an existing delegated role, or enter a new one below."
+            },
+            {
+              "type": "text",
+              "id": "roleName",
+              "label": "New Delegated Role",
+              "required": false,
+              "placeholder": "e.g. COORDINATOR",
+              "onChange": "<%\n            let hasExisting = !empty(delegatedRoles.value);\n            if (!hasExisting && empty(self.value)) {\n              self.setError('Enter a new delegated role name or select an existing role above.');\n            } else if (!empty(self.value) && self.value.length() > 100) {\n              self.setError('Role name must be 100 characters or less.');\n            } else if (!empty(self.value)) {\n              let duplicate = !empty(allShellRoles.data) && allShellRoles.data.filter(r => {\n                r.role.descriptor.substringAfter(':ROLE:') == self.value\n              }).size() > 0;\n              if (duplicate) {\n                self.setError('This role name already exists. Select it from Delegated Roles instead.');\n              } else {\n                self.clearError();\n              }\n            } else {\n              self.clearError();\n            }\n            let orgCode = !empty(selectedShellOrgId.value) ? selectedShellOrgId.selectedEntries[0].descriptor : '';\n            if (!empty(self.value)) {\n              generatedRoleName.setValue(orgCode + ':ROLE:' + self.value);\n            } else if (!empty(delegatedRoles.value)) {\n              generatedRoleName.setValue(orgCode + ':ROLE:' + delegatedRoles.selectedEntries[0].descriptor);\n            } else {\n              generatedRoleName.setValue('');\n            }\n          %>",
+              "valuesOut": [
+                {
+                  "value": "<% self.value %>",
+                  "valueOutBinding": "postAssignableRole.roleName"
+                }
+              ],
+              "helpText": "Type in ALL CAPS. Leave blank if selecting an existing role above."
+            },
+            {
+              "type": "text",
+              "id": "generatedRoleName",
+              "label": "Generated Workday Role Name",
+              "required": true,
+              "enabled": false,
+              "value": "<% '' %>",
+              "helpText": "Auto-generated from the selected or entered role name and Custom Organization code.",
+              "valuesOut": [
+                {
+                  "value": "<% self.value %>",
+                  "valueOutBinding": "postAssignableRole.workdayRoleId"
+                },
+                {
+                  "value": "<% self.value %>",
+                  "valueOutBinding": "postAssignableRole.roleName"
+                }
+              ]
+            },
+            {
+              "type": "date",
+              "id": "effectiveDate",
+              "label": "Effective Date",
+              "required": true,
+              "helpText": "Date this assignable role becomes effective.",
+              "valuesOut": [
+                {
+                  "value": "<% self.value %>",
+                  "valueOutBinding": "postAssignableRole.effectiveDate"
+                }
+              ]
+            },
+            {
+              "type": "instanceList",
+              "id": "positionsList",
+              "label": "Positions",
+              "required": true,
+              "multiSelect": true,
+              "values": "<% [] %>",
+              "onChange": "<%\n            if (empty(self.value)) {\n              self.setError('At least one Position is required.');\n            } else {\n              self.clearError();\n            }\n          %>",
+              "valuesOut": [
+                {
+                  "value": "<% self.value.join(',') %>",
+                  "valueOutBinding": "postAssignableRole.positions"
+                }
+              ],
+              "searchEndPoint": "<% endpoints.positionsSearch %>",
+              "searchResultValues": "<% positionsSearch.data %>",
+              "idKey": "workdayID",
+              "displayKey": "position_PositionManagement.descriptor"
+            },
+            {
+              "type": "readOnlyText",
+              "id": "activeNote",
+              "value": "Role Assignment Active status is automatically set based on whether selected positions are filled."
+            },
+            {
+              "type": "hidden",
+              "id": "shellOrgWidBinding",
+              "value": "<% '' %>",
+              "valuesOut": [
+                {
+                  "value": "<% self.value %>",
+                  "valueOutBinding": "postAssignableRole.shellOrgWid"
+                }
+              ]
+            },
+            {
+              "type": "instanceList",
+              "id": "fuhPicker",
+              "label": "Functional Unit Hierarchy",
+              "required": false,
+              "values": "<% [] %>",
+              "onChange": "<%\n            if (!empty(self.value) && !empty(academicUnitPicker.value)) {\n              self.setError('Cannot select both Functional Unit Hierarchy and Academic Unit.');\n            } else {\n              self.clearError();\n              academicUnitPicker.clearError();\n            }\n            enabledForWidBinding.setValue(!empty(self.value) ? self.value[0] : (!empty(academicUnitPicker.value) ? academicUnitPicker.value[0] : ''));\n            enabledForDisplay.setValue(\n              !empty(self.value) ? self.selectedEntries[0].descriptor :\n              (!empty(academicUnitPicker.value) ? academicUnitPicker.selectedEntries[0].descriptor : 'Academic Unit - University of British Columbia')\n            );\n          %>",
+              "valuesOut": [
+                {
+                  "value": "<% self.value[0] ?? '' %>",
+                  "valueOutBinding": "postAssignableRole.enabledForOrganizationTypes"
+                },
+                {
+                  "value": "<% self.value[0] ?? '' %>",
+                  "valueOutBinding": "postAssignableRole.enabledForWid"
+                }
+              ],
+              "multiSelect": false,
+              "onSearch": "<% customOrganizationsFUH.data.filter(o => { o.organization1.descriptor.contains(event.query) }).map(o => { {'id': o.workdayID, 'descriptor': o.organization1.descriptor} }) %>"
+            },
+            {
+              "type": "instanceList",
+              "id": "academicUnitPicker",
+              "label": "Academic Unit",
+              "required": false,
+              "values": "<% [] %>",
+              "onChange": "<%\n            if (!empty(self.value) && !empty(fuhPicker.value)) {\n              self.setError('Cannot select both Academic Unit and Functional Unit Hierarchy.');\n            } else {\n              self.clearError();\n              fuhPicker.clearError();\n            }\n            enabledForWidBinding.setValue(!empty(fuhPicker.value) ? fuhPicker.value[0] : (!empty(self.value) ? self.value[0] : ''));\n            enabledForDisplay.setValue(\n              !empty(fuhPicker.value) ? fuhPicker.selectedEntries[0].descriptor :\n              (!empty(self.value) ? self.selectedEntries[0].descriptor : 'Academic Unit - University of British Columbia')\n            );\n          %>",
+              "valuesOut": [
+                {
+                  "value": "<% self.value[0] ?? '' %>",
+                  "valueOutBinding": "postAssignableRole.enabledForOrganizationTypes"
+                },
+                {
+                  "value": "<% self.value[0] ?? '' %>",
+                  "valueOutBinding": "postAssignableRole.enabledForWid"
+                }
+              ],
+              "multiSelect": false,
+              "onSearch": "<% academicUnits.data.filter(o => { o.academicUnit.descriptor.contains(event.query) }).map(o => { {'id': o.workdayID, 'descriptor': o.academicUnit.descriptor} }) %>"
+            },
+            {
+              "type": "text",
+              "id": "enabledForDisplay",
+              "label": "Enabled For",
+              "enabled": false,
+              "value": "<% 'Academic Unit - University of British Columbia' %>"
+            },
+            {
+              "type": "hidden",
+              "id": "enabledForWidBinding",
+              "value": "<% '' %>",
+              "valuesOut": [
+                {
+                  "value": "<% self.value %>",
+                  "valueOutBinding": "postAssignableRole.enabledForWid"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "footer": {
+      "type": "footer",
+      "children": [
+        {
+          "type": "pod",
+          "podId": "ecoComsFooter"
+        }
+      ]
+    }
+  },
+  "securityDomains": [
+    "ManageCOMSAssignableRoles"
+  ],
+  "include": [
+    "comsValidations.script"
+  ],
+  "onSubmit": "<%\n  let valid = true;\n  if (empty(selectedShellOrgId.value)) {\n    selectedShellOrgId.setError('Please select a Custom Organization.');\n    valid = false;\n  }\n  if (empty(delegatedRoles.value) && empty(roleName.value)) {\n    roleName.setError('Enter a new delegated role name or select an existing role from the Delegated Roles list.');\n    valid = false;\n  }\n  if (empty(generatedRoleName.value)) {\n    generatedRoleName.setError('Generated Workday Role Name is required. Select an org, then select or enter a role.');\n    valid = false;\n  }\n  if (empty(positionsList.value)) {\n    positionsList.setError('At least one Position is required.');\n    valid = false;\n  }\n  valid;\n%>"
+}
