@@ -1,0 +1,195 @@
+var isWeekday = function(inputDate) {
+  let day = inputDate.format('E');
+  day != 'Sat' && day != 'Sun';
+};
+
+var isCurrentOrFutureYear = function(inputDate) {
+  let currentYear = date:now().year();
+  let selectedYear = inputDate.year();
+  selectedYear >= currentYear && selectedYear <= currentYear + 1;
+};
+
+var isValidSubject = function(inputText) {
+  validate:match('[A-Z]{4}', inputText);
+};
+
+var isValidCourse = function(inputText) {
+  validate:match('[A-Z]{4}(_[A-Z])?:[0-9]{3}[A-Z]?', inputText);
+};
+
+var courseEndsWithLetter = function(courseText) {
+  validate:match('[A-Z]{4}(_[A-Z])?:[0-9]{3}[A-Z]', courseText);
+};
+
+var isValidSection = function(sectionText, courseText) {
+  let courseHasLetter = courseEndsWithLetter(courseText);
+  if (courseHasLetter) {
+    validate:match('[A-Z]_[0-9]{3}', sectionText);
+  } else {
+    validate:match('[0-9]{3}', sectionText);
+  }
+};
+
+var isValidAcademicPeriod = function(inputText) {
+  let currentYear = date:now().year();
+  let nextYear = currentYear + 1;
+  validate:match(currentYear + '(S|W1|W2)', inputText) || validate:match(nextYear + '(S|W1|W2)', inputText);
+};
+
+var isDuplicatePattern = function(patternName, patternsData) {
+  patternsData.filter(p => { p.code == patternName }).size() > 0;
+};
+
+var getExistingPatternName = function(patternName, patternsData) {
+  let matches = patternsData.filter(p => { p.code == patternName });
+  matches.size() > 0 ? matches[0].organizationByName.descriptor : '';
+};
+
+var buildPatternName = function(appCode, subjectVal, courseVal, sectionVal, periodVal) {
+  appCode + ':PATTERN:' + (subjectVal ?? '*') + ':' + (courseVal ?? '*') + ':' + (sectionVal ?? '*') + ':' + (periodVal ?? '*');
+};
+
+var parseAppCode = function(orgCode) {
+  orgCode.contains('(') ?
+    orgCode.substringAfter('(').substringBefore(')') :
+    (orgCode.substringAfter(':').contains(':') ?
+      orgCode.substringBefore(':') + ':' + orgCode.substringAfter(':').substringBefore(':') :
+      orgCode);
+};
+
+var errorNoApp = function() {
+  'Please select an Application before entering pattern attributes.';
+};
+
+var errorSubject = function() {
+  'Subject must be exactly 4 uppercase letters only (e.g. MATH, CPSC, COMM).';
+};
+
+var errorCourse = function() {
+  'Course must be 4 uppercase letters followed by a colon and exactly 3 digits, with an optional letter suffix (e.g. COMM:300, COMM:300A, COMM_V:300, COMM_V:300A).';
+};
+
+var errorSection = function(courseText) {
+  let courseHasLetter = courseEndsWithLetter(courseText);
+  if (courseHasLetter) {
+    'Section must be an uppercase letter followed by underscore and 3 digits (e.g. A_900) because Course ends with a letter.';
+  } else {
+    'Section must be exactly 3 digits (e.g. 201).';
+  }
+};
+
+var errorAcademicPeriod = function() {
+  let currentYear = date:now().year();
+  let nextYear = currentYear + 1;
+  'Academic Period must be ' + currentYear + ' or ' + nextYear + ' followed by S, W1, or W2 only (e.g. ' + currentYear + 'S, ' + currentYear + 'W1, ' + nextYear + 'W2).';
+};
+
+var errorWeekday = function() {
+  'Effective Date must be a weekday. Saturdays and Sundays are not allowed.';
+};
+
+var errorYear = function() {
+  let currentYear = date:now().year();
+  let nextYear = currentYear + 1;
+  'Effective Date year must be ' + currentYear + ' or ' + nextYear + '. Past or future years beyond next year are not allowed.';
+};
+
+var errorDuplicate = function(patternName) {
+  'A Shell Org Pattern with this name already exists: ' + patternName + '. Please enter a different pattern.';
+};
+
+var isValidDelegatedRoles = function(selectedEntries, appCode) {
+  if (empty(selectedEntries) || selectedEntries.size() == 0) { true; }
+  else {
+    let invalid = selectedEntries.filter(r => { !r.descriptor.contains(appCode) });
+    invalid.size() == 0;
+  }
+};
+
+var errorDelegatedRoles = function(appCode) {
+  'Selected delegated roles must belong to application ' + appCode + '. Only roles containing ' + appCode + ' in their name are allowed.';
+};
+
+var isValidDenialReason = function(actionValue, reasonValue) {
+  actionValue != 'Deny' || !empty(reasonValue);
+};
+
+var errorDenialReason = function() {
+  'Denial Reason is required when denying a role.';
+};
+
+var isValidApproveRole = function(actionValue, matchCount) {
+  actionValue != 'Approve' || matchCount > 0;
+};
+
+var errorApproveRole = function() {
+  'No matching Workday Assignable Role found. Please use the Create Security Group task in Workday to create a Role-Based Security Group before approving.';
+};
+
+var isDuplicateAAARole = function(requestedRoleName, allAAArolesData) {
+  allAAArolesData.filter(r => { r.role.descriptor == requestedRoleName }).size() > 0;
+};
+
+var errorDuplicateAAARole = function(requestedRoleName) {
+  'This AAA role already exists in Workday: "' + requestedRoleName + '". Please review the existing role before submitting a duplicate request.';
+};
+
+// ─────────────────────────────────────────────────────────────
+// AUDIT LOG HELPER
+// Call this after every successful ADD / MODIFY / DELETE on any BO.
+//
+// Parameters:
+//   objectType    – the BO name: "COMSApplication" | "COMSAssignableRole" |
+//                   "COMSShellOrgRequest" | "COMSRoleAssignment"
+//   action        – "ADD" | "MODIFY" | "DELETE"
+//   worker        – the worker instance the record belongs to (or null)
+//   application   – the linked COMSApplication instance (or null)
+//   coReferenceId – the record's reference ID as a string (or null)
+//   coName        – human-readable name of the record
+//   details       – plain-text description of what changed
+//   triggeredBy   – descriptor of the user who performed the action
+// ─────────────────────────────────────────────────────────────
+var writeAuditLog = function(objectType, action, worker, application, coReferenceId, coName, details, triggeredBy) {
+  let auditRecord = comsAuditLogs.create();
+  auditRecord.timestamp = date:now().format("yyyy-MM-dd'T'HH:mm:ss'Z'");
+  auditRecord.objectType = objectType;
+  auditRecord.action = action;
+  auditRecord.worker = worker;
+  auditRecord.application = application;
+  auditRecord.coReferenceId = coReferenceId ?? '';
+  auditRecord.coName = coName ?? '';
+  auditRecord.details = details ?? '';
+  auditRecord.triggeredBy = triggeredBy ?? '';
+  auditRecord.save();
+};
+
+{
+  "isWeekday": isWeekday,
+  "isCurrentOrFutureYear": isCurrentOrFutureYear,
+  "isValidSubject": isValidSubject,
+  "isValidCourse": isValidCourse,
+  "courseEndsWithLetter": courseEndsWithLetter,
+  "isValidSection": isValidSection,
+  "isValidAcademicPeriod": isValidAcademicPeriod,
+  "isDuplicatePattern": isDuplicatePattern,
+  "getExistingPatternName": getExistingPatternName,
+  "buildPatternName": buildPatternName,
+  "parseAppCode": parseAppCode,
+  "errorNoApp": errorNoApp,
+  "errorSubject": errorSubject,
+  "errorCourse": errorCourse,
+  "errorSection": errorSection,
+  "errorAcademicPeriod": errorAcademicPeriod,
+  "errorWeekday": errorWeekday,
+  "errorYear": errorYear,
+  "errorDuplicate": errorDuplicate,
+  "isValidDelegatedRoles": isValidDelegatedRoles,
+  "errorDelegatedRoles": errorDelegatedRoles,
+  "isValidDenialReason": isValidDenialReason,
+  "errorDenialReason": errorDenialReason,
+  "isValidApproveRole": isValidApproveRole,
+  "errorApproveRole": errorApproveRole,
+  "isDuplicateAAARole": isDuplicateAAARole,
+  "errorDuplicateAAARole": errorDuplicateAAARole,
+  "writeAuditLog": writeAuditLog
+}
