@@ -1,0 +1,10 @@
+{
+  "id": 5,
+  "name": "AuditLogViewer",
+  "label": "Audit Log Viewer",
+  "securityDomains": [
+    "ViewCOMSAuditLog"
+  ],
+  "routePath": "/auditLogViewer",
+  "businessObject": "COMSAuditLog"
+}
