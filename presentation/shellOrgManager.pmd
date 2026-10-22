@@ -1,0 +1,328 @@
+{
+  "id": "shellOrgManager",
+  "securityDomains": [
+    "ManageCOMSShellOrgs"
+  ],
+  "endPoints": [
+    {
+      "name": "selectedWorker",
+      "baseUrlType": "workday-common",
+      "url": "workers/me",
+      "authType": "sso"
+    },
+    {
+      "name": "myAssignments",
+      "baseUrlType": "workday-app",
+      "url": "comsRoleAssignments",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true"
+    },
+    {
+      "name": "shellOrgs",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "url": "<% empty(selectedApplicationId.value) ? '/comsShellOrgRequests?active=true' : '/comsShellOrgRequests?active=true&application=' + selectedApplicationId.value[0] %>",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "exclude": "<% empty(selectedApplicationId.value) %>"
+    }
+  ],
+  "outboundData": {
+    "outboundEndPoints": [
+      {
+        "name": "comsShellOrgRequestsPut",
+        "baseUrlType": "BUSINESS-OBJECT",
+        "url": "<% '/comsShellOrgRequests/' + comsShellOrgRequestsPut.id %>",
+        "httpMethod": "PUT",
+        "authType": "sso",
+        "onSend": "<% self.data %>",
+        "values": [
+          {
+            "outboundPath": "status",
+            "value": "<% comsShellOrgRequestsPut.status %>"
+          }
+        ]
+      },
+      {
+        "name": "comsAuditLogsPost",
+        "baseUrlType": "BUSINESS-OBJECT",
+        "url": "comsAuditLogs",
+        "httpMethod": "POST",
+        "authType": "sso",
+        "onSend": "<% return self.data; %>",
+        "values": [
+          {
+            "outboundPath": "worker.id",
+            "value": "<% selectedWorker.id %>"
+          },
+          {
+            "outboundPath": "action",
+            "value": "INACTIVATE"
+          },
+          {
+            "outboundPath": "application.id",
+            "value": "<% selectedApplicationId.value[0] %>"
+          },
+          {
+            "outboundPath": "triggeredBy",
+            "value": "<% selectedWorker.descriptor %>"
+          },
+          {
+            "outboundPath": "details",
+            "value": "Status changed via Shell Org Manager"
+          }
+        ]
+      }
+    ]
+  },
+  "presentation": {
+    "headerSize": "VPS_DEFAULT",
+    "title": {
+      "type": "title",
+      "label": "ECO-COMS: Shell Org Manager",
+      "enabled": false
+    },
+    "body": {
+      "type": "areaLayout",
+      "primaryArea": [
+        {
+          "type": "richText",
+          "id": "ubcPageHeader",
+          "value": "<span style=\"color:#002145;font-size:11px;font-weight:700;letter-spacing:1px;\">UNIVERSITY OF BRITISH COLUMBIA \u2014 SHELL ORG MANAGER</span>"
+        },
+        {
+          "type": "section",
+          "horizontal": false,
+          "children": [
+            {
+              "type": "section",
+              "horizontal": true,
+              "children": [
+                {
+                  "type": "section",
+                  "horizontal": false,
+                  "children": [
+                    {
+                      "type": "button",
+                      "label": "Add Pattern",
+                      "taskReference": {
+                        "taskId": "newShellOrgPattern"
+                      },
+                      "action": "PRIMARY"
+                    }
+                  ]
+                },
+                {
+                  "type": "section",
+                  "horizontal": false,
+                  "children": [
+                    {
+                      "type": "button",
+                      "label": "Home",
+                      "taskReference": {
+                        "taskId": "home"
+                      },
+                      "action": "AUXILIARY"
+                    }
+                  ]
+                }
+              ],
+              "columnWidthRatios": [
+                0.17,
+                0.17,
+                0.17,
+                0.17,
+                0.17,
+                0.17
+              ]
+            },
+            {
+              "type": "fieldSet",
+              "id": "aboutFieldSet",
+              "label": "About this page",
+              "collapsible": true,
+              "children": [
+                {
+                  "type": "readOnlyText",
+                  "id": "pageDescriptionText",
+                  "value": "View, add and inactivate Custom Organization shell org patterns for your assigned application. You will only see and be able to manage shell organizations of the org type and subtype defined for your application (e.g. X:CLW / X:Shell for Clockwork). You cannot see or affect other applications' shell organizations. To inactivate a pattern, change its Status to Inactive and save. Edit of other fields is intentionally disabled; add a new pattern instead if the meaning needs to change."
+                }
+              ]
+            },
+            {
+              "type": "dropdown",
+              "id": "selectedApplicationId",
+              "label": "Application Context",
+              "required": true,
+              "instanceListLoopTag": {
+                "id": "selectedApplicationIdList",
+                "type": "instanceLoop",
+                "templateInstance": {
+                  "id": "<% assignment.application.id %>",
+                  "descriptor": "<% assignment.application.descriptor %>"
+                },
+                "on": "<% myAssignments.data %>",
+                "as": "assignment"
+              },
+              "helpText": "Select the application you are provisioned to manage. This list is derived from your active COMS Role Assignments (see Admin Provisioning)."
+            }
+          ]
+        },
+        {
+          "type": "grid",
+          "gridType": "LIST",
+          "multiViewStylingEnabled": true,
+          "id": "ShellOrgsGrid",
+          "rows": "<% empty(selectedApplicationId.value) ? [] : (shellOrgs.data ?? []) %>",
+          "rowVariableName": "shellOrg",
+          "enabled": true,
+          "label": "Shell Organizations",
+          "columns": [
+            {
+              "type": "column",
+              "id": "columnCoReferenceId",
+              "columnId": "columnCoReferenceId",
+              "label": "CO ID",
+              "cellTemplate": {
+                "type": "text",
+                "value": "<% shellOrg.coReferenceId %>",
+                "enabled": false,
+                "id": "shellOrgRequestIdHidden",
+                "valuesOut": [
+                  {
+                    "value": "<% shellOrg.id %>",
+                    "valueOutBinding": "comsShellOrgRequestsPut.id"
+                  },
+                  {
+                    "value": "<% shellOrg.coReferenceId %>",
+                    "valueOutBinding": "comsAuditLogsPost.coReferenceId"
+                  },
+                  {
+                    "value": "<% shellOrg.coName %>",
+                    "valueOutBinding": "comsAuditLogsPost.coName"
+                  }
+                ]
+              },
+              "sortableAndFilterable": "true"
+            },
+            {
+              "type": "column",
+              "id": "columnCoName",
+              "columnId": "columnCoName",
+              "label": "CO Name (Pattern String)",
+              "cellTemplate": {
+                "type": "text",
+                "value": "<% shellOrg.coName %>",
+                "enabled": false
+              },
+              "sortableAndFilterable": "true"
+            },
+            {
+              "type": "column",
+              "id": "columnAttr1",
+              "columnId": "columnAttr1",
+              "label": "Academic Unit",
+              "cellTemplate": {
+                "type": "text",
+                "value": "<% shellOrg.attribute1 %>",
+                "enabled": false
+              },
+              "sortableAndFilterable": "true"
+            },
+            {
+              "type": "column",
+              "id": "columnAttr2",
+              "columnId": "columnAttr2",
+              "label": "Subject",
+              "cellTemplate": {
+                "type": "text",
+                "value": "<% shellOrg.attribute2 %>",
+                "enabled": false
+              },
+              "sortableAndFilterable": "true"
+            },
+            {
+              "type": "column",
+              "id": "columnAttr3",
+              "columnId": "columnAttr3",
+              "label": "Course",
+              "cellTemplate": {
+                "type": "text",
+                "value": "<% shellOrg.attribute3 %>",
+                "enabled": false
+              },
+              "sortableAndFilterable": "true"
+            },
+            {
+              "type": "column",
+              "id": "columnAttr4",
+              "columnId": "columnAttr4",
+              "label": "Section",
+              "cellTemplate": {
+                "type": "text",
+                "value": "<% shellOrg.attribute4 %>",
+                "enabled": false
+              },
+              "sortableAndFilterable": "true"
+            },
+            {
+              "type": "column",
+              "id": "columnAttr5",
+              "columnId": "columnAttr5",
+              "label": "Academic Period",
+              "cellTemplate": {
+                "type": "text",
+                "value": "<% shellOrg.attribute5 %>",
+                "enabled": false
+              },
+              "sortableAndFilterable": "true"
+            },
+            {
+              "type": "column",
+              "id": "columnStatus",
+              "columnId": "columnStatus",
+              "label": "Status",
+              "cellTemplate": {
+                "type": "dropdown",
+                "valuesOut": [
+                  {
+                    "value": "<% self.selectedValues[0] %>",
+                    "valueOutBinding": "comsShellOrgRequestsPut.status"
+                  },
+                  {
+                    "value": "<% self.selectedValues[0] %>",
+                    "valueOutBinding": "comsAuditLogsPost.action"
+                  }
+                ],
+                "values": "<% [{'id':'Active','name':'Active'},{'id':'Inactive','name':'Inactive'}] %>",
+                "idKey": "id",
+                "displayKey": "name",
+                "selectedValues": "<% list:toList(shellOrg.status) %>"
+              },
+              "sortableAndFilterable": "true"
+            }
+          ]
+        },
+        {
+          "type": "readOnlyText",
+          "id": "saveNote",
+          "value": "Important: changing Status to Inactive does not automatically remove any Workday role assignments that reference this shell organization. Verify in Workday (Get_Assign_User_Based_Security_Groups) that no active role assignment uses this Custom Organization before inactivating, otherwise the meaning of that assignment may become unclear."
+        }
+      ]
+    },
+    "footer": {
+      "type": "footer",
+      "children": [
+        {
+          "type": "pod",
+          "podId": "ecoComsFooter"
+        }
+      ]
+    },
+    "pageType": "view"
+  },
+  "include": [
+    "comsCardGenerator.script"
+  ]
+}
