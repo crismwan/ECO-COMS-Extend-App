@@ -12,43 +12,69 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Get Workday OAuth token
+      - name: Get Workday OAuth token (Developer Site)
         id: auth
         run: |
-          TOKEN_RESPONSE=$(curl -s -X POST "${{ secrets.WD_TOKEN_ENDPOINT }}" \
+          TENANT=$(echo "${{ secrets.WD_EXTEND_ENDPOINT }}" | grep -oP '(?<=/v1/)[^/]+')
+          echo "Tenant: ${TENANT}"
+
+          # Try Developer Site client_credentials flow (for api.workday.com/extend)
+          AUTH_HEADER=$(echo -n "${{ secrets.WD_CLIENT_ID }}:${{ secrets.WD_CLIENT_SECRET }}" | base64 -w 0)
+          TOKEN_RESPONSE=$(curl -s -X POST "https://auth.api.workday.com/v1/token" \
+            -H "Authorization: ID ${AUTH_HEADER}" \
             -H "Content-Type: application/x-www-form-urlencoded" \
-            -d "grant_type=refresh_token" \
-            -d "client_id=${{ secrets.WD_CLIENT_ID }}" \
-            -d "client_secret=${{ secrets.WD_CLIENT_SECRET }}" \
-            -d "refresh_token=${{ secrets.WD_REFRESH_TOKEN }}")
+            -d "grant_type=client_credentials" \
+            -d "tenant_alias=${TENANT}")
+          echo "DevSite token response: ${TOKEN_RESPONSE}"
 
-          ACCESS_TOKEN=$(echo $TOKEN_RESPONSE | jq -r '.access_token')
+          ACCESS_TOKEN=$(echo ${TOKEN_RESPONSE} | jq -r '.access_token // empty')
 
-          if [ -z "$ACCESS_TOKEN" ] || [ "$ACCESS_TOKEN" == "null" ]; then
-            echo "Failed to get access token: $TOKEN_RESPONSE"
-            exit 1
+          if [ -z "${ACCESS_TOKEN}" ]; then
+            echo "DevSite auth failed, trying tenant refresh_token..."
+            TOKEN_RESPONSE2=$(curl -s -X POST "${{ secrets.WD_TOKEN_ENDPOINT }}" \
+              -H "Content-Type: application/x-www-form-urlencoded" \
+              -d "grant_type=refresh_token" \
+              -d "client_id=${{ secrets.WD_CLIENT_ID }}" \
+              -d "client_secret=${{ secrets.WD_CLIENT_SECRET }}" \
+              -d "refresh_token=${{ secrets.WD_REFRESH_TOKEN }}")
+            ACCESS_TOKEN=$(echo ${TOKEN_RESPONSE2} | jq -r '.access_token // empty')
+            if [ -z "${ACCESS_TOKEN}" ]; then
+              echo "Both auth methods failed"
+              echo "Tenant response: ${TOKEN_RESPONSE2}"
+              exit 1
+            fi
+            echo "auth_type=tenant" >> $GITHUB_OUTPUT
+          else
+            echo "auth_type=devsite" >> $GITHUB_OUTPUT
           fi
 
-          echo "access_token=$ACCESS_TOKEN" >> $GITHUB_OUTPUT
-          echo "Got access token"
+          echo "access_token=${ACCESS_TOKEN}" >> $GITHUB_OUTPUT
+          echo "tenant=${TENANT}" >> $GITHUB_OUTPUT
+          echo "Got access token via $(cat $GITHUB_OUTPUT | grep auth_type | cut -d= -f2)"
 
       - name: Get latest app version ID
         id: version
         run: |
-          TENANT=$(echo "${{ secrets.WD_EXTEND_ENDPOINT }}" | grep -oP '(?<=/v1/)[^/]+')
-          EXTEND_BASE="https://api.workday.com/api/extend/v1/${TENANT}"
+          TENANT="${{ steps.auth.outputs.tenant }}"
+          AUTH_TYPE="${{ steps.auth.outputs.auth_type }}"
+          TOKEN="${{ steps.auth.outputs.access_token }}"
+
+          if [ "${AUTH_TYPE}" = "devsite" ]; then
+            EXTEND_BASE="https://api.workday.com/api/extend/v1/${TENANT}"
+          else
+            EXTEND_BASE=$(echo "${{ secrets.WD_EXTEND_ENDPOINT }}" | sed 's|/api/v1/|/api/extend/v1/|')
+          fi
           echo "Using Extend base: ${EXTEND_BASE}"
 
           VERSIONS_RESPONSE=$(curl -s \
             "${EXTEND_BASE}/apps/${{ secrets.WD_APP_ID }}/versions?limit=1" \
-            -H "Authorization: Bearer ${{ steps.auth.outputs.access_token }}")
+            -H "Authorization: Bearer ${TOKEN}")
 
           echo "VERSIONS_RESPONSE=${VERSIONS_RESPONSE}"
           VERSION_ID=$(echo ${VERSIONS_RESPONSE} | jq -r '.data[0].id // .versions[0].id // empty')
 
           if [ -z "${VERSION_ID}" ]; then
-            echo "Could not find version ID. Full response:"
-            echo ${VERSIONS_RESPONSE}
+            echo "Could not find version ID"
             exit 1
           fi
 
