@@ -1,0 +1,13 @@
+{
+  "id": "workers",
+  "responseCode": 200,
+  "responseBody": {
+    "data": [
+      {"id": "3aa5550b7fe348b98d7b5741afc65534", "descriptor": "Lawrence Chen"},
+      {"id": "d4000000000000000000000000000010", "descriptor": "Anne Kim"},
+      {"id": "f6000000000000000000000000000030", "descriptor": "Priya Nair"},
+      {"id": "e5000000000000000000000000000020", "descriptor": "Robert Liu"}
+    ],
+    "total": 4
+  }
+}
