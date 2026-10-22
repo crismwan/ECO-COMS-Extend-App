@@ -1,0 +1,94 @@
+{
+  "id": "home",
+  "presentation": {
+    "body": {
+      "type": "hub",
+      "label": "ECO-COMS",
+      "icon": "wd-accent-worksheets",
+      "initialTask": {
+        "taskId": "hubLanding"
+      },
+      "navigationTasks": [
+        {
+          "type": "item",
+          "task": {
+            "taskId": "hubLanding"
+          },
+          "label": "Home",
+          "icon": "wd-accent-worksheets"
+        },
+        {
+          "type": "item",
+          "task": {
+            "taskId": "shellOrgManager"
+          },
+          "label": "Shell Org Manager",
+          "icon": "wd-accent-org"
+        },
+        {
+          "type": "item",
+          "task": {
+            "taskId": "assignableRoleManagerView"
+          },
+          "label": "Assignable Role Manager",
+          "icon": "wd-accent-role"
+        },
+        {
+          "type": "item",
+          "task": {
+            "taskId": "iscRoleRequestsView"
+          },
+          "label": "Pending ISC Requests",
+          "icon": "wd-accent-clipboard-checklist"
+        },
+        {
+          "type": "item",
+          "task": {
+            "taskId": "adminProvisioningView"
+          },
+          "label": "Admin Provisioning",
+          "icon": "wd-accent-security"
+        },
+        {
+          "type": "item",
+          "task": {
+            "taskId": "auditLogViewer"
+          },
+          "label": "Audit Log",
+          "icon": "wd-accent-history"
+        }
+      ],
+      "additionalLinks": {
+        "title": "Quick Actions",
+        "links": [
+          {
+            "type": "task",
+            "label": "Add Pattern",
+            "task": {
+              "taskId": "newShellOrgPattern"
+            }
+          },
+          {
+            "type": "task",
+            "label": "New Role Request",
+            "task": {
+              "taskId": "assignableRoleManager"
+            }
+          }
+        ]
+      }
+    },
+    "footer": {
+      "type": "footer",
+      "children": [
+        {
+          "type": "pod",
+          "podId": "ecoComsFooter"
+        }
+      ]
+    }
+  },
+  "securityDomains": [
+    "ManageCOMSShellOrgs"
+  ]
+}
