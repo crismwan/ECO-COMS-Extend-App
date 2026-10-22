@@ -1,0 +1,220 @@
+{
+  "id": 5,
+  "name": "COMSAssignableRole",
+  "label": "COMS Assignable Role",
+  "defaultSecurityDomains": [
+    "ManageCOMSAssignableRoles"
+  ],
+  "defaultCollection": {
+    "name": "comsAssignableRoles",
+    "label": "COMS Assignable Roles"
+  },
+  "fields": [
+    {
+      "id": 1,
+      "name": "referenceId",
+      "label": "Reference ID",
+      "type": "TEXT",
+      "isReferenceId": true
+    },
+    {
+      "id": 2,
+      "name": "roleName",
+      "label": "Role Name",
+      "type": "TEXT"
+    },
+    {
+      "id": 4,
+      "name": "application",
+      "label": "Application Code",
+      "type": "TEXT"
+    },
+    {
+      "id": 5,
+      "name": "orgType",
+      "label": "Org Type",
+      "type": "TEXT"
+    },
+    {
+      "id": 6,
+      "name": "enabledForCompany",
+      "label": "Enabled For Company",
+      "type": "BOOLEAN"
+    },
+    {
+      "id": 7,
+      "name": "enabledForCompanyHierarchy",
+      "label": "Enabled For Company Hierarchy",
+      "type": "BOOLEAN"
+    },
+    {
+      "id": 8,
+      "name": "status",
+      "label": "Status",
+      "type": "TEXT"
+    },
+    {
+      "id": 9,
+      "name": "workdayRoleId",
+      "label": "Workday Role ID",
+      "type": "TEXT"
+    },
+    {
+      "id": 10,
+      "name": "requestedBy",
+      "label": "Requested By",
+      "type": "SINGLE_INSTANCE",
+      "target": "WORKER",
+      "secureByTarget": false
+    },
+    {
+      "id": 11,
+      "name": "requestedDate",
+      "label": "Requested Date",
+      "type": "DATE",
+      "precision": "DAY"
+    },
+    {
+      "id": 12,
+      "name": "approvedBy",
+      "label": "Approved By",
+      "type": "SINGLE_INSTANCE",
+      "target": "WORKER",
+      "secureByTarget": false
+    },
+    {
+      "id": 13,
+      "name": "approvedDate",
+      "label": "Approved Date",
+      "type": "DATE",
+      "precision": "DAY"
+    },
+    {
+      "id": 14,
+      "name": "iscTicketReference",
+      "label": "ISC Ticket Reference",
+      "type": "TEXT"
+    },
+    {
+      "id": 15,
+      "name": "notes",
+      "label": "Notes",
+      "type": "TEXT"
+    },
+    {
+      "id": 16,
+      "name": "shellOrgCode",
+      "label": "Shell Org Pattern Code",
+      "type": "TEXT"
+    },
+    {
+      "id": 17,
+      "name": "denialReason",
+      "label": "Denial Reason",
+      "type": "TEXT"
+    },
+    {
+      "id": 18,
+      "name": "positions",
+      "label": "Positions",
+      "type": "TEXT"
+    },
+    {
+      "id": 19,
+      "name": "active",
+      "label": "Active",
+      "type": "BOOLEAN"
+    },
+    {
+      "id": 20,
+      "name": "workdayAssignableRole",
+      "label": "Workday Assignable Role ID",
+      "type": "TEXT"
+    },
+    {
+      "id": 21,
+      "name": "shellOrgWid",
+      "label": "Shell Org Workday ID",
+      "type": "TEXT"
+    },
+    {
+      "id": 22,
+      "name": "positionWids",
+      "label": "Position Workday IDs",
+      "type": "TEXT"
+    },
+    {
+      "id": 23,
+      "name": "enabledForOrganizationTypes",
+      "label": "Enabled For Organization Types",
+      "type": "TEXT"
+    },
+    {
+      "id": 24,
+      "name": "functionalUnitHierarchyWid",
+      "label": "Functional Unit Hierarchy WID",
+      "type": "TEXT"
+    },
+    {
+      "id": 34,
+      "name": "functionalUnitDescription",
+      "label": "Functional Unit Description",
+      "type": "TEXT"
+    },
+    {
+      "id": 25,
+      "name": "effectiveDate",
+      "label": "Effective Date",
+      "type": "DATE",
+      "precision": "DAY"
+    },
+    {
+      "id": 26,
+      "name": "academicUnitWid",
+      "label": "Academic Unit WID",
+      "type": "TEXT"
+    },
+    {
+      "id": 35,
+      "name": "academicUnitDescription",
+      "label": "Academic Unit Description",
+      "type": "TEXT"
+    },
+    {
+      "id": 27,
+      "name": "enabledForWid",
+      "label": "Enabled For Workday ID",
+      "type": "TEXT"
+    },
+    {
+      "id": 28,
+      "name": "workersAssigned",
+      "label": "Workers Assigned",
+      "type": "TEXT"
+    },
+    {
+      "id": 29,
+      "name": "positionRestrictions",
+      "label": "Position Restrictions",
+      "type": "TEXT"
+    },
+    {
+      "id": 31,
+      "name": "workdayPositionId",
+      "label": "Workday Position ID",
+      "type": "TEXT"
+    },
+    {
+      "id": 32,
+      "name": "positionIsFilled",
+      "label": "Position Is Filled",
+      "type": "BOOLEAN"
+    },
+    {
+      "id": 33,
+      "name": "organizationRoleAssignments",
+      "label": "Organization - Role Assignments",
+      "type": "TEXT"
+    }
+  ]
+}
