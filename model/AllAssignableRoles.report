@@ -1,0 +1,20 @@
+{
+  "id": 2,
+  "name": "AllAssignableRoles",
+  "label": "All Shell Organization Assignable Roles",
+    "businessObject": "COMSAssignableRole",
+    "defaultSecurityDomains": ["ManageCOMSAssignableRoles"],
+    "sortConfigs": [
+      { "id": 1, "order": "a", "field": "roleName", "direction": "ASCENDING" }
+    ],
+    "columns": [
+      { "id": 1, "name": "Role Name",                      "order": "a", "field": "roleName" },
+      { "id": 2, "name": "Enabled For Organization Types", "order": "b", "field": "enabledForOrganizationTypes" },
+      { "id": 3, "name": "Organization - Role Assignments","order": "c", "field": "organizationRoleAssignments" },
+      { "id": 4, "name": "Workers Assigned",               "order": "d", "field": "workersAssigned" },
+      { "id": 5, "name": "Position Restrictions",          "order": "e", "field": "positionRestrictions" },
+      { "id": 6, "name": "Shell Org Code",                 "order": "f", "field": "shellOrgCode" },
+      { "id": 7, "name": "Active",                         "order": "g", "field": "active" },
+      { "id": 8, "name": "Status",                         "order": "h", "field": "status" }
+  ]
+}
