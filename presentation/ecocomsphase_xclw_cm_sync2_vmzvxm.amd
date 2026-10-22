@@ -1,0 +1,219 @@
+{
+  "appProperties": [],
+  "flowDefinitions": [
+    {
+      "id": "newShellOrgPatternFlow",
+      "flowSteps": [
+        {
+          "id": "newShellOrgPatternStep",
+          "taskId": "newShellOrgPattern",
+          "startsFlow": true,
+          "transitions": [
+            {
+              "order": "a",
+              "value": "newShellOrgPatternConfirmStep",
+              "condition": "true"
+            }
+          ]
+        },
+        {
+          "id": "newShellOrgPatternConfirmStep",
+          "taskId": "newShellOrgPatternConfirm",
+          "transitions": [
+            {
+              "order": "a",
+              "value": "newShellOrgPatternSuccessStep",
+              "condition": "true"
+            }
+          ]
+        },
+        {
+          "id": "newShellOrgPatternSuccessStep",
+          "taskId": "newShellOrgPatternSuccess",
+          "endsFlow": true
+        }
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "id": "home",
+      "routingPattern": "/",
+      "page": {
+        "id": "home"
+      }
+    },
+    {
+      "id": "hubLanding",
+      "routingPattern": "/hubLanding",
+      "page": {
+        "id": "hubLanding"
+      }
+    },
+    {
+      "id": "adminProvisioning",
+      "routingPattern": "/adminProvisioning",
+      "page": {
+        "id": "adminProvisioning"
+      }
+    },
+    {
+      "id": "shellOrgManager",
+      "routingPattern": "/shellOrgManager",
+      "page": {
+        "id": "shellOrgManager"
+      }
+    },
+    {
+      "id": "auditLogViewer",
+      "routingPattern": "/auditLogViewer",
+      "page": {
+        "id": "auditLogViewer"
+      }
+    },
+    {
+      "id": "errorPage",
+      "routingPattern": "/errorPage",
+      "page": {
+        "id": "errorPage"
+      }
+    },
+    {
+      "id": "assignableRoleManager",
+      "routingPattern": "/assignableRoleManager",
+      "page": {
+        "id": "assignableRoleManager"
+      }
+    },
+    {
+      "id": "newShellOrgPattern",
+      "routingPattern": "/newShellOrgPattern",
+      "page": {
+        "id": "newShellOrgPattern"
+      }
+    },
+    {
+      "id": "newShellOrgPatternConfirm",
+      "routingPattern": "/newShellOrgPatternConfirm",
+      "page": {
+        "id": "newShellOrgPatternConfirm"
+      }
+    },
+    {
+      "id": "newShellOrgPatternSuccess",
+      "routingPattern": "/newShellOrgPatternSuccess",
+      "page": {
+        "id": "newShellOrgPatternSuccess"
+      }
+    },
+    {
+      "id": "assignableRoleManagerMaintain",
+      "routingPattern": "/assignableRoleManagerMaintain",
+      "page": {
+        "id": "assignableRoleManagerMaintain"
+      }
+    },
+    {
+      "id": "iscErrorPage",
+      "routingPattern": "/iscErrorPage",
+      "page": {
+        "id": "iscErrorPage"
+      }
+    },
+    {
+      "id": "deleteAssignableRole",
+      "routingPattern": "/deleteAssignableRole",
+      "page": {
+        "id": "deleteAssignableRole"
+      }
+    },
+    {
+      "id": "iscRoleRequestsView",
+      "routingPattern": "/iscRoleRequestsView",
+      "page": {
+        "id": "iscRoleRequestsView"
+      }
+    },
+    {
+      "id": "assignableRoleManagerView",
+      "routingPattern": "/assignableRoleManagerView",
+      "page": {
+        "id": "assignableRoleManagerView"
+      }
+    },
+    {
+      "id": "adminProvisioningView",
+      "routingPattern": "/adminProvisioningView",
+      "page": {
+        "id": "adminProvisioningView"
+      }
+    }
+  ],
+  "applicationId": "ecocomsphase_xclw_cm_sync2_vmzvxm",
+  "dataProviders": [
+    {
+      "key": "BUSINESS-OBJECT",
+      "value": "<% `https://api.workday.com/apps/{{site.applicationId}}/v1` %>"
+    },
+    {
+      "key": "COMMON",
+      "value": "https://api.workday.com/common/v1"
+    },
+    {
+      "key": "workday-app",
+      "value": "<% `{{apiGatewayEndpoint}}/apps/{{site.applicationId}}/v1/` %>"
+    },
+    {
+      "key": "workday-common",
+      "value": "<% `{{apiGatewayEndpoint}}/common/v1/` %>"
+    },
+    {
+      "key": "workday-staffing",
+      "value": "<% `{{apiGatewayEndpoint}}/staffing/v1/` %>"
+    },
+    {
+      "key": "workday-orchestrate",
+      "value": "<% `{{apiGatewayEndpoint}}/orchestrate/v1/` %>"
+    },
+    {
+      "key": "workday-wql",
+      "value": "<% `{{apiGatewayEndpoint}}/wql/v1/` %>"
+    },
+    {
+      "key": "orchestrate",
+      "value": "<% `{{apiGatewayEndpoint}}/orchestrate/v1/apps/{{site.applicationId}}/orchestrations/` %>"
+    },
+    {
+      "key": "workday-bp",
+      "value": "<% `{{apiGatewayEndpoint}}/businessProcess/v1/` %>"
+    },
+    {
+      "key": "wdayCom",
+      "value": "<% `{{apiGatewayEndpoint}}/staffing/v1` %>"
+    },
+    {
+      "key": "wdayRef",
+      "value": "<% `{{apiGatewayEndpoint}}/referenceData/v1` %>"
+    },
+    {
+      "key": "orchestration",
+      "value": "<% apiGatewayEndpoint + '/orchestrate/v1/apps/' + site.applicationId + '/orchestrations' %>"
+    },
+    {
+      "key": "workday-staffing-v6",
+      "value": "<% `{{apiGatewayEndpoint}}/staffing/v6/` %>"
+    },
+    {
+      "key": "workday-academic",
+      "value": "<% `{{apiGatewayEndpoint}}/studentAcademicFoundation/v1/` %>"
+    },
+    {
+      "key": "workday-org",
+      "value": "<% `{{apiGatewayEndpoint}}/common/v1/` %>"
+    },
+    {
+      "key": "workday-staffing-v7",
+      "value": "<% `{{apiGatewayEndpoint}}/staffing/v7/` %>"
+    }
+  ]
+}
