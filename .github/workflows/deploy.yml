@@ -12,84 +12,129 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Get Workday OAuth token (Developer Site)
+      - name: Get Workday Developer OAuth token
         id: auth
         run: |
-          TENANT=$(echo "${{ secrets.WD_EXTEND_ENDPOINT }}" | grep -oP '(?<=/v1/)[^/]+')
-          echo "Tenant: ${TENANT}"
-
-          # Try Developer Site client_credentials flow (for api.workday.com/extend)
-          AUTH_HEADER=$(echo -n "${{ secrets.WD_CLIENT_ID }}:${{ secrets.WD_CLIENT_SECRET }}" | base64 -w 0)
           TOKEN_RESPONSE=$(curl -s -X POST "https://auth.api.workday.com/v1/token" \
-            -H "Authorization: ID ${AUTH_HEADER}" \
             -H "Content-Type: application/x-www-form-urlencoded" \
-            -d "grant_type=client_credentials" \
-            -d "tenant_alias=${TENANT}")
-          echo "DevSite token response: ${TOKEN_RESPONSE}"
+            -u "${{ secrets.WD_CLIENT_ID }}:${{ secrets.WD_CLIENT_SECRET }}" \
+            -d "grant_type=client_credentials")
 
-          ACCESS_TOKEN=$(echo ${TOKEN_RESPONSE} | jq -r '.access_token // empty')
+          echo "Token response: ${TOKEN_RESPONSE}"
+          ACCESS_TOKEN=$(echo "${TOKEN_RESPONSE}" | jq -r '.access_token // empty')
 
           if [ -z "${ACCESS_TOKEN}" ]; then
-            echo "DevSite auth failed, trying tenant refresh_token..."
-            TOKEN_RESPONSE2=$(curl -s -X POST "${{ secrets.WD_TOKEN_ENDPOINT }}" \
-              -H "Content-Type: application/x-www-form-urlencoded" \
-              -d "grant_type=refresh_token" \
-              -d "client_id=${{ secrets.WD_CLIENT_ID }}" \
-              -d "client_secret=${{ secrets.WD_CLIENT_SECRET }}" \
-              -d "refresh_token=${{ secrets.WD_REFRESH_TOKEN }}")
-            ACCESS_TOKEN=$(echo ${TOKEN_RESPONSE2} | jq -r '.access_token // empty')
-            if [ -z "${ACCESS_TOKEN}" ]; then
-              echo "Both auth methods failed"
-              echo "Tenant response: ${TOKEN_RESPONSE2}"
-              exit 1
-            fi
-            echo "auth_type=tenant" >> $GITHUB_OUTPUT
-          else
-            echo "auth_type=devsite" >> $GITHUB_OUTPUT
-          fi
-
-          echo "access_token=${ACCESS_TOKEN}" >> $GITHUB_OUTPUT
-          echo "tenant=${TENANT}" >> $GITHUB_OUTPUT
-          echo "Got access token via $(cat $GITHUB_OUTPUT | grep auth_type | cut -d= -f2)"
-
-      - name: Get latest app version ID
-        id: version
-        run: |
-          TENANT="${{ steps.auth.outputs.tenant }}"
-          AUTH_TYPE="${{ steps.auth.outputs.auth_type }}"
-          TOKEN="${{ steps.auth.outputs.access_token }}"
-
-          if [ "${AUTH_TYPE}" = "devsite" ]; then
-            EXTEND_BASE="https://api.workday.com/api/extend/v1/${TENANT}"
-          else
-            EXTEND_BASE=$(echo "${{ secrets.WD_EXTEND_ENDPOINT }}" | sed 's|/api/v1/|/api/extend/v1/|')
-          fi
-          echo "Using Extend base: ${EXTEND_BASE}"
-
-          VERSIONS_RESPONSE=$(curl -s \
-            "${EXTEND_BASE}/apps/${{ secrets.WD_APP_ID }}/versions?limit=1" \
-            -H "Authorization: Bearer ${TOKEN}")
-
-          echo "VERSIONS_RESPONSE=${VERSIONS_RESPONSE}"
-          VERSION_ID=$(echo ${VERSIONS_RESPONSE} | jq -r '.data[0].id // .versions[0].id // empty')
-
-          if [ -z "${VERSION_ID}" ]; then
-            echo "Could not find version ID"
+            echo "Developer OAuth failed. Response: ${TOKEN_RESPONSE}"
             exit 1
           fi
 
-          echo "version_id=${VERSION_ID}" >> $GITHUB_OUTPUT
-          echo "extend_base=${EXTEND_BASE}" >> $GITHUB_OUTPUT
-          echo "Latest version: ${VERSION_ID}"
+          echo "Got Developer access token"
+          echo "access_token=${ACCESS_TOKEN}" >> $GITHUB_OUTPUT
 
-      - name: Deploy to Workday sandbox
+      - name: Get latest version and build
+        id: build
+        env:
+          APP_ID: cfd75927b808c1dd99c54b1c7096a142
+          APPHUB_BASE: https://api.us.wcp.workday.com/apphub/v1
         run: |
-          DEPLOY_RESPONSE=$(curl -s -X POST \
-            "${{ steps.version.outputs.extend_base }}/apps/${{ secrets.WD_APP_ID }}/deployments" \
-            -H "Authorization: Bearer ${{ steps.auth.outputs.access_token }}" \
-            -H "Content-Type: application/json" \
-            -d "{\"versionId\": \"${{ steps.version.outputs.version_id }}\", \"environment\": \"sandbox\"}")
+          TOKEN="${{ steps.auth.outputs.access_token }}"
 
-          echo "DEPLOY_RESPONSE=${DEPLOY_RESPONSE}"
-          STATUS=$(echo ${DEPLOY_RESPONSE} | jq -r '.status // .error // "unknown"')
-          echo "Deploy status: ${STATUS}"
+          VERSIONS=$(curl -s \
+            -H "Authorization: Bearer ${TOKEN}" \
+            "${APPHUB_BASE}/apps/${APP_ID}/versions?limit=1")
+          echo "Versions: ${VERSIONS}"
+
+          VERSION_ID=$(echo "${VERSIONS}" | jq -r '.data[0].id // empty')
+          if [ -z "${VERSION_ID}" ]; then
+            echo "Could not get version ID"
+            exit 1
+          fi
+          echo "Version ID: ${VERSION_ID}"
+
+          BUILDS=$(curl -s \
+            -H "Authorization: Bearer ${TOKEN}" \
+            "${APPHUB_BASE}/versions/${VERSION_ID}/builds?desc=true&limit=1")
+          echo "Builds: ${BUILDS}"
+
+          BUILD_ID=$(echo "${BUILDS}" | jq -r '.data[0].id // empty')
+          BUILD_STATUS=$(echo "${BUILDS}" | jq -r '.data[0].status // empty')
+
+          if [ -z "${BUILD_ID}" ]; then
+            echo "Could not get build ID"
+            exit 1
+          fi
+          echo "Build ID: ${BUILD_ID} (status: ${BUILD_STATUS})"
+
+          echo "version_id=${VERSION_ID}" >> $GITHUB_OUTPUT
+          echo "build_id=${BUILD_ID}" >> $GITHUB_OUTPUT
+          echo "build_status=${BUILD_STATUS}" >> $GITHUB_OUTPUT
+
+      - name: Wait for build to be ready
+        env:
+          APPHUB_BASE: https://api.us.wcp.workday.com/apphub/v1
+        run: |
+          TOKEN="${{ steps.auth.outputs.access_token }}"
+          BUILD_ID="${{ steps.build.outputs.build_id }}"
+          STATUS="${{ steps.build.outputs.build_status }}"
+          MAX_ATTEMPTS=20
+          ATTEMPT=0
+
+          while [ "${STATUS}" != "COMPLETE" ] && [ "${STATUS}" != "SUCCESS" ] && [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+            sleep 10
+            ATTEMPT=$((ATTEMPT + 1))
+            BUILD_RESP=$(curl -s \
+              -H "Authorization: Bearer ${TOKEN}" \
+              "${APPHUB_BASE}/builds/${BUILD_ID}")
+            STATUS=$(echo "${BUILD_RESP}" | jq -r '.status // empty')
+            echo "Attempt ${ATTEMPT}: Build status = ${STATUS}"
+          done
+          echo "Build status: ${STATUS}"
+
+      - name: Deploy to ubc_wcpdev2
+        env:
+          APP_ID: cfd75927b808c1dd99c54b1c7096a142
+          APPHUB_BASE: https://api.us.wcp.workday.com/apphub/v1
+          TENANT: ubc_wcpdev2
+          ORG_ID: 489e5b41-1b3b-4712-9a7e-46ac6456977c
+        run: |
+          TOKEN="${{ steps.auth.outputs.access_token }}"
+          BUILD_ID="${{ steps.build.outputs.build_id }}"
+
+          DEPLOY_RESPONSE=$(curl -s -X POST \
+            -H "Authorization: Bearer ${TOKEN}" \
+            -H "Content-Type: application/json" \
+            "${APPHUB_BASE}/builds/${BUILD_ID}/deployments" \
+            -d "{\"tenantAlias\": \"${TENANT}\", \"organizationId\": \"${ORG_ID}\"}")
+
+          echo "Deploy response: ${DEPLOY_RESPONSE}"
+          DEPLOY_ERROR=$(echo "${DEPLOY_RESPONSE}" | jq -r '.error // .detail // empty')
+
+          if [ -n "${DEPLOY_ERROR}" ]; then
+            echo "Primary endpoint failed: ${DEPLOY_ERROR}, trying alternate..."
+            DEPLOY_RESPONSE=$(curl -s -X POST \
+              -H "Authorization: Bearer ${TOKEN}" \
+              -H "Content-Type: application/json" \
+              "${APPHUB_BASE}/apps/${APP_ID}/deployments" \
+              -d "{\"buildId\": \"${BUILD_ID}\", \"tenantAlias\": \"${TENANT}\", \"organizationId\": \"${ORG_ID}\"}")
+            echo "Alternate deploy response: ${DEPLOY_RESPONSE}"
+            DEPLOY_ERROR=$(echo "${DEPLOY_RESPONSE}" | jq -r '.error // .detail // empty')
+            if [ -n "${DEPLOY_ERROR}" ]; then
+              echo "Both deploy attempts failed"
+              exit 1
+            fi
+          fi
+
+          echo "Deploy initiated: $(echo "${DEPLOY_RESPONSE}" | jq -r '.status // empty')"
+
+      - name: Verify deploy
+        env:
+          APPHUB_BASE: https://api.us.wcp.workday.com/apphub/v1
+          APP_ID: cfd75927b808c1dd99c54b1c7096a142
+        run: |
+          TOKEN="${{ steps.auth.outputs.access_token }}"
+          sleep 15
+          DEPLOYS=$(curl -s \
+            -H "Authorization: Bearer ${TOKEN}" \
+            "${APPHUB_BASE}/apps/${APP_ID}/deployments?limit=1")
+          echo "Latest deployment: ${DEPLOYS}"
+          echo "Status: $(echo "${DEPLOYS}" | jq -r '.data[0].status // empty')"
