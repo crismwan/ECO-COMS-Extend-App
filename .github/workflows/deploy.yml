@@ -17,21 +17,33 @@ jobs:
         env:
           TENANT: ubc_wcpdev2
         run: |
-          # Workday client_credentials requires:
-          #   Authorization: ID <base64(clientId:clientSecret)>  (NOT "Basic")
-          #   Body: grant_type=client_credentials&tenant_alias=<tenant>
+          # Workday client_credentials for apphub (api.us.wcp.workday.com) requires
+          # token from api.us.wcp.workday.com/auth/v1/token (NOT auth.api.workday.com)
+          # Authorization: ID <base64(clientId:clientSecret)>
+          # Body: grant_type=client_credentials&tenant_alias=<tenant>
           ENCODED=$(printf '%s:%s' "${{ secrets.WD_CLIENT_ID }}" "${{ secrets.WD_CLIENT_SECRET }}" | base64 -w 0)
 
-          TOKEN_RESPONSE=$(curl -s -X POST "https://auth.api.workday.com/v1/token" \
+          echo "Trying api.us.wcp.workday.com/auth endpoint (matches apphub API gateway)..."
+          TOKEN_RESPONSE=$(curl -s -X POST "https://api.us.wcp.workday.com/auth/v1/token" \
             -H "Content-Type: application/x-www-form-urlencoded" \
             -H "Authorization: ID ${ENCODED}" \
             -d "grant_type=client_credentials&tenant_alias=${TENANT}")
 
-          echo "Token response: ${TOKEN_RESPONSE}"
-          ACCESS_TOKEN=$(echo "${TOKEN_RESPONSE}" | jq -r '.access_token // empty')
+          echo "Token response (wcp): ${TOKEN_RESPONSE}"
+          ACCESS_TOKEN=$(echo "${TOKEN_RESPONSE}" | jq -r '.access_token // empty' 2>/dev/null)
 
           if [ -z "${ACCESS_TOKEN}" ]; then
-            echo "Developer OAuth failed. Response: ${TOKEN_RESPONSE}"
+            echo "WCP auth failed, falling back to auth.api.workday.com..."
+            TOKEN_RESPONSE2=$(curl -s -X POST "https://auth.api.workday.com/v1/token" \
+              -H "Content-Type: application/x-www-form-urlencoded" \
+              -H "Authorization: ID ${ENCODED}" \
+              -d "grant_type=client_credentials&tenant_alias=${TENANT}")
+            echo "Token response (auth.api): ${TOKEN_RESPONSE2}"
+            ACCESS_TOKEN=$(echo "${TOKEN_RESPONSE2}" | jq -r '.access_token // empty')
+          fi
+
+          if [ -z "${ACCESS_TOKEN}" ]; then
+            echo "Both auth endpoints failed"
             exit 1
           fi
 
