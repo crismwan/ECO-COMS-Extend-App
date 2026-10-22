@@ -18,23 +18,24 @@ jobs:
           TENANT: ubc_wcpdev2
         run: |
           # WD_CLIENT_ID is the raw Client ID as shown in the Workday Developer Console
-          # (e.g. YmQwZTY5NjItNmZhZi00MjJmLTg2YjktOTU5MjkyNGFhNzU1)
           # Per Workday docs: Authorization: ID base64(clientId:secret)
-          # The client ID is used as-is (no decoding), encoded together with the secret.
-
           ENCODED=$(printf '%s:%s' "${{ secrets.WD_CLIENT_ID }}" "${{ secrets.WD_CLIENT_SECRET }}" | base64 -w 0)
 
-          echo "Trying api.us.wcp.workday.com/auth/v1/token (WCP developer portal auth)..."
-          TOKEN_RESPONSE=$(curl -s -X POST "https://api.us.wcp.workday.com/auth/v1/token" \
+          echo "Trying api.us.wcp.workday.com/auth/v1/token..."
+          TOKEN_RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" -X POST "https://api.us.wcp.workday.com/auth/v1/token" \
             -H "Content-Type: application/x-www-form-urlencoded" \
             -H "Authorization: ID ${ENCODED}" \
             -d "grant_type=client_credentials&tenant_alias=${TENANT}")
 
-          echo "Token response: ${TOKEN_RESPONSE}"
-          ACCESS_TOKEN=$(echo "${TOKEN_RESPONSE}" | jq -r '.access_token // empty' 2>/dev/null)
+          HTTP_STATUS=$(echo "${TOKEN_RESPONSE}" | grep -o 'HTTP_STATUS:[0-9]*' | cut -d: -f2)
+          TOKEN_BODY=$(echo "${TOKEN_RESPONSE}" | sed 's/HTTP_STATUS:[0-9]*//')
+          echo "Auth HTTP status: ${HTTP_STATUS}"
+          echo "Token response: ${TOKEN_BODY}"
+
+          ACCESS_TOKEN=$(echo "${TOKEN_BODY}" | jq -r '.access_token // empty' 2>/dev/null)
 
           if [ -z "${ACCESS_TOKEN}" ]; then
-            echo "WCP auth failed — cannot continue. Response: ${TOKEN_RESPONSE}"
+            echo "WCP auth failed — cannot continue."
             exit 1
           fi
 
@@ -44,15 +45,39 @@ jobs:
       - name: Get latest version and build
         id: build
         env:
+          APP_REF_ID: ecocomsphase_xclw_cm_sync2_vmzvxm
           APP_ID: cfd75927b808c1dd99c54b1c7096a142
           APPHUB_BASE: https://api.us.wcp.workday.com/apphub/v1
         run: |
           TOKEN="${{ steps.auth.outputs.access_token }}"
-          VERSIONS=$(curl -s -H "Authorization: Bearer ${TOKEN}" "${APPHUB_BASE}/apps/${APP_ID}/versions?limit=1")
-          echo "Versions response: ${VERSIONS}"
-          VERSION_ID=$(echo "${VERSIONS}" | jq -r '.data[0].id // empty')
+
+          # Try Reference_Id lookup first (used by the portal)
+          echo "=== Fetching app by Reference_Id ==="
+          APP_RESP=$(curl -s -w "\nHTTP_STATUS:%{http_code}" \
+            -H "Authorization: Bearer ${TOKEN}" \
+            "${APPHUB_BASE}/apps/Reference_Id=${APP_REF_ID}")
+          echo "${APP_RESP}"
+
+          # Try versions with Reference_Id
+          echo "=== Fetching versions ==="
+          VERSIONS=$(curl -s -w "\nHTTP_STATUS:%{http_code}" \
+            -H "Authorization: Bearer ${TOKEN}" \
+            "${APPHUB_BASE}/apps/${APP_ID}/versions?limit=1")
+          echo "${VERSIONS}"
+
+          VERSION_BODY=$(echo "${VERSIONS}" | sed 's/HTTP_STATUS:[0-9]*//')
+          VERSION_ID=$(echo "${VERSION_BODY}" | jq -r '.data[0].id // empty' 2>/dev/null)
+          if [ -z "${VERSION_ID}" ]; then
+            echo "Could not get version ID from UUID — trying Reference_Id path"
+            VERSIONS2=$(curl -s \
+              -H "Authorization: Bearer ${TOKEN}" \
+              "${APPHUB_BASE}/apps/Reference_Id=${APP_REF_ID}/versions?limit=1")
+            echo "Versions2: ${VERSIONS2}"
+            VERSION_ID=$(echo "${VERSIONS2}" | jq -r '.data[0].id // empty' 2>/dev/null)
+          fi
           if [ -z "${VERSION_ID}" ]; then echo "Could not get version ID"; exit 1; fi
           echo "Version ID: ${VERSION_ID}"
+
           BUILDS=$(curl -s -H "Authorization: Bearer ${TOKEN}" "${APPHUB_BASE}/versions/${VERSION_ID}/builds?desc=true&limit=1")
           echo "Builds response: ${BUILDS}"
           BUILD_ID=$(echo "${BUILDS}" | jq -r '.data[0].id // empty')
