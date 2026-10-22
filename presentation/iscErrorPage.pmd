@@ -1,0 +1,29 @@
+{
+  "id": "iscErrorPage",
+  "endPoints": [],
+  "outboundData": {"outboundEndPoints": []},
+  "presentation": {
+    "headerSize": "STANDARD",
+    "title": {
+      "type": "title",
+      "label": "Access Restricted"
+    },
+    "body": {
+      "type": "section",
+      "horizontal": false,
+      "children": [
+        {
+          "type": "readOnlyText",
+          "id": "iscErrorMessage",
+          "value": "This page is only available to ISC Security Administrators. If you have any questions, please raise an Incident Ticket with 'ISC Service Delivery'."
+        }
+      ]
+    },
+    "footer": {
+      "type": "footer",
+      "children": [
+        {"type": "richText", "enabled": "false", "value": "Powered By Workday Extend"}
+      ]
+    }
+  }
+}
