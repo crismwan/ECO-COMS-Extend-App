@@ -1,0 +1,10 @@
+{
+  "podId": "ecoComsFooter",
+  "seed": {
+    "template": {
+      "type": "richText",
+      "enabled": "false",
+      "value": "<span style=\"color:#002145;font-weight:700;\">ECO-COMS</span> <span style=\"color:#6b7280;\">|</span> <span style=\"color:#002145;\">University of British Columbia</span> <span style=\"color:#6b7280;\">\u00a9</span> <span style=\"color:#0055B7;\">Powered by Workday Extend</span>"
+    }
+  }
+}
