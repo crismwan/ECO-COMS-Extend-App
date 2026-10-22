@@ -2,61 +2,63 @@ name: Deploy to Workday Extend
 
 on:
   push:
-    branches: [main]
-  workflow_dispatch:
+      branches: [main]
+        workflow_dispatch:
 
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Get Workday OAuth token
-        id: auth
-        run: |
-          TOKEN_RESPONSE=$(curl -s -X POST "${{ secrets.WD_TOKEN_ENDPOINT }}" \
-            -H "Content-Type: application/x-www-form-urlencoded" \
-            -d "grant_type=password" \
-            -d "username=${{ secrets.WD_USERNAME }}" \
-            -d "password=${{ secrets.WD_PASSWORD }}" \
-            -d "client_id=${{ secrets.WD_CLIENT_ID }}" \
-            -d "client_secret=${{ secrets.WD_CLIENT_SECRET }}")
+        jobs:
+          deploy:
+              runs-on: ubuntu-latest
+                  steps:
+                        - name: Checkout code
+                                uses: actions/checkout@v4
 
-          ACCESS_TOKEN=$(echo $TOKEN_RESPONSE | jq -r '.access_token')
-
-          if [ -z "$ACCESS_TOKEN" ] || [ "$ACCESS_TOKEN" == "null" ]; then
-            echo "Failed to get access token: $TOKEN_RESPONSE"
-            exit 1
-          fi
-
-          echo "access_token=$ACCESS_TOKEN" >> $GITHUB_OUTPUT
-          echo "Got access token"
-
-      - name: Get current deployed version ID
-        id: version
-        run: |
-          APP_RESPONSE=$(curl -s \
-            "${{ secrets.WD_EXTEND_ENDPOINT }}/apps/${{ secrets.WD_APP_ID }}" \
-            -H "Authorization: Bearer ${{ steps.auth.outputs.access_token }}")
-
-          echo "APP_RESPONSE=$APP_RESPONSE"
-          VERSION_ID=$(echo $APP_RESPONSE | jq -r '.currentVersion.id // .deployedVersion.id // .versionId // empty')
-
-          if [ -z "$VERSION_ID" ]; then
-            echo "Could not find current version ID. Full response:"
-            echo $APP_RESPONSE
-            exit 1
-          fi
-
-          echo "version_id=$VERSION_ID" >> $GITHUB_OUTPUT
-          echo "Current version: $VERSION_ID"
-
-      - name: Redeploy current version to Workday sandbox
-        run: |
-          DEPLOY_RESPONSE=$(curl -s -X POST \
-            "${{ secrets.WD_EXTEND_ENDPOINT }}/apps/${{ secrets.WD_APP_ID }}/deployments" \
-            -H "Authorization: Bearer ${{ steps.auth.outputs.access_token }}" \
-            -H "Content-Type: application/json" \
-            -d "{\"versionId\": \"${{ steps.version.outputs.version_id }}\", \"environment\": \"sandbox\"}")
-
-          echo "DEPLOY_RESPONSE=$DEPLOY_RESPONSE"
-          STATUS=$(echo $DEPLOY_RESPONSE | jq -r '.status // .error // "unknown"')
-          echo "Deploy status: $STATUS"
+                                      - name: Get Workday OAuth token
+                                              id: auth
+                                                      run: |
+                                                                TOKEN_RESPONSE=$(curl -s -X POST "${{ secrets.WD_TOKEN_ENDPOINT }}" \
+                                                                            -H "Content-Type: application/x-www-form-urlencoded" \
+                                                                                        -d "grant_type=refresh_token" \
+                                                                                                    -d "client_id=${{ secrets.WD_CLIENT_ID }}" \
+                                                                                                                -d "client_secret=${{ secrets.WD_CLIENT_SECRET }}" \
+                                                                                                                            -d "refresh_token=${{ secrets.WD_REFRESH_TOKEN }}")
+                                                                                                                            
+                                                                                                                                      ACCESS_TOKEN=$(echo $TOKEN_RESPONSE | jq -r '.access_token')
+                                                                                                                                      
+                                                                                                                                                if [ -z "$ACCESS_TOKEN" ] || [ "$ACCESS_TOKEN" == "null" ]; then
+                                                                                                                                                            echo "Failed to get access token: $TOKEN_RESPONSE"
+                                                                                                                                                                        exit 1
+                                                                                                                                                                                  fi
+                                                                                                                                                                                  
+                                                                                                                                                                                            echo "access_token=$ACCESS_TOKEN" >> $GITHUB_OUTPUT
+                                                                                                                                                                                                      echo "Got access token"
+                                                                                                                                                                                                      
+                                                                                                                                                                                                            - name: Get current deployed version ID
+                                                                                                                                                                                                                    id: version
+                                                                                                                                                                                                                            run: |
+                                                                                                                                                                                                                                      APP_RESPONSE=$(curl -s \
+                                                                                                                                                                                                                                                  "${{ secrets.WD_EXTEND_ENDPOINT }}/apps/${{ secrets.WD_APP_ID }}" \
+                                                                                                                                                                                                                                                              -H "Authorization: Bearer ${{ steps.auth.outputs.access_token }}")
+                                                                                                                                                                                                                                                              
+                                                                                                                                                                                                                                                                        echo "APP_RESPONSE=$APP_RESPONSE"
+                                                                                                                                                                                                                                                                                  VERSION_ID=$(echo $APP_RESPONSE | jq -r '.currentVersion.id // .deployedVersion.id // .versionId // empty')
+                                                                                                                                                                                                                                                                                  
+                                                                                                                                                                                                                                                                                            if [ -z "$VERSION_ID" ]; then
+                                                                                                                                                                                                                                                                                                        echo "Could not find current version ID. Full response:"
+                                                                                                                                                                                                                                                                                                                    echo $APP_RESPONSE
+                                                                                                                                                                                                                                                                                                                                exit 1
+                                                                                                                                                                                                                                                                                                                                          fi
+                                                                                                                                                                                                                                                                                                                                          
+                                                                                                                                                                                                                                                                                                                                                    echo "version_id=$VERSION_ID" >> $GITHUB_OUTPUT
+                                                                                                                                                                                                                                                                                                                                                              echo "Current version: $VERSION_ID"
+                                                                                                                                                                                                                                                                                                                                                              
+                                                                                                                                                                                                                                                                                                                                                                    - name: Redeploy current version to Workday sandbox
+                                                                                                                                                                                                                                                                                                                                                                            run: |
+                                                                                                                                                                                                                                                                                                                                                                                      DEPLOY_RESPONSE=$(curl -s -X POST \
+                                                                                                                                                                                                                                                                                                                                                                                                  "${{ secrets.WD_EXTEND_ENDPOINT }}/apps/${{ secrets.WD_APP_ID }}/deployments" \
+                                                                                                                                                                                                                                                                                                                                                                                                              -H "Authorization: Bearer ${{ steps.auth.outputs.access_token }}" \
+                                                                                                                                                                                                                                                                                                                                                                                                                          -H "Content-Type: application/json" \
+                                                                                                                                                                                                                                                                                                                                                                                                                                      -d "{\"versionId\": \"${{ steps.version.outputs.version_id }}\", \"environment\": \"sandbox\"}")
+                                                                                                                                                                                                                                                                                                                                                                                                                                      
+                                                                                                                                                                                                                                                                                                                                                                                                                                                echo "DEPLOY_RESPONSE=$DEPLOY_RESPONSE"
+                                                                                                                                                                                                                                                                                                                                                                                                                                                          STATUS=$(echo $DEPLOY_RESPONSE | jq -r '.status // .error // "unknown"')
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                    echo "Deploy status: $STATUS"
