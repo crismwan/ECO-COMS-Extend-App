@@ -1,0 +1,4 @@
+{
+  "id": "auditLog",
+  "query": "select timestamp, objectType, worker, action, coReferenceId, coName, application, triggeredBy, details FROM comsAuditLogs ORDER BY timestamp DESC"
+}
