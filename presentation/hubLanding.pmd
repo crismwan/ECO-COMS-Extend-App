@@ -22,7 +22,7 @@
             {
               "type": "image",
               "id": "ubcWordmarkImg",
-              "imageUri": "https://raw.githubusercontent.com/ubccsss/styles/master/static/logo-variants/wordmark.png",
+              "imageUri": "https://raw.githubusercontent.com/crismwan/ECO-COMS-Extend-App/main/presentation/assets/ubc-wordmark.png",
               "altText": "University of British Columbia",
               "sizingHint": "THUMBNAIL"
             },
