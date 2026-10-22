@@ -20,13 +20,6 @@
           "collapsible": false,
           "children": [
             {
-              "type": "image",
-              "id": "ubcWordmarkImg",
-              "imageUri": "https://raw.githubusercontent.com/crismwan/ECO-COMS-Extend-App/main/presentation/assets/ubc-wordmark.png",
-              "altText": "University of British Columbia",
-              "sizingHint": "THUMBNAIL"
-            },
-            {
               "type": "richText",
               "id": "ubcSubtitle",
               "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700;letter-spacing:2px;\">CUSTOM ORGANIZATION MANAGEMENT SYSTEM</span>"
