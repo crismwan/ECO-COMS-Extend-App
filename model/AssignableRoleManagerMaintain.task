@@ -1,0 +1,10 @@
+{
+  "id": 4,
+  "name": "AssignableRoleManagerMaintain",
+  "label": "Maintain COMS Assignable Roles",
+  "securityDomains": [
+    "MaintainCOMSAssignableRoles"
+  ],
+  "routePath": "/assignableRoleManagerMaintain",
+  "businessObject": "COMSAssignableRole"
+}
