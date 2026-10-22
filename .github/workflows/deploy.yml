@@ -32,29 +32,29 @@ jobs:
           echo "access_token=$ACCESS_TOKEN" >> $GITHUB_OUTPUT
           echo "Got access token"
 
-      - name: Get current deployed version ID
+      - name: Get latest app version ID
         id: version
         run: |
-          APP_RESPONSE=$(curl -s \
-            "${{ secrets.WD_EXTEND_ENDPOINT }}/apps/${{ secrets.WD_APP_ID }}" \
+          VERSIONS_RESPONSE=$(curl -s \
+            "https://api.workday.com/extend/v1/apps/${{ secrets.WD_APP_ID }}/versions?limit=1" \
             -H "Authorization: Bearer ${{ steps.auth.outputs.access_token }}")
 
-          echo "APP_RESPONSE=$APP_RESPONSE"
-          VERSION_ID=$(echo $APP_RESPONSE | jq -r '.currentVersion.id // .deployedVersion.id // .versionId // empty')
+          echo "VERSIONS_RESPONSE=$VERSIONS_RESPONSE"
+          VERSION_ID=$(echo $VERSIONS_RESPONSE | jq -r '.data[0].id // .versions[0].id // empty')
 
           if [ -z "$VERSION_ID" ]; then
-            echo "Could not find current version ID. Full response:"
-            echo $APP_RESPONSE
+            echo "Could not find version ID. Full response:"
+            echo $VERSIONS_RESPONSE
             exit 1
           fi
 
           echo "version_id=$VERSION_ID" >> $GITHUB_OUTPUT
-          echo "Current version: $VERSION_ID"
+          echo "Latest version: $VERSION_ID"
 
-      - name: Redeploy current version to Workday sandbox
+      - name: Deploy to Workday sandbox
         run: |
           DEPLOY_RESPONSE=$(curl -s -X POST \
-            "${{ secrets.WD_EXTEND_ENDPOINT }}/apps/${{ secrets.WD_APP_ID }}/deployments" \
+            "https://api.workday.com/extend/v1/apps/${{ secrets.WD_APP_ID }}/deployments" \
             -H "Authorization: Bearer ${{ steps.auth.outputs.access_token }}" \
             -H "Content-Type: application/json" \
             -d "{\"versionId\": \"${{ steps.version.outputs.version_id }}\", \"environment\": \"sandbox\"}")
