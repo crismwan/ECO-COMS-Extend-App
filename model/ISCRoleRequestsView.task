@@ -1,0 +1,10 @@
+{
+  "id": 12,
+  "name": "ISCRoleRequestsView",
+  "label": "All Pending Role Requests ISC",
+  "securityDomains": [
+    "MaintainCOMSAssignableRoles"
+  ],
+  "routePath": "/iscRoleRequestsView",
+  "businessObject": "COMSAssignableRole"
+}
