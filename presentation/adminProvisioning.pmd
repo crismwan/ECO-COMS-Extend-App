@@ -1,0 +1,596 @@
+{
+  "id": "adminProvisioning",
+  "include": [
+    "comsValidations.script"
+  ],
+  "securityDomains": [
+    "ManageCOMSAdminProvisioning"
+  ],
+  "endPoints": [
+    {
+      "name": "selectedWorker",
+      "baseUrlType": "COMMON",
+      "url": "/workers/me",
+      "authType": "sso"
+    },
+    {
+      "name": "customOrganizations",
+      "baseUrlType": "workday-wql",
+      "url": "data",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "wqlQuery": {
+        "queryId": "customOrganizations"
+      }
+    },
+    {
+      "name": "comsAssignableRoles",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "url": "/comsAssignableRoles",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true"
+    },
+    {
+      "name": "customOrganizationsFUHSearch",
+      "baseUrlType": "workday-wql",
+      "url": "<% 'data?query=SELECT workdayID, organization1, code FROM customOrganizations WHERE type1 in (b40d8b016367100175b147f364840000) AND organization1 contains \\'' + instanceListQuery + '\\'' %>",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "deferred": "true"
+    },
+    {
+      "name": "academicUnitsSearch",
+      "baseUrlType": "workday-wql",
+      "url": "<% 'data?query=' + string:pathEncode('SELECT workdayID, academicUnit FROM academicUnits WHERE inactive = false AND academicUnit.descriptor contains \\'' + instanceListQuery + '\\'') %>",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "deferred": "true",
+      "exclude": "<% empty instanceListQuery %>"
+    },
+    {
+      "name": "fuhSearch",
+      "baseUrlType": "workday-wql",
+      "url": "<% 'data?query=' + string:pathEncode('SELECT workdayID, organization1 FROM customOrganizations WHERE organization1.descriptor contains \\'' + instanceListQuery + '\\'') %>",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "deferred": "true",
+      "exclude": "<% empty instanceListQuery %>"
+    },
+    {
+      "bestEffort": "true",
+      "exclude": "<% empty instanceListQuery %>",
+      "isCollection": true,
+      "name": "posSearch",
+      "baseUrlType": "workday-wql",
+      "url": "<% 'data?query=' + string:pathEncode('SELECT workdayID, position_PositionManagement FROM allPositions WHERE cf_PositionID contains \\'' + instanceListQuery + '\\'') %>",
+      "authType": "sso",
+      "deferred": "true"
+    },
+    {
+      "name": "delSearch",
+      "baseUrlType": "workday-wql",
+      "url": "<% 'data?query=' + string:pathEncode('SELECT role FROM assignableRoles WHERE roleName contains \\'' + instanceListQuery + '\\'') %>",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "deferred": "true",
+      "exclude": "<% empty instanceListQuery %>"
+    },
+    {
+      "name": "academicUnits",
+      "baseUrlType": "workday-wql",
+      "url": "data",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "wqlQuery": {
+        "queryId": "academicUnits"
+      }
+    },
+    {
+      "name": "auSearch",
+      "baseUrlType": "workday-academic",
+      "url": "<% 'academicUnits?search=' + instanceListQuery %>",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "deferred": "true"
+    },
+    {
+      "name": "customOrganizationsFUH",
+      "baseUrlType": "workday-wql",
+      "url": "data",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "wqlQuery": {
+        "queryId": "customOrganizationsFUH"
+      }
+    },
+    {
+      "name": "allAAAroles",
+      "baseUrlType": "workday-wql",
+      "url": "data",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "wqlQuery": {
+        "queryId": "allAAArolesinTenant"
+      }
+    }
+  ],
+  "outboundData": {
+    "outboundEndPoints": [
+      {
+        "name": "postAssignableRole",
+        "baseUrlType": "BUSINESS-OBJECT",
+        "url": "/comsAssignableRoles",
+        "httpMethod": "POST",
+        "authType": "sso",
+        "onSend": "<% self.data %>",
+        "values": [
+          {
+            "outboundPath": "status",
+            "value": "Pending ISC Review"
+          },
+          {
+            "outboundPath": "requestedDate",
+            "value": "<% date:now().format('yyyy-MM-dd') %>"
+          },
+          {
+            "outboundPath": "requestedBy.id",
+            "value": "<% selectedWorker.id %>"
+          },
+          {
+            "outboundPath": "referenceId",
+            "value": "<% date:now().format('yyyyMMddHHmmss') %>"
+          },
+          {
+            "outboundPath": "active",
+            "value": "<% false %>"
+          }
+        ],
+        "failOnStatusCodes": [
+          {
+            "code": 400
+          },
+          {
+            "code": 403
+          },
+          {
+            "code": 429
+          },
+          {
+            "code": 500
+          }
+        ]
+      },
+      {
+        "name": "postAuditLog",
+        "baseUrlType": "BUSINESS-OBJECT",
+        "url": "/comsAuditLogs",
+        "httpMethod": "POST",
+        "authType": "sso",
+        "values": [
+          {
+            "outboundPath": "timestamp",
+            "value": "<% date:now().format(\"yyyy-MM-dd'T'HH:mm:ss'Z'\") %>"
+          },
+          {
+            "outboundPath": "objectType",
+            "value": "COMSAssignableRole"
+          },
+          {
+            "outboundPath": "action",
+            "value": "ADD"
+          },
+          {
+            "outboundPath": "worker",
+            "value": "<% selectedWorker.id %>"
+          },
+          {
+            "outboundPath": "application",
+            "value": "<% applicationDropdown.value ?? '' %>"
+          },
+          {
+            "outboundPath": "coReferenceId",
+            "value": "<% generatedRoleName.value ?? '' %>"
+          },
+          {
+            "outboundPath": "coName",
+            "value": "<% generatedRoleName.value ?? '' %>"
+          },
+          {
+            "outboundPath": "details",
+            "value": "<% 'AAA role request submitted: ' + (generatedRoleName.value ?? '') + ' effective ' + (effectiveDate.value != null ? effectiveDate.value.format('yyyy-MM-dd') : '') %>"
+          },
+          {
+            "outboundPath": "triggeredBy",
+            "value": "<% selectedWorker.descriptor %>"
+          }
+        ],
+        "failOnStatusCodes": [
+          {
+            "code": 400
+          },
+          {
+            "code": 403
+          },
+          {
+            "code": 429
+          },
+          {
+            "code": 500
+          }
+        ]
+      }
+    ]
+  },
+  "presentation": {
+    "headerSize": "VPS_DEFAULT",
+    "title": {
+      "type": "title",
+      "label": "ECO-COMS: Admin Provisioning (AAA)",
+      "enabled": false
+    },
+    "body": {
+      "type": "section",
+      "horizontal": false,
+      "children": [
+        {
+          "type": "section",
+          "horizontal": true,
+          "children": [
+            {
+              "type": "section",
+              "horizontal": false,
+              "children": [
+                {
+                  "type": "button",
+                  "label": "Home",
+                  "taskReference": {
+                    "taskId": "home"
+                  },
+                  "action": "AUXILIARY"
+                }
+              ]
+            }
+          ],
+          "columnWidthRatios": [
+            0.2,
+            0.2,
+            0.2,
+            0.2,
+            0.2
+          ]
+        },
+        {
+          "type": "readOnlyText",
+          "id": "pageDesc",
+          "value": "Submit and manage Assignable Role requests by Application. Review pending requests or submit a new role request for ISC review."
+        },
+        {
+          "type": "fieldSet",
+          "id": "pendingRolesSection",
+          "label": "1. Pending ISC Review",
+          "children": [
+            {
+              "type": "readOnlyText",
+              "id": "pendingDesc",
+              "value": "The following Assignable Role requests are awaiting ISC review. Click Maintain to approve or deny a request."
+            },
+            {
+              "type": "grid",
+              "gridType": "LIST",
+              "multiViewStylingEnabled": true,
+              "id": "assignableRolesGrid",
+              "rows": "<% comsAssignableRoles.data.filter(r => { r.status == 'Pending ISC Review' && r.roleName.startsWith('Organizations and Roles Assignment Administrator') && r.requestedBy.id == selectedWorker.id }) %>",
+              "rowVariableName": "role",
+              "enabled": false,
+              "label": "Pending Assignable Roles",
+              "columns": [
+                {
+                  "type": "column",
+                  "id": "colOrgApp",
+                  "columnId": "colOrgApp",
+                  "label": "Organization / Application",
+                  "sortableAndFilterable": "true",
+                  "cellTemplate": {
+                    "type": "text",
+                    "value": "<% role.shellOrgCode ?? role.application ?? '' %>",
+                    "enabled": false
+                  }
+                },
+                {
+                  "type": "column",
+                  "id": "colRoleName",
+                  "columnId": "colRoleName",
+                  "label": "Role Name",
+                  "sortableAndFilterable": "true",
+                  "cellTemplate": {
+                    "type": "text",
+                    "value": "<% role.roleName ?? '' %>",
+                    "enabled": false
+                  }
+                },
+                {
+                  "type": "column",
+                  "id": "colWdRoleName",
+                  "columnId": "colWdRoleName",
+                  "label": "Generated Workday Role Name",
+                  "cellTemplate": {
+                    "type": "text",
+                    "value": "<% role.workdayRoleId ?? '' %>",
+                    "enabled": false
+                  }
+                },
+                {
+                  "type": "column",
+                  "id": "colStatus",
+                  "columnId": "colStatus",
+                  "label": "Status",
+                  "cellTemplate": {
+                    "type": "text",
+                    "value": "<% role.status ?? '' %>",
+                    "enabled": false
+                  }
+                },
+                {
+                  "type": "column",
+                  "id": "colEnabledFor",
+                  "columnId": "colEnabledFor",
+                  "label": "Enabled For",
+                  "cellTemplate": {
+                    "type": "text",
+                    "value": "<% role.enabledForOrganizationTypes ?? 'Academic Unit - University of British Columbia' %>",
+                    "enabled": false
+                  }
+                },
+                {
+                  "type": "column",
+                  "id": "colEffDate",
+                  "columnId": "colEffDate",
+                  "label": "Effective Date",
+                  "cellTemplate": {
+                    "type": "text",
+                    "value": "<% role.effectiveDate ?? '' %>",
+                    "enabled": false
+                  }
+                },
+                {
+                  "type": "column",
+                  "id": "colPositions",
+                  "columnId": "colPositions",
+                  "label": "Positions",
+                  "cellTemplate": {
+                    "type": "text",
+                    "value": "<% role.positions ?? '' %>",
+                    "enabled": false
+                  }
+                },
+                {
+                  "type": "column",
+                  "id": "colDelegatedRoles",
+                  "columnId": "colDelegatedRoles",
+                  "label": "Delegated Roles",
+                  "cellTemplate": {
+                    "type": "text",
+                    "value": "<% role.enabledForOrganizationTypes ?? '' %>",
+                    "enabled": false
+                  }
+                },
+                {
+                  "type": "column",
+                  "id": "colRequestedBy",
+                  "columnId": "colRequestedBy",
+                  "label": "Requested By",
+                  "cellTemplate": {
+                    "type": "text",
+                    "value": "<% role.requestedBy.descriptor ?? '' %>",
+                    "enabled": false
+                  }
+                },
+                {
+                  "type": "column",
+                  "id": "colRequestedDate",
+                  "columnId": "colRequestedDate",
+                  "label": "Requested Date",
+                  "cellTemplate": {
+                    "type": "text",
+                    "value": "<% role.requestedDate ?? '' %>",
+                    "enabled": false
+                  }
+                },
+                {
+                  "type": "column",
+                  "id": "colActions",
+                  "columnId": "colActions",
+                  "label": "Actions",
+                  "cellTemplate": {
+                    "type": "section",
+                    "horizontal": true,
+                    "children": [
+                      {
+                        "type": "section",
+                        "horizontal": false,
+                        "children": [
+                          {
+                            "type": "button",
+                            "action": "AUXILIARY",
+                            "label": "Delete",
+                            "taskReference": {
+                              "taskId": "deleteAssignableRole",
+                              "parameterBindings": {
+                                "roleId": "<% role.id %>",
+                                "roleName": "<% role.roleName %>"
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "fieldSet",
+          "id": "newRoleFieldSet",
+          "label": "2. Submit New Assignable Role Request",
+          "children": [
+            {
+              "type": "readOnlyText",
+              "id": "newRoleDesc",
+              "value": "Submit a new Assignable Role request using the Application below. Once submitted, status will be set to Pending ISC Review."
+            },
+            {
+              "type": "dropdown",
+              "id": "applicationDropdown",
+              "label": "Application",
+              "required": true,
+              "helpText": "Select the application for this assignable role.",
+              "values": "<%\n  let appCodes = [];\n  let result = [];\n  for (var org : customOrganizations.data) {\n    let code = org.code;\n    let appCode = code.contains('(') ?\n      code.substringAfter('(').substringBefore(')') :\n      (code.substringAfter(':').contains(':') ?\n        code.substringBefore(':') + ':' + code.substringAfter(':').substringBefore(':') :\n        code);\n    if (!appCodes.contains(appCode)) {\n      appCodes.add(appCode);\n      result.add({'id': org.workdayID, 'descriptor': appCode});\n    }\n  }\n  result;\n%>",
+              "onChange": "<%\n            generatedRoleName.setValue(\n              !empty(self.value) ?\n                !empty(fuhPicker.value) ?\n                  'Organizations and Roles Assignment Administrator (' + self.selectedEntries[0].descriptor + ', Functional Org)' :\n                !empty(academicUnitPicker.value) ?\n                  'Organizations and Roles Assignment Administrator (' + self.selectedEntries[0].descriptor + ', Academic Unit)' :\n                  'Organizations and Roles Assignment Administrator (' + self.selectedEntries[0].descriptor + ')'\n              : ''\n            );\n          %>",
+              "valuesOut": [
+                {
+                  "value": "<% self.value[0] %>",
+                  "valueOutBinding": "postAssignableRole.application"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "generatedRoleName",
+              "label": "Requested AAA Role",
+              "enabled": false,
+              "value": "<% '' %>",
+              "helpText": "Auto-generated based on Application and scope selection. This is the Workday role name that will be requested.",
+              "valuesOut": [
+                {
+                  "value": "<% self.value %>",
+                  "valueOutBinding": "postAssignableRole.workdayRoleId"
+                },
+                {
+                  "value": "<% self.value %>",
+                  "valueOutBinding": "postAssignableRole.roleName"
+                }
+              ]
+            },
+            {
+              "type": "date",
+              "id": "effectiveDate",
+              "label": "Effective Date",
+              "required": true,
+              "helpText": "Date this assignable role becomes effective.",
+              "valuesOut": [
+                {
+                  "value": "<% self.value %>",
+                  "valueOutBinding": "postAssignableRole.effectiveDate"
+                }
+              ]
+            },
+            {
+              "type": "instanceList",
+              "id": "fuhPicker",
+              "label": "Functional Unit Hierarchy",
+              "required": false,
+              "values": "<% [] %>",
+              "onChange": "<%\n            if (!empty(self.value) && !empty(academicUnitPicker.value)) {\n              self.setError('Cannot select both Functional Unit Hierarchy and Academic Unit.');\n            } else {\n              self.clearError();\n              academicUnitPicker.clearError();\n            }\n            let appDesc = !empty(applicationDropdown.value) ? applicationDropdown.selectedEntries[0].descriptor : '';\n            enabledForWidBinding.setValue(!empty(self.value) ? self.value[0] : (!empty(academicUnitPicker.value) ? academicUnitPicker.value[0] : ''));\n            enabledForDisplay.setValue(!empty(self.value) ? self.selectedEntries[0].descriptor : (!empty(academicUnitPicker.value) ? academicUnitPicker.selectedEntries[0].descriptor : 'Academic Unit - University of British Columbia'));\n            if (!empty(appDesc)) {\n              generatedRoleName.setValue(\n                !empty(self.value) ?\n                  'Organizations and Roles Assignment Administrator (' + appDesc + ', Functional Org)' :\n                !empty(academicUnitPicker.value) ?\n                  'Organizations and Roles Assignment Administrator (' + appDesc + ', Academic Unit)' :\n                  'Organizations and Roles Assignment Administrator (' + appDesc + ')'\n              );\n            }\n          %>",
+              "valuesOut": [
+                {
+                  "value": "<% self.value[0] ?? '' %>",
+                  "valueOutBinding": "postAssignableRole.enabledForOrganizationTypes"
+                },
+                {
+                  "value": "<% self.value[0] ?? '' %>",
+                  "valueOutBinding": "postAssignableRole.enabledForWid"
+                }
+              ],
+              "multiSelect": false,
+              "onSearch": "<% customOrganizationsFUH.data.filter(o => { o.organization1.descriptor.contains(event.query) }).map(o => { {'id': o.workdayID, 'descriptor': o.organization1.descriptor} }) %>"
+            },
+            {
+              "type": "instanceList",
+              "id": "academicUnitPicker",
+              "label": "Academic Unit",
+              "required": false,
+              "values": "<% [] %>",
+              "onChange": "<%\n            if (!empty(self.value) && !empty(fuhPicker.value)) {\n              self.setError('Cannot select both Academic Unit and Functional Unit Hierarchy.');\n            } else {\n              self.clearError();\n              fuhPicker.clearError();\n            }\n            let appDesc = !empty(applicationDropdown.value) ? applicationDropdown.selectedEntries[0].descriptor : '';\n            enabledForWidBinding.setValue(!empty(fuhPicker.value) ? fuhPicker.value[0] : (!empty(self.value) ? self.value[0] : ''));\n            enabledForDisplay.setValue(!empty(fuhPicker.value) ? fuhPicker.selectedEntries[0].descriptor : (!empty(self.value) ? self.selectedEntries[0].descriptor : 'Academic Unit - University of British Columbia'));\n            if (!empty(appDesc)) {\n              generatedRoleName.setValue(\n                !empty(fuhPicker.value) ?\n                  'Organizations and Roles Assignment Administrator (' + appDesc + ', Functional Org)' :\n                !empty(self.value) ?\n                  'Organizations and Roles Assignment Administrator (' + appDesc + ', Academic Unit)' :\n                  'Organizations and Roles Assignment Administrator (' + appDesc + ')'\n              );\n            }\n          %>",
+              "valuesOut": [
+                {
+                  "value": "<% self.value[0] ?? '' %>",
+                  "valueOutBinding": "postAssignableRole.enabledForOrganizationTypes"
+                },
+                {
+                  "value": "<% self.value[0] ?? '' %>",
+                  "valueOutBinding": "postAssignableRole.enabledForWid"
+                }
+              ],
+              "multiSelect": false,
+              "onSearch": "<% academicUnits.data.filter(o => { o.academicUnit.descriptor.contains(event.query) }).map(o => { {'id': o.workdayID, 'descriptor': o.academicUnit.descriptor} }) %>"
+            },
+            {
+              "type": "text",
+              "id": "enabledForDisplay",
+              "label": "Enabled For",
+              "enabled": false,
+              "value": "<% 'Academic Unit - University of British Columbia' %>"
+            },
+            {
+              "type": "instanceList",
+              "id": "positionsList",
+              "label": "Positions",
+              "required": false,
+              "multiSelect": true,
+              "values": "<% [] %>",
+              "valuesOut": [
+                {
+                  "value": "<% self.value.join(',') %>",
+                  "valueOutBinding": "postAssignableRole.positions"
+                }
+              ],
+              "searchEndPoint": "<% endpoints.posSearch %>",
+              "searchResultValues": "<% posSearch.data %>",
+              "idKey": "workdayID",
+              "displayKey": "position_PositionManagement.descriptor"
+            },
+            {
+              "type": "readOnlyText",
+              "id": "activeNote",
+              "value": "Role Assignment Active status is automatically set based on whether selected positions are filled."
+            },
+            {
+              "type": "hidden",
+              "id": "enabledForWidBinding",
+              "value": "<% '' %>",
+              "valuesOut": [
+                {
+                  "value": "<% self.value %>",
+                  "valueOutBinding": "postAssignableRole.enabledForWid"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "footer": {
+      "type": "footer",
+      "children": [
+        {
+          "type": "pod",
+          "podId": "ecoComsFooter"
+        }
+      ]
+    },
+    "pageType": "edit"
+  },
+  "onSubmit": "<%\n  let valid = true;\n  if (empty(applicationDropdown.value)) {\n    applicationDropdown.setError('Application is required.');\n    valid = false;\n  }\n  if (empty(effectiveDate.value)) {\n    effectiveDate.setError('Effective Date is required.');\n    valid = false;\n  }\n  if (!empty(generatedRoleName.value) && comsValidations.isDuplicateAAARole(generatedRoleName.value, allAAAroles.data)) {\n    generatedRoleName.setError(comsValidations.errorDuplicateAAARole(generatedRoleName.value));\n    valid = false;\n  }\n  valid;\n%>"
+}
