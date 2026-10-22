@@ -1,0 +1,4 @@
+{
+  "id": "academicUnits",
+  "query": "SELECT workdayID, academicUnit FROM academicUnits WHERE inactive = false"
+}
