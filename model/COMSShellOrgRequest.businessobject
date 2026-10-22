@@ -1,0 +1,144 @@
+{
+  "id": 2,
+  "name": "COMSShellOrgRequest",
+  "label": "COMS Shell Org Request",
+  "defaultSecurityDomains": [
+    "ManageCOMSShellOrgs"
+  ],
+  "defaultCollection": {
+    "name": "comsShellOrgRequests",
+    "label": "COMS Shell Org Requests"
+  },
+  "fields": [
+    {
+      "id": 1,
+      "name": "application",
+      "label": "Application",
+      "type": "SINGLE_INSTANCE",
+      "target": "COMSApplication"
+    },
+    {
+      "id": 2,
+      "name": "coReferenceId",
+      "label": "CO Reference ID",
+      "type": "TEXT"
+    },
+    {
+      "id": 3,
+      "name": "coName",
+      "label": "CO Name",
+      "type": "TEXT"
+    },
+    {
+      "id": 4,
+      "name": "attribute1",
+      "label": "Attribute 1 Academic Unit",
+      "type": "TEXT"
+    },
+    {
+      "id": 5,
+      "name": "attribute2",
+      "label": "Attribute 2 Subject",
+      "type": "TEXT"
+    },
+    {
+      "id": 6,
+      "name": "attribute3",
+      "label": "Attribute 3 Course",
+      "type": "TEXT"
+    },
+    {
+      "id": 7,
+      "name": "attribute4",
+      "label": "Attribute 4 Section",
+      "type": "TEXT"
+    },
+    {
+      "id": 8,
+      "name": "attribute5",
+      "label": "Attribute 5 Academic Period",
+      "type": "TEXT"
+    },
+    {
+      "id": 9,
+      "name": "status",
+      "label": "Status",
+      "type": "TEXT"
+    },
+    {
+      "id": 10,
+      "name": "workdayCustomOrgId",
+      "label": "Workday Custom Org Reference",
+      "type": "TEXT"
+    },
+    {
+      "id": 11,
+      "name": "createdBy",
+      "label": "Created By",
+      "type": "SINGLE_INSTANCE",
+      "target": "WORKER",
+      "secureByTarget": false
+    },
+    {
+      "id": 12,
+      "name": "createdDate",
+      "label": "Created Date",
+      "type": "DATE",
+      "precision": "DAY"
+    },
+    {
+      "id": 13,
+      "name": "inactivatedBy",
+      "label": "Inactivated By",
+      "type": "SINGLE_INSTANCE",
+      "target": "WORKER",
+      "secureByTarget": false
+    },
+    {
+      "id": 14,
+      "name": "inactivatedDate",
+      "label": "Inactivated Date",
+      "type": "DATE",
+      "precision": "DAY"
+    },
+    {
+      "name": "lastModifiedBy",
+      "label": "Last Modified By",
+      "type": "SINGLE_INSTANCE",
+      "target": "WORKER",
+      "secureByTarget": false,
+      "id": 15
+    },
+    {
+      "name": "lastModifiedDate",
+      "label": "Last Modified Date",
+      "type": "DATE",
+      "precision": "DAY",
+      "id": 16
+    },
+    {
+      "id": 17,
+      "name": "orgType",
+      "label": "Org Type",
+      "type": "TEXT"
+    },
+    {
+      "id": 18,
+      "name": "orgSubtype",
+      "label": "Org Subtype",
+      "type": "TEXT"
+    },
+    {
+      "id": 19,
+      "name": "workdayOrgId",
+      "label": "Workday Org ID",
+      "type": "TEXT"
+    },
+    {
+      "id": 20,
+      "name": "organizationName",
+      "label": "Organization Name",
+      "type": "TEXT"
+    }
+  ]
+}
