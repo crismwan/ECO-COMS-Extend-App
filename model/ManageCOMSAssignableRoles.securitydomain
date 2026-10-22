@@ -1,0 +1,6 @@
+{
+  "id": 5,
+  "name": "ManageCOMSAssignableRoles",
+  "label": "Manage: COMS Assignable Roles",
+  "enabledForPageSecurity": true
+}
