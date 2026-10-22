@@ -1,0 +1,65 @@
+{
+  "id": "ecocomsphase_xclw_cm_sync2_vmzvxm",
+  "languages": [
+    {
+      "code": "en-US",
+      "description": "English"
+    }
+  ],
+  "siteAuth": {
+    "authTypes": [
+      {
+        "scheme": "SSO",
+        "id": "sso"
+      }
+    ]
+  },
+  "siteId": "ecocomsphase_xclw_cm_sync2_vmzvxm",
+  "errorPageConfigurations": [
+    {
+      "statusCode": "400",
+      "page": {
+        "id": "errorPage"
+      }
+    },
+    {
+      "statusCode": "401",
+      "page": {
+        "id": "errorPage"
+      }
+    },
+    {
+      "statusCode": "403",
+      "page": {
+        "id": "errorPage"
+      }
+    },
+    {
+      "statusCode": "404",
+      "page": {
+        "id": "errorPage"
+      }
+    },
+    {
+      "statusCode": "408",
+      "page": {
+        "id": "errorPage"
+      }
+    },
+    {
+      "statusCode": "500",
+      "page": {
+        "id": "errorPage"
+      }
+    },
+    {
+      "statusCode": "503",
+      "page": {
+        "id": "errorPage"
+      }
+    }
+  ],
+  "cdnEnabled": true,
+  "siteProperties": [ ],
+  "applicationId": "ecocomsphase_xclw_cm_sync2_vmzvxm"
+}
