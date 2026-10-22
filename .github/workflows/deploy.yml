@@ -17,13 +17,12 @@ jobs:
         env:
           TENANT: ubc_wcpdev2
         run: |
-          # WD_CLIENT_ID is the base64-encoded client ID as shown in the developer portal
+          # WD_CLIENT_ID is the raw Client ID as shown in the Workday Developer Console
           # (e.g. YmQwZTY5NjItNmZhZi00MjJmLTg2YjktOTU5MjkyNGFhNzU1)
-          # The WCP auth endpoint expects: Authorization: ID base64(rawUUID:secret)
-          # So we must decode the client ID first, then re-encode with the secret.
+          # Per Workday docs: Authorization: ID base64(clientId:secret)
+          # The client ID is used as-is (no decoding), encoded together with the secret.
 
-          RAW_CLIENT_ID=$(printf '%s' "${{ secrets.WD_CLIENT_ID }}" | base64 -d)
-          ENCODED=$(printf '%s:%s' "${RAW_CLIENT_ID}" "${{ secrets.WD_CLIENT_SECRET }}" | base64 -w 0)
+          ENCODED=$(printf '%s:%s' "${{ secrets.WD_CLIENT_ID }}" "${{ secrets.WD_CLIENT_SECRET }}" | base64 -w 0)
 
           echo "Trying api.us.wcp.workday.com/auth/v1/token (WCP developer portal auth)..."
           TOKEN_RESPONSE=$(curl -s -X POST "https://api.us.wcp.workday.com/auth/v1/token" \
@@ -35,19 +34,7 @@ jobs:
           ACCESS_TOKEN=$(echo "${TOKEN_RESPONSE}" | jq -r '.access_token // empty' 2>/dev/null)
 
           if [ -z "${ACCESS_TOKEN}" ]; then
-            echo "WCP auth failed. Trying auth.api.workday.com as fallback..."
-            # Fallback: auth.api.workday.com also uses ID scheme but may accept the raw base64 client ID
-            ENCODED2=$(printf '%s:%s' "${{ secrets.WD_CLIENT_ID }}" "${{ secrets.WD_CLIENT_SECRET }}" | base64 -w 0)
-            TOKEN_RESPONSE2=$(curl -s -X POST "https://auth.api.workday.com/v1/token" \
-              -H "Content-Type: application/x-www-form-urlencoded" \
-              -H "Authorization: ID ${ENCODED2}" \
-              -d "grant_type=client_credentials&tenant_alias=${TENANT}")
-            echo "Fallback token response: ${TOKEN_RESPONSE2}"
-            ACCESS_TOKEN=$(echo "${TOKEN_RESPONSE2}" | jq -r '.access_token // empty')
-          fi
-
-          if [ -z "${ACCESS_TOKEN}" ]; then
-            echo "Both auth endpoints failed"
+            echo "WCP auth failed — cannot continue. Response: ${TOKEN_RESPONSE}"
             exit 1
           fi
 
