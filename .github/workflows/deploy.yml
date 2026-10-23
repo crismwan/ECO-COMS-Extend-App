@@ -54,6 +54,58 @@ jobs:
         run: |
           wdcli app upload
 
+      - name: Get tenant access token via ISU client credentials
+        env:
+          TENANT_ALIAS: ubc_wcpdev2
+          ISU_CLIENT_ID: ${{ secrets.WD_ISU_CLIENT_ID }}
+          ISU_CLIENT_SECRET: ${{ secrets.WD_ISU_CLIENT_SECRET }}
+        run: |
+          # Obtain a tenant access token using the ISU API client (client_credentials grant)
+          # Workday OAuth2 endpoint: https://wd2-impl-services1.workday.com/ccx/oauth2/<tenant>/token
+          TOKEN_RESPONSE=$(curl -s -X POST \
+            "https://wd2-impl-services1.workday.com/ccx/oauth2/${TENANT_ALIAS}/token" \
+            -H "Content-Type: application/x-www-form-urlencoded" \
+            -u "${ISU_CLIENT_ID}:${ISU_CLIENT_SECRET}" \
+            -d "grant_type=client_credentials")
+
+          echo "Token response received (masked)"
+          TENANT_TOKEN=$(echo "${TOKEN_RESPONSE}" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['access_token'])")
+
+          if [ -z "${TENANT_TOKEN}" ]; then
+            echo "ERROR: Failed to obtain tenant access token"
+            echo "Response: ${TOKEN_RESPONSE}"
+            exit 1
+          fi
+
+          # Write the tenant token into WDCLI config so wdcli app deploy can use it
+          CONFIG_DIR="${HOME}/.config/@workday/wdcli"
+          CONFIG_FILE="${CONFIG_DIR}/config.json"
+          mkdir -p "${CONFIG_DIR}"
+
+          # Read existing config or start fresh, then inject tenant token
+          if [ ! -f "${CONFIG_FILE}" ]; then
+            echo "{}" > "${CONFIG_FILE}"
+          fi
+
+          TENANT_TOKEN="${TENANT_TOKEN}" TENANT_ALIAS="${TENANT_ALIAS}" \
+          python3 - "${CONFIG_FILE}" << 'PYEOF'
+          import sys, json, os
+          config_file = sys.argv[1]
+          token = os.environ["TENANT_TOKEN"]
+          alias = os.environ["TENANT_ALIAS"]
+          with open(config_file) as f:
+              config = json.load(f)
+          existing = config.get("wcpTenantAccessToken", {})
+          if not isinstance(existing, dict):
+              existing = {}
+          existing[alias] = token
+          config["wcpTenantAccessToken"] = existing
+          with open(config_file, "w") as f:
+              json.dump(config, f)
+          PYEOF
+
+          echo "Tenant token written to WDCLI config for ${TENANT_ALIAS}"
+
       - name: Deploy to ubc_wcpdev2
         env:
           APP_REF_ID: ecocomsphase_xclw_cm_sync2_vmzvxm
