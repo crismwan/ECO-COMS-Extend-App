@@ -54,14 +54,17 @@ jobs:
           WDCLI_CLIENT_SECRET: ${{ secrets.WD_CLIENT_SECRET }}
         run: |
           set -euxo pipefail
-          echo "Working directory: $(pwd)"
-          echo "=== Files to upload ==="
-          find presentation -type f | sort
-          echo "=== MD5 of key files ==="
-          md5sum presentation/hubLanding.pmd presentation/pods/ubcLogo.pod presentation/pods/ecoComsFooter.pod
+
+          # Stamp the version field with the git short SHA so each commit
+          # produces a unique version ID (prevents wdcli from reusing an
+          # already-deployed version, which causes its response parser to crash)
+          GIT_SHA="${GITHUB_SHA:0:8}"
+          jq --arg v "1.0.0-${GIT_SHA}" '.version = $v' appManifest.json > /tmp/manifest-stamped.json
+          cp /tmp/manifest-stamped.json appManifest.json
+          echo "Stamped appManifest.json version: $(jq -r .version appManifest.json)"
+
           echo "=== Running wdcli app upload ==="
           wdcli app upload 2>&1 | tee /tmp/upload-output.txt
-          echo "Upload exit code: $?"
           echo "=== Upload output ==="
           cat /tmp/upload-output.txt
 
