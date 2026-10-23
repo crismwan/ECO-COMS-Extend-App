@@ -55,10 +55,15 @@ jobs:
         run: |
           set -euxo pipefail
           echo "Working directory: $(pwd)"
-          echo "Files to upload:"
+          echo "=== Files to upload ==="
           find presentation -type f | sort
-          wdcli app upload
+          echo "=== MD5 of key files ==="
+          md5sum presentation/hubLanding.pmd presentation/pods/ubcLogo.pod presentation/pods/ecoComsFooter.pod
+          echo "=== Running wdcli app upload ==="
+          wdcli app upload 2>&1 | tee /tmp/upload-output.txt
           echo "Upload exit code: $?"
+          echo "=== Upload output ==="
+          cat /tmp/upload-output.txt
 
       - name: Inject tenant token into WDCLI config
         env:
@@ -88,5 +93,8 @@ jobs:
           WDCLI_CLIENT_SECRET: ${{ secrets.WD_CLIENT_SECRET }}
         run: |
           set -euxo pipefail
-          wdcli app deploy "${APP_REF_ID}" --tenant-alias "${TENANT_ALIAS}" --latest-version
+          echo "=== Running wdcli app deploy ==="
+          wdcli app deploy "${APP_REF_ID}" --tenant-alias "${TENANT_ALIAS}" --latest-version 2>&1 | tee /tmp/deploy-output.txt
           echo "Deploy exit code: $?"
+          echo "=== Deploy output ==="
+          cat /tmp/deploy-output.txt
