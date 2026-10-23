@@ -1,0 +1,11 @@
+{
+  "podId": "ubcLogo",
+  "seed": {
+    "template": {
+      "type": "image",
+      "src": "assets/ubc-wordmark.png",
+      "alt": "The University of British Columbia",
+      "height": "48"
+    }
+  }
+}
