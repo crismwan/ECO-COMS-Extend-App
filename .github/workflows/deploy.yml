@@ -18,9 +18,6 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # WDCLI v1.9.43 is stored as a release asset on this repo
-          # To update: download Linux x64 from https://developer.workday.com/downloads
-          # then upload it as a release asset tagged "wdcli-v1.9.43"
           echo "Downloading WDCLI from release assets..."
           mkdir -p /opt/wdcli-download
           gh release download wdcli-v1.9.43 \
@@ -32,7 +29,6 @@ jobs:
           mkdir -p /opt/wdcli
           tar xzvf /opt/wdcli-download/wdcli-installer-linux-x64-*.tar.gz -C /opt/wdcli
 
-          # Locate the wdcli binary (extracts to wdcli/bin/wdcli)
           WDCLI_BIN=$(find /opt/wdcli -name "wdcli" -type f | head -1)
           if [ -z "${WDCLI_BIN}" ]; then
             echo "ERROR: Could not find wdcli binary after extraction"
@@ -45,6 +41,17 @@ jobs:
 
       - name: Verify WDCLI
         run: wdcli version
+
+      - name: Debug credentials
+        env:
+          WDCLI_CLIENT_ID: ${{ secrets.WD_CLIENT_ID }}
+          WDCLI_CLIENT_SECRET: ${{ secrets.WD_CLIENT_SECRET }}
+        run: |
+          echo "CLIENT_ID length: ${#WDCLI_CLIENT_ID}"
+          echo "CLIENT_SECRET length: ${#WDCLI_CLIENT_SECRET}"
+          echo "CLIENT_ID set: $( [ -n "${WDCLI_CLIENT_ID}" ] && echo YES || echo NO )"
+          echo "CLIENT_SECRET set: $( [ -n "${WDCLI_CLIENT_SECRET}" ] && echo YES || echo NO )"
+          echo "CLIENT_ID first 4 chars: ${WDCLI_CLIENT_ID:0:4}"
 
       - name: Authenticate as system user
         env:
