@@ -158,37 +158,29 @@ jobs:
           ORG_UUID=$(echo "${WHOAMI}" | jq -r '.account.organizationUuid // .organizationUuid // empty' 2>/dev/null | head -1)
           echo "Org UUID: ${ORG_UUID}"
 
-          echo "=== Calling Workday deploy REST API directly ==="
-          echo "  App UUID:   ${APP_UUID}"
+          echo "=== Calling Workday AOS deploy REST API ==="
           echo "  Version ID: ${VERSION_ID}"
           echo "  Tenant:     ${TENANT_ALIAS}"
           echo "  Gateway:    ${GATEWAY}"
 
-          # DevToolsConnector uses /devtools/v1 as the API path prefix
-          # orgUuid is required as a query param (how wdcli passes it via attachParams)
-          if [ -n "${ORG_UUID}" ]; then
-            DEPLOY_URL="https://${GATEWAY}/devtools/v1/apps/${APP_UUID}/deploy?orgUuid=${ORG_UUID}"
-          else
-            echo "WARNING: orgUuid not found — deploying without it"
-            DEPLOY_URL="https://${GATEWAY}/devtools/v1/apps/${APP_UUID}/deploy"
-          fi
+          # Our account lacks agentbuilder.agent.write, so wdcli uses AosConnector:
+          #   POST /aos/v1/deploy
+          #   Authorization: Bearer <TENANT_TOKEN>        (tenant token as primary auth)
+          #   WCP-Authorization: Bearer <DEV_TOKEN>       (developer token in WCP header)
+          #   Body: { versionId: "..." }
+          DEPLOY_URL="https://${GATEWAY}/aos/v1/deploy"
+          echo "  Deploy URL: ${DEPLOY_URL}"
 
           DEPLOY_BODY=$(jq -n \
             --arg versionId "${VERSION_ID}" \
-            --arg tenantAlias "${TENANT_ALIAS}" \
-            '{versionId: $versionId, tenantAlias: $tenantAlias}')
+            '{versionId: $versionId}')
 
-          # Build curl args
-          CURL_ARGS=(-s -w "\n%{http_code}" -X POST "${DEPLOY_URL}" \
+          DEPLOY_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "${DEPLOY_URL}" \
             -H "Content-Type: application/json" \
-            -H "Authorization: Bearer ${DEV_TOKEN}" \
-            -H "Deploy-Tenant-Authorization: Bearer ${TENANT_ACCESS_TOKEN}" \
+            -H "Authorization: Bearer ${TENANT_ACCESS_TOKEN}" \
+            -H "WCP-Authorization: Bearer ${DEV_TOKEN}" \
             -d "${DEPLOY_BODY}")
-          if [ -n "${ORG_UUID}" ]; then
-            CURL_ARGS+=(-H "X-Org-Uuid: ${ORG_UUID}")
-          fi
 
-          DEPLOY_RESPONSE=$(curl "${CURL_ARGS[@]}")
           HTTP_CODE=$(echo "${DEPLOY_RESPONSE}" | tail -1)
           BODY=$(echo "${DEPLOY_RESPONSE}" | sed '$d')
 
@@ -196,8 +188,8 @@ jobs:
           echo "Response body: ${BODY}"
 
           if [ "${HTTP_CODE}" = "200" ] || [ "${HTTP_CODE}" = "201" ] || [ "${HTTP_CODE}" = "202" ]; then
-            SUCCESS=$(echo "${BODY}" | jq -r '.appDeploymentSucceeded // "unknown"' 2>/dev/null)
-            echo "Deploy succeeded (appDeploymentSucceeded=${SUCCESS})"
+            SUCCESS=$(echo "${BODY}" | jq -r '.success // .appDeploymentSucceeded // "unknown"' 2>/dev/null)
+            echo "Deploy succeeded (success=${SUCCESS})"
           else
             echo "ERROR: Deploy API returned HTTP ${HTTP_CODE}"
             exit 1
