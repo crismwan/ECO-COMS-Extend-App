@@ -18,6 +18,9 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # WDCLI v1.9.43 is stored as a release asset on this repo
+          # To update: download Linux x64 from https://developer.workday.com/downloads
+          # then upload it as a release asset tagged "wdcli-v1.9.43"
           echo "Downloading WDCLI from release assets..."
           mkdir -p /opt/wdcli-download
           gh release download wdcli-v1.9.43 \
@@ -29,6 +32,7 @@ jobs:
           mkdir -p /opt/wdcli
           tar xzvf /opt/wdcli-download/wdcli-installer-linux-x64-*.tar.gz -C /opt/wdcli
 
+          # Locate the wdcli binary (extracts to wdcli/bin/wdcli)
           WDCLI_BIN=$(find /opt/wdcli -name "wdcli" -type f | head -1)
           if [ -z "${WDCLI_BIN}" ]; then
             echo "ERROR: Could not find wdcli binary after extraction"
@@ -42,16 +46,33 @@ jobs:
       - name: Verify WDCLI
         run: wdcli version
 
-      - name: Debug credentials
+      - name: Debug credential format
         env:
           WDCLI_CLIENT_ID: ${{ secrets.WD_CLIENT_ID }}
           WDCLI_CLIENT_SECRET: ${{ secrets.WD_CLIENT_SECRET }}
         run: |
-          echo "CLIENT_ID length: ${#WDCLI_CLIENT_ID}"
-          echo "CLIENT_SECRET length: ${#WDCLI_CLIENT_SECRET}"
-          echo "CLIENT_ID set: $( [ -n "${WDCLI_CLIENT_ID}" ] && echo YES || echo NO )"
-          echo "CLIENT_SECRET set: $( [ -n "${WDCLI_CLIENT_SECRET}" ] && echo YES || echo NO )"
-          echo "CLIENT_ID first 4 chars: ${WDCLI_CLIENT_ID:0:4}"
+          ID_LEN=${#WDCLI_CLIENT_ID}
+          SEC_LEN=${#WDCLI_CLIENT_SECRET}
+          echo "CLIENT_ID length: ${ID_LEN}"
+          echo "CLIENT_SECRET length: ${SEC_LEN}"
+          # Check if CLIENT_ID looks like UUID (36 chars with dashes at positions 8,13,18,23)
+          if [ "${ID_LEN}" -eq 36 ]; then
+            echo "CLIENT_ID format: UUID-length (correct)"
+            # Show char at position 8 - should be '-' for UUID
+            CHAR8="${WDCLI_CLIENT_ID:8:1}"
+            echo "CLIENT_ID char at pos 8: [${CHAR8}] (should be '-' for UUID format)"
+          elif [ "${ID_LEN}" -eq 52 ]; then
+            echo "CLIENT_ID format: base64-length (WRONG - needs to be UUID not base64)"
+            echo "HINT: decode with: echo <CLIENT_ID> | base64 -d"
+          else
+            echo "CLIENT_ID format: unexpected length ${ID_LEN}"
+          fi
+          # Check secret length (WCP secrets are typically ~100 chars)
+          if [ "${SEC_LEN}" -gt 90 ]; then
+            echo "CLIENT_SECRET length looks correct (${SEC_LEN} chars)"
+          else
+            echo "CLIENT_SECRET may be too short: ${SEC_LEN} chars (expected ~100)"
+          fi
 
       - name: Authenticate as system user
         env:
