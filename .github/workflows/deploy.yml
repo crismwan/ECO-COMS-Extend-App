@@ -150,11 +150,12 @@ jobs:
           GATEWAY="api.${REGION_CODE}.wcp.workday.com"
           echo "Derived API gateway: ${GATEWAY}"
 
-          # Get org UUID via wdcli whoami --format json
-          echo "=== wdcli whoami ==="
-          WHOAMI=$(wdcli whoami --format json 2>/dev/null || wdcli whoami 2>&1 || true)
+          # Get org UUID via wdcli whoami --format json --verbose
+          # organizationUuid is only included in verbose output
+          echo "=== wdcli whoami --verbose ==="
+          WHOAMI=$(wdcli whoami --format json --verbose 2>/dev/null || true)
           echo "${WHOAMI}"
-          ORG_UUID=$(echo "${WHOAMI}" | jq -r '.organizationUuid // .account.organizationUuid // empty' 2>/dev/null | head -1)
+          ORG_UUID=$(echo "${WHOAMI}" | jq -r '.account.organizationUuid // .organizationUuid // empty' 2>/dev/null | head -1)
           echo "Org UUID: ${ORG_UUID}"
 
           echo "=== Calling Workday deploy REST API directly ==="
@@ -164,7 +165,13 @@ jobs:
           echo "  Gateway:    ${GATEWAY}"
 
           # DevToolsConnector uses /devtools/v1 as the API path prefix
-          DEPLOY_URL="https://${GATEWAY}/devtools/v1/apps/${APP_UUID}/deploy"
+          # orgUuid is required as a query param (how wdcli passes it via attachParams)
+          if [ -n "${ORG_UUID}" ]; then
+            DEPLOY_URL="https://${GATEWAY}/devtools/v1/apps/${APP_UUID}/deploy?orgUuid=${ORG_UUID}"
+          else
+            echo "WARNING: orgUuid not found — deploying without it"
+            DEPLOY_URL="https://${GATEWAY}/devtools/v1/apps/${APP_UUID}/deploy"
+          fi
 
           DEPLOY_BODY=$(jq -n \
             --arg versionId "${VERSION_ID}" \
