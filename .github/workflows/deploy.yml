@@ -116,12 +116,41 @@ jobs:
           TENANT_ALIAS: ubc_wcpdev2
           WDCLI_CLIENT_ID: ${{ secrets.WD_CLIENT_ID }}
           WDCLI_CLIENT_SECRET: ${{ secrets.WD_CLIENT_SECRET }}
-          NODE_DEBUG: https
         run: |
           set -euo pipefail
 
-          echo "=== Running wdcli app deploy (with NODE_DEBUG=https to capture raw API traffic) ==="
-          wdcli app deploy "${APP_REF_ID}" --tenant-alias "${TENANT_ALIAS}" --latest-version --format json \
-            2>&1 | tee /tmp/deploy-output.txt || true
+          # Get the uploaded version ID
+          echo "=== Listing app versions ==="
+          wdcli app version list "${APP_REF_ID}" --format json 2>&1 | tee /tmp/versions.txt || true
+          cat /tmp/versions.txt
+
+          # Try deploy with --version-id flag (instead of --latest-version) to see if response differs
+          UPLOADED_VERSION=$(cat /tmp/versions.txt | jq -r \
+            '[.[] | select(.status == "UPLOADED")] | sort_by(.createdDate) | last | .id // empty' \
+            2>/dev/null || echo "")
+          echo "Uploaded version: ${UPLOADED_VERSION}"
+
+          if [ -n "${UPLOADED_VERSION}" ]; then
+            echo "=== Trying deploy with explicit --version-id ==="
+            wdcli app deploy "${APP_REF_ID}" \
+              --tenant-alias "${TENANT_ALIAS}" \
+              --version-id "${UPLOADED_VERSION}" \
+              --format json 2>&1 | tee /tmp/deploy-output.txt || true
+          else
+            echo "=== Falling back to --latest-version ==="
+            wdcli app deploy "${APP_REF_ID}" \
+              --tenant-alias "${TENANT_ALIAS}" \
+              --latest-version \
+              --format json 2>&1 | tee /tmp/deploy-output.txt || true
+          fi
+
           echo "=== Deploy output ==="
           cat /tmp/deploy-output.txt
+
+          # Fail if deploy shows an error
+          if grep -q "Cannot read properties" /tmp/deploy-output.txt; then
+            echo "WARNING: wdcli crashed parsing deploy response — deploy may still have succeeded on server"
+          elif grep -q "Error" /tmp/deploy-output.txt; then
+            echo "ERROR: Deploy failed"
+            exit 1
+          fi
