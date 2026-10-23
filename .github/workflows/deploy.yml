@@ -86,23 +86,7 @@ jobs:
             echo "{}" > "${CONFIG_FILE}"
           fi
 
-          WD_TENANT_TOKEN="${WD_TENANT_TOKEN}" TENANT_ALIAS="${TENANT_ALIAS}" \
-          python3 - "${CONFIG_FILE}" << 'PYEOF'
-import sys, json, os
-config_file = sys.argv[1]
-token = os.environ["WD_TENANT_TOKEN"]
-alias = os.environ["TENANT_ALIAS"]
-with open(config_file) as f:
-    config = json.load(f)
-existing = config.get("wcpTenantAccessToken", {})
-if not isinstance(existing, dict):
-    existing = {}
-existing[alias] = token
-config["wcpTenantAccessToken"] = existing
-with open(config_file, "w") as f:
-    json.dump(config, f)
-print(f"Tenant token injected for alias: {alias}")
-PYEOF
+          python3 -c "import json,os,sys; f=sys.argv[1]; t=os.environ['WD_TENANT_TOKEN']; a=os.environ['TENANT_ALIAS']; c=json.load(open(f)); e=c.get('wcpTenantAccessToken',{}); e[a]=t; c['wcpTenantAccessToken']=e; json.dump(c,open(f,'w')); print('Token injected for '+a)" "${CONFIG_FILE}"
 
       - name: Deploy to ubc_wcpdev2
         env:
