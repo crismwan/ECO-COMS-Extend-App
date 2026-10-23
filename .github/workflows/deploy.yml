@@ -43,6 +43,7 @@ jobs:
           WDCLI_CLIENT_ID: ${{ secrets.WD_CLIENT_ID }}
           WDCLI_CLIENT_SECRET: ${{ secrets.WD_CLIENT_SECRET }}
         run: |
+          set -euxo pipefail
           wdcli auth login --system-user
           wdcli whoami
 
@@ -52,41 +53,32 @@ jobs:
           WDCLI_CLIENT_ID: ${{ secrets.WD_CLIENT_ID }}
           WDCLI_CLIENT_SECRET: ${{ secrets.WD_CLIENT_SECRET }}
         run: |
+          set -euxo pipefail
+          echo "Working directory: $(pwd)"
+          echo "Files to upload:"
+          find presentation -type f | sort
           wdcli app upload
+          echo "Upload exit code: $?"
 
       - name: Inject tenant token into WDCLI config
         env:
           TENANT_ALIAS: ubc_wcpdev2
           WD_TENANT_TOKEN: ${{ secrets.WD_TENANT_TOKEN }}
         run: |
-          # WCP tenant tokens are issued by WCP auth (api.us.wcp.workday.com/auth) via a
-          # browser-based PKCE flow — there is no machine-to-machine path in WDCLI v1.9.43.
-          #
-          # To refresh this token:
-          #   1. On your local machine: wdcli tenant login --tenant-alias ubc_wcpdev2
-          #   2. Copy the token:
-          #        python3 -c "import json; c=json.load(open('~/.config/@workday/wdcli/config.json'.replace('~', __import__('os').path.expanduser('~')))); print(c['wcpTenantAccessToken']['ubc_wcpdev2'])"
-          #   3. Update the WD_TENANT_TOKEN secret in GitHub repo settings.
-          #
-          # Tokens typically expire after 24 hours; update the secret before each deploy
-          # or whenever the "Deploy to ubc_wcpdev2" step fails with an auth error.
-
+          set -euo pipefail
           if [ -z "${WD_TENANT_TOKEN}" ]; then
             echo "ERROR: WD_TENANT_TOKEN secret is not set."
-            echo "Run 'wdcli tenant login --tenant-alias ubc_wcpdev2' locally and store the"
-            echo "resulting token from ~/.config/@workday/wdcli/config.json as the WD_TENANT_TOKEN secret."
             exit 1
           fi
-
           CONFIG_DIR="${HOME}/.config/@workday/wdcli"
           CONFIG_FILE="${CONFIG_DIR}/config.json"
           mkdir -p "${CONFIG_DIR}"
-
           if [ ! -f "${CONFIG_FILE}" ]; then
             echo "{}" > "${CONFIG_FILE}"
           fi
-
           python3 -c "import json,os,sys; f=sys.argv[1]; t=os.environ['WD_TENANT_TOKEN']; a=os.environ['TENANT_ALIAS']; c=json.load(open(f)); e=c.get('wcpTenantAccessToken',{}); e[a]=t; c['wcpTenantAccessToken']=e; json.dump(c,open(f,'w')); print('Token injected for '+a)" "${CONFIG_FILE}"
+          echo "Config file contents (token redacted):"
+          python3 -c "import json,os; c=json.load(open(os.environ['HOME']+'/.config/@workday/wdcli/config.json')); c.get('wcpTenantAccessToken',{}).update({k:'REDACTED' for k in c.get('wcpTenantAccessToken',{})}); print(json.dumps(c, indent=2))"
 
       - name: Deploy to ubc_wcpdev2
         env:
@@ -95,8 +87,6 @@ jobs:
           WDCLI_CLIENT_ID: ${{ secrets.WD_CLIENT_ID }}
           WDCLI_CLIENT_SECRET: ${{ secrets.WD_CLIENT_SECRET }}
         run: |
-          echo "=== WDCLI version ==="
-          wdcli version || true
-          echo "=== Deploying ==="
+          set -euxo pipefail
           wdcli app deploy "${APP_REF_ID}" --tenant-alias "${TENANT_ALIAS}" --latest-version
-          echo "=== Deploy exit code: $? ==="
+          echo "Deploy exit code: $?"
