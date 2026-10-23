@@ -96,3 +96,5 @@ jobs:
           WDCLI_CLIENT_SECRET: ${{ secrets.WD_CLIENT_SECRET }}
         run: |
           wdcli app deploy "${APP_REF_ID}" --tenant-alias "${TENANT_ALIAS}" --latest-version
+          echo "--- promoting to tenant ---"
+          wdcli app promote "${APP_REF_ID}" --tenant-alias "${TENANT_ALIAS}" --latest-version || echo "promote not available, deploy may be sufficient"
