@@ -87,10 +87,15 @@ jobs:
           if [ "${HTTP_STATUS}" != "200" ]; then
             echo "ERROR: OAuth2 token request failed with HTTP ${HTTP_STATUS}"
             echo "Response: ${TOKEN_RESPONSE}"
-            # Write to GitHub step summary so it's visible in API
+            # Save error details as an artifact file for retrieval
+            mkdir -p /tmp/token-debug
+            echo "HTTP_STATUS=${HTTP_STATUS}" > /tmp/token-debug/error.txt
+            echo "RESPONSE=${TOKEN_RESPONSE}" >> /tmp/token-debug/error.txt
+            echo "CLIENT_ID_LEN=${#ISU_CLIENT_ID}" >> /tmp/token-debug/error.txt
+            # Also write to summary
             echo "## ISU Token Failure" >> $GITHUB_STEP_SUMMARY
-            echo "HTTP Status: ${HTTP_STATUS}" >> $GITHUB_STEP_SUMMARY
-            echo "Response: \`${TOKEN_RESPONSE}\`" >> $GITHUB_STEP_SUMMARY
+            echo "- HTTP Status: ${HTTP_STATUS}" >> $GITHUB_STEP_SUMMARY
+            echo "- Response: ${TOKEN_RESPONSE}" >> $GITHUB_STEP_SUMMARY
             exit 1
           fi
 
@@ -130,6 +135,14 @@ jobs:
           PYEOF
 
           echo "Tenant token written to WDCLI config for ${TENANT_ALIAS}"
+
+      - name: Upload token debug info (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: token-debug
+          path: /tmp/token-debug/
+          if-no-files-found: ignore
 
       - name: Deploy to ubc_wcpdev2
         env:
