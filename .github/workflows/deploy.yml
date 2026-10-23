@@ -175,11 +175,13 @@ jobs:
             --arg versionId "${VERSION_ID}" \
             '{versionId: $versionId}')
 
-          # Decode tenant token claims for debugging
-          echo "=== Tenant token claims ==="
-          echo "${TENANT_ACCESS_TOKEN}" | cut -d'.' -f2 | base64 -d 2>/dev/null | jq '{iss,sub,aud,scope,region,tid,exp}' 2>/dev/null || echo "(decode failed)"
-          echo "=== Dev token claims ==="
-          echo "${DEV_TOKEN}" | cut -d'.' -f2 | base64 -d 2>/dev/null | jq '{iss,sub,aud,scope,region,tid,exp}' 2>/dev/null || echo "(decode failed)"
+          # Decode JWT claims and write to step summary (readable via GitHub API)
+          TENANT_CLAIMS=$(echo "${TENANT_ACCESS_TOKEN}" | cut -d'.' -f2 | base64 -d 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(json.dumps({k:d.get(k) for k in ['iss','sub','aud','scope','region','tid','wid']}))" 2>/dev/null || echo '{"error":"decode_failed"}')
+          DEV_CLAIMS=$(echo "${DEV_TOKEN}" | cut -d'.' -f2 | base64 -d 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(json.dumps({k:d.get(k) for k in ['iss','sub','aud','scope','region','tid','wid']}))" 2>/dev/null || echo '{"error":"decode_failed"}')
+          echo "TENANT_CLAIMS=${TENANT_CLAIMS}" >> $GITHUB_STEP_SUMMARY
+          echo "DEV_CLAIMS=${DEV_CLAIMS}" >> $GITHUB_STEP_SUMMARY
+          echo "Tenant claims: ${TENANT_CLAIMS}"
+          echo "Dev claims:    ${DEV_CLAIMS}"
 
           DEPLOY_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "${DEPLOY_URL}" \
             -H "Content-Type: application/json" \
