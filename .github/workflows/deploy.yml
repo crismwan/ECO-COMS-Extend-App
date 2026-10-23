@@ -118,8 +118,14 @@ jobs:
           WDCLI_CLIENT_SECRET: ${{ secrets.WD_CLIENT_SECRET }}
         run: |
           set -euxo pipefail
+          echo "=== wdcli config (redacted) ==="
+          cat "${HOME}/.config/@workday/wdcli/config.json" | jq 'del(.wcpTenantAccessToken)' 2>/dev/null || true
+          echo "=== wdcli config keys ==="
+          cat "${HOME}/.config/@workday/wdcli/config.json" | jq 'keys' 2>/dev/null || true
+          echo "=== wdcli app deploy --help ==="
+          wdcli app deploy --help 2>&1 || true
           echo "=== Running wdcli app deploy ==="
-          wdcli app deploy "${APP_REF_ID}" --tenant-alias "${TENANT_ALIAS}" --latest-version 2>&1 | tee /tmp/deploy-output.txt
+          wdcli app deploy "${APP_REF_ID}" --tenant-alias "${TENANT_ALIAS}" --latest-version --format json 2>&1 | tee /tmp/deploy-output.txt || true
           echo "Deploy exit code: $?"
           echo "=== Deploy output ==="
           cat /tmp/deploy-output.txt
