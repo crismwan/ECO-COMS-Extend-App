@@ -63,10 +63,12 @@ jobs:
           # Validate secrets are present
           if [ -z "${ISU_CLIENT_ID}" ]; then
             echo "ERROR: WD_ISU_CLIENT_ID secret is not set"
+            echo "## ISU Token Failure: Missing secret WD_ISU_CLIENT_ID" >> $GITHUB_STEP_SUMMARY
             exit 1
           fi
           if [ -z "${ISU_CLIENT_SECRET}" ]; then
             echo "ERROR: WD_ISU_CLIENT_SECRET secret is not set"
+            echo "## ISU Token Failure: Missing secret WD_ISU_CLIENT_SECRET" >> $GITHUB_STEP_SUMMARY
             exit 1
           fi
           echo "ISU_CLIENT_ID is set (length: ${#ISU_CLIENT_ID})"
@@ -85,6 +87,10 @@ jobs:
           if [ "${HTTP_STATUS}" != "200" ]; then
             echo "ERROR: OAuth2 token request failed with HTTP ${HTTP_STATUS}"
             echo "Response: ${TOKEN_RESPONSE}"
+            # Write to GitHub step summary so it's visible in API
+            echo "## ISU Token Failure" >> $GITHUB_STEP_SUMMARY
+            echo "HTTP Status: ${HTTP_STATUS}" >> $GITHUB_STEP_SUMMARY
+            echo "Response: \`${TOKEN_RESPONSE}\`" >> $GITHUB_STEP_SUMMARY
             exit 1
           fi
 
