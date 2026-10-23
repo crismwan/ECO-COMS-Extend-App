@@ -75,11 +75,11 @@ jobs:
 
           # Obtain a tenant access token using the ISU API client (client_credentials grant)
           # Workday OAuth2 endpoint: https://wd2-impl-services1.workday.com/ccx/oauth2/<tenant>/token
+          # Workday requires client_id and client_secret in the POST body (not HTTP Basic auth)
           HTTP_STATUS=$(curl -s -o /tmp/token_response.json -w "%{http_code}" -X POST \
             "https://wd2-impl-services1.workday.com/ccx/oauth2/${TENANT_ALIAS}/token" \
             -H "Content-Type: application/x-www-form-urlencoded" \
-            -u "${ISU_CLIENT_ID}:${ISU_CLIENT_SECRET}" \
-            -d "grant_type=client_credentials")
+            -d "grant_type=client_credentials&client_id=${ISU_CLIENT_ID}&client_secret=${ISU_CLIENT_SECRET}")
 
           echo "HTTP status: ${HTTP_STATUS}"
           TOKEN_RESPONSE=$(cat /tmp/token_response.json)
