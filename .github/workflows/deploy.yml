@@ -65,19 +65,50 @@ jobs:
           echo "=== Upload output ==="
           cat /tmp/upload-output.txt
 
-      - name: Authenticate to tenant as system user
+      - name: Inject tenant access token via client credentials
         env:
           TENANT_ALIAS: ubc_wcpdev2
           WDCLI_CLIENT_ID: ${{ secrets.WD_CLIENT_ID }}
           WDCLI_CLIENT_SECRET: ${{ secrets.WD_CLIENT_SECRET }}
         run: |
-          set -euxo pipefail
-          echo "=== Attempting wdcli tenant login --ci (non-interactive) ==="
-          wdcli tenant login --ci "${TENANT_ALIAS}" 2>&1
-          LOGIN_EXIT=$?
-          echo "tenant login exit code: ${LOGIN_EXIT}"
-          echo "=== wdcli tenant token (to verify stored token) ==="
-          wdcli tenant token 2>&1 || echo "No tenant token stored"
+          set -euo pipefail
+
+          # Fetch a fresh tenant access token using client credentials grant
+          echo "=== Fetching tenant access token via client credentials ==="
+          ENCODED=$(printf '%s:%s' "${WDCLI_CLIENT_ID}" "${WDCLI_CLIENT_SECRET}" | base64 -w 0)
+          TOKEN_RESPONSE=$(curl -s -X POST "https://auth.api.workday.com/v1/token" \
+            -H "Authorization: ID ${ENCODED}" \
+            -H "Content-Type: application/x-www-form-urlencoded" \
+            -d "grant_type=client_credentials&tenant_alias=${TENANT_ALIAS}")
+          echo "Token response keys: $(echo "${TOKEN_RESPONSE}" | jq -r 'keys | @csv' 2>/dev/null || echo 'parse error')"
+          ACCESS_TOKEN=$(echo "${TOKEN_RESPONSE}" | jq -r '.access_token // empty')
+          if [ -z "${ACCESS_TOKEN}" ]; then
+            echo "ERROR: No access_token in response: ${TOKEN_RESPONSE}"
+            exit 1
+          fi
+          echo "Got access token (length=${#ACCESS_TOKEN})"
+
+          # Inject token into wdcli config
+          WDCLI_CONFIG_DIR="${HOME}/.config/@workday/wdcli"
+          mkdir -p "${WDCLI_CONFIG_DIR}"
+          CONFIG_FILE="${WDCLI_CONFIG_DIR}/config.json"
+
+          # Read existing config or start fresh
+          if [ -f "${CONFIG_FILE}" ]; then
+            EXISTING=$(cat "${CONFIG_FILE}")
+          else
+            EXISTING='{}'
+          fi
+
+          # Merge in the tenant access token
+          echo "${EXISTING}" | jq \
+            --arg alias "${TENANT_ALIAS}" \
+            --arg token "${ACCESS_TOKEN}" \
+            '.wcpTenantAccessToken[$alias] = $token' \
+            > "${CONFIG_FILE}"
+          echo "Tenant token written to ${CONFIG_FILE}"
+          echo "=== wdcli tenant token (verify) ==="
+          wdcli tenant token 2>&1 || echo "wdcli tenant token command failed"
 
       - name: Deploy to ubc_wcpdev2
         env:
