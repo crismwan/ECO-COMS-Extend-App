@@ -21,77 +21,22 @@ jobs:
           # WDCLI v1.9.43 is stored as a release asset on this repo
           # To update: download Linux x64 from https://developer.workday.com/downloads
           # then upload it as a release asset tagged "wdcli-v1.9.43"
-          echo "Downloading WDCLI from release assets..."
           mkdir -p /opt/wdcli-download
           gh release download wdcli-v1.9.43 \
             --repo crismwan/ECO-COMS-Extend-App \
             --pattern "wdcli-installer-linux-x64-*.tar.gz" \
             --dir /opt/wdcli-download
 
-          echo "Extracting WDCLI..."
           mkdir -p /opt/wdcli
           tar xzvf /opt/wdcli-download/wdcli-installer-linux-x64-*.tar.gz -C /opt/wdcli
 
-          # Locate the wdcli binary (extracts to wdcli/bin/wdcli)
           WDCLI_BIN=$(find /opt/wdcli -name "wdcli" -type f | head -1)
           if [ -z "${WDCLI_BIN}" ]; then
             echo "ERROR: Could not find wdcli binary after extraction"
-            find /opt/wdcli -type f | head -20
             exit 1
           fi
-          echo "Found wdcli at: ${WDCLI_BIN}"
           chmod +x "${WDCLI_BIN}"
           echo "$(dirname ${WDCLI_BIN})" >> $GITHUB_PATH
-
-      - name: Verify WDCLI
-        run: wdcli version
-
-      - name: Debug credential format
-        env:
-          WDCLI_CLIENT_ID: ${{ secrets.WD_CLIENT_ID }}
-          WDCLI_CLIENT_SECRET: ${{ secrets.WD_CLIENT_SECRET }}
-        run: |
-          ID_LEN=${#WDCLI_CLIENT_ID}
-          SEC_LEN=${#WDCLI_CLIENT_SECRET}
-          echo "CLIENT_ID length: ${ID_LEN}"
-          echo "CLIENT_SECRET length: ${SEC_LEN}"
-          # Check if CLIENT_ID looks like UUID (36 chars with dashes at positions 8,13,18,23)
-          if [ "${ID_LEN}" -eq 36 ]; then
-            echo "CLIENT_ID format: UUID-length (correct)"
-            # Show first 13 chars (e.g. "bd0e6962-6faf") - safe to show, not a secret
-            echo "CLIENT_ID first 13 chars: [${WDCLI_CLIENT_ID:0:13}] (expected: bd0e6962-6faf)"
-          elif [ "${ID_LEN}" -eq 52 ]; then
-            echo "CLIENT_ID format: base64-length (WRONG - needs to be UUID not base64)"
-            echo "HINT: decode with: echo <CLIENT_ID> | base64 -d"
-          else
-            echo "CLIENT_ID format: unexpected length ${ID_LEN}"
-          fi
-          # Check secret length (WCP secrets are typically ~100 chars)
-          if [ "${SEC_LEN}" -gt 90 ]; then
-            echo "CLIENT_SECRET length looks correct (${SEC_LEN} chars)"
-          else
-            echo "CLIENT_SECRET may be too short: ${SEC_LEN} chars (expected ~100)"
-          fi
-
-      - name: Test raw OAuth token request
-        env:
-          WDCLI_CLIENT_ID: ${{ secrets.WD_CLIENT_ID }}
-          WDCLI_CLIENT_SECRET: ${{ secrets.WD_CLIENT_SECRET }}
-        run: |
-          # Test the WCP OAuth token endpoint directly to get the raw error
-          echo "Testing WCP auth endpoint directly..."
-          HTTP_RESP=$(curl -s -w "\nHTTP_STATUS:%{http_code}" \
-            -X POST "https://api.us.wcp.workday.com/auth/v1/token" \
-            -H "Content-Type: application/x-www-form-urlencoded" \
-            --data-urlencode "grant_type=client_credentials" \
-            --data-urlencode "client_id=${WDCLI_CLIENT_ID}" \
-            --data-urlencode "client_secret=${WDCLI_CLIENT_SECRET}")
-          # Print response with secret values masked
-          BODY=$(echo "${HTTP_RESP}" | grep -v "HTTP_STATUS:")
-          STATUS=$(echo "${HTTP_RESP}" | grep "HTTP_STATUS:" | cut -d: -f2)
-          echo "HTTP Status: ${STATUS}"
-          # Mask any token in response but show error message
-          echo "Response body (tokens masked): $(echo "${BODY}" | sed 's/"access_token":"[^"]*"/"access_token":"***MASKED***"/g')"
 
       - name: Authenticate as system user
         env:
