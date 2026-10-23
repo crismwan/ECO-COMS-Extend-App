@@ -22,7 +22,7 @@
             {
               "type": "richText",
               "id": "ubcLogo",
-              "value": "<span style=\"font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:700;letter-spacing:3px;color:#002145;\">THE UNIVERSITY OF BRITISH COLUMBIA</span>"
+              "value": "<span style=\"color:#002145;font-size:16px;font-weight:700;letter-spacing:3px;\">THE UNIVERSITY OF BRITISH COLUMBIA</span>"
             },
             {
               "type": "richText",
