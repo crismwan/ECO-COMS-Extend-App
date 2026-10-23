@@ -46,6 +46,14 @@ jobs:
           wdcli auth login --system-user
           wdcli whoami
 
+      - name: Upload app to App Hub
+        env:
+          APP_REF_ID: ecocomsphase_xclw_cm_sync2_vmzvxm
+          WDCLI_CLIENT_ID: ${{ secrets.WD_CLIENT_ID }}
+          WDCLI_CLIENT_SECRET: ${{ secrets.WD_CLIENT_SECRET }}
+        run: |
+          wdcli app upload
+
       - name: Deploy to ubc_wcpdev2
         env:
           APP_REF_ID: ecocomsphase_xclw_cm_sync2_vmzvxm
