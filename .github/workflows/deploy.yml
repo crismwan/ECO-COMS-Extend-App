@@ -163,7 +163,8 @@ jobs:
           echo "  Tenant:     ${TENANT_ALIAS}"
           echo "  Gateway:    ${GATEWAY}"
 
-          DEPLOY_URL="https://${GATEWAY}/apps/${APP_UUID}/deploy"
+          # DevToolsConnector uses /devtools/v1 as the API path prefix
+          DEPLOY_URL="https://${GATEWAY}/devtools/v1/apps/${APP_UUID}/deploy"
 
           DEPLOY_BODY=$(jq -n \
             --arg versionId "${VERSION_ID}" \
