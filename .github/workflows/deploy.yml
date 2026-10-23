@@ -68,15 +68,12 @@ jobs:
           echo "=== Versions output ==="
           cat /tmp/versions-output.txt
 
-          # Try to extract version ID from versions JSON output
-          VERSION_ID=$(jq -r '.[0].id // empty' /tmp/versions-output.txt 2>/dev/null)
+          # Extract version ID from versions JSON output
+          # wdcli app versions returns [{versionId, appId, name, status, ...}]
+          VERSION_ID=$(jq -r '.[0].versionId // empty' /tmp/versions-output.txt 2>/dev/null)
           if [ -z "${VERSION_ID}" ]; then
-            # Try alternate structure
-            VERSION_ID=$(jq -r '.data[0].id // .versions[0].id // empty' /tmp/versions-output.txt 2>/dev/null)
-          fi
-          if [ -z "${VERSION_ID}" ]; then
-            # Fall back to grepping for 32-char hex from either output
-            VERSION_ID=$(grep -oE '[0-9a-f]{32}' /tmp/upload-output.txt /tmp/versions-output.txt 2>/dev/null | head -1)
+            # Fall back to grepping for 32-char hex from versions output
+            VERSION_ID=$(grep -oE '"versionId"[[:space:]]*:[[:space:]]*"([0-9a-f]{32})"' /tmp/versions-output.txt 2>/dev/null | grep -oE '[0-9a-f]{32}' | head -1)
           fi
           if [ -z "${VERSION_ID}" ]; then
             echo "ERROR: Could not determine version ID from upload or versions output"
