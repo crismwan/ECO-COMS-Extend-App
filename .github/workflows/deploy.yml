@@ -51,7 +51,7 @@ jobs:
           WDCLI_CLIENT_ID: ${{ secrets.WD_CLIENT_ID }}
           WDCLI_CLIENT_SECRET: ${{ secrets.WD_CLIENT_SECRET }}
         run: |
-          wdcli auth login --system-user --ci
+          wdcli auth login --system-user
           wdcli whoami
 
       - name: Deploy to ubc_wcpdev2
@@ -61,4 +61,4 @@ jobs:
           WDCLI_CLIENT_ID: ${{ secrets.WD_CLIENT_ID }}
           WDCLI_CLIENT_SECRET: ${{ secrets.WD_CLIENT_SECRET }}
         run: |
-          wdcli app deploy "${APP_REF_ID}" --tenant-alias "${TENANT_ALIAS}" --latest-version --ci
+          wdcli app deploy "${APP_REF_ID}" --tenant-alias "${TENANT_ALIAS}" --latest-version
