@@ -131,69 +131,61 @@ jobs:
         run: |
           set -euo pipefail
 
-          # Get the developer access token and API gateway URL from wdcli config
           WDCLI_CONFIG="${HOME}/.config/@workday/wdcli/config.json"
-          echo "=== wdcli config keys ==="
-          jq -r 'keys[]' "${WDCLI_CONFIG}" 2>/dev/null || echo "(no config)"
 
-          # Extract developer access token from wdcli config
+          # Developer access token from wdcli config (written by wdcli auth login)
           DEV_TOKEN=$(jq -r '.wcpAccessToken // empty' "${WDCLI_CONFIG}" 2>/dev/null)
           if [ -z "${DEV_TOKEN}" ]; then
-            # Try alternate key names
-            DEV_TOKEN=$(jq -r 'to_entries[] | select(.key | test("access.*token|token.*access"; "i")) | .value' "${WDCLI_CONFIG}" 2>/dev/null | head -1)
-          fi
-          if [ -z "${DEV_TOKEN}" ]; then
-            echo "ERROR: Could not find developer access token in wdcli config"
-            jq . "${WDCLI_CONFIG}"
+            echo "ERROR: wcpAccessToken not found in wdcli config"
+            jq -r 'keys[]' "${WDCLI_CONFIG}"
             exit 1
           fi
           echo "Got developer access token (length=${#DEV_TOKEN})"
 
-          # Get the API gateway URL from wdcli config
-          GATEWAY=$(jq -r '.wcpApiGatewayHostname // empty' "${WDCLI_CONFIG}" 2>/dev/null)
-          if [ -z "${GATEWAY}" ]; then
-            GATEWAY=$(jq -r 'to_entries[] | select(.key | test("gateway|host"; "i")) | .value' "${WDCLI_CONFIG}" 2>/dev/null | head -1)
-          fi
-          if [ -z "${GATEWAY}" ]; then
-            echo "Config contents:"
-            jq . "${WDCLI_CONFIG}"
-            echo "ERROR: Could not find API gateway hostname in wdcli config"
-            exit 1
-          fi
-          echo "API gateway: ${GATEWAY}"
+          # Derive API gateway from wcpRegion: "scylla:us" → "api.us.wcp.workday.com"
+          # Pattern: strip "scylla:" prefix, then build "api.{region}.wcp.workday.com"
+          WCP_REGION=$(jq -r '.wcpRegion // empty' "${WDCLI_CONFIG}" 2>/dev/null)
+          echo "wcpRegion: ${WCP_REGION}"
+          REGION_CODE="${WCP_REGION#scylla:}"  # strip "scylla:" → "us"
+          GATEWAY="api.${REGION_CODE}.wcp.workday.com"
+          echo "Derived API gateway: ${GATEWAY}"
 
-          # Get org UUID from wdcli config
-          ORG_UUID=$(jq -r '.selectedAccountOrganizationUuid // .organizationUuid // empty' "${WDCLI_CONFIG}" 2>/dev/null)
-          if [ -z "${ORG_UUID}" ]; then
-            ORG_UUID=$(jq -r 'to_entries[] | select(.key | test("org.*uuid|uuid.*org"; "i")) | .value' "${WDCLI_CONFIG}" 2>/dev/null | head -1)
-          fi
+          # Get org UUID via wdcli whoami --format json
+          echo "=== wdcli whoami ==="
+          WHOAMI=$(wdcli whoami --format json 2>/dev/null || wdcli whoami 2>&1 || true)
+          echo "${WHOAMI}"
+          ORG_UUID=$(echo "${WHOAMI}" | jq -r '.organizationUuid // .account.organizationUuid // empty' 2>/dev/null | head -1)
           echo "Org UUID: ${ORG_UUID}"
 
           echo "=== Calling Workday deploy REST API directly ==="
           echo "  App UUID:   ${APP_UUID}"
           echo "  Version ID: ${VERSION_ID}"
           echo "  Tenant:     ${TENANT_ALIAS}"
+          echo "  Gateway:    ${GATEWAY}"
 
           DEPLOY_URL="https://${GATEWAY}/apps/${APP_UUID}/deploy"
-          echo "  Deploy URL: ${DEPLOY_URL}"
 
           DEPLOY_BODY=$(jq -n \
             --arg versionId "${VERSION_ID}" \
             --arg tenantAlias "${TENANT_ALIAS}" \
             '{versionId: $versionId, tenantAlias: $tenantAlias}')
 
-          DEPLOY_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "${DEPLOY_URL}" \
+          # Build curl args
+          CURL_ARGS=(-s -w "\n%{http_code}" -X POST "${DEPLOY_URL}" \
             -H "Content-Type: application/json" \
             -H "Authorization: Bearer ${DEV_TOKEN}" \
             -H "Deploy-Tenant-Authorization: Bearer ${TENANT_ACCESS_TOKEN}" \
-            ${ORG_UUID:+-H "X-Org-Uuid: ${ORG_UUID}"} \
             -d "${DEPLOY_BODY}")
+          if [ -n "${ORG_UUID}" ]; then
+            CURL_ARGS+=(-H "X-Org-Uuid: ${ORG_UUID}")
+          fi
 
+          DEPLOY_RESPONSE=$(curl "${CURL_ARGS[@]}")
           HTTP_CODE=$(echo "${DEPLOY_RESPONSE}" | tail -1)
           BODY=$(echo "${DEPLOY_RESPONSE}" | sed '$d')
 
           echo "HTTP status: ${HTTP_CODE}"
-          echo "Response: ${BODY}"
+          echo "Response body: ${BODY}"
 
           if [ "${HTTP_CODE}" = "200" ] || [ "${HTTP_CODE}" = "201" ] || [ "${HTTP_CODE}" = "202" ]; then
             SUCCESS=$(echo "${BODY}" | jq -r '.appDeploymentSucceeded // "unknown"' 2>/dev/null)
