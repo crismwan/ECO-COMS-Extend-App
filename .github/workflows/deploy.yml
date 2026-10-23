@@ -72,9 +72,10 @@ jobs:
           WDCLI_CLIENT_SECRET: ${{ secrets.WD_CLIENT_SECRET }}
         run: |
           set -euxo pipefail
-          echo "=== Authenticating to tenant ${TENANT_ALIAS} as system user ==="
-          wdcli auth tenant login --tenant-alias "${TENANT_ALIAS}" --system-user
-          echo "=== Tenant auth complete ==="
+          echo "=== Available wdcli tenant commands ==="
+          wdcli tenant --help 2>&1 || true
+          echo "=== Available wdcli auth commands ==="
+          wdcli auth --help 2>&1 || true
 
       - name: Deploy to ubc_wcpdev2
         env:
