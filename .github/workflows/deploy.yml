@@ -58,9 +58,8 @@ jobs:
           # Check if CLIENT_ID looks like UUID (36 chars with dashes at positions 8,13,18,23)
           if [ "${ID_LEN}" -eq 36 ]; then
             echo "CLIENT_ID format: UUID-length (correct)"
-            # Show char at position 8 - should be '-' for UUID
-            CHAR8="${WDCLI_CLIENT_ID:8:1}"
-            echo "CLIENT_ID char at pos 8: [${CHAR8}] (should be '-' for UUID format)"
+            # Show first 13 chars (e.g. "bd0e6962-6faf") - safe to show, not a secret
+            echo "CLIENT_ID first 13 chars: [${WDCLI_CLIENT_ID:0:13}] (expected: bd0e6962-6faf)"
           elif [ "${ID_LEN}" -eq 52 ]; then
             echo "CLIENT_ID format: base64-length (WRONG - needs to be UUID not base64)"
             echo "HINT: decode with: echo <CLIENT_ID> | base64 -d"
