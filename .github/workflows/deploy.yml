@@ -60,16 +60,35 @@ jobs:
           ISU_CLIENT_ID: ${{ secrets.WD_ISU_CLIENT_ID }}
           ISU_CLIENT_SECRET: ${{ secrets.WD_ISU_CLIENT_SECRET }}
         run: |
+          # Validate secrets are present
+          if [ -z "${ISU_CLIENT_ID}" ]; then
+            echo "ERROR: WD_ISU_CLIENT_ID secret is not set"
+            exit 1
+          fi
+          if [ -z "${ISU_CLIENT_SECRET}" ]; then
+            echo "ERROR: WD_ISU_CLIENT_SECRET secret is not set"
+            exit 1
+          fi
+          echo "ISU_CLIENT_ID is set (length: ${#ISU_CLIENT_ID})"
+
           # Obtain a tenant access token using the ISU API client (client_credentials grant)
           # Workday OAuth2 endpoint: https://wd2-impl-services1.workday.com/ccx/oauth2/<tenant>/token
-          TOKEN_RESPONSE=$(curl -s -X POST \
+          HTTP_STATUS=$(curl -s -o /tmp/token_response.json -w "%{http_code}" -X POST \
             "https://wd2-impl-services1.workday.com/ccx/oauth2/${TENANT_ALIAS}/token" \
             -H "Content-Type: application/x-www-form-urlencoded" \
             -u "${ISU_CLIENT_ID}:${ISU_CLIENT_SECRET}" \
             -d "grant_type=client_credentials")
 
-          echo "Token response received (masked)"
-          TENANT_TOKEN=$(echo "${TOKEN_RESPONSE}" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['access_token'])")
+          echo "HTTP status: ${HTTP_STATUS}"
+          TOKEN_RESPONSE=$(cat /tmp/token_response.json)
+
+          if [ "${HTTP_STATUS}" != "200" ]; then
+            echo "ERROR: OAuth2 token request failed with HTTP ${HTTP_STATUS}"
+            echo "Response: ${TOKEN_RESPONSE}"
+            exit 1
+          fi
+
+          TENANT_TOKEN=$(echo "${TOKEN_RESPONSE}" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['access_token'])" 2>/dev/null || echo "")
 
           if [ -z "${TENANT_TOKEN}" ]; then
             echo "ERROR: Failed to obtain tenant access token"
