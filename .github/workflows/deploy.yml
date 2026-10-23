@@ -65,25 +65,16 @@ jobs:
           echo "=== Upload output ==="
           cat /tmp/upload-output.txt
 
-      - name: Inject tenant token into WDCLI config
+      - name: Authenticate to tenant as system user
         env:
           TENANT_ALIAS: ubc_wcpdev2
-          WD_TENANT_TOKEN: ${{ secrets.WD_TENANT_TOKEN }}
+          WDCLI_CLIENT_ID: ${{ secrets.WD_CLIENT_ID }}
+          WDCLI_CLIENT_SECRET: ${{ secrets.WD_CLIENT_SECRET }}
         run: |
-          set -euo pipefail
-          if [ -z "${WD_TENANT_TOKEN}" ]; then
-            echo "ERROR: WD_TENANT_TOKEN secret is not set."
-            exit 1
-          fi
-          CONFIG_DIR="${HOME}/.config/@workday/wdcli"
-          CONFIG_FILE="${CONFIG_DIR}/config.json"
-          mkdir -p "${CONFIG_DIR}"
-          if [ ! -f "${CONFIG_FILE}" ]; then
-            echo "{}" > "${CONFIG_FILE}"
-          fi
-          python3 -c "import json,os,sys; f=sys.argv[1]; t=os.environ['WD_TENANT_TOKEN']; a=os.environ['TENANT_ALIAS']; c=json.load(open(f)); e=c.get('wcpTenantAccessToken',{}); e[a]=t; c['wcpTenantAccessToken']=e; json.dump(c,open(f,'w')); print('Token injected for '+a)" "${CONFIG_FILE}"
-          echo "Config file contents (token redacted):"
-          python3 -c "import json,os; c=json.load(open(os.environ['HOME']+'/.config/@workday/wdcli/config.json')); c.get('wcpTenantAccessToken',{}).update({k:'REDACTED' for k in c.get('wcpTenantAccessToken',{})}); print(json.dumps(c, indent=2))"
+          set -euxo pipefail
+          echo "=== Authenticating to tenant ${TENANT_ALIAS} as system user ==="
+          wdcli auth tenant login --tenant-alias "${TENANT_ALIAS}" --system-user
+          echo "=== Tenant auth complete ==="
 
       - name: Deploy to ubc_wcpdev2
         env:
