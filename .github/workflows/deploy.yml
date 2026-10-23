@@ -50,23 +50,26 @@ jobs:
       - name: Upload app to App Hub
         env:
           APP_REF_ID: ecocomsphase_xclw_cm_sync2_vmzvxm
+          APP_UUID: cfd75927b808c1dd99c54b1c7096a142
           WDCLI_CLIENT_ID: ${{ secrets.WD_CLIENT_ID }}
           WDCLI_CLIENT_SECRET: ${{ secrets.WD_CLIENT_SECRET }}
         run: |
           set -euxo pipefail
 
-          # Stamp the version field with the git short SHA so each commit
-          # produces a unique version ID (prevents wdcli from reusing an
-          # already-deployed version, which causes its response parser to crash)
-          GIT_SHA="${GITHUB_SHA:0:8}"
-          jq --arg v "1.0.0-${GIT_SHA}" '.version = $v' appManifest.json > /tmp/manifest-stamped.json
-          cp /tmp/manifest-stamped.json appManifest.json
-          echo "Stamped appManifest.json version: $(jq -r .version appManifest.json)"
-
           echo "=== Running wdcli app upload ==="
           wdcli app upload 2>&1 | tee /tmp/upload-output.txt
           echo "=== Upload output ==="
           cat /tmp/upload-output.txt
+
+          # Extract the version ID from the upload output table
+          # wdcli prints a table with "Version ID" column; the ID is a 32-char hex string
+          VERSION_ID=$(grep -oE '[0-9a-f]{32}' /tmp/upload-output.txt | head -1)
+          if [ -z "${VERSION_ID}" ]; then
+            echo "ERROR: Could not extract version ID from upload output"
+            exit 1
+          fi
+          echo "Extracted version ID: ${VERSION_ID}"
+          echo "VERSION_ID=${VERSION_ID}" >> $GITHUB_ENV
 
       - name: Inject tenant access token via client credentials
         env:
@@ -75,8 +78,6 @@ jobs:
           WDCLI_CLIENT_SECRET: ${{ secrets.WD_CLIENT_SECRET }}
         run: |
           set -euo pipefail
-
-          # Fetch a fresh tenant access token using client credentials grant
           echo "=== Fetching tenant access token via client credentials ==="
           ENCODED=$(printf '%s:%s' "${WDCLI_CLIENT_ID}" "${WDCLI_CLIENT_SECRET}" | base64 -w 0)
           TOKEN_RESPONSE=$(curl -s -X POST "https://auth.api.workday.com/v1/token" \
@@ -95,56 +96,98 @@ jobs:
           WDCLI_CONFIG_DIR="${HOME}/.config/@workday/wdcli"
           mkdir -p "${WDCLI_CONFIG_DIR}"
           CONFIG_FILE="${WDCLI_CONFIG_DIR}/config.json"
-
-          # Read existing config or start fresh
           if [ -f "${CONFIG_FILE}" ]; then
             EXISTING=$(cat "${CONFIG_FILE}")
           else
             EXISTING='{}'
           fi
-
-          # Merge in the tenant access token
           echo "${EXISTING}" | jq \
             --arg alias "${TENANT_ALIAS}" \
             --arg token "${ACCESS_TOKEN}" \
             '.wcpTenantAccessToken[$alias] = $token' \
             > "${CONFIG_FILE}"
           echo "Tenant token written to ${CONFIG_FILE}"
-          echo "=== wdcli tenant token (verify) ==="
-          wdcli tenant token 2>&1 || echo "wdcli tenant token command failed"
 
-      - name: Deploy to ubc_wcpdev2
+          # Export tenant token for use in the next step
+          echo "TENANT_ACCESS_TOKEN=${ACCESS_TOKEN}" >> $GITHUB_ENV
+
+      - name: Deploy to ubc_wcpdev2 via REST API
         env:
-          APP_REF_ID: ecocomsphase_xclw_cm_sync2_vmzvxm
+          APP_UUID: cfd75927b808c1dd99c54b1c7096a142
           TENANT_ALIAS: ubc_wcpdev2
           WDCLI_CLIENT_ID: ${{ secrets.WD_CLIENT_ID }}
           WDCLI_CLIENT_SECRET: ${{ secrets.WD_CLIENT_SECRET }}
         run: |
           set -euo pipefail
 
-          echo "=== Running wdcli app deploy ==="
-          wdcli app deploy "${APP_REF_ID}" --tenant-alias "${TENANT_ALIAS}" --latest-version --format json \
-            2>&1 | tee /tmp/deploy-output.txt || true
+          # Get the developer access token and API gateway URL from wdcli config
+          WDCLI_CONFIG="${HOME}/.config/@workday/wdcli/config.json"
+          echo "=== wdcli config keys ==="
+          jq -r 'keys[]' "${WDCLI_CONFIG}" 2>/dev/null || echo "(no config)"
 
-          echo "=== Deploy output ==="
-          cat /tmp/deploy-output.txt
-
-          # Fail the step if deploy explicitly errored (not just a wdcli response-parse crash)
-          if grep -q "Cannot read properties of undefined" /tmp/deploy-output.txt; then
-            # wdcli crashed parsing the API response — this is a known wdcli bug.
-            # The deploy was initiated; check if it actually succeeded by looking at
-            # whether the 'Initiating app deploy' line appeared (meaning the API call went through).
-            if grep -q "Initiating app deploy" /tmp/deploy-output.txt; then
-              echo "Deploy was initiated (API call succeeded). wdcli crashed on response parsing — known bug."
-              echo "Check Workday console to verify deployment status."
-              # Consider this a success — the API accepted the deploy request
-            else
-              echo "ERROR: Deploy failed to initiate"
-              exit 1
-            fi
-          elif grep -qE "^Error" /tmp/deploy-output.txt; then
-            echo "ERROR: Deploy returned an error"
+          # Extract developer access token from wdcli config
+          DEV_TOKEN=$(jq -r '.wcpAccessToken // empty' "${WDCLI_CONFIG}" 2>/dev/null)
+          if [ -z "${DEV_TOKEN}" ]; then
+            # Try alternate key names
+            DEV_TOKEN=$(jq -r 'to_entries[] | select(.key | test("access.*token|token.*access"; "i")) | .value' "${WDCLI_CONFIG}" 2>/dev/null | head -1)
+          fi
+          if [ -z "${DEV_TOKEN}" ]; then
+            echo "ERROR: Could not find developer access token in wdcli config"
+            jq . "${WDCLI_CONFIG}"
             exit 1
+          fi
+          echo "Got developer access token (length=${#DEV_TOKEN})"
+
+          # Get the API gateway URL from wdcli config
+          GATEWAY=$(jq -r '.wcpApiGatewayHostname // empty' "${WDCLI_CONFIG}" 2>/dev/null)
+          if [ -z "${GATEWAY}" ]; then
+            GATEWAY=$(jq -r 'to_entries[] | select(.key | test("gateway|host"; "i")) | .value' "${WDCLI_CONFIG}" 2>/dev/null | head -1)
+          fi
+          if [ -z "${GATEWAY}" ]; then
+            echo "Config contents:"
+            jq . "${WDCLI_CONFIG}"
+            echo "ERROR: Could not find API gateway hostname in wdcli config"
+            exit 1
+          fi
+          echo "API gateway: ${GATEWAY}"
+
+          # Get org UUID from wdcli config
+          ORG_UUID=$(jq -r '.selectedAccountOrganizationUuid // .organizationUuid // empty' "${WDCLI_CONFIG}" 2>/dev/null)
+          if [ -z "${ORG_UUID}" ]; then
+            ORG_UUID=$(jq -r 'to_entries[] | select(.key | test("org.*uuid|uuid.*org"; "i")) | .value' "${WDCLI_CONFIG}" 2>/dev/null | head -1)
+          fi
+          echo "Org UUID: ${ORG_UUID}"
+
+          echo "=== Calling Workday deploy REST API directly ==="
+          echo "  App UUID:   ${APP_UUID}"
+          echo "  Version ID: ${VERSION_ID}"
+          echo "  Tenant:     ${TENANT_ALIAS}"
+
+          DEPLOY_URL="https://${GATEWAY}/apps/${APP_UUID}/deploy"
+          echo "  Deploy URL: ${DEPLOY_URL}"
+
+          DEPLOY_BODY=$(jq -n \
+            --arg versionId "${VERSION_ID}" \
+            --arg tenantAlias "${TENANT_ALIAS}" \
+            '{versionId: $versionId, tenantAlias: $tenantAlias}')
+
+          DEPLOY_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "${DEPLOY_URL}" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${DEV_TOKEN}" \
+            -H "Deploy-Tenant-Authorization: Bearer ${TENANT_ACCESS_TOKEN}" \
+            ${ORG_UUID:+-H "X-Org-Uuid: ${ORG_UUID}"} \
+            -d "${DEPLOY_BODY}")
+
+          HTTP_CODE=$(echo "${DEPLOY_RESPONSE}" | tail -1)
+          BODY=$(echo "${DEPLOY_RESPONSE}" | sed '$d')
+
+          echo "HTTP status: ${HTTP_CODE}"
+          echo "Response: ${BODY}"
+
+          if [ "${HTTP_CODE}" = "200" ] || [ "${HTTP_CODE}" = "201" ] || [ "${HTTP_CODE}" = "202" ]; then
+            SUCCESS=$(echo "${BODY}" | jq -r '.appDeploymentSucceeded // "unknown"' 2>/dev/null)
+            echo "Deploy succeeded (appDeploymentSucceeded=${SUCCESS})"
           else
-            echo "Deploy completed successfully"
+            echo "ERROR: Deploy API returned HTTP ${HTTP_CODE}"
+            exit 1
           fi
