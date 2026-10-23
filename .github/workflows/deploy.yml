@@ -74,6 +74,26 @@ jobs:
             echo "CLIENT_SECRET may be too short: ${SEC_LEN} chars (expected ~100)"
           fi
 
+      - name: Test raw OAuth token request
+        env:
+          WDCLI_CLIENT_ID: ${{ secrets.WD_CLIENT_ID }}
+          WDCLI_CLIENT_SECRET: ${{ secrets.WD_CLIENT_SECRET }}
+        run: |
+          # Test the WCP OAuth token endpoint directly to get the raw error
+          echo "Testing WCP auth endpoint directly..."
+          HTTP_RESP=$(curl -s -w "\nHTTP_STATUS:%{http_code}" \
+            -X POST "https://api.us.wcp.workday.com/auth/v1/token" \
+            -H "Content-Type: application/x-www-form-urlencoded" \
+            --data-urlencode "grant_type=client_credentials" \
+            --data-urlencode "client_id=${WDCLI_CLIENT_ID}" \
+            --data-urlencode "client_secret=${WDCLI_CLIENT_SECRET}")
+          # Print response with secret values masked
+          BODY=$(echo "${HTTP_RESP}" | grep -v "HTTP_STATUS:")
+          STATUS=$(echo "${HTTP_RESP}" | grep "HTTP_STATUS:" | cut -d: -f2)
+          echo "HTTP Status: ${STATUS}"
+          # Mask any token in response but show error message
+          echo "Response body (tokens masked): $(echo "${BODY}" | sed 's/"access_token":"[^"]*"/"access_token":"***MASKED***"/g')"
+
       - name: Authenticate as system user
         env:
           WDCLI_CLIENT_ID: ${{ secrets.WD_CLIENT_ID }}
