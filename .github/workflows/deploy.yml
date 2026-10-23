@@ -54,95 +54,55 @@ jobs:
         run: |
           wdcli app upload
 
-      - name: Get tenant access token via ISU client credentials
+      - name: Inject tenant token into WDCLI config
         env:
           TENANT_ALIAS: ubc_wcpdev2
-          ISU_CLIENT_ID: ${{ secrets.WD_ISU_CLIENT_ID }}
-          ISU_CLIENT_SECRET: ${{ secrets.WD_ISU_CLIENT_SECRET }}
+          WD_TENANT_TOKEN: ${{ secrets.WD_TENANT_TOKEN }}
         run: |
-          # Validate secrets are present
-          if [ -z "${ISU_CLIENT_ID}" ]; then
-            echo "ERROR: WD_ISU_CLIENT_ID secret is not set"
-            echo "## ISU Token Failure: Missing secret WD_ISU_CLIENT_ID" >> $GITHUB_STEP_SUMMARY
-            exit 1
-          fi
-          if [ -z "${ISU_CLIENT_SECRET}" ]; then
-            echo "ERROR: WD_ISU_CLIENT_SECRET secret is not set"
-            echo "## ISU Token Failure: Missing secret WD_ISU_CLIENT_SECRET" >> $GITHUB_STEP_SUMMARY
-            exit 1
-          fi
-          echo "ISU_CLIENT_ID is set (length: ${#ISU_CLIENT_ID})"
+          # WCP tenant tokens are issued by WCP auth (api.us.wcp.workday.com/auth) via a
+          # browser-based PKCE flow — there is no machine-to-machine path in WDCLI v1.9.43.
+          #
+          # To refresh this token:
+          #   1. On your local machine: wdcli tenant login --tenant-alias ubc_wcpdev2
+          #   2. Copy the token:
+          #        python3 -c "import json; c=json.load(open('~/.config/@workday/wdcli/config.json'.replace('~', __import__('os').path.expanduser('~')))); print(c['wcpTenantAccessToken']['ubc_wcpdev2'])"
+          #   3. Update the WD_TENANT_TOKEN secret in GitHub repo settings.
+          #
+          # Tokens typically expire after 24 hours; update the secret before each deploy
+          # or whenever the "Deploy to ubc_wcpdev2" step fails with an auth error.
 
-          # Obtain a tenant access token using the ISU API client (client_credentials grant)
-          # Workday OAuth2 endpoint: https://wd2-impl-services1.workday.com/ccx/oauth2/<tenant>/token
-          # Workday requires client_id and client_secret in the POST body (not HTTP Basic auth)
-          HTTP_STATUS=$(curl -s -o /tmp/token_response.json -w "%{http_code}" -X POST \
-            "https://wd2-impl-services1.workday.com/ccx/oauth2/${TENANT_ALIAS}/token" \
-            -H "Content-Type: application/x-www-form-urlencoded" \
-            -d "grant_type=client_credentials&client_id=${ISU_CLIENT_ID}&client_secret=${ISU_CLIENT_SECRET}")
-
-          echo "HTTP status: ${HTTP_STATUS}"
-          TOKEN_RESPONSE=$(cat /tmp/token_response.json)
-
-          if [ "${HTTP_STATUS}" != "200" ]; then
-            echo "ERROR: OAuth2 token request failed with HTTP ${HTTP_STATUS}"
-            echo "Response: ${TOKEN_RESPONSE}"
-            # Save error details as an artifact file for retrieval
-            mkdir -p /tmp/token-debug
-            echo "HTTP_STATUS=${HTTP_STATUS}" > /tmp/token-debug/error.txt
-            echo "RESPONSE=${TOKEN_RESPONSE}" >> /tmp/token-debug/error.txt
-            echo "CLIENT_ID_LEN=${#ISU_CLIENT_ID}" >> /tmp/token-debug/error.txt
-            # Also write to summary
-            echo "## ISU Token Failure" >> $GITHUB_STEP_SUMMARY
-            echo "- HTTP Status: ${HTTP_STATUS}" >> $GITHUB_STEP_SUMMARY
-            echo "- Response: ${TOKEN_RESPONSE}" >> $GITHUB_STEP_SUMMARY
+          if [ -z "${WD_TENANT_TOKEN}" ]; then
+            echo "ERROR: WD_TENANT_TOKEN secret is not set."
+            echo "Run 'wdcli tenant login --tenant-alias ubc_wcpdev2' locally and store the"
+            echo "resulting token from ~/.config/@workday/wdcli/config.json as the WD_TENANT_TOKEN secret."
             exit 1
           fi
 
-          TENANT_TOKEN=$(echo "${TOKEN_RESPONSE}" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['access_token'])" 2>/dev/null || echo "")
-
-          if [ -z "${TENANT_TOKEN}" ]; then
-            echo "ERROR: Failed to obtain tenant access token"
-            echo "Response: ${TOKEN_RESPONSE}"
-            exit 1
-          fi
-
-          # Write the tenant token into WDCLI config so wdcli app deploy can use it
           CONFIG_DIR="${HOME}/.config/@workday/wdcli"
           CONFIG_FILE="${CONFIG_DIR}/config.json"
           mkdir -p "${CONFIG_DIR}"
 
-          # Read existing config or start fresh, then inject tenant token
           if [ ! -f "${CONFIG_FILE}" ]; then
             echo "{}" > "${CONFIG_FILE}"
           fi
 
-          TENANT_TOKEN="${TENANT_TOKEN}" TENANT_ALIAS="${TENANT_ALIAS}" \
+          WD_TENANT_TOKEN="${WD_TENANT_TOKEN}" TENANT_ALIAS="${TENANT_ALIAS}" \
           python3 - "${CONFIG_FILE}" << 'PYEOF'
-          import sys, json, os
-          config_file = sys.argv[1]
-          token = os.environ["TENANT_TOKEN"]
-          alias = os.environ["TENANT_ALIAS"]
-          with open(config_file) as f:
-              config = json.load(f)
-          existing = config.get("wcpTenantAccessToken", {})
-          if not isinstance(existing, dict):
-              existing = {}
-          existing[alias] = token
-          config["wcpTenantAccessToken"] = existing
-          with open(config_file, "w") as f:
-              json.dump(config, f)
-          PYEOF
-
-          echo "Tenant token written to WDCLI config for ${TENANT_ALIAS}"
-
-      - name: Upload token debug info (on failure)
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: token-debug
-          path: /tmp/token-debug/
-          if-no-files-found: ignore
+import sys, json, os
+config_file = sys.argv[1]
+token = os.environ["WD_TENANT_TOKEN"]
+alias = os.environ["TENANT_ALIAS"]
+with open(config_file) as f:
+    config = json.load(f)
+existing = config.get("wcpTenantAccessToken", {})
+if not isinstance(existing, dict):
+    existing = {}
+existing[alias] = token
+config["wcpTenantAccessToken"] = existing
+with open(config_file, "w") as f:
+    json.dump(config, f)
+print(f"Tenant token injected for alias: {alias}")
+PYEOF
 
       - name: Deploy to ubc_wcpdev2
         env:
