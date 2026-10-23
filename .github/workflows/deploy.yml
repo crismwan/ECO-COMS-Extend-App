@@ -72,12 +72,12 @@ jobs:
           WDCLI_CLIENT_SECRET: ${{ secrets.WD_CLIENT_SECRET }}
         run: |
           set -euxo pipefail
-          echo "=== wdcli tenant login --help ==="
-          wdcli tenant login --help 2>&1 || true
-          echo "=== Attempting wdcli tenant login --system-user ==="
-          wdcli tenant login --system-user "${TENANT_ALIAS}" 2>&1 || true
-          echo "=== wdcli tenant token (to verify) ==="
-          wdcli tenant token 2>&1 || true
+          echo "=== Attempting wdcli tenant login --ci (non-interactive) ==="
+          wdcli tenant login --ci "${TENANT_ALIAS}" 2>&1
+          LOGIN_EXIT=$?
+          echo "tenant login exit code: ${LOGIN_EXIT}"
+          echo "=== wdcli tenant token (to verify stored token) ==="
+          wdcli tenant token 2>&1 || echo "No tenant token stored"
 
       - name: Deploy to ubc_wcpdev2
         env:
