@@ -96,12 +96,7 @@ jobs:
           WDCLI_CLIENT_SECRET: ${{ secrets.WD_CLIENT_SECRET }}
         run: |
           echo "=== WDCLI version ==="
-          wdcli --version
-          echo "=== Available wdcli app commands ==="
-          wdcli app --help || true
+          wdcli version || true
           echo "=== Deploying ==="
           wdcli app deploy "${APP_REF_ID}" --tenant-alias "${TENANT_ALIAS}" --latest-version
           echo "=== Deploy exit code: $? ==="
-          echo "=== Trying promote ==="
-          wdcli app promote --help || true
-          wdcli app promote "${APP_REF_ID}" --tenant-alias "${TENANT_ALIAS}" --latest-version || echo "promote failed or not available"
