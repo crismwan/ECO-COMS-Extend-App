@@ -142,6 +142,24 @@ jobs:
           mv /tmp/config-restored.json "${CONFIG_FILE}"
           echo "PKCE token restored (length=${#WD_DEV_TOKEN})"
 
+          # Decode JWT expiry (exp claim) to diagnose stale WD_DEV_TOKEN.
+          # JWT format: header.payload.signature (all base64url-encoded)
+          JWT_PAYLOAD=$(echo "${WD_DEV_TOKEN}" | cut -d'.' -f2)
+          # base64url → base64: replace - with + and _ with /; pad to 4-byte boundary
+          PADDED=$(echo "${JWT_PAYLOAD}" | tr '_-' '/+' | awk '{n=length($0)%4; if(n==2) print $0"=="; else if(n==3) print $0"="; else print $0}')
+          EXP=$(echo "${PADDED}" | base64 -d 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('exp','no exp'))" 2>/dev/null || echo "parse-error")
+          if [ "${EXP}" = "parse-error" ] || [ "${EXP}" = "no exp" ]; then
+            echo "WD_DEV_TOKEN JWT exp: could not decode (token may not be a JWT)"
+          else
+            NOW=$(date +%s)
+            if [ "${EXP}" -lt "${NOW}" ]; then
+              echo "WARNING: WD_DEV_TOKEN is EXPIRED (exp=${EXP}, now=${NOW}, expired $((NOW - EXP))s ago)"
+              echo "ACTION REQUIRED: Run 'wdcli auth login' locally and update the WD_DEV_TOKEN secret."
+            else
+              echo "WD_DEV_TOKEN is valid (exp=${EXP}, now=${NOW}, expires in $((EXP - NOW))s)"
+            fi
+          fi
+
       - name: Inject tenant access token via client credentials
         env:
           TENANT_ALIAS: ubc_wcpdev2
