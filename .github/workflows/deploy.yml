@@ -80,6 +80,20 @@ jobs:
           # Export org UUID for later steps
           echo "ORG_UUID=${WD_ORG_UUID}" >> $GITHUB_ENV
 
+      - name: Authenticate as system user (for upload)
+        env:
+          WDCLI_CLIENT_ID: ${{ secrets.WD_CLIENT_ID }}
+          WDCLI_CLIENT_SECRET: ${{ secrets.WD_CLIENT_SECRET }}
+        run: |
+          set -euo pipefail
+          # Runs wdcli auth login --system-user, which overwrites wcpAccessToken
+          # in config with the OctopaAS client-credentials token.
+          # This token works for upload (/apps/source/archive) and getOrganizations,
+          # but NOT for the DevTools deploy endpoint (/apps/{uuid}/deploy).
+          # We restore the PKCE WD_DEV_TOKEN into wcpAccessToken after upload.
+          wdcli auth login --system-user
+          wdcli whoami
+
       - name: Upload app to App Hub
         env:
           APP_REF_ID: ecocomsphase_xclw_cm_sync2_vmzvxm
@@ -110,6 +124,23 @@ jobs:
           fi
           echo "Version ID: ${VERSION_ID}"
           echo "VERSION_ID=${VERSION_ID}" >> $GITHUB_ENV
+
+      - name: Restore PKCE developer token for DevTools deploy
+        env:
+          WD_DEV_TOKEN: ${{ secrets.WD_DEV_TOKEN }}
+          WD_ORG_UUID: ${{ secrets.WD_ORG_UUID }}
+        run: |
+          set -euo pipefail
+          # After wdcli auth login --system-user, wcpAccessToken is the OctopaAS
+          # client-credentials token. The DevTools deploy endpoint requires the
+          # PKCE wcpAccessToken (WD_DEV_TOKEN). Restore it now, keeping all other
+          # config keys (clientId, clientSecret, organizationUuid, etc.) intact.
+          CONFIG_FILE="${HOME}/.config/@workday/wdcli/config.json"
+          jq --arg tok "${WD_DEV_TOKEN}" --arg org "${WD_ORG_UUID}" \
+            '.wcpAccessToken = $tok | .organizationUuid = $org' \
+            "${CONFIG_FILE}" > /tmp/config-restored.json
+          mv /tmp/config-restored.json "${CONFIG_FILE}"
+          echo "PKCE token restored (length=${#WD_DEV_TOKEN})"
 
       - name: Inject tenant access token via client credentials
         env:
