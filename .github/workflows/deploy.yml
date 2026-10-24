@@ -80,15 +80,6 @@ jobs:
           # Export org UUID for later steps
           echo "ORG_UUID=${WD_ORG_UUID}" >> $GITHUB_ENV
 
-      - name: Authenticate as system user (for upload)
-        env:
-          WDCLI_CLIENT_ID: ${{ secrets.WD_CLIENT_ID }}
-          WDCLI_CLIENT_SECRET: ${{ secrets.WD_CLIENT_SECRET }}
-        run: |
-          set -euo pipefail
-          wdcli auth login --system-user
-          wdcli whoami
-
       - name: Upload app to App Hub
         env:
           APP_REF_ID: ecocomsphase_xclw_cm_sync2_vmzvxm
