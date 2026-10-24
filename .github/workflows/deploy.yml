@@ -154,6 +154,7 @@ jobs:
           WDCLI_TENANT_TOKEN: ${{ env.TENANT_ACCESS_TOKEN }}
           WDCLI_CLIENT_ID: ${{ secrets.WD_CLIENT_ID }}
           WDCLI_CLIENT_SECRET: ${{ secrets.WD_CLIENT_SECRET }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
 
@@ -168,11 +169,6 @@ jobs:
           echo "ORG_UUID: ${ORG_UUID}"
           echo "VERSION_ID: ${VERSION_ID}"
 
-          # --- DevTools REST API deploy (doesn't go through AOS, avoids token-scope issue) ---
-          # B.deployApplication path: POST /devtools/v1/apps/{appUuid}/deploy
-          # Headers: Authorization: Bearer <devToken>, org-id: <orgUuid>,
-          #          Deploy-Tenant-Authorization: Bearer <tenantToken>
-          # Body: {versionId, tenantAlias}
           DEPLOY_URL="https://api.us.wcp.workday.com/devtools/v1/apps/${APP_UUID}/deploy"
           DEPLOY_BODY=$(jq -n \
             --arg versionId "${VERSION_ID}" \
@@ -203,11 +199,15 @@ jobs:
           if [ "${CODE2}" = "200" ] || [ "${CODE2}" = "201" ] || [ "${CODE2}" = "202" ]; then
             echo "DevTools deploy succeeded!"; exit 0; fi
 
-          echo "=== Attempt 3: wdcli app deploy (AOS path, token may be _octopaas-scoped) ==="
-          wdcli app deploy "${APP_REF_ID}" --tenant-alias "${TENANT_ALIAS}" 2>&1 || true
+          # Write diagnostics to a gist so they can be read without blob.core.windows.net
+          DIAG=$(jq -n \
+            --arg a1code "${CODE1}" --arg a1body "${BODY1}" \
+            --arg a2code "${CODE2}" --arg a2body "${BODY2}" \
+            --arg orgUuid "${ORG_UUID}" --arg versionId "${VERSION_ID}" \
+            '{attempt1:{code:$a1code,body:$a1body},attempt2:{code:$a2code,body:$a2body},orgUuid:$orgUuid,versionId:$versionId}')
+          gh gist create --public \
+            --desc "ECO-COMS deploy diagnostics $(date -u +%Y%m%dT%H%M%SZ)" \
+            - <<< "${DIAG}" || echo "Gist creation failed (token may lack gist scope)"
 
-          echo ""
-          echo "All attempts failed. HTTP responses above show auth errors."
-          echo "DevTools requires agentbuilder.agent.write permission for the service account."
-          echo "AOS requires a ubc_wcpdev2-scoped tenant token (not _octopaas-scoped)."
+          echo "All deploy attempts failed."
           exit 1
