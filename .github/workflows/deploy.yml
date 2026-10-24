@@ -125,7 +125,7 @@ jobs:
           echo "Version ID: ${VERSION_ID}"
           echo "VERSION_ID=${VERSION_ID}" >> $GITHUB_ENV
 
-      - name: Restore PKCE developer token for DevTools deploy
+      - name: Restore PKCE developer token for AOS deploy
         env:
           WD_DEV_TOKEN: ${{ secrets.WD_DEV_TOKEN }}
           WD_ORG_UUID: ${{ secrets.WD_ORG_UUID }}
@@ -219,10 +219,10 @@ jobs:
           "
 
           # Patch 2: commands/index.js
-          #   Force hasPermission('agentbuilder.agent.write') → true so wdcli
-          #   always takes the DevTools path (B) instead of the AOS path (C).
-          #   AOS path crashes in CI because the _octopaas-scoped system-user
-          #   token is rejected by AOS.
+          #   Force hasPermission('agentbuilder.agent.write') → false so wdcli
+          #   always takes the AOS path (C) instead of the DevTools path (B).
+          #   ECO-COMS is a standard Extend app; the correct deploy endpoint is
+          #   POST /aos/v1/deploy, not the DevTools /devtools/v1/apps/{uuid}/deploy.
           #   commands/index.js lives in the same lib/ dir as metered-command-*.js
           CMDS="$(dirname "${METERED}")/commands/index.js"
           echo "Patching commands bundle: ${CMDS}"
@@ -232,10 +232,10 @@ jobs:
             const f = process.env.CMDS;
             let c = fs.readFileSync(f, 'utf8');
             const old = 'await a.hasPermission(this,\"agentbuilder.agent.write\",i.organizationUuid)';
-            const rep = '(true /* CI: force DevTools path */)';
+            const rep = '(false /* CI: force AOS deploy path, not DevTools */)';
             if (!c.includes(old)) { console.error('ERROR: hasPermission patch target not found'); process.exit(1); }
             fs.writeFileSync(f, c.replace(old, rep));
-            console.log('Patch 2 (force DevTools path): OK');
+            console.log('Patch 2 (force AOS deploy path via hasPermission=false): OK');
           "
 
           # Patch 3: metered-command-C1Iau1Kk.js
@@ -299,20 +299,16 @@ jobs:
       - name: Deploy to ubc_wcpdev2 via wdcli
         env:
           TENANT_ALIAS: ubc_wcpdev2
-          # Two separate tokens are needed for the DevTools deploy POST:
-          # 1. Base connector Authorization bearer (Ge(e)):
-          #    WDCLI_AUTH env var is checked first by Ge(e) before config.
-          #    Must be the PKCE wcpAccessToken (WD_DEV_TOKEN) — authenticates
-          #    the caller to the WCP platform (api.us.wcp.workday.com).
-          # 2. Deploy-Tenant-Authorization header (fi() / patch 1 → WDCLI_TENANT_TOKEN):
-          #    Must be the tenant-scoped client-credentials token (TENANT_ACCESS_TOKEN) —
-          #    proves the caller has access to deploy into the specific tenant.
-          # WDCLI_AUTH drives Authorization: Bearer on the DevTools connector (Ge(e)).
-          # The OctopaAS token (WD_DEV_TOKEN, tenant:_octopaaas) is rejected by the
-          # DevTools /deploy endpoint even with org-id present — it is a platform-service
-          # token, not a customer-tenant token. Use the client-credentials TENANT_ACCESS_TOKEN
-          # for Authorization as well; it is scoped to ubc_wcpdev2 and should pass auth.
-          # WDCLI_TENANT_TOKEN is still the same token for Deploy-Tenant-Authorization (patch 1).
+          # AOS deploy path (Patch 2 forces hasPermission=false → C class):
+          #   POST /aos/v1/deploy with:
+          #   1. Authorization: Bearer <tenantBearerToken>
+          #      = getValidatedTenantAccessToken() = WDCLI_TENANT_TOKEN (Patch 1)
+          #      = TENANT_ACCESS_TOKEN (client-credentials CC token scoped to ubc_wcpdev2)
+          #   2. WCP-Authorization: Bearer <accessToken>
+          #      = getWcpAccessToken() → config file wcpAccessToken = WD_DEV_TOKEN
+          #      = PKCE developer access token (restored into config by "Restore PKCE" step)
+          # WDCLI_AUTH feeds Ge(e) which is only used by the DevTools connector (now bypassed).
+          # It is kept harmless here in case any other code path reads it.
           WDCLI_AUTH: ${{ env.TENANT_ACCESS_TOKEN }}
           WDCLI_TENANT_TOKEN: ${{ env.TENANT_ACCESS_TOKEN }}
           WDCLI_ORG_UUID: ${{ secrets.WD_ORG_UUID }}
