@@ -185,19 +185,25 @@ jobs:
           WDCLI_CLIENT_SECRET: ${{ secrets.WD_CLIENT_SECRET }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          set -uo pipefail
           APP_REF_ID=ecocomsphase_xclw_cm_sync2_vmzvxm
           echo "Deploying ${APP_REF_ID} version ${VERSION_ID} to ${TENANT_ALIAS}"
           echo "WDCLI_AUTH length: ${#WDCLI_AUTH}"
           echo "WDCLI_TENANT_TOKEN length: ${#WDCLI_TENANT_TOKEN}"
-          wdcli app deploy "${APP_REF_ID}" --tenant-alias "${TENANT_ALIAS}" 2>&1 | tee /tmp/deploy-out.txt
-          DEPLOY_EXIT=${PIPESTATUS[0]}
+
+          # Run wdcli deploy, capture all output, don't let failure stop the script yet
+          set +e
+          wdcli app deploy "${APP_REF_ID}" --tenant-alias "${TENANT_ALIAS}" > /tmp/deploy-out.txt 2>&1
+          DEPLOY_EXIT=$?
+          set -e
+
           echo "wdcli exit: ${DEPLOY_EXIT}"
+          cat /tmp/deploy-out.txt
+
           if [ "${DEPLOY_EXIT}" != "0" ]; then
             DEPLOY_OUTPUT=$(cat /tmp/deploy-out.txt)
             export DEPLOY_OUTPUT DEPLOY_EXIT
             node -e "
-              const body = '## Deploy Output (run \`wdcli app deploy\`)\n\`\`\`\n' + process.env.DEPLOY_OUTPUT + '\n\`\`\`\nExit: ' + process.env.DEPLOY_EXIT;
+              const body = '## wdcli deploy output\n\`\`\`\n' + (process.env.DEPLOY_OUTPUT || '<empty>') + '\n\`\`\`\nExit: ' + process.env.DEPLOY_EXIT;
               const https = require('https');
               const data = JSON.stringify({body});
               const req = https.request({
