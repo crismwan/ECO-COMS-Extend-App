@@ -300,32 +300,13 @@ jobs:
           echo "CmNvbnN0IGZzID0gcmVxdWlyZSgnZnMnKTsKY29uc3QgZiA9IHByb2Nlc3MuZW52Lk1FVEVSRUQ7CmxldCBjID0gZnMucmVhZEZpbGVTeW5jKGYsICd1dGY4Jyk7CmNvbnN0IE9MRCA9ICdQdD1lPT57Y29uc3QgdD1wcm9jZXNzLmVudi5XRENMSV9EVFNfQVBJX0dBVEVXQVk7cmV0dXJuKHQ/bmV3IHRpKHQpOm5ldyBsLkRldlRvb2xzQ29ubmVjdG9yKHkuZGV2dG9vbHNIb3N0bmFtZShlLmNvbmZpZ0ZpbGUpKSkuYXR0YWNoQXV0aFRva2VuKEdlKGUpKX0nOwpjb25zdCBSRVAgPSAnUHQ9ZT0+e2NvbnN0IHQ9cHJvY2Vzcy5lbnYuV0RDTElfRFRTX0FQSV9HQVRFV0FZO2NvbnN0IGNvbm49KHQ/bmV3IHRpKHQpOm5ldyBsLkRldlRvb2xzQ29ubmVjdG9yKHkuZGV2dG9vbHNIb3N0bmFtZShlLmNvbmZpZ0ZpbGUpKSk7Y29ubi5zZXREZWZhdWx0SGVhZGVyKCJVc2VyLUFnZW50Iiwid2RjbGkvMS45LjQzIik7cmV0dXJuIGNvbm4uYXR0YWNoQXV0aFRva2VuKEdlKGUpKX0nOwppZiAoIWMuaW5jbHVkZXMoT0xEKSkgeyBjb25zb2xlLmVycm9yKCdFUlJPUjogUHQgcGF0Y2ggdGFyZ2V0IG5vdCBmb3VuZCcpOyBwcm9jZXNzLmV4aXQoMSk7IH0KZnMud3JpdGVGaWxlU3luYyhmLCBjLnJlcGxhY2UoT0xELCBSRVApKTsKY29uc29sZS5sb2coJ1BhdGNoIDExIChhZGQgVXNlci1BZ2VudCBoZWFkZXIgdG8gRGV2VG9vbHNDb25uZWN0b3IpOiBPSycpOwo=" | base64 -d > /tmp/patch11.js
           node /tmp/patch11.js
 
-          # Patch 12: wcp-sdk AosConnector.deployApp() — bypass getAuthHeaders entirely.
-          #
-          #   Run #122 confirmed Patch 12 fired (PKCE on Authorization, CC on WCP-Authorization)
-          #   but still got 401 "The supplied authentication is invalid".
-          #   Telemetry shows is_system_account_boolean=false for the deploy event, meaning the
-          #   PKCE token is recognized as a personal user — not a system account.
-          #
-          #   New hypothesis: AOS /deploy uses Workday "ID" auth scheme (not Bearer at all).
-          #   The server's "www-authenticate: ID" response indicates it wants:
-          #     Authorization: ID <base64(client_id:client_secret)>
-          #   not a Bearer token of any kind. This is the same scheme used to get the CC token
-          #   from auth.api.workday.com/v1/token, applied directly to the AOS endpoint.
-          #
-          #   Strategy: patch AosConnector.deployApp() to intercept the raw fetch/post call
-          #   and override the Authorization header with the ID scheme. We find deployApp in
-          #   the bundle and prepend a fetch-monkey-patch that intercepts the /aos/v1/deploy
-          #   call specifically, swapping Authorization to ID form when WDCLI_ID_AUTH is set.
-          #
-          #   WDCLI_ID_AUTH = base64(clientId:clientSecret) — computed here and exported to $GITHUB_ENV.
-          WCP_SDK=$(find /opt/wdcli -path "*/wcp-sdk/dist/index.js" | head -1)
-          export WCP_SDK
-          echo "=== Patch 12: patching AOS deploy to use Authorization: ID scheme ==="
-          ENCODED_CREDS=$(printf '%s:%s' "${WDCLI_CLIENT_ID}" "${WDCLI_CLIENT_SECRET}" | base64 -w 0)
-          echo "WDCLI_ID_AUTH=${ENCODED_CREDS}" >> $GITHUB_ENV
-          echo "Y29uc3QgZnMgPSByZXF1aXJlKCdmcycpOwpjb25zdCBmID0gcHJvY2Vzcy5lbnYuV0NQX1NESzsKbGV0IGMgPSBmcy5yZWFkRmlsZVN5bmMoZiwgJ3V0ZjgnKTsKY29uc3QgQU5DSE9SID0gJ0Fvc0Nvbm5lY3Rvci5wcm90b3R5cGUuZGVwbG95QXBwJzsKY29uc3QgaWR4ID0gYy5pbmRleE9mKEFOQ0hPUik7CmlmIChpZHggPCAwKSB7CiAgY29uc29sZS5lcnJvcignRVJST1I6IEFvc0Nvbm5lY3Rvci5wcm90b3R5cGUuZGVwbG95QXBwIG5vdCBmb3VuZCBpbiB3Y3Atc2RrJyk7CiAgcHJvY2Vzcy5leGl0KDEpOwp9CmNvbnN0IElOVEVSQ0VQVCA9IFsKICAnLy8gQ0ktUDEyOiBpbnRlcmNlcHQgZmV0Y2ggZm9yIC9hb3MvdjEvZGVwbG95IHRvIHVzZSBBdXRob3JpemF0aW9uOiBJRCBzY2hlbWUnLAogICcoZnVuY3Rpb24oKXsnLAogICcgIHZhciBfb3JpZ0ZldGNoID0gZ2xvYmFsVGhpcy5mZXRjaDsnLAogICcgIGlmKCFfb3JpZ0ZldGNoKSByZXR1cm47JywKICAnICBnbG9iYWxUaGlzLmZldGNoID0gZnVuY3Rpb24odXJsLCBvcHRzKSB7JywKICAnICAgIHZhciBpZEF1dGggPSBwcm9jZXNzLmVudi5XRENMSV9JRF9BVVRIOycsCiAgJyAgICBpZihpZEF1dGggJiYgdHlwZW9mIHVybCA9PT0gInN0cmluZyIgJiYgdXJsLmluZGV4T2YoIi9hb3MvdjEvZGVwbG95IikgPj0gMCkgeycsCiAgJyAgICAgIG9wdHMgPSBvcHRzID8gT2JqZWN0LmFzc2lnbih7fSwgb3B0cykgOiB7fTsnLAogICcgICAgICBvcHRzLmhlYWRlcnMgPSBPYmplY3QuYXNzaWduKHt9LCBvcHRzLmhlYWRlcnMgfHwge30pOycsCiAgJyAgICAgIHZhciBvbGRBdXRoID0gb3B0cy5oZWFkZXJzWyJBdXRob3JpemF0aW9uIl0gfHwgb3B0cy5oZWFkZXJzWyJhdXRob3JpemF0aW9uIl0gfHwgIihub25lKSI7JywKICAnICAgICAgb3B0cy5oZWFkZXJzWyJBdXRob3JpemF0aW9uIl0gPSAiSUQgIiArIGlkQXV0aDsnLAogICcgICAgICBpZighb3B0cy5oZWFkZXJzWyJXQ1AtQXV0aG9yaXphdGlvbiJdICYmIHByb2Nlc3MuZW52LldEQ0xJX1RFTkFOVF9UT0tFTikgeycsCiAgJyAgICAgICAgb3B0cy5oZWFkZXJzWyJXQ1AtQXV0aG9yaXphdGlvbiJdID0gIkJlYXJlciAiICsgcHJvY2Vzcy5lbnYuV0RDTElfVEVOQU5UX1RPS0VOOycsCiAgJyAgICAgIH0nLAogICcgICAgICBjb25zb2xlLmVycm9yKCJbQ0ktUDEyXSBBT1MgZGVwbG95OiBBdXRob3JpemF0aW9uPUlEICh3YXM6ICIgKyBvbGRBdXRoLnN1YnN0cmluZygwLDE1KSArICIuLi4pIik7JywKICAnICAgICAgY29uc29sZS5lcnJvcigiW0NJLVAxMl0gV0NQLUF1dGhvcml6YXRpb246ICIgKyAob3B0cy5oZWFkZXJzWyJXQ1AtQXV0aG9yaXphdGlvbiJdIHx8ICIobm9uZSkiKS5zdWJzdHJpbmcoMCwyMCkgKyAiLi4uIik7JywKICAnICAgIH0nLAogICcgICAgcmV0dXJuIF9vcmlnRmV0Y2guYXBwbHkodGhpcywgYXJndW1lbnRzKTsnLAogICcgIH07JywKICAnfSkoKTsnLApdLmpvaW4oJ1xuJykgKyAnXG4nOwpmcy53cml0ZUZpbGVTeW5jKGYsIElOVEVSQ0VQVCArIGMpOwpjb25zb2xlLmxvZygnUGF0Y2ggMTIgKEFPUyBkZXBsb3kgQXV0aG9yaXphdGlvbjogSUQgc2NoZW1lIHZpYSBmZXRjaCBpbnRlcmNlcHQpOiBPSycpOwo=" | base64 -d > /tmp/patch12.js
-          node /tmp/patch12.js
+          # Patch 12 (REMOVED): The ID-scheme intercept was wrong.
+          #   The AOS endpoint wants Authorization: Bearer <CC_token>, not Authorization: ID.
+          #   The www-authenticate: ID response was a challenge for obtaining a token, not
+          #   the required scheme for the deploy call itself.
+          #   With a valid (non-expired) PKCE token from WD_DEV_TOKEN and the CC bearer token
+          #   from Patch 1 (fi() → WDCLI_TENANT_TOKEN), no further auth patching is needed.
+          echo "Patch 12: skipped (not needed with valid tokens)"
 
       - name: Deploy to ubc_wcpdev2 via wdcli
         env:
@@ -342,16 +323,11 @@ jobs:
           # It is kept harmless here in case any other code path reads it.
           WDCLI_AUTH: ${{ env.TENANT_ACCESS_TOKEN }}
           WDCLI_TENANT_TOKEN: ${{ env.TENANT_ACCESS_TOKEN }}
-          # Patch 12 reads these to swap Authorization / WCP-Authorization on AOS calls:
-          #   WDCLI_PKCE_TOKEN  = WD_DEV_TOKEN (PKCE developer token) → goes on Authorization
-          #   WDCLI_TENANT_TOKEN = TENANT_ACCESS_TOKEN (CC token)      → goes on WCP-Authorization
-          WDCLI_PKCE_TOKEN: ${{ secrets.WD_DEV_TOKEN }}
           WDCLI_ORG_UUID: ${{ secrets.WD_ORG_UUID }}
           WDCLI_APP_UUID: cfd75927b808c1dd99c54b1c7096a142
           WDCLI_VERSION_ID: ${{ env.VERSION_ID }}
           WDCLI_CLIENT_ID: ${{ secrets.WD_CLIENT_ID }}
           WDCLI_CLIENT_SECRET: ${{ secrets.WD_CLIENT_SECRET }}
-          WDCLI_ID_AUTH: ${{ env.WDCLI_ID_AUTH }}
         run: |
           set -euo pipefail
           APP_REF_ID=ecocomsphase_xclw_cm_sync2_vmzvxm
