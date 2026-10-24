@@ -201,23 +201,49 @@ jobs:
             echo "DevTools deploy succeeded!"; exit 0; fi
 
           # Post diagnostics as issue comment (repo-scoped token, no blob storage needed)
-          COMMENT_BODY="## Deploy Diagnostics $(date -u +%Y-%m-%dT%H:%M:%SZ)
-**VERSION_ID**: ${VERSION_ID}
-**ORG_UUID**: ${ORG_UUID}
-
-### Attempt 1: DevTools + Deploy-Tenant-Authorization + org-id
-**HTTP ${CODE1}**
-\`\`\`
-${BODY1}
-\`\`\`
-
-### Attempt 2: DevTools dev token only
-**HTTP ${CODE2}**
-\`\`\`
-${BODY2}
-\`\`\`"
-          gh api --method POST "repos/crismwan/ECO-COMS-Extend-App/issues/1/comments" \
-            --field body="${COMMENT_BODY}" || echo "Issue comment failed"
+          # Use node to build body to avoid YAML ** alias conflict
+          export DIAG_CODE1="${CODE1}" DIAG_BODY1="${BODY1}"
+          export DIAG_CODE2="${CODE2}" DIAG_BODY2="${BODY2}"
+          export DIAG_VID="${VERSION_ID}" DIAG_ORG="${ORG_UUID}"
+          node -e "
+            const body = [
+              '## Deploy Diagnostics ' + new Date().toISOString(),
+              'VERSION_ID: ' + process.env.DIAG_VID,
+              'ORG_UUID: ' + process.env.DIAG_ORG,
+              '',
+              '### Attempt 1: DevTools + Deploy-Tenant-Authorization + org-id',
+              'HTTP ' + process.env.DIAG_CODE1,
+              '\`\`\`',
+              process.env.DIAG_BODY1,
+              '\`\`\`',
+              '',
+              '### Attempt 2: DevTools dev token only',
+              'HTTP ' + process.env.DIAG_CODE2,
+              '\`\`\`',
+              process.env.DIAG_BODY2,
+              '\`\`\`',
+            ].join('\n');
+            const https = require('https');
+            const data = JSON.stringify({body});
+            const req = https.request({
+              hostname: 'api.github.com',
+              path: '/repos/crismwan/ECO-COMS-Extend-App/issues/1/comments',
+              method: 'POST',
+              headers: {
+                'Authorization': 'Bearer ' + process.env.GH_TOKEN,
+                'Content-Type': 'application/json',
+                'User-Agent': 'gh-actions',
+                'Content-Length': Buffer.byteLength(data)
+              }
+            }, res => {
+              let r = '';
+              res.on('data', d => r += d);
+              res.on('end', () => console.log('Comment posted, HTTP', res.statusCode, r.slice(0,100)));
+            });
+            req.on('error', e => console.error('Comment failed:', e.message));
+            req.write(data);
+            req.end();
+          " || echo "Issue comment failed"
 
           echo "All deploy attempts failed."
           exit 1
