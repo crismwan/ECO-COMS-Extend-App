@@ -11,6 +11,7 @@ jobs:
     permissions:
       contents: read
       actions: write
+      issues: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -199,24 +200,24 @@ jobs:
           if [ "${CODE2}" = "200" ] || [ "${CODE2}" = "201" ] || [ "${CODE2}" = "202" ]; then
             echo "DevTools deploy succeeded!"; exit 0; fi
 
-          # Write to step summary (readable via API without blob storage)
-          {
-            echo "## Deploy Diagnostics"
-            echo "**VERSION_ID**: ${VERSION_ID}"
-            echo "**ORG_UUID**: ${ORG_UUID}"
-            echo ""
-            echo "### Attempt 1: DevTools + Deploy-Tenant-Authorization + org-id"
-            echo "**HTTP**: ${CODE1}"
-            echo '```'
-            echo "${BODY1}"
-            echo '```'
-            echo ""
-            echo "### Attempt 2: DevTools dev token only"
-            echo "**HTTP**: ${CODE2}"
-            echo '```'
-            echo "${BODY2}"
-            echo '```'
-          } >> "${GITHUB_STEP_SUMMARY}"
+          # Post diagnostics as issue comment (repo-scoped token, no blob storage needed)
+          COMMENT_BODY="## Deploy Diagnostics $(date -u +%Y-%m-%dT%H:%M:%SZ)
+**VERSION_ID**: ${VERSION_ID}
+**ORG_UUID**: ${ORG_UUID}
+
+### Attempt 1: DevTools + Deploy-Tenant-Authorization + org-id
+**HTTP ${CODE1}**
+\`\`\`
+${BODY1}
+\`\`\`
+
+### Attempt 2: DevTools dev token only
+**HTTP ${CODE2}**
+\`\`\`
+${BODY2}
+\`\`\`"
+          gh api --method POST "repos/crismwan/ECO-COMS-Extend-App/issues/1/comments" \
+            --field body="${COMMENT_BODY}" || echo "Issue comment failed"
 
           echo "All deploy attempts failed."
           exit 1
