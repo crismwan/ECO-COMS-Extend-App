@@ -199,23 +199,24 @@ jobs:
           if [ "${CODE2}" = "200" ] || [ "${CODE2}" = "201" ] || [ "${CODE2}" = "202" ]; then
             echo "DevTools deploy succeeded!"; exit 0; fi
 
-          # Write diagnostics to file for artifact upload (gist requires extra token scope)
-          mkdir -p /tmp/diag
-          jq -n \
-            --arg a1code "${CODE1}" --arg a1body "${BODY1}" \
-            --arg a2code "${CODE2}" --arg a2body "${BODY2}" \
-            --arg orgUuid "${ORG_UUID}" --arg versionId "${VERSION_ID}" \
-            '{attempt1:{code:$a1code,body:$a1body},attempt2:{code:$a2code,body:$a2body},orgUuid:$orgUuid,versionId:$versionId}' \
-            > /tmp/diag/deploy-diag.json
-          cat /tmp/diag/deploy-diag.json
+          # Write to step summary (readable via API without blob storage)
+          {
+            echo "## Deploy Diagnostics"
+            echo "**VERSION_ID**: ${VERSION_ID}"
+            echo "**ORG_UUID**: ${ORG_UUID}"
+            echo ""
+            echo "### Attempt 1: DevTools + Deploy-Tenant-Authorization + org-id"
+            echo "**HTTP**: ${CODE1}"
+            echo '```'
+            echo "${BODY1}"
+            echo '```'
+            echo ""
+            echo "### Attempt 2: DevTools dev token only"
+            echo "**HTTP**: ${CODE2}"
+            echo '```'
+            echo "${BODY2}"
+            echo '```'
+          } >> "${GITHUB_STEP_SUMMARY}"
 
           echo "All deploy attempts failed."
           exit 1
-
-      - name: Upload deploy diagnostics
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: deploy-diag
-          path: /tmp/diag/deploy-diag.json
-          retention-days: 1
