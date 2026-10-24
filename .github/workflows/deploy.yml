@@ -163,8 +163,9 @@ jobs:
           echo "WDCLI_TENANT_TOKEN length: ${#WDCLI_TENANT_TOKEN}"
 
           # Run wdcli app deploy targeting ubc_wcpdev2
-          # Correct flag is --tenant-alias (not --tenant)
-          wdcli app deploy --tenant-alias "${TENANT_ALIAS}" 2>&1 | tee /tmp/deploy-output.txt
+          # Pass APP_REF_ID as positional arg to skip interactive app picker
+          APP_REF_ID=ecocomsphase_xclw_cm_sync2_vmzvxm
+          wdcli app deploy "${APP_REF_ID}" --tenant-alias "${TENANT_ALIAS}" 2>&1 | tee /tmp/deploy-output.txt
           DEPLOY_EXIT=${PIPESTATUS[0]}
 
           cat /tmp/deploy-output.txt
