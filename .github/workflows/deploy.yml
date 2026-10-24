@@ -198,6 +198,17 @@ jobs:
             console.log('Patch 2 (force DevTools path): OK');
           "
 
+          # Patch 3: commands/index.js — log the actual HTTP error from DevTools
+          node -e "
+            const fs = require('fs');
+            const f = process.env.CMDS;
+            let c = fs.readFileSync(f, 'utf8');
+            const old = 'catch(n){a.Output.error(\`Error deploying \${e.versionId} to \${e.tenant.lookupAlias}.\`);const t=n instanceof Error&&\"commonRequestID\"in n?n.commonRequestID:\"\";return{success:!1,versionId:e.versionId,commonRequestId:t,appId:e.appUuid,buildId:\"\",asorRegistrationSucceeded:!1,asorRegistrationErrors:[]}}';
+            const rep = 'catch(n){console.error(\"[DIAG] DevTools deploy error:\",n&&n.message,\"status:\",n&&n.status,\"body:\",JSON.stringify(n&&(n.response||n.body||n.data)));a.Output.error(\`Error deploying \${e.versionId} to \${e.tenant.lookupAlias}.\`);const t=n instanceof Error&&\"commonRequestID\"in n?n.commonRequestID:\"\";return{success:!1,versionId:e.versionId,commonRequestId:t,appId:e.appUuid,buildId:\"\",asorRegistrationSucceeded:!1,asorRegistrationErrors:[]}}';
+            if (!c.includes(old)) { console.error('WARN: catch patch target not found (skipping)'); }
+            else { fs.writeFileSync(f, c.replace(old, rep)); console.log('Patch 3 (log DevTools error): OK'); }
+          "
+
       - name: Deploy to ubc_wcpdev2 via wdcli
         env:
           TENANT_ALIAS: ubc_wcpdev2
