@@ -297,43 +297,61 @@ jobs:
           echo "CmNvbnN0IGZzID0gcmVxdWlyZSgnZnMnKTsKY29uc3QgZiA9IHByb2Nlc3MuZW52Lk1FVEVSRUQ7CmxldCBjID0gZnMucmVhZEZpbGVTeW5jKGYsICd1dGY4Jyk7CmNvbnN0IE9MRCA9ICdQdD1lPT57Y29uc3QgdD1wcm9jZXNzLmVudi5XRENMSV9EVFNfQVBJX0dBVEVXQVk7cmV0dXJuKHQ/bmV3IHRpKHQpOm5ldyBsLkRldlRvb2xzQ29ubmVjdG9yKHkuZGV2dG9vbHNIb3N0bmFtZShlLmNvbmZpZ0ZpbGUpKSkuYXR0YWNoQXV0aFRva2VuKEdlKGUpKX0nOwpjb25zdCBSRVAgPSAnUHQ9ZT0+e2NvbnN0IHQ9cHJvY2Vzcy5lbnYuV0RDTElfRFRTX0FQSV9HQVRFV0FZO2NvbnN0IGNvbm49KHQ/bmV3IHRpKHQpOm5ldyBsLkRldlRvb2xzQ29ubmVjdG9yKHkuZGV2dG9vbHNIb3N0bmFtZShlLmNvbmZpZ0ZpbGUpKSk7Y29ubi5zZXREZWZhdWx0SGVhZGVyKCJVc2VyLUFnZW50Iiwid2RjbGkvMS45LjQzIik7cmV0dXJuIGNvbm4uYXR0YWNoQXV0aFRva2VuKEdlKGUpKX0nOwppZiAoIWMuaW5jbHVkZXMoT0xEKSkgeyBjb25zb2xlLmVycm9yKCdFUlJPUjogUHQgcGF0Y2ggdGFyZ2V0IG5vdCBmb3VuZCcpOyBwcm9jZXNzLmV4aXQoMSk7IH0KZnMud3JpdGVGaWxlU3luYyhmLCBjLnJlcGxhY2UoT0xELCBSRVApKTsKY29uc29sZS5sb2coJ1BhdGNoIDExIChhZGQgVXNlci1BZ2VudCBoZWFkZXIgdG8gRGV2VG9vbHNDb25uZWN0b3IpOiBPSycpOwo=" | base64 -d > /tmp/patch11.js
           node /tmp/patch11.js
 
-          # Patch 12: wcp-sdk AosConnector.deployApp()
-          #   The AOS /deploy endpoint returns 401 "The supplied authentication is invalid"
-          #   when called with both tokens present (both masked in CI output).
-          #   Current mapping:
-          #     Authorization: Bearer <tenantBearerToken>  = getValidatedTenantAccessToken()
-          #                                                 = WDCLI_TENANT_TOKEN (CC token)
-          #     WCP-Authorization: Bearer <accessToken>    = getWcpAccessToken()
-          #                                                 = config.wcpAccessToken = WD_DEV_TOKEN (PKCE)
-          #   WCP platform API convention: Authorization carries the user/developer PKCE token;
-          #   WCP-Authorization carries the tenant-scoped CC token.
-          #   Fix: swap — put WD_DEV_TOKEN on Authorization and CC token on WCP-Authorization.
-          #   AosConnector.deployApp(accessToken) passes accessToken to getAuthHeaders() which
-          #   sets WCP-Authorization. The Authorization comes from tenantBearerToken.
-          #   We patch deployApp to swap the two token arguments when both env vars are set.
+          # Patch 12: wcp-sdk AosConnector — swap token headers on /aos/v1/deploy
+          #   The AOS endpoint returns 401 with both tokens present but on wrong headers.
+          #   WCP convention: Authorization = PKCE user token, WCP-Authorization = CC tenant token.
+          #   wdcli sends them reversed: CC on Authorization, PKCE on WCP-Authorization.
+          #   Strategy: use regex to find the WCP-Authorization setter in the minified bundle
+          #   and inject a guard that swaps headers when WDCLI_PKCE_TOKEN env var is set.
+          #   Also log the 60-char prefix of each token type (unmasked by env name, not value)
+          #   so we can confirm they reach the endpoint.
           WCP_SDK=$(find /opt/wdcli -path "*/wcp-sdk/dist/index.js" | head -1)
           export WCP_SDK
+          echo "=== Patch 12: discovering WCP-Authorization setter in wcp-sdk ==="
+          # Show context around 'WCP-Authorization' to find the exact function form
+          node -e "
+            const fs = require('fs');
+            const c = fs.readFileSync(process.env.WCP_SDK, 'utf8');
+            const idx = c.indexOf('WCP-Authorization');
+            if (idx < 0) { console.error('WCP-Authorization not found in wcp-sdk!'); process.exit(1); }
+            // Print up to 3 occurrences with 120 chars of context each
+            let pos = 0, found = 0;
+            while (found < 3) {
+              const i = c.indexOf('WCP-Authorization', pos);
+              if (i < 0) break;
+              console.log('[CTX' + found + '] pos=' + i + ' | ' + c.slice(Math.max(0,i-80), i+120));
+              pos = i + 1; found++;
+            }
+          "
+          echo "=== Patch 12: applying regex token-swap patch ==="
           node -e "
             const fs = require('fs');
             const f = process.env.WCP_SDK;
             let c = fs.readFileSync(f, 'utf8');
-            // Find AosConnector.deployApp — it calls deployApp(versionId, accessToken)
-            // and sends Authorization: Bearer tenantBearerToken + WCP-Authorization: Bearer accessToken.
-            // We want to swap so PKCE (WD_DEV_TOKEN) is on Authorization and CC on WCP-Authorization.
-            // The function signature in wcp-sdk is:
-            //   async deployApp(e){... this.post('/deploy',{versionId:e},{headers:this.getAuthHeaders(t)}) }
-            // where t = accessToken (WD_DEV_TOKEN via getWcpAccessToken()) and
-            // Authorization comes from getValidatedTenantAccessToken() = WDCLI_TENANT_TOKEN (CC).
-            //
-            // Strategy: override getValidatedTenantAccessToken to return WD_DEV_TOKEN when
-            // WDCLI_PKCE_TOKEN is set, and set WCP-Authorization to WDCLI_TENANT_TOKEN.
-            // Simpler: patch getAuthHeaders to return Authorization: Bearer WDCLI_PKCE_TOKEN
-            // and WCP-Authorization: Bearer WDCLI_TENANT_TOKEN when env vars are set.
-            const OLD = 'getAuthHeaders(e){return{\"WCP-Authorization\":\`Bearer \${e}\`}}';
-            const REP = 'getAuthHeaders(e){if(process.env.WDCLI_PKCE_TOKEN&&process.env.WDCLI_TENANT_TOKEN){console.error(\"[CI-P12] Swapping AOS tokens: Authorization=PKCE, WCP-Authorization=CC\");return{\"Authorization\":\`Bearer \${process.env.WDCLI_PKCE_TOKEN}\`,\"WCP-Authorization\":\`Bearer \${process.env.WDCLI_TENANT_TOKEN}\`};}return{\"WCP-Authorization\":\`Bearer \${e}\`}}';
-            if (!c.includes(OLD)) { console.error('ERROR: AosConnector.getAuthHeaders patch target not found'); process.exit(1); }
-            fs.writeFileSync(f, c.replace(OLD, REP));
-            console.log('Patch 12 (swap AOS tokens: PKCE→Authorization, CC→WCP-Authorization): OK');
+            // Use regex to match the getAuthHeaders method regardless of minified var names.
+            // Pattern: function/method that returns {'WCP-Authorization': 'Bearer ' + someVar}
+            // Captures the whole return statement so we can prepend the swap guard.
+            // Minified forms seen: getAuthHeaders(e){return{'WCP-Authorization':\`Bearer \${e}\`}}
+            //                  or: getAuthHeaders(t){return{'WCP-Authorization':'Bearer '+t}}
+            //                  or in class: getAuthHeaders(n){return{'WCP-Authorization':'Bearer '+n}}
+            const re = /(getAuthHeaders\s*\(\s*\w+\s*\)\s*\{)(return\s*\{\s*['\"]WCP-Authorization['\"])/;
+            const m = re.exec(c);
+            if (!m) {
+              // Fallback: find any place setting 'WCP-Authorization' and show 200 chars around it
+              const idx = c.indexOf('WCP-Authorization');
+              console.error('ERROR: getAuthHeaders regex did not match. Context at WCP-Authorization: ' +
+                (idx >= 0 ? c.slice(Math.max(0,idx-100), idx+100) : 'NOT FOUND'));
+              process.exit(1);
+            }
+            console.log('Matched getAuthHeaders at pos', m.index, '- injecting swap guard');
+            const guard = m[1] +
+              'if(process.env.WDCLI_PKCE_TOKEN&&process.env.WDCLI_TENANT_TOKEN){' +
+              'console.error(\"[CI-P12] AOS deploy: Authorization=PKCE(\"+process.env.WDCLI_PKCE_TOKEN.substring(0,20)+\"...) WCP-Authorization=CC(\"+process.env.WDCLI_TENANT_TOKEN.substring(0,20)+\"...)\");' +
+              'return{\"Authorization\":\"Bearer \"+process.env.WDCLI_PKCE_TOKEN,\"WCP-Authorization\":\"Bearer \"+process.env.WDCLI_TENANT_TOKEN};}' +
+              m[2];
+            c = c.slice(0, m.index) + guard + c.slice(m.index + m[0].length);
+            fs.writeFileSync(f, c);
+            console.log('Patch 12 (swap AOS tokens via regex): OK');
           "
 
       - name: Deploy to ubc_wcpdev2 via wdcli
