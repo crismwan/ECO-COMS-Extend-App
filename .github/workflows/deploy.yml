@@ -48,6 +48,17 @@ jobs:
           set -euxo pipefail
           wdcli auth login --system-user
           wdcli whoami
+          # Dump config keys (redact token values) to understand what's populated
+          WDCLI_CONFIG="${HOME}/.config/@workday/wdcli/config.json"
+          jq 'to_entries | map(if (.value | type) == "string" and (.value | length) > 20 then .value = "<redacted>" else . end) | from_entries' "${WDCLI_CONFIG}" 2>/dev/null || true
+          # Try to get org UUID from wdcli whoami output
+          WHOAMI=$(wdcli whoami --format json 2>/dev/null || true)
+          echo "whoami json: ${WHOAMI}"
+          ORG_UUID=$(echo "${WHOAMI}" | jq -r '.organizationUuid // .orgUuid // .organization.id // empty' 2>/dev/null || true)
+          echo "ORG_UUID from whoami: ${ORG_UUID}"
+          if [ -n "${ORG_UUID}" ]; then
+            echo "ORG_UUID=${ORG_UUID}" >> $GITHUB_ENV
+          fi
 
       - name: Upload app to App Hub
         env:
@@ -163,7 +174,9 @@ jobs:
           APP_UUID=cfd75927b808c1dd99c54b1c7096a142
           WDCLI_CONFIG="${HOME}/.config/@workday/wdcli/config.json"
           DEV_TOKEN=$(jq -r '.wcpAccessToken // empty' "${WDCLI_CONFIG}" 2>/dev/null)
-          ORG_UUID=$(jq -r '.organizationUuid // empty' "${WDCLI_CONFIG}" 2>/dev/null)
+          # ORG_UUID may be set from the auth step via $GITHUB_ENV
+          ORG_UUID_CONFIG=$(jq -r '.organizationUuid // empty' "${WDCLI_CONFIG}" 2>/dev/null)
+          ORG_UUID="${ORG_UUID:-${ORG_UUID_CONFIG}}"
 
           echo "WDCLI_TENANT_TOKEN length: ${#WDCLI_TENANT_TOKEN}"
           echo "DEV_TOKEN length: ${#DEV_TOKEN}"
@@ -202,9 +215,9 @@ jobs:
 
           # Post diagnostics as issue comment (repo-scoped token, no blob storage needed)
           # Use node to build body to avoid YAML ** alias conflict
-          export DIAG_CODE1="${CODE1}" DIAG_BODY1="${BODY1}"
-          export DIAG_CODE2="${CODE2}" DIAG_BODY2="${BODY2}"
-          export DIAG_VID="${VERSION_ID}" DIAG_ORG="${ORG_UUID}"
+          export DIAG_CODE1="${CODE1}" DIAG_BODY1="${BODY1:-<empty>}"
+          export DIAG_CODE2="${CODE2}" DIAG_BODY2="${BODY2:-<empty>}"
+          export DIAG_VID="${VERSION_ID}" DIAG_ORG="${ORG_UUID:-<not set>}"
           node -e "
             const body = [
               '## Deploy Diagnostics ' + new Date().toISOString(),
