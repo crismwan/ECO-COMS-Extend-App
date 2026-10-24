@@ -366,6 +366,29 @@ jobs:
             -d "{\"versionId\":\"${VERSION_ID}\"}")
           echo "Response4: ${RESP4}"
 
+          echo "--- Attempt 5: Authorization: Bearer <PKCE_token> (user token as primary auth) ---"
+          RESP5=$(curl -s -w "\n__HTTP_STATUS__:%{http_code}" -X POST \
+            "https://api.us.wcp.workday.com/aos/v1/deploy" \
+            -H "Authorization: Bearer ${WD_DEV_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -H "User-Agent: wdcli/1.9.43" \
+            -d "{\"versionId\":\"${VERSION_ID}\"}")
+          echo "Response5: ${RESP5}"
+
+          echo "--- Attempt 6: Authorization: Bearer <PKCE_token> + WCP-Authorization: Bearer <CC_token> ---"
+          RESP6=$(curl -s -w "\n__HTTP_STATUS__:%{http_code}" -X POST \
+            "https://api.us.wcp.workday.com/aos/v1/deploy" \
+            -H "Authorization: Bearer ${WD_DEV_TOKEN}" \
+            -H "WCP-Authorization: Bearer ${CC_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -H "User-Agent: wdcli/1.9.43" \
+            -d "{\"versionId\":\"${VERSION_ID}\"}")
+          echo "Response6: ${RESP6}"
+
+          echo "--- Attempt 7: CC token audience check (decode JWT) ---"
+          echo "${CC_TOKEN}" | cut -d'.' -f2 | base64 -d 2>/dev/null | jq '{aud,sub,scope,tenant_alias,iss}' 2>/dev/null || echo "Could not decode CC token JWT"
+          echo "WD_DEV_TOKEN first 50 chars: ${WD_DEV_TOKEN:0:50}"
+
           echo "=== Curl diagnostics complete ==="
 
       - name: Deploy to ubc_wcpdev2 via wdcli
