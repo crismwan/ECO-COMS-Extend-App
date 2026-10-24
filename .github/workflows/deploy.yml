@@ -70,7 +70,9 @@ jobs:
               wcpAccessToken: $devToken,
               organizationUuid: $orgUuid,
               clientId: $clientId,
-              clientSecret: $clientSecret
+              clientSecret: $clientSecret,
+              defaultAccountShortId: "vmzvxm",
+              defaultTenantAlias: "ubc_wcpdev2"
             }' > "${CONFIG_FILE}"
 
           echo "Config written (keys): $(jq -r 'keys | @csv' "${CONFIG_FILE}")"
@@ -181,6 +183,7 @@ jobs:
           TENANT_ALIAS: ubc_wcpdev2
           WDCLI_TENANT_TOKEN: ${{ env.TENANT_ACCESS_TOKEN }}
           WDCLI_AUTH: ${{ secrets.WD_DEV_TOKEN }}
+          WDCLI_ACCOUNT: vmzvxm
           WDCLI_CLIENT_ID: ${{ secrets.WD_CLIENT_ID }}
           WDCLI_CLIENT_SECRET: ${{ secrets.WD_CLIENT_SECRET }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
