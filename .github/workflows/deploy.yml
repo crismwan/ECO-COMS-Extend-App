@@ -182,18 +182,41 @@ jobs:
         env:
           TENANT_ALIAS: ubc_wcpdev2
           WDCLI_TENANT_TOKEN: ${{ env.TENANT_ACCESS_TOKEN }}
-          WDCLI_AUTH: ${{ secrets.WD_DEV_TOKEN }}
-          WDCLI_ACCOUNT: vmzvxm
           WDCLI_CLIENT_ID: ${{ secrets.WD_CLIENT_ID }}
           WDCLI_CLIENT_SECRET: ${{ secrets.WD_CLIENT_SECRET }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           APP_REF_ID=ecocomsphase_xclw_cm_sync2_vmzvxm
           echo "Deploying ${APP_REF_ID} version ${VERSION_ID} to ${TENANT_ALIAS}"
-          echo "WDCLI_AUTH length: ${#WDCLI_AUTH}"
           echo "WDCLI_TENANT_TOKEN length: ${#WDCLI_TENANT_TOKEN}"
 
-          # Run wdcli deploy, capture all output, don't let failure stop the script yet
+          # Dump config to see what system-user login populated
+          WDCLI_CONFIG="${HOME}/.config/@workday/wdcli/config.json"
+          echo "Config keys: $(python3 -c "import json,sys; d=json.load(open('${WDCLI_CONFIG}')); print([k for k in d if k != 'wcpTenantAccessToken'])" 2>/dev/null || true)"
+
+          # Patch: intercept getOrganizations to log what token is used, and
+          # intercept deployApplication to log org UUID + tokens going to DevTools
+          PATCH_FILE=$(find /opt/wdcli -name "metered-command-C1Iau1Kk.js" | head -1)
+          export PATCH_FILE
+          node -e "
+            const fs = require('fs');
+            const path = process.env.PATCH_FILE;
+            let content = fs.readFileSync(path, 'utf8');
+
+            // Patch getOrganizations to log the token used
+            const old1 = 'async getUserAccounts(t){const n=await L(t);return Ee(t,{accessToken:n,version:\"v2\"}).getOrganizations()}';
+            const new1 = 'async getUserAccounts(t){const n=await L(t);console.error(\"[DIAG] getUserAccounts token len:\",n?n.length:0,\"prefix:\",n?n.slice(0,30):\"null\");const orgs=await Ee(t,{accessToken:n,version:\"v2\"}).getOrganizations();console.error(\"[DIAG] orgs:\",JSON.stringify(orgs));return orgs;}';
+            if (content.includes(old1)) {
+              content = content.replace(old1, new1);
+              console.log('Patched getUserAccounts');
+            } else {
+              console.error('WARN: getUserAccounts patch target not found');
+            }
+
+            fs.writeFileSync(path, content);
+          "
+
+          # Run wdcli deploy, capture all output
           set +e
           wdcli app deploy "${APP_REF_ID}" --tenant-alias "${TENANT_ALIAS}" > /tmp/deploy-out.txt 2>&1
           DEPLOY_EXIT=$?
@@ -202,26 +225,24 @@ jobs:
           echo "wdcli exit: ${DEPLOY_EXIT}"
           cat /tmp/deploy-out.txt
 
-          if [ "${DEPLOY_EXIT}" != "0" ]; then
-            DEPLOY_OUTPUT=$(cat /tmp/deploy-out.txt)
-            export DEPLOY_OUTPUT DEPLOY_EXIT
-            node -e "
-              const body = '## wdcli deploy output\n\`\`\`\n' + (process.env.DEPLOY_OUTPUT || '<empty>') + '\n\`\`\`\nExit: ' + process.env.DEPLOY_EXIT;
-              const https = require('https');
-              const data = JSON.stringify({body});
-              const req = https.request({
-                hostname: 'api.github.com',
-                path: '/repos/crismwan/ECO-COMS-Extend-App/issues/1/comments',
-                method: 'POST',
-                headers: {
-                  'Authorization': 'Bearer ' + process.env.GH_TOKEN,
-                  'Content-Type': 'application/json',
-                  'User-Agent': 'gh-actions',
-                  'Content-Length': Buffer.byteLength(data)
-                }
-              }, res => { let r=''; res.on('data',d=>r+=d); res.on('end',()=>console.log('Posted, HTTP',res.statusCode)); });
-              req.on('error', e => console.error(e.message));
-              req.write(data); req.end();
-            " || true
-            exit 1
-          fi
+          DEPLOY_OUTPUT=$(cat /tmp/deploy-out.txt)
+          export DEPLOY_OUTPUT DEPLOY_EXIT
+          node -e "
+            const body = '## wdcli deploy output (diag patch)\n\`\`\`\n' + (process.env.DEPLOY_OUTPUT || '<empty>') + '\n\`\`\`\nExit: ' + process.env.DEPLOY_EXIT;
+            const https = require('https');
+            const data = JSON.stringify({body});
+            const req = https.request({
+              hostname: 'api.github.com',
+              path: '/repos/crismwan/ECO-COMS-Extend-App/issues/1/comments',
+              method: 'POST',
+              headers: {
+                'Authorization': 'Bearer ' + process.env.GH_TOKEN,
+                'Content-Type': 'application/json',
+                'User-Agent': 'gh-actions',
+                'Content-Length': Buffer.byteLength(data)
+              }
+            }, res => { let r=''; res.on('data',d=>r+=d); res.on('end',()=>console.log('Posted, HTTP',res.statusCode)); });
+            req.on('error', e => console.error(e.message));
+            req.write(data); req.end();
+          " || true
+          if [ "${DEPLOY_EXIT}" != "0" ]; then exit 1; fi
