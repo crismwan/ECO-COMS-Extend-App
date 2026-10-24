@@ -163,7 +163,8 @@ jobs:
           echo "WDCLI_TENANT_TOKEN length: ${#WDCLI_TENANT_TOKEN}"
 
           # Run wdcli app deploy targeting ubc_wcpdev2
-          wdcli app deploy --tenant "${TENANT_ALIAS}" 2>&1 | tee /tmp/deploy-output.txt
+          # Correct flag is --tenant-alias (not --tenant)
+          wdcli app deploy --tenant-alias "${TENANT_ALIAS}" 2>&1 | tee /tmp/deploy-output.txt
           DEPLOY_EXIT=${PIPESTATUS[0]}
 
           cat /tmp/deploy-output.txt
