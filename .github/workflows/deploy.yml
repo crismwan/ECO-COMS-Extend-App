@@ -196,6 +196,9 @@ jobs:
           echo "TENANT_ACCESS_TOKEN=${ACCESS_TOKEN}" >> $GITHUB_ENV
 
       - name: Patch wdcli to use DevTools deploy path
+        env:
+          WDCLI_CLIENT_ID: ${{ secrets.WD_CLIENT_ID }}
+          WDCLI_CLIENT_SECRET: ${{ secrets.WD_CLIENT_SECRET }}
         run: |
           set -euo pipefail
 
@@ -315,52 +318,14 @@ jobs:
           #   the bundle and prepend a fetch-monkey-patch that intercepts the /aos/v1/deploy
           #   call specifically, swapping Authorization to ID form when WDCLI_ID_AUTH is set.
           #
-          #   WDCLI_ID_AUTH = base64(clientId:clientSecret) — computed in the deploy step.
+          #   WDCLI_ID_AUTH = base64(clientId:clientSecret) — computed here and exported to $GITHUB_ENV.
           WCP_SDK=$(find /opt/wdcli -path "*/wcp-sdk/dist/index.js" | head -1)
           export WCP_SDK
           echo "=== Patch 12: patching AOS deploy to use Authorization: ID scheme ==="
-          node -e "
-            const fs = require('fs');
-            const f = process.env.WCP_SDK;
-            let c = fs.readFileSync(f, 'utf8');
-            // Find AosConnector.prototype.deployApp to inject a global fetch override
-            // that rewrites Authorization: Bearer -> Authorization: ID for /aos/v1/deploy.
-            const ANCHOR = 'AosConnector.prototype.deployApp';
-            const idx = c.indexOf(ANCHOR);
-            if (idx < 0) {
-              console.error('ERROR: AosConnector.prototype.deployApp not found in wcp-sdk');
-              process.exit(1);
-            }
-            // Inject a fetch-interceptor module-level before the AosConnector class block.
-            // We find the class start (search backwards from ANCHOR for 'AosConnector.prototype')
-            // and insert before it. Simpler: insert at the very start of the file.
-            const INTERCEPT = \`
-// CI-P12: intercept fetch for /aos/v1/deploy to use Authorization: ID scheme
-(function(){
-  const _origFetch = globalThis.fetch;
-  if(!_origFetch) return;
-  globalThis.fetch = function(url, opts) {
-    const idAuth = process.env.WDCLI_ID_AUTH;
-    if(idAuth && typeof url === 'string' && url.includes('/aos/v1/deploy')) {
-      opts = opts ? Object.assign({}, opts) : {};
-      opts.headers = Object.assign({}, opts.headers || {});
-      const oldAuth = opts.headers['Authorization'] || opts.headers['authorization'] || '(none)';
-      opts.headers['Authorization'] = 'ID ' + idAuth;
-      // Keep WCP-Authorization as the CC bearer token
-      if(!opts.headers['WCP-Authorization'] && process.env.WDCLI_TENANT_TOKEN) {
-        opts.headers['WCP-Authorization'] = 'Bearer ' + process.env.WDCLI_TENANT_TOKEN;
-      }
-      console.error('[CI-P12] AOS deploy: overriding Authorization to ID scheme (was: ' + oldAuth.substring(0,15) + '...)');
-      console.error('[CI-P12] WCP-Authorization: ' + (opts.headers['WCP-Authorization'] || '(none)').substring(0,20) + '...');
-    }
-    return _origFetch.apply(this, arguments);
-  };
-})();
-\`;
-            c = INTERCEPT + c;
-            fs.writeFileSync(f, c);
-            console.log('Patch 12 (AOS deploy Authorization: ID scheme via fetch intercept): OK');
-          "
+          ENCODED_CREDS=$(printf '%s:%s' "${WDCLI_CLIENT_ID}" "${WDCLI_CLIENT_SECRET}" | base64 -w 0)
+          echo "WDCLI_ID_AUTH=${ENCODED_CREDS}" >> $GITHUB_ENV
+          echo "Y29uc3QgZnMgPSByZXF1aXJlKCdmcycpOwpjb25zdCBmID0gcHJvY2Vzcy5lbnYuV0NQX1NESzsKbGV0IGMgPSBmcy5yZWFkRmlsZVN5bmMoZiwgJ3V0ZjgnKTsKY29uc3QgQU5DSE9SID0gJ0Fvc0Nvbm5lY3Rvci5wcm90b3R5cGUuZGVwbG95QXBwJzsKY29uc3QgaWR4ID0gYy5pbmRleE9mKEFOQ0hPUik7CmlmIChpZHggPCAwKSB7CiAgY29uc29sZS5lcnJvcignRVJST1I6IEFvc0Nvbm5lY3Rvci5wcm90b3R5cGUuZGVwbG95QXBwIG5vdCBmb3VuZCBpbiB3Y3Atc2RrJyk7CiAgcHJvY2Vzcy5leGl0KDEpOwp9CmNvbnN0IElOVEVSQ0VQVCA9IFsKICAnLy8gQ0ktUDEyOiBpbnRlcmNlcHQgZmV0Y2ggZm9yIC9hb3MvdjEvZGVwbG95IHRvIHVzZSBBdXRob3JpemF0aW9uOiBJRCBzY2hlbWUnLAogICcoZnVuY3Rpb24oKXsnLAogICcgIHZhciBfb3JpZ0ZldGNoID0gZ2xvYmFsVGhpcy5mZXRjaDsnLAogICcgIGlmKCFfb3JpZ0ZldGNoKSByZXR1cm47JywKICAnICBnbG9iYWxUaGlzLmZldGNoID0gZnVuY3Rpb24odXJsLCBvcHRzKSB7JywKICAnICAgIHZhciBpZEF1dGggPSBwcm9jZXNzLmVudi5XRENMSV9JRF9BVVRIOycsCiAgJyAgICBpZihpZEF1dGggJiYgdHlwZW9mIHVybCA9PT0gInN0cmluZyIgJiYgdXJsLmluZGV4T2YoIi9hb3MvdjEvZGVwbG95IikgPj0gMCkgeycsCiAgJyAgICAgIG9wdHMgPSBvcHRzID8gT2JqZWN0LmFzc2lnbih7fSwgb3B0cykgOiB7fTsnLAogICcgICAgICBvcHRzLmhlYWRlcnMgPSBPYmplY3QuYXNzaWduKHt9LCBvcHRzLmhlYWRlcnMgfHwge30pOycsCiAgJyAgICAgIHZhciBvbGRBdXRoID0gb3B0cy5oZWFkZXJzWyJBdXRob3JpemF0aW9uIl0gfHwgb3B0cy5oZWFkZXJzWyJhdXRob3JpemF0aW9uIl0gfHwgIihub25lKSI7JywKICAnICAgICAgb3B0cy5oZWFkZXJzWyJBdXRob3JpemF0aW9uIl0gPSAiSUQgIiArIGlkQXV0aDsnLAogICcgICAgICBpZighb3B0cy5oZWFkZXJzWyJXQ1AtQXV0aG9yaXphdGlvbiJdICYmIHByb2Nlc3MuZW52LldEQ0xJX1RFTkFOVF9UT0tFTikgeycsCiAgJyAgICAgICAgb3B0cy5oZWFkZXJzWyJXQ1AtQXV0aG9yaXphdGlvbiJdID0gIkJlYXJlciAiICsgcHJvY2Vzcy5lbnYuV0RDTElfVEVOQU5UX1RPS0VOOycsCiAgJyAgICAgIH0nLAogICcgICAgICBjb25zb2xlLmVycm9yKCJbQ0ktUDEyXSBBT1MgZGVwbG95OiBBdXRob3JpemF0aW9uPUlEICh3YXM6ICIgKyBvbGRBdXRoLnN1YnN0cmluZygwLDE1KSArICIuLi4pIik7JywKICAnICAgICAgY29uc29sZS5lcnJvcigiW0NJLVAxMl0gV0NQLUF1dGhvcml6YXRpb246ICIgKyAob3B0cy5oZWFkZXJzWyJXQ1AtQXV0aG9yaXphdGlvbiJdIHx8ICIobm9uZSkiKS5zdWJzdHJpbmcoMCwyMCkgKyAiLi4uIik7JywKICAnICAgIH0nLAogICcgICAgcmV0dXJuIF9vcmlnRmV0Y2guYXBwbHkodGhpcywgYXJndW1lbnRzKTsnLAogICcgIH07JywKICAnfSkoKTsnLApdLmpvaW4oJ1xuJykgKyAnXG4nOwpmcy53cml0ZUZpbGVTeW5jKGYsIElOVEVSQ0VQVCArIGMpOwpjb25zb2xlLmxvZygnUGF0Y2ggMTIgKEFPUyBkZXBsb3kgQXV0aG9yaXphdGlvbjogSUQgc2NoZW1lIHZpYSBmZXRjaCBpbnRlcmNlcHQpOiBPSycpOwo=" | base64 -d > /tmp/patch12.js
+          node /tmp/patch12.js
 
       - name: Deploy to ubc_wcpdev2 via wdcli
         env:
@@ -386,6 +351,7 @@ jobs:
           WDCLI_VERSION_ID: ${{ env.VERSION_ID }}
           WDCLI_CLIENT_ID: ${{ secrets.WD_CLIENT_ID }}
           WDCLI_CLIENT_SECRET: ${{ secrets.WD_CLIENT_SECRET }}
+          WDCLI_ID_AUTH: ${{ env.WDCLI_ID_AUTH }}
         run: |
           set -euo pipefail
           APP_REF_ID=ecocomsphase_xclw_cm_sync2_vmzvxm
