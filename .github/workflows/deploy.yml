@@ -148,106 +148,70 @@ jobs:
             console.log('Patched successfully.');
           "
 
-      - name: Deploy to ubc_wcpdev2 via DevTools REST API
+      - name: Deploy to ubc_wcpdev2 via wdcli (patched)
         env:
-          APP_UUID: cfd75927b808c1dd99c54b1c7096a142
           TENANT_ALIAS: ubc_wcpdev2
+          WDCLI_TENANT_TOKEN: ${{ env.TENANT_ACCESS_TOKEN }}
           WDCLI_CLIENT_ID: ${{ secrets.WD_CLIENT_ID }}
           WDCLI_CLIENT_SECRET: ${{ secrets.WD_CLIENT_SECRET }}
         run: |
-          set -euo pipefail
+          set -euxo pipefail
 
+          # The wdcli binary is now patched: fi() checks WDCLI_TENANT_TOKEN env var first,
+          # bypassing the browser-auth requirement. TENANT_ACCESS_TOKEN was set in the
+          # "Inject tenant access token" step and is available here via env.TENANT_ACCESS_TOKEN.
+          echo "WDCLI_TENANT_TOKEN length: ${#WDCLI_TENANT_TOKEN}"
+
+          # Run wdcli app deploy targeting ubc_wcpdev2
+          wdcli app deploy --tenant "${TENANT_ALIAS}" 2>&1 | tee /tmp/deploy-output.txt
+          DEPLOY_EXIT=${PIPESTATUS[0]}
+
+          cat /tmp/deploy-output.txt
+          if [ "${DEPLOY_EXIT}" -eq 0 ]; then
+            echo "Deploy succeeded!"
+            exit 0
+          fi
+
+          # If wdcli deploy failed, fall back to direct DevTools REST API
+          echo "wdcli deploy failed (exit ${DEPLOY_EXIT}), trying DevTools REST API..."
+          APP_UUID=cfd75927b808c1dd99c54b1c7096a142
           WDCLI_CONFIG="${HOME}/.config/@workday/wdcli/config.json"
           DEV_TOKEN=$(jq -r '.wcpAccessToken // empty' "${WDCLI_CONFIG}" 2>/dev/null)
           ORG_UUID=$(jq -r '.organizationUuid // empty' "${WDCLI_CONFIG}" 2>/dev/null)
 
-          if [ -z "${DEV_TOKEN}" ]; then
-            echo "ERROR: wcpAccessToken not found in wdcli config"
-            exit 1
-          fi
-
-          # Fetch orgUuid from the organizations API (OctopaasConnector.getOrganizations)
-          echo "Fetching orgUuid from organizations API..."
-          ORG_RESP=$(curl -s "https://api.us.wcp.workday.com/v2/organizations" \
-            -H "Authorization: Bearer ${DEV_TOKEN}")
-          echo "Organizations response: ${ORG_RESP}" | head -c 500
-          # Try various response shapes
-          ORG_UUID=$(echo "${ORG_RESP}" | jq -r '
-            if type == "array" then .[0].organizationUuid // .[0].id
-            elif .data then (.data[0].organizationUuid // .data[0].id)
-            elif .organizationUuid then .organizationUuid
-            else .id
-            end // empty' 2>/dev/null)
-          echo "ORG_UUID: ${ORG_UUID}"
-
           echo "DEV_TOKEN length: ${#DEV_TOKEN}"
           echo "ORG_UUID: ${ORG_UUID}"
           echo "VERSION_ID: ${VERSION_ID}"
-          echo "APP_UUID: ${APP_UUID}"
 
-          # DevTools deploy: POST /devtools/v1/apps/{appUuid}/deploy
-          # DevToolsConnector uses base path /devtools/v1 on classicHost
-          # This is the path used when agentbuilder.agent.write permission is present
           DEPLOY_URL="https://api.us.wcp.workday.com/devtools/v1/apps/${APP_UUID}/deploy"
           DEPLOY_BODY=$(jq -n \
             --arg versionId "${VERSION_ID}" \
             --arg tenantAlias "${TENANT_ALIAS}" \
             '{versionId: $versionId, tenantAlias: $tenantAlias}')
 
-          echo "=== Attempt 1: DevTools /apps/{uuid}/deploy with dev token only ==="
-          RESP1=$(curl -s -w "\n%{http_code}" -X POST "${DEPLOY_URL}" \
+          echo "=== DevTools attempt 1: dev token only ==="
+          RESP1=$(curl -sf -w "\n%{http_code}" -X POST "${DEPLOY_URL}" \
             -H "Content-Type: application/json" \
             -H "Authorization: Bearer ${DEV_TOKEN}" \
-            -d "${DEPLOY_BODY}")
+            -d "${DEPLOY_BODY}" 2>&1 || true)
           CODE1=$(echo "${RESP1}" | tail -1)
           BODY1=$(echo "${RESP1}" | sed '$d')
           echo "HTTP ${CODE1}: ${BODY1}"
           if [ "${CODE1}" = "200" ] || [ "${CODE1}" = "201" ] || [ "${CODE1}" = "202" ]; then
             echo "Deploy succeeded!"; exit 0; fi
 
-          # Try with org-id header (DevToolsConnector.getHeaders maps orgUuid → 'org-id' header)
-          echo "=== Attempt 2: DevTools with org-id header ==="
-          if [ -n "${ORG_UUID}" ]; then
-            RESP2=$(curl -s -w "\n%{http_code}" -X POST "${DEPLOY_URL}" \
-              -H "Content-Type: application/json" \
-              -H "Authorization: Bearer ${DEV_TOKEN}" \
-              -H "org-id: ${ORG_UUID}" \
-              -d "${DEPLOY_BODY}")
-            CODE2=$(echo "${RESP2}" | tail -1)
-            BODY2=$(echo "${RESP2}" | sed '$d')
-            echo "HTTP ${CODE2}: ${BODY2}"
-            if [ "${CODE2}" = "200" ] || [ "${CODE2}" = "201" ] || [ "${CODE2}" = "202" ]; then
-              echo "Deploy succeeded!"; exit 0; fi
-          fi
-
-          # Try tenant token as Deploy-Tenant-Authorization (the header DevTools uses)
-          echo "=== Attempt 3: DevTools with tenant token as Deploy-Tenant-Authorization ==="
-          RESP3=$(curl -s -w "\n%{http_code}" -X POST "${DEPLOY_URL}" \
+          echo "=== DevTools attempt 2: dev token + Deploy-Tenant-Authorization ==="
+          RESP2=$(curl -sf -w "\n%{http_code}" -X POST "${DEPLOY_URL}" \
             -H "Content-Type: application/json" \
             -H "Authorization: Bearer ${DEV_TOKEN}" \
-            -H "Deploy-Tenant-Authorization: Bearer ${TENANT_ACCESS_TOKEN}" \
-            -d "${DEPLOY_BODY}")
-          CODE3=$(echo "${RESP3}" | tail -1)
-          BODY3=$(echo "${RESP3}" | sed '$d')
-          echo "HTTP ${CODE3}: ${BODY3}"
-          if [ "${CODE3}" = "200" ] || [ "${CODE3}" = "201" ] || [ "${CODE3}" = "202" ]; then
+            -H "Deploy-Tenant-Authorization: Bearer ${WDCLI_TENANT_TOKEN}" \
+            ${ORG_UUID:+-H "org-id: ${ORG_UUID}"} \
+            -d "${DEPLOY_BODY}" 2>&1 || true)
+          CODE2=$(echo "${RESP2}" | tail -1)
+          BODY2=$(echo "${RESP2}" | sed '$d')
+          echo "HTTP ${CODE2}: ${BODY2}"
+          if [ "${CODE2}" = "200" ] || [ "${CODE2}" = "201" ] || [ "${CODE2}" = "202" ]; then
             echo "Deploy succeeded!"; exit 0; fi
 
-          # Try the AOS endpoint with tenant token as Authorization (original approach)
-          echo "=== Attempt 4: AOS /aos/v1/deploy with tenant + dev tokens ==="
-          RESP4=$(curl -s -w "\n%{http_code}" -X POST "https://api.us.wcp.workday.com/aos/v1/deploy" \
-            -H "Content-Type: application/json" \
-            -H "Authorization: Bearer ${TENANT_ACCESS_TOKEN}" \
-            -H "WCP-Authorization: Bearer ${DEV_TOKEN}" \
-            -d "$(jq -n --arg versionId "${VERSION_ID}" '{versionId: $versionId}')")
-          CODE4=$(echo "${RESP4}" | tail -1)
-          BODY4=$(echo "${RESP4}" | sed '$d')
-          echo "HTTP ${CODE4}: ${BODY4}"
-          if [ "${CODE4}" = "200" ] || [ "${CODE4}" = "201" ] || [ "${CODE4}" = "202" ]; then
-            echo "Deploy succeeded!"; exit 0; fi
-
-          echo ""
-          echo "All attempts failed. Error messages above indicate what auth is needed."
-          echo "Next step: set up WD_TENANT_TOKEN secret with a valid ubc_wcpdev2 tenant token"
-          echo "obtained via: wdcli tenant login ubc_wcpdev2"
+          echo "All deploy attempts failed."
           exit 1
