@@ -236,31 +236,11 @@ jobs:
             console.log('Patch 3 (bypass getOrganizations): OK');
           "
 
-          # Patches 4+5: write to temp JS files to avoid bash escaping issues with backticks
+          # Patches 4+5: stored as base64 to avoid YAML/bash escaping issues with backticks
           # Patch 4: Bypass ue() = organizationPermissions (hits /users/self/permissions)
           # Patch 5: Bypass Ve() = getTenantsList (hits OctopaasConnector.getTenantsForOrg)
-          cat > /tmp/patch4.js << 'PATCH4EOF'
-const fs = require('fs');
-const f = process.env.METERED;
-let c = fs.readFileSync(f, 'utf8');
-const OLD = 'function ue(e,t,n){return e.organizationPermissions(n,async()=>(await Ee(e,{accessToken:t,version:"v2"}).get(`/organizations/${encodeURIComponent(n)}/users/self/permissions`)).data.permissions)}';
-const REP = 'function ue(e,t,n){if(process.env.WDCLI_ORG_UUID){console.error("[CI] Bypassing organizationPermissions for org:",n);return Promise.resolve(["agentbuilder.agent.write","agentbuilder.agent.read","agentbuilder.app.create","agentbuilder.app.read","agentbuilder.app.upload","agentbuilder.app.deploy","agentbuilder.app.delete"]);}return e.organizationPermissions(n,async()=>(await Ee(e,{accessToken:t,version:"v2"}).get(`/organizations/${encodeURIComponent(n)}/users/self/permissions`)).data.permissions)}';
-if (!c.includes(OLD)) { console.error('ERROR: ue() patch target not found'); process.exit(1); }
-fs.writeFileSync(f, c.replace(OLD, REP));
-console.log('Patch 4 (bypass organizationPermissions): OK');
-PATCH4EOF
-
-          cat > /tmp/patch5.js << 'PATCH5EOF'
-const fs = require('fs');
-const f = process.env.METERED;
-let c = fs.readFileSync(f, 'utf8');
-const OLD = 'async function Ve(e,t,n=!1){const r=await L(e),i=await new Y().getAccountForCommand(e,t),o=await new l.OctopaasConnector(y.wcpApiGatewayHostname(e.configFile)).getTenantsForOrg(i,r);return n?o.filter(a=>Ii(a.environmentType)):o}';
-const REP = 'async function Ve(e,t,n=!1){if(process.env.WDCLI_ORG_UUID){const tenants=[{lookupAlias:"ubc_wcpdev2",tenantAlias:"ubc_wcpdev2",environmentType:"Development",displayName:"UBC WCP Dev 2",tenantUrl:"https://ubc.wd5.myworkday.com/ubc_wcpdev2"}];console.error("[CI] Bypassing getTenantsForOrg, returning hardcoded tenant list");return n?tenants.filter(a=>Ii(a.environmentType)):tenants;}const r=await L(e),i=await new Y().getAccountForCommand(e,t),o=await new l.OctopaasConnector(y.wcpApiGatewayHostname(e.configFile)).getTenantsForOrg(i,r);return n?o.filter(a=>Ii(a.environmentType)):o}';
-if (!c.includes(OLD)) { console.error('ERROR: Ve() patch target not found'); process.exit(1); }
-fs.writeFileSync(f, c.replace(OLD, REP));
-console.log('Patch 5 (bypass getTenantsForOrg): OK');
-PATCH5EOF
-
+          echo "Y29uc3QgZnMgPSByZXF1aXJlKCdmcycpOwpjb25zdCBmID0gcHJvY2Vzcy5lbnYuTUVURVJFRDsKbGV0IGMgPSBmcy5yZWFkRmlsZVN5bmMoZiwgJ3V0ZjgnKTsKY29uc3QgT0xEID0gJ2Z1bmN0aW9uIHVlKGUsdCxuKXtyZXR1cm4gZS5vcmdhbml6YXRpb25QZXJtaXNzaW9ucyhuLGFzeW5jKCk9Pihhd2FpdCBFZShlLHthY2Nlc3NUb2tlbjp0LHZlcnNpb246InYyIn0pLmdldChgL29yZ2FuaXphdGlvbnMvJHtlbmNvZGVVUklDb21wb25lbnQobil9L3VzZXJzL3NlbGYvcGVybWlzc2lvbnNgKSkuZGF0YS5wZXJtaXNzaW9ucyl9JzsKY29uc3QgUkVQID0gJ2Z1bmN0aW9uIHVlKGUsdCxuKXtpZihwcm9jZXNzLmVudi5XRENMSV9PUkdfVVVJRCl7Y29uc29sZS5lcnJvcigiW0NJXSBCeXBhc3Npbmcgb3JnYW5pemF0aW9uUGVybWlzc2lvbnMgZm9yIG9yZzoiLG4pO3JldHVybiBQcm9taXNlLnJlc29sdmUoWyJhZ2VudGJ1aWxkZXIuYWdlbnQud3JpdGUiLCJhZ2VudGJ1aWxkZXIuYWdlbnQucmVhZCIsImFnZW50YnVpbGRlci5hcHAuY3JlYXRlIiwiYWdlbnRidWlsZGVyLmFwcC5yZWFkIiwiYWdlbnRidWlsZGVyLmFwcC51cGxvYWQiLCJhZ2VudGJ1aWxkZXIuYXBwLmRlcGxveSIsImFnZW50YnVpbGRlci5hcHAuZGVsZXRlIl0pO31yZXR1cm4gZS5vcmdhbml6YXRpb25QZXJtaXNzaW9ucyhuLGFzeW5jKCk9Pihhd2FpdCBFZShlLHthY2Nlc3NUb2tlbjp0LHZlcnNpb246InYyIn0pLmdldChgL29yZ2FuaXphdGlvbnMvJHtlbmNvZGVVUklDb21wb25lbnQobil9L3VzZXJzL3NlbGYvcGVybWlzc2lvbnNgKSkuZGF0YS5wZXJtaXNzaW9ucyl9JzsKaWYgKCFjLmluY2x1ZGVzKE9MRCkpIHsgY29uc29sZS5lcnJvcignRVJST1I6IHVlKCkgcGF0Y2ggdGFyZ2V0IG5vdCBmb3VuZCcpOyBwcm9jZXNzLmV4aXQoMSk7IH0KZnMud3JpdGVGaWxlU3luYyhmLCBjLnJlcGxhY2UoT0xELCBSRVApKTsKY29uc29sZS5sb2coJ1BhdGNoIDQgKGJ5cGFzcyBvcmdhbml6YXRpb25QZXJtaXNzaW9ucyk6IE9LJyk7Cg==" | base64 -d > /tmp/patch4.js
+          echo "Y29uc3QgZnMgPSByZXF1aXJlKCdmcycpOwpjb25zdCBmID0gcHJvY2Vzcy5lbnYuTUVURVJFRDsKbGV0IGMgPSBmcy5yZWFkRmlsZVN5bmMoZiwgJ3V0ZjgnKTsKY29uc3QgT0xEID0gJ2FzeW5jIGZ1bmN0aW9uIFZlKGUsdCxuPSExKXtjb25zdCByPWF3YWl0IEwoZSksaT1hd2FpdCBuZXcgWSgpLmdldEFjY291bnRGb3JDb21tYW5kKGUsdCksbz1hd2FpdCBuZXcgbC5PY3RvcGFhc0Nvbm5lY3Rvcih5LndjcEFwaUdhdGV3YXlIb3N0bmFtZShlLmNvbmZpZ0ZpbGUpKS5nZXRUZW5hbnRzRm9yT3JnKGkscik7cmV0dXJuIG4/by5maWx0ZXIoYT0+SWkoYS5lbnZpcm9ubWVudFR5cGUpKTpvfSc7CmNvbnN0IFJFUCA9ICdhc3luYyBmdW5jdGlvbiBWZShlLHQsbj0hMSl7aWYocHJvY2Vzcy5lbnYuV0RDTElfT1JHX1VVSUQpe2NvbnN0IHRlbmFudHM9W3tsb29rdXBBbGlhczoidWJjX3djcGRldjIiLHRlbmFudEFsaWFzOiJ1YmNfd2NwZGV2MiIsZW52aXJvbm1lbnRUeXBlOiJEZXZlbG9wbWVudCIsZGlzcGxheU5hbWU6IlVCQyBXQ1AgRGV2IDIiLHRlbmFudFVybDoiaHR0cHM6Ly91YmMud2Q1Lm15d29ya2RheS5jb20vdWJjX3djcGRldjIifV07Y29uc29sZS5lcnJvcigiW0NJXSBCeXBhc3NpbmcgZ2V0VGVuYW50c0Zvck9yZywgcmV0dXJuaW5nIGhhcmRjb2RlZCB0ZW5hbnQgbGlzdCIpO3JldHVybiBuP3RlbmFudHMuZmlsdGVyKGE9PklpKGEuZW52aXJvbm1lbnRUeXBlKSk6dGVuYW50czt9Y29uc3Qgcj1hd2FpdCBMKGUpLGk9YXdhaXQgbmV3IFkoKS5nZXRBY2NvdW50Rm9yQ29tbWFuZChlLHQpLG89YXdhaXQgbmV3IGwuT2N0b3BhYXNDb25uZWN0b3IoeS53Y3BBcGlHYXRld2F5SG9zdG5hbWUoZS5jb25maWdGaWxlKSkuZ2V0VGVuYW50c0Zvck9yZyhpLHIpO3JldHVybiBuP28uZmlsdGVyKGE9PklpKGEuZW52aXJvbm1lbnRUeXBlKSk6b30nOwppZiAoIWMuaW5jbHVkZXMoT0xEKSkgeyBjb25zb2xlLmVycm9yKCdFUlJPUjogVmUoKSBwYXRjaCB0YXJnZXQgbm90IGZvdW5kJyk7IHByb2Nlc3MuZXhpdCgxKTsgfQpmcy53cml0ZUZpbGVTeW5jKGYsIGMucmVwbGFjZShPTEQsIFJFUCkpOwpjb25zb2xlLmxvZygnUGF0Y2ggNSAoYnlwYXNzIGdldFRlbmFudHNGb3JPcmcpOiBPSycpOwo=" | base64 -d > /tmp/patch5.js
           node /tmp/patch4.js
           node /tmp/patch5.js
 
