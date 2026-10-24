@@ -143,62 +143,137 @@ jobs:
           echo "Got developer access token (length=${#DEV_TOKEN})"
 
           # Derive API gateway from wcpRegion: "scylla:us" → "api.us.wcp.workday.com"
-          # Pattern: strip "scylla:" prefix, then build "api.{region}.wcp.workday.com"
           WCP_REGION=$(jq -r '.wcpRegion // empty' "${WDCLI_CONFIG}" 2>/dev/null)
           echo "wcpRegion: ${WCP_REGION}"
-          REGION_CODE="${WCP_REGION#scylla:}"  # strip "scylla:" → "us"
+          REGION_CODE="${WCP_REGION#scylla:}"
           GATEWAY="api.${REGION_CODE}.wcp.workday.com"
           echo "Derived API gateway: ${GATEWAY}"
 
-          # Get org UUID via wdcli whoami --format json --verbose
-          # organizationUuid is only included in verbose output
-          echo "=== wdcli whoami --verbose ==="
-          WHOAMI=$(wdcli whoami --format json --verbose 2>/dev/null || true)
-          echo "${WHOAMI}"
-          ORG_UUID=$(echo "${WHOAMI}" | jq -r '.account.organizationUuid // .organizationUuid // empty' 2>/dev/null | head -1)
-          echo "Org UUID: ${ORG_UUID}"
+          echo "=== Diagnosing token types ==="
+          # Decode JWT payload for both tokens to understand what they contain
+          decode_jwt() {
+            local token="$1"
+            local payload
+            payload=$(echo "${token}" | cut -d'.' -f2)
+            # Add padding
+            local padded="${payload}$(printf '=%.0s' $(seq 1 $(( (4 - ${#payload} % 4) % 4 ))))"
+            echo "${padded}" | base64 -d 2>/dev/null || echo "decode_failed"
+          }
 
-          echo "=== Calling Workday AOS deploy REST API ==="
-          echo "  Version ID: ${VERSION_ID}"
-          echo "  Tenant:     ${TENANT_ALIAS}"
-          echo "  Gateway:    ${GATEWAY}"
+          echo "--- Developer token claims ---"
+          DEV_CLAIMS=$(decode_jwt "${DEV_TOKEN}")
+          echo "${DEV_CLAIMS}" | python3 -c "import sys,json; d=json.loads(sys.stdin.read()); print(json.dumps(d, indent=2))" 2>/dev/null || echo "parse failed: ${DEV_CLAIMS}"
 
-          # Our account lacks agentbuilder.agent.write, so wdcli uses AosConnector:
-          #   POST /aos/v1/deploy
-          #   Authorization: Bearer <TENANT_TOKEN>        (tenant token as primary auth)
-          #   WCP-Authorization: Bearer <DEV_TOKEN>       (developer token in WCP header)
-          #   Body: { versionId: "..." }
+          echo "--- Tenant token claims (from auth.api.workday.com) ---"
+          TENANT_CLAIMS=$(decode_jwt "${TENANT_ACCESS_TOKEN}")
+          echo "${TENANT_CLAIMS}" | python3 -c "import sys,json; d=json.loads(sys.stdin.read()); print(json.dumps(d, indent=2))" 2>/dev/null || echo "parse failed: ${TENANT_CLAIMS}"
+
+          echo ""
+          echo "=== Attempt 1: AOS deploy with tenant token as Authorization ==="
+          echo "  (AosConnector layout: Authorization=tenant, WCP-Authorization=dev)"
           DEPLOY_URL="https://${GATEWAY}/aos/v1/deploy"
-          echo "  Deploy URL: ${DEPLOY_URL}"
+          DEPLOY_BODY=$(jq -n --arg versionId "${VERSION_ID}" '{versionId: $versionId}')
 
-          DEPLOY_BODY=$(jq -n \
-            --arg versionId "${VERSION_ID}" \
-            '{versionId: $versionId}')
-
-          # Decode JWT claims and write to step summary (readable via GitHub API)
-          TENANT_CLAIMS=$(echo "${TENANT_ACCESS_TOKEN}" | cut -d'.' -f2 | base64 -d 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(json.dumps({k:d.get(k) for k in ['iss','sub','aud','scope','region','tid','wid']}))" 2>/dev/null || echo '{"error":"decode_failed"}')
-          DEV_CLAIMS=$(echo "${DEV_TOKEN}" | cut -d'.' -f2 | base64 -d 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(json.dumps({k:d.get(k) for k in ['iss','sub','aud','scope','region','tid','wid']}))" 2>/dev/null || echo '{"error":"decode_failed"}')
-          echo "TENANT_CLAIMS=${TENANT_CLAIMS}" >> $GITHUB_STEP_SUMMARY
-          echo "DEV_CLAIMS=${DEV_CLAIMS}" >> $GITHUB_STEP_SUMMARY
-          echo "Tenant claims: ${TENANT_CLAIMS}"
-          echo "Dev claims:    ${DEV_CLAIMS}"
-
-          DEPLOY_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "${DEPLOY_URL}" \
+          RESP1=$(curl -s -w "\n%{http_code}" -X POST "${DEPLOY_URL}" \
             -H "Content-Type: application/json" \
             -H "Authorization: Bearer ${TENANT_ACCESS_TOKEN}" \
             -H "WCP-Authorization: Bearer ${DEV_TOKEN}" \
             -d "${DEPLOY_BODY}")
+          CODE1=$(echo "${RESP1}" | tail -1)
+          BODY1=$(echo "${RESP1}" | sed '$d')
+          echo "HTTP ${CODE1}: ${BODY1}"
 
-          HTTP_CODE=$(echo "${DEPLOY_RESPONSE}" | tail -1)
-          BODY=$(echo "${DEPLOY_RESPONSE}" | sed '$d')
-
-          echo "HTTP status: ${HTTP_CODE}"
-          echo "Response body: ${BODY}"
-
-          if [ "${HTTP_CODE}" = "200" ] || [ "${HTTP_CODE}" = "201" ] || [ "${HTTP_CODE}" = "202" ]; then
-            SUCCESS=$(echo "${BODY}" | jq -r '.success // .appDeploymentSucceeded // "unknown"' 2>/dev/null)
-            echo "Deploy succeeded (success=${SUCCESS})"
-          else
-            echo "ERROR: Deploy API returned HTTP ${HTTP_CODE}"
-            exit 1
+          if [ "${CODE1}" = "200" ] || [ "${CODE1}" = "201" ] || [ "${CODE1}" = "202" ]; then
+            echo "Deploy succeeded!"
+            exit 0
           fi
+
+          echo ""
+          echo "=== Attempt 2: AOS deploy with dev token as Authorization ==="
+          echo "  (reversed layout: Authorization=dev, WCP-Authorization=tenant)"
+          RESP2=$(curl -s -w "\n%{http_code}" -X POST "${DEPLOY_URL}" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${DEV_TOKEN}" \
+            -H "WCP-Authorization: Bearer ${TENANT_ACCESS_TOKEN}" \
+            -d "${DEPLOY_BODY}")
+          CODE2=$(echo "${RESP2}" | tail -1)
+          BODY2=$(echo "${RESP2}" | sed '$d')
+          echo "HTTP ${CODE2}: ${BODY2}"
+
+          if [ "${CODE2}" = "200" ] || [ "${CODE2}" = "201" ] || [ "${CODE2}" = "202" ]; then
+            echo "Deploy succeeded!"
+            exit 0
+          fi
+
+          echo ""
+          echo "=== Attempt 3: AOS deploy with only dev token ==="
+          RESP3=$(curl -s -w "\n%{http_code}" -X POST "${DEPLOY_URL}" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${DEV_TOKEN}" \
+            -d "${DEPLOY_BODY}")
+          CODE3=$(echo "${RESP3}" | tail -1)
+          BODY3=$(echo "${RESP3}" | sed '$d')
+          echo "HTTP ${CODE3}: ${BODY3}"
+
+          if [ "${CODE3}" = "200" ] || [ "${CODE3}" = "201" ] || [ "${CODE3}" = "202" ]; then
+            echo "Deploy succeeded!"
+            exit 0
+          fi
+
+          echo ""
+          echo "=== Attempt 4: AOS deploy with tenantAlias in body ==="
+          DEPLOY_BODY4=$(jq -n \
+            --arg versionId "${VERSION_ID}" \
+            --arg tenantAlias "${TENANT_ALIAS}" \
+            '{versionId: $versionId, tenantAlias: $tenantAlias}')
+          RESP4=$(curl -s -w "\n%{http_code}" -X POST "${DEPLOY_URL}" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${TENANT_ACCESS_TOKEN}" \
+            -H "WCP-Authorization: Bearer ${DEV_TOKEN}" \
+            -d "${DEPLOY_BODY4}")
+          CODE4=$(echo "${RESP4}" | tail -1)
+          BODY4=$(echo "${RESP4}" | sed '$d')
+          echo "HTTP ${CODE4}: ${BODY4}"
+
+          if [ "${CODE4}" = "200" ] || [ "${CODE4}" = "201" ] || [ "${CODE4}" = "202" ]; then
+            echo "Deploy succeeded!"
+            exit 0
+          fi
+
+          echo ""
+          echo "=== Attempt 5: WCP-SDK client_credentials via api.us.wcp.workday.com ==="
+          echo "  (wdcli fetches system user token from api.{region}.wcp.workday.com/v2/token)"
+          ENCODED=$(printf '%s:%s' "${WDCLI_CLIENT_ID}" "${WDCLI_CLIENT_SECRET}" | base64 -w 0)
+          SDK_TOKEN_RESP=$(curl -s -X POST "https://api.us.wcp.workday.com/v2/token" \
+            -H "Authorization: ID ${ENCODED}" \
+            -H "Content-Type: application/x-www-form-urlencoded" \
+            -d "grant_type=client_credentials")
+          echo "SDK token response keys: $(echo "${SDK_TOKEN_RESP}" | jq -r 'keys | @csv' 2>/dev/null)"
+          SDK_DEV_TOKEN=$(echo "${SDK_TOKEN_RESP}" | jq -r '.access_token // empty')
+          if [ -n "${SDK_DEV_TOKEN}" ]; then
+            echo "Got SDK dev token (length=${#SDK_DEV_TOKEN})"
+            echo "--- SDK dev token claims ---"
+            decode_jwt "${SDK_DEV_TOKEN}" | python3 -c "import sys,json; d=json.loads(sys.stdin.read()); print(json.dumps(d, indent=2))" 2>/dev/null || true
+
+            RESP5=$(curl -s -w "\n%{http_code}" -X POST "${DEPLOY_URL}" \
+              -H "Content-Type: application/json" \
+              -H "Authorization: Bearer ${TENANT_ACCESS_TOKEN}" \
+              -H "WCP-Authorization: Bearer ${SDK_DEV_TOKEN}" \
+              -d "${DEPLOY_BODY}")
+            CODE5=$(echo "${RESP5}" | tail -1)
+            BODY5=$(echo "${RESP5}" | sed '$d')
+            echo "HTTP ${CODE5}: ${BODY5}"
+            if [ "${CODE5}" = "200" ] || [ "${CODE5}" = "201" ] || [ "${CODE5}" = "202" ]; then
+              echo "Deploy succeeded!"
+              exit 0
+            fi
+          else
+            echo "Could not get SDK token: ${SDK_TOKEN_RESP}"
+          fi
+
+          echo ""
+          echo "All deploy attempts failed. Check JWT claims above to diagnose."
+          echo "Token endpoint comparison:"
+          echo "  wdcli uses: https://api.us.wcp.workday.com/v2/token (OctopaasConnector)"
+          echo "  we used:    https://auth.api.workday.com/v1/token"
+          exit 1
