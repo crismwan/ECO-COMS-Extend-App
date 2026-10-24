@@ -128,28 +128,25 @@ jobs:
           set -euo pipefail
           # Patch metered-command-C1Iau1Kk.js so getValidatedTenantAccessToken (fi)
           # reads from WDCLI_TENANT_TOKEN env var when set, bypassing browser auth.
-          WDCLI_LIB=$(dirname "$(which wdcli)")/../lib
-          PATCH_FILE="${WDCLI_LIB}/metered-command-C1Iau1Kk.js"
-          if [ ! -f "${PATCH_FILE}" ]; then
-            # Try finding it
-            PATCH_FILE=$(find /opt/wdcli -name "metered-command-C1Iau1Kk.js" | head -1)
+          PATCH_FILE=$(find /opt/wdcli -name "metered-command-C1Iau1Kk.js" | head -1)
+          if [ -z "${PATCH_FILE}" ]; then
+            WDCLI_LIB=$(dirname "$(which wdcli)")/../lib
+            PATCH_FILE="${WDCLI_LIB}/metered-command-C1Iau1Kk.js"
           fi
           echo "Patching: ${PATCH_FILE}"
           OLD='fi=async(e,t)=>{const n=Bt(e,t);'
           NEW='fi=async(e,t)=>{if(process.env.WDCLI_TENANT_TOKEN){return process.env.WDCLI_TENANT_TOKEN;}const n=Bt(e,t);'
-          python3 - "${PATCH_FILE}" <<'PYEOF'
-import sys
-path = sys.argv[1]
-content = open(path).read()
-old = 'fi=async(e,t)=>{const n=Bt(e,t);'
-new = 'fi=async(e,t)=>{if(process.env.WDCLI_TENANT_TOKEN){return process.env.WDCLI_TENANT_TOKEN;}const n=Bt(e,t);'
-if old not in content:
-    print("ERROR: patch target not found in", path)
-    sys.exit(1)
-patched = content.replace(old, new, 1)
-open(path, 'w').write(patched)
-print("Patched successfully.")
-PYEOF
+          export PATCH_FILE OLD NEW
+          node -e "
+            const fs = require('fs');
+            const path = process.env.PATCH_FILE;
+            let content = fs.readFileSync(path, 'utf8');
+            const old = process.env.OLD;
+            const newStr = process.env.NEW;
+            if (!content.includes(old)) { console.error('ERROR: patch target not found'); process.exit(1); }
+            fs.writeFileSync(path, content.replace(old, newStr));
+            console.log('Patched successfully.');
+          "
 
       - name: Deploy to ubc_wcpdev2 via DevTools REST API
         env:
