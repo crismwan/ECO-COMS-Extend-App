@@ -311,6 +311,63 @@ jobs:
           echo "Y29uc3QgZnMgPSByZXF1aXJlKCdmcycpOwpjb25zdCBzZGsgPSBwcm9jZXNzLmVudi5XQ1BfU0RLOwpsZXQgYyA9IGZzLnJlYWRGaWxlU3luYyhzZGssICd1dGY4Jyk7CgovLyBUaGUgd2NwLXNkayBmZXRjaCB3cmFwcGVyIGJ1aWxkcyByZXF1ZXN0IG9wdGlvbnMgYW5kIGNhbGxzIGZldGNoKCkuCi8vIFdlIG5lZWQgdG8gaW50ZXJjZXB0IHJlcXVlc3RzIHRvIC9hb3MvdjEvZGVwbG95IGFuZCBzd2FwIHRoZSBBdXRob3JpemF0aW9uIGhlYWRlci4KLy8gU3RyYXRlZ3k6IHdyYXAgdGhlIGdsb2JhbCBmZXRjaCB0byBpbnRlcmNlcHQgQU9TIGRlcGxveSBjYWxscy4KLy8KLy8gVGhlIHdjcC1zZGsncyBTZXJ2aWNlQXBpQ29ubmVjdG9yIG9yIEFvc0Nvbm5lY3RvciBjYWxscyBmZXRjaCgpLgovLyBXZSBpbmplY3QgYSBmZXRjaCB3cmFwcGVyIHRoYXQsIGZvciAvZGVwbG95IFVSTHMsIHJlcGxhY2VzIEF1dGhvcml6YXRpb24KLy8gd2l0aCB0aGUgSUQgc2NoZW1lIHVzaW5nIGNsaWVudCBjcmVkZW50aWFscyBmcm9tIGVudiB2YXJzLgoKLy8gRmluZCB0aGUgcG9pbnQgd2hlcmUgdGhlIHNkayBleHBvcnRzIG9yIHdoZXJlIGZldGNoIGlzIGNhbGxlZAovLyBJbmplY3QgYXQgdGhlIHRvcCBvZiB0aGUgZmlsZSBhIGZldGNoIGludGVyY2VwdG9yCmNvbnN0IGludGVyY2VwdG9yID0gYAooZnVuY3Rpb24oKXsKICBjb25zdCBfb3JpZ0ZldGNoID0gZ2xvYmFsVGhpcy5mZXRjaDsKICBnbG9iYWxUaGlzLmZldGNoID0gYXN5bmMgZnVuY3Rpb24odXJsLCBvcHRzKSB7CiAgICBjb25zdCB1cmxTdHIgPSB0eXBlb2YgdXJsID09PSAnc3RyaW5nJyA/IHVybCA6ICh1cmwgJiYgdXJsLnVybCA/IHVybC51cmwgOiBTdHJpbmcodXJsKSk7CiAgICBpZiAodXJsU3RyICYmIHVybFN0ci5pbmNsdWRlcygnL2Fvcy92MS9kZXBsb3knKSAmJiBwcm9jZXNzLmVudi5XRENMSV9DTElFTlRfSUQgJiYgcHJvY2Vzcy5lbnYuV0RDTElfQ0xJRU5UX1NFQ1JFVCkgewogICAgICBjb25zdCBlbmNvZGVkID0gQnVmZmVyLmZyb20ocHJvY2Vzcy5lbnYuV0RDTElfQ0xJRU5UX0lEICsgJzonICsgcHJvY2Vzcy5lbnYuV0RDTElfQ0xJRU5UX1NFQ1JFVCkudG9TdHJpbmcoJ2Jhc2U2NCcpOwogICAgICBjb25zdCBpZEF1dGggPSAnSUQgJyArIGVuY29kZWQ7CiAgICAgIG9wdHMgPSBvcHRzIHx8IHt9OwogICAgICBvcHRzLmhlYWRlcnMgPSBPYmplY3QuYXNzaWduKHt9LCBvcHRzLmhlYWRlcnMgfHwge30pOwogICAgICBjb25zdCBvbGRBdXRoID0gb3B0cy5oZWFkZXJzWydBdXRob3JpemF0aW9uJ10gfHwgb3B0cy5oZWFkZXJzWydhdXRob3JpemF0aW9uJ10gfHwgJyhub25lKSc7CiAgICAgIG9wdHMuaGVhZGVyc1snQXV0aG9yaXphdGlvbiddID0gaWRBdXRoOwogICAgICBkZWxldGUgb3B0cy5oZWFkZXJzWydhdXRob3JpemF0aW9uJ107CiAgICAgIGNvbnNvbGUuZXJyb3IoJ1tDSS1QMTJdIEFPUyBkZXBsb3k6IHN3YXBwZWQgQXV0aG9yaXphdGlvbiBmcm9tJywgb2xkQXV0aC5zdWJzdHJpbmcoMCwyMCksICd0byBJRCBzY2hlbWUnKTsKICAgIH0KICAgIHJldHVybiBfb3JpZ0ZldGNoKHVybCwgb3B0cyk7CiAgfTsKfSkoKTsKYDsKCi8vIFByZXBlbmQgdGhlIGludGVyY2VwdG9yIHRvIHRoZSBTREsKYyA9IGludGVyY2VwdG9yICsgYzsKZnMud3JpdGVGaWxlU3luYyhzZGssIGMpOwpjb25zb2xlLmxvZygnUGF0Y2ggMTIgKEFPUyBkZXBsb3kgQXV0aG9yaXphdGlvbjogSUQgc2NoZW1lIGludGVyY2VwdG9yKTogT0snKTsK" | base64 -d > /tmp/patch12.js
           node /tmp/patch12.js
 
+      - name: Diagnose AOS deploy endpoint directly via curl
+        env:
+          WDCLI_CLIENT_ID: ${{ secrets.WD_CLIENT_ID }}
+          WDCLI_CLIENT_SECRET: ${{ secrets.WD_CLIENT_SECRET }}
+          WD_DEV_TOKEN: ${{ secrets.WD_DEV_TOKEN }}
+          TENANT_ALIAS: ubc_wcpdev2
+          VERSION_ID: ${{ env.VERSION_ID }}
+        run: |
+          set -euo pipefail
+          echo "=== Direct curl test: AOS /deploy endpoint ==="
+          ENCODED=$(printf '%s:%s' "${WDCLI_CLIENT_ID}" "${WDCLI_CLIENT_SECRET}" | base64 -w 0)
+
+          echo "--- Attempt 1: Authorization: Bearer <CC_token> + WCP-Authorization: Bearer <PKCE_token> ---"
+          CC_TOKEN=$(curl -s -X POST "https://auth.api.workday.com/v1/token" \
+            -H "Authorization: ID ${ENCODED}" \
+            -H "Content-Type: application/x-www-form-urlencoded" \
+            -d "grant_type=client_credentials&tenant_alias=${TENANT_ALIAS}" | jq -r '.access_token // empty')
+          echo "CC token length: ${#CC_TOKEN}"
+          RESP1=$(curl -s -w "\n__HTTP_STATUS__:%{http_code}" -X POST \
+            "https://api.us.wcp.workday.com/aos/v1/deploy" \
+            -H "Authorization: Bearer ${CC_TOKEN}" \
+            -H "WCP-Authorization: Bearer ${WD_DEV_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -H "User-Agent: wdcli/1.9.43" \
+            -d "{\"versionId\":\"${VERSION_ID}\"}")
+          echo "Response1: ${RESP1}"
+
+          echo "--- Attempt 2: Authorization: ID <base64_creds> + WCP-Authorization: Bearer <PKCE_token> ---"
+          RESP2=$(curl -s -w "\n__HTTP_STATUS__:%{http_code}" -X POST \
+            "https://api.us.wcp.workday.com/aos/v1/deploy" \
+            -H "Authorization: ID ${ENCODED}" \
+            -H "WCP-Authorization: Bearer ${WD_DEV_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -H "User-Agent: wdcli/1.9.43" \
+            -d "{\"versionId\":\"${VERSION_ID}\"}")
+          echo "Response2: ${RESP2}"
+
+          echo "--- Attempt 3: Authorization: Bearer <CC_token> only (no WCP-Authorization) ---"
+          RESP3=$(curl -s -w "\n__HTTP_STATUS__:%{http_code}" -X POST \
+            "https://api.us.wcp.workday.com/aos/v1/deploy" \
+            -H "Authorization: Bearer ${CC_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -H "User-Agent: wdcli/1.9.43" \
+            -d "{\"versionId\":\"${VERSION_ID}\"}")
+          echo "Response3: ${RESP3}"
+
+          echo "--- Attempt 4: WCP-Authorization: Bearer <PKCE_token> only ---"
+          RESP4=$(curl -s -w "\n__HTTP_STATUS__:%{http_code}" -X POST \
+            "https://api.us.wcp.workday.com/aos/v1/deploy" \
+            -H "WCP-Authorization: Bearer ${WD_DEV_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -H "User-Agent: wdcli/1.9.43" \
+            -d "{\"versionId\":\"${VERSION_ID}\"}")
+          echo "Response4: ${RESP4}"
+
+          echo "=== Curl diagnostics complete ==="
+
       - name: Deploy to ubc_wcpdev2 via wdcli
         env:
           TENANT_ALIAS: ubc_wcpdev2
