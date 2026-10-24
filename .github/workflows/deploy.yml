@@ -48,26 +48,27 @@ jobs:
           WD_ORG_UUID: ${{ secrets.WD_ORG_UUID }}
         run: |
           set -euo pipefail
-          # WD_DEV_TOKEN = wcpAccessToken from interactive `wdcli auth login`
-          # WD_ORG_UUID  = organizationUuid from the same config after login
-          #
-          # How to obtain these (run once locally):
-          #   wdcli auth login    (browser PKCE flow)
-          #   cat ~/.config/@workday/wdcli/config.json | jq '{wcpAccessToken, organizationUuid}'
-          # Then add WD_DEV_TOKEN and WD_ORG_UUID as GitHub repo secrets.
+          # WD_DEV_TOKEN = wcpTenantAccessToken["ubc_wcpdev2"] from interactive `wdcli app deploy`
+          # This is the PKCE user token scoped to ubc_wcpdev2 (aud: wd, tenant: ubc_wcpdev2).
+          # It is written by wdcli when you run `wdcli app deploy <ref>` interactively and
+          # complete the browser login for the ubc_wcpdev2 tenant.
+          # Obtain it: run `wdcli app deploy ecocomsphase_xclw_cm_sync2_vmzvxm` locally,
+          # log in via browser, then copy config.json > wcpTenantAccessToken > ubc_wcpdev2.
+          # Token TTL is ~8h; refresh by repeating the interactive deploy and updating the secret.
 
           WDCLI_CONFIG_DIR="${HOME}/.config/@workday/wdcli"
           mkdir -p "${WDCLI_CONFIG_DIR}"
           CONFIG_FILE="${WDCLI_CONFIG_DIR}/config.json"
 
-          # Build config with developer token + org UUID + client credentials
+          # Build config with tenant token in the correct slot + client credentials
+          # wcpTenantAccessToken["ubc_wcpdev2"] is what AOS /deploy uses as Authorization: Bearer
           jq -n \
             --arg devToken "${WD_DEV_TOKEN}" \
             --arg orgUuid "${WD_ORG_UUID}" \
             --arg clientId "${WDCLI_CLIENT_ID}" \
             --arg clientSecret "${WDCLI_CLIENT_SECRET}" \
             '{
-              wcpAccessToken: $devToken,
+              wcpTenantAccessToken: {"ubc_wcpdev2": $devToken},
               organizationUuid: $orgUuid,
               clientId: $clientId,
               clientSecret: $clientSecret,
@@ -76,6 +77,21 @@ jobs:
             }' > "${CONFIG_FILE}"
 
           echo "Config written (keys): $(jq -r 'keys | @csv' "${CONFIG_FILE}")"
+
+          # Decode JWT expiry to check token freshness
+          JWT_PAYLOAD=$(echo "${WD_DEV_TOKEN}" | cut -d'.' -f2)
+          PADDED=$(echo "${JWT_PAYLOAD}" | tr '_-' '/+' | awk '{n=length($0)%4; if(n==2) print $0"=="; else if(n==3) print $0"="; else print $0}')
+          EXP=$(echo "${PADDED}" | base64 -d 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('exp','no exp'))" 2>/dev/null || echo "parse-error")
+          NOW=$(date +%s)
+          if [ "${EXP}" = "parse-error" ] || [ "${EXP}" = "no exp" ]; then
+            echo "WD_DEV_TOKEN JWT exp: could not decode"
+          elif [ "${EXP}" -lt "${NOW}" ]; then
+            echo "WARNING: WD_DEV_TOKEN EXPIRED (exp=${EXP}, now=${NOW}, expired $((NOW - EXP))s ago)"
+            echo "ACTION: run 'wdcli app deploy ecocomsphase_xclw_cm_sync2_vmzvxm' locally, log in, update WD_DEV_TOKEN secret"
+            exit 1
+          else
+            echo "WD_DEV_TOKEN valid (exp=${EXP}, expires in $((EXP - NOW))s)"
+          fi
 
           # Export org UUID for later steps
           echo "ORG_UUID=${WD_ORG_UUID}" >> $GITHUB_ENV
@@ -125,75 +141,21 @@ jobs:
           echo "Version ID: ${VERSION_ID}"
           echo "VERSION_ID=${VERSION_ID}" >> $GITHUB_ENV
 
-      - name: Restore PKCE developer token for AOS deploy
+      - name: Restore tenant token for AOS deploy
         env:
           WD_DEV_TOKEN: ${{ secrets.WD_DEV_TOKEN }}
           WD_ORG_UUID: ${{ secrets.WD_ORG_UUID }}
         run: |
           set -euo pipefail
-          # After wdcli auth login --system-user, wcpAccessToken is the OctopaAS
-          # client-credentials token. The DevTools deploy endpoint requires the
-          # PKCE wcpAccessToken (WD_DEV_TOKEN). Restore it now, keeping all other
-          # config keys (clientId, clientSecret, organizationUuid, etc.) intact.
+          # After wdcli auth login --system-user, the system-user token is in wcpAccessToken.
+          # We must restore the ubc_wcpdev2 tenant token so AOS deploy has the right credential.
+          # wcpTenantAccessToken["ubc_wcpdev2"] = WD_DEV_TOKEN (PKCE token, aud: wd, tenant: ubc_wcpdev2)
           CONFIG_FILE="${HOME}/.config/@workday/wdcli/config.json"
           jq --arg tok "${WD_DEV_TOKEN}" --arg org "${WD_ORG_UUID}" \
-            '.wcpAccessToken = $tok | .organizationUuid = $org' \
+            '.wcpTenantAccessToken["ubc_wcpdev2"] = $tok | .organizationUuid = $org' \
             "${CONFIG_FILE}" > /tmp/config-restored.json
           mv /tmp/config-restored.json "${CONFIG_FILE}"
-          echo "PKCE token restored (length=${#WD_DEV_TOKEN})"
-
-          # Decode JWT expiry (exp claim) to diagnose stale WD_DEV_TOKEN.
-          # JWT format: header.payload.signature (all base64url-encoded)
-          JWT_PAYLOAD=$(echo "${WD_DEV_TOKEN}" | cut -d'.' -f2)
-          # base64url → base64: replace - with + and _ with /; pad to 4-byte boundary
-          PADDED=$(echo "${JWT_PAYLOAD}" | tr '_-' '/+' | awk '{n=length($0)%4; if(n==2) print $0"=="; else if(n==3) print $0"="; else print $0}')
-          EXP=$(echo "${PADDED}" | base64 -d 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('exp','no exp'))" 2>/dev/null || echo "parse-error")
-          if [ "${EXP}" = "parse-error" ] || [ "${EXP}" = "no exp" ]; then
-            echo "WD_DEV_TOKEN JWT exp: could not decode (token may not be a JWT)"
-          else
-            NOW=$(date +%s)
-            if [ "${EXP}" -lt "${NOW}" ]; then
-              echo "WARNING: WD_DEV_TOKEN is EXPIRED (exp=${EXP}, now=${NOW}, expired $((NOW - EXP))s ago)"
-              echo "ACTION REQUIRED: Run 'wdcli auth login' locally and update the WD_DEV_TOKEN secret."
-            else
-              echo "WD_DEV_TOKEN is valid (exp=${EXP}, now=${NOW}, expires in $((EXP - NOW))s)"
-            fi
-          fi
-
-      - name: Inject tenant access token via client credentials
-        env:
-          TENANT_ALIAS: ubc_wcpdev2
-          WDCLI_CLIENT_ID: ${{ secrets.WD_CLIENT_ID }}
-          WDCLI_CLIENT_SECRET: ${{ secrets.WD_CLIENT_SECRET }}
-        run: |
-          set -euo pipefail
-          echo "=== Fetching tenant access token via client credentials ==="
-          ENCODED=$(printf '%s:%s' "${WDCLI_CLIENT_ID}" "${WDCLI_CLIENT_SECRET}" | base64 -w 0)
-          TOKEN_RESPONSE=$(curl -s -X POST "https://auth.api.workday.com/v1/token" \
-            -H "Authorization: ID ${ENCODED}" \
-            -H "Content-Type: application/x-www-form-urlencoded" \
-            -d "grant_type=client_credentials&tenant_alias=${TENANT_ALIAS}")
-          echo "Token response keys: $(echo "${TOKEN_RESPONSE}" | jq -r 'keys | @csv' 2>/dev/null || echo 'parse error')"
-          ACCESS_TOKEN=$(echo "${TOKEN_RESPONSE}" | jq -r '.access_token // empty')
-          if [ -z "${ACCESS_TOKEN}" ]; then
-            echo "ERROR: No access_token in response: ${TOKEN_RESPONSE}"
-            exit 1
-          fi
-          echo "Got access token (length=${#ACCESS_TOKEN})"
-
-          # Inject tenant token into wdcli config (preserve existing keys)
-          WDCLI_CONFIG_DIR="${HOME}/.config/@workday/wdcli"
-          CONFIG_FILE="${WDCLI_CONFIG_DIR}/config.json"
-          EXISTING=$(cat "${CONFIG_FILE}")
-          echo "${EXISTING}" | jq \
-            --arg alias "${TENANT_ALIAS}" \
-            --arg token "${ACCESS_TOKEN}" \
-            '.wcpTenantAccessToken[$alias] = $token' \
-            > "${CONFIG_FILE}"
-          echo "Tenant token written."
-
-          # Export for env-var patch
-          echo "TENANT_ACCESS_TOKEN=${ACCESS_TOKEN}" >> $GITHUB_ENV
+          echo "Tenant token restored into wcpTenantAccessToken.ubc_wcpdev2 (length=${#WD_DEV_TOKEN})"
 
       - name: Patch wdcli to use DevTools deploy path
         env:
@@ -300,96 +262,10 @@ jobs:
           echo "CmNvbnN0IGZzID0gcmVxdWlyZSgnZnMnKTsKY29uc3QgZiA9IHByb2Nlc3MuZW52Lk1FVEVSRUQ7CmxldCBjID0gZnMucmVhZEZpbGVTeW5jKGYsICd1dGY4Jyk7CmNvbnN0IE9MRCA9ICdQdD1lPT57Y29uc3QgdD1wcm9jZXNzLmVudi5XRENMSV9EVFNfQVBJX0dBVEVXQVk7cmV0dXJuKHQ/bmV3IHRpKHQpOm5ldyBsLkRldlRvb2xzQ29ubmVjdG9yKHkuZGV2dG9vbHNIb3N0bmFtZShlLmNvbmZpZ0ZpbGUpKSkuYXR0YWNoQXV0aFRva2VuKEdlKGUpKX0nOwpjb25zdCBSRVAgPSAnUHQ9ZT0+e2NvbnN0IHQ9cHJvY2Vzcy5lbnYuV0RDTElfRFRTX0FQSV9HQVRFV0FZO2NvbnN0IGNvbm49KHQ/bmV3IHRpKHQpOm5ldyBsLkRldlRvb2xzQ29ubmVjdG9yKHkuZGV2dG9vbHNIb3N0bmFtZShlLmNvbmZpZ0ZpbGUpKSk7Y29ubi5zZXREZWZhdWx0SGVhZGVyKCJVc2VyLUFnZW50Iiwid2RjbGkvMS45LjQzIik7cmV0dXJuIGNvbm4uYXR0YWNoQXV0aFRva2VuKEdlKGUpKX0nOwppZiAoIWMuaW5jbHVkZXMoT0xEKSkgeyBjb25zb2xlLmVycm9yKCdFUlJPUjogUHQgcGF0Y2ggdGFyZ2V0IG5vdCBmb3VuZCcpOyBwcm9jZXNzLmV4aXQoMSk7IH0KZnMud3JpdGVGaWxlU3luYyhmLCBjLnJlcGxhY2UoT0xELCBSRVApKTsKY29uc29sZS5sb2coJ1BhdGNoIDExIChhZGQgVXNlci1BZ2VudCBoZWFkZXIgdG8gRGV2VG9vbHNDb25uZWN0b3IpOiBPSycpOwo=" | base64 -d > /tmp/patch11.js
           node /tmp/patch11.js
 
-          # Patch 12: AOS deploy Authorization: ID scheme interceptor
-          #   The AOS /deploy endpoint responds with www-authenticate: ID, meaning it wants
-          #   Authorization: ID base64(clientId:clientSecret) — NOT Bearer token auth.
-          #   Previous Patch 12 attempt failed because WD_DEV_TOKEN was expired at the time.
-          #   Now that WD_DEV_TOKEN is refreshed, the WCP-Authorization (PKCE) header should
-          #   be valid, and swapping Authorization to ID scheme should satisfy the AOS endpoint.
-          #   Strategy: prepend a globalThis.fetch interceptor to the wcp-sdk that swaps
-          #   Authorization to ID scheme for any request targeting /aos/v1/deploy.
-          echo "Y29uc3QgZnMgPSByZXF1aXJlKCdmcycpOwpjb25zdCBzZGsgPSBwcm9jZXNzLmVudi5XQ1BfU0RLOwpsZXQgYyA9IGZzLnJlYWRGaWxlU3luYyhzZGssICd1dGY4Jyk7CgovLyBUaGUgd2NwLXNkayBmZXRjaCB3cmFwcGVyIGJ1aWxkcyByZXF1ZXN0IG9wdGlvbnMgYW5kIGNhbGxzIGZldGNoKCkuCi8vIFdlIG5lZWQgdG8gaW50ZXJjZXB0IHJlcXVlc3RzIHRvIC9hb3MvdjEvZGVwbG95IGFuZCBzd2FwIHRoZSBBdXRob3JpemF0aW9uIGhlYWRlci4KLy8gU3RyYXRlZ3k6IHdyYXAgdGhlIGdsb2JhbCBmZXRjaCB0byBpbnRlcmNlcHQgQU9TIGRlcGxveSBjYWxscy4KLy8KLy8gVGhlIHdjcC1zZGsncyBTZXJ2aWNlQXBpQ29ubmVjdG9yIG9yIEFvc0Nvbm5lY3RvciBjYWxscyBmZXRjaCgpLgovLyBXZSBpbmplY3QgYSBmZXRjaCB3cmFwcGVyIHRoYXQsIGZvciAvZGVwbG95IFVSTHMsIHJlcGxhY2VzIEF1dGhvcml6YXRpb24KLy8gd2l0aCB0aGUgSUQgc2NoZW1lIHVzaW5nIGNsaWVudCBjcmVkZW50aWFscyBmcm9tIGVudiB2YXJzLgoKLy8gRmluZCB0aGUgcG9pbnQgd2hlcmUgdGhlIHNkayBleHBvcnRzIG9yIHdoZXJlIGZldGNoIGlzIGNhbGxlZAovLyBJbmplY3QgYXQgdGhlIHRvcCBvZiB0aGUgZmlsZSBhIGZldGNoIGludGVyY2VwdG9yCmNvbnN0IGludGVyY2VwdG9yID0gYAooZnVuY3Rpb24oKXsKICBjb25zdCBfb3JpZ0ZldGNoID0gZ2xvYmFsVGhpcy5mZXRjaDsKICBnbG9iYWxUaGlzLmZldGNoID0gYXN5bmMgZnVuY3Rpb24odXJsLCBvcHRzKSB7CiAgICBjb25zdCB1cmxTdHIgPSB0eXBlb2YgdXJsID09PSAnc3RyaW5nJyA/IHVybCA6ICh1cmwgJiYgdXJsLnVybCA/IHVybC51cmwgOiBTdHJpbmcodXJsKSk7CiAgICBpZiAodXJsU3RyICYmIHVybFN0ci5pbmNsdWRlcygnL2Fvcy92MS9kZXBsb3knKSAmJiBwcm9jZXNzLmVudi5XRENMSV9DTElFTlRfSUQgJiYgcHJvY2Vzcy5lbnYuV0RDTElfQ0xJRU5UX1NFQ1JFVCkgewogICAgICBjb25zdCBlbmNvZGVkID0gQnVmZmVyLmZyb20ocHJvY2Vzcy5lbnYuV0RDTElfQ0xJRU5UX0lEICsgJzonICsgcHJvY2Vzcy5lbnYuV0RDTElfQ0xJRU5UX1NFQ1JFVCkudG9TdHJpbmcoJ2Jhc2U2NCcpOwogICAgICBjb25zdCBpZEF1dGggPSAnSUQgJyArIGVuY29kZWQ7CiAgICAgIG9wdHMgPSBvcHRzIHx8IHt9OwogICAgICBvcHRzLmhlYWRlcnMgPSBPYmplY3QuYXNzaWduKHt9LCBvcHRzLmhlYWRlcnMgfHwge30pOwogICAgICBjb25zdCBvbGRBdXRoID0gb3B0cy5oZWFkZXJzWydBdXRob3JpemF0aW9uJ10gfHwgb3B0cy5oZWFkZXJzWydhdXRob3JpemF0aW9uJ10gfHwgJyhub25lKSc7CiAgICAgIG9wdHMuaGVhZGVyc1snQXV0aG9yaXphdGlvbiddID0gaWRBdXRoOwogICAgICBkZWxldGUgb3B0cy5oZWFkZXJzWydhdXRob3JpemF0aW9uJ107CiAgICAgIGNvbnNvbGUuZXJyb3IoJ1tDSS1QMTJdIEFPUyBkZXBsb3k6IHN3YXBwZWQgQXV0aG9yaXphdGlvbiBmcm9tJywgb2xkQXV0aC5zdWJzdHJpbmcoMCwyMCksICd0byBJRCBzY2hlbWUnKTsKICAgIH0KICAgIHJldHVybiBfb3JpZ0ZldGNoKHVybCwgb3B0cyk7CiAgfTsKfSkoKTsKYDsKCi8vIFByZXBlbmQgdGhlIGludGVyY2VwdG9yIHRvIHRoZSBTREsKYyA9IGludGVyY2VwdG9yICsgYzsKZnMud3JpdGVGaWxlU3luYyhzZGssIGMpOwpjb25zb2xlLmxvZygnUGF0Y2ggMTIgKEFPUyBkZXBsb3kgQXV0aG9yaXphdGlvbjogSUQgc2NoZW1lIGludGVyY2VwdG9yKTogT0snKTsK" | base64 -d > /tmp/patch12.js
-          node /tmp/patch12.js
-
-      - name: Diagnose AOS deploy endpoint directly via curl
-        env:
-          WDCLI_CLIENT_ID: ${{ secrets.WD_CLIENT_ID }}
-          WDCLI_CLIENT_SECRET: ${{ secrets.WD_CLIENT_SECRET }}
-          WD_DEV_TOKEN: ${{ secrets.WD_DEV_TOKEN }}
-          TENANT_ALIAS: ubc_wcpdev2
-          VERSION_ID: ${{ env.VERSION_ID }}
-        run: |
-          set -euo pipefail
-          echo "=== Direct curl test: AOS /deploy endpoint ==="
-          ENCODED=$(printf '%s:%s' "${WDCLI_CLIENT_ID}" "${WDCLI_CLIENT_SECRET}" | base64 -w 0)
-
-          echo "--- Attempt 1: Authorization: Bearer <CC_token> + WCP-Authorization: Bearer <PKCE_token> ---"
-          CC_TOKEN=$(curl -s -X POST "https://auth.api.workday.com/v1/token" \
-            -H "Authorization: ID ${ENCODED}" \
-            -H "Content-Type: application/x-www-form-urlencoded" \
-            -d "grant_type=client_credentials&tenant_alias=${TENANT_ALIAS}" | jq -r '.access_token // empty')
-          echo "CC token length: ${#CC_TOKEN}"
-          RESP1=$(curl -s -w "\n__HTTP_STATUS__:%{http_code}" -X POST \
-            "https://api.us.wcp.workday.com/aos/v1/deploy" \
-            -H "Authorization: Bearer ${CC_TOKEN}" \
-            -H "WCP-Authorization: Bearer ${WD_DEV_TOKEN}" \
-            -H "Content-Type: application/json" \
-            -H "User-Agent: wdcli/1.9.43" \
-            -d "{\"versionId\":\"${VERSION_ID}\"}")
-          echo "Response1: ${RESP1}"
-
-          echo "--- Attempt 2: Authorization: ID <base64_creds> + WCP-Authorization: Bearer <PKCE_token> ---"
-          RESP2=$(curl -s -w "\n__HTTP_STATUS__:%{http_code}" -X POST \
-            "https://api.us.wcp.workday.com/aos/v1/deploy" \
-            -H "Authorization: ID ${ENCODED}" \
-            -H "WCP-Authorization: Bearer ${WD_DEV_TOKEN}" \
-            -H "Content-Type: application/json" \
-            -H "User-Agent: wdcli/1.9.43" \
-            -d "{\"versionId\":\"${VERSION_ID}\"}")
-          echo "Response2: ${RESP2}"
-
-          echo "--- Attempt 3: Authorization: Bearer <CC_token> only (no WCP-Authorization) ---"
-          RESP3=$(curl -s -w "\n__HTTP_STATUS__:%{http_code}" -X POST \
-            "https://api.us.wcp.workday.com/aos/v1/deploy" \
-            -H "Authorization: Bearer ${CC_TOKEN}" \
-            -H "Content-Type: application/json" \
-            -H "User-Agent: wdcli/1.9.43" \
-            -d "{\"versionId\":\"${VERSION_ID}\"}")
-          echo "Response3: ${RESP3}"
-
-          echo "--- Attempt 4: WCP-Authorization: Bearer <PKCE_token> only ---"
-          RESP4=$(curl -s -w "\n__HTTP_STATUS__:%{http_code}" -X POST \
-            "https://api.us.wcp.workday.com/aos/v1/deploy" \
-            -H "WCP-Authorization: Bearer ${WD_DEV_TOKEN}" \
-            -H "Content-Type: application/json" \
-            -H "User-Agent: wdcli/1.9.43" \
-            -d "{\"versionId\":\"${VERSION_ID}\"}")
-          echo "Response4: ${RESP4}"
-
-          echo "--- Attempt 5: Authorization: Bearer <PKCE_token> (user token as primary auth) ---"
-          RESP5=$(curl -s -w "\n__HTTP_STATUS__:%{http_code}" -X POST \
-            "https://api.us.wcp.workday.com/aos/v1/deploy" \
-            -H "Authorization: Bearer ${WD_DEV_TOKEN}" \
-            -H "Content-Type: application/json" \
-            -H "User-Agent: wdcli/1.9.43" \
-            -d "{\"versionId\":\"${VERSION_ID}\"}")
-          echo "Response5: ${RESP5}"
-
-          echo "--- Attempt 6: Authorization: Bearer <PKCE_token> + WCP-Authorization: Bearer <CC_token> ---"
-          RESP6=$(curl -s -w "\n__HTTP_STATUS__:%{http_code}" -X POST \
-            "https://api.us.wcp.workday.com/aos/v1/deploy" \
-            -H "Authorization: Bearer ${WD_DEV_TOKEN}" \
-            -H "WCP-Authorization: Bearer ${CC_TOKEN}" \
-            -H "Content-Type: application/json" \
-            -H "User-Agent: wdcli/1.9.43" \
-            -d "{\"versionId\":\"${VERSION_ID}\"}")
-          echo "Response6: ${RESP6}"
-
-          echo "--- Attempt 7: CC token audience check (decode JWT) ---"
-          echo "${CC_TOKEN}" | cut -d'.' -f2 | base64 -d 2>/dev/null | jq '{aud,sub,scope,tenant_alias,iss}' 2>/dev/null || echo "Could not decode CC token JWT"
-          echo "WD_DEV_TOKEN first 50 chars: ${WD_DEV_TOKEN:0:50}"
-
-          echo "=== Curl diagnostics complete ==="
+          # Patch 12 removed: was swapping Authorization to ID scheme for AOS deploy.
+          # Root cause was wrong token type — WD_DEV_TOKEN is now correctly set to
+          # wcpTenantAccessToken["ubc_wcpdev2"] (aud: wd, tenant: ubc_wcpdev2), not wcpAccessToken.
+          # No interception needed; wdcli reads the token from config naturally.
 
       - name: Deploy to ubc_wcpdev2 via wdcli
         env:
@@ -398,14 +274,11 @@ jobs:
           #   POST /aos/v1/deploy with:
           #   1. Authorization: Bearer <tenantBearerToken>
           #      = getValidatedTenantAccessToken() = WDCLI_TENANT_TOKEN (Patch 1)
-          #      = TENANT_ACCESS_TOKEN (client-credentials CC token scoped to ubc_wcpdev2)
-          #   2. WCP-Authorization: Bearer <accessToken>
-          #      = getWcpAccessToken() → config file wcpAccessToken = WD_DEV_TOKEN
-          #      = PKCE developer access token (restored into config by "Restore PKCE" step)
-          # WDCLI_AUTH feeds Ge(e) which is only used by the DevTools connector (now bypassed).
-          # It is kept harmless here in case any other code path reads it.
-          WDCLI_AUTH: ${{ env.TENANT_ACCESS_TOKEN }}
-          WDCLI_TENANT_TOKEN: ${{ env.TENANT_ACCESS_TOKEN }}
+          #      = WD_DEV_TOKEN = wcpTenantAccessToken["ubc_wcpdev2"]
+          #        (PKCE user token, aud: wd, tenant: ubc_wcpdev2, sub: lmcneil)
+          #   2. WCP-Authorization: Bearer <wcpAccessToken>
+          #      = getWcpAccessToken() → config file wcpAccessToken (set by system-user login)
+          WDCLI_TENANT_TOKEN: ${{ secrets.WD_DEV_TOKEN }}
           WDCLI_ORG_UUID: ${{ secrets.WD_ORG_UUID }}
           WDCLI_APP_UUID: cfd75927b808c1dd99c54b1c7096a142
           WDCLI_VERSION_ID: ${{ env.VERSION_ID }}
