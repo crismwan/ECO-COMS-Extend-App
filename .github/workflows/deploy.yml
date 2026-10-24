@@ -183,10 +183,8 @@ jobs:
           #   always takes the DevTools path (B) instead of the AOS path (C).
           #   AOS path crashes in CI because the _octopaas-scoped system-user
           #   token is rejected by AOS.
-          CMDS=$(find /opt/wdcli -name "commands" -type d | head -1)/index.js
-          if [ ! -f "${CMDS}" ]; then
-            CMDS="$(dirname "$(which wdcli)")/../lib/commands/index.js"
-          fi
+          #   commands/index.js lives in the same lib/ dir as metered-command-*.js
+          CMDS="$(dirname "${METERED}")/commands/index.js"
           echo "Patching commands bundle: ${CMDS}"
           export CMDS
           node -e "
