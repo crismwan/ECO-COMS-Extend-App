@@ -297,43 +297,69 @@ jobs:
           echo "CmNvbnN0IGZzID0gcmVxdWlyZSgnZnMnKTsKY29uc3QgZiA9IHByb2Nlc3MuZW52Lk1FVEVSRUQ7CmxldCBjID0gZnMucmVhZEZpbGVTeW5jKGYsICd1dGY4Jyk7CmNvbnN0IE9MRCA9ICdQdD1lPT57Y29uc3QgdD1wcm9jZXNzLmVudi5XRENMSV9EVFNfQVBJX0dBVEVXQVk7cmV0dXJuKHQ/bmV3IHRpKHQpOm5ldyBsLkRldlRvb2xzQ29ubmVjdG9yKHkuZGV2dG9vbHNIb3N0bmFtZShlLmNvbmZpZ0ZpbGUpKSkuYXR0YWNoQXV0aFRva2VuKEdlKGUpKX0nOwpjb25zdCBSRVAgPSAnUHQ9ZT0+e2NvbnN0IHQ9cHJvY2Vzcy5lbnYuV0RDTElfRFRTX0FQSV9HQVRFV0FZO2NvbnN0IGNvbm49KHQ/bmV3IHRpKHQpOm5ldyBsLkRldlRvb2xzQ29ubmVjdG9yKHkuZGV2dG9vbHNIb3N0bmFtZShlLmNvbmZpZ0ZpbGUpKSk7Y29ubi5zZXREZWZhdWx0SGVhZGVyKCJVc2VyLUFnZW50Iiwid2RjbGkvMS45LjQzIik7cmV0dXJuIGNvbm4uYXR0YWNoQXV0aFRva2VuKEdlKGUpKX0nOwppZiAoIWMuaW5jbHVkZXMoT0xEKSkgeyBjb25zb2xlLmVycm9yKCdFUlJPUjogUHQgcGF0Y2ggdGFyZ2V0IG5vdCBmb3VuZCcpOyBwcm9jZXNzLmV4aXQoMSk7IH0KZnMud3JpdGVGaWxlU3luYyhmLCBjLnJlcGxhY2UoT0xELCBSRVApKTsKY29uc29sZS5sb2coJ1BhdGNoIDExIChhZGQgVXNlci1BZ2VudCBoZWFkZXIgdG8gRGV2VG9vbHNDb25uZWN0b3IpOiBPSycpOwo=" | base64 -d > /tmp/patch11.js
           node /tmp/patch11.js
 
-          # Patch 12: wcp-sdk AosConnector — swap token headers on /aos/v1/deploy
-          #   The AOS endpoint returns 401 with both tokens present but on wrong headers.
-          #   WCP convention: Authorization = PKCE user token, WCP-Authorization = CC tenant token.
-          #   wdcli sends them reversed: CC on Authorization, PKCE on WCP-Authorization.
-          #   The bundle form (confirmed from run #121 discovery output) is:
-          #     AosConnector.prototype.getAuthHeaders = function (accessToken) {
-          #     return accessToken ? { 'WCP-Authorization': "".concat(this.authHeaderPrefix, " ").concat(accessToken) } : {};
-          #     };
-          #   We replace the prototype assignment with a version that, when WDCLI_PKCE_TOKEN
-          #   is set, returns swapped headers: Authorization=PKCE, WCP-Authorization=CC tenant.
+          # Patch 12: wcp-sdk AosConnector.deployApp() — bypass getAuthHeaders entirely.
+          #
+          #   Run #122 confirmed Patch 12 fired (PKCE on Authorization, CC on WCP-Authorization)
+          #   but still got 401 "The supplied authentication is invalid".
+          #   Telemetry shows is_system_account_boolean=false for the deploy event, meaning the
+          #   PKCE token is recognized as a personal user — not a system account.
+          #
+          #   New hypothesis: AOS /deploy uses Workday "ID" auth scheme (not Bearer at all).
+          #   The server's "www-authenticate: ID" response indicates it wants:
+          #     Authorization: ID <base64(client_id:client_secret)>
+          #   not a Bearer token of any kind. This is the same scheme used to get the CC token
+          #   from auth.api.workday.com/v1/token, applied directly to the AOS endpoint.
+          #
+          #   Strategy: patch AosConnector.deployApp() to intercept the raw fetch/post call
+          #   and override the Authorization header with the ID scheme. We find deployApp in
+          #   the bundle and prepend a fetch-monkey-patch that intercepts the /aos/v1/deploy
+          #   call specifically, swapping Authorization to ID form when WDCLI_ID_AUTH is set.
+          #
+          #   WDCLI_ID_AUTH = base64(clientId:clientSecret) — computed in the deploy step.
           WCP_SDK=$(find /opt/wdcli -path "*/wcp-sdk/dist/index.js" | head -1)
           export WCP_SDK
-          echo "=== Patch 12: applying exact-string token-swap patch to AosConnector.getAuthHeaders ==="
+          echo "=== Patch 12: patching AOS deploy to use Authorization: ID scheme ==="
           node -e "
             const fs = require('fs');
             const f = process.env.WCP_SDK;
             let c = fs.readFileSync(f, 'utf8');
-            const OLD = 'AosConnector.prototype.getAuthHeaders = function (accessToken) {\n        return accessToken ? { \'WCP-Authorization\': \"\".concat(this.authHeaderPrefix, \" \").concat(accessToken) } : {};\n    };';
-            if (!c.includes(OLD)) {
-              // The bundle may use different whitespace — try the single-line form
-              const OLD2 = 'AosConnector.prototype.getAuthHeaders=function(accessToken){return accessToken?{\'WCP-Authorization\':\"\".concat(this.authHeaderPrefix,\" \").concat(accessToken)}:{}}';
-              if (!c.includes(OLD2)) {
-                // Show context to help debug
-                const idx = c.indexOf('getAuthHeaders');
-                console.error('ERROR: AosConnector.getAuthHeaders patch target not found.');
-                console.error('Context at getAuthHeaders: ' + (idx >= 0 ? c.slice(Math.max(0,idx-40), idx+200) : 'NOT FOUND'));
-                process.exit(1);
-              }
-              console.log('Using single-line form of getAuthHeaders');
-              const REP2 = 'AosConnector.prototype.getAuthHeaders=function(accessToken){if(process.env.WDCLI_PKCE_TOKEN&&process.env.WDCLI_TENANT_TOKEN){console.error(\"[CI-P12] AOS deploy: Authorization=PKCE(\"+process.env.WDCLI_PKCE_TOKEN.substring(0,20)+\"...) WCP-Authorization=CC(\"+process.env.WDCLI_TENANT_TOKEN.substring(0,20)+\"...)\");return{\"Authorization\":\"Bearer \"+process.env.WDCLI_PKCE_TOKEN,\"WCP-Authorization\":\"Bearer \"+process.env.WDCLI_TENANT_TOKEN};}return accessToken?{\'WCP-Authorization\':\"\".concat(this.authHeaderPrefix,\" \").concat(accessToken)}:{}}';
-              fs.writeFileSync(f, c.replace(OLD2, REP2));
-              console.log('Patch 12 (swap AOS tokens, single-line form): OK');
-              process.exit(0);
+            // Find AosConnector.prototype.deployApp to inject a global fetch override
+            // that rewrites Authorization: Bearer -> Authorization: ID for /aos/v1/deploy.
+            const ANCHOR = 'AosConnector.prototype.deployApp';
+            const idx = c.indexOf(ANCHOR);
+            if (idx < 0) {
+              console.error('ERROR: AosConnector.prototype.deployApp not found in wcp-sdk');
+              process.exit(1);
             }
-            const REP = 'AosConnector.prototype.getAuthHeaders = function (accessToken) {\n        if(process.env.WDCLI_PKCE_TOKEN&&process.env.WDCLI_TENANT_TOKEN){console.error(\"[CI-P12] AOS deploy: Authorization=PKCE(\"+process.env.WDCLI_PKCE_TOKEN.substring(0,20)+\"...) WCP-Authorization=CC(\"+process.env.WDCLI_TENANT_TOKEN.substring(0,20)+\"...)\");return{\"Authorization\":\"Bearer \"+process.env.WDCLI_PKCE_TOKEN,\"WCP-Authorization\":\"Bearer \"+process.env.WDCLI_TENANT_TOKEN};}return accessToken ? { \'WCP-Authorization\': \"\".concat(this.authHeaderPrefix, \" \").concat(accessToken) } : {};\n    };';
-            fs.writeFileSync(f, c.replace(OLD, REP));
-            console.log('Patch 12 (swap AOS tokens, multi-line form): OK');
+            // Inject a fetch-interceptor module-level before the AosConnector class block.
+            // We find the class start (search backwards from ANCHOR for 'AosConnector.prototype')
+            // and insert before it. Simpler: insert at the very start of the file.
+            const INTERCEPT = \`
+// CI-P12: intercept fetch for /aos/v1/deploy to use Authorization: ID scheme
+(function(){
+  const _origFetch = globalThis.fetch;
+  if(!_origFetch) return;
+  globalThis.fetch = function(url, opts) {
+    const idAuth = process.env.WDCLI_ID_AUTH;
+    if(idAuth && typeof url === 'string' && url.includes('/aos/v1/deploy')) {
+      opts = opts ? Object.assign({}, opts) : {};
+      opts.headers = Object.assign({}, opts.headers || {});
+      const oldAuth = opts.headers['Authorization'] || opts.headers['authorization'] || '(none)';
+      opts.headers['Authorization'] = 'ID ' + idAuth;
+      // Keep WCP-Authorization as the CC bearer token
+      if(!opts.headers['WCP-Authorization'] && process.env.WDCLI_TENANT_TOKEN) {
+        opts.headers['WCP-Authorization'] = 'Bearer ' + process.env.WDCLI_TENANT_TOKEN;
+      }
+      console.error('[CI-P12] AOS deploy: overriding Authorization to ID scheme (was: ' + oldAuth.substring(0,15) + '...)');
+      console.error('[CI-P12] WCP-Authorization: ' + (opts.headers['WCP-Authorization'] || '(none)').substring(0,20) + '...');
+    }
+    return _origFetch.apply(this, arguments);
+  };
+})();
+\`;
+            c = INTERCEPT + c;
+            fs.writeFileSync(f, c);
+            console.log('Patch 12 (AOS deploy Authorization: ID scheme via fetch intercept): OK');
           "
 
       - name: Deploy to ubc_wcpdev2 via wdcli
