@@ -183,8 +183,36 @@ jobs:
           WDCLI_AUTH: ${{ secrets.WD_DEV_TOKEN }}
           WDCLI_CLIENT_ID: ${{ secrets.WD_CLIENT_ID }}
           WDCLI_CLIENT_SECRET: ${{ secrets.WD_CLIENT_SECRET }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          set -euxo pipefail
+          set -uo pipefail
           APP_REF_ID=ecocomsphase_xclw_cm_sync2_vmzvxm
           echo "Deploying ${APP_REF_ID} version ${VERSION_ID} to ${TENANT_ALIAS}"
-          wdcli app deploy "${APP_REF_ID}" --tenant-alias "${TENANT_ALIAS}"
+          echo "WDCLI_AUTH length: ${#WDCLI_AUTH}"
+          echo "WDCLI_TENANT_TOKEN length: ${#WDCLI_TENANT_TOKEN}"
+          wdcli app deploy "${APP_REF_ID}" --tenant-alias "${TENANT_ALIAS}" 2>&1 | tee /tmp/deploy-out.txt
+          DEPLOY_EXIT=${PIPESTATUS[0]}
+          echo "wdcli exit: ${DEPLOY_EXIT}"
+          if [ "${DEPLOY_EXIT}" != "0" ]; then
+            DEPLOY_OUTPUT=$(cat /tmp/deploy-out.txt)
+            export DEPLOY_OUTPUT DEPLOY_EXIT
+            node -e "
+              const body = '## Deploy Output (run \`wdcli app deploy\`)\n\`\`\`\n' + process.env.DEPLOY_OUTPUT + '\n\`\`\`\nExit: ' + process.env.DEPLOY_EXIT;
+              const https = require('https');
+              const data = JSON.stringify({body});
+              const req = https.request({
+                hostname: 'api.github.com',
+                path: '/repos/crismwan/ECO-COMS-Extend-App/issues/1/comments',
+                method: 'POST',
+                headers: {
+                  'Authorization': 'Bearer ' + process.env.GH_TOKEN,
+                  'Content-Type': 'application/json',
+                  'User-Agent': 'gh-actions',
+                  'Content-Length': Buffer.byteLength(data)
+                }
+              }, res => { let r=''; res.on('data',d=>r+=d); res.on('end',()=>console.log('Posted, HTTP',res.statusCode)); });
+              req.on('error', e => console.error(e.message));
+              req.write(data); req.end();
+            " || true
+            exit 1
+          fi
