@@ -236,39 +236,33 @@ jobs:
             console.log('Patch 3 (bypass getOrganizations): OK');
           "
 
-          # Patch 4: metered-command-C1Iau1Kk.js
-          #   Bypass ue() — the organizationPermissions function that calls
-          #   /organizations/{orgUuid}/users/self/permissions on OctopaAS.
-          #   Called by It() (hasPermission) and St() (assertAppPermission).
-          #   Both of these fire during deploy when checking app-type permissions.
-          #   When WDCLI_ORG_UUID is set, return a full permission set instead.
-          node -e "
-            const fs = require('fs');
-            const f = process.env.METERED;
-            let c = fs.readFileSync(f, 'utf8');
-            const old = 'function ue(e,t,n){return e.organizationPermissions(n,async()=>(await Ee(e,{accessToken:t,version:\"v2\"}).get(\`/organizations/\${encodeURIComponent(n)}/users/self/permissions\`)).data.permissions)}';
-            const rep = 'function ue(e,t,n){if(process.env.WDCLI_ORG_UUID){console.error(\"[CI] Bypassing organizationPermissions for org:\",n);return Promise.resolve([\"agentbuilder.agent.write\",\"agentbuilder.agent.read\",\"agentbuilder.app.create\",\"agentbuilder.app.read\",\"agentbuilder.app.upload\",\"agentbuilder.app.deploy\",\"agentbuilder.app.delete\"]);}return e.organizationPermissions(n,async()=>(await Ee(e,{accessToken:t,version:\"v2\"}).get(\`/organizations/\${encodeURIComponent(n)}/users/self/permissions\`)).data.permissions)}';
-            if (!c.includes(old)) { console.error('ERROR: ue() patch target not found'); process.exit(1); }
-            fs.writeFileSync(f, c.replace(old, rep));
-            console.log('Patch 4 (bypass organizationPermissions): OK');
-          "
+          # Patches 4+5: write to temp JS files to avoid bash escaping issues with backticks
+          # Patch 4: Bypass ue() = organizationPermissions (hits /users/self/permissions)
+          # Patch 5: Bypass Ve() = getTenantsList (hits OctopaasConnector.getTenantsForOrg)
+          cat > /tmp/patch4.js << 'PATCH4EOF'
+const fs = require('fs');
+const f = process.env.METERED;
+let c = fs.readFileSync(f, 'utf8');
+const OLD = 'function ue(e,t,n){return e.organizationPermissions(n,async()=>(await Ee(e,{accessToken:t,version:"v2"}).get(`/organizations/${encodeURIComponent(n)}/users/self/permissions`)).data.permissions)}';
+const REP = 'function ue(e,t,n){if(process.env.WDCLI_ORG_UUID){console.error("[CI] Bypassing organizationPermissions for org:",n);return Promise.resolve(["agentbuilder.agent.write","agentbuilder.agent.read","agentbuilder.app.create","agentbuilder.app.read","agentbuilder.app.upload","agentbuilder.app.deploy","agentbuilder.app.delete"]);}return e.organizationPermissions(n,async()=>(await Ee(e,{accessToken:t,version:"v2"}).get(`/organizations/${encodeURIComponent(n)}/users/self/permissions`)).data.permissions)}';
+if (!c.includes(OLD)) { console.error('ERROR: ue() patch target not found'); process.exit(1); }
+fs.writeFileSync(f, c.replace(OLD, REP));
+console.log('Patch 4 (bypass organizationPermissions): OK');
+PATCH4EOF
 
-          # Patch 5: metered-command-C1Iau1Kk.js
-          #   Bypass Ve() = getTenantsList which calls OctopaasConnector.getTenantsForOrg()
-          #   directly (not via Ee() wrapper). It uses the PKCE token to hit OctopaAS,
-          #   which rejects it with 401. This is called by getTenantConfigForCommand (bi)
-          #   which is called in the deploy run() before the tenant login step.
-          #   Return a hardcoded tenant entry for ubc_wcpdev2 when WDCLI_ORG_UUID is set.
-          node -e "
-            const fs = require('fs');
-            const f = process.env.METERED;
-            let c = fs.readFileSync(f, 'utf8');
-            const old = 'async function Ve(e,t,n=!1){const r=await L(e),i=await new Y().getAccountForCommand(e,t),o=await new l.OctopaasConnector(y.wcpApiGatewayHostname(e.configFile)).getTenantsForOrg(i,r);return n?o.filter(a=>Ii(a.environmentType)):o}';
-            const rep = 'async function Ve(e,t,n=!1){if(process.env.WDCLI_ORG_UUID){const tenants=[{lookupAlias:\"ubc_wcpdev2\",tenantAlias:\"ubc_wcpdev2\",environmentType:\"Development\",displayName:\"UBC WCP Dev 2\",tenantUrl:\"https://ubc.wd5.myworkday.com/ubc_wcpdev2\"}];console.error(\"[CI] Bypassing getTenantsForOrg, returning hardcoded tenant list\");return n?tenants.filter(a=>Ii(a.environmentType)):tenants;}const r=await L(e),i=await new Y().getAccountForCommand(e,t),o=await new l.OctopaasConnector(y.wcpApiGatewayHostname(e.configFile)).getTenantsForOrg(i,r);return n?o.filter(a=>Ii(a.environmentType)):o}';
-            if (!c.includes(old)) { console.error('ERROR: Ve() patch target not found'); process.exit(1); }
-            fs.writeFileSync(f, c.replace(old, rep));
-            console.log('Patch 5 (bypass getTenantsForOrg): OK');
-          "
+          cat > /tmp/patch5.js << 'PATCH5EOF'
+const fs = require('fs');
+const f = process.env.METERED;
+let c = fs.readFileSync(f, 'utf8');
+const OLD = 'async function Ve(e,t,n=!1){const r=await L(e),i=await new Y().getAccountForCommand(e,t),o=await new l.OctopaasConnector(y.wcpApiGatewayHostname(e.configFile)).getTenantsForOrg(i,r);return n?o.filter(a=>Ii(a.environmentType)):o}';
+const REP = 'async function Ve(e,t,n=!1){if(process.env.WDCLI_ORG_UUID){const tenants=[{lookupAlias:"ubc_wcpdev2",tenantAlias:"ubc_wcpdev2",environmentType:"Development",displayName:"UBC WCP Dev 2",tenantUrl:"https://ubc.wd5.myworkday.com/ubc_wcpdev2"}];console.error("[CI] Bypassing getTenantsForOrg, returning hardcoded tenant list");return n?tenants.filter(a=>Ii(a.environmentType)):tenants;}const r=await L(e),i=await new Y().getAccountForCommand(e,t),o=await new l.OctopaasConnector(y.wcpApiGatewayHostname(e.configFile)).getTenantsForOrg(i,r);return n?o.filter(a=>Ii(a.environmentType)):o}';
+if (!c.includes(OLD)) { console.error('ERROR: Ve() patch target not found'); process.exit(1); }
+fs.writeFileSync(f, c.replace(OLD, REP));
+console.log('Patch 5 (bypass getTenantsForOrg): OK');
+PATCH5EOF
+
+          node /tmp/patch4.js
+          node /tmp/patch5.js
 
       - name: Deploy to ubc_wcpdev2 via wdcli
         env:
