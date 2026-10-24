@@ -199,15 +199,23 @@ jobs:
           if [ "${CODE2}" = "200" ] || [ "${CODE2}" = "201" ] || [ "${CODE2}" = "202" ]; then
             echo "DevTools deploy succeeded!"; exit 0; fi
 
-          # Write diagnostics to a gist so they can be read without blob.core.windows.net
-          DIAG=$(jq -n \
+          # Write diagnostics to file for artifact upload (gist requires extra token scope)
+          mkdir -p /tmp/diag
+          jq -n \
             --arg a1code "${CODE1}" --arg a1body "${BODY1}" \
             --arg a2code "${CODE2}" --arg a2body "${BODY2}" \
             --arg orgUuid "${ORG_UUID}" --arg versionId "${VERSION_ID}" \
-            '{attempt1:{code:$a1code,body:$a1body},attempt2:{code:$a2code,body:$a2body},orgUuid:$orgUuid,versionId:$versionId}')
-          gh gist create --public \
-            --desc "ECO-COMS deploy diagnostics $(date -u +%Y%m%dT%H%M%SZ)" \
-            - <<< "${DIAG}" || echo "Gist creation failed (token may lack gist scope)"
+            '{attempt1:{code:$a1code,body:$a1body},attempt2:{code:$a2code,body:$a2body},orgUuid:$orgUuid,versionId:$versionId}' \
+            > /tmp/diag/deploy-diag.json
+          cat /tmp/diag/deploy-diag.json
 
           echo "All deploy attempts failed."
           exit 1
+
+      - name: Upload deploy diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: deploy-diag
+          path: /tmp/diag/deploy-diag.json
+          retention-days: 1
