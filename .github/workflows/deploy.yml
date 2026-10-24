@@ -297,7 +297,13 @@ jobs:
           # 2. Deploy-Tenant-Authorization header (fi() / patch 1 → WDCLI_TENANT_TOKEN):
           #    Must be the tenant-scoped client-credentials token (TENANT_ACCESS_TOKEN) —
           #    proves the caller has access to deploy into the specific tenant.
-          WDCLI_AUTH: ${{ secrets.WD_DEV_TOKEN }}
+          # WDCLI_AUTH drives Authorization: Bearer on the DevTools connector (Ge(e)).
+          # The OctopaAS token (WD_DEV_TOKEN, tenant:_octopaaas) is rejected by the
+          # DevTools /deploy endpoint even with org-id present — it is a platform-service
+          # token, not a customer-tenant token. Use the client-credentials TENANT_ACCESS_TOKEN
+          # for Authorization as well; it is scoped to ubc_wcpdev2 and should pass auth.
+          # WDCLI_TENANT_TOKEN is still the same token for Deploy-Tenant-Authorization (patch 1).
+          WDCLI_AUTH: ${{ env.TENANT_ACCESS_TOKEN }}
           WDCLI_TENANT_TOKEN: ${{ env.TENANT_ACCESS_TOKEN }}
           WDCLI_ORG_UUID: ${{ secrets.WD_ORG_UUID }}
           WDCLI_APP_UUID: cfd75927b808c1dd99c54b1c7096a142
