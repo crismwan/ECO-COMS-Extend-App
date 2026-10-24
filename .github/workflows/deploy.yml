@@ -40,25 +40,52 @@ jobs:
           chmod +x "${WDCLI_BIN}"
           echo "$(dirname ${WDCLI_BIN})" >> $GITHUB_PATH
 
-      - name: Authenticate as system user
+      - name: Pre-populate wdcli config with developer token
+        env:
+          WDCLI_CLIENT_ID: ${{ secrets.WD_CLIENT_ID }}
+          WDCLI_CLIENT_SECRET: ${{ secrets.WD_CLIENT_SECRET }}
+          WD_DEV_TOKEN: ${{ secrets.WD_DEV_TOKEN }}
+          WD_ORG_UUID: ${{ secrets.WD_ORG_UUID }}
+        run: |
+          set -euo pipefail
+          # WD_DEV_TOKEN = wcpAccessToken from interactive `wdcli auth login`
+          # WD_ORG_UUID  = organizationUuid from the same config after login
+          #
+          # How to obtain these (run once locally):
+          #   wdcli auth login    (browser PKCE flow)
+          #   cat ~/.config/@workday/wdcli/config.json | jq '{wcpAccessToken, organizationUuid}'
+          # Then add WD_DEV_TOKEN and WD_ORG_UUID as GitHub repo secrets.
+
+          WDCLI_CONFIG_DIR="${HOME}/.config/@workday/wdcli"
+          mkdir -p "${WDCLI_CONFIG_DIR}"
+          CONFIG_FILE="${WDCLI_CONFIG_DIR}/config.json"
+
+          # Build config with developer token + org UUID + client credentials
+          jq -n \
+            --arg devToken "${WD_DEV_TOKEN}" \
+            --arg orgUuid "${WD_ORG_UUID}" \
+            --arg clientId "${WDCLI_CLIENT_ID}" \
+            --arg clientSecret "${WDCLI_CLIENT_SECRET}" \
+            '{
+              wcpAccessToken: $devToken,
+              organizationUuid: $orgUuid,
+              clientId: $clientId,
+              clientSecret: $clientSecret
+            }' > "${CONFIG_FILE}"
+
+          echo "Config written (keys): $(jq -r 'keys | @csv' "${CONFIG_FILE}")"
+
+          # Export org UUID for later steps
+          echo "ORG_UUID=${WD_ORG_UUID}" >> $GITHUB_ENV
+
+      - name: Authenticate as system user (for upload)
         env:
           WDCLI_CLIENT_ID: ${{ secrets.WD_CLIENT_ID }}
           WDCLI_CLIENT_SECRET: ${{ secrets.WD_CLIENT_SECRET }}
         run: |
-          set -euxo pipefail
+          set -euo pipefail
           wdcli auth login --system-user
           wdcli whoami
-          # Dump config keys (redact token values) to understand what's populated
-          WDCLI_CONFIG="${HOME}/.config/@workday/wdcli/config.json"
-          jq 'to_entries | map(if (.value | type) == "string" and (.value | length) > 20 then .value = "<redacted>" else . end) | from_entries' "${WDCLI_CONFIG}" 2>/dev/null || true
-          # Try to get org UUID from wdcli whoami output
-          WHOAMI=$(wdcli whoami --format json 2>/dev/null || true)
-          echo "whoami json: ${WHOAMI}"
-          ORG_UUID=$(echo "${WHOAMI}" | jq -r '.organizationUuid // .orgUuid // .organization.id // empty' 2>/dev/null || true)
-          echo "ORG_UUID from whoami: ${ORG_UUID}"
-          if [ -n "${ORG_UUID}" ]; then
-            echo "ORG_UUID=${ORG_UUID}" >> $GITHUB_ENV
-          fi
 
       - name: Upload app to App Hub
         env:
@@ -74,18 +101,14 @@ jobs:
           cat /tmp/upload-output.txt
 
           # After upload, get the latest version ID via wdcli app versions
-          # This is more reliable than parsing upload output (which may not print
-          # the version ID when re-uploading identical content)
           echo "=== Fetching latest version ID ==="
           wdcli app versions "${APP_REF_ID}" --format json 2>&1 | tee /tmp/versions-output.txt || true
           echo "=== Versions output ==="
           cat /tmp/versions-output.txt
 
           # Extract version ID from versions JSON output
-          # wdcli app versions returns [{versionId, appId, name, status, ...}]
           VERSION_ID=$(jq -r '.[0].versionId // empty' /tmp/versions-output.txt 2>/dev/null)
           if [ -z "${VERSION_ID}" ]; then
-            # Fall back to grepping for 32-char hex from versions output
             VERSION_ID=$(grep -oE '"versionId"[[:space:]]*:[[:space:]]*"([0-9a-f]{32})"' /tmp/versions-output.txt 2>/dev/null | grep -oE '[0-9a-f]{32}' | head -1)
           fi
           if [ -z "${VERSION_ID}" ]; then
@@ -116,30 +139,23 @@ jobs:
           fi
           echo "Got access token (length=${#ACCESS_TOKEN})"
 
-          # Inject token into wdcli config
+          # Inject tenant token into wdcli config (preserve existing keys)
           WDCLI_CONFIG_DIR="${HOME}/.config/@workday/wdcli"
-          mkdir -p "${WDCLI_CONFIG_DIR}"
           CONFIG_FILE="${WDCLI_CONFIG_DIR}/config.json"
-          if [ -f "${CONFIG_FILE}" ]; then
-            EXISTING=$(cat "${CONFIG_FILE}")
-          else
-            EXISTING='{}'
-          fi
+          EXISTING=$(cat "${CONFIG_FILE}")
           echo "${EXISTING}" | jq \
             --arg alias "${TENANT_ALIAS}" \
             --arg token "${ACCESS_TOKEN}" \
             '.wcpTenantAccessToken[$alias] = $token' \
             > "${CONFIG_FILE}"
-          echo "Tenant token written to ${CONFIG_FILE}"
+          echo "Tenant token written."
 
-          # Export tenant token for use in the next step
+          # Export for env-var patch
           echo "TENANT_ACCESS_TOKEN=${ACCESS_TOKEN}" >> $GITHUB_ENV
 
       - name: Patch wdcli to accept tenant token from env var
         run: |
           set -euo pipefail
-          # Patch metered-command-C1Iau1Kk.js so getValidatedTenantAccessToken (fi)
-          # reads from WDCLI_TENANT_TOKEN env var when set, bypassing browser auth.
           PATCH_FILE=$(find /opt/wdcli -name "metered-command-C1Iau1Kk.js" | head -1)
           if [ -z "${PATCH_FILE}" ]; then
             WDCLI_LIB=$(dirname "$(which wdcli)")/../lib
@@ -160,103 +176,15 @@ jobs:
             console.log('Patched successfully.');
           "
 
-      - name: Deploy to ubc_wcpdev2 via wdcli (patched)
+      - name: Deploy to ubc_wcpdev2 via wdcli
         env:
           TENANT_ALIAS: ubc_wcpdev2
           WDCLI_TENANT_TOKEN: ${{ env.TENANT_ACCESS_TOKEN }}
+          WDCLI_AUTH: ${{ secrets.WD_DEV_TOKEN }}
           WDCLI_CLIENT_ID: ${{ secrets.WD_CLIENT_ID }}
           WDCLI_CLIENT_SECRET: ${{ secrets.WD_CLIENT_SECRET }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          set -euo pipefail
-
+          set -euxo pipefail
           APP_REF_ID=ecocomsphase_xclw_cm_sync2_vmzvxm
-          APP_UUID=cfd75927b808c1dd99c54b1c7096a142
-          WDCLI_CONFIG="${HOME}/.config/@workday/wdcli/config.json"
-          DEV_TOKEN=$(jq -r '.wcpAccessToken // empty' "${WDCLI_CONFIG}" 2>/dev/null)
-          # ORG_UUID may be set from the auth step via $GITHUB_ENV
-          ORG_UUID_CONFIG=$(jq -r '.organizationUuid // empty' "${WDCLI_CONFIG}" 2>/dev/null)
-          ORG_UUID="${ORG_UUID:-${ORG_UUID_CONFIG}}"
-
-          echo "WDCLI_TENANT_TOKEN length: ${#WDCLI_TENANT_TOKEN}"
-          echo "DEV_TOKEN length: ${#DEV_TOKEN}"
-          echo "ORG_UUID: ${ORG_UUID}"
-          echo "VERSION_ID: ${VERSION_ID}"
-
-          DEPLOY_URL="https://api.us.wcp.workday.com/devtools/v1/apps/${APP_UUID}/deploy"
-          DEPLOY_BODY=$(jq -n \
-            --arg versionId "${VERSION_ID}" \
-            --arg tenantAlias "${TENANT_ALIAS}" \
-            '{versionId: $versionId, tenantAlias: $tenantAlias}')
-
-          echo "=== Attempt 1: DevTools with dev token + Deploy-Tenant-Authorization + org-id ==="
-          RESP1=$(curl -s -w "\n%{http_code}" -X POST "${DEPLOY_URL}" \
-            -H "Content-Type: application/json" \
-            -H "Authorization: Bearer ${DEV_TOKEN}" \
-            -H "Deploy-Tenant-Authorization: Bearer ${WDCLI_TENANT_TOKEN}" \
-            ${ORG_UUID:+-H "org-id: ${ORG_UUID}"} \
-            -d "${DEPLOY_BODY}" || true)
-          CODE1=$(echo "${RESP1}" | tail -1)
-          BODY1=$(echo "${RESP1}" | sed '$d')
-          echo "HTTP ${CODE1}: ${BODY1}"
-          if [ "${CODE1}" = "200" ] || [ "${CODE1}" = "201" ] || [ "${CODE1}" = "202" ]; then
-            echo "DevTools deploy succeeded!"; exit 0; fi
-
-          echo "=== Attempt 2: DevTools with dev token only ==="
-          RESP2=$(curl -s -w "\n%{http_code}" -X POST "${DEPLOY_URL}" \
-            -H "Content-Type: application/json" \
-            -H "Authorization: Bearer ${DEV_TOKEN}" \
-            -d "${DEPLOY_BODY}" || true)
-          CODE2=$(echo "${RESP2}" | tail -1)
-          BODY2=$(echo "${RESP2}" | sed '$d')
-          echo "HTTP ${CODE2}: ${BODY2}"
-          if [ "${CODE2}" = "200" ] || [ "${CODE2}" = "201" ] || [ "${CODE2}" = "202" ]; then
-            echo "DevTools deploy succeeded!"; exit 0; fi
-
-          # Post diagnostics as issue comment (repo-scoped token, no blob storage needed)
-          # Use node to build body to avoid YAML ** alias conflict
-          export DIAG_CODE1="${CODE1}" DIAG_BODY1="${BODY1:-<empty>}"
-          export DIAG_CODE2="${CODE2}" DIAG_BODY2="${BODY2:-<empty>}"
-          export DIAG_VID="${VERSION_ID}" DIAG_ORG="${ORG_UUID:-<not set>}"
-          node -e "
-            const body = [
-              '## Deploy Diagnostics ' + new Date().toISOString(),
-              'VERSION_ID: ' + process.env.DIAG_VID,
-              'ORG_UUID: ' + process.env.DIAG_ORG,
-              '',
-              '### Attempt 1: DevTools + Deploy-Tenant-Authorization + org-id',
-              'HTTP ' + process.env.DIAG_CODE1,
-              '\`\`\`',
-              process.env.DIAG_BODY1,
-              '\`\`\`',
-              '',
-              '### Attempt 2: DevTools dev token only',
-              'HTTP ' + process.env.DIAG_CODE2,
-              '\`\`\`',
-              process.env.DIAG_BODY2,
-              '\`\`\`',
-            ].join('\n');
-            const https = require('https');
-            const data = JSON.stringify({body});
-            const req = https.request({
-              hostname: 'api.github.com',
-              path: '/repos/crismwan/ECO-COMS-Extend-App/issues/1/comments',
-              method: 'POST',
-              headers: {
-                'Authorization': 'Bearer ' + process.env.GH_TOKEN,
-                'Content-Type': 'application/json',
-                'User-Agent': 'gh-actions',
-                'Content-Length': Buffer.byteLength(data)
-              }
-            }, res => {
-              let r = '';
-              res.on('data', d => r += d);
-              res.on('end', () => console.log('Comment posted, HTTP', res.statusCode, r.slice(0,100)));
-            });
-            req.on('error', e => console.error('Comment failed:', e.message));
-            req.write(data);
-            req.end();
-          " || echo "Issue comment failed"
-
-          echo "All deploy attempts failed."
-          exit 1
+          echo "Deploying ${APP_REF_ID} version ${VERSION_ID} to ${TENANT_ALIAS}"
+          wdcli app deploy "${APP_REF_ID}" --tenant-alias "${TENANT_ALIAS}"
