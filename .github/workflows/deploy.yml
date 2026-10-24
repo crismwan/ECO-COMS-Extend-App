@@ -10,6 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      actions: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -156,17 +157,38 @@ jobs:
             local payload
             payload=$(echo "${token}" | cut -d'.' -f2)
             # Add padding
-            local padded="${payload}$(printf '=%.0s' $(seq 1 $(( (4 - ${#payload} % 4) % 4 ))))"
+            local len=${#payload}
+            local pad=$(( (4 - len % 4) % 4 ))
+            local padded="${payload}$(python3 -c "print('='*${pad})")"
             echo "${padded}" | base64 -d 2>/dev/null || echo "decode_failed"
           }
 
+          mkdir -p /tmp/diag
+
           echo "--- Developer token claims ---"
           DEV_CLAIMS=$(decode_jwt "${DEV_TOKEN}")
-          echo "${DEV_CLAIMS}" | python3 -c "import sys,json; d=json.loads(sys.stdin.read()); print(json.dumps(d, indent=2))" 2>/dev/null || echo "parse failed: ${DEV_CLAIMS}"
+          DEV_JSON=$(echo "${DEV_CLAIMS}" | python3 -c "import sys,json; d=json.loads(sys.stdin.read()); print(json.dumps(d, indent=2))" 2>/dev/null || echo "parse failed")
+          echo "${DEV_JSON}"
+          echo "${DEV_JSON}" > /tmp/diag/dev_token_claims.json
 
           echo "--- Tenant token claims (from auth.api.workday.com) ---"
           TENANT_CLAIMS=$(decode_jwt "${TENANT_ACCESS_TOKEN}")
-          echo "${TENANT_CLAIMS}" | python3 -c "import sys,json; d=json.loads(sys.stdin.read()); print(json.dumps(d, indent=2))" 2>/dev/null || echo "parse failed: ${TENANT_CLAIMS}"
+          TENANT_JSON=$(echo "${TENANT_CLAIMS}" | python3 -c "import sys,json; d=json.loads(sys.stdin.read()); print(json.dumps(d, indent=2))" 2>/dev/null || echo "parse failed")
+          echo "${TENANT_JSON}"
+          echo "${TENANT_JSON}" > /tmp/diag/tenant_token_claims.json
+
+          # Write summary for step summary
+          {
+            echo "## JWT Claims"
+            echo "### Developer Token"
+            echo '```json'
+            echo "${DEV_JSON}"
+            echo '```'
+            echo "### Tenant Token (auth.api.workday.com)"
+            echo '```json'
+            echo "${TENANT_JSON}"
+            echo '```'
+          } >> $GITHUB_STEP_SUMMARY
 
           echo ""
           echo "=== Attempt 1: AOS deploy with tenant token as Authorization ==="
@@ -276,4 +298,24 @@ jobs:
           echo "Token endpoint comparison:"
           echo "  wdcli uses: https://api.us.wcp.workday.com/v2/token (OctopaasConnector)"
           echo "  we used:    https://auth.api.workday.com/v1/token"
+
+          # Write results summary to file for artifact upload
+          {
+            echo "ATTEMPT_1: ${CODE1} - ${BODY1}"
+            echo "ATTEMPT_2: ${CODE2} - ${BODY2}"
+            echo "ATTEMPT_3: ${CODE3} - ${BODY3}"
+            echo "ATTEMPT_4: ${CODE4} - ${BODY4}"
+          } > /tmp/diag/attempt_results.txt
+          cp /tmp/diag/* "$GITHUB_WORKSPACE/" 2>/dev/null || true
           exit 1
+
+      - name: Upload diagnostic artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: deploy-diagnostics
+          path: |
+            dev_token_claims.json
+            tenant_token_claims.json
+            attempt_results.txt
+          if-no-files-found: ignore
