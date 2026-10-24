@@ -262,11 +262,16 @@ jobs:
       - name: Deploy to ubc_wcpdev2 via wdcli
         env:
           TENANT_ALIAS: ubc_wcpdev2
-          # DevTools /devtools/v1/apps/{uuid}/deploy is a WCP platform endpoint.
-          # It requires the PKCE wcpAccessToken (WD_DEV_TOKEN), NOT the
-          # client-credentials tenant token. Patch 1 (fi()) returns WDCLI_TENANT_TOKEN
-          # as the validated tenant access token — so we set it to the PKCE token here.
-          WDCLI_TENANT_TOKEN: ${{ secrets.WD_DEV_TOKEN }}
+          # Two separate tokens are needed for the DevTools deploy POST:
+          # 1. Base connector Authorization bearer (Ge(e)):
+          #    WDCLI_AUTH env var is checked first by Ge(e) before config.
+          #    Must be the PKCE wcpAccessToken (WD_DEV_TOKEN) — authenticates
+          #    the caller to the WCP platform (api.us.wcp.workday.com).
+          # 2. Deploy-Tenant-Authorization header (fi() / patch 1 → WDCLI_TENANT_TOKEN):
+          #    Must be the tenant-scoped client-credentials token (TENANT_ACCESS_TOKEN) —
+          #    proves the caller has access to deploy into the specific tenant.
+          WDCLI_AUTH: ${{ secrets.WD_DEV_TOKEN }}
+          WDCLI_TENANT_TOKEN: ${{ env.TENANT_ACCESS_TOKEN }}
           WDCLI_ORG_UUID: ${{ secrets.WD_ORG_UUID }}
           WDCLI_APP_UUID: cfd75927b808c1dd99c54b1c7096a142
           WDCLI_VERSION_ID: ${{ env.VERSION_ID }}
