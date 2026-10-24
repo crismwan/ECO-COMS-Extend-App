@@ -220,21 +220,27 @@ jobs:
             console.log('Patch 2 (force DevTools path): OK');
           "
 
-          # Patch 3: commands/index.js — log the actual HTTP error from DevTools
+          # Patch 3: metered-command-C1Iau1Kk.js
+          #   Bypass getUserAccounts (OctopaAS getOrganizations) entirely when
+          #   WDCLI_ORG_UUID is set. getOrganizations needs the OctopaAS token,
+          #   but for deploy we've already restored the PKCE token into wcpAccessToken.
+          #   We know the org from the diagnostic run: 489e5b41-1b3b-4712-9a7e-46ac6456977c
           node -e "
             const fs = require('fs');
-            const f = process.env.CMDS;
+            const f = process.env.METERED;
             let c = fs.readFileSync(f, 'utf8');
-            const old = 'catch(n){a.Output.error(\`Error deploying \${e.versionId} to \${e.tenant.lookupAlias}.\`);const t=n instanceof Error&&\"commonRequestID\"in n?n.commonRequestID:\"\";return{success:!1,versionId:e.versionId,commonRequestId:t,appId:e.appUuid,buildId:\"\",asorRegistrationSucceeded:!1,asorRegistrationErrors:[]}}';
-            const rep = 'catch(n){console.error(\"[DIAG] DevTools deploy error:\",n&&n.message,\"status:\",n&&n.status,\"body:\",JSON.stringify(n&&(n.response||n.body||n.data)));a.Output.error(\`Error deploying \${e.versionId} to \${e.tenant.lookupAlias}.\`);const t=n instanceof Error&&\"commonRequestID\"in n?n.commonRequestID:\"\";return{success:!1,versionId:e.versionId,commonRequestId:t,appId:e.appUuid,buildId:\"\",asorRegistrationSucceeded:!1,asorRegistrationErrors:[]}}';
-            if (!c.includes(old)) { console.error('WARN: catch patch target not found (skipping)'); }
-            else { fs.writeFileSync(f, c.replace(old, rep)); console.log('Patch 3 (log DevTools error): OK'); }
+            const old = 'async getUserAccounts(t){const n=await L(t);return Ee(t,{accessToken:n,version:\"v2\"}).getOrganizations()}';
+            const rep = 'async getUserAccounts(t){if(process.env.WDCLI_ORG_UUID){const uuid=process.env.WDCLI_ORG_UUID;console.error(\"[CI] Bypassing getOrganizations, using WDCLI_ORG_UUID:\",uuid);return{total:1,userUuid:\"ci\",userOrganizations:[{organizationUuid:uuid,organizationShortId:\"vmzvxm\",organizationName:\"The University Of British Columbia\",organizationType:\"Customer\",tenantPrefix:\"ubc\",associationType:\"PRIMARY\",region:\"scylla:us\"}]};}const n=await L(t);return Ee(t,{accessToken:n,version:\"v2\"}).getOrganizations()}';
+            if (!c.includes(old)) { console.error('ERROR: getUserAccounts patch target not found'); process.exit(1); }
+            fs.writeFileSync(f, c.replace(old, rep));
+            console.log('Patch 3 (bypass getOrganizations): OK');
           "
 
       - name: Deploy to ubc_wcpdev2 via wdcli
         env:
           TENANT_ALIAS: ubc_wcpdev2
           WDCLI_TENANT_TOKEN: ${{ env.TENANT_ACCESS_TOKEN }}
+          WDCLI_ORG_UUID: ${{ secrets.WD_ORG_UUID }}
           WDCLI_CLIENT_ID: ${{ secrets.WD_CLIENT_ID }}
           WDCLI_CLIENT_SECRET: ${{ secrets.WD_CLIENT_SECRET }}
         run: |
