@@ -277,6 +277,15 @@ jobs:
           node /tmp/patch8.js
           node /tmp/patch9.js
 
+          # Patch 10: commands/index.js
+          #   Add 'org-id' header to the DevTools deploy POST.
+          #   ServiceApiConnector.execute() destructures {baseURL,params,configHeaders,...}
+          #   but NOT orgUuid, so the org-id header is never set by the generic post().
+          #   DevToolsConnector.getHeaders() sets org-id but is only called by named methods.
+          #   Fix: explicitly include 'org-id': e.orgUuid in the headers object passed to post().
+          echo "CmNvbnN0IGZzID0gcmVxdWlyZSgnZnMnKTsKY29uc3QgZiA9IHByb2Nlc3MuZW52LkNNRFM7CmxldCBjID0gZnMucmVhZEZpbGVTeW5jKGYsICd1dGY4Jyk7CmNvbnN0IE9MRCA9ICdjb25uZWN0b3IucG9zdChgL2FwcHMvJHtlLmFwcFV1aWR9L2RlcGxveWAse3ZlcnNpb25JZDplLnZlcnNpb25JZCx0ZW5hbnRBbGlhczplLnRlbmFudC50ZW5hbnRBbGlhc30se29yZ1V1aWQ6ZS5vcmdVdWlkLGhlYWRlcnM6eyJEZXBsb3ktVGVuYW50LUF1dGhvcml6YXRpb24iOmBCZWFyZXIgJHtlLnRlbmFudEFjY2Vzc1Rva2VufWB9fSknOwpjb25zdCBSRVAgPSAnY29ubmVjdG9yLnBvc3QoYC9hcHBzLyR7ZS5hcHBVdWlkfS9kZXBsb3lgLHt2ZXJzaW9uSWQ6ZS52ZXJzaW9uSWQsdGVuYW50QWxpYXM6ZS50ZW5hbnQudGVuYW50QWxpYXN9LHtvcmdVdWlkOmUub3JnVXVpZCxoZWFkZXJzOnsiRGVwbG95LVRlbmFudC1BdXRob3JpemF0aW9uIjpgQmVhcmVyICR7ZS50ZW5hbnRBY2Nlc3NUb2tlbn1gLCJvcmctaWQiOmUub3JnVXVpZH19KSc7CmlmICghYy5pbmNsdWRlcyhPTEQpKSB7IGNvbnNvbGUuZXJyb3IoJ0VSUk9SOiBkZXBsb3lBcHBsaWNhdGlvbiBwYXRjaCB0YXJnZXQgbm90IGZvdW5kJyk7IHByb2Nlc3MuZXhpdCgxKTsgfQpmcy53cml0ZUZpbGVTeW5jKGYsIGMucmVwbGFjZShPTEQsIFJFUCkpOwpjb25zb2xlLmxvZygnUGF0Y2ggMTAgKGFkZCBvcmctaWQgaGVhZGVyIHRvIGRlcGxveSBQT1NUKTogT0snKTsK" | base64 -d > /tmp/patch10.js
+          node /tmp/patch10.js
+
       - name: Deploy to ubc_wcpdev2 via wdcli
         env:
           TENANT_ALIAS: ubc_wcpdev2
