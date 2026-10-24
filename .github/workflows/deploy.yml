@@ -150,6 +150,7 @@ jobs:
           GATEWAY="api.${REGION_CODE}.wcp.workday.com"
           echo "Derived API gateway: ${GATEWAY}"
 
+          mkdir -p /tmp/diag
           echo "=== Diagnosing token types ==="
           # Decode JWT payload for both tokens to understand what they contain
           decode_jwt() {
@@ -162,8 +163,6 @@ jobs:
             local padded="${payload}$(python3 -c "print('='*${pad})")"
             echo "${padded}" | base64 -d 2>/dev/null || echo "decode_failed"
           }
-
-          mkdir -p /tmp/diag
 
           echo "--- Developer token claims ---"
           DEV_CLAIMS=$(decode_jwt "${DEV_TOKEN}")
@@ -301,12 +300,11 @@ jobs:
 
           # Write results summary to file for artifact upload
           {
-            echo "ATTEMPT_1: ${CODE1} - ${BODY1}"
-            echo "ATTEMPT_2: ${CODE2} - ${BODY2}"
-            echo "ATTEMPT_3: ${CODE3} - ${BODY3}"
-            echo "ATTEMPT_4: ${CODE4} - ${BODY4}"
-          } > /tmp/diag/attempt_results.txt
-          cp /tmp/diag/* "$GITHUB_WORKSPACE/" 2>/dev/null || true
+            echo "ATTEMPT_1: ${CODE1:-n/a} - ${BODY1:-n/a}"
+            echo "ATTEMPT_2: ${CODE2:-n/a} - ${BODY2:-n/a}"
+            echo "ATTEMPT_3: ${CODE3:-n/a} - ${BODY3:-n/a}"
+            echo "ATTEMPT_4: ${CODE4:-n/a} - ${BODY4:-n/a}"
+          } >> /tmp/diag/attempt_results.txt
           exit 1
 
       - name: Upload diagnostic artifacts
@@ -314,8 +312,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: deploy-diagnostics
-          path: |
-            dev_token_claims.json
-            tenant_token_claims.json
-            attempt_results.txt
+          path: /tmp/diag/
           if-no-files-found: ignore
