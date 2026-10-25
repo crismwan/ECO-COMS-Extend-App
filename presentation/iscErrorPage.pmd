@@ -19,11 +19,6 @@
           "podId": "ubcLogo"
         },
         {
-          "type": "richText",
-          "id": "ubcPageHeader",
-          "value": "<span style=\"display:block;border-top:3px solid #002145;padding-top:8px;margin-bottom:2px;\"><span style=\"color:#002145;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;font-family:sans-serif;\">University of British Columbia</span><span style=\"color:#6b7280;font-size:10px;font-weight:400;\"> — ECO-COMS</span></span>"
-        },
-        {
           "type": "readOnlyText",
           "id": "iscErrorMessage",
           "value": "This page is only available to ISC Security Administrators. If you have any questions, please raise an Incident Ticket with 'ISC Service Delivery'."

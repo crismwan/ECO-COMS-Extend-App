@@ -136,8 +136,8 @@
         },
         {
           "type": "richText",
-          "id": "ubcPageHeader",
-          "value": "<span style=\"display:block;border-top:3px solid #002145;padding-top:8px;margin-bottom:2px;\"><span style=\"color:#002145;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;font-family:sans-serif;\">University of British Columbia</span><span style=\"color:#6b7280;font-size:10px;font-weight:400;\"> — DELETE ROLE REQUEST</span></span>"
+          "id": "ubcPageContext",
+          "value": "<span style=\"display:block;color:#0055B7;font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;font-family:Arial,sans-serif;padding-bottom:8px;\">Delete Role Request</span>"
         },
         {
           "type": "section",
