@@ -40,10 +40,18 @@
         "authType": "sso",
         "exclude": "<% empty(queryParams.roleId) %>",
         "failOnStatusCodes": [
-          { "code": 400 },
-          { "code": 403 },
-          { "code": 429 },
-          { "code": 500 }
+          {
+            "code": 400
+          },
+          {
+            "code": 403
+          },
+          {
+            "code": 429
+          },
+          {
+            "code": 500
+          }
         ]
       },
       {
@@ -57,23 +65,52 @@
             "outboundPath": "timestamp",
             "value": "<% date:now().format(\"yyyy-MM-dd'T'HH:mm:ss'Z'\") %>"
           },
-          { "outboundPath": "objectType", "value": "COMSAssignableRole" },
-          { "outboundPath": "action", "value": "DELETE" },
-          { "outboundPath": "worker", "value": "<% selectedWorker.id %>" },
-          { "outboundPath": "application", "value": "" },
-          { "outboundPath": "coReferenceId", "value": "<% queryParams.roleId ?? '' %>" },
-          { "outboundPath": "coName", "value": "<% selectedRoleDisplay.value ?? '' %>" },
+          {
+            "outboundPath": "objectType",
+            "value": "COMSAssignableRole"
+          },
+          {
+            "outboundPath": "action",
+            "value": "DELETE"
+          },
+          {
+            "outboundPath": "worker",
+            "value": "<% selectedWorker.id %>"
+          },
+          {
+            "outboundPath": "application",
+            "value": ""
+          },
+          {
+            "outboundPath": "coReferenceId",
+            "value": "<% queryParams.roleId ?? '' %>"
+          },
+          {
+            "outboundPath": "coName",
+            "value": "<% selectedRoleDisplay.value ?? '' %>"
+          },
           {
             "outboundPath": "details",
             "value": "<% 'Assignable role deleted: ' + (selectedRoleDisplay.value ?? '') + ' (id: ' + (queryParams.roleId ?? '') + ')' %>"
           },
-          { "outboundPath": "triggeredBy", "value": "<% selectedWorker.descriptor %>" }
+          {
+            "outboundPath": "triggeredBy",
+            "value": "<% selectedWorker.descriptor %>"
+          }
         ],
         "failOnStatusCodes": [
-          { "code": 400 },
-          { "code": 403 },
-          { "code": 429 },
-          { "code": 500 }
+          {
+            "code": 400
+          },
+          {
+            "code": 403
+          },
+          {
+            "code": 429
+          },
+          {
+            "code": 500
+          }
         ],
         "exclude": "<% empty(queryParams.roleId) %>"
       }
@@ -104,7 +141,9 @@
                 {
                   "type": "button",
                   "label": "Home",
-                  "taskReference": { "taskId": "home" },
+                  "taskReference": {
+                    "taskId": "home"
+                  },
                   "action": "AUXILIARY"
                 }
               ]
@@ -116,13 +155,18 @@
                 {
                   "type": "button",
                   "label": "Assignable Role Manager",
-                  "taskReference": { "taskId": "assignableRoleManager" },
+                  "taskReference": {
+                    "taskId": "assignableRoleManager"
+                  },
                   "action": "AUXILIARY"
                 }
               ]
             }
           ],
-          "columnWidthRatios": [0.3, 0.7]
+          "columnWidthRatios": [
+            0.3,
+            0.7
+          ]
         },
         {
           "type": "readOnlyText",
@@ -285,7 +329,6 @@
         {
           "type": "fieldSet",
           "id": "confirmDeleteSection",
-          "label": "Confirm Delete",
           "visible": "<% !empty(queryParams.roleId) %>",
           "children": [
             {
@@ -300,7 +343,14 @@
               "id": "deleteWarning",
               "value": "Warning: This action permanently deletes the selected role request and cannot be undone. Click OK to confirm."
             }
-          ]
+          ],
+          "title": "Confirm Delete",
+          "layout": {
+            "density": "medium",
+            "alignment": "left",
+            "horizontalSizing": "fixed",
+            "labelPosition": "side_align_left"
+          }
         }
       ]
     },

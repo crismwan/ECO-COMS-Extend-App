@@ -274,7 +274,6 @@
         {
           "type": "fieldSet",
           "id": "actionFieldSet",
-          "label": "ISC Action",
           "children": [
             {
               "type": "dropdown",
@@ -323,12 +322,18 @@
                 }
               ]
             }
-          ]
+          ],
+          "title": "ISC Action",
+          "layout": {
+            "density": "medium",
+            "alignment": "left",
+            "horizontalSizing": "fixed",
+            "labelPosition": "side_align_left"
+          }
         },
         {
           "type": "fieldSet",
           "id": "roleDetailSection",
-          "label": "Role Details",
           "children": [
             {
               "type": "text",
@@ -374,7 +379,14 @@
                 }
               ]
             }
-          ]
+          ],
+          "title": "Role Details",
+          "layout": {
+            "density": "medium",
+            "alignment": "left",
+            "horizontalSizing": "fixed",
+            "labelPosition": "side_align_left"
+          }
         }
       ]
     },

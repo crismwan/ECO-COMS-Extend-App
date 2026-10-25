@@ -172,7 +172,6 @@
         {
           "type": "fieldSet",
           "id": "aboutFieldSet",
-          "label": "About this page",
           "collapsible": true,
           "children": [
             {
@@ -180,7 +179,14 @@
               "id": "pageDescription",
               "value": "Add a new Shell Org Pattern for your application. Patterns define the CO naming structure used to create Custom Organizations in Workday. The pattern name is auto-generated from the fields below. A duplicate check is performed before submission."
             }
-          ]
+          ],
+          "title": "About this page",
+          "layout": {
+            "density": "medium",
+            "alignment": "left",
+            "horizontalSizing": "stretch",
+            "labelPosition": "top"
+          }
         },
         {
           "type": "dropdown",
@@ -245,7 +251,6 @@
         {
           "type": "fieldSet",
           "id": "patternFields",
-          "label": "Pattern Attributes",
           "collapsible": false,
           "children": [
             {
@@ -302,7 +307,14 @@
               "value": "<% flowVariables.attribute5 ?? '' %>",
               "placeholder": "e.g. 2026S"
             }
-          ]
+          ],
+          "title": "Pattern Attributes",
+          "layout": {
+            "density": "medium",
+            "alignment": "left",
+            "horizontalSizing": "fixed",
+            "labelPosition": "side_align_left"
+          }
         }
       ]
     },

@@ -25,11 +25,6 @@
       "type": "areaLayout",
       "primaryArea": [
         {
-          "type": "richText",
-          "id": "ubcPageHeader",
-          "value": "<span style=\"color:#002145;font-size:11px;font-weight:700;letter-spacing:1px;\">UNIVERSITY OF BRITISH COLUMBIA \u2014 ADMIN PROVISIONING</span>"
-        },
-        {
           "type": "section",
           "horizontal": true,
           "children": [
@@ -92,7 +87,6 @@
         {
           "type": "fieldSet",
           "id": "aaaRolesSection",
-          "label": "AAA Role Requests",
           "collapsible": true,
           "collapsed": false,
           "children": [
@@ -148,7 +142,7 @@
                   "sortableAndFilterable": "true",
                   "cellTemplate": {
                     "type": "richText",
-                    "value": "<% role.status == 'Pending ISC Review' ? '<span style=\"color:#b45309;font-weight:600\">\u23f3 Pending ISC Review</span>' : role.status == 'Approved' ? '<span style=\"color:#15803d;font-weight:600\">\u2713 Approved</span>' : role.status == 'Inactive' ? '<span style=\"color:#6b7280;font-weight:600\">\u25cb Inactive</span>' : role.status ?? '' %>"
+                    "value": "<% role.status == 'Pending ISC Review' ? '<span style=\"color:#b45309;font-weight:600\">⏳ Pending ISC Review</span>' : role.status == 'Approved' ? '<span style=\"color:#15803d;font-weight:600\">✓ Approved</span>' : role.status == 'Inactive' ? '<span style=\"color:#6b7280;font-weight:600\">○ Inactive</span>' : role.status ?? '' %>"
                   }
                 },
                 {
@@ -230,7 +224,14 @@
                 }
               ]
             }
-          ]
+          ],
+          "title": "AAA Role Requests",
+          "layout": {
+            "density": "medium",
+            "alignment": "left",
+            "horizontalSizing": "stretch",
+            "labelPosition": "top"
+          }
         }
       ]
     },

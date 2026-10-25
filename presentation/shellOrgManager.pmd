@@ -87,11 +87,6 @@
       "type": "areaLayout",
       "primaryArea": [
         {
-          "type": "richText",
-          "id": "ubcPageHeader",
-          "value": "<span style=\"color:#002145;font-size:11px;font-weight:700;letter-spacing:1px;\">UNIVERSITY OF BRITISH COLUMBIA \u2014 SHELL ORG MANAGER</span>"
-        },
-        {
           "type": "section",
           "horizontal": false,
           "children": [
@@ -140,7 +135,6 @@
             {
               "type": "fieldSet",
               "id": "aboutFieldSet",
-              "label": "About this page",
               "collapsible": true,
               "children": [
                 {
@@ -148,7 +142,14 @@
                   "id": "pageDescriptionText",
                   "value": "View, add and inactivate Custom Organization shell org patterns for your assigned application. You will only see and be able to manage shell organizations of the org type and subtype defined for your application (e.g. X:CLW / X:Shell for Clockwork). You cannot see or affect other applications' shell organizations. To inactivate a pattern, change its Status to Inactive and save. Edit of other fields is intentionally disabled; add a new pattern instead if the meaning needs to change."
                 }
-              ]
+              ],
+              "title": "About this page",
+              "layout": {
+                "density": "medium",
+                "alignment": "left",
+                "horizontalSizing": "stretch",
+                "labelPosition": "top"
+              }
             },
             {
               "type": "dropdown",

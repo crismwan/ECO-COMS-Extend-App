@@ -277,7 +277,6 @@
         {
           "type": "fieldSet",
           "id": "pendingRolesSection",
-          "label": "1. Pending ISC Review",
           "children": [
             {
               "type": "readOnlyText",
@@ -438,12 +437,18 @@
                 }
               ]
             }
-          ]
+          ],
+          "title": "1. Pending ISC Review",
+          "layout": {
+            "density": "medium",
+            "alignment": "left",
+            "horizontalSizing": "fixed",
+            "labelPosition": "side_align_left"
+          }
         },
         {
           "type": "fieldSet",
           "id": "newRoleFieldSet",
-          "label": "2. Submit New Assignable Role Request",
           "children": [
             {
               "type": "readOnlyText",
@@ -577,7 +582,14 @@
                 }
               ]
             }
-          ]
+          ],
+          "title": "2. Submit New Assignable Role Request",
+          "layout": {
+            "density": "medium",
+            "alignment": "left",
+            "horizontalSizing": "fixed",
+            "labelPosition": "side_align_left"
+          }
         }
       ]
     },
