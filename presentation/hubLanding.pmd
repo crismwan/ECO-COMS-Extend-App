@@ -15,24 +15,6 @@
       "primaryArea": [
         {
           "type": "fieldSet",
-          "id": "ubcBrandingHeader",
-          "collapsible": false,
-          "children": [
-            {
-              "type": "pod",
-              "podId": "ubcLogo"
-            }
-          ],
-          "title": " ",
-          "layout": {
-            "density": "medium",
-            "alignment": "left",
-            "horizontalSizing": "stretch",
-            "labelPosition": "top"
-          }
-        },
-        {
-          "type": "fieldSet",
           "id": "shellOrgSection",
           "collapsible": true,
           "collapsed": false,
