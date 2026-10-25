@@ -115,17 +115,16 @@
           "enabled": false,
           "value": "<% flowVariables.effectiveDate %>"
         }
-      ],
-      "primaryArea": []
+      ]
     },
     "footer": {
+      "type": "footer",
       "children": [
         {
           "type": "pod",
           "podId": "ecoComsFooter"
         }
-      ],
-      "type": "footer"
+      ]
     },
     "pageType": "edit"
   }

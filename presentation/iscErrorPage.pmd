@@ -1,9 +1,7 @@
 {
   "id": "iscErrorPage",
   "endPoints": [],
-  "outboundData": {
-    "outboundEndPoints": []
-  },
+  "outboundData": {"outboundEndPoints": []},
   "presentation": {
     "headerSize": "STANDARD",
     "title": {
@@ -19,17 +17,13 @@
           "id": "iscErrorMessage",
           "value": "This page is only available to ISC Security Administrators. If you have any questions, please raise an Incident Ticket with 'ISC Service Delivery'."
         }
-      ],
-      "primaryArea": []
+      ]
     },
     "footer": {
+      "type": "footer",
       "children": [
-        {
-          "type": "pod",
-          "podId": "ecoComsFooter"
-        }
-      ],
-      "type": "footer"
+        {"type": "richText", "enabled": "false", "value": "Powered By Workday Extend"}
+      ]
     }
   }
 }

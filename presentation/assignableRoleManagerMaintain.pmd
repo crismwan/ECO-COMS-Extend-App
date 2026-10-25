@@ -274,6 +274,7 @@
         {
           "type": "fieldSet",
           "id": "actionFieldSet",
+          "label": "ISC Action",
           "children": [
             {
               "type": "dropdown",
@@ -322,18 +323,12 @@
                 }
               ]
             }
-          ],
-          "title": "ISC Action",
-          "layout": {
-            "density": "medium",
-            "alignment": "left",
-            "horizontalSizing": "stretch",
-            "labelPosition": "top"
-          }
+          ]
         },
         {
           "type": "fieldSet",
           "id": "roleDetailSection",
+          "label": "Role Details",
           "children": [
             {
               "type": "text",
@@ -379,26 +374,19 @@
                 }
               ]
             }
-          ],
-          "title": "Role Details",
-          "layout": {
-            "density": "medium",
-            "alignment": "left",
-            "horizontalSizing": "stretch",
-            "labelPosition": "top"
-          }
+          ]
         }
-      ],
-      "primaryArea": []
+      ]
     },
     "footer": {
+      "type": "footer",
       "children": [
         {
-          "type": "pod",
-          "podId": "ecoComsFooter"
+          "type": "richText",
+          "enabled": "false",
+          "value": "Powered By Workday Extend"
         }
-      ],
-      "type": "footer"
+      ]
     }
   },
   "onSubmit": "<%\n  let valid = true;\n  if (empty(maintainAction.value)) {\n    maintainAction.setError('Please select an action.');\n    valid = false;\n  }\n  if (maintainAction.value == 'Approve') {\n    if (empty(workdayRoleDropdown.value)) {\n      workdayRoleDropdown.setError('Please select a Workday Assignable Role to approve.');\n      valid = false;\n    }\n  }\n  if (maintainAction.value == 'Deny') {\n    if (empty(denialReason.value)) {\n      denialReason.setError('Denial Reason is required when denying a role.');\n      valid = false;\n    }\n  }\n  valid;\n%>"

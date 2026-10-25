@@ -59,6 +59,11 @@
       "horizontal": false,
       "children": [
         {
+          "type": "richText",
+          "id": "ubcPageHeader",
+          "value": "<span style=\"color:#002145;font-size:11px;font-weight:700;letter-spacing:1px;\">UNIVERSITY OF BRITISH COLUMBIA \u2014 PENDING ISC REQUESTS</span>"
+        },
+        {
           "type": "section",
           "horizontal": true,
           "children": [
@@ -305,17 +310,17 @@
             }
           ]
         }
-      ],
-      "primaryArea": []
+      ]
     },
     "footer": {
+      "type": "footer",
       "children": [
         {
-          "type": "pod",
-          "podId": "ecoComsFooter"
+          "type": "richText",
+          "enabled": "false",
+          "value": "Powered By Workday Extend"
         }
-      ],
-      "type": "footer"
+      ]
     }
   }
 }

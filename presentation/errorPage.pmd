@@ -39,18 +39,8 @@
           "label": "Error Message",
           "value": "Something went wrong. Please try again, or contact your COMS Administrator if the problem persists."
         }
-      ],
-      "primaryArea": []
+      ]
     },
-    "pageType": "edit",
-    "footer": {
-      "children": [
-        {
-          "type": "pod",
-          "podId": "ecoComsFooter"
-        }
-      ],
-      "type": "footer"
-    }
+    "pageType": "edit"
   }
 }

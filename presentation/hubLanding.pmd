@@ -4,16 +4,41 @@
     "ManageCOMSShellOrgs"
   ],
   "presentation": {
+    "headerSize": "VPS_DEFAULT",
     "title": {
       "type": "title",
-      "label": "ECO-COMS"
+      "label": "ECO-COMS",
+      "enabled": false
     },
     "body": {
       "type": "areaLayout",
       "primaryArea": [
         {
           "type": "fieldSet",
+          "id": "ubcBrandingHeader",
+          "label": " ",
+          "collapsible": false,
+          "children": [
+            {
+              "type": "pod",
+              "podId": "ubcLogo"
+            },
+            {
+              "type": "richText",
+              "id": "ubcSubtitle",
+              "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700;letter-spacing:2px;\">CUSTOM ORGANIZATION MANAGEMENT SYSTEM</span>"
+            },
+            {
+              "type": "richText",
+              "id": "ubcIntroText",
+              "value": "<span style=\"color:#444444;font-size:13px;\">ECO-COMS is the University of British Columbia tool for managing shell org patterns and Assignable Role requests in Workday. Use the sections below to navigate to your task. Your access level determines which sections are active for you. For help, contact the <b>ISC team</b>.</span>"
+            }
+          ]
+        },
+        {
+          "type": "fieldSet",
           "id": "shellOrgSection",
+          "label": "Shell Org Manager",
           "collapsible": true,
           "collapsed": false,
           "children": [
@@ -62,18 +87,12 @@
                 0.5
               ]
             }
-          ],
-          "title": "Shell Org Manager",
-          "layout": {
-            "density": "medium",
-            "alignment": "left",
-            "horizontalSizing": "stretch",
-            "labelPosition": "top"
-          }
+          ]
         },
         {
           "type": "fieldSet",
           "id": "assignableRoleSection",
+          "label": "Assignable Role Manager",
           "collapsible": true,
           "collapsed": false,
           "children": [
@@ -138,18 +157,12 @@
                 0.33
               ]
             }
-          ],
-          "title": "Assignable Role Manager",
-          "layout": {
-            "density": "medium",
-            "alignment": "left",
-            "horizontalSizing": "stretch",
-            "labelPosition": "top"
-          }
+          ]
         },
         {
           "type": "fieldSet",
           "id": "adminSection",
+          "label": "Administration — ISC Only",
           "collapsible": true,
           "collapsed": false,
           "children": [
@@ -214,18 +227,12 @@
                 0.33
               ]
             }
-          ],
-          "title": "Administration — ISC Only",
-          "layout": {
-            "density": "medium",
-            "alignment": "left",
-            "horizontalSizing": "stretch",
-            "labelPosition": "top"
-          }
+          ]
         },
         {
           "type": "fieldSet",
           "id": "auditLogSection",
+          "label": "Audit Log",
           "collapsible": true,
           "collapsed": false,
           "children": [
@@ -258,25 +265,18 @@
                 1
               ]
             }
-          ],
-          "title": "Audit Log",
-          "layout": {
-            "density": "medium",
-            "alignment": "left",
-            "horizontalSizing": "stretch",
-            "labelPosition": "top"
-          }
+          ]
         }
       ]
     },
     "footer": {
+      "type": "footer",
       "children": [
         {
           "type": "pod",
           "podId": "ecoComsFooter"
         }
-      ],
-      "type": "footer"
+      ]
     },
     "pageType": "view"
   }

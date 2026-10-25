@@ -90,9 +90,11 @@
   },
   "onSubmit": "<%\n  let valid = true;\n  if (!comsValidations.isValidSubject(attribute1.value)) {\n    attribute1.setError('Subject must be exactly 4 uppercase letters only (e.g. MATH, CPSC, COMM).');\n    valid = false;\n  }\n  if (!comsValidations.isValidCourse(attribute2.value)) {\n    attribute2.setError('Course must be 4 uppercase letters followed by a colon and exactly 3 digits, with an optional letter suffix (e.g. COMM:300, COMM:300A, COMM_V:300, COMM_V:300A).');\n    valid = false;\n  }\n  if (!comsValidations.isValidSection(attribute3.value, attribute2.value ?? '')) {\n    attribute3.setError(comsValidations.errorSection(attribute2.value ?? ''));\n    valid = false;\n  }\n  if (!comsValidations.isValidAcademicPeriod(attribute5.value)) {\n    attribute5.setError('Academic Period must be the current year (2026) or next year (2027) followed by S, W1, or W2 only (e.g. 2026S, 2026W1, 2027W2).');\n    valid = false;\n  }\n  if (!comsValidations.isWeekday(effectiveDate.value)) {\n    effectiveDate.setError('Effective Date must be a weekday. Saturdays and Sundays are not allowed.');\n    valid = false;\n  }\n  if (!comsValidations.isCurrentOrFutureYear(effectiveDate.value)) {\n    effectiveDate.setError('Effective Date year must be 2026 or 2027. Past or future years beyond next year are not allowed.');\n    valid = false;\n  }\n  valid;\n%>",
   "presentation": {
+    "headerSize": "VPS_DEFAULT",
     "title": {
       "type": "title",
-      "label": "ECO-COMS: New Shell Org Pattern"
+      "label": "ECO-COMS: New Shell Org Pattern",
+      "enabled": false
     },
     "body": {
       "type": "section",
@@ -170,6 +172,7 @@
         {
           "type": "fieldSet",
           "id": "aboutFieldSet",
+          "label": "About this page",
           "collapsible": true,
           "children": [
             {
@@ -177,14 +180,7 @@
               "id": "pageDescription",
               "value": "Add a new Shell Org Pattern for your application. Patterns define the CO naming structure used to create Custom Organizations in Workday. The pattern name is auto-generated from the fields below. A duplicate check is performed before submission."
             }
-          ],
-          "title": "About this page",
-          "layout": {
-            "density": "medium",
-            "alignment": "left",
-            "horizontalSizing": "stretch",
-            "labelPosition": "top"
-          }
+          ]
         },
         {
           "type": "dropdown",
@@ -249,6 +245,7 @@
         {
           "type": "fieldSet",
           "id": "patternFields",
+          "label": "Pattern Attributes",
           "collapsible": false,
           "children": [
             {
@@ -305,26 +302,18 @@
               "value": "<% flowVariables.attribute5 ?? '' %>",
               "placeholder": "e.g. 2026S"
             }
-          ],
-          "title": "Pattern Attributes",
-          "layout": {
-            "density": "medium",
-            "alignment": "left",
-            "horizontalSizing": "stretch",
-            "labelPosition": "top"
-          }
+          ]
         }
-      ],
-      "primaryArea": []
+      ]
     },
     "footer": {
+      "type": "footer",
       "children": [
         {
           "type": "pod",
           "podId": "ecoComsFooter"
         }
-      ],
-      "type": "footer"
+      ]
     },
     "pageType": "edit"
   }

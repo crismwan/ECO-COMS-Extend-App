@@ -13,14 +13,21 @@
     }
   ],
   "presentation": {
+    "headerSize": "VPS_DEFAULT",
     "title": {
       "type": "title",
-      "label": "ECO-COMS: Audit Log Viewer"
+      "label": "ECO-COMS: Audit Log Viewer",
+      "enabled": false
     },
     "body": {
       "type": "section",
       "horizontal": false,
       "children": [
+        {
+          "type": "richText",
+          "id": "ubcPageHeader",
+          "value": "<span style=\"color:#002145;font-size:11px;font-weight:700;letter-spacing:1px;\">UNIVERSITY OF BRITISH COLUMBIA \u2014 AUDIT LOG</span>"
+        },
         {
           "type": "section",
           "horizontal": true,
@@ -50,6 +57,7 @@
         {
           "type": "fieldSet",
           "id": "aboutFieldSet",
+          "label": "About this page",
           "collapsible": true,
           "children": [
             {
@@ -57,26 +65,18 @@
               "id": "pageDescriptionText",
               "value": "Immutable, searchable log of every COMS-initiated Custom Organization change (Create / Inactivate). Replaces the Log Tab in the legacy MSC Tool. Records cannot be deleted."
             }
-          ],
-          "title": "About this page",
-          "layout": {
-            "density": "medium",
-            "alignment": "left",
-            "horizontalSizing": "stretch",
-            "labelPosition": "top"
-          }
+          ]
         }
-      ],
-      "primaryArea": []
+      ]
     },
     "footer": {
+      "type": "footer",
       "children": [
         {
           "type": "pod",
           "podId": "ecoComsFooter"
         }
-      ],
-      "type": "footer"
+      ]
     },
     "tabs": [
       {

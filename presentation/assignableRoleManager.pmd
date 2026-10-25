@@ -234,6 +234,7 @@
         {
           "type": "fieldSet",
           "id": "pendingRolesSection",
+          "label": "1. Pending ISC Review",
           "children": [
             {
               "type": "readOnlyText",
@@ -383,18 +384,12 @@
                 }
               ]
             }
-          ],
-          "title": "1. Pending ISC Review",
-          "layout": {
-            "density": "medium",
-            "alignment": "left",
-            "horizontalSizing": "stretch",
-            "labelPosition": "top"
-          }
+          ]
         },
         {
           "type": "fieldSet",
           "id": "addNewRoleSection",
+          "label": "2. Submit New Assignable Role Request",
           "children": [
             {
               "type": "readOnlyText",
@@ -579,26 +574,18 @@
                 }
               ]
             }
-          ],
-          "title": "2. Submit New Assignable Role Request",
-          "layout": {
-            "density": "medium",
-            "alignment": "left",
-            "horizontalSizing": "stretch",
-            "labelPosition": "top"
-          }
+          ]
         }
-      ],
-      "primaryArea": []
+      ]
     },
     "footer": {
+      "type": "footer",
       "children": [
         {
           "type": "pod",
           "podId": "ecoComsFooter"
         }
-      ],
-      "type": "footer"
+      ]
     }
   },
   "securityDomains": [

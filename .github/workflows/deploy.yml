@@ -119,19 +119,9 @@ jobs:
           set -euxo pipefail
 
           echo "=== Running wdcli app upload ==="
-          # Capture ALL stdout+stderr; || true so validation warnings don't abort the step
-          echo "." | wdcli app upload --verbose 2>&1 | tee /tmp/upload-output.txt || true
-
-          echo ""
-          echo "=== Full upload output (${#} lines) ==="
+          echo "." | wdcli app upload 2>&1 | tee /tmp/upload-output.txt || true
+          echo "=== Upload output ==="
           cat /tmp/upload-output.txt
-
-          echo ""
-          echo "=== Validation errors / warnings summary ==="
-          grep -iE "(error|warning|invalid|missing|specify|failed|validation)" /tmp/upload-output.txt || echo "(none found)"
-
-          echo ""
-          echo "=== Upload line count: $(wc -l < /tmp/upload-output.txt) lines captured ==="
 
           # After upload, get the latest version ID via wdcli app versions
           echo "=== Fetching latest version ID ==="
