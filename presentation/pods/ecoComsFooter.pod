@@ -4,7 +4,7 @@
     "template": {
       "type": "richText",
       "enabled": "false",
-      "value": "<span style=\"color:#002145;font-weight:700;\">ECO-COMS</span> <span style=\"color:#6b7280;\">|</span> <span style=\"color:#002145;\">University of British Columbia</span> <span style=\"color:#6b7280;\">\u00a9</span> <span style=\"color:#0055B7;\">Powered by Workday Extend</span>"
+      "value": "<span style=\"display:block;border-top:1px solid #e5e7eb;padding-top:8px;\"><span style=\"color:#002145;font-weight:700;font-size:11px;\">ECO-COMS</span><span style=\"color:#6b7280;font-size:11px;\"> — </span><span style=\"color:#002145;font-size:11px;\">University of British Columbia</span><span style=\"color:#d1d5db;font-size:11px;\"> · </span><span style=\"color:#0055B7;font-size:11px;\">Powered by Workday Extend</span></span>"
     }
   }
 }

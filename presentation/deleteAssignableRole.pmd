@@ -40,10 +40,18 @@
         "authType": "sso",
         "exclude": "<% empty(queryParams.roleId) %>",
         "failOnStatusCodes": [
-          { "code": 400 },
-          { "code": 403 },
-          { "code": 429 },
-          { "code": 500 }
+          {
+            "code": 400
+          },
+          {
+            "code": 403
+          },
+          {
+            "code": 429
+          },
+          {
+            "code": 500
+          }
         ]
       },
       {
@@ -57,23 +65,52 @@
             "outboundPath": "timestamp",
             "value": "<% date:now().format(\"yyyy-MM-dd'T'HH:mm:ss'Z'\") %>"
           },
-          { "outboundPath": "objectType", "value": "COMSAssignableRole" },
-          { "outboundPath": "action", "value": "DELETE" },
-          { "outboundPath": "worker", "value": "<% selectedWorker.id %>" },
-          { "outboundPath": "application", "value": "" },
-          { "outboundPath": "coReferenceId", "value": "<% queryParams.roleId ?? '' %>" },
-          { "outboundPath": "coName", "value": "<% selectedRoleDisplay.value ?? '' %>" },
+          {
+            "outboundPath": "objectType",
+            "value": "COMSAssignableRole"
+          },
+          {
+            "outboundPath": "action",
+            "value": "DELETE"
+          },
+          {
+            "outboundPath": "worker",
+            "value": "<% selectedWorker.id %>"
+          },
+          {
+            "outboundPath": "application",
+            "value": ""
+          },
+          {
+            "outboundPath": "coReferenceId",
+            "value": "<% queryParams.roleId ?? '' %>"
+          },
+          {
+            "outboundPath": "coName",
+            "value": "<% selectedRoleDisplay.value ?? '' %>"
+          },
           {
             "outboundPath": "details",
             "value": "<% 'Assignable role deleted: ' + (selectedRoleDisplay.value ?? '') + ' (id: ' + (queryParams.roleId ?? '') + ')' %>"
           },
-          { "outboundPath": "triggeredBy", "value": "<% selectedWorker.descriptor %>" }
+          {
+            "outboundPath": "triggeredBy",
+            "value": "<% selectedWorker.descriptor %>"
+          }
         ],
         "failOnStatusCodes": [
-          { "code": 400 },
-          { "code": 403 },
-          { "code": 429 },
-          { "code": 500 }
+          {
+            "code": 400
+          },
+          {
+            "code": 403
+          },
+          {
+            "code": 429
+          },
+          {
+            "code": 500
+          }
         ],
         "exclude": "<% empty(queryParams.roleId) %>"
       }
@@ -94,6 +131,15 @@
       "horizontal": false,
       "children": [
         {
+          "type": "pod",
+          "podId": "ubcLogo"
+        },
+        {
+          "type": "richText",
+          "id": "ubcPageHeader",
+          "value": "<span style=\"display:block;border-top:3px solid #002145;padding-top:8px;margin-bottom:2px;\"><span style=\"color:#002145;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;font-family:sans-serif;\">University of British Columbia</span><span style=\"color:#6b7280;font-size:10px;font-weight:400;\"> — DELETE ROLE REQUEST</span></span>"
+        },
+        {
           "type": "section",
           "horizontal": true,
           "children": [
@@ -104,7 +150,9 @@
                 {
                   "type": "button",
                   "label": "Home",
-                  "taskReference": { "taskId": "home" },
+                  "taskReference": {
+                    "taskId": "home"
+                  },
                   "action": "AUXILIARY"
                 }
               ]
@@ -116,13 +164,18 @@
                 {
                   "type": "button",
                   "label": "Assignable Role Manager",
-                  "taskReference": { "taskId": "assignableRoleManager" },
+                  "taskReference": {
+                    "taskId": "assignableRoleManager"
+                  },
                   "action": "AUXILIARY"
                 }
               ]
             }
           ],
-          "columnWidthRatios": [0.3, 0.7]
+          "columnWidthRatios": [
+            0.3,
+            0.7
+          ]
         },
         {
           "type": "readOnlyText",
@@ -302,15 +355,15 @@
             }
           ]
         }
-      ]
+      ],
+      "primaryArea": []
     },
     "footer": {
       "type": "footer",
       "children": [
         {
-          "type": "richText",
-          "enabled": "false",
-          "value": "Powered By Workday Extend"
+          "type": "pod",
+          "podId": "ecoComsFooter"
         }
       ]
     }

@@ -76,7 +76,8 @@
             }
           }
         ]
-      }
+      },
+      "primaryArea": []
     },
     "footer": {
       "type": "footer",

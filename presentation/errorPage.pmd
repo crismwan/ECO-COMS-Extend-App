@@ -12,6 +12,15 @@
       "horizontal": false,
       "children": [
         {
+          "type": "pod",
+          "podId": "ubcLogo"
+        },
+        {
+          "type": "richText",
+          "id": "ubcPageHeader",
+          "value": "<span style=\"display:block;border-top:3px solid #002145;padding-top:8px;margin-bottom:2px;\"><span style=\"color:#002145;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;font-family:sans-serif;\">University of British Columbia</span><span style=\"color:#6b7280;font-size:10px;font-weight:400;\"> — ECO-COMS</span></span>"
+        },
+        {
           "type": "text",
           "id": "errorSummary401",
           "visible": "<% errorCode == '401' %>",
@@ -39,8 +48,18 @@
           "label": "Error Message",
           "value": "Something went wrong. Please try again, or contact your COMS Administrator if the problem persists."
         }
-      ]
+      ],
+      "primaryArea": []
     },
-    "pageType": "edit"
+    "pageType": "edit",
+    "footer": {
+      "type": "footer",
+      "children": [
+        {
+          "type": "pod",
+          "podId": "ecoComsFooter"
+        }
+      ]
+    }
   }
 }
