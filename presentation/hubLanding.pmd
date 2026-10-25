@@ -162,7 +162,7 @@
         {
           "type": "fieldSet",
           "id": "adminSection",
-          "label": "Administration \u2014 ISC Only",
+          "label": "Administration — ISC Only",
           "collapsible": true,
           "collapsed": false,
           "children": [
