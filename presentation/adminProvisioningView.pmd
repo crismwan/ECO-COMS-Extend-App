@@ -15,24 +15,13 @@
   ],
   "presentation": {
     "pageType": "view",
-    "headerSize": "VPS_DEFAULT",
     "title": {
       "type": "title",
-      "label": "ECO-COMS: Admin Provisioning",
-      "enabled": false
+      "label": "ECO-COMS: Admin Provisioning"
     },
     "body": {
       "type": "areaLayout",
       "primaryArea": [
-        {
-          "type": "pod",
-          "podId": "ubcLogo"
-        },
-        {
-          "type": "richText",
-          "id": "ubcPageContext",
-          "value": "<span style=\"display:block;color:#0055B7;font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;font-family:Arial,sans-serif;padding-bottom:8px;\">Admin Provisioning</span>"
-        },
         {
           "type": "section",
           "horizontal": true,
@@ -96,7 +85,6 @@
         {
           "type": "fieldSet",
           "id": "aaaRolesSection",
-          "label": "AAA Role Requests",
           "collapsible": true,
           "collapsed": false,
           "children": [
@@ -234,12 +222,18 @@
                 }
               ]
             }
-          ]
+          ],
+          "title": "AAA Role Requests",
+          "layout": {
+            "density": "medium",
+            "alignment": "left",
+            "horizontalSizing": "stretch",
+            "labelPosition": "top"
+          }
         }
       ]
     },
     "footer": {
-      "type": "footer",
       "children": [
         {
           "type": "pod",

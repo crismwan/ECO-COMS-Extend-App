@@ -56,15 +56,6 @@
       "horizontal": false,
       "children": [
         {
-          "type": "pod",
-          "podId": "ubcLogo"
-        },
-        {
-          "type": "richText",
-          "id": "ubcPageContext",
-          "value": "<span style=\"display:block;color:#0055B7;font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;font-family:Arial,sans-serif;padding-bottom:8px;\">Confirm Shell Org Pattern</span>"
-        },
-        {
           "type": "text",
           "id": "hiddenPatternName",
           "label": "Pattern",
@@ -128,7 +119,6 @@
       "primaryArea": []
     },
     "footer": {
-      "type": "footer",
       "children": [
         {
           "type": "pod",

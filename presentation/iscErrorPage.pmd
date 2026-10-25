@@ -15,10 +15,6 @@
       "horizontal": false,
       "children": [
         {
-          "type": "pod",
-          "podId": "ubcLogo"
-        },
-        {
           "type": "readOnlyText",
           "id": "iscErrorMessage",
           "value": "This page is only available to ISC Security Administrators. If you have any questions, please raise an Incident Ticket with 'ISC Service Delivery'."
@@ -27,7 +23,6 @@
       "primaryArea": []
     },
     "footer": {
-      "type": "footer",
       "children": [
         {
           "type": "pod",

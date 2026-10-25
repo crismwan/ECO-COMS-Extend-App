@@ -6,15 +6,6 @@
       "type": "section",
       "children": [
         {
-          "type": "pod",
-          "podId": "ubcLogo"
-        },
-        {
-          "type": "richText",
-          "id": "ubcPageContext",
-          "value": "<span style=\"display:block;color:#0055B7;font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;font-family:Arial,sans-serif;padding-bottom:8px;\">Shell Org Pattern Created</span>"
-        },
-        {
           "type": "readOnlyText",
           "id": "successMessage",
           "value": "<% 'Shell Org Pattern ' + (flowVariables.patternName ?? '') + ' has been added successfully.' %>"
@@ -23,7 +14,6 @@
       "primaryArea": []
     },
     "footer": {
-      "type": "footer",
       "children": [
         {
           "type": "pod",

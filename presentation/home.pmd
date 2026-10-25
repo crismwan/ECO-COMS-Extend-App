@@ -80,7 +80,6 @@
       "primaryArea": []
     },
     "footer": {
-      "type": "footer",
       "children": [
         {
           "type": "pod",

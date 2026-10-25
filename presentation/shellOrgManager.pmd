@@ -77,24 +77,13 @@
     ]
   },
   "presentation": {
-    "headerSize": "VPS_DEFAULT",
     "title": {
       "type": "title",
-      "label": "ECO-COMS: Shell Org Manager",
-      "enabled": false
+      "label": "ECO-COMS: Shell Org Manager"
     },
     "body": {
       "type": "areaLayout",
       "primaryArea": [
-        {
-          "type": "pod",
-          "podId": "ubcLogo"
-        },
-        {
-          "type": "richText",
-          "id": "ubcPageContext",
-          "value": "<span style=\"display:block;color:#0055B7;font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;font-family:Arial,sans-serif;padding-bottom:8px;\">Shell Org Manager</span>"
-        },
         {
           "type": "section",
           "horizontal": false,
@@ -144,7 +133,6 @@
             {
               "type": "fieldSet",
               "id": "aboutFieldSet",
-              "label": "About this page",
               "collapsible": true,
               "children": [
                 {
@@ -152,7 +140,14 @@
                   "id": "pageDescriptionText",
                   "value": "View, add and inactivate Custom Organization shell org patterns for your assigned application. You will only see and be able to manage shell organizations of the org type and subtype defined for your application (e.g. X:CLW / X:Shell for Clockwork). You cannot see or affect other applications' shell organizations. To inactivate a pattern, change its Status to Inactive and save. Edit of other fields is intentionally disabled; add a new pattern instead if the meaning needs to change."
                 }
-              ]
+              ],
+              "title": "About this page",
+              "layout": {
+                "density": "medium",
+                "alignment": "left",
+                "horizontalSizing": "stretch",
+                "labelPosition": "top"
+              }
             },
             {
               "type": "dropdown",
@@ -316,7 +311,6 @@
       ]
     },
     "footer": {
-      "type": "footer",
       "children": [
         {
           "type": "pod",

@@ -246,15 +246,6 @@
       "horizontal": false,
       "children": [
         {
-          "type": "pod",
-          "podId": "ubcLogo"
-        },
-        {
-          "type": "richText",
-          "id": "ubcPageContext",
-          "value": "<span style=\"display:block;color:#0055B7;font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;font-family:Arial,sans-serif;padding-bottom:8px;\">Role Request Details</span>"
-        },
-        {
           "type": "section",
           "horizontal": true,
           "children": [
@@ -283,7 +274,6 @@
         {
           "type": "fieldSet",
           "id": "actionFieldSet",
-          "label": "ISC Action",
           "children": [
             {
               "type": "dropdown",
@@ -332,12 +322,18 @@
                 }
               ]
             }
-          ]
+          ],
+          "title": "ISC Action",
+          "layout": {
+            "density": "medium",
+            "alignment": "left",
+            "horizontalSizing": "stretch",
+            "labelPosition": "top"
+          }
         },
         {
           "type": "fieldSet",
           "id": "roleDetailSection",
-          "label": "Role Details",
           "children": [
             {
               "type": "text",
@@ -383,13 +379,19 @@
                 }
               ]
             }
-          ]
+          ],
+          "title": "Role Details",
+          "layout": {
+            "density": "medium",
+            "alignment": "left",
+            "horizontalSizing": "stretch",
+            "labelPosition": "top"
+          }
         }
       ],
       "primaryArea": []
     },
     "footer": {
-      "type": "footer",
       "children": [
         {
           "type": "pod",

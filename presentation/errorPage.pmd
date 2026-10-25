@@ -12,10 +12,6 @@
       "horizontal": false,
       "children": [
         {
-          "type": "pod",
-          "podId": "ubcLogo"
-        },
-        {
           "type": "text",
           "id": "errorSummary401",
           "visible": "<% errorCode == '401' %>",
@@ -48,7 +44,6 @@
     },
     "pageType": "edit",
     "footer": {
-      "type": "footer",
       "children": [
         {
           "type": "pod",

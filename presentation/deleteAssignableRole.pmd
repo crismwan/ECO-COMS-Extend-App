@@ -131,15 +131,6 @@
       "horizontal": false,
       "children": [
         {
-          "type": "pod",
-          "podId": "ubcLogo"
-        },
-        {
-          "type": "richText",
-          "id": "ubcPageContext",
-          "value": "<span style=\"display:block;color:#0055B7;font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;font-family:Arial,sans-serif;padding-bottom:8px;\">Delete Role Request</span>"
-        },
-        {
           "type": "section",
           "horizontal": true,
           "children": [
@@ -338,7 +329,6 @@
         {
           "type": "fieldSet",
           "id": "confirmDeleteSection",
-          "label": "Confirm Delete",
           "visible": "<% !empty(queryParams.roleId) %>",
           "children": [
             {
@@ -353,13 +343,19 @@
               "id": "deleteWarning",
               "value": "Warning: This action permanently deletes the selected role request and cannot be undone. Click OK to confirm."
             }
-          ]
+          ],
+          "title": "Confirm Delete",
+          "layout": {
+            "density": "medium",
+            "alignment": "left",
+            "horizontalSizing": "stretch",
+            "labelPosition": "top"
+          }
         }
       ],
       "primaryArea": []
     },
     "footer": {
-      "type": "footer",
       "children": [
         {
           "type": "pod",
