@@ -119,7 +119,7 @@ jobs:
           set -euxo pipefail
 
           echo "=== Running wdcli app upload ==="
-          wdcli app upload 2>&1 | tee /tmp/upload-output.txt || true
+          echo "." | wdcli app upload 2>&1 | tee /tmp/upload-output.txt || true
           echo "=== Upload output ==="
           cat /tmp/upload-output.txt
 
