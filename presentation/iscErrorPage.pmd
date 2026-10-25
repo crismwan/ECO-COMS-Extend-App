@@ -28,7 +28,8 @@
           "type": "pod",
           "podId": "ecoComsFooter"
         }
-      ]
+      ],
+      "type": "footer"
     }
   }
 }

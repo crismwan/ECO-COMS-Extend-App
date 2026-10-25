@@ -598,7 +598,8 @@
           "type": "pod",
           "podId": "ecoComsFooter"
         }
-      ]
+      ],
+      "type": "footer"
     },
     "pageType": "edit"
   },

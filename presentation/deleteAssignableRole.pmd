@@ -361,7 +361,8 @@
           "type": "pod",
           "podId": "ecoComsFooter"
         }
-      ]
+      ],
+      "type": "footer"
     }
   },
   "onSubmit": "<%\n  let valid = true;\n  if (empty(queryParams.roleId)) {\n    valid = false;\n  }\n  valid;\n%>",

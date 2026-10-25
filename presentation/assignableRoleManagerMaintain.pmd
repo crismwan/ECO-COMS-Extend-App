@@ -397,7 +397,8 @@
           "type": "pod",
           "podId": "ecoComsFooter"
         }
-      ]
+      ],
+      "type": "footer"
     }
   },
   "onSubmit": "<%\n  let valid = true;\n  if (empty(maintainAction.value)) {\n    maintainAction.setError('Please select an action.');\n    valid = false;\n  }\n  if (maintainAction.value == 'Approve') {\n    if (empty(workdayRoleDropdown.value)) {\n      workdayRoleDropdown.setError('Please select a Workday Assignable Role to approve.');\n      valid = false;\n    }\n  }\n  if (maintainAction.value == 'Deny') {\n    if (empty(denialReason.value)) {\n      denialReason.setError('Denial Reason is required when denying a role.');\n      valid = false;\n    }\n  }\n  valid;\n%>"
