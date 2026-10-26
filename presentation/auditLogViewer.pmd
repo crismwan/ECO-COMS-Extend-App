@@ -64,9 +64,10 @@
               "id": "aboutFieldSet",
               "children": [
                 {
-                  "type": "readOnlyText",
+                  "type": "richText",
                   "id": "pageDescriptionText",
-                  "value": "Immutable, searchable log of every COMS-initiated Custom Organization change (Create / Inactivate). Replaces the Log Tab in the legacy MSC Tool. Records cannot be deleted."
+                  "value": "<span style=\"color:#374151;font-size:12px\">Immutable, searchable log of every COMS-initiated Custom Organization change (Create / Inactivate). Replaces the Log Tab in the legacy MSC Tool. Records cannot be deleted.</span>",
+                  "enabled": false
                 }
               ],
               "title": "About this page",
@@ -210,7 +211,7 @@
             "type": "richText",
             "id": "exportNote",
             "enabled": false,
-            "value": "<p style=\"background:#eef4ff;border-left:3px solid #0055B7;padding:8px 10px;font-size:11px;color:#374151\">Use the grid’s built-in export action to download these results as CSV for compliance reporting.</p>"
+            "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">ℹ </span><span style=\"color:#374151;font-size:11px\">Use the grid’s built-in export action to download these results as CSV for compliance reporting.</span>"
           },
           {
             "type": "pod",
@@ -242,7 +243,7 @@
             "type": "richText",
             "id": "filterNote",
             "enabled": false,
-            "value": "<p style=\"background:#fef3c7;border-left:3px solid #d97706;padding:8px 10px;font-size:11px;color:#92400e\">Filtering by Application or Action is not yet available on this page. Use the grid’s built-in column sort and the export action to narrow results.</p>"
+            "value": "<span style=\"color:#d97706;font-size:11px;font-weight:700\">⚠ </span><span style=\"color:#92400e;font-size:11px\">Filtering by Application or Action is not yet available on this page. Use the grid’s built-in column sort and the export action to narrow results.</span>"
           },
           {
             "type": "pod",

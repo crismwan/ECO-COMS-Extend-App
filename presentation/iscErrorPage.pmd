@@ -33,7 +33,7 @@
                   "type": "richText",
                   "id": "iscErrorMessage",
                   "enabled": false,
-                  "value": "This page is only available to ISC Security Administrators. If you have any questions, please raise an Incident Ticket with 'ISC Service Delivery'."
+                  "value": "<span style=\"color:#374151;font-size:13px\">This page is only available to ISC Security Administrators. If you have any questions, please raise an Incident Ticket with 'ISC Service Delivery'.</span>"
                 }
               ]
             }
@@ -59,7 +59,7 @@
                   "children": [
                     {
                       "type": "button",
-                      "label": "\u2190 Back to Home",
+                      "label": "← Back to Home",
                       "taskReference": {
                         "taskId": "home"
                       },

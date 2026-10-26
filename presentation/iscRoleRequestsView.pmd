@@ -134,7 +134,7 @@
               "type": "richText",
               "id": "pageDesc",
               "enabled": false,
-              "value": "ISC Security: View all pending Assignable Role requests from both Assignable Role Manager and Admin Provisioning. Click Maintain to approve or deny a request."
+              "value": "<span style=\"color:#374151;font-size:13px\">ISC Security: View all pending Assignable Role requests from both Assignable Role Manager and Admin Provisioning. Click Maintain to approve or deny a request.</span>"
             }
           ]
         },

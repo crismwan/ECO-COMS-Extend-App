@@ -153,7 +153,7 @@
                   "type": "richText",
                   "id": "pageDescText",
                   "enabled": false,
-                  "value": "View and manage shell org patterns for your assigned application. Select an application to see its patterns. You can inactivate patterns from the grid below."
+                  "value": "<span style=\"color:#374151;font-size:13px\">View and manage shell org patterns for your assigned application. Select an application to see its patterns. You can inactivate patterns from the grid below.</span>"
                 }
               ]
             }
@@ -167,7 +167,7 @@
               "type": "richText",
               "id": "saveNote",
               "enabled": false,
-              "value": "<p style=\"background:#fef3c7;border-left:3px solid #d97706;padding:8px 10px;font-size:11px;color:#92400e\"><b>Warning:</b> Changing Status to Inactive does not automatically remove any Workday role assignments referencing this shell organization. Verify in Workday (<code>Get_Assign_User_Based_Security_Groups</code>) that no active role assignment uses this Custom Organization before inactivating.</p>"
+              "value": "<span style=\"color:#d97706;font-size:11px;font-weight:700\">⚠ </span><span style=\"color:#92400e;font-size:11px\"><b>Warning:</b> Changing Status to Inactive does not automatically remove any Workday role assignments referencing this shell organization. Verify in Workday (<code>Get_Assign_User_Based_Security_Groups</code>) that no active role assignment uses this Custom Organization before inactivating.</span>"
             }
           ]
         }

@@ -259,7 +259,7 @@
                   "children": [
                     {
                       "type": "button",
-                      "label": "\u2190 Back to Assignable Role Manager",
+                      "label": "← Back to Assignable Role Manager",
                       "taskReference": {
                         "taskId": "assignableRoleManager"
                       },

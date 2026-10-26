@@ -33,7 +33,7 @@
                   "type": "richText",
                   "id": "shellOrgDesc",
                   "enabled": false,
-                  "value": "View and manage shell org patterns for your assigned application. You can add new Custom Organizations and inactivate existing ones. You will only see patterns for the application you are provisioned to manage."
+                  "value": "<span style=\"color:#374151;font-size:13px\">View and manage shell org patterns for your assigned application. You can add new Custom Organizations and inactivate existing ones. You will only see patterns for the application you are provisioned to manage.</span>"
                 },
                 {
                   "type": "button",
@@ -78,7 +78,7 @@
                   "type": "richText",
                   "id": "assignableRoleDesc",
                   "enabled": false,
-                  "value": "Submit a new Assignable Role request for a Custom Organization. Each request goes to ISC for review before it becomes active in Workday. You can also view the status of your pending and approved requests."
+                  "value": "<span style=\"color:#374151;font-size:13px\">Submit a new Assignable Role request for a Custom Organization. Each request goes to ISC for review before it becomes active in Workday. You can also view the status of your pending and approved requests.</span>"
                 },
                 {
                   "type": "button",
@@ -123,7 +123,7 @@
                   "type": "richText",
                   "id": "adminDesc",
                   "enabled": false,
-                  "value": "Admin Provisioning controls which users can manage shell orgs and submit role requests for each application. Submit a new AAA role request or view all provisioned roles."
+                  "value": "<span style=\"color:#374151;font-size:13px\">Admin Provisioning controls which users can manage shell orgs and submit role requests for each application. Submit a new AAA role request or view all provisioned roles.</span>"
                 },
                 {
                   "type": "button",
@@ -168,7 +168,7 @@
                   "type": "richText",
                   "id": "iscOnlyDesc",
                   "enabled": false,
-                  "value": "ISC Security staff: review and process all pending Assignable Role requests from across ECO-COMS."
+                  "value": "<span style=\"color:#374151;font-size:13px\">ISC Security staff: review and process all pending Assignable Role requests from across ECO-COMS.</span>"
                 },
                 {
                   "type": "button",
@@ -203,7 +203,7 @@
                   "type": "richText",
                   "id": "auditLogDesc",
                   "enabled": false,
-                  "value": "View the history of all ECO-COMS changes and events. Use the Audit Log to review who made changes, when they were made, and what was affected."
+                  "value": "<span style=\"color:#374151;font-size:13px\">View the history of all ECO-COMS changes and events. Use the Audit Log to review who made changes, when they were made, and what was affected.</span>"
                 },
                 {
                   "type": "button",

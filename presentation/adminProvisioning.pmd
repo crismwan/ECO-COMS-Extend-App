@@ -297,7 +297,7 @@
               "type": "richText",
               "id": "pageDesc",
               "enabled": false,
-              "value": "Submit and manage Assignable Role requests by Application. Review pending requests or submit a new role request for ISC review."
+              "value": "<span style=\"color:#374151;font-size:13px\">Submit and manage Assignable Role requests by Application. Review pending requests or submit a new role request for ISC review.</span>"
             }
           ]
         },
@@ -313,7 +313,7 @@
                   "type": "richText",
                   "id": "pendingDesc",
                   "enabled": false,
-                  "value": "<p style=\"background:#eef4ff;border-left:3px solid #0055B7;padding:8px 10px;font-size:11px;color:#374151\">The following Assignable Role requests are awaiting ISC review. Click <b>Maintain</b> to approve or deny a request.</p>"
+                  "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">ℹ </span><span style=\"color:#374151;font-size:11px\">The following Assignable Role requests are awaiting ISC review. Click <b>Maintain</b> to approve or deny a request.</span>"
                 },
                 {
                   "type": "grid",
@@ -492,7 +492,7 @@
                   "type": "richText",
                   "id": "newRoleDesc",
                   "enabled": false,
-                  "value": "<p style=\"background:#eef4ff;border-left:3px solid #0055B7;padding:8px 10px;font-size:11px;color:#374151\">Submit a new Assignable Role request using the Application below. Once submitted, status will be set to <b>Pending ISC Review</b>.</p>"
+                  "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">ℹ </span><span style=\"color:#374151;font-size:11px\">Submit a new Assignable Role request using the Application below. Once submitted, status will be set to <b>Pending ISC Review</b>.</span>"
                 },
                 {
                   "type": "dropdown",
@@ -609,7 +609,7 @@
                   "type": "richText",
                   "id": "activeNote",
                   "enabled": false,
-                  "value": "<p style=\"background:#eef4ff;border-left:3px solid #0055B7;padding:8px 10px;font-size:11px;color:#374151\">Role Assignment Active status is automatically set based on whether selected positions are filled.</p>"
+                  "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">ℹ </span><span style=\"color:#374151;font-size:11px\">Role Assignment Active status is automatically set based on whether selected positions are filled.</span>"
                 },
                 {
                   "type": "hidden",
