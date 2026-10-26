@@ -16,13 +16,11 @@
       "sections": [
         {
           "type": "layoutSection",
-          "id": "hubContentSection",
+          "id": "shellOrgLayoutSection",
           "children": [
             {
               "type": "fieldSet",
               "id": "shellOrgSection",
-              "collapsible": true,
-              "collapsed": false,
               "title": "Shell Org Manager",
               "layout": {
                 "density": "medium",
@@ -38,52 +36,36 @@
                   "value": "View and manage shell org patterns for your assigned application. You can add new Custom Organizations and inactivate existing ones. You will only see patterns for the application you are provisioned to manage."
                 },
                 {
-                  "type": "section",
-                  "horizontal": true,
-                  "columnWidthRatios": [
-                    0.5,
-                    0.5
-                  ],
-                  "children": [
-                    {
-                      "type": "section",
-                      "horizontal": false,
-                      "children": [
-                        {
-                          "type": "button",
-                          "label": "Shell Org Manager",
-                          "taskReference": {
-                            "taskId": "shellOrgManager"
-                          },
-                          "action": "PRIMARY",
-                          "tooltip": "View and manage shell org patterns for your application."
-                        }
-                      ]
-                    },
-                    {
-                      "type": "section",
-                      "horizontal": false,
-                      "children": [
-                        {
-                          "type": "button",
-                          "label": "Add Pattern",
-                          "taskReference": {
-                            "taskId": "newShellOrgPattern"
-                          },
-                          "action": "AUXILIARY",
-                          "tooltip": "Create a new shell org pattern for your application."
-                        }
-                      ]
-                    }
-                  ]
+                  "type": "button",
+                  "id": "shellOrgManagerBtn",
+                  "label": "Shell Org Manager",
+                  "taskReference": {
+                    "taskId": "shellOrgManager"
+                  },
+                  "action": "PRIMARY",
+                  "tooltip": "View and manage shell org patterns for your application."
+                },
+                {
+                  "type": "button",
+                  "id": "addPatternBtn",
+                  "label": "Add Pattern",
+                  "taskReference": {
+                    "taskId": "newShellOrgPattern"
+                  },
+                  "action": "AUXILIARY",
+                  "tooltip": "Create a new shell org pattern for your application."
                 }
               ]
-            },
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "assignableRoleLayoutSection",
+          "children": [
             {
               "type": "fieldSet",
               "id": "assignableRoleSection",
-              "collapsible": true,
-              "collapsed": false,
               "title": "Assignable Role Manager",
               "layout": {
                 "density": "medium",
@@ -99,69 +81,47 @@
                   "value": "Submit a new Assignable Role request for a Custom Organization. Each request goes to ISC for review before it becomes active in Workday. You can also view the status of your pending and approved requests."
                 },
                 {
-                  "type": "section",
-                  "horizontal": true,
-                  "columnWidthRatios": [
-                    0.34,
-                    0.33,
-                    0.33
-                  ],
-                  "children": [
-                    {
-                      "type": "section",
-                      "horizontal": false,
-                      "children": [
-                        {
-                          "type": "button",
-                          "label": "My Role Requests",
-                          "taskReference": {
-                            "taskId": "assignableRoleManagerView"
-                          },
-                          "action": "PRIMARY",
-                          "tooltip": "View the status of your Assignable Role requests."
-                        }
-                      ]
-                    },
-                    {
-                      "type": "section",
-                      "horizontal": false,
-                      "children": [
-                        {
-                          "type": "button",
-                          "label": "Submit New Request",
-                          "taskReference": {
-                            "taskId": "assignableRoleManager"
-                          },
-                          "action": "AUXILIARY",
-                          "tooltip": "Submit a new Assignable Role request for ISC review."
-                        }
-                      ]
-                    },
-                    {
-                      "type": "section",
-                      "horizontal": false,
-                      "children": [
-                        {
-                          "type": "button",
-                          "label": "Pending ISC Requests",
-                          "taskReference": {
-                            "taskId": "iscRoleRequestsView"
-                          },
-                          "action": "AUXILIARY",
-                          "tooltip": "View all role requests currently pending ISC review."
-                        }
-                      ]
-                    }
-                  ]
+                  "type": "button",
+                  "id": "myRoleRequestsBtn",
+                  "label": "My Role Requests",
+                  "taskReference": {
+                    "taskId": "assignableRoleManagerView"
+                  },
+                  "action": "PRIMARY",
+                  "tooltip": "View the status of your Assignable Role requests."
+                },
+                {
+                  "type": "button",
+                  "id": "submitNewRequestBtn",
+                  "label": "Submit New Request",
+                  "taskReference": {
+                    "taskId": "assignableRoleManager"
+                  },
+                  "action": "AUXILIARY",
+                  "tooltip": "Submit a new Assignable Role request for ISC review."
+                },
+                {
+                  "type": "button",
+                  "id": "pendingIscRequestsArmBtn",
+                  "label": "Pending ISC Requests",
+                  "taskReference": {
+                    "taskId": "iscRoleRequestsView"
+                  },
+                  "action": "AUXILIARY",
+                  "tooltip": "View all role requests currently pending ISC review."
                 }
               ]
-            },
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "adminLayoutSection",
+          "children": [
             {
               "type": "fieldSet",
               "id": "adminSection",
-              "collapsible": true,
-              "collapsed": false,
-              "title": "Administration \u2014 ISC Only",
+              "title": "Administration — ISC Only",
               "layout": {
                 "density": "medium",
                 "alignment": "left",
@@ -176,68 +136,46 @@
                   "value": "Admin Provisioning controls which users can manage shell orgs and submit role requests for each application. ISC can submit AAA role requests and review pending requests here."
                 },
                 {
-                  "type": "section",
-                  "horizontal": true,
-                  "columnWidthRatios": [
-                    0.34,
-                    0.33,
-                    0.33
-                  ],
-                  "children": [
-                    {
-                      "type": "section",
-                      "horizontal": false,
-                      "children": [
-                        {
-                          "type": "button",
-                          "label": "Admin Provisioning",
-                          "taskReference": {
-                            "taskId": "adminProvisioningView"
-                          },
-                          "action": "PRIMARY",
-                          "tooltip": "View and manage AAA role provisioning for all applications."
-                        }
-                      ]
-                    },
-                    {
-                      "type": "section",
-                      "horizontal": false,
-                      "children": [
-                        {
-                          "type": "button",
-                          "label": "Submit AAA Request",
-                          "taskReference": {
-                            "taskId": "adminProvisioning"
-                          },
-                          "action": "AUXILIARY",
-                          "tooltip": "Submit a new AAA role request for ISC review."
-                        }
-                      ]
-                    },
-                    {
-                      "type": "section",
-                      "horizontal": false,
-                      "children": [
-                        {
-                          "type": "button",
-                          "label": "Pending ISC Requests",
-                          "taskReference": {
-                            "taskId": "iscRoleRequestsView"
-                          },
-                          "action": "AUXILIARY",
-                          "tooltip": "View all role requests currently pending ISC review."
-                        }
-                      ]
-                    }
-                  ]
+                  "type": "button",
+                  "id": "adminProvisioningBtn",
+                  "label": "Admin Provisioning",
+                  "taskReference": {
+                    "taskId": "adminProvisioningView"
+                  },
+                  "action": "PRIMARY",
+                  "tooltip": "View and manage AAA role provisioning for all applications."
+                },
+                {
+                  "type": "button",
+                  "id": "submitAaaRequestBtn",
+                  "label": "Submit AAA Request",
+                  "taskReference": {
+                    "taskId": "adminProvisioning"
+                  },
+                  "action": "AUXILIARY",
+                  "tooltip": "Submit a new AAA role request for ISC review."
+                },
+                {
+                  "type": "button",
+                  "id": "pendingIscRequestsAdminBtn",
+                  "label": "Pending ISC Requests",
+                  "taskReference": {
+                    "taskId": "iscRoleRequestsView"
+                  },
+                  "action": "AUXILIARY",
+                  "tooltip": "View all role requests currently pending ISC review."
                 }
               ]
-            },
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "auditLogLayoutSection",
+          "children": [
             {
               "type": "fieldSet",
               "id": "auditLogSection",
-              "collapsible": true,
-              "collapsed": false,
               "title": "Audit Log",
               "layout": {
                 "density": "medium",
@@ -253,28 +191,14 @@
                   "value": "View the history of all ECO-COMS changes and events. Use the Audit Log to review who made changes, when they were made, and what was affected."
                 },
                 {
-                  "type": "section",
-                  "horizontal": true,
-                  "columnWidthRatios": [
-                    1
-                  ],
-                  "children": [
-                    {
-                      "type": "section",
-                      "horizontal": false,
-                      "children": [
-                        {
-                          "type": "button",
-                          "label": "Audit Log",
-                          "taskReference": {
-                            "taskId": "auditLogViewer"
-                          },
-                          "action": "PRIMARY",
-                          "tooltip": "View the history of all ECO-COMS changes and events."
-                        }
-                      ]
-                    }
-                  ]
+                  "type": "button",
+                  "id": "auditLogBtn",
+                  "label": "Audit Log",
+                  "taskReference": {
+                    "taskId": "auditLogViewer"
+                  },
+                  "action": "PRIMARY",
+                  "tooltip": "View the history of all ECO-COMS changes and events."
                 }
               ]
             }

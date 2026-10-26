@@ -186,7 +186,6 @@
             {
               "type": "fieldSet",
               "id": "aboutFieldSet",
-              "collapsible": true,
               "children": [
                 {
                   "type": "readOnlyText",
@@ -271,7 +270,6 @@
             {
               "type": "fieldSet",
               "id": "patternFields",
-              "collapsible": false,
               "children": [
                 {
                   "type": "date",

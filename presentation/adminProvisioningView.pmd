@@ -119,8 +119,6 @@
             {
               "type": "fieldSet",
               "id": "aaaRolesSection",
-              "collapsible": true,
-              "collapsed": false,
               "children": [
                 {
                   "type": "readOnlyText",

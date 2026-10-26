@@ -112,8 +112,6 @@
             {
               "type": "fieldSet",
               "id": "pendingRolesSection",
-              "collapsible": true,
-              "collapsed": false,
               "children": [
                 {
                   "type": "readOnlyText",

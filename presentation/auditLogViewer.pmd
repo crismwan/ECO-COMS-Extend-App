@@ -62,7 +62,6 @@
             {
               "type": "fieldSet",
               "id": "aboutFieldSet",
-              "collapsible": true,
               "children": [
                 {
                   "type": "readOnlyText",

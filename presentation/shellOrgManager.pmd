@@ -141,7 +141,6 @@
             {
               "type": "fieldSet",
               "id": "aboutFieldSet",
-              "collapsible": true,
               "title": "About this page",
               "layout": {
                 "density": "medium",
