@@ -137,18 +137,18 @@
           "children": [
             {
               "type": "button",
-              "label": "← Home",
+              "label": "← My Role Requests",
               "taskReference": {
-                "taskId": "home"
+                "taskId": "assignableRoleManagerView"
               },
               "action": "LINK",
               "suppressDiscardDialog": true
             },
             {
               "type": "button",
-              "label": "← Assignable Role Manager",
+              "label": "← Admin Provisioning",
               "taskReference": {
-                "taskId": "assignableRoleManager"
+                "taskId": "adminProvisioningView"
               },
               "action": "LINK",
               "suppressDiscardDialog": true

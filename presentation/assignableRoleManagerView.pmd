@@ -51,6 +51,14 @@
                 "taskId": "assignableRoleManager"
               },
               "action": "PRIMARY"
+            },
+            {
+              "type": "button",
+              "label": "Delete Request",
+              "taskReference": {
+                "taskId": "deleteAssignableRole"
+              },
+              "action": "AUXILIARY"
             }
           ]
         },
