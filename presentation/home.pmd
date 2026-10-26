@@ -6,17 +6,9 @@
       "label": "COMS APP",
       "icon": "wd-accent-home",
       "initialTask": {
-        "taskId": "hubLanding"
+        "taskId": "shellOrgManager"
       },
       "navigationTasks": [
-        {
-          "type": "item",
-          "task": {
-            "taskId": "hubLanding"
-          },
-          "label": "Home",
-          "icon": "wd-accent-home"
-        },
         {
           "type": "item",
           "task": {
