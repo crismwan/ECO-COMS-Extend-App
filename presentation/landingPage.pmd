@@ -16,12 +16,11 @@
       "sections": [
         {
           "type": "layoutSection",
-          "id": "shellOrgCardSection",
+          "id": "topCardsSection",
           "children": [
             {
               "type": "fieldSet",
               "id": "shellOrgCard",
-              "label": "SHELL ORGANIZATIONS",
               "layout": {
                 "density": "low",
                 "alignment": "left",
@@ -33,7 +32,7 @@
                   "type": "richText",
                   "id": "shellOrgRow",
                   "enabled": false,
-                  "value": "<p style=\"margin:0 0 12px 0;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#5c6470;border-bottom:1px solid #dde1e7;padding-bottom:8px\">SHELL ORGANIZATIONS</p><table style=\"width:100%;border-collapse:collapse\"><tr><td style=\"width:44px;vertical-align:middle;padding-right:14px\"><span style=\"display:inline-flex;width:36px;height:36px;background:#eff6ff;border-radius:8px;align-items:center;justify-content:center;font-size:18px\">&#9632;</span></td><td style=\"vertical-align:middle\"><b style=\"font-size:14px\">Shell Org Manager</b><br><span style=\"font-size:12px;color:#64748b\">View and manage shell org patterns for your assigned application.</span></td></tr></table>"
+                  "value": "<p style=\"margin:0 0 8px 0;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#5c6470\">SHELL ORGANIZATIONS</p><table style=\"width:100%;border-collapse:collapse\"><tr><td style=\"width:36px;vertical-align:middle;padding-right:10px\"><span style=\"display:inline-flex;width:30px;height:30px;background:#eff6ff;border-radius:6px;align-items:center;justify-content:center;font-size:16px\">&#9632;</span></td><td style=\"vertical-align:middle\"><b style=\"font-size:13px\">Shell Org Manager</b><br><span style=\"font-size:11px;color:#64748b\">View and manage shell org patterns for your assigned application.</span></td></tr></table>"
                 },
                 {
                   "type": "button",
@@ -54,17 +53,10 @@
                   "action": "PRIMARY"
                 }
               ]
-            }
-          ]
-        },
-        {
-          "type": "layoutSection",
-          "id": "myRoleRequestsCardSection",
-          "children": [
+            },
             {
               "type": "fieldSet",
               "id": "myRoleRequestsCard",
-              "label": "ASSIGNABLE ROLES",
               "layout": {
                 "density": "low",
                 "alignment": "left",
@@ -76,7 +68,7 @@
                   "type": "richText",
                   "id": "myRoleRequestsRow",
                   "enabled": false,
-                  "value": "<p style=\"margin:0 0 12px 0;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#5c6470;border-bottom:1px solid #dde1e7;padding-bottom:8px\">ASSIGNABLE ROLES</p><table style=\"width:100%;border-collapse:collapse\"><tr><td style=\"width:44px;vertical-align:middle;padding-right:14px\"><span style=\"display:inline-flex;width:36px;height:36px;background:#eff6ff;border-radius:8px;align-items:center;justify-content:center;font-size:18px\">&#9670;</span></td><td style=\"vertical-align:middle\"><b style=\"font-size:14px\">My Role Requests</b><br><span style=\"font-size:12px;color:#64748b\">View the status of your pending and approved role requests.</span></td></tr></table>"
+                  "value": "<p style=\"margin:0 0 8px 0;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#5c6470\">ASSIGNABLE ROLES</p><table style=\"width:100%;border-collapse:collapse\"><tr><td style=\"width:36px;vertical-align:middle;padding-right:10px\"><span style=\"display:inline-flex;width:30px;height:30px;background:#eff6ff;border-radius:6px;align-items:center;justify-content:center;font-size:16px\">&#9670;</span></td><td style=\"vertical-align:middle\"><b style=\"font-size:13px\">My Role Requests</b><br><span style=\"font-size:11px;color:#64748b\">View the status of your pending and approved role requests.</span></td></tr></table>"
                 },
                 {
                   "type": "button",
@@ -97,13 +89,7 @@
                   "action": "PRIMARY"
                 }
               ]
-            }
-          ]
-        },
-        {
-          "type": "layoutSection",
-          "id": "administrationCardSection",
-          "children": [
+            },
             {
               "type": "fieldSet",
               "id": "adminProvisioningCard",
@@ -118,7 +104,7 @@
                   "type": "richText",
                   "id": "adminProvisioningRow",
                   "enabled": false,
-                  "value": "<p style=\"margin:0 0 12px 0;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#5c6470;border-bottom:1px solid #dde1e7;padding-bottom:8px\">ADMINISTRATION</p><table style=\"width:100%;border-collapse:collapse\"><tr><td style=\"width:44px;vertical-align:middle;padding-right:14px\"><span style=\"display:inline-flex;width:36px;height:36px;background:#eff6ff;border-radius:8px;align-items:center;justify-content:center;font-size:18px\">&#9650;</span></td><td style=\"vertical-align:middle\"><b style=\"font-size:14px\">Admin Provisioning</b><br><span style=\"font-size:12px;color:#64748b\">Submit or review AAA provisioning requests for each application.</span></td></tr></table>"
+                  "value": "<p style=\"margin:0 0 8px 0;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#5c6470\">ADMINISTRATION</p><table style=\"width:100%;border-collapse:collapse\"><tr><td style=\"width:36px;vertical-align:middle;padding-right:10px\"><span style=\"display:inline-flex;width:30px;height:30px;background:#eff6ff;border-radius:6px;align-items:center;justify-content:center;font-size:16px\">&#9650;</span></td><td style=\"vertical-align:middle\"><b style=\"font-size:13px\">Admin Provisioning</b><br><span style=\"font-size:11px;color:#64748b\">Submit or review AAA provisioning requests for each application.</span></td></tr></table>"
                 },
                 {
                   "type": "button",
@@ -139,7 +125,13 @@
                   "action": "PRIMARY"
                 }
               ]
-            },
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "bottomCardsSection",
+          "children": [
             {
               "type": "fieldSet",
               "id": "pendingIscCard",
@@ -154,7 +146,7 @@
                   "type": "richText",
                   "id": "pendingIscRow",
                   "enabled": false,
-                  "value": "<table style=\"width:100%;border-collapse:collapse\"><tr><td style=\"width:44px;vertical-align:middle;padding-right:14px\"><span style=\"display:inline-flex;width:36px;height:36px;background:#eff6ff;border-radius:8px;align-items:center;justify-content:center;font-size:18px\">&#9658;</span></td><td style=\"vertical-align:middle\"><b style=\"font-size:14px\">Pending ISC Requests</b><br><span style=\"font-size:12px;color:#64748b\">Review and process pending assignable role requests across ECO-COMS.</span></td></tr></table>"
+                  "value": "<table style=\"width:100%;border-collapse:collapse\"><tr><td style=\"width:36px;vertical-align:middle;padding-right:10px\"><span style=\"display:inline-flex;width:30px;height:30px;background:#eff6ff;border-radius:6px;align-items:center;justify-content:center;font-size:16px\">&#9658;</span></td><td style=\"vertical-align:middle\"><b style=\"font-size:13px\">Pending ISC Requests</b><br><span style=\"font-size:11px;color:#64748b\">Review and process pending assignable role requests across ECO-COMS.</span></td></tr></table>"
                 },
                 {
                   "type": "button",
@@ -181,7 +173,7 @@
                   "type": "richText",
                   "id": "auditLogRow",
                   "enabled": false,
-                  "value": "<table style=\"width:100%;border-collapse:collapse\"><tr><td style=\"width:44px;vertical-align:middle;padding-right:14px\"><span style=\"display:inline-flex;width:36px;height:36px;background:#eff6ff;border-radius:8px;align-items:center;justify-content:center;font-size:18px\">&#9658;</span></td><td style=\"vertical-align:middle\"><b style=\"font-size:14px\">Audit Log</b><br><span style=\"font-size:12px;color:#64748b\">Review the history of all ECO-COMS changes, actions, and events.</span></td></tr></table>"
+                  "value": "<table style=\"width:100%;border-collapse:collapse\"><tr><td style=\"width:36px;vertical-align:middle;padding-right:10px\"><span style=\"display:inline-flex;width:30px;height:30px;background:#eff6ff;border-radius:6px;align-items:center;justify-content:center;font-size:16px\">&#9658;</span></td><td style=\"vertical-align:middle\"><b style=\"font-size:13px\">Audit Log</b><br><span style=\"font-size:11px;color:#64748b\">Review the history of all ECO-COMS changes, actions, and events.</span></td></tr></table>"
                 },
                 {
                   "type": "button",
