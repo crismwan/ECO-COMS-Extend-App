@@ -191,7 +191,7 @@
                   "type": "richText",
                   "id": "pageDescription",
                   "enabled": false,
-                  "value": "<div style=\"background:#eef4ff;border-left:3px solid #0055B7;padding:8px 10px;font-size:11px;color:#374151\">Add a new Shell Org Pattern for your application. Patterns define the CO naming structure used to create Custom Organizations in Workday. The pattern name is auto-generated from the fields below. A duplicate check is performed before submission.</div>"
+                  "value": "<p style=\"background:#eef4ff;border-left:3px solid #0055B7;padding:8px 10px;font-size:11px;color:#374151\">Add a new Shell Org Pattern for your application. Patterns define the CO naming structure used to create Custom Organizations in Workday. The pattern name is auto-generated from the fields below. A duplicate check is performed before submission.</p>"
                 }
               ],
               "title": "About this page",
@@ -284,7 +284,7 @@
                   "type": "richText",
                   "id": "patternHelp",
                   "enabled": false,
-                  "value": "<div style=\"background:#eef4ff;border-left:3px solid #0055B7;padding:8px 10px;font-size:11px;color:#374151\">Fill in the pattern attributes below. Leave blank to use wildcard (*). The Pattern Name Preview above updates as you type.</div>"
+                  "value": "<p style=\"background:#eef4ff;border-left:3px solid #0055B7;padding:8px 10px;font-size:11px;color:#374151\">Fill in the pattern attributes below. Leave blank to use wildcard (*). The Pattern Name Preview above updates as you type.</p>"
                 },
                 {
                   "type": "text",

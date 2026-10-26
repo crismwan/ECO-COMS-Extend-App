@@ -102,14 +102,14 @@
               "type": "richText",
               "id": "pendingNoticeYes",
               "enabled": false,
-              "value": "<div style=\"background:#fef3c7;border-left:3px solid #d97706;padding:8px 10px;font-size:11px;color:#92400e\">⏳ There are AAA role requests currently pending ISC review. Use the <b>Maintain</b> action on a row below to process pending requests.</div>",
+              "value": "<p style=\"background:#fef3c7;border-left:3px solid #d97706;padding:8px 10px;font-size:11px;color:#92400e\">⏳ There are AAA role requests currently pending ISC review. Use the <b>Maintain</b> action on a row below to process pending requests.</p>",
               "visible": "<% size(comsAssignableRoles.data.filter(r => r.roleName.startsWith('Organizations and Roles Assignment Administrator') && r.status == 'Pending ISC Review')) > 0 %>"
             },
             {
               "type": "richText",
               "id": "pendingNoticeNo",
               "enabled": false,
-              "value": "<div style=\"background:#d1fae5;border-left:3px solid #059669;padding:8px 10px;font-size:11px;color:#065f46\">✓ There are no AAA role requests pending ISC review.</div>",
+              "value": "<p style=\"background:#d1fae5;border-left:3px solid #059669;padding:8px 10px;font-size:11px;color:#065f46\">✓ There are no AAA role requests pending ISC review.</p>",
               "visible": "<% size(comsAssignableRoles.data.filter(r => r.roleName.startsWith('Organizations and Roles Assignment Administrator') && r.status == 'Pending ISC Review')) == 0 %>"
             }
           ]

@@ -313,7 +313,7 @@
                   "type": "richText",
                   "id": "pendingDesc",
                   "enabled": false,
-                  "value": "<div style=\"background:#eef4ff;border-left:3px solid #0055B7;padding:8px 10px;font-size:11px;color:#374151\">The following Assignable Role requests are awaiting ISC review. Click <b>Maintain</b> to approve or deny a request.</div>"
+                  "value": "<p style=\"background:#eef4ff;border-left:3px solid #0055B7;padding:8px 10px;font-size:11px;color:#374151\">The following Assignable Role requests are awaiting ISC review. Click <b>Maintain</b> to approve or deny a request.</p>"
                 },
                 {
                   "type": "grid",
@@ -492,7 +492,7 @@
                   "type": "richText",
                   "id": "newRoleDesc",
                   "enabled": false,
-                  "value": "<div style=\"background:#eef4ff;border-left:3px solid #0055B7;padding:8px 10px;font-size:11px;color:#374151\">Submit a new Assignable Role request using the Application below. Once submitted, status will be set to <b>Pending ISC Review</b>.</div>"
+                  "value": "<p style=\"background:#eef4ff;border-left:3px solid #0055B7;padding:8px 10px;font-size:11px;color:#374151\">Submit a new Assignable Role request using the Application below. Once submitted, status will be set to <b>Pending ISC Review</b>.</p>"
                 },
                 {
                   "type": "dropdown",
@@ -609,7 +609,7 @@
                   "type": "richText",
                   "id": "activeNote",
                   "enabled": false,
-                  "value": "<div style=\"background:#eef4ff;border-left:3px solid #0055B7;padding:8px 10px;font-size:11px;color:#374151\">Role Assignment Active status is automatically set based on whether selected positions are filled.</div>"
+                  "value": "<p style=\"background:#eef4ff;border-left:3px solid #0055B7;padding:8px 10px;font-size:11px;color:#374151\">Role Assignment Active status is automatically set based on whether selected positions are filled.</p>"
                 },
                 {
                   "type": "hidden",

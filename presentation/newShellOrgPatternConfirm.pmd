@@ -87,7 +87,7 @@
                   "type": "richText",
                   "id": "confirmHelp",
                   "enabled": false,
-                  "value": "<div style=\"background:#eef4ff;border-left:3px solid #0055B7;padding:8px 10px;font-size:11px;color:#374151\">Please confirm the new Shell Org Pattern below. This will create a new pattern in COMS. The Orchestration will sync it to Workday automatically.</div>"
+                  "value": "<p style=\"background:#eef4ff;border-left:3px solid #0055B7;padding:8px 10px;font-size:11px;color:#374151\">Please confirm the new Shell Org Pattern below. This will create a new pattern in COMS. The Orchestration will sync it to Workday automatically.</p>"
                 },
                 {
                   "type": "text",

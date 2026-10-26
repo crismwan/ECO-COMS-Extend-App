@@ -95,14 +95,14 @@
               "type": "richText",
               "id": "pendingNoticeYes",
               "enabled": false,
-              "value": "<div style=\"background:#fef3c7;border-left:3px solid #d97706;padding:8px 10px;font-size:11px;color:#92400e\">⏳ You have requests currently pending ISC review. Use the <b>Maintain</b> action on a row below to update or add information to a pending request.</div>",
+              "value": "<p style=\"background:#fef3c7;border-left:3px solid #d97706;padding:8px 10px;font-size:11px;color:#92400e\">⏳ You have requests currently pending ISC review. Use the <b>Maintain</b> action on a row below to update or add information to a pending request.</p>",
               "visible": "<% size(comsAssignableRoles.data.filter(r => !r.roleName.startsWith('Organizations and Roles Assignment Administrator') && r.requestedBy.id == selectedWorker.id && r.status == 'Pending ISC Review')) > 0 %>"
             },
             {
               "type": "richText",
               "id": "pendingNoticeNo",
               "enabled": false,
-              "value": "<div style=\"background:#d1fae5;border-left:3px solid #059669;padding:8px 10px;font-size:11px;color:#065f46\">✓ You have no requests pending ISC review.</div>",
+              "value": "<p style=\"background:#d1fae5;border-left:3px solid #059669;padding:8px 10px;font-size:11px;color:#065f46\">✓ You have no requests pending ISC review.</p>",
               "visible": "<% size(comsAssignableRoles.data.filter(r => !r.roleName.startsWith('Organizations and Roles Assignment Administrator') && r.requestedBy.id == selectedWorker.id && r.status == 'Pending ISC Review')) == 0 %>"
             }
           ]
