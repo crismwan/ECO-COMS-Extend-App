@@ -147,6 +147,13 @@
       "page": {
         "id": "adminProvisioningView"
       }
+    },
+    {
+      "id": "fuhLandingPage",
+      "routingPattern": "/fuhLandingPage",
+      "page": {
+        "id": "fuhLandingPage"
+      }
     }
   ],
   "applicationId": "ecocomsphase_xclw_cm_sync2_vmzvxm",
