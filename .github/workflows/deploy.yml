@@ -144,13 +144,13 @@ jobs:
           fi
 
           # First try to extract version ID directly from upload output
-          VERSION_ID=$(grep -oE '"versionId"[[:space:]]*:[[:space:]]*"([0-9a-f]{32})"' /tmp/upload-output.txt 2>/dev/null | grep -oE '[0-9a-f]{32}' | head -1)
+          VERSION_ID=$(grep -oE '"versionId"[[:space:]]*:[[:space:]]*"([0-9a-f]{32})"' /tmp/upload-output.txt 2>/dev/null | grep -oE '[0-9a-f]{32}' | head -1) || true
           if [ -z "${VERSION_ID}" ]; then
-            VERSION_ID=$(grep -oE 'versionId[[:space:]]*=[[:space:]]*([0-9a-f]{32})' /tmp/upload-output.txt 2>/dev/null | grep -oE '[0-9a-f]{32}' | head -1)
+            VERSION_ID=$(grep -oE 'versionId[[:space:]]*=[[:space:]]*([0-9a-f]{32})' /tmp/upload-output.txt 2>/dev/null | grep -oE '[0-9a-f]{32}' | head -1) || true
           fi
           if [ -z "${VERSION_ID}" ]; then
             # Parse from "Initiated build <buildId> for version <versionId>" line
-            VERSION_ID=$(grep -oE 'for version [0-9a-f]{32}' /tmp/upload-output.txt | grep -oE '[0-9a-f]{32}' | head -1)
+            VERSION_ID=$(grep -oE 'for version [0-9a-f]{32}' /tmp/upload-output.txt | grep -oE '[0-9a-f]{32}' | head -1) || true
           fi
           echo "=== VERSION_ID from upload output: '${VERSION_ID}' ==="
 
