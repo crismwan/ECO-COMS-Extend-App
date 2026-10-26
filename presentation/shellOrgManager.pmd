@@ -35,11 +35,6 @@
       "label": "<% empty(queryParams.appName) ? 'ECO-COMS: Shell Org Manager' : (queryParams.appName ?? '') %>",
       "enabled": true
     },
-    "subtitle": {
-      "type": "subtitle",
-      "label": "<% empty(queryParams.appCode) ? 'Select an application to manage its shell org patterns.' : ('App ID: ' + (queryParams.appCode ?? '')) %>",
-      "enabled": true
-    },
     "body": {
       "type": "basicFormLayout",
       "id": "shellOrgManagerForm",
@@ -48,6 +43,12 @@
           "type": "layoutSection",
           "id": "navSection",
           "children": [
+            {
+              "type": "richText",
+              "id": "pageSubtitle",
+              "enabled": false,
+              "value": "<% empty(queryParams.appCode) ? '<span style=\"color:#6b7280;font-size:12px\">Select an application to manage its shell org patterns.</span>' : '<span style=\"color:#6b7280;font-size:12px\">App ID: ' + (queryParams.appCode ?? '') + '</span>' %>"
+            },
             {
               "type": "button",
               "label": "← Back to Applications",
