@@ -1,1 +1,394 @@
-{"id":"shellOrgManager","securityDomains":["ManageCOMSShellOrgs"],"include":["comsCardGenerator.script"],"endPoints":[{"name":"comsApplications","baseUrlType":"BUSINESS-OBJECT","url":"/comsApplications","authType":"sso","isCollection":true,"bestEffort":"true"},{"name":"shellOrgPatterns","baseUrlType":"workday-wql","url":"data","authType":"sso","isCollection":true,"bestEffort":"true","wqlQuery":{"queryId":"existingPatterns"}},{"name":"shellOrgs","baseUrlType":"workday-wql","url":"data","authType":"sso","isCollection":true,"bestEffort":"true","wqlQuery":{"queryId":"customOrganizations"}},{"name":"shellRoles","baseUrlType":"workday-wql","url":"data","authType":"sso","isCollection":true,"bestEffort":"true","wqlQuery":{"queryId":"allShellAssignableRolesinTenant"}}],"presentation":{"headerSize":"STANDARD","pageType":"view","title":{"type":"title","label":"<% empty(queryParams.appName) ? 'ECO-COMS: Shell Org Manager' : (queryParams.appName ?? '') %>","enabled":true},"body":{"type":"basicFormLayout","id":"shellOrgManagerForm","sections":[{"type":"layoutSection","id":"navSection","children":[{"type":"richText","id":"pageSubtitle","enabled":false,"value":"<% empty(queryParams.appCode) ? '<span style=\"color:#6b7280;font-size:12px\">Select an application to manage its shell orgs and patterns.</span>' : '<span style=\"color:#6b7280;font-size:12px\">App ID: ' + (queryParams.appCode ?? '') + '</span>' %>"},{"type":"button","label":"\u2190 Back to Applications","taskReference":{"taskId":"shellOrgManager"},"action":"LINK","visible":"<% !empty(queryParams.appCode) %>"},{"type":"button","label":"\u2190 Home","taskReference":{"taskId":"home"},"action":"LINK","visible":"<% empty(queryParams.appCode) %>"}]},{"type":"layoutSection","id":"appsSection","children":[{"type":"fieldSet","id":"appsFieldSet","visible":"<% empty(queryParams.appCode) %>","title":"Applications","layout":{"density":"medium","alignment":"left","horizontalSizing":"stretch","labelPosition":"top"},"children":[{"type":"grid","gridType":"LIST","multiViewStylingEnabled":true,"id":"appsGrid","rows":"<% comsApplications.data %>","rowVariableName":"app","enabled":false,"label":"Applications","autoPaging":true,"columns":[{"type":"column","id":"colAppName","columnId":"colAppName","label":"Application Name","sortableAndFilterable":"true","cellTemplate":{"type":"text","value":"<% app.name ?? '' %>","enabled":false}},{"type":"column","id":"colAppActions","columnId":"colAppActions","label":"Manage","cellTemplate":{"type":"button","action":"AUXILIARY","label":"Manage","taskReference":{"taskId":"shellOrgManager","parameterBindings":{"appCode":"<% app.appId %>","appName":"<% app.name %>"}}}}]}]}]}]},"tabs":[{"type":"section","label":"Application Patterns","children":[{"type":"fieldSet","id":"patternsFieldSet","visible":"<% !empty(queryParams.appCode) %>","title":"Shell Org Patterns","layout":{"density":"medium","alignment":"left","horizontalSizing":"stretch","labelPosition":"top"},"children":[{"type":"button","label":"Add Pattern","taskReference":{"taskId":"newShellOrgPattern"},"action":"PRIMARY"},{"type":"richText","id":"saveNote","enabled":false,"value":"<span style=\"color:#d97706;font-size:11px;font-weight:700\">\u26a0 </span><span style=\"color:#92400e;font-size:11px\"><b>Warning:</b> Inactivating a pattern does not remove Workday role assignments using this organization. Verify no active role assignments reference it before inactivating.</span>"},{"type":"richText","id":"emptyStateMsg","enabled":false,"value":"<span style=\"color:#374151;font-size:12px\">No shell org patterns found for this application. Use the <b>Add Pattern</b> button above to create one.</span>","visible":"<% !empty(queryParams.appCode) && size(shellOrgPatterns.data.filter(p => { p.code.startsWith((queryParams.appCode ?? '') + ':PATTERN') })) == 0 %>"},{"type":"grid","gridType":"LIST","multiViewStylingEnabled":true,"id":"patternsGrid","rows":"<% empty(queryParams.appCode) ? [] : shellOrgPatterns.data.filter(p => { p.code.startsWith(queryParams.appCode + ':PATTERN') }) %>","rowVariableName":"pattern","enabled":false,"label":"<% 'Patterns for ' + (queryParams.appName ?? queryParams.appCode ?? '') %>","autoPaging":true,"visible":"<% !empty(queryParams.appCode) && size(shellOrgPatterns.data.filter(p => { p.code.startsWith((queryParams.appCode ?? '') + ':PATTERN') })) > 0 %>","columns":[{"type":"column","id":"colPatternName","columnId":"colPatternName","label":"Organization Name","sortableAndFilterable":"true","cellTemplate":{"type":"text","value":"<% pattern.organizationByName.descriptor ?? '' %>","enabled":false}},{"type":"column","id":"colPatternCode","columnId":"colPatternCode","label":"Pattern Code","sortableAndFilterable":"true","cellTemplate":{"type":"text","value":"<% pattern.code %>","enabled":false}},{"type":"column","id":"colStatus","columnId":"colStatus","label":"Status","sortableAndFilterable":"true","cellTemplate":{"type":"richText","value":"<% pattern.cf_active1 == true ? '<span style=\"color:#065f46;font-weight:600;font-size:11px\">\u2713 Active</span>' : '<span style=\"color:#6b7280;font-weight:600;font-size:11px\">\u25cb Inactive</span>' %>"}}]}]},{"type":"richText","id":"patternsSelectAppMsg","enabled":false,"visible":"<% empty(queryParams.appCode) %>","value":"<span style=\"color:#6b7280;font-size:13px\">Select an application above to view its shell org patterns.</span>"}]},{"type":"section","label":"Application Shell Organizations","children":[{"type":"fieldSet","id":"shellOrgsFieldSet","visible":"<% !empty(queryParams.appCode) %>","title":"Shell Organizations","layout":{"density":"medium","alignment":"left","horizontalSizing":"stretch","labelPosition":"top"},"children":[{"type":"richText","id":"shellOrgsEmptyMsg","enabled":false,"value":"<span style=\"color:#374151;font-size:12px\">No shell organizations found for this application code.</span>","visible":"<% !empty(queryParams.appCode) && size(shellOrgs.data.filter(o => { o.code.startsWith((queryParams.appCode ?? '') + ':') && !o.code.contains(':PATTERN') })) == 0 %>"},{"type":"grid","gridType":"LIST","multiViewStylingEnabled":true,"id":"shellOrgsGrid","rows":"<% empty(queryParams.appCode) ? [] : shellOrgs.data.filter(o => { o.code.startsWith(queryParams.appCode + ':') && !o.code.contains(':PATTERN') }) %>","rowVariableName":"org","enabled":false,"label":"<% 'Shell Organizations for ' + (queryParams.appName ?? queryParams.appCode ?? '') %>","autoPaging":true,"visible":"<% !empty(queryParams.appCode) && size(shellOrgs.data.filter(o => { o.code.startsWith((queryParams.appCode ?? '') + ':') && !o.code.contains(':PATTERN') })) > 0 %>","columns":[{"type":"column","id":"colOrgName","columnId":"colOrgName","label":"Organization Name","sortableAndFilterable":"true","cellTemplate":{"type":"text","value":"<% org.organizationByName.descriptor ?? '' %>","enabled":false}},{"type":"column","id":"colOrgCode","columnId":"colOrgCode","label":"Organization Code","sortableAndFilterable":"true","cellTemplate":{"type":"text","value":"<% org.code %>","enabled":false}}]}]},{"type":"richText","id":"shellOrgsSelectAppMsg","enabled":false,"visible":"<% empty(queryParams.appCode) %>","value":"<span style=\"color:#6b7280;font-size:13px\">Select an application above to view its shell organizations.</span>"}]},{"type":"section","label":"Add New Organization","children":[{"type":"richText","id":"addOrgNote","enabled":false,"value":"<span style=\"color:#374151;font-size:12px\">Create a new shell organization. The organization name will be auto-generated from the application code and organization code you provide.</span>"},{"type":"button","label":"Add New Shell Organization","taskReference":{"taskId":"newShellOrg"},"action":"PRIMARY"}]},{"type":"section","label":"Manage Role Assignments","children":[{"type":"fieldSet","id":"roleAssignmentsFieldSet","visible":"<% !empty(queryParams.appCode) %>","title":"Shell Role Assignments","layout":{"density":"medium","alignment":"left","horizontalSizing":"stretch","labelPosition":"top"},"children":[{"type":"richText","id":"roleAssignmentsNote","enabled":false,"value":"<span style=\"color:#374151;font-size:12px\">Role assignments for shell organizations in this application. Use <b>Manage Positions</b> to add or remove position restrictions from a role assignment.</span>"},{"type":"richText","id":"rolesEmptyMsg","enabled":false,"value":"<span style=\"color:#374151;font-size:12px\">No shell role assignments found for this application.</span>","visible":"<% !empty(queryParams.appCode) && size(shellRoles.data.filter(r => { r.roleAssignments != null && size(r.roleAssignments.filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith(queryParams.appCode ?? '') })) > 0 })) == 0 %>"},{"type":"grid","gridType":"LIST","multiViewStylingEnabled":true,"id":"roleAssignmentsGrid","rows":"<% empty(queryParams.appCode) ? [] : shellRoles.data.filter(r => { r.roleAssignments != null && size(r.roleAssignments.filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith(queryParams.appCode ?? '') })) > 0 }) %>","rowVariableName":"roleRow","enabled":false,"label":"<% 'Role Assignments for ' + (queryParams.appName ?? queryParams.appCode ?? '') %>","autoPaging":true,"visible":"<% !empty(queryParams.appCode) && size(shellRoles.data.filter(r => { r.roleAssignments != null && size(r.roleAssignments.filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith(queryParams.appCode ?? '') })) > 0 })) > 0 %>","columns":[{"type":"column","id":"colRoleName","columnId":"colRoleName","label":"Role","sortableAndFilterable":"true","cellTemplate":{"type":"text","value":"<% roleRow.role.descriptor ?? '' %>","enabled":false}},{"type":"column","id":"colOrgTypes","columnId":"colOrgTypes","label":"Enabled Org Types","sortableAndFilterable":"true","cellTemplate":{"type":"text","value":"<% roleRow.enabledForOrganizationTypes != null ? roleRow.enabledForOrganizationTypes.map(t => { t.descriptor }).join(', ') : '' %>","enabled":false}},{"type":"column","id":"colAssignmentOrg","columnId":"colAssignmentOrg","label":"Organization","sortableAndFilterable":"true","cellTemplate":{"type":"text","value":"<% roleRow.roleAssignments != null ? roleRow.roleAssignments.filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith(queryParams.appCode ?? '') }).map(ra => { ra.organization.descriptor }).join('; ') : '' %>","enabled":false}},{"type":"column","id":"colAssignedTo","columnId":"colAssignedTo","label":"Assigned To","sortableAndFilterable":"true","cellTemplate":{"type":"text","value":"<% roleRow.roleAssignments != null ? roleRow.roleAssignments.filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith(queryParams.appCode ?? '') }).flatMap(ra => { ra.workersAssigned != null ? ra.workersAssigned.map(w => { w.descriptor }) : [] }).join('; ') : '' %>","enabled":false}}]}]},{"type":"richText","id":"rolesSelectAppMsg","enabled":false,"visible":"<% empty(queryParams.appCode) %>","value":"<span style=\"color:#6b7280;font-size:13px\">Select an application above to manage its role assignments.</span>"}]}],"footer":{"type":"footer","children":[{"type":"pod","podId":"ecoComsFooter"}]}}}
+{
+  "id": "shellOrgManager",
+  "securityDomains": ["ManageCOMSShellOrgs"],
+  "include": ["comsCardGenerator.script"],
+  "endPoints": [
+    {
+      "name": "comsApplications",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "url": "/comsApplications",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true"
+    },
+    {
+      "name": "shellOrgPatterns",
+      "baseUrlType": "workday-wql",
+      "url": "data",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "wqlQuery": {"queryId": "existingPatterns"}
+    },
+    {
+      "name": "shellOrgs",
+      "baseUrlType": "workday-wql",
+      "url": "data",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "wqlQuery": {"queryId": "customOrganizations"}
+    },
+    {
+      "name": "shellRoles",
+      "baseUrlType": "workday-wql",
+      "url": "data",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "wqlQuery": {"queryId": "allShellAssignableRolesinTenant"}
+    }
+  ],
+  "presentation": {
+    "headerSize": "STANDARD",
+    "pageType": "view",
+    "title": {
+      "type": "title",
+      "label": "<% empty(queryParams.appName) ? 'ECO-COMS: Shell Org Manager' : (queryParams.appName ?? '') %>",
+      "enabled": true
+    },
+    "body": {
+      "type": "basicFormLayout",
+      "id": "shellOrgManagerForm",
+      "sections": [
+        {
+          "type": "layoutSection",
+          "id": "navSection",
+          "children": [
+            {
+              "type": "richText",
+              "id": "pageSubtitle",
+              "enabled": false,
+              "value": "<% empty(queryParams.appCode) ? '<span style=\"color:#6b7280;font-size:12px\">Select an application to manage its shell orgs and patterns.</span>' : '<span style=\"color:#6b7280;font-size:12px\">App ID: ' + (queryParams.appCode ?? '') + '</span>' %>"
+            },
+            {
+              "type": "button",
+              "label": "\u2190 Back to Applications",
+              "taskReference": {"taskId": "shellOrgManager"},
+              "action": "LINK",
+              "visible": "<% !empty(queryParams.appCode) %>"
+            },
+            {
+              "type": "button",
+              "label": "\u2190 Home",
+              "taskReference": {"taskId": "home"},
+              "action": "LINK",
+              "visible": "<% empty(queryParams.appCode) %>"
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "appsSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "appsFieldSet",
+              "visible": "<% empty(queryParams.appCode) %>",
+              "title": "Applications",
+              "layout": {"density": "medium", "alignment": "left", "horizontalSizing": "stretch", "labelPosition": "top"},
+              "children": [
+                {
+                  "type": "grid",
+                  "gridType": "LIST",
+                  "multiViewStylingEnabled": true,
+                  "id": "appsGrid",
+                  "rows": "<% comsApplications.data %>",
+                  "rowVariableName": "app",
+                  "enabled": false,
+                  "label": "Applications",
+                  "autoPaging": true,
+                  "columns": [
+                    {
+                      "type": "column",
+                      "id": "colAppName",
+                      "columnId": "colAppName",
+                      "label": "Application Name",
+                      "sortableAndFilterable": "true",
+                      "cellTemplate": {"type": "text", "value": "<% app.name ?? '' %>", "enabled": false}
+                    },
+                    {
+                      "type": "column",
+                      "id": "colAppActions",
+                      "columnId": "colAppActions",
+                      "label": "Manage",
+                      "cellTemplate": {
+                        "type": "button",
+                        "action": "AUXILIARY",
+                        "label": "Manage",
+                        "taskReference": {
+                          "taskId": "shellOrgManager",
+                          "parameterBindings": {"appCode": "<% app.appId %>", "appName": "<% app.name %>"}
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "tabs": [
+      {
+        "type": "section",
+        "label": "Application Patterns",
+        "children": [
+          {
+            "type": "fieldSet",
+            "id": "patternsFieldSet",
+            "visible": "<% !empty(queryParams.appCode) %>",
+            "title": "Shell Org Patterns",
+            "layout": {"density": "medium", "alignment": "left", "horizontalSizing": "stretch", "labelPosition": "top"},
+            "children": [
+              {
+                "type": "button",
+                "label": "Add Pattern",
+                "taskReference": {"taskId": "newShellOrgPattern"},
+                "action": "PRIMARY"
+              },
+              {
+                "type": "richText",
+                "id": "saveNote",
+                "enabled": false,
+                "value": "<span style=\"color:#d97706;font-size:11px;font-weight:700\">\u26a0 </span><span style=\"color:#92400e;font-size:11px\"><b>Warning:</b> Inactivating a pattern does not remove Workday role assignments using this organization. Verify no active role assignments reference it before inactivating.</span>"
+              },
+              {
+                "type": "richText",
+                "id": "emptyStateMsg",
+                "enabled": false,
+                "value": "<span style=\"color:#374151;font-size:12px\">No shell org patterns found for this application. Use the <b>Add Pattern</b> button above to create one.</span>",
+                "visible": "<% !empty(queryParams.appCode) && size(shellOrgPatterns.data.filter(p => { p.code.startsWith((queryParams.appCode ?? '') + ':PATTERN') })) == 0 %>"
+              },
+              {
+                "type": "grid",
+                "gridType": "LIST",
+                "multiViewStylingEnabled": true,
+                "id": "patternsGrid",
+                "rows": "<% empty(queryParams.appCode) ? [] : shellOrgPatterns.data.filter(p => { p.code.startsWith(queryParams.appCode + ':PATTERN') }) %>",
+                "rowVariableName": "pattern",
+                "enabled": false,
+                "label": "<% 'Patterns for ' + (queryParams.appName ?? queryParams.appCode ?? '') %>",
+                "autoPaging": true,
+                "visible": "<% !empty(queryParams.appCode) && size(shellOrgPatterns.data.filter(p => { p.code.startsWith((queryParams.appCode ?? '') + ':PATTERN') })) > 0 %>",
+                "columns": [
+                  {
+                    "type": "column",
+                    "id": "colPatternName",
+                    "columnId": "colPatternName",
+                    "label": "Organization Name",
+                    "sortableAndFilterable": "true",
+                    "cellTemplate": {"type": "text", "value": "<% pattern.organizationByName.descriptor ?? '' %>", "enabled": false}
+                  },
+                  {
+                    "type": "column",
+                    "id": "colPatternCode",
+                    "columnId": "colPatternCode",
+                    "label": "Pattern Code",
+                    "sortableAndFilterable": "true",
+                    "cellTemplate": {"type": "text", "value": "<% pattern.code %>", "enabled": false}
+                  },
+                  {
+                    "type": "column",
+                    "id": "colStatus",
+                    "columnId": "colStatus",
+                    "label": "Status",
+                    "sortableAndFilterable": "true",
+                    "cellTemplate": {
+                      "type": "richText",
+                      "value": "<% pattern.cf_active1 == true ? '<span style=\"color:#065f46;font-weight:600;font-size:11px\">\u2713 Active</span>' : '<span style=\"color:#6b7280;font-weight:600;font-size:11px\">\u25cb Inactive</span>' %>"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "richText",
+            "id": "patternsSelectAppMsg",
+            "enabled": false,
+            "visible": "<% empty(queryParams.appCode) %>",
+            "value": "<span style=\"color:#6b7280;font-size:13px\">Select an application above to view its shell org patterns.</span>"
+          }
+        ]
+      },
+      {
+        "type": "section",
+        "label": "Application Shell Organizations",
+        "children": [
+          {
+            "type": "fieldSet",
+            "id": "shellOrgsFieldSet",
+            "visible": "<% !empty(queryParams.appCode) %>",
+            "title": "Shell Organizations",
+            "layout": {"density": "medium", "alignment": "left", "horizontalSizing": "stretch", "labelPosition": "top"},
+            "children": [
+              {
+                "type": "richText",
+                "id": "shellOrgsEmptyMsg",
+                "enabled": false,
+                "value": "<span style=\"color:#374151;font-size:12px\">No shell organizations found for this application code.</span>",
+                "visible": "<% !empty(queryParams.appCode) && size(shellOrgs.data.filter(o => { o.code.startsWith((queryParams.appCode ?? '') + ':') && !o.code.contains(':PATTERN') })) == 0 %>"
+              },
+              {
+                "type": "grid",
+                "gridType": "LIST",
+                "multiViewStylingEnabled": true,
+                "id": "shellOrgsGrid",
+                "rows": "<% empty(queryParams.appCode) ? [] : shellOrgs.data.filter(o => { o.code.startsWith(queryParams.appCode + ':') && !o.code.contains(':PATTERN') }) %>",
+                "rowVariableName": "org",
+                "enabled": false,
+                "label": "<% 'Shell Organizations for ' + (queryParams.appName ?? queryParams.appCode ?? '') %>",
+                "autoPaging": true,
+                "visible": "<% !empty(queryParams.appCode) && size(shellOrgs.data.filter(o => { o.code.startsWith((queryParams.appCode ?? '') + ':') && !o.code.contains(':PATTERN') })) > 0 %>",
+                "columns": [
+                  {
+                    "type": "column",
+                    "id": "colOrgName",
+                    "columnId": "colOrgName",
+                    "label": "Organization Name",
+                    "sortableAndFilterable": "true",
+                    "cellTemplate": {"type": "text", "value": "<% org.organizationByName.descriptor ?? '' %>", "enabled": false}
+                  },
+                  {
+                    "type": "column",
+                    "id": "colOrgCode",
+                    "columnId": "colOrgCode",
+                    "label": "Organization Code",
+                    "sortableAndFilterable": "true",
+                    "cellTemplate": {"type": "text", "value": "<% org.code %>", "enabled": false}
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "richText",
+            "id": "shellOrgsSelectAppMsg",
+            "enabled": false,
+            "visible": "<% empty(queryParams.appCode) %>",
+            "value": "<span style=\"color:#6b7280;font-size:13px\">Select an application above to view its shell organizations.</span>"
+          }
+        ]
+      },
+      {
+        "type": "section",
+        "label": "Add New Organization",
+        "children": [
+          {
+            "type": "richText",
+            "id": "addOrgNote",
+            "enabled": false,
+            "value": "<span style=\"color:#374151;font-size:12px\">Create a new shell organization. The organization name will be auto-generated from the application code and organization code you provide.</span>"
+          },
+          {
+            "type": "button",
+            "label": "Add New Shell Organization",
+            "taskReference": {"taskId": "newShellOrg"},
+            "action": "PRIMARY"
+          }
+        ]
+      },
+      {
+        "type": "section",
+        "label": "Manage Role Assignments",
+        "children": [
+          {
+            "type": "fieldSet",
+            "id": "roleAssignmentsFieldSet",
+            "visible": "<% !empty(queryParams.appCode) %>",
+            "title": "Shell Role Assignments",
+            "layout": {"density": "medium", "alignment": "left", "horizontalSizing": "stretch", "labelPosition": "top"},
+            "children": [
+              {
+                "type": "richText",
+                "id": "roleAssignmentsNote",
+                "enabled": false,
+                "value": "<span style=\"color:#374151;font-size:12px\">Role assignments for shell organizations in this application. Use <b>Manage Positions</b> to add or remove position restrictions from a role assignment.</span>"
+              },
+              {
+                "type": "richText",
+                "id": "rolesEmptyMsg",
+                "enabled": false,
+                "value": "<span style=\"color:#374151;font-size:12px\">No shell role assignments found for this application.</span>",
+                "visible": "<% !empty(queryParams.appCode) && size(shellRoles.data.filter(r => { r.roleAssignments != null && size(r.roleAssignments.filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith(queryParams.appCode ?? '') })) > 0 })) == 0 %>"
+              },
+              {
+                "type": "grid",
+                "gridType": "LIST",
+                "multiViewStylingEnabled": true,
+                "id": "roleAssignmentsGrid",
+                "rows": "<% empty(queryParams.appCode) ? [] : shellRoles.data.filter(r => { r.roleAssignments != null && size(r.roleAssignments.filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith(queryParams.appCode ?? '') })) > 0 }) %>",
+                "rowVariableName": "roleRow",
+                "enabled": false,
+                "label": "<% 'Role Assignments for ' + (queryParams.appName ?? queryParams.appCode ?? '') %>",
+                "autoPaging": true,
+                "visible": "<% !empty(queryParams.appCode) && size(shellRoles.data.filter(r => { r.roleAssignments != null && size(r.roleAssignments.filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith(queryParams.appCode ?? '') })) > 0 })) > 0 %>",
+                "columns": [
+                  {
+                    "type": "column",
+                    "id": "colRoleName",
+                    "columnId": "colRoleName",
+                    "label": "Role",
+                    "sortableAndFilterable": "true",
+                    "cellTemplate": {"type": "text", "value": "<% roleRow.role.descriptor ?? '' %>", "enabled": false}
+                  },
+                  {
+                    "type": "column",
+                    "id": "colOrgTypes",
+                    "columnId": "colOrgTypes",
+                    "label": "Enabled Org Types",
+                    "sortableAndFilterable": "true",
+                    "cellTemplate": {
+                      "type": "text",
+                      "value": "<% roleRow.enabledForOrganizationTypes != null ? roleRow.enabledForOrganizationTypes.map(t => { t.descriptor }).join(', ') : '' %>",
+                      "enabled": false
+                    }
+                  },
+                  {
+                    "type": "column",
+                    "id": "colAssignmentOrg",
+                    "columnId": "colAssignmentOrg",
+                    "label": "Organization",
+                    "sortableAndFilterable": "true",
+                    "cellTemplate": {
+                      "type": "text",
+                      "value": "<% roleRow.roleAssignments != null ? roleRow.roleAssignments.filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith(queryParams.appCode ?? '') }).map(ra => { ra.organization.descriptor }).join('; ') : '' %>",
+                      "enabled": false
+                    }
+                  },
+                  {
+                    "type": "column",
+                    "id": "colAssignedTo",
+                    "columnId": "colAssignedTo",
+                    "label": "Assigned To",
+                    "sortableAndFilterable": "true",
+                    "cellTemplate": {
+                      "type": "text",
+                      "value": "<% roleRow.roleAssignments != null ? roleRow.roleAssignments.filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith(queryParams.appCode ?? '') }).flatMap(ra => { ra.workersAssigned != null ? ra.workersAssigned.map(w => { w.descriptor }) : [] }).join('; ') : '' %>",
+                      "enabled": false
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "richText",
+            "id": "rolesSelectAppMsg",
+            "enabled": false,
+            "visible": "<% empty(queryParams.appCode) %>",
+            "value": "<span style=\"color:#6b7280;font-size:13px\">Select an application above to manage its role assignments.</span>"
+          }
+        ]
+      }
+    ],
+    "footer": {
+      "type": "footer",
+      "children": [
+        {"type": "pod", "podId": "ecoComsFooter"}
+      ]
+    }
+  }
+}
