@@ -68,10 +68,6 @@
             "labelPosition": "top"
           }
         },
-        {
-          "type": "pod",
-          "podId": "ecoComsFooter"
-        }
       ]
     },
     "tabs": [
@@ -203,6 +199,10 @@
             "type": "readOnlyText",
             "id": "exportNote",
             "value": "Use the grid's built-in export action to download these results as CSV for compliance reporting."
+          },
+          {
+            "type": "pod",
+            "podId": "ecoComsFooter"
           }
         ]
       },
@@ -230,6 +230,10 @@
             "type": "readOnlyText",
             "id": "filterNote",
             "value": "Filtering by Application or Action is not yet available on this page. Use the grid's built-in column sort and the export action to narrow results."
+          },
+          {
+            "type": "pod",
+            "podId": "ecoComsFooter"
           }
         ]
       }
