@@ -15,9 +15,18 @@
           "task": {
             "taskId": "landingPage"
           },
-          "label": "RBAC APP HUB",
+          "label": "RBAC HUB",
           "color": "#002145",
           "icon": "wd-accent-home"
+        },
+        {
+          "type": "item",
+          "task": {
+            "taskId": "fuhLandingPage"
+          },
+          "label": "FUH Administration",
+          "color": "#002145",
+          "icon": "wd-accent-worksheets"
         }
       ]
     },

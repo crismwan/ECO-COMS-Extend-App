@@ -1,0 +1,29 @@
+{
+  "id": "fuhLandingPage",
+  "securityDomains": [
+    "ManageCOMSShellOrgs"
+  ],
+  "presentation": {
+    "headerSize": "VPS_DEFAULT",
+    "title": {
+      "type": "title",
+      "label": "Functional Unit Hierarchy Management",
+      "enabled": true
+    },
+    "body": {
+      "type": "basicFormLayout",
+      "id": "fuhLandingPageForm",
+      "sections": []
+    },
+    "footer": {
+      "type": "footer",
+      "children": [
+        {
+          "type": "pod",
+          "podId": "ecoComsFooter"
+        }
+      ]
+    },
+    "pageType": "view"
+  }
+}

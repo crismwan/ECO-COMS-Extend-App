@@ -63,6 +63,7 @@
   "siteProperties": [ ],
   "applicationId": "ecocomsphase_xclw_cm_sync2_vmzvxm",
   "headerBackgroundColor": "#002145",
+  "titleAlignment": "CENTER",
   "titles": [
     {
       "value": "Role-Based Access Control (RBAC) Solution",
