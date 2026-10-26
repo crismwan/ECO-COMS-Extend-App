@@ -119,11 +119,14 @@ jobs:
           WDCLI_CLIENT_ID: ${{ secrets.WD_CLIENT_ID }}
           WDCLI_CLIENT_SECRET: ${{ secrets.WD_CLIENT_SECRET }}
         run: |
-          set -uxo pipefail
+          set -uo pipefail
 
           echo "=== Running wdcli app upload ==="
-          # Capture output even on failure; check exit code separately
-          echo "." | wdcli app upload 2>&1 | tee /tmp/upload-output.txt; UPLOAD_EXIT=${PIPESTATUS[1]}
+          # Disable -e so we can capture the exit code ourselves
+          set +e
+          echo "." | wdcli app upload 2>&1 | tee /tmp/upload-output.txt
+          UPLOAD_EXIT=${PIPESTATUS[1]}
+          set -e
           echo "=== Upload output ==="
           cat /tmp/upload-output.txt
           echo "=== Upload exit code: ${UPLOAD_EXIT} ==="
@@ -134,9 +137,9 @@ jobs:
               echo "Exit code: ${UPLOAD_EXIT}"
               echo "### Upload output:"
               echo '```'
-              cat /tmp/upload-output.txt
+              cat /tmp/upload-output.txt 2>/dev/null || echo "(no output captured)"
               echo '```'
-            } >> $GITHUB_STEP_SUMMARY
+            } >> $GITHUB_STEP_SUMMARY || true
             exit 1
           fi
 
