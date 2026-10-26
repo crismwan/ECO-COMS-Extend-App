@@ -16,16 +16,13 @@
       "sections": [
         {
           "type": "layoutSection",
-          "id": "topRow",
-          "layout": {
-            "numberOfColumns": "TWO_COLUMNS"
-          },
+          "id": "shellOrgCardSection",
           "children": [
             {
               "type": "fieldSet",
               "id": "shellOrgCard",
               "layout": {
-                "density": "medium",
+                "density": "low",
                 "alignment": "left",
                 "horizontalSizing": "stretch",
                 "labelPosition": "top"
@@ -35,19 +32,13 @@
                   "type": "richText",
                   "id": "shellOrgTitle",
                   "enabled": false,
-                  "value": "<b>&#9632; Shell Org Manager</b>"
-                },
-                {
-                  "type": "richText",
-                  "id": "shellOrgCategory",
-                  "enabled": false,
-                  "value": "<span style=\"color:#888;font-size:11px;text-transform:uppercase;letter-spacing:1px\">Shell Organizations</span>"
+                  "value": "<b>&#9632; Shell Org Manager</b> &nbsp;<span style=\"color:#888;font-size:11px\">SHELL ORGANIZATIONS</span>"
                 },
                 {
                   "type": "richText",
                   "id": "shellOrgDesc",
                   "enabled": false,
-                  "value": "<span style=\"color:#64748b;font-size:13px\">View and manage shell org patterns for your assigned application.</span>"
+                  "value": "<span style=\"color:#64748b;font-size:12px\">View and manage shell org patterns for your assigned application.</span>"
                 },
                 {
                   "type": "button",
@@ -68,12 +59,18 @@
                   "action": "PRIMARY"
                 }
               ]
-            },
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "myRoleRequestsCardSection",
+          "children": [
             {
               "type": "fieldSet",
               "id": "myRoleRequestsCard",
               "layout": {
-                "density": "medium",
+                "density": "low",
                 "alignment": "left",
                 "horizontalSizing": "stretch",
                 "labelPosition": "top"
@@ -83,19 +80,13 @@
                   "type": "richText",
                   "id": "myRoleRequestsTitle",
                   "enabled": false,
-                  "value": "<b>&#9670; My Role Requests</b>"
-                },
-                {
-                  "type": "richText",
-                  "id": "myRoleRequestsCategory",
-                  "enabled": false,
-                  "value": "<span style=\"color:#888;font-size:11px;text-transform:uppercase;letter-spacing:1px\">Assignable Roles</span>"
+                  "value": "<b>&#9670; My Role Requests</b> &nbsp;<span style=\"color:#888;font-size:11px\">ASSIGNABLE ROLES</span>"
                 },
                 {
                   "type": "richText",
                   "id": "myRoleRequestsDesc",
                   "enabled": false,
-                  "value": "<span style=\"color:#64748b;font-size:13px\">View the status of your pending and approved role requests.</span>"
+                  "value": "<span style=\"color:#64748b;font-size:12px\">View the status of your pending and approved role requests.</span>"
                 },
                 {
                   "type": "button",
@@ -121,16 +112,13 @@
         },
         {
           "type": "layoutSection",
-          "id": "middleRow",
-          "layout": {
-            "numberOfColumns": "TWO_COLUMNS"
-          },
+          "id": "adminProvisioningCardSection",
           "children": [
             {
               "type": "fieldSet",
               "id": "adminProvisioningCard",
               "layout": {
-                "density": "medium",
+                "density": "low",
                 "alignment": "left",
                 "horizontalSizing": "stretch",
                 "labelPosition": "top"
@@ -140,19 +128,13 @@
                   "type": "richText",
                   "id": "adminProvisioningTitle",
                   "enabled": false,
-                  "value": "<b>&#9650; Admin Provisioning</b>"
-                },
-                {
-                  "type": "richText",
-                  "id": "adminProvisioningCategory",
-                  "enabled": false,
-                  "value": "<span style=\"color:#888;font-size:11px;text-transform:uppercase;letter-spacing:1px\">Administration</span>"
+                  "value": "<b>&#9650; Admin Provisioning</b> &nbsp;<span style=\"color:#888;font-size:11px\">ADMINISTRATION</span>"
                 },
                 {
                   "type": "richText",
                   "id": "adminProvisioningDesc",
                   "enabled": false,
-                  "value": "<span style=\"color:#64748b;font-size:13px\">Manage AAA role provisioning. Submit or review AAA requests for each application.</span>"
+                  "value": "<span style=\"color:#64748b;font-size:12px\">Submit or review AAA provisioning requests for each application.</span>"
                 },
                 {
                   "type": "button",
@@ -173,12 +155,18 @@
                   "action": "PRIMARY"
                 }
               ]
-            },
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "pendingIscCardSection",
+          "children": [
             {
               "type": "fieldSet",
               "id": "pendingIscCard",
               "layout": {
-                "density": "medium",
+                "density": "low",
                 "alignment": "left",
                 "horizontalSizing": "stretch",
                 "labelPosition": "top"
@@ -188,19 +176,13 @@
                   "type": "richText",
                   "id": "pendingIscTitle",
                   "enabled": false,
-                  "value": "<b>&#9658; Pending ISC Requests</b>"
-                },
-                {
-                  "type": "richText",
-                  "id": "pendingIscCategory",
-                  "enabled": false,
-                  "value": "<span style=\"color:#888;font-size:11px;text-transform:uppercase;letter-spacing:1px\">Administration</span>"
+                  "value": "<b>&#9658; Pending ISC Requests</b> &nbsp;<span style=\"color:#888;font-size:11px\">ADMINISTRATION</span>"
                 },
                 {
                   "type": "richText",
                   "id": "pendingIscDesc",
                   "enabled": false,
-                  "value": "<span style=\"color:#64748b;font-size:13px\">Review and process all pending assignable role requests across ECO-COMS.</span>"
+                  "value": "<span style=\"color:#64748b;font-size:12px\">Review and process pending assignable role requests across ECO-COMS.</span>"
                 },
                 {
                   "type": "button",
@@ -217,16 +199,13 @@
         },
         {
           "type": "layoutSection",
-          "id": "bottomRow",
-          "layout": {
-            "numberOfColumns": "TWO_COLUMNS"
-          },
+          "id": "auditLogCardSection",
           "children": [
             {
               "type": "fieldSet",
               "id": "auditLogCard",
               "layout": {
-                "density": "medium",
+                "density": "low",
                 "alignment": "left",
                 "horizontalSizing": "stretch",
                 "labelPosition": "top"
@@ -236,19 +215,13 @@
                   "type": "richText",
                   "id": "auditLogTitle",
                   "enabled": false,
-                  "value": "<b>&#9658; Audit Log</b>"
-                },
-                {
-                  "type": "richText",
-                  "id": "auditLogCategory",
-                  "enabled": false,
-                  "value": "<span style=\"color:#888;font-size:11px;text-transform:uppercase;letter-spacing:1px\">Administration</span>"
+                  "value": "<b>&#9658; Audit Log</b> &nbsp;<span style=\"color:#888;font-size:11px\">ADMINISTRATION</span>"
                 },
                 {
                   "type": "richText",
                   "id": "auditLogDesc",
                   "enabled": false,
-                  "value": "<span style=\"color:#64748b;font-size:13px\">Review the history of all ECO-COMS changes, actions, and events.</span>"
+                  "value": "<span style=\"color:#64748b;font-size:12px\">Review the history of all ECO-COMS changes, actions, and events.</span>"
                 },
                 {
                   "type": "button",
