@@ -132,20 +132,31 @@ jobs:
             exit 1
           fi
 
-          # After upload, get the latest version ID via wdcli app versions
-          echo "=== Fetching latest version ID ==="
+          # First try to extract version ID directly from upload output
+          VERSION_ID=$(grep -oE '"versionId"[[:space:]]*:[[:space:]]*"([0-9a-f]{32})"' /tmp/upload-output.txt 2>/dev/null | grep -oE '[0-9a-f]{32}' | head -1)
+          if [ -z "${VERSION_ID}" ]; then
+            VERSION_ID=$(grep -oE 'versionId[[:space:]]*=[[:space:]]*([0-9a-f]{32})' /tmp/upload-output.txt 2>/dev/null | grep -oE '[0-9a-f]{32}' | head -1)
+          fi
+          echo "=== VERSION_ID from upload output: '${VERSION_ID}' ==="
+
+          # After upload, also try wdcli app versions
+          echo "=== Fetching latest version ID via wdcli app versions ==="
           wdcli app versions "${APP_REF_ID}" --format json 2>&1 | tee /tmp/versions-output.txt; VERSIONS_EXIT=${PIPESTATUS[0]}
           echo "=== Versions output ==="
           cat /tmp/versions-output.txt
           echo "=== Versions exit code: ${VERSIONS_EXIT} ==="
 
-          # Extract version ID from versions JSON output
-          VERSION_ID=$(jq -r '.[0].versionId // empty' /tmp/versions-output.txt 2>/dev/null)
+          # Try to extract from versions output if not found from upload
+          if [ -z "${VERSION_ID}" ]; then
+            VERSION_ID=$(jq -r '.[0].versionId // empty' /tmp/versions-output.txt 2>/dev/null)
+          fi
           if [ -z "${VERSION_ID}" ]; then
             VERSION_ID=$(grep -oE '"versionId"[[:space:]]*:[[:space:]]*"([0-9a-f]{32})"' /tmp/versions-output.txt 2>/dev/null | grep -oE '[0-9a-f]{32}' | head -1)
           fi
           if [ -z "${VERSION_ID}" ]; then
             echo "ERROR: Could not determine version ID from upload or versions output"
+            echo "=== Full upload output for diagnosis ==="
+            cat /tmp/upload-output.txt
             exit 1
           fi
           echo "Version ID: ${VERSION_ID}"
