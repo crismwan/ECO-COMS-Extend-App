@@ -237,18 +237,20 @@
           "id": "contentSection",
           "children": [
             {
-              "type": "readOnlyText",
+              "type": "richText",
               "id": "pageDesc",
-              "value": "Manage Assignable Roles for Custom Organizations. Review pending role requests or submit a new role request for ISC review."
+              "enabled": false,
+              "value": "<span style=\"color:#6b7280;font-size:11px\">Manage Assignable Roles for Custom Organizations. Review pending role requests or submit a new role request for ISC review.</span>"
             },
             {
               "type": "fieldSet",
               "id": "pendingRolesSection",
               "children": [
                 {
-                  "type": "readOnlyText",
+                  "type": "richText",
                   "id": "pendingDesc",
-                  "value": "The following Assignable Role requests are awaiting ISC review. Click Maintain to approve or deny a request."
+                  "enabled": false,
+                  "value": "<div style=\"background:#eef4ff;border-left:3px solid #0055B7;padding:8px 10px;font-size:11px;color:#374151\">The following Assignable Role requests are awaiting ISC review. Click <b>Maintain</b> to approve or deny a request.</div>"
                 },
                 {
                   "type": "grid",
@@ -407,9 +409,10 @@
               "id": "addNewRoleSection",
               "children": [
                 {
-                  "type": "readOnlyText",
+                  "type": "richText",
                   "id": "addNewDesc",
-                  "value": "Submit a new Assignable Role request. Select the Custom Organization, provide role details and select positions. Once submitted, status will be set to Pending ISC Review."
+                  "enabled": false,
+                  "value": "<div style=\"background:#eef4ff;border-left:3px solid #0055B7;padding:8px 10px;font-size:11px;color:#374151\">Submit a new Assignable Role request. Select the Custom Organization, provide role details and select positions. Once submitted, status will be set to <b>Pending ISC Review</b>.</div>"
                 },
                 {
                   "type": "instanceList",
@@ -516,9 +519,10 @@
                   "displayKey": "position_PositionManagement.descriptor"
                 },
                 {
-                  "type": "readOnlyText",
+                  "type": "richText",
                   "id": "activeNote",
-                  "value": "Role Assignment Active status is automatically set based on whether selected positions are filled."
+                  "enabled": false,
+                  "value": "<div style=\"background:#eef4ff;border-left:3px solid #0055B7;padding:8px 10px;font-size:11px;color:#374151\">Role Assignment Active status is automatically set based on whether selected positions are filled.</div>"
                 },
                 {
                   "type": "hidden",

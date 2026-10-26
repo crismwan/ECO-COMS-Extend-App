@@ -164,9 +164,10 @@
           "id": "contentSection",
           "children": [
             {
-              "type": "readOnlyText",
+              "type": "richText",
               "id": "saveNote",
-              "value": "Important: changing Status to Inactive does not automatically remove any Workday role assignments that reference this shell organization. Verify in Workday (Get_Assign_User_Based_Security_Groups) that no active role assignment uses this Custom Organization before inactivating, otherwise the meaning of that assignment may become unclear."
+              "enabled": false,
+              "value": "<div style=\"background:#fef3c7;border-left:3px solid #d97706;padding:8px 10px;font-size:11px;color:#92400e\"><b>Warning:</b> Changing Status to Inactive does not automatically remove any Workday role assignments referencing this shell organization. Verify in Workday (<code>Get_Assign_User_Based_Security_Groups</code>) that no active role assignment uses this Custom Organization before inactivating.</div>"
             }
           ]
         }

@@ -99,16 +99,6 @@
                   },
                   "action": "AUXILIARY",
                   "tooltip": "Submit a new Assignable Role request for ISC review."
-                },
-                {
-                  "type": "button",
-                  "id": "pendingIscRequestsArmBtn",
-                  "label": "Pending ISC Requests",
-                  "taskReference": {
-                    "taskId": "iscRoleRequestsView"
-                  },
-                  "action": "AUXILIARY",
-                  "tooltip": "View all role requests currently pending ISC review."
                 }
               ]
             }
@@ -133,7 +123,7 @@
                   "type": "richText",
                   "id": "adminDesc",
                   "enabled": false,
-                  "value": "Admin Provisioning controls which users can manage shell orgs and submit role requests for each application. ISC can submit AAA role requests and review pending requests here."
+                  "value": "Admin Provisioning controls which users can manage shell orgs and submit role requests for each application. Submit a new AAA role request or view all provisioned roles."
                 },
                 {
                   "type": "button",
@@ -154,15 +144,40 @@
                   },
                   "action": "AUXILIARY",
                   "tooltip": "Submit a new AAA role request for ISC review."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "iscOnlyLayoutSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "iscOnlySection",
+              "title": "ISC Only",
+              "layout": {
+                "density": "medium",
+                "alignment": "left",
+                "horizontalSizing": "stretch",
+                "labelPosition": "top"
+              },
+              "children": [
+                {
+                  "type": "richText",
+                  "id": "iscOnlyDesc",
+                  "enabled": false,
+                  "value": "ISC Security staff: review and process all pending Assignable Role requests from across ECO-COMS."
                 },
                 {
                   "type": "button",
-                  "id": "pendingIscRequestsAdminBtn",
+                  "id": "pendingIscRequestsBtn",
                   "label": "Pending ISC Requests",
                   "taskReference": {
                     "taskId": "iscRoleRequestsView"
                   },
-                  "action": "AUXILIARY",
+                  "action": "PRIMARY",
                   "tooltip": "View all role requests currently pending ISC review."
                 }
               ]

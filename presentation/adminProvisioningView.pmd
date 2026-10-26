@@ -99,15 +99,17 @@
               "value": "Admin Provisioning controls who can manage shell orgs and submit role requests in ECO-COMS for each application. These are <b>AAA (Organizations and Roles Assignment Administrator)</b> roles. To submit a new AAA role request for ISC review, click <b>Submit AAA Role Request</b> above."
             },
             {
-              "type": "readOnlyText",
+              "type": "richText",
               "id": "pendingNoticeYes",
-              "value": "There are AAA role requests currently pending ISC review. Use the Maintain action on a row below to process pending requests.",
+              "enabled": false,
+              "value": "<div style=\"background:#fef3c7;border-left:3px solid #d97706;padding:8px 10px;font-size:11px;color:#92400e\">⏳ There are AAA role requests currently pending ISC review. Use the <b>Maintain</b> action on a row below to process pending requests.</div>",
               "visible": "<% size(comsAssignableRoles.data.filter(r => r.roleName.startsWith('Organizations and Roles Assignment Administrator') && r.status == 'Pending ISC Review')) > 0 %>"
             },
             {
-              "type": "readOnlyText",
+              "type": "richText",
               "id": "pendingNoticeNo",
-              "value": "There are no AAA role requests pending ISC review.",
+              "enabled": false,
+              "value": "<div style=\"background:#d1fae5;border-left:3px solid #059669;padding:8px 10px;font-size:11px;color:#065f46\">✓ There are no AAA role requests pending ISC review.</div>",
               "visible": "<% size(comsAssignableRoles.data.filter(r => r.roleName.startsWith('Organizations and Roles Assignment Administrator') && r.status == 'Pending ISC Review')) == 0 %>"
             }
           ]
@@ -172,7 +174,7 @@
                       "sortableAndFilterable": "true",
                       "cellTemplate": {
                         "type": "richText",
-                        "value": "<% role.status == 'Pending ISC Review' ? '<span style=\"color:#b45309;font-weight:600\">\u23f3 Pending ISC Review</span>' : role.status == 'Approved' ? '<span style=\"color:#15803d;font-weight:600\">\u2713 Approved</span>' : role.status == 'Inactive' ? '<span style=\"color:#6b7280;font-weight:600\">\u25cb Inactive</span>' : role.status ?? '' %>"
+                        "value": "<% role.status == 'Pending ISC Review' ? '<span style=\"background:#fef3c7;color:#92400e;font-weight:600;padding:2px 8px;border-radius:4px\">\u23f3 Pending ISC Review</span>' : role.status == 'Approved' ? '<span style=\"background:#d1fae5;color:#065f46;font-weight:600;padding:2px 8px;border-radius:4px\">\u2713 Approved</span>' : role.status == 'Inactive' ? '<span style=\"background:#f3f4f6;color:#6b7280;font-weight:600;padding:2px 8px;border-radius:4px\">\u25cb Inactive</span>' : role.status ?? '' %>"
                       }
                     },
                     {

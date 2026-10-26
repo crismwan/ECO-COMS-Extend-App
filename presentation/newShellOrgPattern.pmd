@@ -188,9 +188,10 @@
               "id": "aboutFieldSet",
               "children": [
                 {
-                  "type": "readOnlyText",
+                  "type": "richText",
                   "id": "pageDescription",
-                  "value": "Add a new Shell Org Pattern for your application. Patterns define the CO naming structure used to create Custom Organizations in Workday. The pattern name is auto-generated from the fields below. A duplicate check is performed before submission."
+                  "enabled": false,
+                  "value": "<div style=\"background:#eef4ff;border-left:3px solid #0055B7;padding:8px 10px;font-size:11px;color:#374151\">Add a new Shell Org Pattern for your application. Patterns define the CO naming structure used to create Custom Organizations in Workday. The pattern name is auto-generated from the fields below. A duplicate check is performed before submission.</div>"
                 }
               ],
               "title": "About this page",
@@ -280,9 +281,10 @@
                   "onChange": "<%\n            if (empty(self.value)) {\n              self.clearError();\n            } else if (!comsValidations.isWeekday(self.value)) {\n              self.setError(comsValidations.errorWeekday());\n            } else if (!comsValidations.isCurrentOrFutureYear(self.value)) {\n              self.setError(comsValidations.errorYear());\n            } else {\n              self.clearError();\n            }\n          %>"
                 },
                 {
-                  "type": "readOnlyText",
+                  "type": "richText",
                   "id": "patternHelp",
-                  "value": "Fill in the pattern attributes below. Leave blank to use wildcard (*). The Pattern Name Preview above updates as you type."
+                  "enabled": false,
+                  "value": "<div style=\"background:#eef4ff;border-left:3px solid #0055B7;padding:8px 10px;font-size:11px;color:#374151\">Fill in the pattern attributes below. Leave blank to use wildcard (*). The Pattern Name Preview above updates as you type.</div>"
                 },
                 {
                   "type": "text",

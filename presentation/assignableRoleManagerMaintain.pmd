@@ -413,9 +413,8 @@
       "type": "footer",
       "children": [
         {
-          "type": "richText",
-          "enabled": "false",
-          "value": "Powered By Workday Extend"
+          "type": "pod",
+          "podId": "ecoComsFooter"
         }
       ]
     },

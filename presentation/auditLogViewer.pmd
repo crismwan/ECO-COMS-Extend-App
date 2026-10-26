@@ -207,9 +207,10 @@
             ]
           },
           {
-            "type": "readOnlyText",
+            "type": "richText",
             "id": "exportNote",
-            "value": "Use the grid's built-in export action to download these results as CSV for compliance reporting."
+            "enabled": false,
+            "value": "<div style=\"background:#eef4ff;border-left:3px solid #0055B7;padding:8px 10px;font-size:11px;color:#374151\">Use the grid’s built-in export action to download these results as CSV for compliance reporting.</div>"
           },
           {
             "type": "pod",
@@ -238,9 +239,10 @@
             ]
           },
           {
-            "type": "readOnlyText",
+            "type": "richText",
             "id": "filterNote",
-            "value": "Filtering by Application or Action is not yet available on this page. Use the grid's built-in column sort and the export action to narrow results."
+            "enabled": false,
+            "value": "<div style=\"background:#fef3c7;border-left:3px solid #d97706;padding:8px 10px;font-size:11px;color:#92400e\">Filtering by Application or Action is not yet available on this page. Use the grid’s built-in column sort and the export action to narrow results.</div>"
           },
           {
             "type": "pod",
