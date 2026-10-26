@@ -157,6 +157,18 @@ jobs:
             echo "ERROR: Could not determine version ID from upload or versions output"
             echo "=== Full upload output for diagnosis ==="
             cat /tmp/upload-output.txt
+            # Write to GitHub Step Summary for accessibility
+            {
+              echo "## Upload Failure Diagnosis"
+              echo "### Upload output:"
+              echo '```'
+              cat /tmp/upload-output.txt
+              echo '```'
+              echo "### Versions output:"
+              echo '```'
+              cat /tmp/versions-output.txt 2>/dev/null || echo "(empty)"
+              echo '```'
+            } >> $GITHUB_STEP_SUMMARY
             exit 1
           fi
           echo "Version ID: ${VERSION_ID}"
