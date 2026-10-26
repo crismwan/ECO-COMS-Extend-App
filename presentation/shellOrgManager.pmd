@@ -3,30 +3,10 @@
   "securityDomains": [
     "ManageCOMSShellOrgs"
   ],
+  "include": [
+    "comsCardGenerator.script"
+  ],
   "endPoints": [
-    {
-      "name": "selectedWorker",
-      "baseUrlType": "workday-common",
-      "url": "workers/me",
-      "authType": "sso"
-    },
-    {
-      "name": "myAssignments",
-      "baseUrlType": "workday-app",
-      "url": "comsRoleAssignments",
-      "authType": "sso",
-      "isCollection": true,
-      "bestEffort": "true"
-    },
-    {
-      "name": "shellOrgs",
-      "baseUrlType": "BUSINESS-OBJECT",
-      "url": "<% empty(selectedApplicationId.value) ? '/comsShellOrgRequests?active=true' : '/comsShellOrgRequests?active=true&application=' + selectedApplicationId.value[0] %>",
-      "authType": "sso",
-      "isCollection": true,
-      "bestEffort": "true",
-      "exclude": "<% empty(selectedApplicationId.value) %>"
-    },
     {
       "name": "comsApplications",
       "baseUrlType": "BUSINESS-OBJECT",
@@ -34,58 +14,22 @@
       "authType": "sso",
       "isCollection": true,
       "bestEffort": "true"
+    },
+    {
+      "name": "shellOrgPatterns",
+      "baseUrlType": "workday-wql",
+      "url": "data",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "wqlQuery": {
+        "queryId": "existingPatterns"
+      }
     }
   ],
-  "outboundData": {
-    "outboundEndPoints": [
-      {
-        "name": "comsShellOrgRequestsPut",
-        "baseUrlType": "BUSINESS-OBJECT",
-        "url": "<% '/comsShellOrgRequests/' + comsShellOrgRequestsPut.id %>",
-        "httpMethod": "PUT",
-        "authType": "sso",
-        "onSend": "<% self.data %>",
-        "values": [
-          {
-            "outboundPath": "status",
-            "value": "<% comsShellOrgRequestsPut.status %>"
-          }
-        ]
-      },
-      {
-        "name": "comsAuditLogsPost",
-        "baseUrlType": "BUSINESS-OBJECT",
-        "url": "comsAuditLogs",
-        "httpMethod": "POST",
-        "authType": "sso",
-        "onSend": "<% return self.data; %>",
-        "values": [
-          {
-            "outboundPath": "worker.id",
-            "value": "<% selectedWorker.id %>"
-          },
-          {
-            "outboundPath": "action",
-            "value": "INACTIVATE"
-          },
-          {
-            "outboundPath": "application.id",
-            "value": "<% selectedApplicationId.value[0] %>"
-          },
-          {
-            "outboundPath": "triggeredBy",
-            "value": "<% selectedWorker.descriptor %>"
-          },
-          {
-            "outboundPath": "details",
-            "value": "Status changed via Shell Org Manager"
-          }
-        ]
-      }
-    ]
-  },
   "presentation": {
     "headerSize": "STANDARD",
+    "pageType": "view",
     "title": {
       "type": "title",
       "label": "ECO-COMS: Shell Org Manager",
@@ -128,8 +72,8 @@
               "layout": {
                 "density": "medium",
                 "alignment": "left",
-                "horizontalSizing": "stretch",
-                "labelPosition": "top"
+                "horizontalSizing": "fixed",
+                "labelPosition": "side_align_left"
               },
               "children": [
                 {
@@ -155,6 +99,7 @@
         {
           "type": "layoutSection",
           "id": "contextCardSection",
+          "visible": "<% !empty(selectedApplicationId.value) %>",
           "children": [
             {
               "type": "cardContainer",
@@ -181,20 +126,98 @@
         },
         {
           "type": "layoutSection",
-          "id": "contentSection",
+          "id": "patternsSection",
+          "visible": "<% !empty(selectedApplicationId.value) %>",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "patternsFieldSet",
+              "title": "Shell Org Patterns",
+              "layout": {
+                "density": "medium",
+                "alignment": "left",
+                "horizontalSizing": "stretch",
+                "labelPosition": "top"
+              },
+              "children": [
+                {
+                  "type": "richText",
+                  "id": "saveNote",
+                  "enabled": false,
+                  "value": "<span style=\"color:#d97706;font-size:11px;font-weight:700\">⚠ </span><span style=\"color:#92400e;font-size:11px\"><b>Warning:</b> Changing Status to Inactive does not automatically remove any Workday role assignments referencing this shell organization. Verify in Workday (Get_Assign_User_Based_Security_Groups) that no active role assignment uses this Custom Organization before inactivating.</span>"
+                },
+                {
+                  "type": "richText",
+                  "id": "emptyStateMsg",
+                  "enabled": false,
+                  "value": "<span style=\"color:#374151;font-size:12px\">No shell org patterns found for this application. Use the <b>Add Pattern</b> button above to create one.</span>",
+                  "visible": "<% !empty(selectedApplicationId.value) && size(shellOrgPatterns.data.filter(p => { let appCode = comsApplications.data.filter(a => { a.id == selectedApplicationId.value[0] }).size() > 0 ? comsApplications.data.filter(a => { a.id == selectedApplicationId.value[0] })[0].appId : ''; p.code.startsWith(appCode + ':PATTERN') })) == 0 %>"
+                },
+                {
+                  "type": "grid",
+                  "gridType": "LIST",
+                  "multiViewStylingEnabled": true,
+                  "id": "patternsGrid",
+                  "rows": "<% let appCode = empty(selectedApplicationId.value) ? '' : (comsApplications.data.filter(a => { a.id == selectedApplicationId.value[0] }).size() > 0 ? comsApplications.data.filter(a => { a.id == selectedApplicationId.value[0] })[0].appId : ''); shellOrgPatterns.data.filter(p => { p.code.startsWith(appCode + ':PATTERN') }) %>",
+                  "rowVariableName": "pattern",
+                  "enabled": false,
+                  "label": "Shell Org Patterns",
+                  "autoPaging": true,
+                  "defaultSortColumnId": "colPatternCode",
+                  "defaultSortOrder": "ASCENDING",
+                  "visible": "<% !empty(selectedApplicationId.value) && size(shellOrgPatterns.data.filter(p => { let appCode = comsApplications.data.filter(a => { a.id == selectedApplicationId.value[0] }).size() > 0 ? comsApplications.data.filter(a => { a.id == selectedApplicationId.value[0] })[0].appId : ''; p.code.startsWith(appCode + ':PATTERN') })) > 0 %>",
+                  "columns": [
+                    {
+                      "type": "column",
+                      "id": "colPatternName",
+                      "columnId": "colPatternName",
+                      "label": "Organization Name",
+                      "sortableAndFilterable": "true",
+                      "cellTemplate": {
+                        "type": "text",
+                        "value": "<% pattern.organizationByName.descriptor %>",
+                        "enabled": false
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "id": "colPatternCode",
+                      "columnId": "colPatternCode",
+                      "label": "Pattern Code",
+                      "sortableAndFilterable": "true",
+                      "cellTemplate": {
+                        "type": "text",
+                        "value": "<% pattern.code %>",
+                        "enabled": false
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "id": "colStatus",
+                      "columnId": "colStatus",
+                      "label": "Status",
+                      "sortableAndFilterable": "true",
+                      "cellTemplate": {
+                        "type": "richText",
+                        "value": "<% pattern.cf_active1 == true ? '<span style=\"color:#065f46;font-weight:600;font-size:11px\">✓ Active</span>' : '<span style=\"color:#6b7280;font-weight:600;font-size:11px\">○ Inactive</span>' %>"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "noAppSection",
+          "visible": "<% empty(selectedApplicationId.value) %>",
           "children": [
             {
               "type": "richText",
-              "id": "saveNote",
+              "id": "selectAppPrompt",
               "enabled": false,
-              "value": "<span style=\"color:#d97706;font-size:11px;font-weight:700\">⚠ </span><span style=\"color:#92400e;font-size:11px\"><b>Warning:</b> Changing Status to Inactive does not automatically remove any Workday role assignments referencing this shell organization. Verify in Workday (Get_Assign_User_Based_Security_Groups) that no active role assignment uses this Custom Organization before inactivating.</span>"
-            },
-            {
-              "type": "richText",
-              "id": "emptyStateMsg",
-              "enabled": false,
-              "value": "<span style=\"color:#374151;font-size:12px\">No shell org patterns found for this application. Use the <b>Add Pattern</b> button above to create one.</span>",
-              "visible": "<% !empty(selectedApplicationId.value) && size(shellOrgs.data) == 0 %>"
+              "value": "<span style=\"color:#374151;font-size:12px\">Select an application above to view its shell org patterns.</span>"
             }
           ]
         }
@@ -208,10 +231,6 @@
           "podId": "ecoComsFooter"
         }
       ]
-    },
-    "pageType": "view"
-  },
-  "include": [
-    "comsCardGenerator.script"
-  ]
+    }
+  }
 }
