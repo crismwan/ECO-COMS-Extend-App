@@ -90,69 +90,6 @@
               "visible": "<% empty(queryParams.appCode) %>"
             }
           ]
-        },
-        {
-          "type": "layoutSection",
-          "id": "appsSection",
-          "children": [
-            {
-              "type": "fieldSet",
-              "id": "appsFieldSet",
-              "visible": "<% empty(queryParams.appCode) %>",
-              "title": "Applications",
-              "layout": {
-                "density": "medium",
-                "alignment": "left",
-                "horizontalSizing": "stretch",
-                "labelPosition": "top"
-              },
-              "children": [
-                {
-                  "type": "grid",
-                  "gridType": "LIST",
-                  "multiViewStylingEnabled": true,
-                  "id": "appsGrid",
-                  "rows": "<% comsApplications.data %>",
-                  "rowVariableName": "app",
-                  "enabled": false,
-                  "label": "Applications",
-                  "autoPaging": true,
-                  "columns": [
-                    {
-                      "type": "column",
-                      "id": "colAppName",
-                      "columnId": "colAppName",
-                      "label": "Application Name",
-                      "sortableAndFilterable": "true",
-                      "cellTemplate": {
-                        "type": "text",
-                        "value": "<% app.name ?? '' %>",
-                        "enabled": false
-                      }
-                    },
-                    {
-                      "type": "column",
-                      "id": "colAppActions",
-                      "columnId": "colAppActions",
-                      "label": "Manage",
-                      "cellTemplate": {
-                        "type": "button",
-                        "action": "AUXILIARY",
-                        "label": "Manage",
-                        "taskReference": {
-                          "taskId": "shellOrgManager",
-                          "parameterBindings": {
-                            "appCode": "<% app.appId %>",
-                            "appName": "<% app.name %>"
-                          }
-                        }
-                      }
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
         }
       ]
     },
@@ -161,6 +98,63 @@
         "type": "section",
         "label": "Application Patterns",
         "children": [
+          {
+            "type": "fieldSet",
+            "id": "appsFieldSet",
+            "visible": "<% empty(queryParams.appCode) %>",
+            "title": "Applications",
+            "layout": {
+              "density": "medium",
+              "alignment": "left",
+              "horizontalSizing": "stretch",
+              "labelPosition": "top"
+            },
+            "children": [
+              {
+                "type": "grid",
+                "gridType": "LIST",
+                "multiViewStylingEnabled": true,
+                "id": "appsGrid",
+                "rows": "<% comsApplications.data %>",
+                "rowVariableName": "app",
+                "enabled": false,
+                "label": "Applications",
+                "autoPaging": true,
+                "columns": [
+                  {
+                    "type": "column",
+                    "id": "colAppName",
+                    "columnId": "colAppName",
+                    "label": "Application Name",
+                    "sortableAndFilterable": "true",
+                    "cellTemplate": {
+                      "type": "text",
+                      "value": "<% app.name ?? '' %>",
+                      "enabled": false
+                    }
+                  },
+                  {
+                    "type": "column",
+                    "id": "colAppActions",
+                    "columnId": "colAppActions",
+                    "label": "Manage",
+                    "cellTemplate": {
+                      "type": "button",
+                      "action": "AUXILIARY",
+                      "label": "Manage",
+                      "taskReference": {
+                        "taskId": "shellOrgManager",
+                        "parameterBindings": {
+                          "appCode": "<% app.appId %>",
+                          "appName": "<% app.name %>"
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
           {
             "type": "fieldSet",
             "id": "patternsFieldSet",
@@ -250,7 +244,7 @@
             "id": "patternsSelectAppMsg",
             "enabled": false,
             "visible": "<% empty(queryParams.appCode) %>",
-            "value": "<span style=\"color:#6b7280;font-size:13px\">Select an application above to view its shell org patterns.</span>"
+            "value": "<span style=\"color:#6b7280;font-size:13px\">Select an application from the list above to view its shell org patterns.</span>"
           }
         ]
       },
@@ -460,15 +454,6 @@
           }
         ]
       }
-    ],
-    "footer": {
-      "type": "footer",
-      "children": [
-        {
-          "type": "pod",
-          "podId": "ecoComsFooter"
-        }
-      ]
-    }
+    ]
   }
 }
