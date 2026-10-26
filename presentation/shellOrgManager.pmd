@@ -1,7 +1,11 @@
 {
   "id": "shellOrgManager",
-  "securityDomains": ["ManageCOMSShellOrgs"],
-  "include": ["comsCardGenerator.script"],
+  "securityDomains": [
+    "ManageCOMSShellOrgs"
+  ],
+  "include": [
+    "comsCardGenerator.script"
+  ],
   "endPoints": [
     {
       "name": "comsApplications",
@@ -18,7 +22,9 @@
       "authType": "sso",
       "isCollection": true,
       "bestEffort": "true",
-      "wqlQuery": {"queryId": "existingPatterns"}
+      "wqlQuery": {
+        "queryId": "existingPatterns"
+      }
     },
     {
       "name": "shellOrgs",
@@ -27,7 +33,9 @@
       "authType": "sso",
       "isCollection": true,
       "bestEffort": "true",
-      "wqlQuery": {"queryId": "customOrganizations"}
+      "wqlQuery": {
+        "queryId": "customOrganizations"
+      }
     },
     {
       "name": "shellRoles",
@@ -36,7 +44,9 @@
       "authType": "sso",
       "isCollection": true,
       "bestEffort": "true",
-      "wqlQuery": {"queryId": "allShellAssignableRolesinTenant"}
+      "wqlQuery": {
+        "queryId": "allShellAssignableRolesinTenant"
+      }
     }
   ],
   "presentation": {
@@ -63,15 +73,19 @@
             },
             {
               "type": "button",
-              "label": "\u2190 Back to Applications",
-              "taskReference": {"taskId": "shellOrgManager"},
+              "label": "← Back to Applications",
+              "taskReference": {
+                "taskId": "shellOrgManager"
+              },
               "action": "LINK",
               "visible": "<% !empty(queryParams.appCode) %>"
             },
             {
               "type": "button",
-              "label": "\u2190 Home",
-              "taskReference": {"taskId": "home"},
+              "label": "← Home",
+              "taskReference": {
+                "taskId": "home"
+              },
               "action": "LINK",
               "visible": "<% empty(queryParams.appCode) %>"
             }
@@ -86,7 +100,12 @@
               "id": "appsFieldSet",
               "visible": "<% empty(queryParams.appCode) %>",
               "title": "Applications",
-              "layout": {"density": "medium", "alignment": "left", "horizontalSizing": "stretch", "labelPosition": "top"},
+              "layout": {
+                "density": "medium",
+                "alignment": "left",
+                "horizontalSizing": "stretch",
+                "labelPosition": "top"
+              },
               "children": [
                 {
                   "type": "grid",
@@ -105,7 +124,11 @@
                       "columnId": "colAppName",
                       "label": "Application Name",
                       "sortableAndFilterable": "true",
-                      "cellTemplate": {"type": "text", "value": "<% app.name ?? '' %>", "enabled": false}
+                      "cellTemplate": {
+                        "type": "text",
+                        "value": "<% app.name ?? '' %>",
+                        "enabled": false
+                      }
                     },
                     {
                       "type": "column",
@@ -118,7 +141,10 @@
                         "label": "Manage",
                         "taskReference": {
                           "taskId": "shellOrgManager",
-                          "parameterBindings": {"appCode": "<% app.appId %>", "appName": "<% app.name %>"}
+                          "parameterBindings": {
+                            "appCode": "<% app.appId %>",
+                            "appName": "<% app.name %>"
+                          }
                         }
                       }
                     }
@@ -140,19 +166,26 @@
             "id": "patternsFieldSet",
             "visible": "<% !empty(queryParams.appCode) %>",
             "title": "Shell Org Patterns",
-            "layout": {"density": "medium", "alignment": "left", "horizontalSizing": "stretch", "labelPosition": "top"},
+            "layout": {
+              "density": "medium",
+              "alignment": "left",
+              "horizontalSizing": "stretch",
+              "labelPosition": "top"
+            },
             "children": [
               {
                 "type": "button",
                 "label": "Add Pattern",
-                "taskReference": {"taskId": "newShellOrgPattern"},
+                "taskReference": {
+                  "taskId": "newShellOrgPattern"
+                },
                 "action": "PRIMARY"
               },
               {
                 "type": "richText",
                 "id": "saveNote",
                 "enabled": false,
-                "value": "<span style=\"color:#d97706;font-size:11px;font-weight:700\">\u26a0 </span><span style=\"color:#92400e;font-size:11px\"><b>Warning:</b> Inactivating a pattern does not remove Workday role assignments using this organization. Verify no active role assignments reference it before inactivating.</span>"
+                "value": "<span style=\"color:#d97706;font-size:11px;font-weight:700\">⚠ </span><span style=\"color:#92400e;font-size:11px\"><b>Warning:</b> Changing Status to Inactive does not automatically remove any Workday role assignments referencing this shell organization. Verify in Workday (Get_Assign_User_Based_Security_Groups) that no active role assignment uses this Custom Organization before inactivating.</span>"
               },
               {
                 "type": "richText",
@@ -179,7 +212,11 @@
                     "columnId": "colPatternName",
                     "label": "Organization Name",
                     "sortableAndFilterable": "true",
-                    "cellTemplate": {"type": "text", "value": "<% pattern.organizationByName.descriptor ?? '' %>", "enabled": false}
+                    "cellTemplate": {
+                      "type": "text",
+                      "value": "<% pattern.organizationByName.descriptor ?? '' %>",
+                      "enabled": false
+                    }
                   },
                   {
                     "type": "column",
@@ -187,7 +224,11 @@
                     "columnId": "colPatternCode",
                     "label": "Pattern Code",
                     "sortableAndFilterable": "true",
-                    "cellTemplate": {"type": "text", "value": "<% pattern.code %>", "enabled": false}
+                    "cellTemplate": {
+                      "type": "text",
+                      "value": "<% pattern.code %>",
+                      "enabled": false
+                    }
                   },
                   {
                     "type": "column",
@@ -197,7 +238,7 @@
                     "sortableAndFilterable": "true",
                     "cellTemplate": {
                       "type": "richText",
-                      "value": "<% pattern.cf_active1 == true ? '<span style=\"color:#065f46;font-weight:600;font-size:11px\">\u2713 Active</span>' : '<span style=\"color:#6b7280;font-weight:600;font-size:11px\">\u25cb Inactive</span>' %>"
+                      "value": "<% pattern.cf_active1 == true ? '<span style=\"color:#065f46;font-weight:600;font-size:11px\">✓ Active</span>' : '<span style=\"color:#6b7280;font-weight:600;font-size:11px\">○ Inactive</span>' %>"
                     }
                   }
                 ]
@@ -222,7 +263,12 @@
             "id": "shellOrgsFieldSet",
             "visible": "<% !empty(queryParams.appCode) %>",
             "title": "Shell Organizations",
-            "layout": {"density": "medium", "alignment": "left", "horizontalSizing": "stretch", "labelPosition": "top"},
+            "layout": {
+              "density": "medium",
+              "alignment": "left",
+              "horizontalSizing": "stretch",
+              "labelPosition": "top"
+            },
             "children": [
               {
                 "type": "richText",
@@ -249,7 +295,11 @@
                     "columnId": "colOrgName",
                     "label": "Organization Name",
                     "sortableAndFilterable": "true",
-                    "cellTemplate": {"type": "text", "value": "<% org.organizationByName.descriptor ?? '' %>", "enabled": false}
+                    "cellTemplate": {
+                      "type": "text",
+                      "value": "<% org.organizationByName.descriptor ?? '' %>",
+                      "enabled": false
+                    }
                   },
                   {
                     "type": "column",
@@ -257,7 +307,11 @@
                     "columnId": "colOrgCode",
                     "label": "Organization Code",
                     "sortableAndFilterable": "true",
-                    "cellTemplate": {"type": "text", "value": "<% org.code %>", "enabled": false}
+                    "cellTemplate": {
+                      "type": "text",
+                      "value": "<% org.code %>",
+                      "enabled": false
+                    }
                   }
                 ]
               }
@@ -285,7 +339,9 @@
           {
             "type": "button",
             "label": "Add New Shell Organization",
-            "taskReference": {"taskId": "newShellOrg"},
+            "taskReference": {
+              "taskId": "newShellOrg"
+            },
             "action": "PRIMARY"
           }
         ]
@@ -299,7 +355,12 @@
             "id": "roleAssignmentsFieldSet",
             "visible": "<% !empty(queryParams.appCode) %>",
             "title": "Shell Role Assignments",
-            "layout": {"density": "medium", "alignment": "left", "horizontalSizing": "stretch", "labelPosition": "top"},
+            "layout": {
+              "density": "medium",
+              "alignment": "left",
+              "horizontalSizing": "stretch",
+              "labelPosition": "top"
+            },
             "children": [
               {
                 "type": "richText",
@@ -332,7 +393,11 @@
                     "columnId": "colRoleName",
                     "label": "Role",
                     "sortableAndFilterable": "true",
-                    "cellTemplate": {"type": "text", "value": "<% roleRow.role.descriptor ?? '' %>", "enabled": false}
+                    "cellTemplate": {
+                      "type": "text",
+                      "value": "<% roleRow.role.descriptor ?? '' %>",
+                      "enabled": false
+                    }
                   },
                   {
                     "type": "column",
@@ -355,6 +420,18 @@
                     "cellTemplate": {
                       "type": "text",
                       "value": "<% roleRow.roleAssignments != null ? roleRow.roleAssignments.filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith(queryParams.appCode ?? '') }).map(ra => { ra.organization.descriptor }).join('; ') : '' %>",
+                      "enabled": false
+                    }
+                  },
+                  {
+                    "type": "column",
+                    "id": "colPositions",
+                    "columnId": "colPositions",
+                    "label": "Positions",
+                    "sortableAndFilterable": "true",
+                    "cellTemplate": {
+                      "type": "text",
+                      "value": "<% roleRow.roleAssignments != null ? roleRow.roleAssignments.filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith(queryParams.appCode ?? '') }).flatMap(ra => { ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions != null ? ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions.map(p => { p.descriptor }) : [] }).join('; ') : '' %>",
                       "enabled": false
                     }
                   },
@@ -387,7 +464,10 @@
     "footer": {
       "type": "footer",
       "children": [
-        {"type": "pod", "podId": "ecoComsFooter"}
+        {
+          "type": "pod",
+          "podId": "ecoComsFooter"
+        }
       ]
     }
   }
