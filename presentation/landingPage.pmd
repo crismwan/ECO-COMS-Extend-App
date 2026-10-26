@@ -21,14 +21,20 @@
             {
               "type": "fieldSet",
               "id": "shellOrgsSectionLabel",
-              "title": "Shell Organizations",
               "layout": {
                 "density": "low",
                 "alignment": "left",
                 "horizontalSizing": "stretch",
                 "labelPosition": "top"
               },
-              "children": []
+              "children": [
+                {
+                  "type": "richText",
+                  "id": "shellOrgsSectionLabelText",
+                  "enabled": false,
+                  "value": "<p style=\"margin:0;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#666\">SHELL ORGANIZATIONS</p>"
+                }
+              ]
             }
           ]
         },
@@ -81,14 +87,20 @@
             {
               "type": "fieldSet",
               "id": "assignableRolesSectionLabel",
-              "title": "Assignable Roles",
               "layout": {
                 "density": "low",
                 "alignment": "left",
                 "horizontalSizing": "stretch",
                 "labelPosition": "top"
               },
-              "children": []
+              "children": [
+                {
+                  "type": "richText",
+                  "id": "assignableRolesSectionLabelText",
+                  "enabled": false,
+                  "value": "<p style=\"margin:0;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#666\">ASSIGNABLE ROLES</p>"
+                }
+              ]
             }
           ]
         },
@@ -141,14 +153,20 @@
             {
               "type": "fieldSet",
               "id": "administrationSectionLabel",
-              "title": "Administration",
               "layout": {
                 "density": "low",
                 "alignment": "left",
                 "horizontalSizing": "stretch",
                 "labelPosition": "top"
               },
-              "children": []
+              "children": [
+                {
+                  "type": "richText",
+                  "id": "administrationSectionLabelText",
+                  "enabled": false,
+                  "value": "<p style=\"margin:0;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#666\">ADMINISTRATION</p>"
+                }
+              ]
             }
           ]
         },
