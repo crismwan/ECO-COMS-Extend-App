@@ -133,7 +133,7 @@
               },
               "children": [
                 {
-                  "type": "instancePicker",
+                  "type": "dropdown",
                   "id": "selectedApplicationId",
                   "label": "Application",
                   "helpText": "Select an application to view and manage its shell org patterns.",

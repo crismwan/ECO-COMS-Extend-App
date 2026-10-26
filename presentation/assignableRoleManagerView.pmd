@@ -56,7 +56,10 @@
               "type": "button",
               "label": "Delete Request",
               "taskReference": {
-                "taskId": "deleteAssignableRole"
+                "taskId": "deleteAssignableRole",
+                "parameterBindings": {
+                  "view": "assignable"
+                }
               },
               "action": "AUXILIARY"
             }

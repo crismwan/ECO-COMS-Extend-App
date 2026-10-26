@@ -142,7 +142,8 @@
                 "taskId": "assignableRoleManagerView"
               },
               "action": "LINK",
-              "suppressDiscardDialog": true
+              "suppressDiscardDialog": true,
+              "visible": "<% empty(queryParams.view) || queryParams.view == 'assignable' %>"
             },
             {
               "type": "button",
@@ -151,7 +152,8 @@
                 "taskId": "adminProvisioningView"
               },
               "action": "LINK",
-              "suppressDiscardDialog": true
+              "suppressDiscardDialog": true,
+              "visible": "<% queryParams.view == 'aaa' %>"
             }
           ]
         },
@@ -190,7 +192,7 @@
                   "defaultSortColumnId": "colRequestedDate",
                   "defaultSortOrder": "DESCENDING",
                   "label": "Pending Assignable Role Requests",
-                  "rows": "<% comsAssignableRoles.data.filter(r => { r.status == 'Pending ISC Review' }) %>",
+                  "rows": "<% comsAssignableRoles.data.filter(r => { r.status == 'Pending ISC Review' && (empty(queryParams.view) || (queryParams.view == 'aaa' ? r.roleName.startsWith('Organizations and Roles Assignment Administrator') : !r.roleName.startsWith('Organizations and Roles Assignment Administrator'))) }) %>",
                   "rowVariableName": "role",
                   "enabled": false,
                   "columns": [
@@ -207,7 +209,8 @@
                           "taskId": "deleteAssignableRole",
                           "parameterBindings": {
                             "roleId": "<% role.id %>",
-                            "roleName": "<% role.roleName %>"
+                            "roleName": "<% role.roleName %>",
+                            "view": "<% queryParams.view ?? '' %>"
                           }
                         }
                       }

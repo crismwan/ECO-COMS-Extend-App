@@ -53,7 +53,7 @@
     "headerSize": "STANDARD",
     "title": {
       "type": "title",
-      "label": "ECO-COMS: All Pending Role Requests (ISC)"
+      "label": "<% queryParams.view == 'aaa' ? 'ECO-COMS: Pending AAA Provisioning Requests (ISC)' : queryParams.view == 'assignable' ? 'ECO-COMS: Pending Assignable Role Requests (ISC)' : 'ECO-COMS: All Pending Role Requests (ISC)' %>"
     },
     "body": {
       "type": "basicFormLayout",
@@ -69,7 +69,26 @@
               "taskReference": {
                 "taskId": "home"
               },
-              "action": "LINK"
+              "action": "LINK",
+              "visible": "<% empty(queryParams.view) %>"
+            },
+            {
+              "type": "button",
+              "label": "← My Role Requests",
+              "taskReference": {
+                "taskId": "assignableRoleManagerView"
+              },
+              "action": "LINK",
+              "visible": "<% queryParams.view == 'assignable' %>"
+            },
+            {
+              "type": "button",
+              "label": "← Admin Provisioning",
+              "taskReference": {
+                "taskId": "adminProvisioningView"
+              },
+              "action": "LINK",
+              "visible": "<% queryParams.view == 'aaa' %>"
             }
           ]
         },
@@ -81,7 +100,7 @@
               "type": "richText",
               "id": "pageDesc",
               "enabled": false,
-              "value": "<span style=\"color:#374151;font-size:13px\">ISC Security: View all pending Assignable Role requests from both Assignable Role Manager and Admin Provisioning. Click Maintain to approve or deny a request.</span>"
+              "value": "<% queryParams.view == 'aaa' ? '<span style=\"color:#374151;font-size:13px\">ISC Security: View pending AAA Provisioning role requests submitted via Admin Provisioning. Click Maintain to approve or deny a request.</span>' : queryParams.view == 'assignable' ? '<span style=\"color:#374151;font-size:13px\">ISC Security: View pending Assignable Role requests submitted via My Role Requests. Click Maintain to approve or deny a request.</span>' : '<span style=\"color:#374151;font-size:13px\">ISC Security: View all pending Assignable Role requests from both Assignable Role Manager and Admin Provisioning. Click Maintain to approve or deny a request.</span>' %>"
             }
           ]
         },
@@ -92,7 +111,7 @@
             {
               "type": "fieldSet",
               "id": "pendingGridFieldSet",
-              "title": "All Pending ISC Review Requests",
+              "title": "<% queryParams.view == 'aaa' ? 'Pending AAA Provisioning Requests' : queryParams.view == 'assignable' ? 'Pending Assignable Role Requests' : 'All Pending ISC Review Requests' %>",
               "layout": {
                 "density": "medium",
                 "alignment": "left",
@@ -108,10 +127,10 @@
                   "autoPaging": true,
                   "defaultSortColumnId": "colRequestedDate",
                   "defaultSortOrder": "DESCENDING",
-                  "rows": "<% comsAssignableRoles.data.filter(r => { r.status == 'Pending ISC Review' }) %>",
+                  "rows": "<% comsAssignableRoles.data.filter(r => { r.status == 'Pending ISC Review' && (empty(queryParams.view) || (queryParams.view == 'aaa' ? r.roleName.startsWith('Organizations and Roles Assignment Administrator') : !r.roleName.startsWith('Organizations and Roles Assignment Administrator'))) }) %>",
                   "rowVariableName": "role",
                   "enabled": false,
-                  "label": "All Pending ISC Review Requests",
+                  "label": "<% queryParams.view == 'aaa' ? 'Pending AAA Provisioning Requests' : queryParams.view == 'assignable' ? 'Pending Assignable Role Requests' : 'All Pending ISC Review Requests' %>",
                   "columns": [
                     {
                       "type": "column",
