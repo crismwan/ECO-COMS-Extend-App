@@ -119,18 +119,25 @@ jobs:
           WDCLI_CLIENT_ID: ${{ secrets.WD_CLIENT_ID }}
           WDCLI_CLIENT_SECRET: ${{ secrets.WD_CLIENT_SECRET }}
         run: |
-          set -euxo pipefail
+          set -uxo pipefail
 
           echo "=== Running wdcli app upload ==="
-          echo "." | wdcli app upload 2>&1 | tee /tmp/upload-output.txt
+          # Capture output even on failure; check exit code separately
+          echo "." | wdcli app upload 2>&1 | tee /tmp/upload-output.txt; UPLOAD_EXIT=${PIPESTATUS[1]}
           echo "=== Upload output ==="
           cat /tmp/upload-output.txt
+          echo "=== Upload exit code: ${UPLOAD_EXIT} ==="
+          if [ "${UPLOAD_EXIT}" -ne 0 ]; then
+            echo "ERROR: wdcli app upload failed with exit code ${UPLOAD_EXIT}"
+            exit 1
+          fi
 
           # After upload, get the latest version ID via wdcli app versions
           echo "=== Fetching latest version ID ==="
-          wdcli app versions "${APP_REF_ID}" --format json 2>&1 | tee /tmp/versions-output.txt || true
+          wdcli app versions "${APP_REF_ID}" --format json 2>&1 | tee /tmp/versions-output.txt; VERSIONS_EXIT=${PIPESTATUS[0]}
           echo "=== Versions output ==="
           cat /tmp/versions-output.txt
+          echo "=== Versions exit code: ${VERSIONS_EXIT} ==="
 
           # Extract version ID from versions JSON output
           VERSION_ID=$(jq -r '.[0].versionId // empty' /tmp/versions-output.txt 2>/dev/null)
