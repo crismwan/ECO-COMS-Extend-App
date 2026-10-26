@@ -7,7 +7,7 @@
     "headerSize": "VPS_DEFAULT",
     "title": {
       "type": "title",
-      "label": "Home",
+      "label": "Custom Organization Management",
       "enabled": true
     },
     "body": {
