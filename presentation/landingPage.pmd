@@ -59,22 +59,28 @@
                   "value": "<span style=\"color:#64748b;font-size:13px\">View and manage shell org patterns for your assigned application.</span>"
                 },
                 {
-                  "type": "button",
-                  "id": "addPatternBtn",
-                  "label": "Add Pattern",
-                  "taskReference": {
-                    "taskId": "newShellOrgPattern"
-                  },
-                  "action": "AUXILIARY"
-                },
-                {
-                  "type": "button",
-                  "id": "shellOrgManagerBtn",
-                  "label": "Open",
-                  "taskReference": {
-                    "taskId": "shellOrgManager"
-                  },
-                  "action": "PRIMARY"
+                  "type": "buttonGroup",
+                  "id": "shellOrgBtnGroup",
+                  "children": [
+                    {
+                      "type": "button",
+                      "id": "addPatternBtn",
+                      "label": "Add Pattern",
+                      "taskReference": {
+                        "taskId": "newShellOrgPattern"
+                      },
+                      "action": "AUXILIARY"
+                    },
+                    {
+                      "type": "button",
+                      "id": "shellOrgManagerBtn",
+                      "label": "Open",
+                      "taskReference": {
+                        "taskId": "shellOrgManager"
+                      },
+                      "action": "PRIMARY"
+                    }
+                  ]
                 }
               ]
             }
@@ -125,22 +131,28 @@
                   "value": "<span style=\"color:#64748b;font-size:13px\">View the status of your pending and approved role requests.</span>"
                 },
                 {
-                  "type": "button",
-                  "id": "submitNewRequestBtn",
-                  "label": "Submit New",
-                  "taskReference": {
-                    "taskId": "assignableRoleManager"
-                  },
-                  "action": "AUXILIARY"
-                },
-                {
-                  "type": "button",
-                  "id": "myRoleRequestsBtn",
-                  "label": "Open",
-                  "taskReference": {
-                    "taskId": "assignableRoleManagerView"
-                  },
-                  "action": "PRIMARY"
+                  "type": "buttonGroup",
+                  "id": "myRoleRequestsBtnGroup",
+                  "children": [
+                    {
+                      "type": "button",
+                      "id": "submitNewRequestBtn",
+                      "label": "Submit New",
+                      "taskReference": {
+                        "taskId": "assignableRoleManager"
+                      },
+                      "action": "AUXILIARY"
+                    },
+                    {
+                      "type": "button",
+                      "id": "myRoleRequestsBtn",
+                      "label": "Open",
+                      "taskReference": {
+                        "taskId": "assignableRoleManagerView"
+                      },
+                      "action": "PRIMARY"
+                    }
+                  ]
                 }
               ]
             }
@@ -191,22 +203,28 @@
                   "value": "<span style=\"color:#64748b;font-size:13px\">Manage AAA role provisioning. Submit or review AAA requests for each application.</span>"
                 },
                 {
-                  "type": "button",
-                  "id": "submitAaaRequestBtn",
-                  "label": "Submit AAA",
-                  "taskReference": {
-                    "taskId": "adminProvisioning"
-                  },
-                  "action": "AUXILIARY"
-                },
-                {
-                  "type": "button",
-                  "id": "adminProvisioningBtn",
-                  "label": "Open",
-                  "taskReference": {
-                    "taskId": "adminProvisioningView"
-                  },
-                  "action": "PRIMARY"
+                  "type": "buttonGroup",
+                  "id": "adminProvisioningBtnGroup",
+                  "children": [
+                    {
+                      "type": "button",
+                      "id": "submitAaaRequestBtn",
+                      "label": "Submit AAA",
+                      "taskReference": {
+                        "taskId": "adminProvisioning"
+                      },
+                      "action": "AUXILIARY"
+                    },
+                    {
+                      "type": "button",
+                      "id": "adminProvisioningBtn",
+                      "label": "Open",
+                      "taskReference": {
+                        "taskId": "adminProvisioningView"
+                      },
+                      "action": "PRIMARY"
+                    }
+                  ]
                 }
               ]
             }
