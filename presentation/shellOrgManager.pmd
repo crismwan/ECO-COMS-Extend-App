@@ -437,22 +437,14 @@
                   },
                   {
                     "type": "column",
-                    "id": "colManagePositions",
-                    "columnId": "colManagePositions",
-                    "label": "Actions",
+                    "id": "colAssignedTo",
+                    "columnId": "colAssignedTo",
+                    "label": "Assigned To",
+                    "sortableAndFilterable": "true",
                     "cellTemplate": {
-                      "type": "button",
-                      "action": "AUXILIARY",
-                      "label": "Manage Positions",
-                      "taskReference": {
-                        "taskId": "manageShellOrgPositions",
-                        "parameterBindings": {
-                          "roleId": "<% roleRow.role.id %>",
-                          "roleName": "<% roleRow.role.descriptor %>",
-                          "appCode": "<% queryParams.appCode %>",
-                          "appName": "<% queryParams.appName %>"
-                        }
-                      }
+                      "type": "text",
+                      "value": "<% roleRow.roleAssignments != null ? roleRow.roleAssignments.filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith(queryParams.appCode ?? '') }).flatMap(ra => { ra.workersAssigned != null ? ra.workersAssigned.map(w => { w.descriptor }) : [] }).join('; ') : '' %>",
+                      "enabled": false
                     }
                   }
                 ]
