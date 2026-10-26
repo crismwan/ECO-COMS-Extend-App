@@ -203,8 +203,9 @@
             "podId": "ecoComsFooter"
           }
         ]
-      },
+      }
     ],
     "pageType": "view"
+
   }
 }
