@@ -3,7 +3,7 @@
   "presentation": {
     "body": {
       "type": "hub",
-      "label": "ECO-COMS",
+      "label": "Custom Organization Management",
       "icon": "wd-accent-home",
       "initialTask": {
         "taskId": "hubLanding"
