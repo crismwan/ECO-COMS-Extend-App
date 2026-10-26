@@ -29,10 +29,15 @@
   ],
   "presentation": {
     "headerSize": "STANDARD",
-    "pageType": "view",
+    "pageType": "record",
     "title": {
       "type": "title",
-      "label": "ECO-COMS: Shell Org Manager",
+      "label": "<% empty(queryParams.appName) ? 'ECO-COMS: Shell Org Manager' : (queryParams.appName ?? '') %>",
+      "enabled": true
+    },
+    "subtitle": {
+      "type": "subtitle",
+      "label": "<% empty(queryParams.appCode) ? 'Select an application to manage its shell org patterns.' : ('App ID: ' + (queryParams.appCode ?? '')) %>",
       "enabled": true
     },
     "body": {
@@ -45,11 +50,21 @@
           "children": [
             {
               "type": "button",
+              "label": "← Back to Applications",
+              "taskReference": {
+                "taskId": "shellOrgManager"
+              },
+              "action": "LINK",
+              "visible": "<% !empty(queryParams.appCode) %>"
+            },
+            {
+              "type": "button",
               "label": "← Home",
               "taskReference": {
                 "taskId": "home"
               },
-              "action": "LINK"
+              "action": "LINK",
+              "visible": "<% empty(queryParams.appCode) %>"
             },
             {
               "type": "button",
@@ -68,6 +83,7 @@
             {
               "type": "fieldSet",
               "id": "appsFieldSet",
+              "visible": "<% empty(queryParams.appCode) %>",
               "title": "Applications",
               "layout": {
                 "density": "medium",
@@ -76,12 +92,6 @@
                 "labelPosition": "top"
               },
               "children": [
-                {
-                  "type": "richText",
-                  "id": "appsDesc",
-                  "enabled": false,
-                  "value": "<span style=\"color:#374151;font-size:12px\">Select an application to view its shell org patterns.</span>"
-                },
                 {
                   "type": "grid",
                   "gridType": "LIST",
@@ -117,7 +127,8 @@
                         "taskReference": {
                           "taskId": "shellOrgManager",
                           "parameterBindings": {
-                            "appCode": "<% app.appId %>"
+                            "appCode": "<% app.appId %>",
+                            "appName": "<% app.name %>"
                           }
                         }
                       }
@@ -136,7 +147,7 @@
               "type": "fieldSet",
               "id": "patternsFieldSet",
               "visible": "<% !empty(queryParams.appCode) %>",
-              "title": "<% 'Shell Org Patterns — ' + (queryParams.appCode ?? '') %>",
+              "title": "Shell Org Patterns",
               "layout": {
                 "density": "medium",
                 "alignment": "left",
@@ -165,7 +176,7 @@
                   "rows": "<% empty(queryParams.appCode) ? [] : shellOrgPatterns.data.filter(p => { p.code.startsWith(queryParams.appCode + ':PATTERN') }) %>",
                   "rowVariableName": "pattern",
                   "enabled": false,
-                  "label": "<% 'Patterns for ' + (queryParams.appCode ?? '') %>",
+                  "label": "<% 'Patterns for ' + (queryParams.appName ?? queryParams.appCode ?? '') %>",
                   "autoPaging": true,
                   "visible": "<% !empty(queryParams.appCode) && size(shellOrgPatterns.data.filter(p => { p.code.startsWith((queryParams.appCode ?? '') + ':PATTERN') })) > 0 %>",
                   "columns": [
