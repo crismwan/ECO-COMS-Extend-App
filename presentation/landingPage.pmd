@@ -7,8 +7,9 @@
     "headerSize": "VPS_DEFAULT",
     "title": {
       "type": "title",
-      "label": "Custom Organization Management",
-      "enabled": true
+      "label": "Role-Based Access Control (RBAC) Solution",
+      "enabled": true,
+      "textAlign": "center"
     },
     "body": {
       "type": "basicFormLayout",
