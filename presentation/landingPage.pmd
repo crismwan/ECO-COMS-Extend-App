@@ -16,6 +16,24 @@
       "sections": [
         {
           "type": "layoutSection",
+          "id": "shellOrgsSectionHeader",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "shellOrgsSectionLabel",
+              "title": "Shell Organizations",
+              "layout": {
+                "density": "low",
+                "alignment": "left",
+                "horizontalSizing": "stretch",
+                "labelPosition": "top"
+              },
+              "children": []
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
           "id": "shellOrgCardSection",
           "children": [
             {
@@ -30,15 +48,9 @@
               "children": [
                 {
                   "type": "richText",
-                  "id": "shellOrgTitle",
+                  "id": "shellOrgRow",
                   "enabled": false,
-                  "value": "<b>&#9632; Shell Org Manager</b> &nbsp;<span style=\"color:#888;font-size:11px\">SHELL ORGANIZATIONS</span>"
-                },
-                {
-                  "type": "richText",
-                  "id": "shellOrgDesc",
-                  "enabled": false,
-                  "value": "<span style=\"color:#64748b;font-size:12px\">View and manage shell org patterns for your assigned application.</span>"
+                  "value": "<table style=\"width:100%;border-collapse:collapse\"><tr><td style=\"width:44px;vertical-align:middle;padding-right:14px\"><span style=\"display:inline-flex;width:36px;height:36px;background:#eff6ff;border-radius:8px;align-items:center;justify-content:center;font-size:18px\">&#9632;</span></td><td style=\"vertical-align:middle\"><b style=\"font-size:14px\">Shell Org Manager</b><br><span style=\"font-size:12px;color:#64748b\">View and manage shell org patterns for your assigned application.</span></td></tr></table>"
                 },
                 {
                   "type": "button",
@@ -64,6 +76,24 @@
         },
         {
           "type": "layoutSection",
+          "id": "assignableRolesSectionHeader",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "assignableRolesSectionLabel",
+              "title": "Assignable Roles",
+              "layout": {
+                "density": "low",
+                "alignment": "left",
+                "horizontalSizing": "stretch",
+                "labelPosition": "top"
+              },
+              "children": []
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
           "id": "myRoleRequestsCardSection",
           "children": [
             {
@@ -78,15 +108,9 @@
               "children": [
                 {
                   "type": "richText",
-                  "id": "myRoleRequestsTitle",
+                  "id": "myRoleRequestsRow",
                   "enabled": false,
-                  "value": "<b>&#9670; My Role Requests</b> &nbsp;<span style=\"color:#888;font-size:11px\">ASSIGNABLE ROLES</span>"
-                },
-                {
-                  "type": "richText",
-                  "id": "myRoleRequestsDesc",
-                  "enabled": false,
-                  "value": "<span style=\"color:#64748b;font-size:12px\">View the status of your pending and approved role requests.</span>"
+                  "value": "<table style=\"width:100%;border-collapse:collapse\"><tr><td style=\"width:44px;vertical-align:middle;padding-right:14px\"><span style=\"display:inline-flex;width:36px;height:36px;background:#eff6ff;border-radius:8px;align-items:center;justify-content:center;font-size:18px\">&#9670;</span></td><td style=\"vertical-align:middle\"><b style=\"font-size:14px\">My Role Requests</b><br><span style=\"font-size:12px;color:#64748b\">View the status of your pending and approved role requests.</span></td></tr></table>"
                 },
                 {
                   "type": "button",
@@ -112,6 +136,24 @@
         },
         {
           "type": "layoutSection",
+          "id": "administrationSectionHeader",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "administrationSectionLabel",
+              "title": "Administration",
+              "layout": {
+                "density": "low",
+                "alignment": "left",
+                "horizontalSizing": "stretch",
+                "labelPosition": "top"
+              },
+              "children": []
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
           "id": "adminProvisioningCardSection",
           "children": [
             {
@@ -126,15 +168,9 @@
               "children": [
                 {
                   "type": "richText",
-                  "id": "adminProvisioningTitle",
+                  "id": "adminProvisioningRow",
                   "enabled": false,
-                  "value": "<b>&#9650; Admin Provisioning</b> &nbsp;<span style=\"color:#888;font-size:11px\">ADMINISTRATION</span>"
-                },
-                {
-                  "type": "richText",
-                  "id": "adminProvisioningDesc",
-                  "enabled": false,
-                  "value": "<span style=\"color:#64748b;font-size:12px\">Submit or review AAA provisioning requests for each application.</span>"
+                  "value": "<table style=\"width:100%;border-collapse:collapse\"><tr><td style=\"width:44px;vertical-align:middle;padding-right:14px\"><span style=\"display:inline-flex;width:36px;height:36px;background:#eff6ff;border-radius:8px;align-items:center;justify-content:center;font-size:18px\">&#9650;</span></td><td style=\"vertical-align:middle\"><b style=\"font-size:14px\">Admin Provisioning</b><br><span style=\"font-size:12px;color:#64748b\">Submit or review AAA provisioning requests for each application.</span></td></tr></table>"
                 },
                 {
                   "type": "button",
@@ -174,15 +210,9 @@
               "children": [
                 {
                   "type": "richText",
-                  "id": "pendingIscTitle",
+                  "id": "pendingIscRow",
                   "enabled": false,
-                  "value": "<b>&#9658; Pending ISC Requests</b> &nbsp;<span style=\"color:#888;font-size:11px\">ADMINISTRATION</span>"
-                },
-                {
-                  "type": "richText",
-                  "id": "pendingIscDesc",
-                  "enabled": false,
-                  "value": "<span style=\"color:#64748b;font-size:12px\">Review and process pending assignable role requests across ECO-COMS.</span>"
+                  "value": "<table style=\"width:100%;border-collapse:collapse\"><tr><td style=\"width:44px;vertical-align:middle;padding-right:14px\"><span style=\"display:inline-flex;width:36px;height:36px;background:#eff6ff;border-radius:8px;align-items:center;justify-content:center;font-size:18px\">&#9658;</span></td><td style=\"vertical-align:middle\"><b style=\"font-size:14px\">Pending ISC Requests</b><br><span style=\"font-size:12px;color:#64748b\">Review and process pending assignable role requests across ECO-COMS.</span></td></tr></table>"
                 },
                 {
                   "type": "button",
@@ -213,15 +243,9 @@
               "children": [
                 {
                   "type": "richText",
-                  "id": "auditLogTitle",
+                  "id": "auditLogRow",
                   "enabled": false,
-                  "value": "<b>&#9658; Audit Log</b> &nbsp;<span style=\"color:#888;font-size:11px\">ADMINISTRATION</span>"
-                },
-                {
-                  "type": "richText",
-                  "id": "auditLogDesc",
-                  "enabled": false,
-                  "value": "<span style=\"color:#64748b;font-size:12px\">Review the history of all ECO-COMS changes, actions, and events.</span>"
+                  "value": "<table style=\"width:100%;border-collapse:collapse\"><tr><td style=\"width:44px;vertical-align:middle;padding-right:14px\"><span style=\"display:inline-flex;width:36px;height:36px;background:#eff6ff;border-radius:8px;align-items:center;justify-content:center;font-size:18px\">&#9658;</span></td><td style=\"vertical-align:middle\"><b style=\"font-size:14px\">Audit Log</b><br><span style=\"font-size:12px;color:#64748b\">Review the history of all ECO-COMS changes, actions, and events.</span></td></tr></table>"
                 },
                 {
                   "type": "button",
