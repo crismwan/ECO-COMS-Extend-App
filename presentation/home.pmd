@@ -3,7 +3,7 @@
   "presentation": {
     "body": {
       "type": "hub",
-      "label": "CUSTOM ORG MGMT",
+      "label": "ECO-COMS",
       "color": "#002145",
       "icon": "wd-accent-home",
       "initialTask": {
