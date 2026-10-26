@@ -15,9 +15,8 @@
       "id": "landingPageForm",
       "sections": [
         {
-          "type": "section",
+          "type": "layoutSection",
           "id": "topCardsSection",
-          "horizontal": true,
           "children": [
             {
               "type": "fieldSet",
@@ -130,9 +129,8 @@
           ]
         },
         {
-          "type": "section",
+          "type": "layoutSection",
           "id": "bottomCardsSection",
-          "horizontal": true,
           "children": [
             {
               "type": "fieldSet",
