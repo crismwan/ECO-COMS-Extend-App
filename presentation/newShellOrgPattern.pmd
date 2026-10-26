@@ -115,7 +115,7 @@
             },
             {
               "type": "button",
-              "label": "Home",
+              "label": "\u2190 Home",
               "taskReference": {
                 "taskId": "home"
               },
