@@ -7,7 +7,8 @@
   },
   "body": {
     "type": "simpleCard",
-    "value": "SHELL ORGANIZATIONS"
+    "value": "SHELL ORGANIZATIONS",
+    "color": "#0055B3"
   },
   "footer": [
     {

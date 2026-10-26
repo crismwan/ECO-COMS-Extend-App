@@ -15,7 +15,7 @@
           "task": {
             "taskId": "landingPage"
           },
-          "label": "RBAC HUB",
+          "label": "RBAC Hub",
           "color": "#002145",
           "icon": "wd-accent-home"
         },
