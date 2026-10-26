@@ -105,77 +105,40 @@
           "id": "navSection",
           "children": [
             {
-              "type": "section",
-              "horizontal": true,
-              "columnWidthRatios": [
-                0.2,
-                0.2,
-                0.2,
-                0.2,
-                0.2
-              ],
-              "children": [
-                {
-                  "type": "section",
-                  "horizontal": false,
-                  "children": [
-                    {
-                      "type": "button",
-                      "label": "Shell Org Manager",
-                      "taskReference": {
-                        "taskId": "shellOrgManager"
-                      },
-                      "action": "LINK",
-                      "suppressDiscardDialog": true
-                    }
-                  ]
-                },
-                {
-                  "type": "section",
-                  "horizontal": false,
-                  "children": [
-                    {
-                      "type": "button",
-                      "label": "Home",
-                      "taskReference": {
-                        "taskId": "home"
-                      },
-                      "action": "LINK",
-                      "suppressDiscardDialog": true
-                    }
-                  ]
-                },
-                {
-                  "type": "section",
-                  "horizontal": false,
-                  "children": [
-                    {
-                      "type": "button",
-                      "label": "Audit Log",
-                      "taskReference": {
-                        "taskId": "auditLogViewer"
-                      },
-                      "action": "LINK",
-                      "suppressDiscardDialog": true
-                    }
-                  ]
-                },
-                {
-                  "type": "section",
-                  "horizontal": false,
-                  "children": [
-                    {
-                      "type": "button",
-                      "label": "Admin Provisioning",
-                      "taskReference": {
-                        "taskId": "adminProvisioning"
-                      },
-                      "action": "LINK",
-                      "suppressDiscardDialog": true
-                    }
-                  ]
-                }
-              ]
+              "type": "button",
+              "label": "Shell Org Manager",
+              "taskReference": {
+                "taskId": "shellOrgManager"
+              },
+              "action": "LINK",
+              "suppressDiscardDialog": true
+            },
+            {
+              "type": "button",
+              "label": "Home",
+              "taskReference": {
+                "taskId": "home"
+              },
+              "action": "LINK",
+              "suppressDiscardDialog": true
+            },
+            {
+              "type": "button",
+              "label": "Audit Log",
+              "taskReference": {
+                "taskId": "auditLogViewer"
+              },
+              "action": "LINK",
+              "suppressDiscardDialog": true
+            },
+            {
+              "type": "button",
+              "label": "Admin Provisioning",
+              "taskReference": {
+                "taskId": "adminProvisioning"
+              },
+              "action": "LINK",
+              "suppressDiscardDialog": true
             }
           ]
         },
@@ -191,7 +154,7 @@
                   "type": "richText",
                   "id": "pageDescription",
                   "enabled": false,
-                  "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">ℹ </span><span style=\"color:#374151;font-size:11px\">Add a new Shell Org Pattern for your application. Patterns define the CO naming structure used to create Custom Organizations in Workday. The pattern name is auto-generated from the fields below. A duplicate check is performed before submission.</span>"
+                  "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">\u2139 </span><span style=\"color:#374151;font-size:11px\">Add a new Shell Org Pattern for your application. Patterns define the CO naming structure used to create Custom Organizations in Workday. The pattern name is auto-generated from the fields below. A duplicate check is performed before submission.</span>"
                 }
               ],
               "title": "About this page",
@@ -284,7 +247,7 @@
                   "type": "richText",
                   "id": "patternHelp",
                   "enabled": false,
-                  "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">ℹ </span><span style=\"color:#374151;font-size:11px\">Fill in the pattern attributes below. Leave blank to use wildcard (*). The Pattern Name Preview above updates as you type.</span>"
+                  "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">\u2139 </span><span style=\"color:#374151;font-size:11px\">Fill in the pattern attributes below. Leave blank to use wildcard (*). The Pattern Name Preview above updates as you type.</span>"
                 },
                 {
                   "type": "text",

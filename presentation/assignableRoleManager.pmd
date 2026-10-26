@@ -204,31 +204,12 @@
           "id": "navSection",
           "children": [
             {
-              "type": "section",
-              "horizontal": true,
-              "children": [
-                {
-                  "type": "section",
-                  "horizontal": false,
-                  "children": [
-                    {
-                      "type": "button",
-                      "label": "Home",
-                      "taskReference": {
-                        "taskId": "home"
-                      },
-                      "action": "AUXILIARY"
-                    }
-                  ]
-                }
-              ],
-              "columnWidthRatios": [
-                0.2,
-                0.2,
-                0.2,
-                0.2,
-                0.2
-              ]
+              "type": "button",
+              "label": "Home",
+              "taskReference": {
+                "taskId": "home"
+              },
+              "action": "AUXILIARY"
             }
           ]
         },
@@ -250,7 +231,7 @@
                   "type": "richText",
                   "id": "pendingDesc",
                   "enabled": false,
-                  "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">ℹ </span><span style=\"color:#374151;font-size:11px\">The following Assignable Role requests are awaiting ISC review. Click <b>Maintain</b> to approve or deny a request.</span>"
+                  "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">\u2139 </span><span style=\"color:#374151;font-size:11px\">The following Assignable Role requests are awaiting ISC review. Click <b>Maintain</b> to approve or deny a request.</span>"
                 },
                 {
                   "type": "grid",
@@ -412,7 +393,7 @@
                   "type": "richText",
                   "id": "addNewDesc",
                   "enabled": false,
-                  "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">ℹ </span><span style=\"color:#374151;font-size:11px\">Submit a new Assignable Role request. Select the Custom Organization, provide role details and select positions. Once submitted, status will be set to <b>Pending ISC Review</b>.</span>"
+                  "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">\u2139 </span><span style=\"color:#374151;font-size:11px\">Submit a new Assignable Role request. Select the Custom Organization, provide role details and select positions. Once submitted, status will be set to <b>Pending ISC Review</b>.</span>"
                 },
                 {
                   "type": "instanceList",
@@ -522,7 +503,7 @@
                   "type": "richText",
                   "id": "activeNote",
                   "enabled": false,
-                  "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">ℹ </span><span style=\"color:#374151;font-size:11px\">Role Assignment Active status is automatically set based on whether selected positions are filled.</span>"
+                  "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">\u2139 </span><span style=\"color:#374151;font-size:11px\">Role Assignment Active status is automatically set based on whether selected positions are filled.</span>"
                 },
                 {
                   "type": "hidden",

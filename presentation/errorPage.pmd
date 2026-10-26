@@ -63,32 +63,13 @@
           "id": "navSection",
           "children": [
             {
-              "type": "section",
-              "horizontal": true,
-              "columnWidthRatios": [
-                0.2,
-                0.2,
-                0.2,
-                0.2,
-                0.2
-              ],
-              "children": [
-                {
-                  "type": "section",
-                  "horizontal": false,
-                  "children": [
-                    {
-                      "type": "button",
-                      "label": "Go to Home",
-                      "taskReference": {
-                        "taskId": "home"
-                      },
-                      "action": "PRIMARY",
-                      "suppressDiscardDialog": true
-                    }
-                  ]
-                }
-              ]
+              "type": "button",
+              "label": "Go to Home",
+              "taskReference": {
+                "taskId": "home"
+              },
+              "action": "PRIMARY",
+              "suppressDiscardDialog": true
             }
           ]
         }

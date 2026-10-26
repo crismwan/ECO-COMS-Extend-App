@@ -28,30 +28,12 @@
           "id": "navSection",
           "children": [
             {
-              "type": "section",
-              "horizontal": true,
-              "children": [
-                {
-                  "type": "section",
-                  "horizontal": false,
-                  "children": [
-                    {
-                      "type": "button",
-                      "label": "Home",
-                      "taskReference": {
-                        "taskId": "home"
-                      },
-                      "action": "AUXILIARY"
-                    }
-                  ]
-                }
-              ],
-              "columnWidthRatios": [
-                0.25,
-                0.25,
-                0.25,
-                0.25
-              ]
+              "type": "button",
+              "label": "Home",
+              "taskReference": {
+                "taskId": "home"
+              },
+              "action": "AUXILIARY"
             }
           ]
         },
@@ -211,7 +193,7 @@
             "type": "richText",
             "id": "exportNote",
             "enabled": false,
-            "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">ℹ </span><span style=\"color:#374151;font-size:11px\">Use the grid’s built-in export action to download these results as CSV for compliance reporting.</span>"
+            "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">\u2139 </span><span style=\"color:#374151;font-size:11px\">Use the grid\u2019s built-in export action to download these results as CSV for compliance reporting.</span>"
           },
           {
             "type": "pod",
@@ -243,7 +225,7 @@
             "type": "richText",
             "id": "filterNote",
             "enabled": false,
-            "value": "<span style=\"color:#d97706;font-size:11px;font-weight:700\">⚠ </span><span style=\"color:#92400e;font-size:11px\">Filtering by Application or Action is not yet available on this page. Use the grid’s built-in column sort and the export action to narrow results.</span>"
+            "value": "<span style=\"color:#d97706;font-size:11px;font-weight:700\">\u26a0 </span><span style=\"color:#92400e;font-size:11px\">Filtering by Application or Action is not yet available on this page. Use the grid\u2019s built-in column sort and the export action to narrow results.</span>"
           },
           {
             "type": "pod",

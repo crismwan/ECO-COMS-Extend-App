@@ -92,45 +92,20 @@
           "id": "navSection",
           "children": [
             {
-              "type": "section",
-              "horizontal": true,
-              "columnWidthRatios": [
-                0.2,
-                0.2,
-                0.2,
-                0.2,
-                0.2
-              ],
-              "children": [
-                {
-                  "type": "section",
-                  "horizontal": false,
-                  "children": [
-                    {
-                      "type": "button",
-                      "label": "Add Pattern",
-                      "taskReference": {
-                        "taskId": "newShellOrgPattern"
-                      },
-                      "action": "PRIMARY"
-                    }
-                  ]
-                },
-                {
-                  "type": "section",
-                  "horizontal": false,
-                  "children": [
-                    {
-                      "type": "button",
-                      "label": "Home",
-                      "taskReference": {
-                        "taskId": "home"
-                      },
-                      "action": "AUXILIARY"
-                    }
-                  ]
-                }
-              ]
+              "type": "button",
+              "label": "Add Pattern",
+              "taskReference": {
+                "taskId": "newShellOrgPattern"
+              },
+              "action": "PRIMARY"
+            },
+            {
+              "type": "button",
+              "label": "Home",
+              "taskReference": {
+                "taskId": "home"
+              },
+              "action": "AUXILIARY"
             }
           ]
         },

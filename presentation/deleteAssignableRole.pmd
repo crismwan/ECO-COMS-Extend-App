@@ -135,44 +135,22 @@
           "id": "navSection",
           "children": [
             {
-              "type": "section",
-              "horizontal": true,
-              "children": [
-                {
-                  "type": "section",
-                  "horizontal": false,
-                  "children": [
-                    {
-                      "type": "button",
-                      "label": "Home",
-                      "taskReference": {
-                        "taskId": "home"
-                      },
-                      "action": "LINK",
-                      "suppressDiscardDialog": true
-                    }
-                  ]
-                },
-                {
-                  "type": "section",
-                  "horizontal": false,
-                  "children": [
-                    {
-                      "type": "button",
-                      "label": "Assignable Role Manager",
-                      "taskReference": {
-                        "taskId": "assignableRoleManager"
-                      },
-                      "action": "LINK",
-                      "suppressDiscardDialog": true
-                    }
-                  ]
-                }
-              ],
-              "columnWidthRatios": [
-                0.3,
-                0.7
-              ]
+              "type": "button",
+              "label": "Home",
+              "taskReference": {
+                "taskId": "home"
+              },
+              "action": "LINK",
+              "suppressDiscardDialog": true
+            },
+            {
+              "type": "button",
+              "label": "Assignable Role Manager",
+              "taskReference": {
+                "taskId": "assignableRoleManager"
+              },
+              "action": "LINK",
+              "suppressDiscardDialog": true
             }
           ]
         },
@@ -363,7 +341,7 @@
               "type": "richText",
               "id": "confirmDelete",
               "enabled": false,
-              "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">ℹ </span><span style=\"color:#374151;font-size:11px\">Select a role from the grid above, then click <b>OK</b> to permanently delete the request.</span>"
+              "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">\u2139 </span><span style=\"color:#374151;font-size:11px\">Select a role from the grid above, then click <b>OK</b> to permanently delete the request.</span>"
             },
             {
               "type": "fieldSet",
@@ -381,7 +359,7 @@
                   "type": "richText",
                   "id": "deleteWarning",
                   "enabled": false,
-                  "value": "<span style=\"color:#dc2626;font-size:11px;font-weight:700\">⚠ </span><span style=\"color:#991b1b;font-size:11px\"><b>Warning:</b> This action permanently deletes the selected role request and cannot be undone. Click OK to confirm.</span>"
+                  "value": "<span style=\"color:#dc2626;font-size:11px;font-weight:700\">\u26a0 </span><span style=\"color:#991b1b;font-size:11px\"><b>Warning:</b> This action permanently deletes the selected role request and cannot be undone. Click OK to confirm.</span>"
                 }
               ],
               "title": "Confirm Delete",

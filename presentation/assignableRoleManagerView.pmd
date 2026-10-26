@@ -37,47 +37,22 @@
           "id": "navSection",
           "children": [
             {
-              "type": "section",
-              "horizontal": true,
-              "columnWidthRatios": [
-                0.2,
-                0.2,
-                0.2,
-                0.2,
-                0.2
-              ],
-              "children": [
-                {
-                  "type": "section",
-                  "horizontal": false,
-                  "children": [
-                    {
-                      "type": "button",
-                      "label": "Submit New Request",
-                      "taskReference": {
-                        "taskId": "assignableRoleManager"
-                      },
-                      "action": "PRIMARY",
-                      "tooltip": "Open the form to submit a new Assignable Role request for ISC review."
-                    }
-                  ]
-                },
-                {
-                  "type": "section",
-                  "horizontal": false,
-                  "children": [
-                    {
-                      "type": "button",
-                      "label": "Home",
-                      "taskReference": {
-                        "taskId": "home"
-                      },
-                      "action": "AUXILIARY",
-                      "tooltip": "Return to the ECO-COMS home page."
-                    }
-                  ]
-                }
-              ]
+              "type": "button",
+              "label": "Submit New Request",
+              "taskReference": {
+                "taskId": "assignableRoleManager"
+              },
+              "action": "PRIMARY",
+              "tooltip": "Open the form to submit a new Assignable Role request for ISC review."
+            },
+            {
+              "type": "button",
+              "label": "Home",
+              "taskReference": {
+                "taskId": "home"
+              },
+              "action": "AUXILIARY",
+              "tooltip": "Return to the ECO-COMS home page."
             }
           ]
         },

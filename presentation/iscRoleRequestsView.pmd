@@ -63,66 +63,36 @@
           "id": "navSection",
           "children": [
             {
-              "type": "section",
-              "horizontal": true,
-              "children": [
-                {
-                  "type": "section",
-                  "horizontal": false,
-                  "children": [
-                    {
-                      "type": "button",
-                      "label": "Home",
-                      "taskReference": {
-                        "taskId": "home"
-                      },
-                      "action": "AUXILIARY"
-                    }
-                  ]
-                },
-                {
-                  "type": "section",
-                  "horizontal": false,
-                  "children": [
-                    {
-                      "type": "button",
-                      "label": "Assignable Role Manager",
-                      "taskReference": {
-                        "taskId": "assignableRoleManager"
-                      },
-                      "action": "AUXILIARY"
-                    }
-                  ]
-                },
-                {
-                  "type": "section",
-                  "horizontal": false,
-                  "children": [
-                    {
-                      "type": "button",
-                      "label": "Admin Provisioning",
-                      "taskReference": {
-                        "taskId": "adminProvisioning"
-                      },
-                      "action": "AUXILIARY"
-                    }
-                  ]
-                },
-                {
-                  "type": "section",
-                  "horizontal": false,
-                  "children": [
-                    {
-                      "type": "button",
-                      "label": "Maintain",
-                      "taskReference": {
-                        "taskId": "assignableRoleManagerMaintain"
-                      },
-                      "action": "PRIMARY"
-                    }
-                  ]
-                }
-              ]
+              "type": "button",
+              "label": "Maintain",
+              "taskReference": {
+                "taskId": "assignableRoleManagerMaintain"
+              },
+              "action": "PRIMARY"
+            },
+            {
+              "type": "button",
+              "label": "Home",
+              "taskReference": {
+                "taskId": "home"
+              },
+              "action": "AUXILIARY"
+            },
+            {
+              "type": "button",
+              "label": "Assignable Role Manager",
+              "taskReference": {
+                "taskId": "assignableRoleManager"
+              },
+              "action": "AUXILIARY"
+            },
+            {
+              "type": "button",
+              "label": "Admin Provisioning",
+              "taskReference": {
+                "taskId": "adminProvisioning"
+              },
+              "action": "AUXILIARY"
             }
           ]
         },

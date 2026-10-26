@@ -250,31 +250,13 @@
           "id": "navSection",
           "children": [
             {
-              "type": "section",
-              "horizontal": true,
-              "children": [
-                {
-                  "type": "section",
-                  "horizontal": false,
-                  "children": [
-                    {
-                      "type": "button",
-                      "label": "← Back to Assignable Role Manager",
-                      "taskReference": {
-                        "taskId": "assignableRoleManager"
-                      },
-                      "action": "LINK",
-                      "suppressDiscardDialog": true
-                    }
-                  ]
-                }
-              ],
-              "columnWidthRatios": [
-                0.25,
-                0.25,
-                0.25,
-                0.25
-              ]
+              "type": "button",
+              "label": "\u2190 Back to Assignable Role Manager",
+              "taskReference": {
+                "taskId": "assignableRoleManager"
+              },
+              "action": "LINK",
+              "suppressDiscardDialog": true
             }
           ]
         },

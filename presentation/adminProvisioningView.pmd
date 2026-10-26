@@ -30,62 +30,31 @@
           "id": "navSection",
           "children": [
             {
-              "type": "section",
-              "horizontal": true,
-              "children": [
-                {
-                  "type": "section",
-                  "horizontal": false,
-                  "children": [
-                    {
-                      "type": "button",
-                      "label": "Submit AAA Role Request",
-                      "taskReference": {
-                        "taskId": "adminProvisioning"
-                      },
-                      "action": "PRIMARY",
-                      "tooltip": "Open the form to submit a new AAA role request for ISC review."
-                    }
-                  ]
-                },
-                {
-                  "type": "section",
-                  "horizontal": false,
-                  "children": [
-                    {
-                      "type": "button",
-                      "label": "Home",
-                      "taskReference": {
-                        "taskId": "home"
-                      },
-                      "action": "AUXILIARY",
-                      "tooltip": "Return to the ECO-COMS home page."
-                    }
-                  ]
-                },
-                {
-                  "type": "section",
-                  "horizontal": false,
-                  "children": [
-                    {
-                      "type": "button",
-                      "label": "Maintain",
-                      "taskReference": {
-                        "taskId": "assignableRoleManagerMaintain"
-                      },
-                      "action": "AUXILIARY",
-                      "tooltip": "Maintain (approve or deny) a pending AAA role request."
-                    }
-                  ]
-                }
-              ],
-              "columnWidthRatios": [
-                0.2,
-                0.2,
-                0.2,
-                0.2,
-                0.2
-              ]
+              "type": "button",
+              "label": "Submit AAA Role Request",
+              "taskReference": {
+                "taskId": "adminProvisioning"
+              },
+              "action": "PRIMARY",
+              "tooltip": "Open the form to submit a new AAA role request for ISC review."
+            },
+            {
+              "type": "button",
+              "label": "Home",
+              "taskReference": {
+                "taskId": "home"
+              },
+              "action": "AUXILIARY",
+              "tooltip": "Return to the ECO-COMS home page."
+            },
+            {
+              "type": "button",
+              "label": "Maintain",
+              "taskReference": {
+                "taskId": "assignableRoleManagerMaintain"
+              },
+              "action": "AUXILIARY",
+              "tooltip": "Maintain (approve or deny) a pending AAA role request."
             }
           ]
         },
