@@ -18,11 +18,13 @@
     {
       "name": "shellOrgPatterns",
       "baseUrlType": "workday-wql",
-      "url": "<% 'data?query=' + string:pathEncode('SELECT workdayID, organizationByName, code, cf_active1 FROM topLevelOrganizations WHERE code contains \\'' + (queryParams.appCode ?? '') + ':PATTERN\\'') %>",
+      "url": "data",
       "authType": "sso",
       "isCollection": true,
       "bestEffort": "true",
-      "exclude": "<% empty(queryParams.appCode) %>"
+      "wqlQuery": {
+        "queryId": "existingPatterns"
+      }
     }
   ],
   "presentation": {
@@ -175,19 +177,19 @@
                   "id": "emptyStateMsg",
                   "enabled": false,
                   "value": "<span style=\"color:#374151;font-size:12px\">No shell org patterns found for this application. Use the <b>Add Pattern</b> button above to create one.</span>",
-                  "visible": "<% !empty(queryParams.appCode) && size(shellOrgPatterns.data) == 0 %>"
+                  "visible": "<% !empty(queryParams.appCode) && size(shellOrgPatterns.data.filter(p => { p.code.startsWith(queryParams.appCode + ':PATTERN') })) == 0 %>"
                 },
                 {
                   "type": "grid",
                   "gridType": "LIST",
                   "multiViewStylingEnabled": true,
                   "id": "patternsGrid",
-                  "rows": "<% shellOrgPatterns.data %>",
+                  "rows": "<% shellOrgPatterns.data.filter(p => { p.code.startsWith(queryParams.appCode + ':PATTERN') }) %>",
                   "rowVariableName": "pattern",
                   "enabled": false,
                   "label": "<% 'Patterns for ' + (queryParams.appCode ?? '') %>",
                   "autoPaging": true,
-                  "visible": "<% !empty(queryParams.appCode) && size(shellOrgPatterns.data) > 0 %>",
+                  "visible": "<% !empty(queryParams.appCode) && size(shellOrgPatterns.data.filter(p => { p.code.startsWith(queryParams.appCode + ':PATTERN') })) > 0 %>",
                   "columns": [
                     {
                       "type": "column",
