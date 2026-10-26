@@ -242,151 +242,170 @@
       "label": "ECO-COMS: Maintain Assignable Roles (ISC)"
     },
     "body": {
-      "type": "section",
-      "horizontal": false,
-      "children": [
+      "type": "basicFormLayout",
+      "id": "maintainForm",
+      "sections": [
         {
-          "type": "section",
-          "horizontal": true,
+          "type": "layoutSection",
+          "id": "navSection",
           "children": [
             {
               "type": "section",
-              "horizontal": false,
+              "horizontal": true,
               "children": [
                 {
-                  "type": "button",
-                  "label": "← Back to Assignable Role Manager",
-                  "taskReference": {
-                    "taskId": "assignableRoleManager"
-                  },
-                  "action": "AUXILIARY"
+                  "type": "section",
+                  "horizontal": false,
+                  "children": [
+                    {
+                      "type": "button",
+                      "label": "\u2190 Back to Assignable Role Manager",
+                      "taskReference": {
+                        "taskId": "assignableRoleManager"
+                      },
+                      "action": "LINK",
+                      "suppressDiscardDialog": true
+                    }
+                  ]
                 }
+              ],
+              "columnWidthRatios": [
+                0.25,
+                0.25,
+                0.25,
+                0.25
               ]
             }
-          ],
-          "columnWidthRatios": [
-            0.25,
-            0.25,
-            0.25,
-            0.25
           ]
         },
         {
-          "type": "fieldSet",
-          "id": "actionFieldSet",
+          "type": "layoutSection",
+          "id": "actionSection",
           "children": [
             {
-              "type": "dropdown",
-              "id": "maintainAction",
-              "label": "Action",
-              "required": true,
-              "enabled": true,
-              "values": "<% [{'id': 'Approve', 'descriptor': 'Approve'}, {'id': 'Deny', 'descriptor': 'Deny'}] %>",
-              "onChange": "<%\n            selectedAction.setValue(self.value);\n            if (self.value == 'Deny' && empty(denialReason.value)) {\n              denialReason.setError('Denial Reason is required when denying a role.');\n            } else {\n              denialReason.clearError();\n            }\n          %>"
-            },
-            {
-              "type": "hidden",
-              "id": "selectedAction",
-              "value": "<% '' %>"
-            },
-            {
-              "type": "instanceList",
-              "id": "workdayRoleDropdown",
-              "label": "Workday Assignable Role (required for Approve)",
-              "required": false,
-              "enabled": true,
-              "values": "<% allShellRoles.data.map(r => { {'id': r.role.id, 'descriptor': r.role.descriptor} }) %>",
-              "valuesOut": [
+              "type": "fieldSet",
+              "id": "actionFieldSet",
+              "children": [
                 {
-                  "value": "<% self.value[0] ?? '' %>",
-                  "valueOutBinding": "approveRole.workdayAssignableRole"
+                  "type": "dropdown",
+                  "id": "maintainAction",
+                  "label": "Action",
+                  "required": true,
+                  "enabled": true,
+                  "values": "<% [{'id': 'Approve', 'descriptor': 'Approve'}, {'id': 'Deny', 'descriptor': 'Deny'}] %>",
+                  "onChange": "<%\n            selectedAction.setValue(self.value);\n            if (self.value == 'Deny' && empty(denialReason.value)) {\n              denialReason.setError('Denial Reason is required when denying a role.');\n            } else {\n              denialReason.clearError();\n            }\n          %>"
                 },
                 {
-                  "value": "<% self.selectedEntries[0].descriptor ?? '' %>",
-                  "valueOutBinding": "approveRole.workdayRoleId"
-                }
-              ]
-            },
-            {
-              "type": "textArea",
-              "id": "denialReason",
-              "label": "Denial Reason (required for Deny)",
-              "required": false,
-              "enabled": true,
-              "placeholder": "Provide a clear reason for denying this role request.",
-              "onChange": "<%\n            if (maintainAction.value == 'Deny' && empty(self.value)) {\n              self.setError('Denial Reason is required when denying a role.');\n            } else {\n              self.clearError();\n            }\n          %>",
-              "valuesOut": [
+                  "type": "hidden",
+                  "id": "selectedAction",
+                  "value": "<% '' %>"
+                },
                 {
-                  "value": "<% self.value %>",
-                  "valueOutBinding": "denyRole.denialReason"
+                  "type": "instanceList",
+                  "id": "workdayRoleDropdown",
+                  "label": "Workday Assignable Role (required for Approve)",
+                  "required": false,
+                  "enabled": true,
+                  "values": "<% allShellRoles.data.map(r => { {'id': r.role.id, 'descriptor': r.role.descriptor} }) %>",
+                  "valuesOut": [
+                    {
+                      "value": "<% self.value[0] ?? '' %>",
+                      "valueOutBinding": "approveRole.workdayAssignableRole"
+                    },
+                    {
+                      "value": "<% self.selectedEntries[0].descriptor ?? '' %>",
+                      "valueOutBinding": "approveRole.workdayRoleId"
+                    }
+                  ]
+                },
+                {
+                  "type": "textArea",
+                  "id": "denialReason",
+                  "label": "Denial Reason (required for Deny)",
+                  "required": false,
+                  "enabled": true,
+                  "placeholder": "Provide a clear reason for denying this role request.",
+                  "onChange": "<%\n            if (maintainAction.value == 'Deny' && empty(self.value)) {\n              self.setError('Denial Reason is required when denying a role.');\n            } else {\n              self.clearError();\n            }\n          %>",
+                  "valuesOut": [
+                    {
+                      "value": "<% self.value %>",
+                      "valueOutBinding": "denyRole.denialReason"
+                    }
+                  ]
                 }
-              ]
+              ],
+              "title": "ISC Action",
+              "layout": {
+                "density": "medium",
+                "alignment": "left",
+                "horizontalSizing": "fixed",
+                "labelPosition": "side_align_left"
+              }
             }
-          ],
-          "title": "ISC Action",
-          "layout": {
-            "density": "medium",
-            "alignment": "left",
-            "horizontalSizing": "fixed",
-            "labelPosition": "side_align_left"
-          }
+          ]
         },
         {
-          "type": "fieldSet",
-          "id": "roleDetailSection",
+          "type": "layoutSection",
+          "id": "detailSection",
           "children": [
             {
-              "type": "text",
-              "id": "roleNameText",
-              "label": "Role Name",
-              "enabled": false,
-              "value": "<% selectedRole.roleName ?? '' %>"
-            },
-            {
-              "type": "text",
-              "id": "enabledForText",
-              "label": "Enabled For",
-              "enabled": false,
-              "value": "<% selectedRole.enabledForOrganizationTypes ?? 'Academic Unit - University of British Columbia' %>"
-            },
-            {
-              "type": "text",
-              "id": "delegatedRolesText",
-              "label": "Delegated Roles",
-              "enabled": false,
-              "visible": "<% !empty(selectedRole.enabledForOrganizationTypes) && selectedRole.enabledForOrganizationTypes != 'Academic Unit - University of British Columbia' %>",
-              "value": "<% selectedRole.enabledForOrganizationTypes ?? '' %>"
-            },
-            {
-              "type": "grid",
-              "gridType": "LIST",
-              "id": "posGrid",
-              "label": "Positions",
-              "rows": "<% empty(selectedRole.positionWids) ? (empty(selectedRole.positions) ? [] : positions.data.filter(p => { selectedRole.positions.contains(p.id) })) : positions.data.filter(p => { selectedRole.positionWids.contains(p.id) }) %>",
-              "rowVariableName": "pos",
-              "enabled": false,
-              "columns": [
+              "type": "fieldSet",
+              "id": "roleDetailSection",
+              "children": [
                 {
-                  "type": "column",
-                  "id": "colPos",
-                  "columnId": "colPos",
-                  "label": "Position",
-                  "cellTemplate": {
-                    "type": "text",
-                    "value": "<% pos.descriptor %>",
-                    "enabled": false
-                  }
+                  "type": "text",
+                  "id": "roleNameText",
+                  "label": "Role Name",
+                  "enabled": false,
+                  "value": "<% selectedRole.roleName ?? '' %>"
+                },
+                {
+                  "type": "text",
+                  "id": "enabledForText",
+                  "label": "Enabled For",
+                  "enabled": false,
+                  "value": "<% selectedRole.enabledForOrganizationTypes ?? 'Academic Unit - University of British Columbia' %>"
+                },
+                {
+                  "type": "text",
+                  "id": "delegatedRolesText",
+                  "label": "Delegated Roles",
+                  "enabled": false,
+                  "visible": "<% !empty(selectedRole.enabledForOrganizationTypes) && selectedRole.enabledForOrganizationTypes != 'Academic Unit - University of British Columbia' %>",
+                  "value": "<% selectedRole.enabledForOrganizationTypes ?? '' %>"
+                },
+                {
+                  "type": "grid",
+                  "gridType": "LIST",
+                  "id": "posGrid",
+                  "label": "Positions",
+                  "rows": "<% empty(selectedRole.positionWids) ? (empty(selectedRole.positions) ? [] : positions.data.filter(p => { selectedRole.positions.contains(p.id) })) : positions.data.filter(p => { selectedRole.positionWids.contains(p.id) }) %>",
+                  "rowVariableName": "pos",
+                  "enabled": false,
+                  "columns": [
+                    {
+                      "type": "column",
+                      "id": "colPos",
+                      "columnId": "colPos",
+                      "label": "Position",
+                      "cellTemplate": {
+                        "type": "text",
+                        "value": "<% pos.descriptor %>",
+                        "enabled": false
+                      }
+                    }
+                  ]
                 }
-              ]
+              ],
+              "title": "Role Details",
+              "layout": {
+                "density": "medium",
+                "alignment": "left",
+                "horizontalSizing": "fixed",
+                "labelPosition": "side_align_left"
+              }
             }
-          ],
-          "title": "Role Details",
-          "layout": {
-            "density": "medium",
-            "alignment": "left",
-            "horizontalSizing": "fixed",
-            "labelPosition": "side_align_left"
-          }
+          ]
         }
       ]
     },
@@ -399,7 +418,8 @@
           "value": "Powered By Workday Extend"
         }
       ]
-    }
+    },
+    "standardEditButtonsHidden": true
   },
   "onSubmit": "<%\n  let valid = true;\n  if (empty(maintainAction.value)) {\n    maintainAction.setError('Please select an action.');\n    valid = false;\n  }\n  if (maintainAction.value == 'Approve') {\n    if (empty(workdayRoleDropdown.value)) {\n      workdayRoleDropdown.setError('Please select a Workday Assignable Role to approve.');\n      valid = false;\n    }\n  }\n  if (maintainAction.value == 'Deny') {\n    if (empty(denialReason.value)) {\n      denialReason.setError('Denial Reason is required when denying a role.');\n      valid = false;\n    }\n  }\n  valid;\n%>"
 }

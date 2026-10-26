@@ -1,7 +1,9 @@
 {
   "id": "iscErrorPage",
   "endPoints": [],
-  "outboundData": {"outboundEndPoints": []},
+  "outboundData": {
+    "outboundEndPoints": []
+  },
   "presentation": {
     "headerSize": "STANDARD",
     "title": {
@@ -9,34 +11,65 @@
       "label": "Access Restricted"
     },
     "body": {
-      "type": "section",
-      "horizontal": false,
-      "children": [
+      "type": "basicFormLayout",
+      "id": "iscErrorPageForm",
+      "sections": [
         {
-          "type": "readOnlyText",
-          "id": "iscErrorMessage",
-          "value": "This page is only available to ISC Security Administrators. If you have any questions, please raise an Incident Ticket with 'ISC Service Delivery'."
-        },
-        {
-          "type": "section",
-          "horizontal": true,
+          "type": "layoutSection",
+          "id": "errorSection",
           "children": [
             {
-              "type": "section",
-              "horizontal": false,
+              "type": "fieldSet",
+              "id": "errorFieldSet",
+              "title": "Access Restricted",
+              "layout": {
+                "density": "medium",
+                "alignment": "left",
+                "horizontalSizing": "stretch",
+                "labelPosition": "top"
+              },
               "children": [
                 {
-                  "type": "button",
-                  "label": "← Back to Home",
-                  "taskReference": {
-                    "taskId": "home"
-                  },
-                  "action": "AUXILIARY"
+                  "type": "richText",
+                  "id": "iscErrorMessage",
+                  "enabled": false,
+                  "value": "This page is only available to ISC Security Administrators. If you have any questions, please raise an Incident Ticket with 'ISC Service Delivery'."
                 }
               ]
             }
-          ],
-          "columnWidthRatios": [0.25, 0.25, 0.25, 0.25]
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "navSection",
+          "children": [
+            {
+              "type": "section",
+              "horizontal": true,
+              "columnWidthRatios": [
+                0.25,
+                0.25,
+                0.25,
+                0.25
+              ],
+              "children": [
+                {
+                  "type": "section",
+                  "horizontal": false,
+                  "children": [
+                    {
+                      "type": "button",
+                      "label": "\u2190 Back to Home",
+                      "taskReference": {
+                        "taskId": "home"
+                      },
+                      "action": "AUXILIARY"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
         }
       ]
     },

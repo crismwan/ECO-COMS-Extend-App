@@ -7,53 +7,84 @@
       "label": "Pattern Created"
     },
     "body": {
-      "type": "section",
-      "horizontal": false,
-      "children": [
+      "type": "basicFormLayout",
+      "id": "successForm",
+      "sections": [
         {
-          "type": "readOnlyText",
-          "id": "successMessage",
-          "value": "The Custom Organization has been created in Workday."
-        },
-        {
-          "type": "readOnlyText",
-          "id": "patternNameDisplay",
-          "value": "<% flowVariables.patternName ?? '' %>"
-        },
-        {
-          "type": "section",
-          "horizontal": true,
+          "type": "layoutSection",
+          "id": "successSection",
           "children": [
             {
-              "type": "section",
-              "horizontal": false,
+              "type": "fieldSet",
+              "id": "successFieldSet",
+              "title": "Pattern Created Successfully",
+              "layout": {
+                "density": "medium",
+                "alignment": "left",
+                "horizontalSizing": "stretch",
+                "labelPosition": "top"
+              },
               "children": [
                 {
-                  "type": "button",
-                  "label": "Add Another Pattern",
-                  "taskReference": {
-                    "taskId": "newShellOrgPattern"
-                  },
-                  "action": "PRIMARY"
-                }
-              ]
-            },
-            {
-              "type": "section",
-              "horizontal": false,
-              "children": [
+                  "type": "richText",
+                  "id": "successMessage",
+                  "enabled": false,
+                  "value": "The Custom Organization has been created in Workday."
+                },
                 {
-                  "type": "button",
-                  "label": "Back to Shell Org Manager",
-                  "taskReference": {
-                    "taskId": "shellOrgManager"
-                  },
-                  "action": "AUXILIARY"
+                  "type": "readOnlyText",
+                  "id": "patternNameDisplay",
+                  "value": "<% flowVariables.patternName ?? '' %>"
                 }
               ]
             }
-          ],
-          "columnWidthRatios": [0.25, 0.25, 0.25, 0.25]
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "navSection",
+          "children": [
+            {
+              "type": "section",
+              "horizontal": true,
+              "columnWidthRatios": [
+                0.25,
+                0.25,
+                0.25,
+                0.25
+              ],
+              "children": [
+                {
+                  "type": "section",
+                  "horizontal": false,
+                  "children": [
+                    {
+                      "type": "button",
+                      "label": "Add Another Pattern",
+                      "taskReference": {
+                        "taskId": "newShellOrgPattern"
+                      },
+                      "action": "PRIMARY"
+                    }
+                  ]
+                },
+                {
+                  "type": "section",
+                  "horizontal": false,
+                  "children": [
+                    {
+                      "type": "button",
+                      "label": "Back to Shell Org Manager",
+                      "taskReference": {
+                        "taskId": "shellOrgManager"
+                      },
+                      "action": "AUXILIARY"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
         }
       ]
     },

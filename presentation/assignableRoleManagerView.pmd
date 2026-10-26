@@ -29,205 +29,225 @@
       "enabled": true
     },
     "body": {
-      "type": "areaLayout",
-      "primaryArea": [
+      "type": "basicFormLayout",
+      "id": "assignableRoleManagerViewForm",
+      "sections": [
         {
-          "type": "section",
-          "horizontal": true,
+          "type": "layoutSection",
+          "id": "navSection",
           "children": [
             {
               "type": "section",
-              "horizontal": false,
+              "horizontal": true,
+              "columnWidthRatios": [
+                0.2,
+                0.2,
+                0.2,
+                0.2,
+                0.2
+              ],
               "children": [
                 {
-                  "type": "button",
-                  "label": "Submit New Request",
-                  "taskReference": {
-                    "taskId": "assignableRoleManager"
-                  },
-                  "action": "PRIMARY",
-                  "tooltip": "Open the form to submit a new Assignable Role request for ISC review."
-                }
-              ]
-            },
-            {
-              "type": "section",
-              "horizontal": false,
-              "children": [
+                  "type": "section",
+                  "horizontal": false,
+                  "children": [
+                    {
+                      "type": "button",
+                      "label": "Submit New Request",
+                      "taskReference": {
+                        "taskId": "assignableRoleManager"
+                      },
+                      "action": "PRIMARY",
+                      "tooltip": "Open the form to submit a new Assignable Role request for ISC review."
+                    }
+                  ]
+                },
                 {
-                  "type": "button",
-                  "label": "Home",
-                  "taskReference": {
-                    "taskId": "home"
-                  },
-                  "action": "AUXILIARY",
-                  "tooltip": "Return to the ECO-COMS home page."
+                  "type": "section",
+                  "horizontal": false,
+                  "children": [
+                    {
+                      "type": "button",
+                      "label": "Home",
+                      "taskReference": {
+                        "taskId": "home"
+                      },
+                      "action": "AUXILIARY",
+                      "tooltip": "Return to the ECO-COMS home page."
+                    }
+                  ]
                 }
               ]
             }
-          ],
-          "columnWidthRatios": [
-            0.2,
-            0.2,
-            0.2,
-            0.2,
-            0.2
           ]
         },
         {
-          "type": "richText",
-          "id": "pageDesc",
-          "value": "View your Assignable Role requests and their current status. Each request is reviewed by ISC before becoming active in Workday. To submit a new request, click <b>Submit New Request</b> above."
-        },
-        {
-          "type": "readOnlyText",
-          "id": "pendingNoticeYes",
-          "value": "You have requests currently pending ISC review. Use the Maintain action on a row below to update or add information to a pending request.",
-          "visible": "<% size(comsAssignableRoles.data.filter(r => !r.roleName.startsWith('Organizations and Roles Assignment Administrator') && r.requestedBy.id == selectedWorker.id && r.status == 'Pending ISC Review')) > 0 %>"
-        },
-        {
-          "type": "readOnlyText",
-          "id": "pendingNoticeNo",
-          "value": "You have no requests pending ISC review.",
-          "visible": "<% size(comsAssignableRoles.data.filter(r => !r.roleName.startsWith('Organizations and Roles Assignment Administrator') && r.requestedBy.id == selectedWorker.id && r.status == 'Pending ISC Review')) == 0 %>"
-        },
-        {
-          "type": "fieldSet",
-          "id": "pendingRolesSection",
-          "collapsible": true,
-          "collapsed": false,
+          "type": "layoutSection",
+          "id": "descSection",
           "children": [
             {
-              "type": "readOnlyText",
-              "id": "emptyStateMsg",
-              "value": "You have no Assignable Role requests. Click Submit New Request above to get started.",
-              "visible": "<% size(comsAssignableRoles.data.filter(r => !r.roleName.startsWith('Organizations and Roles Assignment Administrator') && r.requestedBy.id == selectedWorker.id)) == 0 %>"
+              "type": "richText",
+              "id": "pageDesc",
+              "enabled": false,
+              "value": "View your Assignable Role requests and their current status. Each request is reviewed by ISC before becoming active in Workday. To submit a new request, click <b>Submit New Request</b> above."
             },
             {
-              "type": "grid",
-              "gridType": "LIST",
-              "multiViewStylingEnabled": true,
-              "id": "assignableRolesGrid",
-              "rows": "<% comsAssignableRoles.data.filter(r => !r.roleName.startsWith('Organizations and Roles Assignment Administrator') && r.requestedBy.id == selectedWorker.id) %>",
-              "rowVariableName": "role",
-              "enabled": false,
-              "label": "Assignable Role Requests",
-              "autoPaging": true,
-              "defaultSortColumnId": "colRequestedDate",
-              "defaultSortOrder": "DESCENDING",
-              "visible": "<% size(comsAssignableRoles.data.filter(r => !r.roleName.startsWith('Organizations and Roles Assignment Administrator') && r.requestedBy.id == selectedWorker.id)) > 0 %>",
-              "columns": [
+              "type": "readOnlyText",
+              "id": "pendingNoticeYes",
+              "value": "You have requests currently pending ISC review. Use the Maintain action on a row below to update or add information to a pending request.",
+              "visible": "<% size(comsAssignableRoles.data.filter(r => !r.roleName.startsWith('Organizations and Roles Assignment Administrator') && r.requestedBy.id == selectedWorker.id && r.status == 'Pending ISC Review')) > 0 %>"
+            },
+            {
+              "type": "readOnlyText",
+              "id": "pendingNoticeNo",
+              "value": "You have no requests pending ISC review.",
+              "visible": "<% size(comsAssignableRoles.data.filter(r => !r.roleName.startsWith('Organizations and Roles Assignment Administrator') && r.requestedBy.id == selectedWorker.id && r.status == 'Pending ISC Review')) == 0 %>"
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "gridSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "pendingRolesSection",
+              "collapsible": true,
+              "collapsed": false,
+              "children": [
                 {
-                  "type": "column",
-                  "id": "colOrgApp",
-                  "columnId": "colOrgApp",
-                  "label": "Organization / Application",
-                  "sortableAndFilterable": "true",
-                  "cellTemplate": {
-                    "type": "text",
-                    "value": "<% role.shellOrgCode ?? role.application ?? '' %>",
-                    "enabled": false
-                  }
+                  "type": "readOnlyText",
+                  "id": "emptyStateMsg",
+                  "value": "You have no Assignable Role requests. Click Submit New Request above to get started.",
+                  "visible": "<% size(comsAssignableRoles.data.filter(r => !r.roleName.startsWith('Organizations and Roles Assignment Administrator') && r.requestedBy.id == selectedWorker.id)) == 0 %>"
                 },
                 {
-                  "type": "column",
-                  "id": "colRoleName",
-                  "columnId": "colRoleName",
-                  "label": "Role Name",
-                  "sortableAndFilterable": "true",
-                  "cellTemplate": {
-                    "type": "text",
-                    "value": "<% role.roleName ?? '' %>",
-                    "enabled": false
-                  }
-                },
-                {
-                  "type": "column",
-                  "id": "colWdRoleName",
-                  "columnId": "colWdRoleName",
-                  "label": "Generated Workday Role Name",
-                  "cellTemplate": {
-                    "type": "text",
-                    "value": "<% role.workdayRoleId ?? '' %>",
-                    "enabled": false
-                  }
-                },
-                {
-                  "type": "column",
-                  "id": "colStatus",
-                  "columnId": "colStatus",
-                  "label": "Status",
-                  "sortableAndFilterable": "true",
-                  "cellTemplate": {
-                    "type": "richText",
-                    "value": "<% role.status == 'Pending ISC Review' ? '<span style=\"color:#b45309;font-weight:600\">\u23f3 Pending ISC Review</span>' : role.status == 'Approved' ? '<span style=\"color:#15803d;font-weight:600\">\u2713 Approved</span>' : role.status == 'Inactive' ? '<span style=\"color:#6b7280;font-weight:600\">\u25cb Inactive</span>' : role.status ?? '' %>"
-                  }
-                },
-                {
-                  "type": "column",
-                  "id": "colEffDate",
-                  "columnId": "colEffDate",
-                  "label": "Effective Date",
-                  "cellTemplate": {
-                    "type": "text",
-                    "value": "<% role.effectiveDate ?? '' %>",
-                    "enabled": false
-                  }
-                },
-                {
-                  "type": "column",
-                  "id": "colRequestedDate",
-                  "columnId": "colRequestedDate",
-                  "label": "Requested Date",
-                  "sortableAndFilterable": "true",
-                  "cellTemplate": {
-                    "type": "text",
-                    "value": "<% role.requestedDate ?? '' %>",
-                    "enabled": false
-                  }
-                },
-                {
-                  "type": "column",
-                  "id": "colActions",
-                  "columnId": "colActions",
-                  "label": "Actions",
-                  "cellTemplate": {
-                    "type": "section",
-                    "horizontal": true,
-                    "children": [
-                      {
+                  "type": "grid",
+                  "gridType": "LIST",
+                  "multiViewStylingEnabled": true,
+                  "id": "assignableRolesGrid",
+                  "rows": "<% comsAssignableRoles.data.filter(r => !r.roleName.startsWith('Organizations and Roles Assignment Administrator') && r.requestedBy.id == selectedWorker.id) %>",
+                  "rowVariableName": "role",
+                  "enabled": false,
+                  "label": "Assignable Role Requests",
+                  "autoPaging": true,
+                  "defaultSortColumnId": "colRequestedDate",
+                  "defaultSortOrder": "DESCENDING",
+                  "visible": "<% size(comsAssignableRoles.data.filter(r => !r.roleName.startsWith('Organizations and Roles Assignment Administrator') && r.requestedBy.id == selectedWorker.id)) > 0 %>",
+                  "columns": [
+                    {
+                      "type": "column",
+                      "id": "colOrgApp",
+                      "columnId": "colOrgApp",
+                      "label": "Organization / Application",
+                      "sortableAndFilterable": "true",
+                      "cellTemplate": {
+                        "type": "text",
+                        "value": "<% role.shellOrgCode ?? role.application ?? '' %>",
+                        "enabled": false
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "id": "colRoleName",
+                      "columnId": "colRoleName",
+                      "label": "Role Name",
+                      "sortableAndFilterable": "true",
+                      "cellTemplate": {
+                        "type": "text",
+                        "value": "<% role.roleName ?? '' %>",
+                        "enabled": false
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "id": "colWdRoleName",
+                      "columnId": "colWdRoleName",
+                      "label": "Generated Workday Role Name",
+                      "cellTemplate": {
+                        "type": "text",
+                        "value": "<% role.workdayRoleId ?? '' %>",
+                        "enabled": false
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "id": "colStatus",
+                      "columnId": "colStatus",
+                      "label": "Status",
+                      "sortableAndFilterable": "true",
+                      "cellTemplate": {
+                        "type": "richText",
+                        "value": "<% role.status == 'Pending ISC Review' ? '<span style=\"color:#b45309;font-weight:600\">\u23f3 Pending ISC Review</span>' : role.status == 'Approved' ? '<span style=\"color:#15803d;font-weight:600\">\u2713 Approved</span>' : role.status == 'Inactive' ? '<span style=\"color:#6b7280;font-weight:600\">\u25cb Inactive</span>' : role.status ?? '' %>"
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "id": "colEffDate",
+                      "columnId": "colEffDate",
+                      "label": "Effective Date",
+                      "cellTemplate": {
+                        "type": "text",
+                        "value": "<% role.effectiveDate ?? '' %>",
+                        "enabled": false
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "id": "colRequestedDate",
+                      "columnId": "colRequestedDate",
+                      "label": "Requested Date",
+                      "sortableAndFilterable": "true",
+                      "cellTemplate": {
+                        "type": "text",
+                        "value": "<% role.requestedDate ?? '' %>",
+                        "enabled": false
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "id": "colActions",
+                      "columnId": "colActions",
+                      "label": "Actions",
+                      "cellTemplate": {
                         "type": "section",
-                        "horizontal": false,
+                        "horizontal": true,
                         "children": [
                           {
-                            "type": "button",
-                            "action": "AUXILIARY",
-                            "label": "Maintain",
-                            "visible": "<% role.status == 'Pending ISC Review' %>",
-                            "tooltip": "Update or add information to this pending request.",
-                            "taskReference": {
-                              "taskId": "assignableRoleManagerMaintain",
-                              "parameterBindings": {
-                                "roleId": "<% role.id %>",
-                                "roleName": "<% role.roleName %>"
+                            "type": "section",
+                            "horizontal": false,
+                            "children": [
+                              {
+                                "type": "button",
+                                "action": "AUXILIARY",
+                                "label": "Maintain",
+                                "visible": "<% role.status == 'Pending ISC Review' %>",
+                                "tooltip": "Update or add information to this pending request.",
+                                "taskReference": {
+                                  "taskId": "assignableRoleManagerMaintain",
+                                  "parameterBindings": {
+                                    "roleId": "<% role.id %>",
+                                    "roleName": "<% role.roleName %>"
+                                  }
+                                }
                               }
-                            }
+                            ]
                           }
                         ]
                       }
-                    ]
-                  }
+                    }
+                  ]
                 }
-              ]
+              ],
+              "title": "My Assignable Role Requests",
+              "layout": {
+                "density": "medium",
+                "alignment": "left",
+                "horizontalSizing": "stretch",
+                "labelPosition": "top"
+              }
             }
-          ],
-          "title": "My Assignable Role Requests",
-          "layout": {
-            "density": "medium",
-            "alignment": "left",
-            "horizontalSizing": "stretch",
-            "labelPosition": "top"
-          }
+          ]
         }
       ]
     },

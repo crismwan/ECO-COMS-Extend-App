@@ -97,224 +97,246 @@
       "enabled": true
     },
     "body": {
-      "type": "section",
-      "horizontal": false,
-      "children": [
+      "type": "basicFormLayout",
+      "id": "newShellOrgPatternForm",
+      "sections": [
         {
-          "type": "section",
-          "horizontal": true,
-          "columnWidthRatios": [
-            0.2,
-            0.2,
-            0.2,
-            0.2,
-            0.2
-          ],
+          "type": "layoutSection",
+          "id": "navSection",
           "children": [
             {
               "type": "section",
-              "horizontal": false,
+              "horizontal": true,
+              "columnWidthRatios": [
+                0.2,
+                0.2,
+                0.2,
+                0.2,
+                0.2
+              ],
               "children": [
                 {
-                  "type": "button",
-                  "label": "Shell Org Manager",
-                  "taskReference": {
-                    "taskId": "shellOrgManager"
-                  },
-                  "action": "AUXILIARY"
-                }
-              ]
-            },
-            {
-              "type": "section",
-              "horizontal": false,
-              "children": [
+                  "type": "section",
+                  "horizontal": false,
+                  "children": [
+                    {
+                      "type": "button",
+                      "label": "Shell Org Manager",
+                      "taskReference": {
+                        "taskId": "shellOrgManager"
+                      },
+                      "action": "LINK",
+                      "suppressDiscardDialog": true
+                    }
+                  ]
+                },
                 {
-                  "type": "button",
-                  "label": "Home",
-                  "taskReference": {
-                    "taskId": "home"
-                  },
-                  "action": "AUXILIARY"
-                }
-              ]
-            },
-            {
-              "type": "section",
-              "horizontal": false,
-              "children": [
+                  "type": "section",
+                  "horizontal": false,
+                  "children": [
+                    {
+                      "type": "button",
+                      "label": "Home",
+                      "taskReference": {
+                        "taskId": "home"
+                      },
+                      "action": "LINK",
+                      "suppressDiscardDialog": true
+                    }
+                  ]
+                },
                 {
-                  "type": "button",
-                  "label": "Audit Log",
-                  "taskReference": {
-                    "taskId": "auditLogViewer"
-                  },
-                  "action": "AUXILIARY"
-                }
-              ]
-            },
-            {
-              "type": "section",
-              "horizontal": false,
-              "children": [
+                  "type": "section",
+                  "horizontal": false,
+                  "children": [
+                    {
+                      "type": "button",
+                      "label": "Audit Log",
+                      "taskReference": {
+                        "taskId": "auditLogViewer"
+                      },
+                      "action": "LINK",
+                      "suppressDiscardDialog": true
+                    }
+                  ]
+                },
                 {
-                  "type": "button",
-                  "label": "Admin Provisioning",
-                  "taskReference": {
-                    "taskId": "adminProvisioning"
-                  },
-                  "action": "AUXILIARY"
+                  "type": "section",
+                  "horizontal": false,
+                  "children": [
+                    {
+                      "type": "button",
+                      "label": "Admin Provisioning",
+                      "taskReference": {
+                        "taskId": "adminProvisioning"
+                      },
+                      "action": "LINK",
+                      "suppressDiscardDialog": true
+                    }
+                  ]
                 }
               ]
             }
           ]
         },
         {
-          "type": "fieldSet",
-          "id": "aboutFieldSet",
-          "collapsible": true,
+          "type": "layoutSection",
+          "id": "aboutSection",
           "children": [
             {
-              "type": "readOnlyText",
-              "id": "pageDescription",
-              "value": "Add a new Shell Org Pattern for your application. Patterns define the CO naming structure used to create Custom Organizations in Workday. The pattern name is auto-generated from the fields below. A duplicate check is performed before submission."
-            }
-          ],
-          "title": "About this page",
-          "layout": {
-            "density": "medium",
-            "alignment": "left",
-            "horizontalSizing": "stretch",
-            "labelPosition": "top"
-          }
-        },
-        {
-          "type": "dropdown",
-          "id": "selectedApplicationId",
-          "label": "Application",
-          "required": true,
-          "instanceListLoopTag": {
-            "id": "selectedApplicationIdList",
-            "type": "instanceLoop",
-            "templateInstance": {
-              "id": "<% app.id %>",
-              "descriptor": "<% app.appId %>"
-            },
-            "on": "<% comsApplications.data %>",
-            "as": "app"
-          },
-          "helpText": "Select the application this pattern belongs to.",
-          "onChange": "<%\n            attribute1.clearError();\n            attribute2.clearError();\n            attribute3.clearError();\n            attribute4.clearError();\n            attribute5.clearError();\n            effectiveDate.clearError();\n          %>"
-        },
-        {
-          "type": "readOnlyText",
-          "id": "patternPreview",
-          "label": "Pattern Name Preview",
-          "value": "<% if (empty(selectedApplicationId.value)) { 'Select an application above' } else { let sa = comsApplications.data.filter(a => { a.id == selectedApplicationId.value[0] }); let ac = sa.size() > 0 ? sa[0].appId : ''; ac + ':PATTERN:' + (attribute1.value ?? '*') + ':' + (attribute2.value ?? '*') + ':' + (attribute3.value ?? '*') + ':' + (attribute5.value ?? '*') } %>"
-        },
-        {
-          "type": "grid",
-          "gridType": "LIST",
-          "multiViewStylingEnabled": true,
-          "id": "ExistingPatternsGrid",
-          "rows": "<% existingPatterns.data %>",
-          "rowVariableName": "pattern",
-          "enabled": false,
-          "label": "Existing Shell Org Patterns",
-          "columns": [
-            {
-              "type": "column",
-              "id": "colPatternName",
-              "columnId": "colPatternName",
-              "label": "Organization Name",
-              "sortableAndFilterable": "true",
-              "cellTemplate": {
-                "type": "text",
-                "value": "<% pattern.organizationByName.descriptor %>",
-                "enabled": false
-              }
-            },
-            {
-              "type": "column",
-              "id": "colPatternCode",
-              "columnId": "colPatternCode",
-              "label": "Pattern Code",
-              "sortableAndFilterable": "true",
-              "cellTemplate": {
-                "type": "text",
-                "value": "<% pattern.code %>",
-                "enabled": false
+              "type": "fieldSet",
+              "id": "aboutFieldSet",
+              "collapsible": true,
+              "children": [
+                {
+                  "type": "readOnlyText",
+                  "id": "pageDescription",
+                  "value": "Add a new Shell Org Pattern for your application. Patterns define the CO naming structure used to create Custom Organizations in Workday. The pattern name is auto-generated from the fields below. A duplicate check is performed before submission."
+                }
+              ],
+              "title": "About this page",
+              "layout": {
+                "density": "medium",
+                "alignment": "left",
+                "horizontalSizing": "stretch",
+                "labelPosition": "top"
               }
             }
           ]
         },
         {
-          "type": "fieldSet",
-          "id": "patternFields",
-          "collapsible": false,
+          "type": "layoutSection",
+          "id": "formSection",
           "children": [
             {
-              "type": "date",
-              "id": "effectiveDate",
-              "label": "Effective Date",
+              "type": "dropdown",
+              "id": "selectedApplicationId",
+              "label": "Application",
               "required": true,
-              "value": "<% flowVariables.effectiveDate ?? '' %>",
-              "onChange": "<%\n            if (empty(self.value)) {\n              self.clearError();\n            } else if (!comsValidations.isWeekday(self.value)) {\n              self.setError(comsValidations.errorWeekday());\n            } else if (!comsValidations.isCurrentOrFutureYear(self.value)) {\n              self.setError(comsValidations.errorYear());\n            } else {\n              self.clearError();\n            }\n          %>"
+              "instanceListLoopTag": {
+                "id": "selectedApplicationIdList",
+                "type": "instanceLoop",
+                "templateInstance": {
+                  "id": "<% app.id %>",
+                  "descriptor": "<% app.appId %>"
+                },
+                "on": "<% comsApplications.data %>",
+                "as": "app"
+              },
+              "helpText": "Select the application this pattern belongs to.",
+              "onChange": "<%\n            attribute1.clearError();\n            attribute2.clearError();\n            attribute3.clearError();\n            attribute4.clearError();\n            attribute5.clearError();\n            effectiveDate.clearError();\n          %>"
             },
             {
               "type": "readOnlyText",
-              "id": "patternHelp",
-              "value": "Fill in the pattern attributes below. Leave blank to use wildcard (*). The Pattern Name Preview above updates as you type."
+              "id": "patternPreview",
+              "label": "Pattern Name Preview",
+              "value": "<% if (empty(selectedApplicationId.value)) { 'Select an application above' } else { let sa = comsApplications.data.filter(a => { a.id == selectedApplicationId.value[0] }); let ac = sa.size() > 0 ? sa[0].appId : ''; ac + ':PATTERN:' + (attribute1.value ?? '*') + ':' + (attribute2.value ?? '*') + ':' + (attribute3.value ?? '*') + ':' + (attribute5.value ?? '*') } %>"
             },
             {
-              "type": "text",
-              "id": "attribute1",
-              "label": "Subject",
-              "onChange": "<%\n            if (empty(selectedApplicationId.value)) {\n              self.setError(comsValidations.errorNoApp());\n            } else if (empty(self.value)) {\n              self.clearError();\n            } else if (!comsValidations.isValidSubject(self.value)) {\n              self.setError(comsValidations.errorSubject());\n            } else {\n              let pName = (comsApplications.data.filter(a => { a.id == selectedApplicationId.value[0] }).size() > 0 ? comsApplications.data.filter(a => { a.id == selectedApplicationId.value[0] })[0].appId : '') + ':PATTERN:' + (attribute1.value ?? '*') + ':' + (attribute2.value ?? '*') + ':' + (attribute3.value ?? '*') + ':' + (attribute5.value ?? '*');\n              let dupes = existingPatterns.data.filter(p => { p.code == pName });\n              if (dupes.size() > 0) {\n                self.setError(comsValidations.errorDuplicate(dupes[0].organizationByName.descriptor));\n              } else {\n                self.clearError();\n              }\n            }\n          %>",
-              "value": "<% flowVariables.attribute1 ?? '' %>",
-              "placeholder": "e.g. MATH"
+              "type": "grid",
+              "gridType": "LIST",
+              "multiViewStylingEnabled": true,
+              "id": "ExistingPatternsGrid",
+              "rows": "<% existingPatterns.data %>",
+              "rowVariableName": "pattern",
+              "enabled": false,
+              "label": "Existing Shell Org Patterns",
+              "columns": [
+                {
+                  "type": "column",
+                  "id": "colPatternName",
+                  "columnId": "colPatternName",
+                  "label": "Organization Name",
+                  "sortableAndFilterable": "true",
+                  "cellTemplate": {
+                    "type": "text",
+                    "value": "<% pattern.organizationByName.descriptor %>",
+                    "enabled": false
+                  }
+                },
+                {
+                  "type": "column",
+                  "id": "colPatternCode",
+                  "columnId": "colPatternCode",
+                  "label": "Pattern Code",
+                  "sortableAndFilterable": "true",
+                  "cellTemplate": {
+                    "type": "text",
+                    "value": "<% pattern.code %>",
+                    "enabled": false
+                  }
+                }
+              ]
             },
             {
-              "type": "text",
-              "id": "attribute2",
-              "label": "Course",
-              "onChange": "<%\n            if (empty(selectedApplicationId.value)) {\n              self.setError(comsValidations.errorNoApp());\n            } else if (empty(self.value)) {\n              self.clearError();\n            } else if (!comsValidations.isValidCourse(self.value)) {\n              self.setError(comsValidations.errorCourse());\n            } else {\n              let pName = (comsApplications.data.filter(a => { a.id == selectedApplicationId.value[0] }).size() > 0 ? comsApplications.data.filter(a => { a.id == selectedApplicationId.value[0] })[0].appId : '') + ':PATTERN:' + (attribute1.value ?? '*') + ':' + (attribute2.value ?? '*') + ':' + (attribute3.value ?? '*') + ':' + (attribute5.value ?? '*');\n              let dupes = existingPatterns.data.filter(p => { p.code == pName });\n              if (dupes.size() > 0) {\n                self.setError(comsValidations.errorDuplicate(dupes[0].organizationByName.descriptor));\n              } else {\n                self.clearError();\n              }\n            }\n            if (!empty(attribute3.value)) {\n              if (!comsValidations.isValidSection(attribute3.value, self.value ?? '')) {\n                attribute3.setError(comsValidations.errorSection(self.value ?? ''));\n              } else {\n                attribute3.clearError();\n              }\n            }\n          %>",
-              "value": "<% flowVariables.attribute2 ?? '' %>",
-              "placeholder": "e.g. MATH_V:300"
-            },
-            {
-              "type": "text",
-              "id": "attribute3",
-              "label": "Section",
-              "onChange": "<%\n            if (empty(selectedApplicationId.value)) {\n              self.setError(comsValidations.errorNoApp());\n            } else if (empty(self.value)) {\n              self.clearError();\n            } else if (!comsValidations.isValidSection(self.value, attribute2.value ?? '')) {\n              self.setError(comsValidations.errorSection(attribute2.value ?? ''));\n            } else {\n              let pName = (comsApplications.data.filter(a => { a.id == selectedApplicationId.value[0] }).size() > 0 ? comsApplications.data.filter(a => { a.id == selectedApplicationId.value[0] })[0].appId : '') + ':PATTERN:' + (attribute1.value ?? '*') + ':' + (attribute2.value ?? '*') + ':' + (attribute3.value ?? '*') + ':' + (attribute5.value ?? '*');\n              let dupes = existingPatterns.data.filter(p => { p.code == pName });\n              if (dupes.size() > 0) {\n                self.setError(comsValidations.errorDuplicate(dupes[0].organizationByName.descriptor));\n              } else {\n                self.clearError();\n              }\n            }\n          %>",
-              "value": "<% flowVariables.attribute3 ?? '' %>",
-              "placeholder": "e.g. 951"
-            },
-            {
-              "type": "text",
-              "id": "attribute4",
-              "label": "Course Reference",
-              "value": "<% flowVariables.attribute4 ?? '' %>",
-              "placeholder": "e.g. MATH_V",
-              "visible": false,
-              "required": false
-            },
-            {
-              "type": "text",
-              "id": "attribute5",
-              "label": "Academic Period",
-              "onChange": "<%\n            if (empty(selectedApplicationId.value)) {\n              self.setError(comsValidations.errorNoApp());\n            } else if (empty(self.value)) {\n              self.clearError();\n            } else if (!comsValidations.isValidAcademicPeriod(self.value)) {\n              self.setError(comsValidations.errorAcademicPeriod());\n            } else {\n              let pName = (comsApplications.data.filter(a => { a.id == selectedApplicationId.value[0] }).size() > 0 ? comsApplications.data.filter(a => { a.id == selectedApplicationId.value[0] })[0].appId : '') + ':PATTERN:' + (attribute1.value ?? '*') + ':' + (attribute2.value ?? '*') + ':' + (attribute3.value ?? '*') + ':' + (attribute5.value ?? '*');\n              let dupes = existingPatterns.data.filter(p => { p.code == pName });\n              if (dupes.size() > 0) {\n                self.setError(comsValidations.errorDuplicate(dupes[0].organizationByName.descriptor));\n              } else {\n                self.clearError();\n              }\n            }\n          %>",
-              "value": "<% flowVariables.attribute5 ?? '' %>",
-              "placeholder": "e.g. 2026S"
+              "type": "fieldSet",
+              "id": "patternFields",
+              "collapsible": false,
+              "children": [
+                {
+                  "type": "date",
+                  "id": "effectiveDate",
+                  "label": "Effective Date",
+                  "required": true,
+                  "value": "<% flowVariables.effectiveDate ?? '' %>",
+                  "onChange": "<%\n            if (empty(self.value)) {\n              self.clearError();\n            } else if (!comsValidations.isWeekday(self.value)) {\n              self.setError(comsValidations.errorWeekday());\n            } else if (!comsValidations.isCurrentOrFutureYear(self.value)) {\n              self.setError(comsValidations.errorYear());\n            } else {\n              self.clearError();\n            }\n          %>"
+                },
+                {
+                  "type": "readOnlyText",
+                  "id": "patternHelp",
+                  "value": "Fill in the pattern attributes below. Leave blank to use wildcard (*). The Pattern Name Preview above updates as you type."
+                },
+                {
+                  "type": "text",
+                  "id": "attribute1",
+                  "label": "Subject",
+                  "onChange": "<%\n            if (empty(selectedApplicationId.value)) {\n              self.setError(comsValidations.errorNoApp());\n            } else if (empty(self.value)) {\n              self.clearError();\n            } else if (!comsValidations.isValidSubject(self.value)) {\n              self.setError(comsValidations.errorSubject());\n            } else {\n              let pName = (comsApplications.data.filter(a => { a.id == selectedApplicationId.value[0] }).size() > 0 ? comsApplications.data.filter(a => { a.id == selectedApplicationId.value[0] })[0].appId : '') + ':PATTERN:' + (attribute1.value ?? '*') + ':' + (attribute2.value ?? '*') + ':' + (attribute3.value ?? '*') + ':' + (attribute5.value ?? '*');\n              let dupes = existingPatterns.data.filter(p => { p.code == pName });\n              if (dupes.size() > 0) {\n                self.setError(comsValidations.errorDuplicate(dupes[0].organizationByName.descriptor));\n              } else {\n                self.clearError();\n              }\n            }\n          %>",
+                  "value": "<% flowVariables.attribute1 ?? '' %>",
+                  "placeholder": "e.g. MATH"
+                },
+                {
+                  "type": "text",
+                  "id": "attribute2",
+                  "label": "Course",
+                  "onChange": "<%\n            if (empty(selectedApplicationId.value)) {\n              self.setError(comsValidations.errorNoApp());\n            } else if (empty(self.value)) {\n              self.clearError();\n            } else if (!comsValidations.isValidCourse(self.value)) {\n              self.setError(comsValidations.errorCourse());\n            } else {\n              let pName = (comsApplications.data.filter(a => { a.id == selectedApplicationId.value[0] }).size() > 0 ? comsApplications.data.filter(a => { a.id == selectedApplicationId.value[0] })[0].appId : '') + ':PATTERN:' + (attribute1.value ?? '*') + ':' + (attribute2.value ?? '*') + ':' + (attribute3.value ?? '*') + ':' + (attribute5.value ?? '*');\n              let dupes = existingPatterns.data.filter(p => { p.code == pName });\n              if (dupes.size() > 0) {\n                self.setError(comsValidations.errorDuplicate(dupes[0].organizationByName.descriptor));\n              } else {\n                self.clearError();\n              }\n            }\n            if (!empty(attribute3.value)) {\n              if (!comsValidations.isValidSection(attribute3.value, self.value ?? '')) {\n                attribute3.setError(comsValidations.errorSection(self.value ?? ''));\n              } else {\n                attribute3.clearError();\n              }\n            }\n          %>",
+                  "value": "<% flowVariables.attribute2 ?? '' %>",
+                  "placeholder": "e.g. MATH_V:300"
+                },
+                {
+                  "type": "text",
+                  "id": "attribute3",
+                  "label": "Section",
+                  "onChange": "<%\n            if (empty(selectedApplicationId.value)) {\n              self.setError(comsValidations.errorNoApp());\n            } else if (empty(self.value)) {\n              self.clearError();\n            } else if (!comsValidations.isValidSection(self.value, attribute2.value ?? '')) {\n              self.setError(comsValidations.errorSection(attribute2.value ?? ''));\n            } else {\n              let pName = (comsApplications.data.filter(a => { a.id == selectedApplicationId.value[0] }).size() > 0 ? comsApplications.data.filter(a => { a.id == selectedApplicationId.value[0] })[0].appId : '') + ':PATTERN:' + (attribute1.value ?? '*') + ':' + (attribute2.value ?? '*') + ':' + (attribute3.value ?? '*') + ':' + (attribute5.value ?? '*');\n              let dupes = existingPatterns.data.filter(p => { p.code == pName });\n              if (dupes.size() > 0) {\n                self.setError(comsValidations.errorDuplicate(dupes[0].organizationByName.descriptor));\n              } else {\n                self.clearError();\n              }\n            }\n          %>",
+                  "value": "<% flowVariables.attribute3 ?? '' %>",
+                  "placeholder": "e.g. 951"
+                },
+                {
+                  "type": "text",
+                  "id": "attribute4",
+                  "label": "Course Reference",
+                  "value": "<% flowVariables.attribute4 ?? '' %>",
+                  "placeholder": "e.g. MATH_V",
+                  "visible": false,
+                  "required": false
+                },
+                {
+                  "type": "text",
+                  "id": "attribute5",
+                  "label": "Academic Period",
+                  "onChange": "<%\n            if (empty(selectedApplicationId.value)) {\n              self.setError(comsValidations.errorNoApp());\n            } else if (empty(self.value)) {\n              self.clearError();\n            } else if (!comsValidations.isValidAcademicPeriod(self.value)) {\n              self.setError(comsValidations.errorAcademicPeriod());\n            } else {\n              let pName = (comsApplications.data.filter(a => { a.id == selectedApplicationId.value[0] }).size() > 0 ? comsApplications.data.filter(a => { a.id == selectedApplicationId.value[0] })[0].appId : '') + ':PATTERN:' + (attribute1.value ?? '*') + ':' + (attribute2.value ?? '*') + ':' + (attribute3.value ?? '*') + ':' + (attribute5.value ?? '*');\n              let dupes = existingPatterns.data.filter(p => { p.code == pName });\n              if (dupes.size() > 0) {\n                self.setError(comsValidations.errorDuplicate(dupes[0].organizationByName.descriptor));\n              } else {\n                self.clearError();\n              }\n            }\n          %>",
+                  "value": "<% flowVariables.attribute5 ?? '' %>",
+                  "placeholder": "e.g. 2026S"
+                }
+              ],
+              "title": "Pattern Attributes",
+              "layout": {
+                "density": "medium",
+                "alignment": "left",
+                "horizontalSizing": "fixed",
+                "labelPosition": "side_align_left"
+              }
             }
-          ],
-          "title": "Pattern Attributes",
-          "layout": {
-            "density": "medium",
-            "alignment": "left",
-            "horizontalSizing": "fixed",
-            "labelPosition": "side_align_left"
-          }
+          ]
         }
       ]
     },
@@ -327,6 +349,7 @@
         }
       ]
     },
-    "pageType": "edit"
+    "pageType": "edit",
+    "standardEditButtonsHidden": true
   }
 }

@@ -127,230 +127,270 @@
       "label": "ECO-COMS: Delete Assignable Role Request"
     },
     "body": {
-      "type": "section",
-      "horizontal": false,
-      "children": [
+      "type": "basicFormLayout",
+      "id": "deleteForm",
+      "sections": [
         {
-          "type": "section",
-          "horizontal": true,
+          "type": "layoutSection",
+          "id": "navSection",
           "children": [
             {
               "type": "section",
-              "horizontal": false,
+              "horizontal": true,
               "children": [
                 {
-                  "type": "button",
-                  "label": "Home",
-                  "taskReference": {
-                    "taskId": "home"
-                  },
-                  "action": "AUXILIARY"
-                }
-              ]
-            },
-            {
-              "type": "section",
-              "horizontal": false,
-              "children": [
+                  "type": "section",
+                  "horizontal": false,
+                  "children": [
+                    {
+                      "type": "button",
+                      "label": "Home",
+                      "taskReference": {
+                        "taskId": "home"
+                      },
+                      "action": "LINK",
+                      "suppressDiscardDialog": true
+                    }
+                  ]
+                },
                 {
-                  "type": "button",
-                  "label": "Assignable Role Manager",
-                  "taskReference": {
-                    "taskId": "assignableRoleManager"
-                  },
-                  "action": "AUXILIARY"
+                  "type": "section",
+                  "horizontal": false,
+                  "children": [
+                    {
+                      "type": "button",
+                      "label": "Assignable Role Manager",
+                      "taskReference": {
+                        "taskId": "assignableRoleManager"
+                      },
+                      "action": "LINK",
+                      "suppressDiscardDialog": true
+                    }
+                  ]
                 }
+              ],
+              "columnWidthRatios": [
+                0.3,
+                0.7
               ]
-            }
-          ],
-          "columnWidthRatios": [
-            0.3,
-            0.7
-          ]
-        },
-        {
-          "type": "readOnlyText",
-          "id": "pageDesc",
-          "value": "Select a Pending ISC Review role request to delete. Only roles with status Pending ISC Review can be deleted. This action cannot be undone."
-        },
-        {
-          "type": "grid",
-          "gridType": "LIST",
-          "multiViewStylingEnabled": true,
-          "id": "pendingRolesGrid",
-          "label": "Pending Assignable Role Requests",
-          "rows": "<% comsAssignableRoles.data.filter(r => { r.status == 'Pending ISC Review' }) %>",
-          "rowVariableName": "role",
-          "enabled": false,
-          "columns": [
-            {
-              "type": "column",
-              "id": "colSelect",
-              "columnId": "colSelect",
-              "label": "Delete",
-              "cellTemplate": {
-                "type": "button",
-                "action": "AUXILIARY",
-                "label": "Select",
-                "taskReference": {
-                  "taskId": "deleteAssignableRole",
-                  "parameterBindings": {
-                    "roleId": "<% role.id %>",
-                    "roleName": "<% role.roleName %>"
-                  }
-                }
-              }
-            },
-            {
-              "type": "column",
-              "id": "colOrgApp",
-              "columnId": "colOrgApp",
-              "label": "Organization / Application",
-              "sortableAndFilterable": "true",
-              "cellTemplate": {
-                "type": "instanceList",
-                "view": true,
-                "relatedTask": true,
-                "instanceList": [
-                  {
-                    "descriptor": "<% role.shellOrgCode ?? role.application ?? '' %>",
-                    "wid": "<% role.shellOrgWid ?? '' %>"
-                  }
-                ]
-              }
-            },
-            {
-              "type": "column",
-              "id": "colRoleName",
-              "columnId": "colRoleName",
-              "label": "Role Name",
-              "sortableAndFilterable": "true",
-              "cellTemplate": {
-                "type": "text",
-                "value": "<% role.roleName ?? '' %>",
-                "enabled": false
-              }
-            },
-            {
-              "type": "column",
-              "id": "colWdRoleName",
-              "columnId": "colWdRoleName",
-              "label": "Workday Assignable Role",
-              "cellTemplate": {
-                "type": "instanceList",
-                "view": true,
-                "relatedTask": true,
-                "instanceList": [
-                  {
-                    "descriptor": "<% role.workdayRoleId ?? '' %>",
-                    "wid": "<% role.workdayAssignableRole ?? '' %>"
-                  }
-                ]
-              }
-            },
-            {
-              "type": "column",
-              "id": "colEnabledFor",
-              "columnId": "colEnabledFor",
-              "label": "Enabled For",
-              "cellTemplate": {
-                "type": "instanceList",
-                "view": true,
-                "relatedTask": true,
-                "instanceList": [
-                  {
-                    "descriptor": "<% role.enabledForOrganizationTypes ?? 'Academic Unit - University of British Columbia' %>",
-                    "wid": "<% role.enabledForWid ?? '' %>"
-                  }
-                ]
-              }
-            },
-            {
-              "type": "column",
-              "id": "colEffDate",
-              "columnId": "colEffDate",
-              "label": "Effective Date",
-              "cellTemplate": {
-                "type": "text",
-                "value": "<% role.effectiveDate ?? '' %>",
-                "enabled": false
-              }
-            },
-            {
-              "type": "column",
-              "id": "colPositions",
-              "columnId": "colPositions",
-              "label": "Positions / Delegated Roles",
-              "cellTemplate": {
-                "type": "instanceList",
-                "id": "colPositionsList",
-                "view": true,
-                "relatedTask": true,
-                "enabled": false,
-                "values": "<% empty(role.positions) ? [] : positions.data.filter(p => { role.positions.contains(p.id) }) %>",
-                "widKey": "id"
-              }
-            },
-            {
-              "type": "column",
-              "id": "colRequestedBy",
-              "columnId": "colRequestedBy",
-              "label": "Requested By",
-              "cellTemplate": {
-                "type": "instanceList",
-                "view": true,
-                "relatedTask": true,
-                "instanceList": [
-                  {
-                    "descriptor": "<% role.requestedBy.descriptor ?? '' %>",
-                    "wid": "<% role.requestedBy.id ?? '' %>"
-                  }
-                ]
-              }
-            },
-            {
-              "type": "column",
-              "id": "colRequestedDate",
-              "columnId": "colRequestedDate",
-              "label": "Requested Date",
-              "cellTemplate": {
-                "type": "text",
-                "value": "<% role.requestedDate ?? '' %>",
-                "enabled": false
-              }
             }
           ]
         },
         {
-          "type": "readOnlyText",
-          "id": "confirmDelete",
-          "value": "Select a role above then click OK to permanently delete the request."
-        },
-        {
-          "type": "fieldSet",
-          "id": "confirmDeleteSection",
-          "visible": "<% !empty(queryParams.roleId) %>",
+          "type": "layoutSection",
+          "id": "descSection",
           "children": [
             {
-              "type": "text",
-              "id": "selectedRoleDisplay",
-              "label": "Role to Delete",
+              "type": "richText",
+              "id": "pageDesc",
               "enabled": false,
-              "value": "<% queryParams.roleName ?? '' %>"
-            },
+              "value": "Select a Pending ISC Review role request to delete. Only roles with status Pending ISC Review can be deleted. This action cannot be undone."
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "gridSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "pendingRolesFieldSet",
+              "title": "Pending Assignable Role Requests",
+              "layout": {
+                "density": "medium",
+                "alignment": "left",
+                "horizontalSizing": "stretch",
+                "labelPosition": "top"
+              },
+              "children": [
+                {
+                  "type": "grid",
+                  "gridType": "LIST",
+                  "multiViewStylingEnabled": true,
+                  "id": "pendingRolesGrid",
+                  "label": "Pending Assignable Role Requests",
+                  "rows": "<% comsAssignableRoles.data.filter(r => { r.status == 'Pending ISC Review' }) %>",
+                  "rowVariableName": "role",
+                  "enabled": false,
+                  "columns": [
+                    {
+                      "type": "column",
+                      "id": "colSelect",
+                      "columnId": "colSelect",
+                      "label": "Delete",
+                      "cellTemplate": {
+                        "type": "button",
+                        "action": "AUXILIARY",
+                        "label": "Select",
+                        "taskReference": {
+                          "taskId": "deleteAssignableRole",
+                          "parameterBindings": {
+                            "roleId": "<% role.id %>",
+                            "roleName": "<% role.roleName %>"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "id": "colOrgApp",
+                      "columnId": "colOrgApp",
+                      "label": "Organization / Application",
+                      "sortableAndFilterable": "true",
+                      "cellTemplate": {
+                        "type": "instanceList",
+                        "view": true,
+                        "relatedTask": true,
+                        "instanceList": [
+                          {
+                            "descriptor": "<% role.shellOrgCode ?? role.application ?? '' %>",
+                            "wid": "<% role.shellOrgWid ?? '' %>"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "id": "colRoleName",
+                      "columnId": "colRoleName",
+                      "label": "Role Name",
+                      "sortableAndFilterable": "true",
+                      "cellTemplate": {
+                        "type": "text",
+                        "value": "<% role.roleName ?? '' %>",
+                        "enabled": false
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "id": "colWdRoleName",
+                      "columnId": "colWdRoleName",
+                      "label": "Workday Assignable Role",
+                      "cellTemplate": {
+                        "type": "instanceList",
+                        "view": true,
+                        "relatedTask": true,
+                        "instanceList": [
+                          {
+                            "descriptor": "<% role.workdayRoleId ?? '' %>",
+                            "wid": "<% role.workdayAssignableRole ?? '' %>"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "id": "colEnabledFor",
+                      "columnId": "colEnabledFor",
+                      "label": "Enabled For",
+                      "cellTemplate": {
+                        "type": "instanceList",
+                        "view": true,
+                        "relatedTask": true,
+                        "instanceList": [
+                          {
+                            "descriptor": "<% role.enabledForOrganizationTypes ?? 'Academic Unit - University of British Columbia' %>",
+                            "wid": "<% role.enabledForWid ?? '' %>"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "id": "colEffDate",
+                      "columnId": "colEffDate",
+                      "label": "Effective Date",
+                      "cellTemplate": {
+                        "type": "text",
+                        "value": "<% role.effectiveDate ?? '' %>",
+                        "enabled": false
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "id": "colPositions",
+                      "columnId": "colPositions",
+                      "label": "Positions / Delegated Roles",
+                      "cellTemplate": {
+                        "type": "instanceList",
+                        "id": "colPositionsList",
+                        "view": true,
+                        "relatedTask": true,
+                        "enabled": false,
+                        "values": "<% empty(role.positions) ? [] : positions.data.filter(p => { role.positions.contains(p.id) }) %>",
+                        "widKey": "id"
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "id": "colRequestedBy",
+                      "columnId": "colRequestedBy",
+                      "label": "Requested By",
+                      "cellTemplate": {
+                        "type": "instanceList",
+                        "view": true,
+                        "relatedTask": true,
+                        "instanceList": [
+                          {
+                            "descriptor": "<% role.requestedBy.descriptor ?? '' %>",
+                            "wid": "<% role.requestedBy.id ?? '' %>"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "id": "colRequestedDate",
+                      "columnId": "colRequestedDate",
+                      "label": "Requested Date",
+                      "cellTemplate": {
+                        "type": "text",
+                        "value": "<% role.requestedDate ?? '' %>",
+                        "enabled": false
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "confirmSection",
+          "children": [
             {
               "type": "readOnlyText",
-              "id": "deleteWarning",
-              "value": "Warning: This action permanently deletes the selected role request and cannot be undone. Click OK to confirm."
+              "id": "confirmDelete",
+              "value": "Select a role above then click OK to permanently delete the request."
+            },
+            {
+              "type": "fieldSet",
+              "id": "confirmDeleteSection",
+              "visible": "<% !empty(queryParams.roleId) %>",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "selectedRoleDisplay",
+                  "label": "Role to Delete",
+                  "enabled": false,
+                  "value": "<% queryParams.roleName ?? '' %>"
+                },
+                {
+                  "type": "readOnlyText",
+                  "id": "deleteWarning",
+                  "value": "Warning: This action permanently deletes the selected role request and cannot be undone. Click OK to confirm."
+                }
+              ],
+              "title": "Confirm Delete",
+              "layout": {
+                "density": "medium",
+                "alignment": "left",
+                "horizontalSizing": "fixed",
+                "labelPosition": "side_align_left"
+              }
             }
-          ],
-          "title": "Confirm Delete",
-          "layout": {
-            "density": "medium",
-            "alignment": "left",
-            "horizontalSizing": "fixed",
-            "labelPosition": "side_align_left"
-          }
+          ]
         }
       ]
     },
@@ -363,7 +403,8 @@
           "value": "Powered By Workday Extend"
         }
       ]
-    }
+    },
+    "standardEditButtonsHidden": true
   },
   "onSubmit": "<%\n  let valid = true;\n  if (empty(queryParams.roleId)) {\n    valid = false;\n  }\n  valid;\n%>",
   "onSuccess": {

@@ -20,53 +20,65 @@
       "enabled": true
     },
     "body": {
-      "type": "section",
-      "horizontal": false,
-      "children": [
+      "type": "basicFormLayout",
+      "id": "auditLogViewerForm",
+      "sections": [
         {
-          "type": "section",
-          "horizontal": true,
+          "type": "layoutSection",
+          "id": "navSection",
           "children": [
             {
               "type": "section",
-              "horizontal": false,
+              "horizontal": true,
               "children": [
                 {
-                  "type": "button",
-                  "label": "Home",
-                  "taskReference": {
-                    "taskId": "home"
-                  },
-                  "action": "AUXILIARY"
+                  "type": "section",
+                  "horizontal": false,
+                  "children": [
+                    {
+                      "type": "button",
+                      "label": "Home",
+                      "taskReference": {
+                        "taskId": "home"
+                      },
+                      "action": "AUXILIARY"
+                    }
+                  ]
                 }
+              ],
+              "columnWidthRatios": [
+                0.25,
+                0.25,
+                0.25,
+                0.25
               ]
             }
-          ],
-          "columnWidthRatios": [
-            0.25,
-            0.25,
-            0.25,
-            0.25
           ]
         },
         {
-          "type": "fieldSet",
-          "id": "aboutFieldSet",
-          "collapsible": true,
+          "type": "layoutSection",
+          "id": "aboutSection",
           "children": [
             {
-              "type": "readOnlyText",
-              "id": "pageDescriptionText",
-              "value": "Immutable, searchable log of every COMS-initiated Custom Organization change (Create / Inactivate). Replaces the Log Tab in the legacy MSC Tool. Records cannot be deleted."
+              "type": "fieldSet",
+              "id": "aboutFieldSet",
+              "collapsible": true,
+              "children": [
+                {
+                  "type": "readOnlyText",
+                  "id": "pageDescriptionText",
+                  "value": "Immutable, searchable log of every COMS-initiated Custom Organization change (Create / Inactivate). Replaces the Log Tab in the legacy MSC Tool. Records cannot be deleted."
+                }
+              ],
+              "title": "About this page",
+              "layout": {
+                "density": "medium",
+                "alignment": "left",
+                "horizontalSizing": "stretch",
+                "labelPosition": "top"
+              }
             }
-          ],
-          "title": "About this page",
-          "layout": {
-            "density": "medium",
-            "alignment": "left",
-            "horizontalSizing": "stretch",
-            "labelPosition": "top"
-          }
+          ]
         }
       ]
     },
