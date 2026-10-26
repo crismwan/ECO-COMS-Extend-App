@@ -3,7 +3,7 @@
   "presentation": {
     "body": {
       "type": "hub",
-      "label": "Custom Organization Management",
+      "label": "COMS APP",
       "icon": "wd-accent-home",
       "initialTask": {
         "taskId": "hubLanding"
