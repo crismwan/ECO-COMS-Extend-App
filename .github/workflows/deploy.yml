@@ -138,9 +138,8 @@ jobs:
             VERSION_ID=$(grep -oE 'versionId[[:space:]]*=[[:space:]]*([0-9a-f]{32})' /tmp/upload-output.txt 2>/dev/null | grep -oE '[0-9a-f]{32}' | head -1)
           fi
           if [ -z "${VERSION_ID}" ]; then
-            # Parse 32-char hex ID from wdcli table output (│ refId… │ versionId │ buildId │)
-            # Table has 3 columns; version ID is the 2nd 32-char hex token on the data row
-            VERSION_ID=$(grep -oE '[0-9a-f]{32}' /tmp/upload-output.txt | sed -n '2p')
+            # Parse from "Initiated build <buildId> for version <versionId>" line
+            VERSION_ID=$(grep -oE 'for version [0-9a-f]{32}' /tmp/upload-output.txt | grep -oE '[0-9a-f]{32}' | head -1)
           fi
           echo "=== VERSION_ID from upload output: '${VERSION_ID}' ==="
 
