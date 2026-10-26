@@ -1,0 +1,150 @@
+{
+  "id": "newShellOrgConfirm",
+  "endPoints": [],
+  "outboundData": {
+    "outboundEndPoints": [
+      {
+        "name": "triggerAddShellOrg",
+        "baseUrlType": "orchestration",
+        "url": "<% '/AddShellOrg/launch?comsAppId=' + (flowVariables.comsAppId ?? '') + '&organizationName=' + (flowVariables.organizationName ?? '') + '&organizationCode=' + (flowVariables.organizationCode ?? '') + '&workerId=' + (flowVariables.workerId ?? '') + '&effectiveDate=' + (flowVariables.effectiveDate ?? '') %>",
+        "authType": "SSO",
+        "httpMethod": "POST",
+        "onSend": "<% {} %>",
+        "headers": [
+          {
+            "name": "content-type",
+            "value": "application/json"
+          }
+        ],
+        "values": [
+          {
+            "outboundPath": "organizationName",
+            "value": "<% flowVariables.organizationName %>"
+          }
+        ],
+        "failOnStatusCodes": [
+          {
+            "code": 400
+          },
+          {
+            "code": 403
+          },
+          {
+            "code": 404
+          },
+          {
+            "code": 429
+          },
+          {
+            "code": 500
+          }
+        ]
+      }
+    ],
+    "responseErrorDetail": {
+      "errorSummary": "<% error %>",
+      "errors": "<% empty errors ? [] : [error].join(errors.map(err => { err.error })) %>"
+    }
+  },
+  "presentation": {
+    "headerSize": "STANDARD",
+    "title": {
+      "type": "title",
+      "label": "Confirm: Add Shell Organization"
+    },
+    "body": {
+      "type": "basicFormLayout",
+      "id": "confirmForm",
+      "sections": [
+        {
+          "type": "layoutSection",
+          "id": "navSection",
+          "children": [
+            {
+              "type": "button",
+              "label": "← Back to Add Organization",
+              "taskReference": {
+                "taskId": "newShellOrg"
+              },
+              "action": "LINK",
+              "suppressDiscardDialog": true
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "confirmSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "confirmFieldSet",
+              "title": "Confirm New Shell Organization",
+              "layout": {
+                "density": "medium",
+                "alignment": "left",
+                "horizontalSizing": "fixed",
+                "labelPosition": "side_align_left"
+              },
+              "children": [
+                {
+                  "type": "text",
+                  "id": "hiddenOrgName",
+                  "label": "Organization Name",
+                  "enabled": false,
+                  "value": "<% flowVariables.organizationName %>",
+                  "valuesOut": [
+                    {
+                      "value": "<% self.value %>",
+                      "valueOutBinding": "triggerAddShellOrg.organizationName"
+                    }
+                  ]
+                },
+                {
+                  "type": "richText",
+                  "id": "confirmHelp",
+                  "enabled": false,
+                  "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">ℹ </span><span style=\"color:#374151;font-size:11px\">Please confirm the new Shell Organization below. This will create a new Custom Organization in Workday via the orchestration.</span>"
+                },
+                {
+                  "type": "text",
+                  "label": "Organization Name",
+                  "enabled": false,
+                  "value": "<% flowVariables.organizationName %>"
+                },
+                {
+                  "type": "text",
+                  "label": "Organization Code",
+                  "enabled": false,
+                  "value": "<% flowVariables.organizationCode %>"
+                },
+                {
+                  "type": "text",
+                  "label": "Application",
+                  "enabled": false,
+                  "value": "<% flowVariables.applicationCode %>"
+                },
+                {
+                  "type": "text",
+                  "label": "Effective Date",
+                  "enabled": false,
+                  "value": "<% flowVariables.effectiveDate %>"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "footer": {
+      "type": "footer",
+      "children": [
+        {
+          "type": "pod",
+          "podId": "ecoComsFooter"
+        }
+      ]
+    },
+    "pageType": "edit",
+    "standardEditButtonsHidden": true
+  }
+}

@@ -1,0 +1,93 @@
+{
+  "id": "newShellOrgSuccess",
+  "presentation": {
+    "headerSize": "STANDARD",
+    "title": {
+      "type": "title",
+      "label": "Shell Organization Created"
+    },
+    "body": {
+      "type": "basicFormLayout",
+      "id": "successForm",
+      "sections": [
+        {
+          "type": "layoutSection",
+          "id": "successSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "successFieldSet",
+              "title": "Organization Created Successfully",
+              "layout": {
+                "density": "medium",
+                "alignment": "left",
+                "horizontalSizing": "stretch",
+                "labelPosition": "top"
+              },
+              "children": [
+                {
+                  "type": "richText",
+                  "id": "successMessage",
+                  "enabled": false,
+                  "value": "<span style=\"color:#059669;font-size:11px;font-weight:700\">✓ </span><span style=\"color:#065f46;font-size:11px\">The Shell Organization has been created in Workday.</span>"
+                },
+                {
+                  "type": "readOnlyText",
+                  "id": "orgNameDisplay",
+                  "label": "Organization Name",
+                  "value": "<% flowVariables.organizationName ?? '' %>"
+                },
+                {
+                  "type": "readOnlyText",
+                  "id": "orgCodeDisplay",
+                  "label": "Organization Code",
+                  "value": "<% flowVariables.organizationCode ?? '' %>"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "navSection",
+          "children": [
+            {
+              "type": "button",
+              "label": "Add Another Organization",
+              "taskReference": {
+                "taskId": "newShellOrg"
+              },
+              "action": "PRIMARY"
+            },
+            {
+              "type": "button",
+              "label": "View in Shell Org Manager",
+              "taskReference": {
+                "taskId": "shellOrgManager"
+              },
+              "action": "AUXILIARY"
+            },
+            {
+              "type": "button",
+              "label": "← Home",
+              "taskReference": {
+                "taskId": "home"
+              },
+              "action": "LINK"
+            }
+          ]
+        }
+      ]
+    },
+    "footer": {
+      "type": "footer",
+      "children": [
+        {
+          "type": "pod",
+          "podId": "ecoComsFooter"
+        }
+      ]
+    },
+    "pageType": "view"
+  }
+}
