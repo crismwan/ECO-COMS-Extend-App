@@ -18,13 +18,11 @@
     {
       "name": "shellOrgPatterns",
       "baseUrlType": "workday-wql",
-      "url": "data",
+      "url": "<% 'data?query=' + string:pathEncode('SELECT workdayID, organizationByName, code, cf_active1 FROM topLevelOrganizations WHERE code contains \\'' + (queryParams.appCode ?? '') + ':PATTERN\\'') %>",
       "authType": "sso",
       "isCollection": true,
       "bestEffort": "true",
-      "wqlQuery": {
-        "queryId": "existingPatterns"
-      }
+      "exclude": "<% empty(queryParams.appCode) %>"
     }
   ],
   "presentation": {
@@ -63,62 +61,88 @@
         },
         {
           "type": "layoutSection",
-          "id": "appSelectorSection",
+          "id": "appsSection",
           "children": [
             {
               "type": "fieldSet",
-              "id": "appSelectorFieldSet",
-              "title": "Select Application",
+              "id": "appsFieldSet",
+              "title": "Applications",
               "layout": {
                 "density": "medium",
                 "alignment": "left",
-                "horizontalSizing": "fixed",
-                "labelPosition": "side_align_left"
+                "horizontalSizing": "stretch",
+                "labelPosition": "top"
               },
               "children": [
                 {
-                  "type": "dropdown",
-                  "id": "selectedApplicationId",
-                  "label": "Application",
-                  "helpText": "Select an application to view and manage its shell org patterns.",
-                  "instanceListLoopTag": {
-                    "id": "selectedApplicationIdList",
-                    "type": "instanceLoop",
-                    "templateInstance": {
-                      "id": "<% app.id %>",
-                      "descriptor": "<% app.appId %>"
-                    },
-                    "on": "<% comsApplications.data %>",
-                    "as": "app"
-                  }
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "type": "layoutSection",
-          "id": "contextCardSection",
-          "children": [
-            {
-              "type": "cardContainer",
-              "id": "contextCardContainer",
-              "layout": "grid",
-              "visible": "<% !empty(selectedApplicationId.value) %>",
-              "cards": [
-                {
-                  "type": "card",
-                  "cardId": "AppContextCard",
-                  "parameters": {
-                    "info": "<% comsCardGenerator.appContextInfo(empty(selectedApplicationId.value) ? null : comsApplications.data.filter(a => { a.id == selectedApplicationId.value[0] }).size() > 0 ? comsApplications.data.filter(a => { a.id == selectedApplicationId.value[0] })[0].appId : null) %>"
-                  }
+                  "type": "richText",
+                  "id": "appsDesc",
+                  "enabled": false,
+                  "value": "<span style=\"color:#374151;font-size:12px\">Select an application to view its shell org patterns.</span>"
                 },
                 {
-                  "type": "card",
-                  "cardId": "StatusGuideCard",
-                  "parameters": {
-                    "info": "<% comsCardGenerator.statusGuideInfo('Active') %>"
-                  }
+                  "type": "grid",
+                  "gridType": "LIST",
+                  "multiViewStylingEnabled": true,
+                  "id": "appsGrid",
+                  "rows": "<% comsApplications.data %>",
+                  "rowVariableName": "app",
+                  "enabled": false,
+                  "label": "Applications",
+                  "autoPaging": true,
+                  "columns": [
+                    {
+                      "type": "column",
+                      "id": "colAppName",
+                      "columnId": "colAppName",
+                      "label": "Application Name",
+                      "sortableAndFilterable": "true",
+                      "cellTemplate": {
+                        "type": "text",
+                        "value": "<% app.name ?? '' %>",
+                        "enabled": false
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "id": "colAppId",
+                      "columnId": "colAppId",
+                      "label": "App ID",
+                      "sortableAndFilterable": "true",
+                      "cellTemplate": {
+                        "type": "text",
+                        "value": "<% app.appId ?? '' %>",
+                        "enabled": false
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "id": "colAppStatus",
+                      "columnId": "colAppStatus",
+                      "label": "Status",
+                      "cellTemplate": {
+                        "type": "richText",
+                        "value": "<% app.active == true ? '<span style=\"color:#065f46;font-weight:600;font-size:11px\">✓ Active</span>' : '<span style=\"color:#6b7280;font-weight:600;font-size:11px\">○ Inactive</span>' %>"
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "id": "colAppActions",
+                      "columnId": "colAppActions",
+                      "label": "Actions",
+                      "cellTemplate": {
+                        "type": "button",
+                        "action": "AUXILIARY",
+                        "label": "View Patterns",
+                        "taskReference": {
+                          "taskId": "shellOrgManager",
+                          "parameterBindings": {
+                            "appCode": "<% app.appId %>"
+                          }
+                        }
+                      }
+                    }
+                  ]
                 }
               ]
             }
@@ -131,8 +155,8 @@
             {
               "type": "fieldSet",
               "id": "patternsFieldSet",
-              "visible": "<% !empty(selectedApplicationId.value) %>",
-              "title": "Shell Org Patterns",
+              "visible": "<% !empty(queryParams.appCode) %>",
+              "title": "<% 'Shell Org Patterns — ' + (queryParams.appCode ?? '') %>",
               "layout": {
                 "density": "medium",
                 "alignment": "left",
@@ -151,19 +175,19 @@
                   "id": "emptyStateMsg",
                   "enabled": false,
                   "value": "<span style=\"color:#374151;font-size:12px\">No shell org patterns found for this application. Use the <b>Add Pattern</b> button above to create one.</span>",
-                  "visible": "<% !empty(selectedApplicationId.value) && size(shellOrgPatterns.data.filter(p => { let appCode = comsApplications.data.filter(a => { a.id == selectedApplicationId.value[0] }).size() > 0 ? comsApplications.data.filter(a => { a.id == selectedApplicationId.value[0] })[0].appId : ''; p.code.startsWith(appCode + ':PATTERN') })) == 0 %>"
+                  "visible": "<% !empty(queryParams.appCode) && size(shellOrgPatterns.data) == 0 %>"
                 },
                 {
                   "type": "grid",
                   "gridType": "LIST",
                   "multiViewStylingEnabled": true,
                   "id": "patternsGrid",
-                  "rows": "<% let appCode = empty(selectedApplicationId.value) ? '' : (comsApplications.data.filter(a => { a.id == selectedApplicationId.value[0] }).size() > 0 ? comsApplications.data.filter(a => { a.id == selectedApplicationId.value[0] })[0].appId : ''); shellOrgPatterns.data.filter(p => { p.code.startsWith(appCode + ':PATTERN') }) %>",
+                  "rows": "<% shellOrgPatterns.data %>",
                   "rowVariableName": "pattern",
                   "enabled": false,
-                  "label": "Shell Org Patterns",
+                  "label": "<% 'Patterns for ' + (queryParams.appCode ?? '') %>",
                   "autoPaging": true,
-                  "visible": "<% !empty(selectedApplicationId.value) && size(shellOrgPatterns.data.filter(p => { let appCode = comsApplications.data.filter(a => { a.id == selectedApplicationId.value[0] }).size() > 0 ? comsApplications.data.filter(a => { a.id == selectedApplicationId.value[0] })[0].appId : ''; p.code.startsWith(appCode + ':PATTERN') })) > 0 %>",
+                  "visible": "<% !empty(queryParams.appCode) && size(shellOrgPatterns.data) > 0 %>",
                   "columns": [
                     {
                       "type": "column",
@@ -203,19 +227,6 @@
                   ]
                 }
               ]
-            }
-          ]
-        },
-        {
-          "type": "layoutSection",
-          "id": "noAppSection",
-          "children": [
-            {
-              "type": "richText",
-              "id": "selectAppPrompt",
-              "visible": "<% empty(selectedApplicationId.value) %>",
-              "enabled": false,
-              "value": "<span style=\"color:#374151;font-size:12px\">Select an application above to view its shell org patterns.</span>"
             }
           ]
         }
