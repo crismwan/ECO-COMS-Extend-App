@@ -259,6 +259,20 @@
                   "action": "AUXILIARY"
                 }
               ]
+            },
+            {
+              "type": "section",
+              "horizontal": false,
+              "children": [
+                {
+                  "type": "button",
+                  "label": "Delete Request",
+                  "taskReference": {
+                    "taskId": "deleteAssignableRole"
+                  },
+                  "action": "AUXILIARY"
+                }
+              ]
             }
           ],
           "columnWidthRatios": [

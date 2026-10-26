@@ -38,6 +38,36 @@
           "visible": "<% errorCode != '401' && errorCode != '403' && errorCode != '404' %>",
           "label": "Error Message",
           "value": "Something went wrong. Please try again, or contact your COMS Administrator if the problem persists."
+        },
+        {
+          "type": "section",
+          "horizontal": true,
+          "children": [
+            {
+              "type": "section",
+              "horizontal": false,
+              "children": [
+                {
+                  "type": "button",
+                  "label": "Go to Home",
+                  "taskReference": {
+                    "taskId": "home"
+                  },
+                  "action": "PRIMARY"
+                }
+              ]
+            }
+          ],
+          "columnWidthRatios": [0.2, 0.2, 0.2, 0.2, 0.2]
+        }
+      ]
+    },
+    "footer": {
+      "type": "footer",
+      "children": [
+        {
+          "type": "pod",
+          "podId": "ecoComsFooter"
         }
       ]
     },

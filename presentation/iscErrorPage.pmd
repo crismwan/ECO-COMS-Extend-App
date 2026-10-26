@@ -16,13 +16,37 @@
           "type": "readOnlyText",
           "id": "iscErrorMessage",
           "value": "This page is only available to ISC Security Administrators. If you have any questions, please raise an Incident Ticket with 'ISC Service Delivery'."
+        },
+        {
+          "type": "section",
+          "horizontal": true,
+          "children": [
+            {
+              "type": "section",
+              "horizontal": false,
+              "children": [
+                {
+                  "type": "button",
+                  "label": "← Back to Home",
+                  "taskReference": {
+                    "taskId": "home"
+                  },
+                  "action": "AUXILIARY"
+                }
+              ]
+            }
+          ],
+          "columnWidthRatios": [0.25, 0.25, 0.25, 0.25]
         }
       ]
     },
     "footer": {
       "type": "footer",
       "children": [
-        {"type": "richText", "enabled": "false", "value": "Powered By Workday Extend"}
+        {
+          "type": "pod",
+          "podId": "ecoComsFooter"
+        }
       ]
     }
   }

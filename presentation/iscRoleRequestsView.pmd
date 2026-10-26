@@ -103,6 +103,20 @@
                   "action": "AUXILIARY"
                 }
               ]
+            },
+            {
+              "type": "section",
+              "horizontal": false,
+              "children": [
+                {
+                  "type": "button",
+                  "label": "Maintain",
+                  "taskReference": {
+                    "taskId": "assignableRoleManagerMaintain"
+                  },
+                  "action": "PRIMARY"
+                }
+              ]
             }
           ]
         },

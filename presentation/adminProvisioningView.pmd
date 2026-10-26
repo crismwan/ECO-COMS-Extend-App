@@ -57,6 +57,21 @@
                   "tooltip": "Return to the ECO-COMS home page."
                 }
               ]
+            },
+            {
+              "type": "section",
+              "horizontal": false,
+              "children": [
+                {
+                  "type": "button",
+                  "label": "Maintain",
+                  "taskReference": {
+                    "taskId": "assignableRoleManagerMaintain"
+                  },
+                  "action": "AUXILIARY",
+                  "tooltip": "Maintain (approve or deny) a pending AAA role request."
+                }
+              ]
             }
           ],
           "columnWidthRatios": [
