@@ -3,7 +3,8 @@
   "presentation": {
     "body": {
       "type": "hub",
-      "label": "COMS APP",
+      "label": "CUSTOM ORGANIZATION MANAGEMENT",
+      "color": "#002145",
       "icon": "wd-accent-home",
       "initialTask": {
         "taskId": "landingPage"
@@ -14,48 +15,9 @@
           "task": {
             "taskId": "landingPage"
           },
-          "label": "Home",
+          "label": "ECO-COMS APP HUB",
+          "color": "#002145",
           "icon": "wd-accent-home"
-        },
-        {
-          "type": "item",
-          "task": {
-            "taskId": "shellOrgManager"
-          },
-          "label": "Shell Org Manager",
-          "icon": "wd-accent-org"
-        },
-        {
-          "type": "item",
-          "task": {
-            "taskId": "assignableRoleManagerView"
-          },
-          "label": "Assignable Role Manager",
-          "icon": "wd-accent-role"
-        },
-        {
-          "type": "item",
-          "task": {
-            "taskId": "iscRoleRequestsView"
-          },
-          "label": "Pending ISC Requests",
-          "icon": "wd-accent-clipboard-checklist"
-        },
-        {
-          "type": "item",
-          "task": {
-            "taskId": "adminProvisioningView"
-          },
-          "label": "Admin Provisioning",
-          "icon": "wd-accent-security"
-        },
-        {
-          "type": "item",
-          "task": {
-            "taskId": "auditLogViewer"
-          },
-          "label": "Audit Log",
-          "icon": "wd-accent-history"
         }
       ]
     },
