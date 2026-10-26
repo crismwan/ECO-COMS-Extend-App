@@ -16,25 +16,10 @@
       "sections": [
         {
           "type": "layoutSection",
-          "id": "shellOrgsSectionHeader",
-          "children": [
-            {
-              "type": "fieldSet",
-              "id": "shellOrgsSectionLabel",
-              "title": "SHELL ORGANIZATIONS",
-              "layout": {
-                "density": "medium",
-                "alignment": "left",
-                "horizontalSizing": "stretch",
-                "labelPosition": "top"
-              },
-              "children": []
-            }
-          ]
-        },
-        {
-          "type": "layoutSection",
-          "id": "shellOrgCardSection",
+          "id": "topRow",
+          "layout": {
+            "numberOfColumns": "TWO_COLUMNS"
+          },
           "children": [
             {
               "type": "fieldSet",
@@ -50,7 +35,13 @@
                   "type": "richText",
                   "id": "shellOrgTitle",
                   "enabled": false,
-                  "value": "<b>◼ Shell Org Manager</b>"
+                  "value": "<b>&#9632; Shell Org Manager</b>"
+                },
+                {
+                  "type": "richText",
+                  "id": "shellOrgCategory",
+                  "enabled": false,
+                  "value": "<span style=\"color:#888;font-size:11px;text-transform:uppercase;letter-spacing:1px\">Shell Organizations</span>"
                 },
                 {
                   "type": "richText",
@@ -77,31 +68,7 @@
                   "action": "PRIMARY"
                 }
               ]
-            }
-          ]
-        },
-        {
-          "type": "layoutSection",
-          "id": "assignableRolesSectionHeader",
-          "children": [
-            {
-              "type": "fieldSet",
-              "id": "assignableRolesSectionLabel",
-              "title": "ASSIGNABLE ROLES",
-              "layout": {
-                "density": "medium",
-                "alignment": "left",
-                "horizontalSizing": "stretch",
-                "labelPosition": "top"
-              },
-              "children": []
-            }
-          ]
-        },
-        {
-          "type": "layoutSection",
-          "id": "myRoleRequestsCardSection",
-          "children": [
+            },
             {
               "type": "fieldSet",
               "id": "myRoleRequestsCard",
@@ -116,7 +83,13 @@
                   "type": "richText",
                   "id": "myRoleRequestsTitle",
                   "enabled": false,
-                  "value": "<b>◆ My Role Requests</b>"
+                  "value": "<b>&#9670; My Role Requests</b>"
+                },
+                {
+                  "type": "richText",
+                  "id": "myRoleRequestsCategory",
+                  "enabled": false,
+                  "value": "<span style=\"color:#888;font-size:11px;text-transform:uppercase;letter-spacing:1px\">Assignable Roles</span>"
                 },
                 {
                   "type": "richText",
@@ -148,25 +121,10 @@
         },
         {
           "type": "layoutSection",
-          "id": "administrationSectionHeader",
-          "children": [
-            {
-              "type": "fieldSet",
-              "id": "administrationSectionLabel",
-              "title": "ADMINISTRATION",
-              "layout": {
-                "density": "medium",
-                "alignment": "left",
-                "horizontalSizing": "stretch",
-                "labelPosition": "top"
-              },
-              "children": []
-            }
-          ]
-        },
-        {
-          "type": "layoutSection",
-          "id": "adminProvisioningCardSection",
+          "id": "middleRow",
+          "layout": {
+            "numberOfColumns": "TWO_COLUMNS"
+          },
           "children": [
             {
               "type": "fieldSet",
@@ -182,7 +140,13 @@
                   "type": "richText",
                   "id": "adminProvisioningTitle",
                   "enabled": false,
-                  "value": "<b>▲ Admin Provisioning</b>"
+                  "value": "<b>&#9650; Admin Provisioning</b>"
+                },
+                {
+                  "type": "richText",
+                  "id": "adminProvisioningCategory",
+                  "enabled": false,
+                  "value": "<span style=\"color:#888;font-size:11px;text-transform:uppercase;letter-spacing:1px\">Administration</span>"
                 },
                 {
                   "type": "richText",
@@ -209,13 +173,7 @@
                   "action": "PRIMARY"
                 }
               ]
-            }
-          ]
-        },
-        {
-          "type": "layoutSection",
-          "id": "pendingIscCardSection",
-          "children": [
+            },
             {
               "type": "fieldSet",
               "id": "pendingIscCard",
@@ -230,7 +188,13 @@
                   "type": "richText",
                   "id": "pendingIscTitle",
                   "enabled": false,
-                  "value": "<b>▸ Pending ISC Requests</b>"
+                  "value": "<b>&#9658; Pending ISC Requests</b>"
+                },
+                {
+                  "type": "richText",
+                  "id": "pendingIscCategory",
+                  "enabled": false,
+                  "value": "<span style=\"color:#888;font-size:11px;text-transform:uppercase;letter-spacing:1px\">Administration</span>"
                 },
                 {
                   "type": "richText",
@@ -253,7 +217,10 @@
         },
         {
           "type": "layoutSection",
-          "id": "auditLogCardSection",
+          "id": "bottomRow",
+          "layout": {
+            "numberOfColumns": "TWO_COLUMNS"
+          },
           "children": [
             {
               "type": "fieldSet",
@@ -269,7 +236,13 @@
                   "type": "richText",
                   "id": "auditLogTitle",
                   "enabled": false,
-                  "value": "<b>▸ Audit Log</b>"
+                  "value": "<b>&#9658; Audit Log</b>"
+                },
+                {
+                  "type": "richText",
+                  "id": "auditLogCategory",
+                  "enabled": false,
+                  "value": "<span style=\"color:#888;font-size:11px;text-transform:uppercase;letter-spacing:1px\">Administration</span>"
                 },
                 {
                   "type": "richText",
