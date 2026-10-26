@@ -16,35 +16,12 @@
       "sections": [
         {
           "type": "layoutSection",
-          "id": "shellOrgsSectionHeader",
-          "children": [
-            {
-              "type": "fieldSet",
-              "id": "shellOrgsSectionLabel",
-              "layout": {
-                "density": "low",
-                "alignment": "left",
-                "horizontalSizing": "stretch",
-                "labelPosition": "top"
-              },
-              "children": [
-                {
-                  "type": "richText",
-                  "id": "shellOrgsSectionLabelText",
-                  "enabled": false,
-                  "value": "<p style=\"margin:0;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#666\">SHELL ORGANIZATIONS</p>"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "type": "layoutSection",
           "id": "shellOrgCardSection",
           "children": [
             {
               "type": "fieldSet",
               "id": "shellOrgCard",
+              "label": "SHELL ORGANIZATIONS",
               "layout": {
                 "density": "low",
                 "alignment": "left",
@@ -82,35 +59,12 @@
         },
         {
           "type": "layoutSection",
-          "id": "assignableRolesSectionHeader",
-          "children": [
-            {
-              "type": "fieldSet",
-              "id": "assignableRolesSectionLabel",
-              "layout": {
-                "density": "low",
-                "alignment": "left",
-                "horizontalSizing": "stretch",
-                "labelPosition": "top"
-              },
-              "children": [
-                {
-                  "type": "richText",
-                  "id": "assignableRolesSectionLabelText",
-                  "enabled": false,
-                  "value": "<p style=\"margin:0;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#666\">ASSIGNABLE ROLES</p>"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "type": "layoutSection",
           "id": "myRoleRequestsCardSection",
           "children": [
             {
               "type": "fieldSet",
               "id": "myRoleRequestsCard",
+              "label": "ASSIGNABLE ROLES",
               "layout": {
                 "density": "low",
                 "alignment": "left",
@@ -148,35 +102,12 @@
         },
         {
           "type": "layoutSection",
-          "id": "administrationSectionHeader",
-          "children": [
-            {
-              "type": "fieldSet",
-              "id": "administrationSectionLabel",
-              "layout": {
-                "density": "low",
-                "alignment": "left",
-                "horizontalSizing": "stretch",
-                "labelPosition": "top"
-              },
-              "children": [
-                {
-                  "type": "richText",
-                  "id": "administrationSectionLabelText",
-                  "enabled": false,
-                  "value": "<p style=\"margin:0;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#666\">ADMINISTRATION</p>"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "type": "layoutSection",
           "id": "adminProvisioningCardSection",
           "children": [
             {
               "type": "fieldSet",
               "id": "adminProvisioningCard",
+              "label": "ADMINISTRATION",
               "layout": {
                 "density": "low",
                 "alignment": "left",
