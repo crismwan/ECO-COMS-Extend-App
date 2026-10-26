@@ -15,7 +15,7 @@
           "task": {
             "taskId": "landingPage"
           },
-          "label": "ECO-COMS APP HUB",
+          "label": "RBAC APP HUB",
           "color": "#002145",
           "icon": "wd-accent-home"
         }
