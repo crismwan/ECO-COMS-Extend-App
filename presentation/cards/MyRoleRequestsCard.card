@@ -11,15 +11,15 @@
   },
   "footer": [
     {
-      "label": "Submit New",
+      "label": "View All",
       "taskReference": {
-        "taskId": "assignableRoleManager"
+        "taskId": "assignableRoleManagerView"
       }
     },
     {
-      "label": "Open",
+      "label": "Submit New",
       "taskReference": {
-        "taskId": "assignableRoleManagerView"
+        "taskId": "assignableRoleManager"
       }
     }
   ]

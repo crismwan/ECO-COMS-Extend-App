@@ -11,15 +11,15 @@
   },
   "footer": [
     {
-      "label": "Add Pattern",
+      "label": "View All",
       "taskReference": {
-        "taskId": "newShellOrgPattern"
+        "taskId": "shellOrgManager"
       }
     },
     {
-      "label": "Open",
+      "label": "Add Pattern",
       "taskReference": {
-        "taskId": "shellOrgManager"
+        "taskId": "newShellOrgPattern"
       }
     }
   ]

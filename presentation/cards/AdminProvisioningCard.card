@@ -11,15 +11,15 @@
   },
   "footer": [
     {
-      "label": "Submit AAA",
+      "label": "View All",
       "taskReference": {
-        "taskId": "adminProvisioning"
+        "taskId": "adminProvisioningView"
       }
     },
     {
-      "label": "Open",
+      "label": "Submit AAA",
       "taskReference": {
-        "taskId": "adminProvisioningView"
+        "taskId": "adminProvisioning"
       }
     }
   ]

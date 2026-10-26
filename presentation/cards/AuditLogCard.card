@@ -11,7 +11,7 @@
   },
   "footer": [
     {
-      "label": "Open",
+      "label": "View All",
       "taskReference": {
         "taskId": "auditLogViewer"
       }
