@@ -137,7 +137,7 @@
           "children": [
             {
               "type": "button",
-              "label": "\u2190 Home",
+              "label": "← Home",
               "taskReference": {
                 "taskId": "home"
               },
@@ -146,7 +146,7 @@
             },
             {
               "type": "button",
-              "label": "\u2190 Assignable Role Manager",
+              "label": "← Assignable Role Manager",
               "taskReference": {
                 "taskId": "assignableRoleManager"
               },
@@ -187,7 +187,6 @@
                   "gridType": "LIST",
                   "multiViewStylingEnabled": true,
                   "id": "pendingRolesGrid",
-                  "autoPaging": true,
                   "defaultSortColumnId": "colRequestedDate",
                   "defaultSortOrder": "DESCENDING",
                   "label": "Pending Assignable Role Requests",
@@ -345,7 +344,7 @@
               "type": "richText",
               "id": "confirmDelete",
               "enabled": false,
-              "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">\u2139 </span><span style=\"color:#374151;font-size:11px\">Select a role from the grid above, then click <b>OK</b> to permanently delete the request.</span>"
+              "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">ℹ </span><span style=\"color:#374151;font-size:11px\">Select a role from the grid above, then click <b>OK</b> to permanently delete the request.</span>"
             },
             {
               "type": "fieldSet",
@@ -363,7 +362,7 @@
                   "type": "richText",
                   "id": "deleteWarning",
                   "enabled": false,
-                  "value": "<span style=\"color:#dc2626;font-size:11px;font-weight:700\">\u26a0 </span><span style=\"color:#991b1b;font-size:11px\"><b>Warning:</b> This action permanently deletes the selected role request and cannot be undone. Click OK to confirm.</span>"
+                  "value": "<span style=\"color:#dc2626;font-size:11px;font-weight:700\">⚠ </span><span style=\"color:#991b1b;font-size:11px\"><b>Warning:</b> This action permanently deletes the selected role request and cannot be undone. Click OK to confirm.</span>"
                 }
               ],
               "title": "Confirm Delete",

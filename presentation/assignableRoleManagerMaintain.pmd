@@ -252,7 +252,7 @@
           "children": [
             {
               "type": "button",
-              "label": "\u2190 Back to Assignable Role Manager",
+              "label": "← Back to Assignable Role Manager",
               "taskReference": {
                 "taskId": "assignableRoleManager"
               },
@@ -361,7 +361,6 @@
                   "type": "grid",
                   "gridType": "LIST",
                   "id": "posGrid",
-                  "autoPaging": true,
                   "label": "Positions",
                   "rows": "<% empty(selectedRole.positionWids) ? (empty(selectedRole.positions) ? [] : positions.data.filter(p => { selectedRole.positions.contains(p.id) })) : positions.data.filter(p => { selectedRole.positionWids.contains(p.id) }) %>",
                   "rowVariableName": "pos",
