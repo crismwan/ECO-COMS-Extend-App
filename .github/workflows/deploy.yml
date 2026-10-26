@@ -147,18 +147,35 @@ jobs:
       - name: Restore tenant token for AOS deploy
         env:
           WD_DEV_TOKEN: ${{ secrets.WD_DEV_TOKEN }}
+          WD_WCP_TOKEN: ${{ secrets.WD_WCP_TOKEN }}
           WD_ORG_UUID: ${{ secrets.WD_ORG_UUID }}
         run: |
           set -euo pipefail
-          # After wdcli auth login --system-user, the system-user token is in wcpAccessToken.
-          # We must restore the ubc_wcpdev2 tenant token so AOS deploy has the right credential.
-          # wcpTenantAccessToken["ubc_wcpdev2"] = WD_DEV_TOKEN (PKCE token, aud: wd, tenant: ubc_wcpdev2)
+          # WD_DEV_TOKEN = wcpTenantAccessToken["ubc_wcpdev2"]  (aud: wd,  tenant: ubc_wcpdev2)
+          # WD_WCP_TOKEN = wcpAccessToken                       (aud: wcp, tenant: _octopaaas)
+          #
+          # AOS /deploy needs both:
+          #   Authorization: Bearer <wcpTenantAccessToken>   → used as Auth header by wdcli
+          #   WCP-Auth: <wcpAccessToken>                     → platform-level header
+          #
+          # After wdcli auth login --system-user, wcpAccessToken holds the system-user
+          # OctopaAS token — which is NOT accepted by AOS. We replace both slots with
+          # the PKCE user tokens from the interactive config.json the operator pasted.
           CONFIG_FILE="${HOME}/.config/@workday/wdcli/config.json"
-          jq --arg tok "${WD_DEV_TOKEN}" --arg org "${WD_ORG_UUID}" \
-            '.wcpTenantAccessToken["ubc_wcpdev2"] = $tok | .organizationUuid = $org' \
+
+          # Build deploy-ready WCP_TOKEN: fall back to WD_DEV_TOKEN if WD_WCP_TOKEN unset
+          PLATFORM_TOKEN="${WD_WCP_TOKEN:-${WD_DEV_TOKEN}}"
+
+          jq --arg tenantTok "${WD_DEV_TOKEN}" \
+             --arg wcpTok "${PLATFORM_TOKEN}" \
+             --arg org "${WD_ORG_UUID}" \
+            '.wcpTenantAccessToken["ubc_wcpdev2"] = $tenantTok
+            | .wcpAccessToken = $wcpTok
+            | .organizationUuid = $org' \
             "${CONFIG_FILE}" > /tmp/config-restored.json
           mv /tmp/config-restored.json "${CONFIG_FILE}"
-          echo "Tenant token restored into wcpTenantAccessToken.ubc_wcpdev2 (length=${#WD_DEV_TOKEN})"
+          echo "Restored: wcpTenantAccessToken.ubc_wcpdev2 (len=${#WD_DEV_TOKEN}), wcpAccessToken (len=${#PLATFORM_TOKEN})"
+          echo "Config keys: $(jq -r 'keys | @csv' "${CONFIG_FILE}")"
 
       - name: Patch wdcli to use DevTools deploy path
         env:
@@ -280,13 +297,16 @@ jobs:
           #      = WD_DEV_TOKEN = wcpTenantAccessToken["ubc_wcpdev2"]
           #        (PKCE user token, aud: wd, tenant: ubc_wcpdev2, sub: lmcneil)
           #   2. WCP-Authorization: Bearer <wcpAccessToken>
-          #      = getWcpAccessToken() → config file wcpAccessToken (set by system-user login)
+          #      = getWcpAccessToken() → config file wcpAccessToken
+          #      = WD_WCP_TOKEN = wcpAccessToken from interactive config.json
+          #        (platform token, aud: wcp, tenant: _octopaaas)
           WDCLI_TENANT_TOKEN: ${{ secrets.WD_DEV_TOKEN }}
           WDCLI_ORG_UUID: ${{ secrets.WD_ORG_UUID }}
           WDCLI_APP_UUID: cfd75927b808c1dd99c54b1c7096a142
           WDCLI_VERSION_ID: ${{ env.VERSION_ID }}
           WDCLI_CLIENT_ID: ${{ secrets.WD_CLIENT_ID }}
           WDCLI_CLIENT_SECRET: ${{ secrets.WD_CLIENT_SECRET }}
+          WD_WCP_TOKEN: ${{ secrets.WD_WCP_TOKEN }}
         run: |
           set -euo pipefail
           APP_REF_ID=ecocomsphase_xclw_cm_sync2_vmzvxm
