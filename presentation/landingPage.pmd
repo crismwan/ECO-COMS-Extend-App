@@ -19,110 +19,21 @@
           "id": "topCardsSection",
           "children": [
             {
-              "type": "fieldSet",
-              "id": "shellOrgCard",
-              "layout": {
-                "density": "low",
-                "alignment": "left",
-                "horizontalSizing": "stretch",
-                "labelPosition": "top"
-              },
-              "children": [
+              "type": "cardContainer",
+              "id": "topCardContainer",
+              "layout": "grid",
+              "cards": [
                 {
-                  "type": "richText",
-                  "id": "shellOrgRow",
-                  "enabled": false,
-                  "value": "<p style=\"margin:0 0 8px 0;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#5c6470\">SHELL ORGANIZATIONS</p><table style=\"width:100%;border-collapse:collapse\"><tr><td style=\"width:36px;vertical-align:middle;padding-right:10px\"><span style=\"display:inline-flex;width:30px;height:30px;background:#eff6ff;border-radius:6px;align-items:center;justify-content:center;font-size:16px\">&#9632;</span></td><td style=\"vertical-align:middle\"><b style=\"font-size:13px\">Shell Org Manager</b><br><span style=\"font-size:11px;color:#64748b\">View and manage shell org patterns for your assigned application.</span></td></tr></table>"
+                  "type": "card",
+                  "cardId": "ShellOrgCard"
                 },
                 {
-                  "type": "button",
-                  "id": "addPatternBtn",
-                  "label": "Add Pattern",
-                  "taskReference": {
-                    "taskId": "newShellOrgPattern"
-                  },
-                  "action": "AUXILIARY"
+                  "type": "card",
+                  "cardId": "MyRoleRequestsCard"
                 },
                 {
-                  "type": "button",
-                  "id": "shellOrgManagerBtn",
-                  "label": "Open",
-                  "taskReference": {
-                    "taskId": "shellOrgManager"
-                  },
-                  "action": "PRIMARY"
-                }
-              ]
-            },
-            {
-              "type": "fieldSet",
-              "id": "myRoleRequestsCard",
-              "layout": {
-                "density": "low",
-                "alignment": "left",
-                "horizontalSizing": "stretch",
-                "labelPosition": "top"
-              },
-              "children": [
-                {
-                  "type": "richText",
-                  "id": "myRoleRequestsRow",
-                  "enabled": false,
-                  "value": "<p style=\"margin:0 0 8px 0;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#5c6470\">ASSIGNABLE ROLES</p><table style=\"width:100%;border-collapse:collapse\"><tr><td style=\"width:36px;vertical-align:middle;padding-right:10px\"><span style=\"display:inline-flex;width:30px;height:30px;background:#eff6ff;border-radius:6px;align-items:center;justify-content:center;font-size:16px\">&#9670;</span></td><td style=\"vertical-align:middle\"><b style=\"font-size:13px\">My Role Requests</b><br><span style=\"font-size:11px;color:#64748b\">View the status of your pending and approved role requests.</span></td></tr></table>"
-                },
-                {
-                  "type": "button",
-                  "id": "submitNewRequestBtn",
-                  "label": "Submit New",
-                  "taskReference": {
-                    "taskId": "assignableRoleManager"
-                  },
-                  "action": "AUXILIARY"
-                },
-                {
-                  "type": "button",
-                  "id": "myRoleRequestsBtn",
-                  "label": "Open",
-                  "taskReference": {
-                    "taskId": "assignableRoleManagerView"
-                  },
-                  "action": "PRIMARY"
-                }
-              ]
-            },
-            {
-              "type": "fieldSet",
-              "id": "adminProvisioningCard",
-              "layout": {
-                "density": "low",
-                "alignment": "left",
-                "horizontalSizing": "stretch",
-                "labelPosition": "top"
-              },
-              "children": [
-                {
-                  "type": "richText",
-                  "id": "adminProvisioningRow",
-                  "enabled": false,
-                  "value": "<p style=\"margin:0 0 8px 0;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#5c6470\">ADMINISTRATION</p><table style=\"width:100%;border-collapse:collapse\"><tr><td style=\"width:36px;vertical-align:middle;padding-right:10px\"><span style=\"display:inline-flex;width:30px;height:30px;background:#eff6ff;border-radius:6px;align-items:center;justify-content:center;font-size:16px\">&#9650;</span></td><td style=\"vertical-align:middle\"><b style=\"font-size:13px\">Admin Provisioning</b><br><span style=\"font-size:11px;color:#64748b\">Submit or review AAA provisioning requests for each application.</span></td></tr></table>"
-                },
-                {
-                  "type": "button",
-                  "id": "submitAaaRequestBtn",
-                  "label": "Submit AAA",
-                  "taskReference": {
-                    "taskId": "adminProvisioning"
-                  },
-                  "action": "AUXILIARY"
-                },
-                {
-                  "type": "button",
-                  "id": "adminProvisioningBtn",
-                  "label": "Open",
-                  "taskReference": {
-                    "taskId": "adminProvisioningView"
-                  },
-                  "action": "PRIMARY"
+                  "type": "card",
+                  "cardId": "AdminProvisioningCard"
                 }
               ]
             }
@@ -133,56 +44,17 @@
           "id": "bottomCardsSection",
           "children": [
             {
-              "type": "fieldSet",
-              "id": "pendingIscCard",
-              "layout": {
-                "density": "low",
-                "alignment": "left",
-                "horizontalSizing": "stretch",
-                "labelPosition": "top"
-              },
-              "children": [
+              "type": "cardContainer",
+              "id": "bottomCardContainer",
+              "layout": "grid",
+              "cards": [
                 {
-                  "type": "richText",
-                  "id": "pendingIscRow",
-                  "enabled": false,
-                  "value": "<table style=\"width:100%;border-collapse:collapse\"><tr><td style=\"width:36px;vertical-align:middle;padding-right:10px\"><span style=\"display:inline-flex;width:30px;height:30px;background:#eff6ff;border-radius:6px;align-items:center;justify-content:center;font-size:16px\">&#9658;</span></td><td style=\"vertical-align:middle\"><b style=\"font-size:13px\">Pending ISC Requests</b><br><span style=\"font-size:11px;color:#64748b\">Review and process pending assignable role requests across ECO-COMS.</span></td></tr></table>"
+                  "type": "card",
+                  "cardId": "PendingIscCard"
                 },
                 {
-                  "type": "button",
-                  "id": "pendingIscRequestsBtn",
-                  "label": "Open",
-                  "taskReference": {
-                    "taskId": "iscRoleRequestsView"
-                  },
-                  "action": "PRIMARY"
-                }
-              ]
-            },
-            {
-              "type": "fieldSet",
-              "id": "auditLogCard",
-              "layout": {
-                "density": "low",
-                "alignment": "left",
-                "horizontalSizing": "stretch",
-                "labelPosition": "top"
-              },
-              "children": [
-                {
-                  "type": "richText",
-                  "id": "auditLogRow",
-                  "enabled": false,
-                  "value": "<table style=\"width:100%;border-collapse:collapse\"><tr><td style=\"width:36px;vertical-align:middle;padding-right:10px\"><span style=\"display:inline-flex;width:30px;height:30px;background:#eff6ff;border-radius:6px;align-items:center;justify-content:center;font-size:16px\">&#9658;</span></td><td style=\"vertical-align:middle\"><b style=\"font-size:13px\">Audit Log</b><br><span style=\"font-size:11px;color:#64748b\">Review the history of all ECO-COMS changes, actions, and events.</span></td></tr></table>"
-                },
-                {
-                  "type": "button",
-                  "id": "auditLogBtn",
-                  "label": "Open",
-                  "taskReference": {
-                    "taskId": "auditLogViewer"
-                  },
-                  "action": "PRIMARY"
+                  "type": "card",
+                  "cardId": "AuditLogCard"
                 }
               ]
             }

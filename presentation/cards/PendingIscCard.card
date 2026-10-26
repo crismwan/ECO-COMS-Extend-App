@@ -1,0 +1,20 @@
+{
+  "id": "PendingIscCard",
+  "header": {
+    "title": "Pending ISC Requests",
+    "subtitle": "Review and process pending assignable role requests across ECO-COMS.",
+    "icon": "wd-accent-clipboard-checklist"
+  },
+  "body": {
+    "type": "simpleCard",
+    "value": "PENDING REQUESTS"
+  },
+  "footer": [
+    {
+      "label": "Open",
+      "taskReference": {
+        "taskId": "iscRoleRequestsView"
+      }
+    }
+  ]
+}

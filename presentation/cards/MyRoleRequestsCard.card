@@ -1,0 +1,26 @@
+{
+  "id": "MyRoleRequestsCard",
+  "header": {
+    "title": "My Role Requests",
+    "subtitle": "View the status of your pending and approved role requests.",
+    "icon": "wd-accent-role"
+  },
+  "body": {
+    "type": "simpleCard",
+    "value": "ASSIGNABLE ROLES"
+  },
+  "footer": [
+    {
+      "label": "Submit New",
+      "taskReference": {
+        "taskId": "assignableRoleManager"
+      }
+    },
+    {
+      "label": "Open",
+      "taskReference": {
+        "taskId": "assignableRoleManagerView"
+      }
+    }
+  ]
+}

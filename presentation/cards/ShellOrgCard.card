@@ -1,0 +1,26 @@
+{
+  "id": "ShellOrgCard",
+  "header": {
+    "title": "Shell Org Manager",
+    "subtitle": "View and manage shell org patterns for your assigned application.",
+    "icon": "wd-accent-org"
+  },
+  "body": {
+    "type": "simpleCard",
+    "value": "SHELL ORGANIZATIONS"
+  },
+  "footer": [
+    {
+      "label": "Add Pattern",
+      "taskReference": {
+        "taskId": "newShellOrgPattern"
+      }
+    },
+    {
+      "label": "Open",
+      "taskReference": {
+        "taskId": "shellOrgManager"
+      }
+    }
+  ]
+}

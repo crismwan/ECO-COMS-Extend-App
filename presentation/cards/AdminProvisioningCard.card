@@ -1,0 +1,26 @@
+{
+  "id": "AdminProvisioningCard",
+  "header": {
+    "title": "Admin Provisioning",
+    "subtitle": "Submit or review AAA provisioning requests for each application.",
+    "icon": "wd-accent-security"
+  },
+  "body": {
+    "type": "simpleCard",
+    "value": "ADMINISTRATION"
+  },
+  "footer": [
+    {
+      "label": "Submit AAA",
+      "taskReference": {
+        "taskId": "adminProvisioning"
+      }
+    },
+    {
+      "label": "Open",
+      "taskReference": {
+        "taskId": "adminProvisioningView"
+      }
+    }
+  ]
+}
