@@ -115,27 +115,9 @@
             },
             {
               "type": "button",
-              "label": "Shell Org Manager",
+              "label": "← Shell Org Manager",
               "taskReference": {
                 "taskId": "shellOrgManager"
-              },
-              "action": "LINK",
-              "suppressDiscardDialog": true
-            },
-            {
-              "type": "button",
-              "label": "Audit Log",
-              "taskReference": {
-                "taskId": "auditLogViewer"
-              },
-              "action": "LINK",
-              "suppressDiscardDialog": true
-            },
-            {
-              "type": "button",
-              "label": "Admin Provisioning",
-              "taskReference": {
-                "taskId": "adminProvisioning"
               },
               "action": "LINK",
               "suppressDiscardDialog": true
@@ -236,14 +218,6 @@
               "id": "patternFields",
               "children": [
                 {
-                  "type": "date",
-                  "id": "effectiveDate",
-                  "label": "Effective Date",
-                  "required": true,
-                  "value": "<% flowVariables.effectiveDate ?? '' %>",
-                  "onChange": "<%\n            if (empty(self.value)) {\n              self.clearError();\n            } else if (!comsValidations.isWeekday(self.value)) {\n              self.setError(comsValidations.errorWeekday());\n            } else if (!comsValidations.isCurrentOrFutureYear(self.value)) {\n              self.setError(comsValidations.errorYear());\n            } else {\n              self.clearError();\n            }\n          %>"
-                },
-                {
                   "type": "richText",
                   "id": "patternHelp",
                   "enabled": false,
@@ -289,6 +263,14 @@
                   "onChange": "<%\n            if (empty(selectedApplicationId.value)) {\n              self.setError(comsValidations.errorNoApp());\n            } else if (empty(self.value)) {\n              self.clearError();\n            } else if (!comsValidations.isValidAcademicPeriod(self.value)) {\n              self.setError(comsValidations.errorAcademicPeriod());\n            } else {\n              let pName = (comsApplications.data.filter(a => { a.id == selectedApplicationId.value[0] }).size() > 0 ? comsApplications.data.filter(a => { a.id == selectedApplicationId.value[0] })[0].appId : '') + ':PATTERN:' + (attribute1.value ?? '*') + ':' + (attribute2.value ?? '*') + ':' + (attribute3.value ?? '*') + ':' + (attribute5.value ?? '*');\n              let dupes = existingPatterns.data.filter(p => { p.code == pName });\n              if (dupes.size() > 0) {\n                self.setError(comsValidations.errorDuplicate(dupes[0].organizationByName.descriptor));\n              } else {\n                self.clearError();\n              }\n            }\n          %>",
                   "value": "<% flowVariables.attribute5 ?? '' %>",
                   "placeholder": "e.g. 2026S"
+                },
+                {
+                  "type": "date",
+                  "id": "effectiveDate",
+                  "label": "Effective Date",
+                  "required": true,
+                  "value": "<% flowVariables.effectiveDate ?? '' %>",
+                  "onChange": "<%\n            if (empty(self.value)) {\n              self.clearError();\n            } else if (!comsValidations.isWeekday(self.value)) {\n              self.setError(comsValidations.errorWeekday());\n            } else if (!comsValidations.isCurrentOrFutureYear(self.value)) {\n              self.setError(comsValidations.errorYear());\n            } else {\n              self.clearError();\n            }\n          %>"
                 }
               ],
               "title": "Pattern Attributes",

@@ -138,7 +138,7 @@
                 {
                   "type": "button",
                   "id": "submitAaaRequestBtn",
-                  "label": "Submit AAA Request",
+                  "label": "Submit AAA Role Request",
                   "taskReference": {
                     "taskId": "adminProvisioning"
                   },

@@ -58,6 +58,21 @@
       "sections": [
         {
           "type": "layoutSection",
+          "id": "navSection",
+          "children": [
+            {
+              "type": "button",
+              "label": "← Back to Add Pattern",
+              "taskReference": {
+                "taskId": "newShellOrgPattern"
+              },
+              "action": "LINK",
+              "suppressDiscardDialog": true
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
           "id": "confirmSection",
           "children": [
             {

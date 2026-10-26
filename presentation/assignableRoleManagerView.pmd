@@ -42,8 +42,7 @@
               "taskReference": {
                 "taskId": "home"
               },
-              "action": "LINK",
-              "tooltip": "Return to the ECO-COMS home page."
+              "action": "LINK"
             },
             {
               "type": "button",
@@ -51,8 +50,7 @@
               "taskReference": {
                 "taskId": "assignableRoleManager"
               },
-              "action": "PRIMARY",
-              "tooltip": "Open the form to submit a new Assignable Role request for ISC review."
+              "action": "PRIMARY"
             }
           ]
         },
@@ -154,7 +152,7 @@
                       "sortableAndFilterable": "true",
                       "cellTemplate": {
                         "type": "richText",
-                        "value": "<% role.status == 'Pending ISC Review' ? '<span style=\"color:#92400e;font-weight:600;font-size:11px\">⏳ Pending ISC Review</span>' : role.status == 'Approved' ? '<span style=\"color:#065f46;font-weight:600;font-size:11px\">✓ Approved</span>' : role.status == 'Inactive' ? '<span style=\"color:#6b7280;font-weight:600;font-size:11px\">○ Inactive</span>' : role.status ?? '' %>"
+                        "value": "<% role.status == 'Pending ISC Review' ? '<span style=\"color:#92400e;font-weight:600;font-size:11px\">⏳ Pending ISC Review</span>' : role.status == 'Approved' ? '<span style=\"color:#065f46;font-weight:600;font-size:11px\">✓ Approved</span>' : role.status == 'Denied' ? '<span style=\"color:#991b1b;font-weight:600;font-size:11px\">✗ Denied</span>' : role.status == 'Inactive' ? '<span style=\"color:#6b7280;font-weight:600;font-size:11px\">○ Inactive</span>' : role.status ?? '' %>"
                       }
                     },
                     {

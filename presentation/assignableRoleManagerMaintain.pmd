@@ -252,9 +252,27 @@
           "children": [
             {
               "type": "button",
-              "label": "← Back to Assignable Role Manager",
+              "label": "← Home",
               "taskReference": {
-                "taskId": "assignableRoleManager"
+                "taskId": "home"
+              },
+              "action": "LINK",
+              "suppressDiscardDialog": true
+            },
+            {
+              "type": "button",
+              "label": "← Pending ISC Requests",
+              "taskReference": {
+                "taskId": "iscRoleRequestsView"
+              },
+              "action": "LINK",
+              "suppressDiscardDialog": true
+            },
+            {
+              "type": "button",
+              "label": "← Admin Provisioning",
+              "taskReference": {
+                "taskId": "adminProvisioningView"
               },
               "action": "LINK",
               "suppressDiscardDialog": true

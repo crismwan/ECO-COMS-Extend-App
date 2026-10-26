@@ -204,38 +204,6 @@
           }
         ]
       },
-      {
-        "type": "section",
-        "label": "Filter",
-        "children": [
-          {
-            "type": "dropdown",
-            "id": "filterAction",
-            "label": "Filter by Action",
-            "required": false,
-            "instanceList": [
-              {
-                "id": "CREATE",
-                "descriptor": "Create"
-              },
-              {
-                "id": "INACTIVATE",
-                "descriptor": "Inactivate"
-              }
-            ]
-          },
-          {
-            "type": "richText",
-            "id": "filterNote",
-            "enabled": false,
-            "value": "<span style=\"color:#d97706;font-size:11px;font-weight:700\">\u26a0 </span><span style=\"color:#92400e;font-size:11px\">Filtering by Application or Action is not yet available on this page. Use the grid\u2019s built-in column sort and the export action to narrow results.</span>"
-          },
-          {
-            "type": "pod",
-            "podId": "ecoComsFooter"
-          }
-        ]
-      }
     ],
     "pageType": "view"
   }

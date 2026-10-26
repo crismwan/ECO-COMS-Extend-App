@@ -54,11 +54,19 @@
             },
             {
               "type": "button",
-              "label": "Back to Shell Org Manager",
+              "label": "View in Shell Org Manager",
               "taskReference": {
                 "taskId": "shellOrgManager"
               },
               "action": "AUXILIARY"
+            },
+            {
+              "type": "button",
+              "label": "← Home",
+              "taskReference": {
+                "taskId": "home"
+              },
+              "action": "LINK"
             }
           ]
         }
