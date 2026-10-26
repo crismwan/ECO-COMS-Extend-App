@@ -129,6 +129,14 @@ jobs:
           echo "=== Upload exit code: ${UPLOAD_EXIT} ==="
           if [ "${UPLOAD_EXIT}" -ne 0 ]; then
             echo "ERROR: wdcli app upload failed with exit code ${UPLOAD_EXIT}"
+            {
+              echo "## Upload Failure"
+              echo "Exit code: ${UPLOAD_EXIT}"
+              echo "### Upload output:"
+              echo '```'
+              cat /tmp/upload-output.txt
+              echo '```'
+            } >> $GITHUB_STEP_SUMMARY
             exit 1
           fi
 
