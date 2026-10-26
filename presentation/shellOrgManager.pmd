@@ -125,10 +125,9 @@
                       "label": "Application Name",
                       "sortableAndFilterable": "true",
                       "cellTemplate": {
-                        "type": "relatedAction",
-                        "workdayId": "<% app.workdayID %>",
-                        "descriptor": "<% app.name ?? '' %>",
-                        "enabled": true
+                        "type": "text",
+                        "value": "<% app.name ?? '' %>",
+                        "enabled": false
                       }
                     },
                     {
@@ -214,10 +213,9 @@
                     "label": "Organization Name",
                     "sortableAndFilterable": "true",
                     "cellTemplate": {
-                      "type": "relatedAction",
-                      "workdayId": "<% pattern.workdayID %>",
-                      "descriptor": "<% pattern.organizationByName.descriptor %>",
-                      "enabled": true
+                      "type": "text",
+                      "value": "<% pattern.organizationByName.descriptor ?? '' %>",
+                      "enabled": false
                     }
                   },
                   {
@@ -298,10 +296,9 @@
                     "label": "Organization Name",
                     "sortableAndFilterable": "true",
                     "cellTemplate": {
-                      "type": "relatedAction",
-                      "workdayId": "<% org.workdayID %>",
-                      "descriptor": "<% org.organizationByName.descriptor %>",
-                      "enabled": true
+                      "type": "text",
+                      "value": "<% org.organizationByName.descriptor ?? '' %>",
+                      "enabled": false
                     }
                   },
                   {
@@ -397,10 +394,9 @@
                     "label": "Role",
                     "sortableAndFilterable": "true",
                     "cellTemplate": {
-                      "type": "relatedAction",
-                      "workdayId": "<% roleRow.role.id %>",
-                      "descriptor": "<% roleRow.role.descriptor %>",
-                      "enabled": true
+                      "type": "text",
+                      "value": "<% roleRow.role.descriptor ?? '' %>",
+                      "enabled": false
                     }
                   },
                   {
