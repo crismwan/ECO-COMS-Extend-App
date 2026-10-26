@@ -29,7 +29,7 @@
   ],
   "presentation": {
     "headerSize": "STANDARD",
-    "pageType": "record",
+    "pageType": "view",
     "title": {
       "type": "title",
       "label": "<% empty(queryParams.appName) ? 'ECO-COMS: Shell Org Manager' : (queryParams.appName ?? '') %>",
