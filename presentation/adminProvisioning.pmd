@@ -232,11 +232,11 @@
     ]
   },
   "presentation": {
-    "headerSize": "VPS_DEFAULT",
+    "headerSize": "STANDARD",
     "title": {
       "type": "title",
       "label": "ECO-COMS: Admin Provisioning (AAA)",
-      "enabled": false
+      "enabled": true
     },
     "body": {
       "type": "section",

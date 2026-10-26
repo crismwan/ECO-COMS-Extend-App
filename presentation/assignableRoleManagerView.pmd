@@ -22,11 +22,11 @@
   ],
   "presentation": {
     "pageType": "view",
-    "headerSize": "VPS_DEFAULT",
+    "headerSize": "STANDARD",
     "title": {
       "type": "title",
       "label": "ECO-COMS: Assignable Role Manager",
-      "enabled": false
+      "enabled": true
     },
     "body": {
       "type": "areaLayout",
@@ -160,7 +160,7 @@
                   "sortableAndFilterable": "true",
                   "cellTemplate": {
                     "type": "richText",
-                    "value": "<% role.status == 'Pending ISC Review' ? '<span style=\"color:#b45309;font-weight:600\">⏳ Pending ISC Review</span>' : role.status == 'Approved' ? '<span style=\"color:#15803d;font-weight:600\">✓ Approved</span>' : role.status == 'Inactive' ? '<span style=\"color:#6b7280;font-weight:600\">○ Inactive</span>' : role.status ?? '' %>"
+                    "value": "<% role.status == 'Pending ISC Review' ? '<span style=\"color:#b45309;font-weight:600\">\u23f3 Pending ISC Review</span>' : role.status == 'Approved' ? '<span style=\"color:#15803d;font-weight:600\">\u2713 Approved</span>' : role.status == 'Inactive' ? '<span style=\"color:#6b7280;font-weight:600\">\u25cb Inactive</span>' : role.status ?? '' %>"
                   }
                 },
                 {

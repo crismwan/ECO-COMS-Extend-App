@@ -8,7 +8,7 @@
     "title": {
       "type": "title",
       "label": "ECO-COMS",
-      "enabled": false
+      "enabled": true
     },
     "body": {
       "type": "areaLayout",
@@ -217,7 +217,7 @@
               ]
             }
           ],
-          "title": "Administration — ISC Only",
+          "title": "Administration \u2014 ISC Only",
           "layout": {
             "density": "medium",
             "alignment": "left",
