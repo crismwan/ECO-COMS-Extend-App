@@ -237,6 +237,7 @@
   },
   "presentation": {
     "pageType": "edit",
+    "headerSize": "STANDARD",
     "title": {
       "type": "title",
       "label": "ECO-COMS: Maintain Assignable Roles (ISC)"
@@ -360,6 +361,7 @@
                   "type": "grid",
                   "gridType": "LIST",
                   "id": "posGrid",
+                  "autoPaging": true,
                   "label": "Positions",
                   "rows": "<% empty(selectedRole.positionWids) ? (empty(selectedRole.positions) ? [] : positions.data.filter(p => { selectedRole.positions.contains(p.id) })) : positions.data.filter(p => { selectedRole.positionWids.contains(p.id) }) %>",
                   "rowVariableName": "pos",

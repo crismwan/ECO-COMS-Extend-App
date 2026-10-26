@@ -47,6 +47,7 @@
     }
   },
   "presentation": {
+    "headerSize": "STANDARD",
     "title": {
       "type": "title",
       "label": "Confirm: Add Shell Org Pattern"

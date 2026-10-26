@@ -65,6 +65,7 @@
             {
               "type": "richText",
               "id": "pageDesc",
+              "enabled": false,
               "value": "<span style=\"color:#374151;font-size:13px\">Admin Provisioning controls who can manage shell orgs and submit role requests in ECO-COMS for each application. These are <b>AAA (Organizations and Roles Assignment Administrator)</b> roles. To submit a new AAA role request for ISC review, click <b>Submit AAA Role Request</b> above.</span>"
             },
             {

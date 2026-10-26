@@ -122,6 +122,7 @@
   },
   "presentation": {
     "pageType": "edit",
+    "headerSize": "STANDARD",
     "title": {
       "type": "title",
       "label": "ECO-COMS: Delete Assignable Role Request"
@@ -186,6 +187,9 @@
                   "gridType": "LIST",
                   "multiViewStylingEnabled": true,
                   "id": "pendingRolesGrid",
+                  "autoPaging": true,
+                  "defaultSortColumnId": "colRequestedDate",
+                  "defaultSortOrder": "DESCENDING",
                   "label": "Pending Assignable Role Requests",
                   "rows": "<% comsAssignableRoles.data.filter(r => { r.status == 'Pending ISC Review' }) %>",
                   "rowVariableName": "role",
