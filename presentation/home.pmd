@@ -6,9 +6,17 @@
       "label": "COMS APP",
       "icon": "wd-accent-home",
       "initialTask": {
-        "taskId": "shellOrgManager"
+        "taskId": "landingPage"
       },
       "navigationTasks": [
+        {
+          "type": "item",
+          "task": {
+            "taskId": "landingPage"
+          },
+          "label": "Home",
+          "icon": "wd-accent-home"
+        },
         {
           "type": "item",
           "task": {

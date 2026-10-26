@@ -44,6 +44,13 @@
       }
     },
     {
+      "id": "landingPage",
+      "routingPattern": "/landingPage",
+      "page": {
+        "id": "landingPage"
+      }
+    },
+    {
       "id": "adminProvisioning",
       "routingPattern": "/adminProvisioning",
       "page": {
