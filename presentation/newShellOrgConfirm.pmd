@@ -42,8 +42,7 @@
       }
     ],
     "responseErrorDetail": {
-      "errorSummary": "<% error %>",
-      "errors": "<% empty errors ? [] : [error].join(errors.map(err => { err.error })) %>"
+      "errorSummary": "<% error ?? '' %>"
     }
   },
   "presentation": {
