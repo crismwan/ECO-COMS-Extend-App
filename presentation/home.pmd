@@ -57,26 +57,7 @@
           "label": "Audit Log",
           "icon": "wd-accent-history"
         }
-      ],
-      "additionalLinks": {
-        "title": "Quick Actions",
-        "links": [
-          {
-            "type": "task",
-            "label": "Add Pattern",
-            "task": {
-              "taskId": "newShellOrgPattern"
-            }
-          },
-          {
-            "type": "task",
-            "label": "New Role Request",
-            "task": {
-              "taskId": "assignableRoleManager"
-            }
-          }
-        ]
-      }
+      ]
     },
     "footer": {
       "type": "footer",
