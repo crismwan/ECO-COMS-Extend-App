@@ -1,0 +1,71 @@
+ECO-COMS Extend App — Pending UI Changes
+==========================================
+Date: 2026-10-26
+Branch: Changes staged for commit/push
+
+CHANGE 1: Fix FUH & Academic Unit pickers (adminProvisioning + assignableRoleManager)
+---------------------------------------------------------------------------------------
+Files: presentation/adminProvisioning.pmd
+       presentation/assignableRoleManager.pmd
+
+Problem:
+  - fuhPicker and academicUnitPicker instanceList fields were using onSearch
+    with event.query filtering — this pattern is not supported in these pages
+    and returned no results when typing.
+  - After switching to static `values` expressions, fuhPicker had a FATAL
+    duplicate `values` property (old empty [] not removed).
+
+Fix Applied:
+  - Removed `"values": "<% [] %>"` (old placeholder) from fuhPicker in both files.
+  - Moved the correct expression `"values": "<% customOrganizationsFUH.data.map(...) %>"`
+    to the standard position (right after `required`, before `onChange`).
+  - academicUnitPicker already had correct single `values` — no change needed.
+  - Removed all onSearch handlers from both pickers.
+
+Result: Both pickers now pre-load their options from WQL endpoint data at page
+load (same pattern used throughout the rest of the codebase).
+
+
+CHANGE 2: hubLanding.pmd — Redesigned landing page
+----------------------------------------------------
+File: presentation/hubLanding.pmd
+
+Problem:
+  - Previous design had large duplicate navigation buttons mirroring the side nav.
+  - Quick Actions sidebar requested for removal.
+
+Fix Applied:
+  - Rewrote to 3 grouped fieldSet cards (Shell Organizations, Assignable Roles,
+    Administration) using basicFormLayout.
+  - Each card has a richText description + compact action buttons.
+  - Shell Orgs: "Add Pattern" (AUXILIARY) + "Open" (PRIMARY → shellOrgManager)
+  - Assignable Roles: "Submit New" (AUXILIARY) + "Open" (PRIMARY → assignableRoleManagerView)
+  - Administration: "Submit AAA" (AUXILIARY) + "Open" (PRIMARY → adminProvisioningView)
+                    "Open" Pending ISC Requests (PRIMARY → iscRoleRequestsView)
+                    "Open" Audit Log (PRIMARY → auditLogViewer)
+
+
+CHANGE 3: home.pmd — Remove Quick Actions sidebar
+--------------------------------------------------
+File: presentation/home.pmd
+
+Problem:
+  - `additionalLinks` block created a "Quick Actions" sidebar section that
+    duplicated nav items and cluttered the hub shell.
+
+Fix Applied:
+  - Removed the entire `additionalLinks` array from the hub body.
+  - Side navigation tasks (hubLanding, shellOrgManager, assignableRoleManagerView,
+    iscRoleRequestsView, adminProvisioningView, auditLogViewer) retained as-is.
+
+
+DEPLOYMENT NOTE
+---------------
+GitHub Actions deploy requires a valid WD_DEV_TOKEN (PKCE token, ~8h TTL).
+Previous runs #182 and #183 failed due to expired token.
+
+To refresh:
+  1. Run `wdcli app deploy` interactively on your local machine
+  2. Copy wcpTenantAccessToken → ubc_wcpdev2 from ~/.wdcli/config.json (or equivalent)
+  3. Update the WD_DEV_TOKEN secret in GitHub repo Settings → Secrets → Actions
+  4. Re-run the failed workflow OR push a new commit to trigger deploy
