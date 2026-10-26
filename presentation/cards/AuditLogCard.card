@@ -3,7 +3,7 @@
   "header": {
     "title": "Audit Log",
     "subtitle": "Review the history of all ECO-COMS changes, actions, and events.",
-    "icon": "wd-accent-history"
+    "icon": "wd-accent-checkmarked-page"
   },
   "body": {
     "type": "simpleCard",

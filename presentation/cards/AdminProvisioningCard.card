@@ -3,7 +3,7 @@
   "header": {
     "title": "Admin Provisioning",
     "subtitle": "Submit or review AAA provisioning requests for each application.",
-    "icon": "wd-accent-security"
+    "icon": "wd-accent-megaphone"
   },
   "body": {
     "type": "simpleCard",

@@ -3,7 +3,7 @@
   "header": {
     "title": "My Role Requests",
     "subtitle": "View the status of your pending and approved role requests.",
-    "icon": "wd-accent-role"
+    "icon": "wd-accent-checkmarked-page"
   },
   "body": {
     "type": "simpleCard",
