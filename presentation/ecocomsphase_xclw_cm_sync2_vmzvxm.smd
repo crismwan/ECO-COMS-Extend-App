@@ -62,5 +62,6 @@
   "cdnEnabled": true,
   "siteProperties": [ ],
   "applicationId": "ecocomsphase_xclw_cm_sync2_vmzvxm",
-  "headerBackgroundColor": "#0055B3"
+  "headerBackgroundColor": "#0055B3",
+  "titleAlignment": "center"
 }
