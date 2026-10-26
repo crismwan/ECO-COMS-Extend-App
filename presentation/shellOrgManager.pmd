@@ -26,6 +26,14 @@
       "isCollection": true,
       "bestEffort": "true",
       "exclude": "<% empty(selectedApplicationId.value) %>"
+    },
+    {
+      "name": "comsApplications",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "url": "/comsApplications",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true"
     }
   ],
   "outboundData": {
@@ -111,12 +119,12 @@
         },
         {
           "type": "layoutSection",
-          "id": "aboutSection",
+          "id": "appSelectorSection",
           "children": [
             {
               "type": "fieldSet",
-              "id": "aboutFieldSet",
-              "title": "About this page",
+              "id": "appSelectorFieldSet",
+              "title": "Select Application",
               "layout": {
                 "density": "medium",
                 "alignment": "left",
@@ -125,10 +133,47 @@
               },
               "children": [
                 {
-                  "type": "richText",
-                  "id": "pageDescText",
-                  "enabled": false,
-                  "value": "<span style=\"color:#374151;font-size:13px\">View and manage shell org patterns for your assigned application. Select an application to see its patterns. You can inactivate patterns from the grid below.</span>"
+                  "type": "instancePicker",
+                  "id": "selectedApplicationId",
+                  "label": "Application",
+                  "helpText": "Select an application to view and manage its shell org patterns.",
+                  "instanceListLoopTag": {
+                    "id": "selectedApplicationIdList",
+                    "type": "instanceLoop",
+                    "templateInstance": {
+                      "id": "<% app.id %>",
+                      "descriptor": "<% app.appId %>"
+                    },
+                    "on": "<% comsApplications.data %>",
+                    "as": "app"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "contextCardSection",
+          "children": [
+            {
+              "type": "cardContainer",
+              "id": "contextCardContainer",
+              "layout": "grid",
+              "cards": [
+                {
+                  "type": "card",
+                  "cardId": "AppContextCard",
+                  "parameters": {
+                    "info": "<% comsCardGenerator.appContextInfo(empty(selectedApplicationId.value) ? null : comsApplications.data.filter(a => { a.id == selectedApplicationId.value[0] }).size() > 0 ? comsApplications.data.filter(a => { a.id == selectedApplicationId.value[0] })[0].appId : null) %>"
+                  }
+                },
+                {
+                  "type": "card",
+                  "cardId": "StatusGuideCard",
+                  "parameters": {
+                    "info": "<% comsCardGenerator.statusGuideInfo('Active') %>"
+                  }
                 }
               ]
             }
