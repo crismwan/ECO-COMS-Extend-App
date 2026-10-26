@@ -14,21 +14,9 @@
     },
     {
       "location": {
-        "endPointName": "myAssignments"
-      },
-      "mockId": "myAssignments"
-    },
-    {
-      "location": {
         "endPointName": "auditLogs"
       },
       "mockId": "auditLogs"
-    },
-    {
-      "location": {
-        "endPointName": "shellOrgs"
-      },
-      "mockId": "shellOrgs"
     }
   ]
 }

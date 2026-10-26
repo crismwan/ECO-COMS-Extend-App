@@ -99,12 +99,12 @@
         {
           "type": "layoutSection",
           "id": "contextCardSection",
-          "visible": "<% !empty(selectedApplicationId.value) %>",
           "children": [
             {
               "type": "cardContainer",
               "id": "contextCardContainer",
               "layout": "grid",
+              "visible": "<% !empty(selectedApplicationId.value) %>",
               "cards": [
                 {
                   "type": "card",
@@ -127,11 +127,11 @@
         {
           "type": "layoutSection",
           "id": "patternsSection",
-          "visible": "<% !empty(selectedApplicationId.value) %>",
           "children": [
             {
               "type": "fieldSet",
               "id": "patternsFieldSet",
+              "visible": "<% !empty(selectedApplicationId.value) %>",
               "title": "Shell Org Patterns",
               "layout": {
                 "density": "medium",
@@ -163,8 +163,6 @@
                   "enabled": false,
                   "label": "Shell Org Patterns",
                   "autoPaging": true,
-                  "defaultSortColumnId": "colPatternCode",
-                  "defaultSortOrder": "ASCENDING",
                   "visible": "<% !empty(selectedApplicationId.value) && size(shellOrgPatterns.data.filter(p => { let appCode = comsApplications.data.filter(a => { a.id == selectedApplicationId.value[0] }).size() > 0 ? comsApplications.data.filter(a => { a.id == selectedApplicationId.value[0] })[0].appId : ''; p.code.startsWith(appCode + ':PATTERN') })) > 0 %>",
                   "columns": [
                     {
@@ -211,11 +209,11 @@
         {
           "type": "layoutSection",
           "id": "noAppSection",
-          "visible": "<% empty(selectedApplicationId.value) %>",
           "children": [
             {
               "type": "richText",
               "id": "selectAppPrompt",
+              "visible": "<% empty(selectedApplicationId.value) %>",
               "enabled": false,
               "value": "<span style=\"color:#374151;font-size:12px\">Select an application above to view its shell org patterns.</span>"
             }
