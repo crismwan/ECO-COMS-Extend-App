@@ -65,35 +65,11 @@
           "children": [
             {
               "type": "button",
-              "label": "Maintain",
-              "taskReference": {
-                "taskId": "assignableRoleManagerMaintain"
-              },
-              "action": "PRIMARY"
-            },
-            {
-              "type": "button",
-              "label": "\u2190 Home",
+              "label": "← Home",
               "taskReference": {
                 "taskId": "home"
               },
               "action": "LINK"
-            },
-            {
-              "type": "button",
-              "label": "Assignable Role Manager",
-              "taskReference": {
-                "taskId": "assignableRoleManager"
-              },
-              "action": "AUXILIARY"
-            },
-            {
-              "type": "button",
-              "label": "Admin Provisioning",
-              "taskReference": {
-                "taskId": "adminProvisioning"
-              },
-              "action": "AUXILIARY"
             }
           ]
         },
