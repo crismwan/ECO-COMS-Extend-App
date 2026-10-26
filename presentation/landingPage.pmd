@@ -102,12 +102,11 @@
         },
         {
           "type": "layoutSection",
-          "id": "adminProvisioningCardSection",
+          "id": "administrationCardSection",
           "children": [
             {
               "type": "fieldSet",
               "id": "adminProvisioningCard",
-              "label": "ADMINISTRATION",
               "layout": {
                 "density": "low",
                 "alignment": "left",
@@ -140,13 +139,7 @@
                   "action": "PRIMARY"
                 }
               ]
-            }
-          ]
-        },
-        {
-          "type": "layoutSection",
-          "id": "pendingIscCardSection",
-          "children": [
+            },
             {
               "type": "fieldSet",
               "id": "pendingIscCard",
@@ -173,13 +166,7 @@
                   "action": "PRIMARY"
                 }
               ]
-            }
-          ]
-        },
-        {
-          "type": "layoutSection",
-          "id": "auditLogCardSection",
-          "children": [
+            },
             {
               "type": "fieldSet",
               "id": "auditLogCard",
