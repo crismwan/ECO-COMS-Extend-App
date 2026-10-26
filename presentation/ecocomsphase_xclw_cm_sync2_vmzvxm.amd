@@ -44,13 +44,6 @@
       }
     },
     {
-      "id": "hubLanding",
-      "routingPattern": "/hubLanding",
-      "page": {
-        "id": "hubLanding"
-      }
-    },
-    {
       "id": "adminProvisioning",
       "routingPattern": "/adminProvisioning",
       "page": {

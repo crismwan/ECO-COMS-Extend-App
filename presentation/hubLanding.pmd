@@ -23,7 +23,7 @@
               "id": "shellOrgsSectionLabel",
               "title": "SHELL ORGANIZATIONS",
               "layout": {
-                "density": "compact",
+                "density": "medium",
                 "alignment": "left",
                 "horizontalSizing": "stretch",
                 "labelPosition": "top"
@@ -84,7 +84,7 @@
               "id": "assignableRolesSectionLabel",
               "title": "ASSIGNABLE ROLES",
               "layout": {
-                "density": "compact",
+                "density": "medium",
                 "alignment": "left",
                 "horizontalSizing": "stretch",
                 "labelPosition": "top"
@@ -145,7 +145,7 @@
               "id": "administrationSectionLabel",
               "title": "ADMINISTRATION",
               "layout": {
-                "density": "compact",
+                "density": "medium",
                 "alignment": "left",
                 "horizontalSizing": "stretch",
                 "labelPosition": "top"
