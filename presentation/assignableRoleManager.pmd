@@ -522,7 +522,7 @@
                   "id": "fuhPicker",
                   "label": "Functional Unit Hierarchy",
                   "required": false,
-                  "values": "<% [] %>",
+                  "values": "<% customOrganizationsFUH.data.map(o => { {'id': o.workdayID, 'descriptor': o.organization1.descriptor} }) %>",
                   "onChange": "<%\n            if (!empty(self.value) && !empty(academicUnitPicker.value)) {\n              self.setError('Cannot select both Functional Unit Hierarchy and Academic Unit.');\n            } else {\n              self.clearError();\n              academicUnitPicker.clearError();\n            }\n            enabledForWidBinding.setValue(!empty(self.value) ? self.value[0] : (!empty(academicUnitPicker.value) ? academicUnitPicker.value[0] : ''));\n            enabledForDisplay.setValue(\n              !empty(self.value) ? self.selectedEntries[0].descriptor :\n              (!empty(academicUnitPicker.value) ? academicUnitPicker.selectedEntries[0].descriptor : 'Academic Unit - University of British Columbia')\n            );\n          %>",
                   "valuesOut": [
                     {
@@ -534,8 +534,7 @@
                       "valueOutBinding": "postAssignableRole.enabledForWid"
                     }
                   ],
-                  "multiSelect": false,
-                  "values": "<% customOrganizationsFUH.data.map(o => { {'id': o.workdayID, 'descriptor': o.organization1.descriptor} }) %>"
+                  "multiSelect": false
                 },
                 {
                   "type": "instanceList",
