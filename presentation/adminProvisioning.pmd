@@ -524,7 +524,7 @@
                   "id": "fuhPicker",
                   "label": "Functional Unit Hierarchy",
                   "required": false,
-                  "values": "<% customOrganizationsFUH.data.map(o => { {'id': o.workdayID, 'descriptor': o.organization1.descriptor} }) %>",
+                  "values": "<% customOrganizationsFUH.data %>",
                   "onChange": "<%\n            if (!empty(self.value) && !empty(academicUnitPicker.value)) {\n              self.setError('Cannot select both Functional Unit Hierarchy and Academic Unit.');\n            } else {\n              self.clearError();\n              academicUnitPicker.clearError();\n            }\n            let appDesc = !empty(applicationDropdown.value) ? applicationDropdown.selectedEntries[0].descriptor : '';\n            enabledForWidBinding.setValue(!empty(self.value) ? self.value[0] : (!empty(academicUnitPicker.value) ? academicUnitPicker.value[0] : ''));\n            enabledForDisplay.setValue(!empty(self.value) ? self.selectedEntries[0].descriptor : (!empty(academicUnitPicker.value) ? academicUnitPicker.selectedEntries[0].descriptor : 'Academic Unit - University of British Columbia'));\n            if (!empty(appDesc)) {\n              generatedRoleName.setValue(\n                !empty(self.value) ?\n                  'Organizations and Roles Assignment Administrator (' + appDesc + ', Functional Org)' :\n                !empty(academicUnitPicker.value) ?\n                  'Organizations and Roles Assignment Administrator (' + appDesc + ', Academic Unit)' :\n                  'Organizations and Roles Assignment Administrator (' + appDesc + ')'\n              );\n            }\n          %>",
                   "valuesOut": [
                     {
@@ -538,14 +538,16 @@
                   ],
                   "multiSelect": false,
                   "searchEndPoint": "<% endpoints.fuhSearch %>",
-                  "searchResultValues": "<% fuhSearch.data.map(o => { {'id': o.workdayID, 'descriptor': o.organization1.descriptor} }) %>"
+                  "searchResultValues": "<% fuhSearch.data %>",
+                  "idKey": "workdayID",
+                  "displayKey": "organization1.descriptor"
                 },
                 {
                   "type": "instanceList",
                   "id": "academicUnitPicker",
                   "label": "Academic Unit",
                   "required": false,
-                  "values": "<% academicUnits.data.map(o => { {'id': o.workdayID, 'descriptor': o.academicUnit.descriptor} }) %>",
+                  "values": "<% academicUnits.data %>",
                   "onChange": "<%\n            if (!empty(self.value) && !empty(fuhPicker.value)) {\n              self.setError('Cannot select both Academic Unit and Functional Unit Hierarchy.');\n            } else {\n              self.clearError();\n              fuhPicker.clearError();\n            }\n            let appDesc = !empty(applicationDropdown.value) ? applicationDropdown.selectedEntries[0].descriptor : '';\n            enabledForWidBinding.setValue(!empty(fuhPicker.value) ? fuhPicker.value[0] : (!empty(self.value) ? self.value[0] : ''));\n            enabledForDisplay.setValue(!empty(fuhPicker.value) ? fuhPicker.selectedEntries[0].descriptor : (!empty(self.value) ? self.selectedEntries[0].descriptor : 'Academic Unit - University of British Columbia'));\n            if (!empty(appDesc)) {\n              generatedRoleName.setValue(\n                !empty(fuhPicker.value) ?\n                  'Organizations and Roles Assignment Administrator (' + appDesc + ', Functional Org)' :\n                !empty(self.value) ?\n                  'Organizations and Roles Assignment Administrator (' + appDesc + ', Academic Unit)' :\n                  'Organizations and Roles Assignment Administrator (' + appDesc + ')'\n              );\n            }\n          %>",
                   "valuesOut": [
                     {
@@ -559,7 +561,9 @@
                   ],
                   "multiSelect": false,
                   "searchEndPoint": "<% endpoints.academicUnitsSearch %>",
-                  "searchResultValues": "<% academicUnitsSearch.data.map(o => { {'id': o.workdayID, 'descriptor': o.academicUnit.descriptor} }) %>"
+                  "searchResultValues": "<% academicUnitsSearch.data %>",
+                  "idKey": "workdayID",
+                  "displayKey": "academicUnit.descriptor"
                 },
                 {
                   "type": "text",
