@@ -39,6 +39,40 @@
             "code": 500
           }
         ]
+      },
+      {
+        "name": "postAuditLog",
+        "baseUrlType": "BUSINESS-OBJECT",
+        "url": "/comsAuditLogs",
+        "httpMethod": "POST",
+        "authType": "sso",
+        "values": [
+          {
+            "outboundPath": "timestamp",
+            "value": "<% date:now().format(\"yyyy-MM-dd'T'HH:mm:ss'Z'\") %>"
+          },
+          {
+            "outboundPath": "objectType",
+            "value": "Add New Shell Org Pattern"
+          },
+          {
+            "outboundPath": "action",
+            "value": "CREATE"
+          },
+          {
+            "outboundPath": "coName",
+            "value": "<% flowVariables.patternName ?? '' %>"
+          },
+          {
+            "outboundPath": "details",
+            "value": "<% 'Application: ' + (flowVariables.comsAppId ?? '') + ', Effective Date: ' + (flowVariables.effectiveDate ?? '') %>"
+          }
+        ],
+        "failOnStatusCodes": [
+          { "code": 400 },
+          { "code": 403 },
+          { "code": 500 }
+        ]
       }
     ],
     "responseErrorDetail": {
