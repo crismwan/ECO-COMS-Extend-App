@@ -89,7 +89,11 @@
               "action": "LINK",
               "visible": "<% empty(queryParams.appCode) %>"
             }
-          ]
+          ],
+          "layout": {
+            "alignment": "left",
+            "labelPosition": "top"
+          }
         }
       ]
     },
