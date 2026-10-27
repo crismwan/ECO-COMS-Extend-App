@@ -77,9 +77,9 @@
           "id": "navSection",
           "children": [
             {
-              "type": "section",
-              "id": "topHeaderBarSection",
-              "horizontal": false,
+              "type": "fieldSet",
+              "id": "navFieldSet",
+              "title": "<% empty(queryParams.appCode) ? 'Shell Org Manager' : (queryParams.appName ?? queryParams.appCode ?? 'Shell Org Manager') %>",
               "layout": {
                 "density": "high",
                 "alignment": "left",
@@ -97,32 +97,12 @@
                   "visible": "<% !empty(queryParams.appCode) %>"
                 },
                 {
-                  "type": "button",
-                  "id": "backToHomeBtn",
-                  "label": "← Home",
-                  "taskReference": {"taskId": "home"},
-                  "action": "LINK",
-                  "suppressDiscardDialog": true,
-                  "visible": "<% empty(queryParams.appCode) %>"
-                },
-                {
                   "type": "richText",
                   "id": "pageSubtitle",
                   "enabled": false,
-                  "value": "<span style=\"color:#6b7280;font-size:12px\"><% empty(queryParams.appCode) ? 'Select an application to manage its shell orgs and patterns.' : (queryParams.appCode ?? '') + (empty(queryParams.appName) ? '' : ' · ' + (queryParams.appName ?? '')) %></span>"
+                  "value": "<span style=\"color:#6b7280;font-size:12px\"><% empty(queryParams.appCode) ? 'Select an application to manage its shell orgs and patterns.' : (queryParams.appCode ?? '') + ' — manage shell orgs and URL patterns' %></span>"
                 }
               ]
-            },
-            {
-              "type": "fieldSet",
-              "id": "navSpacerFieldSet",
-              "layout": {
-                "density": "high",
-                "alignment": "left",
-                "horizontalSizing": "stretch",
-                "labelPosition": "top"
-              },
-              "children": []
             }
           ]
         }
