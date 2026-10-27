@@ -44,7 +44,7 @@
     {
       "name": "academicUnitsSearch",
       "baseUrlType": "workday-wql",
-      "url": "<% 'data?query=SELECT workdayID, academicUnit FROM academicUnits WHERE inactive = false AND academicUnit contains \\'' + instanceListQuery + '\\'' %>",
+      "url": "<% 'data?query=' + string:pathEncode('SELECT workdayID, academicUnit FROM academicUnits WHERE inactive = false AND academicUnit contains \\'' + instanceListQuery + '\\'') %>",
       "authType": "sso",
       "isCollection": true,
       "bestEffort": "true",
@@ -54,7 +54,7 @@
     {
       "name": "fuhSearch",
       "baseUrlType": "workday-wql",
-      "url": "<% 'data?query=SELECT workdayID, organization1 FROM customOrganizations WHERE organization1 contains \\'' + instanceListQuery + '\\'' %>",
+      "url": "<% 'data?query=' + string:pathEncode('SELECT workdayID, organization1 FROM customOrganizations WHERE organization1 contains \\'' + instanceListQuery + '\\'') %>",
       "authType": "sso",
       "isCollection": true,
       "bestEffort": "true",
