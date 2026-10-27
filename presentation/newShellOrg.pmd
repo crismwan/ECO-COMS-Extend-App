@@ -65,7 +65,7 @@
       }
     ]
   },
-  "onSubmit": "<%\n  let valid = true;\n  if (empty(selectedApplicationId.value)) {\n    selectedApplicationId.setError('Please select an application.');\n    valid = false;\n  }\n  if (empty(organizationCode.value)) {\n    organizationCode.setError('Organization Code is required.');\n    valid = false;\n  }\n  if (empty(effectiveDate.value)) {\n    effectiveDate.setError('Effective Date is required.');\n    valid = false;\n  } else {\n    let d = effectiveDate.value;\n    let dow = d.dayOfWeek();\n    if (dow == 6 || dow == 7) {\n      effectiveDate.setError('Effective Date must be a weekday. Saturdays and Sundays are not allowed.');\n      valid = false;\n    } else {\n      let y = d.year();\n      if (y < 2026 || y > 2027) {\n        effectiveDate.setError('Effective Date year must be 2026 or 2027.');\n        valid = false;\n      }\n    }\n  }\n  valid;\n%>",
+  "onSubmit": "<%\n  let valid = true;\n  if (empty(selectedApplicationId.value)) {\n    selectedApplicationId.setError('Please select an application.');\n    valid = false;\n  }\n  if (empty(effectiveDate.value)) {\n    effectiveDate.setError('Effective Date is required.');\n    valid = false;\n  } else {\n    let d = effectiveDate.value;\n    let dow = d.dayOfWeek();\n    if (dow == 6 || dow == 7) {\n      effectiveDate.setError('Effective Date must be a weekday. Saturdays and Sundays are not allowed.');\n      valid = false;\n    } else {\n      let y = d.year();\n      if (y < 2026 || y > 2027) {\n        effectiveDate.setError('Effective Date year must be 2026 or 2027.');\n        valid = false;\n      }\n    }\n  }\n  valid;\n%>",
   "presentation": {
     "headerSize": "STANDARD",
     "title": {
@@ -83,7 +83,7 @@
           "children": [
             {
               "type": "button",
-              "label": "← Shell Org Manager",
+              "label": "\u2190 Shell Org Manager",
               "taskReference": {
                 "taskId": "shellOrgManager"
               },
@@ -92,7 +92,7 @@
             },
             {
               "type": "button",
-              "label": "← Home",
+              "label": "\u2190 Home",
               "taskReference": {
                 "taskId": "home"
               },
@@ -113,7 +113,7 @@
                   "type": "richText",
                   "id": "pageDescription",
                   "enabled": false,
-                  "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">ℹ </span><span style=\"color:#374151;font-size:11px\">Add a new Shell Organization to Workday. Select the application and enter the Organization Code. The Organization Name will be auto-generated as <b>ApplicationCode:OrganizationCode</b>.</span>"
+                  "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">\u2139 </span><span style=\"color:#374151;font-size:11px\">Add a new Shell Organization to Workday. Select the application and enter the Organization Code. The Organization Name will be auto-generated as <b>ApplicationCode:OrganizationCode</b>.</span>"
                 }
               ],
               "title": "About this page",
@@ -155,9 +155,7 @@
                   "type": "text",
                   "id": "organizationCode",
                   "label": "Organization Code",
-                  "required": true,
-                  "helpText": "Enter the organization code (e.g. MATH300951). The full org name will be ApplicationCode:OrganizationCode.",
-                  "placeholder": "e.g. MATH300951",
+                  "helpText": "The full org name will be ApplicationCode:OrganizationCode.",
                   "onChange": "<%\n    if (!empty(self.value) && !empty(selectedApplicationId.value)) {\n      let ac = comsApplications.data.filter(a => { a.id == selectedApplicationId.value[0] }).size() > 0 ? comsApplications.data.filter(a => { a.id == selectedApplicationId.value[0] })[0].appId : '';\n      let orgName = ac + ':' + self.value;\n      let dupes = existingOrgs.data.filter(o => { o.code == orgName });\n      if (dupes.size() > 0) {\n        self.setError('An organization with this code already exists: ' + dupes[0].organizationByName.descriptor);\n      } else {\n        self.clearError();\n      }\n    } else {\n      self.clearError();\n    }\n  %>"
                 },
                 {
