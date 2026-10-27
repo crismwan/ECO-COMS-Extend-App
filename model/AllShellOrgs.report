@@ -1,0 +1,16 @@
+{
+  "id": 11,
+  "name": "AllShellOrgs",
+  "label": "All Shell Organizations",
+  "businessObject": "COMSShellOrgRequest",
+  "defaultSecurityDomains": ["ManageCOMSShellOrgs"],
+  "sortConfigs": [
+    { "id": 1, "order": "a", "field": "code", "direction": "ASCENDING" }
+  ],
+  "columns": [
+    { "id": 1, "name": "Shell Org Code",    "order": "a", "field": "code" },
+    { "id": 2, "name": "Organization Name", "order": "b", "field": "organizationName" },
+    { "id": 3, "name": "Workday ID",        "order": "c", "field": "workdayOrgId" },
+    { "id": 4, "name": "Active",            "order": "d", "field": "active" }
+  ]
+}
