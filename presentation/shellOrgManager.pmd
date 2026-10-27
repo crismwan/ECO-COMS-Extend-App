@@ -154,7 +154,19 @@
                     "cellTemplate": {
                       "type": "text",
                       "value": "<% app.appId ?? '' %>",
-                      "enabled": false
+                      "enabled": false,
+                      "relatedActions": [
+                        {
+                          "label": "Open Shell Org Manager",
+                          "taskReference": {
+                            "taskId": "shellOrgManager",
+                            "parameterBindings": {
+                              "appCode": "<% app.appId %>",
+                              "appName": "<% app.name %>"
+                            }
+                          }
+                        }
+                      ]
                     }
                   },
                   {
@@ -245,7 +257,21 @@
                     "cellTemplate": {
                       "type": "text",
                       "value": "<% pattern.organizationByName.descriptor ?? '' %>",
-                      "enabled": false
+                      "enabled": false,
+                      "relatedActions": [
+                        {
+                          "label": "Manage Status",
+                          "taskReference": {
+                            "taskId": "manageShellOrgStatus",
+                            "parameterBindings": {
+                              "orgId": "<% pattern.workdayID %>",
+                              "orgCode": "<% pattern.code %>",
+                              "orgName": "<% pattern.organizationByName.descriptor ?? pattern.code %>",
+                              "currentStatus": "<% pattern.cf_active1 == true ? 'Active' : 'Inactive' %>"
+                            }
+                          }
+                        }
+                      ]
                     }
                   },
                   {
