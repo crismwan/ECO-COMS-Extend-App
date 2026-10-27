@@ -77,12 +77,6 @@
           "id": "navSection",
           "children": [
             {
-              "type": "richText",
-              "id": "pageSubtitle",
-              "enabled": false,
-              "value": "<% empty(queryParams.appCode) ? '<span style=\"color:#6b7280;font-size:12px\">Select an application to manage its shell orgs and patterns.</span>' : '<span style=\"color:#6b7280;font-size:12px\">App ID: ' + (queryParams.appCode ?? '') + '</span>' %>"
-            },
-            {
               "type": "button",
               "label": "\u2190 Back to Applications",
               "taskReference": {
@@ -99,6 +93,12 @@
               },
               "action": "LINK",
               "visible": "<% empty(queryParams.appCode) %>"
+            },
+            {
+              "type": "richText",
+              "id": "pageSubtitle",
+              "enabled": false,
+              "value": "<% empty(queryParams.appCode) ? '<span style=\"color:#6b7280;font-size:12px\">Select an application to manage its shell orgs and patterns.</span>' : '<span style=\"color:#6b7280;font-size:12px\">' + (queryParams.appCode ?? '') + (empty(queryParams.appName) ? '' : ' \u00b7 ' + (queryParams.appName ?? '')) + '</span>' %>"
             }
           ],
           "layout": {
