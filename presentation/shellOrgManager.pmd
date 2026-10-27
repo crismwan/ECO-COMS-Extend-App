@@ -159,6 +159,18 @@
                   },
                   {
                     "type": "column",
+                    "id": "colAppDisplayName",
+                    "columnId": "colAppDisplayName",
+                    "label": "Application Name",
+                    "sortableAndFilterable": "true",
+                    "cellTemplate": {
+                      "type": "text",
+                      "value": "<% app.name ?? '' %>",
+                      "enabled": false
+                    }
+                  },
+                  {
+                    "type": "column",
                     "id": "colAppActions",
                     "columnId": "colAppActions",
                     "label": "Manage",
@@ -284,13 +296,6 @@
             ]
           },
           {
-            "type": "richText",
-            "id": "patternsSelectAppMsg",
-            "enabled": false,
-            "visible": "<% empty(queryParams.appCode) %>",
-            "value": "<span style=\"color:#6b7280;font-size:13px\">Select an application from the list above to view its shell org patterns.</span>"
-          },
-          {
             "type": "fieldSet",
             "id": "footerFieldSet0",
             "layout": {
@@ -320,6 +325,15 @@
             "enabled": false,
             "visible": "<% !empty(queryParams.appCode) %>",
             "value": "<span style=\"color:#d97706;font-size:11px;font-weight:700\">⚠ </span><span style=\"color:#92400e;font-size:11px\"><b>Filtered view:</b> You selected <b><% queryParams.appCode ?? '' %></b> from the Application Patterns tab. Only shell organizations matching this application are shown below. <a href=\"javascript:void(0)\" style=\"color:#0055B7\">View all organizations</a> by navigating to Shell Org Manager without an application selected.</span>"
+          },
+          {
+            "type": "button",
+            "id": "addNewOrgBtn",
+            "label": "Add New Shell Organization",
+            "taskReference": {
+              "taskId": "newShellOrg"
+            },
+            "action": "PRIMARY"
           },
           {
             "type": "fieldSet",
@@ -518,44 +532,6 @@
               {
                 "type": "richText",
                 "id": "footerText1",
-                "enabled": false,
-                "value": "<p style=\"text-align:center\"><span style=\"color:#002145;font-size:11px;font-weight:700;font-family:Arial,sans-serif;letter-spacing:2px;\">ECO-COMS</span><span style=\"color:#6b7280;font-size:11px;font-family:Arial,sans-serif;\"> · </span><span style=\"color:#002145;font-size:11px;font-family:Arial,sans-serif;\">University of British Columbia</span><span style=\"color:#6b7280;font-size:11px;font-family:Arial,sans-serif;\"> · </span><span style=\"color:#0055B7;font-size:11px;font-family:Arial,sans-serif;font-style:italic;\">Custom Organization Management System</span></p>"
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "type": "section",
-        "label": "Add New Organization",
-        "children": [
-          {
-            "type": "richText",
-            "id": "addOrgNote",
-            "enabled": false,
-            "value": "<span style=\"color:#374151;font-size:12px\">Create a new shell organization. The organization name will be auto-generated from the application code and organization code you provide.</span>"
-          },
-          {
-            "type": "button",
-            "label": "Add New Shell Organization",
-            "taskReference": {
-              "taskId": "newShellOrg"
-            },
-            "action": "PRIMARY"
-          },
-          {
-            "type": "fieldSet",
-            "id": "footerFieldSet2",
-            "layout": {
-              "density": "medium",
-              "alignment": "center",
-              "horizontalSizing": "stretch",
-              "labelPosition": "top"
-            },
-            "children": [
-              {
-                "type": "richText",
-                "id": "footerText2",
                 "enabled": false,
                 "value": "<p style=\"text-align:center\"><span style=\"color:#002145;font-size:11px;font-weight:700;font-family:Arial,sans-serif;letter-spacing:2px;\">ECO-COMS</span><span style=\"color:#6b7280;font-size:11px;font-family:Arial,sans-serif;\"> · </span><span style=\"color:#002145;font-size:11px;font-family:Arial,sans-serif;\">University of British Columbia</span><span style=\"color:#6b7280;font-size:11px;font-family:Arial,sans-serif;\"> · </span><span style=\"color:#0055B7;font-size:11px;font-family:Arial,sans-serif;font-style:italic;\">Custom Organization Management System</span></p>"
               }
