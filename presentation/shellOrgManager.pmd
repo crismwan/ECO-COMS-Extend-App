@@ -125,23 +125,11 @@
                     "type": "column",
                     "id": "colAppName",
                     "columnId": "colAppName",
-                    "label": "App ID",
+                    "label": "Application ID",
                     "sortableAndFilterable": "true",
                     "cellTemplate": {
                       "type": "text",
                       "value": "<% app.appId ?? '' %>",
-                      "enabled": false
-                    }
-                  },
-                  {
-                    "type": "column",
-                    "id": "colAppFullName",
-                    "columnId": "colAppFullName",
-                    "label": "Application Name",
-                    "sortableAndFilterable": "true",
-                    "cellTemplate": {
-                      "type": "text",
-                      "value": "<% app.name ?? '' %>",
                       "enabled": false
                     }
                   },
