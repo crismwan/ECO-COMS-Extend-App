@@ -25,6 +25,44 @@
           { "code": 404 },
           { "code": 500 }
         ]
+      },
+      {
+        "name": "postAuditLog",
+        "baseUrlType": "BUSINESS-OBJECT",
+        "url": "/comsAuditLogs",
+        "httpMethod": "POST",
+        "authType": "sso",
+        "values": [
+          {
+            "outboundPath": "timestamp",
+            "value": "<% date:now().format(\"yyyy-MM-dd'T'HH:mm:ss'Z'\") %>"
+          },
+          {
+            "outboundPath": "objectType",
+            "value": "<% queryParams.currentStatus == 'Active' ? 'Inactivate Organization' : 'Activate Organization' %>"
+          },
+          {
+            "outboundPath": "action",
+            "value": "<% queryParams.currentStatus == 'Active' ? 'INACTIVATE' : 'ACTIVATE' %>"
+          },
+          {
+            "outboundPath": "coReferenceId",
+            "value": "<% queryParams.orgCode ?? '' %>"
+          },
+          {
+            "outboundPath": "coName",
+            "value": "<% queryParams.orgName ?? '' %>"
+          },
+          {
+            "outboundPath": "details",
+            "value": "<% 'Status changed from ' + (queryParams.currentStatus ?? 'Unknown') + ' to ' + (queryParams.currentStatus == 'Active' ? 'Inactive' : 'Active') %>"
+          }
+        ],
+        "failOnStatusCodes": [
+          { "code": 400 },
+          { "code": 403 },
+          { "code": 500 }
+        ]
       }
     ],
     "responseErrorDetail": {
