@@ -152,21 +152,16 @@
                     "label": "Application ID",
                     "sortableAndFilterable": "true",
                     "cellTemplate": {
-                      "type": "text",
-                      "value": "<% app.appId ?? '' %>",
-                      "enabled": false,
-                      "relatedActions": [
-                        {
-                          "label": "Open Shell Org Manager",
-                          "taskReference": {
-                            "taskId": "shellOrgManager",
-                            "parameterBindings": {
-                              "appCode": "<% app.appId %>",
-                              "appName": "<% app.name %>"
-                            }
-                          }
+                      "type": "button",
+                      "action": "LINK",
+                      "label": "<% app.appId ?? '' %>",
+                      "taskReference": {
+                        "taskId": "shellOrgManager",
+                        "parameterBindings": {
+                          "appCode": "<% app.appId %>",
+                          "appName": "<% app.name %>"
                         }
-                      ]
+                      }
                     }
                   },
                   {
@@ -255,23 +250,18 @@
                     "label": "Organization Name",
                     "sortableAndFilterable": "true",
                     "cellTemplate": {
-                      "type": "text",
-                      "value": "<% pattern.organizationByName.descriptor ?? '' %>",
-                      "enabled": false,
-                      "relatedActions": [
-                        {
-                          "label": "Manage Status",
-                          "taskReference": {
-                            "taskId": "manageShellOrgStatus",
-                            "parameterBindings": {
-                              "orgId": "<% pattern.workdayID %>",
-                              "orgCode": "<% pattern.code %>",
-                              "orgName": "<% pattern.organizationByName.descriptor ?? pattern.code %>",
-                              "currentStatus": "<% pattern.cf_active1 == true ? 'Active' : 'Inactive' %>"
-                            }
-                          }
+                      "type": "button",
+                      "action": "LINK",
+                      "label": "<% pattern.organizationByName.descriptor ?? '' %>",
+                      "taskReference": {
+                        "taskId": "manageShellOrgStatus",
+                        "parameterBindings": {
+                          "orgId": "<% pattern.workdayID %>",
+                          "orgCode": "<% pattern.code %>",
+                          "orgName": "<% pattern.organizationByName.descriptor ?? pattern.code %>",
+                          "currentStatus": "<% pattern.cf_active1 == true ? 'Active' : 'Inactive' %>"
                         }
-                      ]
+                      }
                     }
                   },
                   {
@@ -399,23 +389,18 @@
                     "label": "Organization Name",
                     "sortableAndFilterable": "true",
                     "cellTemplate": {
-                      "type": "text",
-                      "value": "<% org.organizationByName.descriptor ?? '' %>",
-                      "enabled": false,
-                      "relatedActions": [
-                        {
-                          "label": "Manage Status",
-                          "taskReference": {
-                            "taskId": "manageShellOrgStatus",
-                            "parameterBindings": {
-                              "orgId": "<% org.workdayID %>",
-                              "orgCode": "<% org.code %>",
-                              "orgName": "<% org.organizationByName.descriptor ?? org.code %>",
-                              "currentStatus": "<% org.cf_active1 == true ? 'Active' : 'Inactive' %>"
-                            }
-                          }
+                      "type": "button",
+                      "action": "LINK",
+                      "label": "<% org.organizationByName.descriptor ?? '' %>",
+                      "taskReference": {
+                        "taskId": "manageShellOrgStatus",
+                        "parameterBindings": {
+                          "orgId": "<% org.workdayID %>",
+                          "orgCode": "<% org.code %>",
+                          "orgName": "<% org.organizationByName.descriptor ?? org.code %>",
+                          "currentStatus": "<% org.cf_active1 == true ? 'Active' : 'Inactive' %>"
                         }
-                      ]
+                      }
                     }
                   },
                   {
@@ -491,23 +476,18 @@
                     "label": "Organization Name",
                     "sortableAndFilterable": "true",
                     "cellTemplate": {
-                      "type": "text",
-                      "value": "<% org.organizationByName.descriptor ?? '' %>",
-                      "enabled": false,
-                      "relatedActions": [
-                        {
-                          "label": "Manage Status",
-                          "taskReference": {
-                            "taskId": "manageShellOrgStatus",
-                            "parameterBindings": {
-                              "orgId": "<% org.workdayID %>",
-                              "orgCode": "<% org.code %>",
-                              "orgName": "<% org.organizationByName.descriptor ?? org.code %>",
-                              "currentStatus": "<% org.cf_active1 == true ? 'Active' : 'Inactive' %>"
-                            }
-                          }
+                      "type": "button",
+                      "action": "LINK",
+                      "label": "<% org.organizationByName.descriptor ?? '' %>",
+                      "taskReference": {
+                        "taskId": "manageShellOrgStatus",
+                        "parameterBindings": {
+                          "orgId": "<% org.workdayID %>",
+                          "orgCode": "<% org.code %>",
+                          "orgName": "<% org.organizationByName.descriptor ?? org.code %>",
+                          "currentStatus": "<% org.cf_active1 == true ? 'Active' : 'Inactive' %>"
                         }
-                      ]
+                      }
                     }
                   },
                   {

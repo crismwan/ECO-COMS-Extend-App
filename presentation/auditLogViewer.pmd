@@ -29,7 +29,7 @@
           "children": [
             {
               "type": "button",
-              "label": "\u2190 Home",
+              "label": "← Home",
               "taskReference": {
                 "taskId": "home"
               },
@@ -48,7 +48,7 @@
                 {
                   "type": "richText",
                   "id": "pageDescriptionText",
-                  "value": "<span style=\"color:#374151;font-size:12px\">Immutable, searchable log of every COMS-initiated Custom Organization change (Create / Inactivate). Replaces the Log Tab in the legacy MSC Tool. Records cannot be deleted.</span>",
+                  "value": "<span style=\"color:#374151;font-size:12px\">Immutable, searchable log of every COMS-initiated Custom Organization change. Records are created automatically when shell organizations or patterns are added, and when their status is changed. Records cannot be deleted.</span>",
                   "enabled": false
                 }
               ],
@@ -108,18 +108,6 @@
               },
               {
                 "type": "column",
-                "id": "columnWorker",
-                "columnId": "columnWorker",
-                "label": "Worker",
-                "cellTemplate": {
-                  "type": "text",
-                  "value": "<% logEntry.worker.descriptor %>",
-                  "enabled": false
-                },
-                "sortableAndFilterable": "true"
-              },
-              {
-                "type": "column",
                 "id": "columnAction",
                 "columnId": "columnAction",
                 "label": "Action",
@@ -134,7 +122,7 @@
                 "type": "column",
                 "id": "columnCoReferenceId",
                 "columnId": "columnCoReferenceId",
-                "label": "CO ID",
+                "label": "CO Reference ID",
                 "cellTemplate": {
                   "type": "text",
                   "value": "<% logEntry.coReferenceId %>",
@@ -146,10 +134,22 @@
                 "type": "column",
                 "id": "columnCoName",
                 "columnId": "columnCoName",
-                "label": "CO Name (Pattern String)",
+                "label": "CO Name",
                 "cellTemplate": {
                   "type": "text",
                   "value": "<% logEntry.coName %>",
+                  "enabled": false
+                },
+                "sortableAndFilterable": "true"
+              },
+              {
+                "type": "column",
+                "id": "columnWorker",
+                "columnId": "columnWorker",
+                "label": "Worker",
+                "cellTemplate": {
+                  "type": "text",
+                  "value": "<% logEntry.worker.descriptor %>",
                   "enabled": false
                 },
                 "sortableAndFilterable": "true"
@@ -196,16 +196,20 @@
             "type": "richText",
             "id": "exportNote",
             "enabled": false,
-            "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">\u2139 </span><span style=\"color:#374151;font-size:11px\">Use the grid\u2019s built-in export action to download these results as CSV for compliance reporting.</span>"
-          },
-          {
-            "type": "pod",
-            "podId": "ecoComsFooter"
+            "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">ℹ </span><span style=\"color:#374151;font-size:11px\">Use the grid’s built-in export action to download these results as CSV for compliance reporting.</span>"
           }
         ]
       }
     ],
+    "footer": {
+      "type": "footer",
+      "children": [
+        {
+          "type": "pod",
+          "podId": "ecoComsFooter"
+        }
+      ]
+    },
     "pageType": "view"
-
   }
 }
