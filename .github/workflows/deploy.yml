@@ -361,8 +361,24 @@ jobs:
           echo "WDCLI_ORG_UUID: '${WDCLI_ORG_UUID:-<EMPTY>}'"
           echo "WDCLI_APP_UUID: '${WDCLI_APP_UUID:-<EMPTY>}'"
           echo "=== Running wdcli app deploy ==="
-          wdcli app deploy "${APP_REF_ID}" --tenant-alias "${TENANT_ALIAS}" 2>&1 || {
-            EXIT=$?
-            echo "=== wdcli deploy FAILED with exit code ${EXIT} ==="
-            exit ${EXIT}
-          }
+          set +e
+          wdcli app deploy "${APP_REF_ID}" --tenant-alias "${TENANT_ALIAS}" 2>&1 | tee /tmp/deploy-output.txt
+          DEPLOY_EXIT=${PIPESTATUS[0]}
+          set -e
+          echo "=== Deploy exit code: ${DEPLOY_EXIT} ==="
+          echo "=== Deploy output ==="
+          cat /tmp/deploy-output.txt
+          {
+            echo "## Deploy Step Output"
+            echo "Exit code: ${DEPLOY_EXIT}"
+            echo "VERSION_ID: ${VERSION_ID:-<empty>}"
+            echo "WDCLI_VERSION_ID: ${WDCLI_VERSION_ID:-<empty>}"
+            echo "WDCLI_TENANT_TOKEN length: ${#WDCLI_TENANT_TOKEN}"
+            echo '```'
+            cat /tmp/deploy-output.txt 2>/dev/null || echo "(no output)"
+            echo '```'
+          } >> $GITHUB_STEP_SUMMARY || true
+          if [ "${DEPLOY_EXIT}" -ne 0 ]; then
+            echo "=== wdcli deploy FAILED with exit code ${DEPLOY_EXIT} ==="
+            exit ${DEPLOY_EXIT}
+          fi
