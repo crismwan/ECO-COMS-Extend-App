@@ -297,19 +297,19 @@
                 "id": "allShellOrgsEmptyMsg",
                 "enabled": false,
                 "value": "<span style=\"color:#374151;font-size:12px\">No shell organizations found.</span>",
-                "visible": "<% empty(queryParams.appCode) && size(allShellOrgs.data.filter(o => { !o.code.contains(':PATTERN') })) == 0 %>"
+                "visible": "<% empty(queryParams.appCode) && size(allShellOrgs.data.filter(o => { o.code.startsWith('X:') && !o.code.contains(':PATTERN') })) == 0 %>"
               },
               {
                 "type": "grid",
                 "gridType": "LIST",
                 "multiViewStylingEnabled": true,
                 "id": "allShellOrgsGrid",
-                "rows": "<% allShellOrgs.data.filter(o => { !o.code.contains(':PATTERN') }) %>",
+                "rows": "<% allShellOrgs.data.filter(o => { o.code.startsWith('X:') && !o.code.contains(':PATTERN') }) %>",
                 "rowVariableName": "org",
                 "enabled": false,
                 "label": "Shell Organizations",
                 "autoPaging": true,
-                "visible": "<% empty(queryParams.appCode) && size(allShellOrgs.data.filter(o => { !o.code.contains(':PATTERN') })) > 0 %>",
+                "visible": "<% empty(queryParams.appCode) && size(allShellOrgs.data.filter(o => { o.code.startsWith('X:') && !o.code.contains(':PATTERN') })) > 0 %>",
                 "columns": [
                   {
                     "type": "column",
