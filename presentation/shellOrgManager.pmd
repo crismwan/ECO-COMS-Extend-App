@@ -77,9 +77,8 @@
           "id": "navSection",
           "children": [
             {
-              "type": "section",
-              "id": "topHeaderBarSection",
-              "horizontal": false,
+              "type": "fieldSet",
+              "id": "topHeaderBarFieldSet",
               "layout": {
                 "density": "high",
                 "alignment": "left",
