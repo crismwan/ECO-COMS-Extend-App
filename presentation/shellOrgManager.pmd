@@ -78,7 +78,7 @@
           "children": [
             {
               "type": "button",
-              "label": "\u2190 Back to Applications",
+              "label": "← Back to Applications",
               "taskReference": {
                 "taskId": "shellOrgManager"
               },
@@ -87,7 +87,7 @@
             },
             {
               "type": "button",
-              "label": "\u2190 Home",
+              "label": "← Home",
               "taskReference": {
                 "taskId": "home"
               },
@@ -95,10 +95,9 @@
               "visible": "<% empty(queryParams.appCode) %>"
             },
             {
-              "type": "richText",
+              "type": "readOnlyText",
               "id": "pageSubtitle",
-              "enabled": false,
-              "value": "<% empty(queryParams.appCode) ? '<span style=\"color:#6b7280;font-size:12px\">Select an application to manage its shell orgs and patterns.</span>' : '<span style=\"color:#6b7280;font-size:12px\">' + (queryParams.appCode ?? '') + (empty(queryParams.appName) ? '' : ' \u00b7 ' + (queryParams.appName ?? '')) + '</span>' %>"
+              "value": "<% empty(queryParams.appCode) ? 'Select an application to manage its shell orgs and patterns.' : (queryParams.appCode ?? '') + (empty(queryParams.appName) ? '' : ' · ' + (queryParams.appName ?? '')) %>"
             }
           ],
           "layout": {
@@ -196,7 +195,7 @@
                 "type": "richText",
                 "id": "saveNote",
                 "enabled": false,
-                "value": "<span style=\"color:#d97706;font-size:11px;font-weight:700\">\u26a0 </span><span style=\"color:#92400e;font-size:11px\"><b>Warning:</b> Changing Status to Inactive does not automatically remove any Workday role assignments referencing this shell organization. Verify in Workday (Get_Assign_User_Based_Security_Groups) that no active role assignment uses this Custom Organization before inactivating.</span>"
+                "value": "<span style=\"color:#d97706;font-size:11px;font-weight:700\">⚠ </span><span style=\"color:#92400e;font-size:11px\"><b>Warning:</b> Changing Status to Inactive does not automatically remove any Workday role assignments referencing this shell organization. Verify in Workday (Get_Assign_User_Based_Security_Groups) that no active role assignment uses this Custom Organization before inactivating.</span>"
               },
               {
                 "type": "richText",
@@ -249,7 +248,7 @@
                     "sortableAndFilterable": "true",
                     "cellTemplate": {
                       "type": "richText",
-                      "value": "<% pattern.cf_active1 == true ? '<span style=\"color:#065f46;font-weight:600;font-size:11px\">\u2713 Active</span>' : '<span style=\"color:#6b7280;font-weight:600;font-size:11px\">\u25cb Inactive</span>' %>"
+                      "value": "<% pattern.cf_active1 == true ? '<span style=\"color:#065f46;font-weight:600;font-size:11px\">✓ Active</span>' : '<span style=\"color:#6b7280;font-weight:600;font-size:11px\">○ Inactive</span>' %>"
                     }
                   },
                   {
@@ -286,13 +285,18 @@
           {
             "type": "fieldSet",
             "id": "footerFieldSet0",
-            "layout": { "density": "medium", "alignment": "center", "horizontalSizing": "stretch", "labelPosition": "top" },
+            "layout": {
+              "density": "medium",
+              "alignment": "center",
+              "horizontalSizing": "stretch",
+              "labelPosition": "top"
+            },
             "children": [
               {
                 "type": "richText",
                 "id": "footerText0",
                 "enabled": false,
-                "value": "<p style=\"text-align:center\"><span style=\"color:#002145;font-size:11px;font-weight:700;font-family:Arial,sans-serif;letter-spacing:2px;\">ECO-COMS</span><span style=\"color:#6b7280;font-size:11px;font-family:Arial,sans-serif;\"> \u00b7 </span><span style=\"color:#002145;font-size:11px;font-family:Arial,sans-serif;\">University of British Columbia</span><span style=\"color:#6b7280;font-size:11px;font-family:Arial,sans-serif;\"> \u00b7 </span><span style=\"color:#0055B7;font-size:11px;font-family:Arial,sans-serif;font-style:italic;\">Custom Organization Management System</span></p>"
+                "value": "<p style=\"text-align:center\"><span style=\"color:#002145;font-size:11px;font-weight:700;font-family:Arial,sans-serif;letter-spacing:2px;\">ECO-COMS</span><span style=\"color:#6b7280;font-size:11px;font-family:Arial,sans-serif;\"> · </span><span style=\"color:#002145;font-size:11px;font-family:Arial,sans-serif;\">University of British Columbia</span><span style=\"color:#6b7280;font-size:11px;font-family:Arial,sans-serif;\"> · </span><span style=\"color:#0055B7;font-size:11px;font-family:Arial,sans-serif;font-style:italic;\">Custom Organization Management System</span></p>"
               }
             ]
           }
@@ -307,7 +311,7 @@
             "id": "shellOrgsAppWarning",
             "enabled": false,
             "visible": "<% !empty(queryParams.appCode) %>",
-            "value": "<span style=\"color:#d97706;font-size:11px;font-weight:700\">\u26a0 </span><span style=\"color:#92400e;font-size:11px\"><b>Filtered view:</b> You selected <b><% queryParams.appCode ?? '' %></b> from the Application Patterns tab. Only shell organizations matching this application are shown below. <a href=\"javascript:void(0)\" style=\"color:#0055B7\">View all organizations</a> by navigating to Shell Org Manager without an application selected.</span>"
+            "value": "<span style=\"color:#d97706;font-size:11px;font-weight:700\">⚠ </span><span style=\"color:#92400e;font-size:11px\"><b>Filtered view:</b> You selected <b><% queryParams.appCode ?? '' %></b> from the Application Patterns tab. Only shell organizations matching this application are shown below. <a href=\"javascript:void(0)\" style=\"color:#0055B7\">View all organizations</a> by navigating to Shell Org Manager without an application selected.</span>"
           },
           {
             "type": "fieldSet",
@@ -374,7 +378,7 @@
                     "sortableAndFilterable": "true",
                     "cellTemplate": {
                       "type": "richText",
-                      "value": "<% org.cf_active1 == true ? '<span style=\"color:#065f46;font-weight:600;font-size:11px\">\u2713 Active</span>' : '<span style=\"color:#6b7280;font-weight:600;font-size:11px\">\u25cb Inactive</span>' %>"
+                      "value": "<% org.cf_active1 == true ? '<span style=\"color:#065f46;font-weight:600;font-size:11px\">✓ Active</span>' : '<span style=\"color:#6b7280;font-weight:600;font-size:11px\">○ Inactive</span>' %>"
                     }
                   },
                   {
@@ -405,7 +409,7 @@
             "type": "fieldSet",
             "id": "filteredShellOrgsFieldSet",
             "visible": "<% !empty(queryParams.appCode) %>",
-            "title": "<% 'Shell Organizations \u2014 ' + (queryParams.appName ?? queryParams.appCode ?? '') %>",
+            "title": "<% 'Shell Organizations — ' + (queryParams.appName ?? queryParams.appCode ?? '') %>",
             "layout": {
               "density": "medium",
               "alignment": "left",
@@ -466,7 +470,7 @@
                     "sortableAndFilterable": "true",
                     "cellTemplate": {
                       "type": "richText",
-                      "value": "<% org.cf_active1 == true ? '<span style=\"color:#065f46;font-weight:600;font-size:11px\">\u2713 Active</span>' : '<span style=\"color:#6b7280;font-weight:600;font-size:11px\">\u25cb Inactive</span>' %>"
+                      "value": "<% org.cf_active1 == true ? '<span style=\"color:#065f46;font-weight:600;font-size:11px\">✓ Active</span>' : '<span style=\"color:#6b7280;font-weight:600;font-size:11px\">○ Inactive</span>' %>"
                     }
                   },
                   {
@@ -496,13 +500,18 @@
           {
             "type": "fieldSet",
             "id": "footerFieldSet1",
-            "layout": { "density": "medium", "alignment": "center", "horizontalSizing": "stretch", "labelPosition": "top" },
+            "layout": {
+              "density": "medium",
+              "alignment": "center",
+              "horizontalSizing": "stretch",
+              "labelPosition": "top"
+            },
             "children": [
               {
                 "type": "richText",
                 "id": "footerText1",
                 "enabled": false,
-                "value": "<p style=\"text-align:center\"><span style=\"color:#002145;font-size:11px;font-weight:700;font-family:Arial,sans-serif;letter-spacing:2px;\">ECO-COMS</span><span style=\"color:#6b7280;font-size:11px;font-family:Arial,sans-serif;\"> \u00b7 </span><span style=\"color:#002145;font-size:11px;font-family:Arial,sans-serif;\">University of British Columbia</span><span style=\"color:#6b7280;font-size:11px;font-family:Arial,sans-serif;\"> \u00b7 </span><span style=\"color:#0055B7;font-size:11px;font-family:Arial,sans-serif;font-style:italic;\">Custom Organization Management System</span></p>"
+                "value": "<p style=\"text-align:center\"><span style=\"color:#002145;font-size:11px;font-weight:700;font-family:Arial,sans-serif;letter-spacing:2px;\">ECO-COMS</span><span style=\"color:#6b7280;font-size:11px;font-family:Arial,sans-serif;\"> · </span><span style=\"color:#002145;font-size:11px;font-family:Arial,sans-serif;\">University of British Columbia</span><span style=\"color:#6b7280;font-size:11px;font-family:Arial,sans-serif;\"> · </span><span style=\"color:#0055B7;font-size:11px;font-family:Arial,sans-serif;font-style:italic;\">Custom Organization Management System</span></p>"
               }
             ]
           }
@@ -529,13 +538,18 @@
           {
             "type": "fieldSet",
             "id": "footerFieldSet2",
-            "layout": { "density": "medium", "alignment": "center", "horizontalSizing": "stretch", "labelPosition": "top" },
+            "layout": {
+              "density": "medium",
+              "alignment": "center",
+              "horizontalSizing": "stretch",
+              "labelPosition": "top"
+            },
             "children": [
               {
                 "type": "richText",
                 "id": "footerText2",
                 "enabled": false,
-                "value": "<p style=\"text-align:center\"><span style=\"color:#002145;font-size:11px;font-weight:700;font-family:Arial,sans-serif;letter-spacing:2px;\">ECO-COMS</span><span style=\"color:#6b7280;font-size:11px;font-family:Arial,sans-serif;\"> \u00b7 </span><span style=\"color:#002145;font-size:11px;font-family:Arial,sans-serif;\">University of British Columbia</span><span style=\"color:#6b7280;font-size:11px;font-family:Arial,sans-serif;\"> \u00b7 </span><span style=\"color:#0055B7;font-size:11px;font-family:Arial,sans-serif;font-style:italic;\">Custom Organization Management System</span></p>"
+                "value": "<p style=\"text-align:center\"><span style=\"color:#002145;font-size:11px;font-weight:700;font-family:Arial,sans-serif;letter-spacing:2px;\">ECO-COMS</span><span style=\"color:#6b7280;font-size:11px;font-family:Arial,sans-serif;\"> · </span><span style=\"color:#002145;font-size:11px;font-family:Arial,sans-serif;\">University of British Columbia</span><span style=\"color:#6b7280;font-size:11px;font-family:Arial,sans-serif;\"> · </span><span style=\"color:#0055B7;font-size:11px;font-family:Arial,sans-serif;font-style:italic;\">Custom Organization Management System</span></p>"
               }
             ]
           }
@@ -656,13 +670,18 @@
           {
             "type": "fieldSet",
             "id": "footerFieldSet3",
-            "layout": { "density": "medium", "alignment": "center", "horizontalSizing": "stretch", "labelPosition": "top" },
+            "layout": {
+              "density": "medium",
+              "alignment": "center",
+              "horizontalSizing": "stretch",
+              "labelPosition": "top"
+            },
             "children": [
               {
                 "type": "richText",
                 "id": "footerText3",
                 "enabled": false,
-                "value": "<p style=\"text-align:center\"><span style=\"color:#002145;font-size:11px;font-weight:700;font-family:Arial,sans-serif;letter-spacing:2px;\">ECO-COMS</span><span style=\"color:#6b7280;font-size:11px;font-family:Arial,sans-serif;\"> \u00b7 </span><span style=\"color:#002145;font-size:11px;font-family:Arial,sans-serif;\">University of British Columbia</span><span style=\"color:#6b7280;font-size:11px;font-family:Arial,sans-serif;\"> \u00b7 </span><span style=\"color:#0055B7;font-size:11px;font-family:Arial,sans-serif;font-style:italic;\">Custom Organization Management System</span></p>"
+                "value": "<p style=\"text-align:center\"><span style=\"color:#002145;font-size:11px;font-weight:700;font-family:Arial,sans-serif;letter-spacing:2px;\">ECO-COMS</span><span style=\"color:#6b7280;font-size:11px;font-family:Arial,sans-serif;\"> · </span><span style=\"color:#002145;font-size:11px;font-family:Arial,sans-serif;\">University of British Columbia</span><span style=\"color:#6b7280;font-size:11px;font-family:Arial,sans-serif;\"> · </span><span style=\"color:#0055B7;font-size:11px;font-family:Arial,sans-serif;font-style:italic;\">Custom Organization Management System</span></p>"
               }
             ]
           }
