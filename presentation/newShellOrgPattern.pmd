@@ -106,7 +106,7 @@
           "children": [
             {
               "type": "button",
-              "label": "← Home",
+              "label": "\u2190 Home",
               "taskReference": {
                 "taskId": "home"
               },
@@ -115,7 +115,7 @@
             },
             {
               "type": "button",
-              "label": "← Shell Org Manager",
+              "label": "\u2190 Shell Org Manager",
               "taskReference": {
                 "taskId": "shellOrgManager"
               },
@@ -136,11 +136,11 @@
                   "type": "richText",
                   "id": "pageDescription",
                   "enabled": false,
-                  "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">ℹ </span><span style=\"color:#374151;font-size:11px\">Add a new Shell Org Pattern for your application. Patterns define the CO naming structure used to create Custom Organizations in Workday. The pattern name is auto-generated from the fields below. A duplicate check is performed before submission.</span>"
+                  "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">\u2139 </span><span style=\"color:#374151;font-size:11px\">Add a new Shell Org Pattern for your application. Patterns define the CO naming structure used to create Custom Organizations in Workday. The pattern name is auto-generated from the fields below. A duplicate check is performed before submission.</span>"
                 }
               ],
               "title": "About this page",
-              "layout": {
+              "_layout": {
                 "density": "medium",
                 "alignment": "left",
                 "horizontalSizing": "stretch",
@@ -221,7 +221,7 @@
                   "type": "richText",
                   "id": "patternHelp",
                   "enabled": false,
-                  "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">ℹ </span><span style=\"color:#374151;font-size:11px\">Fill in the pattern attributes below. Leave blank to use wildcard (*). The Pattern Name Preview above updates as you type.</span>"
+                  "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">\u2139 </span><span style=\"color:#374151;font-size:11px\">Fill in the pattern attributes below. Leave blank to use wildcard (*). The Pattern Name Preview above updates as you type.</span>"
                 },
                 {
                   "type": "text",
@@ -274,7 +274,7 @@
                 }
               ],
               "title": "Pattern Attributes",
-              "layout": {
+              "_layout": {
                 "density": "medium",
                 "alignment": "left",
                 "horizontalSizing": "fixed",

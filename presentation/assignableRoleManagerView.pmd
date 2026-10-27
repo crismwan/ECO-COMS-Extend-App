@@ -38,7 +38,7 @@
           "children": [
             {
               "type": "button",
-              "label": "← Home",
+              "label": "\u2190 Home",
               "taskReference": {
                 "taskId": "home"
               },
@@ -79,14 +79,14 @@
               "type": "richText",
               "id": "pendingNoticeYes",
               "enabled": false,
-              "value": "<span style=\"color:#d97706;font-size:11px;font-weight:700\">⚠ </span><span style=\"color:#92400e;font-size:11px\">You have requests currently pending ISC review. Use the <b>Maintain</b> action on a row below to update or add information to a pending request.</span>",
+              "value": "<span style=\"color:#d97706;font-size:11px;font-weight:700\">\u26a0 </span><span style=\"color:#92400e;font-size:11px\">You have requests currently pending ISC review. Use the <b>Maintain</b> action on a row below to update or add information to a pending request.</span>",
               "visible": "<% size(comsAssignableRoles.data.filter(r => !r.roleName.startsWith('Organizations and Roles Assignment Administrator') && r.requestedBy.id == selectedWorker.id && r.status == 'Pending ISC Review')) > 0 %>"
             },
             {
               "type": "richText",
               "id": "pendingNoticeNo",
               "enabled": false,
-              "value": "<span style=\"color:#059669;font-size:11px;font-weight:700\">✓ </span><span style=\"color:#065f46;font-size:11px\">You have no requests pending ISC review.</span>",
+              "value": "<span style=\"color:#059669;font-size:11px;font-weight:700\">\u2713 </span><span style=\"color:#065f46;font-size:11px\">You have no requests pending ISC review.</span>",
               "visible": "<% size(comsAssignableRoles.data.filter(r => !r.roleName.startsWith('Organizations and Roles Assignment Administrator') && r.requestedBy.id == selectedWorker.id && r.status == 'Pending ISC Review')) == 0 %>"
             }
           ]
@@ -116,8 +116,6 @@
                   "enabled": false,
                   "label": "Assignable Role Requests",
                   "autoPaging": true,
-                  "defaultSortColumnId": "colRequestedDate",
-                  "defaultSortOrder": "DESCENDING",
                   "visible": "<% size(comsAssignableRoles.data.filter(r => !r.roleName.startsWith('Organizations and Roles Assignment Administrator') && r.requestedBy.id == selectedWorker.id)) > 0 %>",
                   "columns": [
                     {
@@ -163,7 +161,7 @@
                       "sortableAndFilterable": "true",
                       "cellTemplate": {
                         "type": "richText",
-                        "value": "<% role.status == 'Pending ISC Review' ? '<span style=\"color:#92400e;font-weight:600;font-size:11px\">⏳ Pending ISC Review</span>' : role.status == 'Approved' ? '<span style=\"color:#065f46;font-weight:600;font-size:11px\">✓ Approved</span>' : role.status == 'Denied' ? '<span style=\"color:#991b1b;font-weight:600;font-size:11px\">✗ Denied</span>' : role.status == 'Inactive' ? '<span style=\"color:#6b7280;font-weight:600;font-size:11px\">○ Inactive</span>' : role.status ?? '' %>"
+                        "value": "<% role.status == 'Pending ISC Review' ? '<span style=\"color:#92400e;font-weight:600;font-size:11px\">\u23f3 Pending ISC Review</span>' : role.status == 'Approved' ? '<span style=\"color:#065f46;font-weight:600;font-size:11px\">\u2713 Approved</span>' : role.status == 'Denied' ? '<span style=\"color:#991b1b;font-weight:600;font-size:11px\">\u2717 Denied</span>' : role.status == 'Inactive' ? '<span style=\"color:#6b7280;font-weight:600;font-size:11px\">\u25cb Inactive</span>' : role.status ?? '' %>"
                       }
                     },
                     {
@@ -207,25 +205,27 @@
                                 "action": "AUXILIARY",
                                 "label": "Maintain",
                                 "visible": "<% role.status == 'Pending ISC Review' %>",
-                                "tooltip": "Update or add information to this pending request.",
                                 "taskReference": {
                                   "taskId": "assignableRoleManagerMaintain",
                                   "parameterBindings": {
                                     "roleId": "<% role.id %>",
                                     "roleName": "<% role.roleName %>"
                                   }
-                                }
+                                },
+                                "_tooltip": "Update or add information to this pending request."
                               }
                             ]
                           }
                         ]
                       }
                     }
-                  ]
+                  ],
+                  "_defaultSortColumnId": "colRequestedDate",
+                  "_defaultSortOrder": "DESCENDING"
                 }
               ],
               "title": "My Assignable Role Requests",
-              "layout": {
+              "_layout": {
                 "density": "medium",
                 "alignment": "left",
                 "horizontalSizing": "stretch",

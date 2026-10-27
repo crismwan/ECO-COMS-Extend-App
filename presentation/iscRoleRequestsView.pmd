@@ -65,7 +65,7 @@
           "children": [
             {
               "type": "button",
-              "label": "← Home",
+              "label": "\u2190 Home",
               "taskReference": {
                 "taskId": "home"
               },
@@ -74,7 +74,7 @@
             },
             {
               "type": "button",
-              "label": "← My Role Requests",
+              "label": "\u2190 My Role Requests",
               "taskReference": {
                 "taskId": "assignableRoleManagerView"
               },
@@ -83,7 +83,7 @@
             },
             {
               "type": "button",
-              "label": "← Admin Provisioning",
+              "label": "\u2190 Admin Provisioning",
               "taskReference": {
                 "taskId": "adminProvisioningView"
               },
@@ -112,12 +112,6 @@
               "type": "fieldSet",
               "id": "pendingGridFieldSet",
               "title": "<% queryParams.view == 'aaa' ? 'Pending AAA Provisioning Requests' : queryParams.view == 'assignable' ? 'Pending Assignable Role Requests' : 'All Pending ISC Review Requests' %>",
-              "layout": {
-                "density": "medium",
-                "alignment": "left",
-                "horizontalSizing": "stretch",
-                "labelPosition": "top"
-              },
               "children": [
                 {
                   "type": "grid",
@@ -125,8 +119,6 @@
                   "multiViewStylingEnabled": true,
                   "id": "allPendingGrid",
                   "autoPaging": true,
-                  "defaultSortColumnId": "colRequestedDate",
-                  "defaultSortOrder": "DESCENDING",
                   "rows": "<% comsAssignableRoles.data.filter(r => { r.status == 'Pending ISC Review' && (empty(queryParams.view) || (queryParams.view == 'aaa' ? r.roleName.startsWith('Organizations and Roles Assignment Administrator') : !r.roleName.startsWith('Organizations and Roles Assignment Administrator'))) }) %>",
                   "rowVariableName": "role",
                   "enabled": false,
@@ -185,7 +177,7 @@
                       "sortableAndFilterable": "true",
                       "cellTemplate": {
                         "type": "richText",
-                        "value": "<% role.status == 'Pending ISC Review' ? '<span style=\"color:#92400e;font-weight:600;font-size:11px\">⏳ Pending ISC Review</span>' : role.status == 'Approved' ? '<span style=\"color:#065f46;font-weight:600;font-size:11px\">✓ Approved</span>' : role.status == 'Denied' ? '<span style=\"color:#991b1b;font-weight:600;font-size:11px\">✗ Denied</span>' : role.status == 'Inactive' ? '<span style=\"color:#6b7280;font-weight:600;font-size:11px\">○ Inactive</span>' : role.status ?? '' %>"
+                        "value": "<% role.status == 'Pending ISC Review' ? '<span style=\"color:#92400e;font-weight:600;font-size:11px\">\u23f3 Pending ISC Review</span>' : role.status == 'Approved' ? '<span style=\"color:#065f46;font-weight:600;font-size:11px\">\u2713 Approved</span>' : role.status == 'Denied' ? '<span style=\"color:#991b1b;font-weight:600;font-size:11px\">\u2717 Denied</span>' : role.status == 'Inactive' ? '<span style=\"color:#6b7280;font-weight:600;font-size:11px\">\u25cb Inactive</span>' : role.status ?? '' %>"
                       }
                     },
                     {
@@ -314,9 +306,17 @@
                         ]
                       }
                     }
-                  ]
+                  ],
+                  "_defaultSortColumnId": "colRequestedDate",
+                  "_defaultSortOrder": "DESCENDING"
                 }
-              ]
+              ],
+              "_layout": {
+                "density": "medium",
+                "alignment": "left",
+                "horizontalSizing": "stretch",
+                "labelPosition": "top"
+              }
             }
           ]
         }

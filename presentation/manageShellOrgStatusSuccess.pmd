@@ -18,18 +18,12 @@
               "type": "fieldSet",
               "id": "successFieldSet",
               "title": "Status Updated Successfully",
-              "layout": {
-                "density": "medium",
-                "alignment": "left",
-                "horizontalSizing": "stretch",
-                "labelPosition": "top"
-              },
               "children": [
                 {
                   "type": "richText",
                   "id": "successMessage",
                   "enabled": false,
-                  "value": "<span style=\"color:#059669;font-size:11px;font-weight:700\">✓ </span><span style=\"color:#065f46;font-size:11px\">The organization status has been updated successfully.</span>"
+                  "value": "<span style=\"color:#059669;font-size:11px;font-weight:700\">\u2713 </span><span style=\"color:#065f46;font-size:11px\">The organization status has been updated successfully.</span>"
                 },
                 {
                   "type": "readOnlyText",
@@ -43,17 +37,19 @@
                   "label": "New Status",
                   "value": "<% queryParams.currentStatus == 'Active' ? 'Inactive' : 'Active' %>"
                 }
-              ]
+              ],
+              "_layout": {
+                "density": "medium",
+                "alignment": "left",
+                "horizontalSizing": "stretch",
+                "labelPosition": "top"
+              }
             }
           ]
         },
         {
           "type": "layoutSection",
           "id": "navSection",
-          "layout": {
-            "alignment": "left",
-            "labelPosition": "top"
-          },
           "children": [
             {
               "type": "button",
@@ -65,13 +61,17 @@
             },
             {
               "type": "button",
-              "label": "← Home",
+              "label": "\u2190 Home",
               "taskReference": {
                 "taskId": "home"
               },
               "action": "LINK"
             }
-          ]
+          ],
+          "_layout": {
+            "alignment": "left",
+            "labelPosition": "top"
+          }
         }
       ]
     },

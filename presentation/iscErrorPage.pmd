@@ -22,12 +22,6 @@
               "type": "fieldSet",
               "id": "errorFieldSet",
               "title": "Access Restricted",
-              "layout": {
-                "density": "medium",
-                "alignment": "left",
-                "horizontalSizing": "stretch",
-                "labelPosition": "top"
-              },
               "children": [
                 {
                   "type": "richText",
@@ -35,7 +29,13 @@
                   "enabled": false,
                   "value": "<span style=\"color:#374151;font-size:13px\">This page is only available to ISC Security Administrators. If you have any questions, please raise an Incident Ticket with 'ISC Service Delivery'.</span>"
                 }
-              ]
+              ],
+              "_layout": {
+                "density": "medium",
+                "alignment": "left",
+                "horizontalSizing": "stretch",
+                "labelPosition": "top"
+              }
             }
           ]
         },
@@ -50,7 +50,7 @@
                 "taskId": "home"
               },
               "action": "LINK",
-              "tooltip": "Return to the ECO-COMS home page."
+              "_tooltip": "Return to the ECO-COMS home page."
             }
           ]
         }

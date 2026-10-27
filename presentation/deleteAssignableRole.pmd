@@ -137,7 +137,7 @@
           "children": [
             {
               "type": "button",
-              "label": "← My Role Requests",
+              "label": "\u2190 My Role Requests",
               "taskReference": {
                 "taskId": "assignableRoleManagerView"
               },
@@ -147,7 +147,7 @@
             },
             {
               "type": "button",
-              "label": "← Admin Provisioning",
+              "label": "\u2190 Admin Provisioning",
               "taskReference": {
                 "taskId": "adminProvisioningView"
               },
@@ -177,20 +177,12 @@
               "type": "fieldSet",
               "id": "pendingRolesFieldSet",
               "title": "Pending Assignable Role Requests",
-              "layout": {
-                "density": "medium",
-                "alignment": "left",
-                "horizontalSizing": "stretch",
-                "labelPosition": "top"
-              },
               "children": [
                 {
                   "type": "grid",
                   "gridType": "LIST",
                   "multiViewStylingEnabled": true,
                   "id": "pendingRolesGrid",
-                  "defaultSortColumnId": "colRequestedDate",
-                  "defaultSortOrder": "DESCENDING",
                   "label": "Pending Assignable Role Requests",
                   "rows": "<% comsAssignableRoles.data.filter(r => { r.status == 'Pending ISC Review' && (empty(queryParams.view) || (queryParams.view == 'aaa' ? r.roleName.startsWith('Organizations and Roles Assignment Administrator') : !r.roleName.startsWith('Organizations and Roles Assignment Administrator'))) }) %>",
                   "rowVariableName": "role",
@@ -224,7 +216,6 @@
                       "cellTemplate": {
                         "type": "instanceList",
                         "view": true,
-                        "relatedTask": true,
                         "instanceList": [
                           {
                             "descriptor": "<% role.shellOrgCode ?? role.application ?? '' %>",
@@ -253,7 +244,6 @@
                       "cellTemplate": {
                         "type": "instanceList",
                         "view": true,
-                        "relatedTask": true,
                         "instanceList": [
                           {
                             "descriptor": "<% role.workdayRoleId ?? '' %>",
@@ -270,7 +260,6 @@
                       "cellTemplate": {
                         "type": "instanceList",
                         "view": true,
-                        "relatedTask": true,
                         "instanceList": [
                           {
                             "descriptor": "<% role.enabledForOrganizationTypes ?? 'Academic Unit - University of British Columbia' %>",
@@ -299,7 +288,6 @@
                         "type": "instanceList",
                         "id": "colPositionsList",
                         "view": true,
-                        "relatedTask": true,
                         "enabled": false,
                         "values": "<% empty(role.positions) ? [] : positions.data.filter(p => { role.positions.contains(p.id) }) %>",
                         "widKey": "id"
@@ -313,7 +301,6 @@
                       "cellTemplate": {
                         "type": "instanceList",
                         "view": true,
-                        "relatedTask": true,
                         "instanceList": [
                           {
                             "descriptor": "<% role.requestedBy.descriptor ?? '' %>",
@@ -333,9 +320,17 @@
                         "enabled": false
                       }
                     }
-                  ]
+                  ],
+                  "_defaultSortColumnId": "colRequestedDate",
+                  "_defaultSortOrder": "DESCENDING"
                 }
-              ]
+              ],
+              "_layout": {
+                "density": "medium",
+                "alignment": "left",
+                "horizontalSizing": "stretch",
+                "labelPosition": "top"
+              }
             }
           ]
         },
@@ -347,7 +342,7 @@
               "type": "richText",
               "id": "confirmDelete",
               "enabled": false,
-              "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">ℹ </span><span style=\"color:#374151;font-size:11px\">Select a role from the grid above, then click <b>OK</b> to permanently delete the request.</span>"
+              "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">\u2139 </span><span style=\"color:#374151;font-size:11px\">Select a role from the grid above, then click <b>OK</b> to permanently delete the request.</span>"
             },
             {
               "type": "fieldSet",
@@ -365,11 +360,11 @@
                   "type": "richText",
                   "id": "deleteWarning",
                   "enabled": false,
-                  "value": "<span style=\"color:#dc2626;font-size:11px;font-weight:700\">⚠ </span><span style=\"color:#991b1b;font-size:11px\"><b>Warning:</b> This action permanently deletes the selected role request and cannot be undone. Click OK to confirm.</span>"
+                  "value": "<span style=\"color:#dc2626;font-size:11px;font-weight:700\">\u26a0 </span><span style=\"color:#991b1b;font-size:11px\"><b>Warning:</b> This action permanently deletes the selected role request and cannot be undone. Click OK to confirm.</span>"
                 }
               ],
               "title": "Confirm Delete",
-              "layout": {
+              "_layout": {
                 "density": "medium",
                 "alignment": "left",
                 "horizontalSizing": "fixed",
@@ -392,7 +387,7 @@
     "standardEditButtonsHidden": true
   },
   "onSubmit": "<%\n  let valid = true;\n  if (empty(queryParams.roleId)) {\n    valid = false;\n  }\n  valid;\n%>",
-  "onSuccess": {
+  "_onSuccess": {
     "taskReference": {
       "taskId": "deleteAssignableRole"
     }

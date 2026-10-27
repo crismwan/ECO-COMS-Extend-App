@@ -9,7 +9,7 @@
       "type": "title",
       "label": "Functional Unit Hierarchy Management",
       "enabled": true,
-      "textAlign": "center"
+      "_textAlign": "center"
     },
     "body": {
       "type": "basicFormLayout",

@@ -18,12 +18,6 @@
               "type": "fieldSet",
               "id": "successFieldSet",
               "title": "Pattern Created Successfully",
-              "layout": {
-                "density": "medium",
-                "alignment": "left",
-                "horizontalSizing": "stretch",
-                "labelPosition": "top"
-              },
               "children": [
                 {
                   "type": "richText",
@@ -36,7 +30,13 @@
                   "id": "patternNameDisplay",
                   "value": "<% flowVariables.patternName ?? '' %>"
                 }
-              ]
+              ],
+              "_layout": {
+                "density": "medium",
+                "alignment": "left",
+                "horizontalSizing": "stretch",
+                "labelPosition": "top"
+              }
             }
           ]
         },
@@ -62,7 +62,7 @@
             },
             {
               "type": "button",
-              "label": "← Home",
+              "label": "\u2190 Home",
               "taskReference": {
                 "taskId": "home"
               },

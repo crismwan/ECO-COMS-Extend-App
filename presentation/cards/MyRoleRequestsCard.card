@@ -8,7 +8,7 @@
   "body": {
     "type": "simpleCard",
     "value": "ASSIGNABLE ROLES",
-    "color": "#0055B3"
+    "_color": "#0055B3"
   },
   "footer": [
     {

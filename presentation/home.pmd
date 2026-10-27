@@ -4,7 +4,6 @@
     "body": {
       "type": "hub",
       "label": "ECO-COMS",
-      "color": "#002145",
       "icon": "wd-accent-home",
       "initialTask": {
         "taskId": "landingPage"
@@ -16,8 +15,8 @@
             "taskId": "landingPage"
           },
           "label": "RBAC Hub",
-          "color": "#002145",
-          "icon": "wd-accent-home"
+          "icon": "wd-accent-home",
+          "_color": "#002145"
         },
         {
           "type": "item",
@@ -25,10 +24,11 @@
             "taskId": "fuhLandingPage"
           },
           "label": "FUH Administration",
-          "color": "#002145",
-          "icon": "wd-accent-worksheets"
+          "icon": "wd-accent-worksheets",
+          "_color": "#002145"
         }
-      ]
+      ],
+      "_color": "#002145"
     },
     "footer": {
       "type": "footer",

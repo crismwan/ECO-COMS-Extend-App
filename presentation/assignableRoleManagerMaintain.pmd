@@ -252,7 +252,7 @@
           "children": [
             {
               "type": "button",
-              "label": "← Home",
+              "label": "\u2190 Home",
               "taskReference": {
                 "taskId": "home"
               },
@@ -261,7 +261,7 @@
             },
             {
               "type": "button",
-              "label": "← Pending ISC Requests",
+              "label": "\u2190 Pending ISC Requests",
               "taskReference": {
                 "taskId": "iscRoleRequestsView"
               },
@@ -270,7 +270,7 @@
             },
             {
               "type": "button",
-              "label": "← Admin Provisioning",
+              "label": "\u2190 Admin Provisioning",
               "taskReference": {
                 "taskId": "adminProvisioningView"
               },
@@ -336,7 +336,7 @@
                 }
               ],
               "title": "ISC Action",
-              "layout": {
+              "_layout": {
                 "density": "medium",
                 "alignment": "left",
                 "horizontalSizing": "fixed",
@@ -399,7 +399,7 @@
                 }
               ],
               "title": "Role Details",
-              "layout": {
+              "_layout": {
                 "density": "medium",
                 "alignment": "left",
                 "horizontalSizing": "fixed",

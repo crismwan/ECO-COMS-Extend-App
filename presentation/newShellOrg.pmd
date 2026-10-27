@@ -117,7 +117,7 @@
                 }
               ],
               "title": "About this page",
-              "layout": {
+              "_layout": {
                 "density": "medium",
                 "alignment": "left",
                 "horizontalSizing": "stretch",
@@ -164,7 +164,7 @@
                 }
               ],
               "title": "Organization Details",
-              "layout": {
+              "_layout": {
                 "density": "medium",
                 "alignment": "left",
                 "horizontalSizing": "fixed",

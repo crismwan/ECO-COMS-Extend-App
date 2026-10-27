@@ -9,7 +9,7 @@
       "type": "title",
       "label": "Role-Based Access Control (RBAC) Solution",
       "enabled": true,
-      "textAlign": "center"
+      "_textAlign": "center"
     },
     "body": {
       "type": "basicFormLayout",
@@ -22,7 +22,6 @@
             {
               "type": "cardContainer",
               "id": "topCardContainer",
-              "layout": "grid",
               "cards": [
                 {
                   "type": "card",
@@ -36,7 +35,8 @@
                   "type": "card",
                   "cardId": "AdminProvisioningCard"
                 }
-              ]
+              ],
+              "_layout": "grid"
             }
           ]
         },
@@ -47,7 +47,6 @@
             {
               "type": "cardContainer",
               "id": "bottomCardContainer",
-              "layout": "grid",
               "cards": [
                 {
                   "type": "card",
@@ -57,7 +56,8 @@
                   "type": "card",
                   "cardId": "AuditLogCard"
                 }
-              ]
+              ],
+              "_layout": "grid"
             }
           ]
         }
