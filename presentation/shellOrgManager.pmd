@@ -253,8 +253,8 @@
                       "relatedTask": true,
                       "instanceList": [
                         {
-                          "descriptor": "<% pattern.organizationByName.descriptor ?? pattern.code ?? \"\" %>",
-                          "wid": "<% pattern.workdayID ?? \"\" %>"
+                          "descriptor": "<% pattern.descriptor ?? pattern.code ?? \"\" %>",
+                          "wid": "<% pattern.id ?? \"\" %>"
                         }
                       ]
                     }
@@ -294,9 +294,9 @@
                       "taskReference": {
                         "taskId": "manageShellOrgStatus",
                         "parameterBindings": {
-                          "orgId": "<% pattern.workdayID %>",
+                          "orgId": "<% pattern.id ?? \"\" %>",
                           "orgCode": "<% pattern.code %>",
-                          "orgName": "<% pattern.organizationByName.descriptor ?? pattern.code %>",
+                          "orgName": "<% pattern.descriptor ?? pattern.code ?? \"\" %>",
                           "currentStatus": "<% pattern.cf_active1 == true ? 'Active' : 'Inactive' %>"
                         }
                       }
@@ -389,8 +389,8 @@
                       "relatedTask": true,
                       "instanceList": [
                         {
-                          "descriptor": "<% org.organizationByName.descriptor ?? org.code ?? \"\" %>",
-                          "wid": "<% org.workdayID ?? \"\" %>"
+                          "descriptor": "<% org.descriptor ?? org.code ?? \"\" %>",
+                          "wid": "<% org.id ?? \"\" %>"
                         }
                       ]
                     }
@@ -418,9 +418,9 @@
                       "taskReference": {
                         "taskId": "manageShellOrgStatus",
                         "parameterBindings": {
-                          "orgId": "<% org.workdayID %>",
+                          "orgId": "<% org.id ?? \"\" %>",
                           "orgCode": "<% org.code %>",
-                          "orgName": "<% org.organizationByName.descriptor ?? org.code %>",
+                          "orgName": "<% org.descriptor ?? org.code ?? \"\" %>",
                           "currentStatus": "<% org.cf_active1 == true ? 'Active' : 'Inactive' %>"
                         }
                       }
@@ -473,8 +473,8 @@
                       "relatedTask": true,
                       "instanceList": [
                         {
-                          "descriptor": "<% org.organizationByName.descriptor ?? org.code ?? \"\" %>",
-                          "wid": "<% org.workdayID ?? \"\" %>"
+                          "descriptor": "<% org.descriptor ?? org.code ?? \"\" %>",
+                          "wid": "<% org.id ?? \"\" %>"
                         }
                       ]
                     }
@@ -502,9 +502,9 @@
                       "taskReference": {
                         "taskId": "manageShellOrgStatus",
                         "parameterBindings": {
-                          "orgId": "<% org.workdayID %>",
+                          "orgId": "<% org.id ?? \"\" %>",
                           "orgCode": "<% org.code %>",
-                          "orgName": "<% org.organizationByName.descriptor ?? org.code %>",
+                          "orgName": "<% org.descriptor ?? org.code ?? \"\" %>",
                           "currentStatus": "<% org.cf_active1 == true ? 'Active' : 'Inactive' %>"
                         }
                       }
