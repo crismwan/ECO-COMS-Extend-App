@@ -537,7 +537,8 @@
                     }
                   ],
                   "multiSelect": false,
-                  "onSearch": "<% instanceListQuery.setValue(event.query); fuhSearch.data.map(o => { {'id': o.workdayID, 'descriptor': o.organization1.descriptor} }) %>"
+                  "searchEndPoint": "<% endpoints.fuhSearch %>",
+                  "searchResultValues": "<% fuhSearch.data.map(o => { {'id': o.workdayID, 'descriptor': o.organization1.descriptor} }) %>"
                 },
                 {
                   "type": "instanceList",
@@ -557,7 +558,8 @@
                     }
                   ],
                   "multiSelect": false,
-                  "onSearch": "<% instanceListQuery.setValue(event.query); academicUnitsSearch.data.map(o => { {'id': o.workdayID, 'descriptor': o.academicUnit.descriptor} }) %>"
+                  "searchEndPoint": "<% endpoints.academicUnitsSearch %>",
+                  "searchResultValues": "<% academicUnitsSearch.data.map(o => { {'id': o.workdayID, 'descriptor': o.academicUnit.descriptor} }) %>"
                 },
                 {
                   "type": "text",
