@@ -545,28 +545,6 @@
         "children": [
           {
             "type": "fieldSet",
-            "id": "roleFilterFieldSet",
-            "title": "Filter",
-            "layout": {
-              "density": "high",
-              "alignment": "left",
-              "horizontalSizing": "stretch",
-              "labelPosition": "top"
-            },
-            "children": [
-              {
-                "type": "instanceList",
-                "id": "roleFilter",
-                "label": "Filter by Role",
-                "multiSelect": false,
-                "required": false,
-                "instanceList": "<% shellRoles.data.map(r => { {'id': r.role.id, 'descriptor': r.role.descriptor} }) %>",
-                "selectedValues": "<% [] %>"
-              }
-            ]
-          },
-          {
-            "type": "fieldSet",
             "id": "roleAssignmentsFieldSet",
             "title": "Shell Role Assignments",
             "layout": {
