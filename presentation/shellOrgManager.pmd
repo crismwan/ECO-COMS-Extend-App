@@ -251,12 +251,8 @@
                       "type": "instanceList",
                       "view": true,
                       "relatedTask": true,
-                      "instanceList": [
-                        {
-                          "descriptor": "<% pattern.organizationByName.descriptor ?? pattern.code ?? \"\" %>",
-                          "wid": "<% pattern.workdayID ?? \"\" %>"
-                        }
-                      ]
+                      "values": "<% [pattern] %>",
+                      "widKey": "workdayID"
                     }
                   },
                   {
@@ -387,12 +383,8 @@
                       "type": "instanceList",
                       "view": true,
                       "relatedTask": true,
-                      "instanceList": [
-                        {
-                          "descriptor": "<% org.organizationByName.descriptor ?? org.code ?? \"\" %>",
-                          "wid": "<% org.workdayID ?? \"\" %>"
-                        }
-                      ]
+                      "values": "<% [org] %>",
+                      "widKey": "workdayID"
                     }
                   },
                   {
@@ -471,12 +463,8 @@
                       "type": "instanceList",
                       "view": true,
                       "relatedTask": true,
-                      "instanceList": [
-                        {
-                          "descriptor": "<% org.organizationByName.descriptor ?? org.code ?? \"\" %>",
-                          "wid": "<% org.workdayID ?? \"\" %>"
-                        }
-                      ]
+                      "values": "<% [org] %>",
+                      "widKey": "workdayID"
                     }
                   },
                   {
