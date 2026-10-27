@@ -352,6 +352,17 @@ jobs:
         run: |
           set -euo pipefail
           APP_REF_ID=ecocomsphase_xclw_cm_sync2_vmzvxm
-          echo "Deploying ${APP_REF_ID} version ${VERSION_ID} to ${TENANT_ALIAS}"
+          echo "=== Deploy debug info ==="
+          echo "APP_REF_ID: ${APP_REF_ID}"
+          echo "TENANT_ALIAS: ${TENANT_ALIAS}"
+          echo "VERSION_ID from env: '${VERSION_ID:-<EMPTY>}'"
+          echo "WDCLI_VERSION_ID: '${WDCLI_VERSION_ID:-<EMPTY>}'"
           echo "WDCLI_TENANT_TOKEN length: ${#WDCLI_TENANT_TOKEN}"
-          wdcli app deploy "${APP_REF_ID}" --tenant-alias "${TENANT_ALIAS}"
+          echo "WDCLI_ORG_UUID: '${WDCLI_ORG_UUID:-<EMPTY>}'"
+          echo "WDCLI_APP_UUID: '${WDCLI_APP_UUID:-<EMPTY>}'"
+          echo "=== Running wdcli app deploy ==="
+          wdcli app deploy "${APP_REF_ID}" --tenant-alias "${TENANT_ALIAS}" 2>&1 || {
+            EXIT=$?
+            echo "=== wdcli deploy FAILED with exit code ${EXIT} ==="
+            exit ${EXIT}
+          }
