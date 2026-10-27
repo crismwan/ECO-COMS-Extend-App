@@ -71,49 +71,56 @@
     "body": {
       "type": "basicFormLayout",
       "id": "shellOrgManagerForm",
-      "sections": []
+      "sections": [
+        {
+          "type": "layoutSection",
+          "id": "navSection",
+          "children": [
+            {
+              "type": "section",
+              "id": "topHeaderBarSection",
+              "horizontal": false,
+              "layout": {
+                "density": "high",
+                "alignment": "left",
+                "horizontalSizing": "stretch",
+                "labelPosition": "top"
+              },
+              "children": [
+                {
+                  "type": "button",
+                  "id": "backToApplicationsBtn",
+                  "label": "← Back to Applications",
+                  "taskReference": {"taskId": "shellOrgManager"},
+                  "action": "LINK",
+                  "suppressDiscardDialog": true,
+                  "visible": "<% !empty(queryParams.appCode) %>"
+                },
+                {
+                  "type": "button",
+                  "id": "backToHomeBtn",
+                  "label": "← Home",
+                  "taskReference": {"taskId": "home"},
+                  "action": "LINK",
+                  "suppressDiscardDialog": true,
+                  "visible": "<% empty(queryParams.appCode) %>"
+                },
+                {
+                  "type": "readOnlyText",
+                  "id": "pageSubtitle",
+                  "value": "<% empty(queryParams.appCode) ? 'Select an application to manage its shell orgs and patterns.' : (queryParams.appCode ?? '') + (empty(queryParams.appName) ? '' : ' · ' + (queryParams.appName ?? '')) %>"
+                }
+              ]
+            }
+          ]
+        }
+      ]
     },
     "tabs": [
       {
         "type": "section",
         "label": "Application Patterns",
         "children": [
-          {
-            "type": "section",
-            "id": "navBar1",
-            "horizontal": false,
-            "layout": {
-              "density": "high",
-              "alignment": "left",
-              "horizontalSizing": "stretch",
-              "labelPosition": "top"
-            },
-            "children": [
-              {
-                "type": "button",
-                "id": "backToApplicationsBtn1",
-                "label": "← Back to Applications",
-                "taskReference": {"taskId": "shellOrgManager"},
-                "action": "LINK",
-                "suppressDiscardDialog": true,
-                "visible": "<% !empty(queryParams.appCode) %>"
-              },
-              {
-                "type": "button",
-                "id": "backToHomeBtn1",
-                "label": "← Home",
-                "taskReference": {"taskId": "home"},
-                "action": "LINK",
-                "suppressDiscardDialog": true,
-                "visible": "<% empty(queryParams.appCode) %>"
-              },
-              {
-                "type": "readOnlyText",
-                "id": "pageSubtitle1",
-                "value": "<% empty(queryParams.appCode) ? 'Select an application to manage its shell orgs and patterns.' : (queryParams.appCode ?? '') + (empty(queryParams.appName) ? '' : ' · ' + (queryParams.appName ?? '')) %>"
-              }
-            ]
-          },
           {
             "type": "fieldSet",
             "id": "appsFieldSet",
@@ -306,42 +313,6 @@
         "type": "section",
         "label": "Application Shell Organizations",
         "children": [
-          {
-            "type": "section",
-            "id": "navBar2",
-            "horizontal": false,
-            "layout": {
-              "density": "high",
-              "alignment": "left",
-              "horizontalSizing": "stretch",
-              "labelPosition": "top"
-            },
-            "children": [
-              {
-                "type": "button",
-                "id": "backToApplicationsBtn2",
-                "label": "← Back to Applications",
-                "taskReference": {"taskId": "shellOrgManager"},
-                "action": "LINK",
-                "suppressDiscardDialog": true,
-                "visible": "<% !empty(queryParams.appCode) %>"
-              },
-              {
-                "type": "button",
-                "id": "backToHomeBtn2",
-                "label": "← Home",
-                "taskReference": {"taskId": "home"},
-                "action": "LINK",
-                "suppressDiscardDialog": true,
-                "visible": "<% empty(queryParams.appCode) %>"
-              },
-              {
-                "type": "readOnlyText",
-                "id": "pageSubtitle2",
-                "value": "<% empty(queryParams.appCode) ? 'Select an application to manage its shell orgs and patterns.' : (queryParams.appCode ?? '') + (empty(queryParams.appName) ? '' : ' · ' + (queryParams.appName ?? '')) %>"
-              }
-            ]
-          },
           {
             "type": "richText",
             "id": "shellOrgsAppWarning",
@@ -558,42 +529,6 @@
         "label": "Add New Organization",
         "children": [
           {
-            "type": "section",
-            "id": "navBar3",
-            "horizontal": false,
-            "layout": {
-              "density": "high",
-              "alignment": "left",
-              "horizontalSizing": "stretch",
-              "labelPosition": "top"
-            },
-            "children": [
-              {
-                "type": "button",
-                "id": "backToApplicationsBtn3",
-                "label": "← Back to Applications",
-                "taskReference": {"taskId": "shellOrgManager"},
-                "action": "LINK",
-                "suppressDiscardDialog": true,
-                "visible": "<% !empty(queryParams.appCode) %>"
-              },
-              {
-                "type": "button",
-                "id": "backToHomeBtn3",
-                "label": "← Home",
-                "taskReference": {"taskId": "home"},
-                "action": "LINK",
-                "suppressDiscardDialog": true,
-                "visible": "<% empty(queryParams.appCode) %>"
-              },
-              {
-                "type": "readOnlyText",
-                "id": "pageSubtitle3",
-                "value": "<% empty(queryParams.appCode) ? 'Select an application to manage its shell orgs and patterns.' : (queryParams.appCode ?? '') + (empty(queryParams.appName) ? '' : ' · ' + (queryParams.appName ?? '')) %>"
-              }
-            ]
-          },
-          {
             "type": "richText",
             "id": "addOrgNote",
             "enabled": false,
@@ -631,42 +566,6 @@
         "type": "section",
         "label": "Manage Role Assignments",
         "children": [
-          {
-            "type": "section",
-            "id": "navBar4",
-            "horizontal": false,
-            "layout": {
-              "density": "high",
-              "alignment": "left",
-              "horizontalSizing": "stretch",
-              "labelPosition": "top"
-            },
-            "children": [
-              {
-                "type": "button",
-                "id": "backToApplicationsBtn4",
-                "label": "← Back to Applications",
-                "taskReference": {"taskId": "shellOrgManager"},
-                "action": "LINK",
-                "suppressDiscardDialog": true,
-                "visible": "<% !empty(queryParams.appCode) %>"
-              },
-              {
-                "type": "button",
-                "id": "backToHomeBtn4",
-                "label": "← Home",
-                "taskReference": {"taskId": "home"},
-                "action": "LINK",
-                "suppressDiscardDialog": true,
-                "visible": "<% empty(queryParams.appCode) %>"
-              },
-              {
-                "type": "readOnlyText",
-                "id": "pageSubtitle4",
-                "value": "<% empty(queryParams.appCode) ? 'Select an application to manage its shell orgs and patterns.' : (queryParams.appCode ?? '') + (empty(queryParams.appName) ? '' : ' · ' + (queryParams.appName ?? '')) %>"
-              }
-            ]
-          },
           {
             "type": "fieldSet",
             "id": "roleAssignmentsFieldSet",
