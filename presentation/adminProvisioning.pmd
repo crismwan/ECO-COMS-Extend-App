@@ -33,45 +33,6 @@
       "bestEffort": "true"
     },
     {
-      "name": "customOrganizationsFUHSearch",
-      "baseUrlType": "workday-wql",
-      "url": "<% 'data?query=SELECT workdayID, organization1, code FROM customOrganizations WHERE type1 in (b40d8b016367100175b147f364840000) AND organization1 contains \\'' + instanceListQuery + '\\'' %>",
-      "authType": "sso",
-      "isCollection": true,
-      "bestEffort": "true",
-      "deferred": "true"
-    },
-    {
-      "name": "academicUnitsSearch",
-      "baseUrlType": "workday-wql",
-      "url": "<% 'data?query=' + string:pathEncode('SELECT workdayID, academicUnit FROM academicUnits WHERE inactive = false AND academicUnit.descriptor contains \\'' + instanceListQuery + '\\'') %>",
-      "authType": "sso",
-      "isCollection": true,
-      "bestEffort": "true",
-      "deferred": "true",
-      "exclude": "<% empty instanceListQuery %>"
-    },
-    {
-      "name": "fuhSearch",
-      "baseUrlType": "workday-wql",
-      "url": "<% 'data?query=' + string:pathEncode('SELECT workdayID, organization1 FROM customOrganizations WHERE organization1.descriptor contains \\'' + instanceListQuery + '\\'') %>",
-      "authType": "sso",
-      "isCollection": true,
-      "bestEffort": "true",
-      "deferred": "true",
-      "exclude": "<% empty instanceListQuery %>"
-    },
-    {
-      "bestEffort": "true",
-      "exclude": "<% empty instanceListQuery %>",
-      "isCollection": true,
-      "name": "posSearch",
-      "baseUrlType": "workday-wql",
-      "url": "<% 'data?query=' + string:pathEncode('SELECT workdayID, position_PositionManagement FROM allPositions WHERE cf_PositionID contains \\'' + instanceListQuery + '\\'') %>",
-      "authType": "sso",
-      "deferred": "true"
-    },
-    {
       "name": "delSearch",
       "baseUrlType": "workday-wql",
       "url": "<% 'data?query=' + string:pathEncode('SELECT role FROM assignableRoles WHERE roleName contains \\'' + instanceListQuery + '\\'') %>",
@@ -93,15 +54,6 @@
       }
     },
     {
-      "name": "auSearch",
-      "baseUrlType": "workday-academic",
-      "url": "<% 'academicUnits?search=' + instanceListQuery %>",
-      "authType": "sso",
-      "isCollection": true,
-      "bestEffort": "true",
-      "deferred": "true"
-    },
-    {
       "name": "customOrganizationsFUH",
       "baseUrlType": "workday-wql",
       "url": "data",
@@ -110,6 +62,17 @@
       "bestEffort": "true",
       "wqlQuery": {
         "queryId": "customOrganizationsFUH"
+      }
+    },
+    {
+      "name": "allPositions",
+      "baseUrlType": "workday-wql",
+      "url": "data",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "wqlQuery": {
+        "queryId": "allPositions"
       }
     },
     {
@@ -570,17 +533,13 @@
                   "label": "Positions",
                   "required": false,
                   "multiSelect": true,
-                  "values": "<% [] %>",
+                  "values": "<% allPositions.data.map(o => { {'id': o.workdayID, 'descriptor': o.position_PositionManagement.descriptor} }) %>",
                   "valuesOut": [
                     {
                       "value": "<% self.value.join(',') %>",
                       "valueOutBinding": "postAssignableRole.positions"
                     }
-                  ],
-                  "searchEndPoint": "<% endpoints.posSearch %>",
-                  "searchResultValues": "<% posSearch.data %>",
-                  "idKey": "workdayID",
-                  "displayKey": "position_PositionManagement.descriptor"
+                  ]
                 },
                 {
                   "type": "richText",
