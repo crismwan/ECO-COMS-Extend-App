@@ -291,7 +291,7 @@
                 "type": "richText",
                 "id": "footerText0",
                 "enabled": false,
-                "value": "<div style=\"text-align:center\"><span style=\"color:#002145;font-size:11px;font-weight:700;letter-spacing:2px\">ECO-COMS</span><span style=\"color:#6b7280;font-size:11px\"> \u00b7 </span><span style=\"color:#002145;font-size:11px\">University of British Columbia</span><span style=\"color:#6b7280;font-size:11px\"> \u00b7 </span><span style=\"color:#0055B7;font-size:11px;font-style:italic\">Custom Organization Management System</span></div>"
+                "value": "<div style=\"text-align:center;width:100%\"><span style=\"color:#002145;font-size:11px;font-weight:700;letter-spacing:2px\">ECO-COMS</span><span style=\"color:#6b7280;font-size:11px\"> \u00b7 </span><span style=\"color:#002145;font-size:11px\">University of British Columbia</span><span style=\"color:#6b7280;font-size:11px\"> \u00b7 </span><span style=\"color:#0055B7;font-size:11px;font-style:italic\">Custom Organization Management System</span></div>"
               }
             ]
           }
@@ -501,7 +501,7 @@
                 "type": "richText",
                 "id": "footerText1",
                 "enabled": false,
-                "value": "<div style=\"text-align:center\"><span style=\"color:#002145;font-size:11px;font-weight:700;letter-spacing:2px\">ECO-COMS</span><span style=\"color:#6b7280;font-size:11px\"> \u00b7 </span><span style=\"color:#002145;font-size:11px\">University of British Columbia</span><span style=\"color:#6b7280;font-size:11px\"> \u00b7 </span><span style=\"color:#0055B7;font-size:11px;font-style:italic\">Custom Organization Management System</span></div>"
+                "value": "<div style=\"text-align:center;width:100%\"><span style=\"color:#002145;font-size:11px;font-weight:700;letter-spacing:2px\">ECO-COMS</span><span style=\"color:#6b7280;font-size:11px\"> \u00b7 </span><span style=\"color:#002145;font-size:11px\">University of British Columbia</span><span style=\"color:#6b7280;font-size:11px\"> \u00b7 </span><span style=\"color:#0055B7;font-size:11px;font-style:italic\">Custom Organization Management System</span></div>"
               }
             ]
           }
@@ -534,7 +534,7 @@
                 "type": "richText",
                 "id": "footerText2",
                 "enabled": false,
-                "value": "<div style=\"text-align:center\"><span style=\"color:#002145;font-size:11px;font-weight:700;letter-spacing:2px\">ECO-COMS</span><span style=\"color:#6b7280;font-size:11px\"> \u00b7 </span><span style=\"color:#002145;font-size:11px\">University of British Columbia</span><span style=\"color:#6b7280;font-size:11px\"> \u00b7 </span><span style=\"color:#0055B7;font-size:11px;font-style:italic\">Custom Organization Management System</span></div>"
+                "value": "<div style=\"text-align:center;width:100%\"><span style=\"color:#002145;font-size:11px;font-weight:700;letter-spacing:2px\">ECO-COMS</span><span style=\"color:#6b7280;font-size:11px\"> \u00b7 </span><span style=\"color:#002145;font-size:11px\">University of British Columbia</span><span style=\"color:#6b7280;font-size:11px\"> \u00b7 </span><span style=\"color:#0055B7;font-size:11px;font-style:italic\">Custom Organization Management System</span></div>"
               }
             ]
           }
@@ -661,7 +661,7 @@
                 "type": "richText",
                 "id": "footerText3",
                 "enabled": false,
-                "value": "<div style=\"text-align:center\"><span style=\"color:#002145;font-size:11px;font-weight:700;letter-spacing:2px\">ECO-COMS</span><span style=\"color:#6b7280;font-size:11px\"> \u00b7 </span><span style=\"color:#002145;font-size:11px\">University of British Columbia</span><span style=\"color:#6b7280;font-size:11px\"> \u00b7 </span><span style=\"color:#0055B7;font-size:11px;font-style:italic\">Custom Organization Management System</span></div>"
+                "value": "<div style=\"text-align:center;width:100%\"><span style=\"color:#002145;font-size:11px;font-weight:700;letter-spacing:2px\">ECO-COMS</span><span style=\"color:#6b7280;font-size:11px\"> \u00b7 </span><span style=\"color:#002145;font-size:11px\">University of British Columbia</span><span style=\"color:#6b7280;font-size:11px\"> \u00b7 </span><span style=\"color:#0055B7;font-size:11px;font-style:italic\">Custom Organization Management System</span></div>"
               }
             ]
           }
