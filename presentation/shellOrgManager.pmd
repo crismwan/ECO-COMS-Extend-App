@@ -297,7 +297,11 @@
                           "orgId": "<% pattern.workdayID ?? \"\" %>",
                           "orgCode": "<% pattern.code %>",
                           "orgName": "<% pattern.organizationByName.descriptor ?? pattern.code ?? \"\" %>",
-                          "currentStatus": "<% pattern.cf_active1 == true ? 'Active' : 'Inactive' %>"
+                          "currentStatus": "<% pattern.cf_active1 == true ? 'Active' : 'Inactive' %>",
+                          "effectiveDate": "<% date:now().format(\"yyyy-MM-dd\") %>",
+                          "patternName": "<% pattern.code %>",
+                          "orgType": "<% queryParams.orgType ?? '' %>",
+                          "comsAppId": "<% queryParams.appCode ?? '' %>"
                         }
                       }
                     }
@@ -421,7 +425,11 @@
                           "orgId": "<% org.workdayID ?? \"\" %>",
                           "orgCode": "<% org.code %>",
                           "orgName": "<% org.organizationByName.descriptor ?? org.code ?? \"\" %>",
-                          "currentStatus": "<% org.cf_active1 == true ? 'Active' : 'Inactive' %>"
+                          "currentStatus": "<% org.cf_active1 == true ? 'Active' : 'Inactive' %>",
+                          "effectiveDate": "<% date:now().format(\"yyyy-MM-dd\") %>",
+                          "patternName": "<% org.code %>",
+                          "orgType": "<% queryParams.orgType ?? '' %>",
+                          "comsAppId": "<% queryParams.appCode ?? '' %>"
                         }
                       }
                     }
@@ -505,7 +513,11 @@
                           "orgId": "<% org.workdayID ?? \"\" %>",
                           "orgCode": "<% org.code %>",
                           "orgName": "<% org.organizationByName.descriptor ?? org.code ?? \"\" %>",
-                          "currentStatus": "<% org.cf_active1 == true ? 'Active' : 'Inactive' %>"
+                          "currentStatus": "<% org.cf_active1 == true ? 'Active' : 'Inactive' %>",
+                          "effectiveDate": "<% date:now().format(\"yyyy-MM-dd\") %>",
+                          "patternName": "<% org.code %>",
+                          "orgType": "<% queryParams.orgType ?? '' %>",
+                          "comsAppId": "<% queryParams.appCode ?? '' %>"
                         }
                       }
                     }
