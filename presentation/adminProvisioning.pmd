@@ -537,7 +537,7 @@
                     }
                   ],
                   "multiSelect": false,
-                  "onSearch": "<% customOrganizationsFUH.data.filter(o => { o.organization1.descriptor.contains(event.query) }).map(o => { {'id': o.workdayID, 'descriptor': o.organization1.descriptor} }) %>"
+                  "onSearch": "<% instanceListQuery.setValue(event.query); fuhSearch.data.map(o => { {'id': o.workdayID, 'descriptor': o.organization1.descriptor} }) %>"
                 },
                 {
                   "type": "instanceList",
@@ -557,7 +557,7 @@
                     }
                   ],
                   "multiSelect": false,
-                  "onSearch": "<% academicUnits.data.filter(o => { o.academicUnit.descriptor.contains(event.query) }).map(o => { {'id': o.workdayID, 'descriptor': o.academicUnit.descriptor} }) %>"
+                  "onSearch": "<% instanceListQuery.setValue(event.query); academicUnitsSearch.data.map(o => { {'id': o.workdayID, 'descriptor': o.academicUnit.descriptor} }) %>"
                 },
                 {
                   "type": "text",
