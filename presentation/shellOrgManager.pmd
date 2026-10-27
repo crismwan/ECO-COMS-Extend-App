@@ -545,8 +545,29 @@
         "children": [
           {
             "type": "fieldSet",
+            "id": "roleFilterFieldSet",
+            "title": "Filter",
+            "layout": {
+              "density": "high",
+              "alignment": "left",
+              "horizontalSizing": "stretch",
+              "labelPosition": "top"
+            },
+            "children": [
+              {
+                "type": "instanceList",
+                "id": "roleFilter",
+                "label": "Filter by Role",
+                "multiSelect": false,
+                "required": false,
+                "instanceList": "<% shellRoles.data.map(r => { {'id': r.role.id, 'descriptor': r.role.descriptor} }) %>",
+                "selectedValues": "<% [] %>"
+              }
+            ]
+          },
+          {
+            "type": "fieldSet",
             "id": "roleAssignmentsFieldSet",
-            "visible": "<% !empty(queryParams.appCode) %>",
             "title": "Shell Role Assignments",
             "layout": {
               "density": "medium",
@@ -559,26 +580,26 @@
                 "type": "richText",
                 "id": "roleAssignmentsNote",
                 "enabled": false,
-                "value": "<span style=\"color:#374151;font-size:12px\">Role assignments for shell organizations in this application. Use <b>Manage Positions</b> to add or remove position restrictions from a role assignment.</span>"
+                "value": "<span style=\"color:#374151;font-size:12px\">Each row represents one role assignment to a shell organization. Use <b>Manage Positions</b> to add or remove position restrictions on that assignment.</span>"
               },
               {
                 "type": "richText",
                 "id": "rolesEmptyMsg",
                 "enabled": false,
-                "value": "<span style=\"color:#374151;font-size:12px\">No shell role assignments found for this application.</span>",
-                "visible": "<% !empty(queryParams.appCode) && size(shellRoles.data.filter(r => { r.roleAssignments != null && size(r.roleAssignments.filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith(queryParams.appCode ?? '') })) > 0 })) == 0 %>"
+                "value": "<span style=\"color:#374151;font-size:12px\">No shell role assignments found<% !empty(queryParams.appCode) ? ' for ' + (queryParams.appName ?? queryParams.appCode) : '' %>.</span>",
+                "visible": "<% size(shellRoles.data.flatMap(r => { r.roleAssignments != null ? r.roleAssignments.filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith(empty(queryParams.appCode) ? 'X:' : queryParams.appCode) }) : [] })) == 0 %>"
               },
               {
                 "type": "grid",
                 "gridType": "LIST",
                 "multiViewStylingEnabled": true,
                 "id": "roleAssignmentsGrid",
-                "rows": "<% empty(queryParams.appCode) ? [] : shellRoles.data.filter(r => { r.roleAssignments != null && size(r.roleAssignments.filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith(queryParams.appCode ?? '') })) > 0 }) %>",
-                "rowVariableName": "roleRow",
+                "rows": "<% shellRoles.data.flatMap(r => { r.roleAssignments != null ? r.roleAssignments.filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith(empty(queryParams.appCode) ? 'X:' : queryParams.appCode) }).map(ra => { {'roleId': r.role.id, 'roleName': r.role.descriptor, 'enabledOrgTypes': r.enabledForOrganizationTypes, 'orgId': ra.organization.id, 'orgDescriptor': ra.organization.descriptor, 'workersAssigned': ra.workersAssigned, 'positions': ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions} }) : [] }) %>",
+                "rowVariableName": "ra",
                 "enabled": false,
-                "label": "<% 'Role Assignments for ' + (queryParams.appName ?? queryParams.appCode ?? '') %>",
+                "label": "Role Assignments",
                 "autoPaging": true,
-                "visible": "<% !empty(queryParams.appCode) && size(shellRoles.data.filter(r => { r.roleAssignments != null && size(r.roleAssignments.filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith(queryParams.appCode ?? '') })) > 0 })) > 0 %>",
+                "visible": "<% size(shellRoles.data.flatMap(r => { r.roleAssignments != null ? r.roleAssignments.filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith(empty(queryParams.appCode) ? 'X:' : queryParams.appCode) }) : [] })) > 0 %>",
                 "columns": [
                   {
                     "type": "column",
@@ -588,7 +609,7 @@
                     "sortableAndFilterable": "true",
                     "cellTemplate": {
                       "type": "text",
-                      "value": "<% roleRow.role.descriptor ?? '' %>",
+                      "value": "<% ra.roleName ?? '' %>",
                       "enabled": false
                     }
                   },
@@ -600,7 +621,7 @@
                     "sortableAndFilterable": "true",
                     "cellTemplate": {
                       "type": "text",
-                      "value": "<% roleRow.enabledForOrganizationTypes != null ? roleRow.enabledForOrganizationTypes.map(t => { t.descriptor }).join(', ') : '' %>",
+                      "value": "<% ra.enabledOrgTypes != null ? ra.enabledOrgTypes.map(t => { t.descriptor }).join(', ') : '—' %>",
                       "enabled": false
                     }
                   },
@@ -612,19 +633,7 @@
                     "sortableAndFilterable": "true",
                     "cellTemplate": {
                       "type": "text",
-                      "value": "<% roleRow.roleAssignments != null ? roleRow.roleAssignments.filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith(queryParams.appCode ?? '') }).map(ra => { ra.organization.descriptor }).join('; ') : '' %>",
-                      "enabled": false
-                    }
-                  },
-                  {
-                    "type": "column",
-                    "id": "colPositions",
-                    "columnId": "colPositions",
-                    "label": "Positions",
-                    "sortableAndFilterable": "true",
-                    "cellTemplate": {
-                      "type": "text",
-                      "value": "<% roleRow.roleAssignments != null ? roleRow.roleAssignments.filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith(queryParams.appCode ?? '') }).flatMap(ra => { ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions != null ? ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions.map(p => { p.descriptor }) : [] }).join('; ') : '' %>",
+                      "value": "<% ra.orgDescriptor ?? '' %>",
                       "enabled": false
                     }
                   },
@@ -632,24 +641,51 @@
                     "type": "column",
                     "id": "colAssignedTo",
                     "columnId": "colAssignedTo",
-                    "label": "Assigned To",
+                    "label": "Workers Assigned",
                     "sortableAndFilterable": "true",
                     "cellTemplate": {
                       "type": "text",
-                      "value": "<% roleRow.roleAssignments != null ? roleRow.roleAssignments.filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith(queryParams.appCode ?? '') }).flatMap(ra => { ra.workersAssigned != null ? ra.workersAssigned.map(w => { w.descriptor }) : [] }).join('; ') : '' %>",
+                      "value": "<% ra.workersAssigned != null && size(ra.workersAssigned) > 0 ? ra.workersAssigned.map(w => { w.descriptor }).join(', ') : '—' %>",
                       "enabled": false
+                    }
+                  },
+                  {
+                    "type": "column",
+                    "id": "colPositions",
+                    "columnId": "colPositions",
+                    "label": "Position Restrictions",
+                    "sortableAndFilterable": "true",
+                    "cellTemplate": {
+                      "type": "text",
+                      "value": "<% ra.positions != null && size(ra.positions) > 0 ? ra.positions.map(p => { p.descriptor }).join(', ') : 'None' %>",
+                      "enabled": false
+                    }
+                  },
+                  {
+                    "type": "column",
+                    "id": "colManagePositions",
+                    "columnId": "colManagePositions",
+                    "label": "Manage Positions",
+                    "cellTemplate": {
+                      "type": "button",
+                      "action": "AUXILIARY",
+                      "label": "Manage Positions",
+                      "taskReference": {
+                        "taskId": "manageRolePositions",
+                        "parameterBindings": {
+                          "roleId": "<% ra.roleId %>",
+                          "roleName": "<% ra.roleName %>",
+                          "orgId": "<% ra.orgId %>",
+                          "orgDescriptor": "<% ra.orgDescriptor %>",
+                          "appCode": "<% queryParams.appCode ?? '' %>",
+                          "appName": "<% queryParams.appName ?? '' %>"
+                        }
+                      }
                     }
                   }
                 ]
               }
             ]
-          },
-          {
-            "type": "richText",
-            "id": "rolesSelectAppMsg",
-            "enabled": false,
-            "visible": "<% empty(queryParams.appCode) %>",
-            "value": "<span style=\"color:#6b7280;font-size:13px\">Select an application above to manage its role assignments.</span>"
           },
           {
             "type": "fieldSet",
