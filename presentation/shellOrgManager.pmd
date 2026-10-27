@@ -83,7 +83,7 @@
               "layout": {
                 "density": "high",
                 "alignment": "left",
-                "horizontalSizing": "stretch",
+                "horizontalSizing": "fixed",
                 "labelPosition": "top"
               },
               "children": [
