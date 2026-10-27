@@ -103,6 +103,7 @@
           ],
           "layout": {
             "alignment": "left",
+            "horizontalSizing": "stretch",
             "labelPosition": "top"
           }
         }
@@ -248,6 +249,26 @@
                     "cellTemplate": {
                       "type": "richText",
                       "value": "<% pattern.cf_active1 == true ? '<span style=\"color:#065f46;font-weight:600;font-size:11px\">\u2713 Active</span>' : '<span style=\"color:#6b7280;font-weight:600;font-size:11px\">\u25cb Inactive</span>' %>"
+                    }
+                  },
+                  {
+                    "type": "column",
+                    "id": "colPatternManage",
+                    "columnId": "colPatternManage",
+                    "label": "Manage",
+                    "cellTemplate": {
+                      "type": "button",
+                      "action": "AUXILIARY",
+                      "label": "<% pattern.cf_active1 == true ? 'Inactivate' : 'Activate' %>",
+                      "taskReference": {
+                        "taskId": "manageShellOrgStatus",
+                        "parameterBindings": {
+                          "orgId": "<% pattern.workdayID %>",
+                          "orgCode": "<% pattern.code %>",
+                          "orgName": "<% pattern.organizationByName.descriptor ?? pattern.code %>",
+                          "currentStatus": "<% pattern.cf_active1 == true ? 'Active' : 'Inactive' %>"
+                        }
+                      }
                     }
                   }
                 ]
