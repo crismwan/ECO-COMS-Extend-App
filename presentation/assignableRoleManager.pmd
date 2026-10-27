@@ -38,7 +38,7 @@
     {
       "name": "fuhSearch",
       "baseUrlType": "workday-wql",
-      "url": "<% 'data?query=' + string:pathEncode('SELECT workdayID, organization1 FROM customOrganizations WHERE type1 in (b40d8b016367100175b147f364840000) AND organization1 contains \\'' + instanceListQuery + '\\'') %>",
+      "url": "<% 'data?query=' + string:pathEncode('SELECT workdayID, organization1, code FROM customOrganizations WHERE type1 in (b40d8b016367100175b147f364840000) AND code contains \\'' + instanceListQuery + '\\'') %>",
       "authType": "sso",
       "isCollection": true,
       "bestEffort": "true",
@@ -48,7 +48,7 @@
     {
       "name": "auSearch",
       "baseUrlType": "workday-wql",
-      "url": "<% 'data?query=' + string:pathEncode('SELECT workdayID, academicUnit FROM academicUnits WHERE inactive = false AND academicUnit contains \\'' + instanceListQuery + '\\'') %>",
+      "url": "<% 'data?query=' + string:pathEncode('SELECT workdayID, academicUnit, academicUnitName FROM academicUnits WHERE inactive = false AND academicUnitName contains \\'' + instanceListQuery + '\\'') %>",
       "authType": "sso",
       "isCollection": true,
       "bestEffort": "true",
@@ -58,7 +58,7 @@
     {
       "name": "posSearch",
       "baseUrlType": "workday-wql",
-      "url": "<% 'data?query=' + string:pathEncode('SELECT workdayID, position_PositionManagement FROM allPositions WHERE supervisoryOrganization is not empty AND cf_PositionID contains \\'positionId:\\' AND position_PositionManagement contains \\'' + instanceListQuery + '\\'') %>",
+      "url": "<% 'data?query=' + string:pathEncode('SELECT workdayID, position_PositionManagement FROM allPositions WHERE supervisoryOrganization is not empty AND cf_PositionID contains \\'positionId:\\' AND cf_PositionID contains \\'' + instanceListQuery + '\\'') %>",
       "authType": "sso",
       "isCollection": true,
       "bestEffort": "true",
