@@ -498,7 +498,7 @@
                   "multiSelect": true,
                   "values": "<% [] %>",
                   "searchEndPoint": "<% endpoints.posSearch %>",
-                  "searchResultValues": "<% posSearch.data.map(o => { {'id': o.workdayID, 'descriptor': o.position_PositionManagement.descriptor} }) %>",
+                  "searchResultValues": "<% empty(posSearch.data) ? [] : posSearch.data.map(o => { {'id': o.workdayID, 'descriptor': o.position_PositionManagement.descriptor} }) %>",
                   "onChange": "<%\n            if (empty(self.value)) {\n              self.setError('At least one Position is required.');\n            } else {\n              self.clearError();\n            }\n          %>",
                   "valuesOut": [
                     {
@@ -531,7 +531,7 @@
                   "required": false,
                   "values": "<% [] %>",
                   "searchEndPoint": "<% endpoints.fuhSearch %>",
-                  "searchResultValues": "<% fuhSearch.data.map(o => { {'id': o.workdayID, 'descriptor': o.organization1.descriptor} }) %>",
+                  "searchResultValues": "<% empty(fuhSearch.data) ? [] : fuhSearch.data.map(o => { {'id': o.workdayID, 'descriptor': o.organization1.descriptor} }) %>",
                   "onChange": "<%\n            if (!empty(self.value) && !empty(academicUnitPicker.value)) {\n              self.setError('Cannot select both Functional Unit Hierarchy and Academic Unit.');\n            } else {\n              self.clearError();\n              academicUnitPicker.clearError();\n            }\n            enabledForWidBinding.setValue(!empty(self.value) ? self.value[0] : (!empty(academicUnitPicker.value) ? academicUnitPicker.value[0] : ''));\n            enabledForDisplay.setValue(\n              !empty(self.value) ? self.selectedEntries[0].descriptor :\n              (!empty(academicUnitPicker.value) ? academicUnitPicker.selectedEntries[0].descriptor : 'Academic Unit - University of British Columbia')\n            );\n          %>",
                   "valuesOut": [
                     {
@@ -552,7 +552,7 @@
                   "required": false,
                   "values": "<% [] %>",
                   "searchEndPoint": "<% endpoints.auSearch %>",
-                  "searchResultValues": "<% auSearch.data.map(o => { {'id': o.workdayID, 'descriptor': o.academicUnit.descriptor} }) %>",
+                  "searchResultValues": "<% empty(auSearch.data) ? [] : auSearch.data.map(o => { {'id': o.workdayID, 'descriptor': o.academicUnit.descriptor} }) %>",
                   "onChange": "<%\n            if (!empty(self.value) && !empty(fuhPicker.value)) {\n              self.setError('Cannot select both Academic Unit and Functional Unit Hierarchy.');\n            } else {\n              self.clearError();\n              fuhPicker.clearError();\n            }\n            enabledForWidBinding.setValue(!empty(fuhPicker.value) ? fuhPicker.value[0] : (!empty(self.value) ? self.value[0] : ''));\n            enabledForDisplay.setValue(\n              !empty(fuhPicker.value) ? fuhPicker.selectedEntries[0].descriptor :\n              (!empty(self.value) ? self.selectedEntries[0].descriptor : 'Academic Unit - University of British Columbia')\n            );\n          %>",
                   "valuesOut": [
                     {
