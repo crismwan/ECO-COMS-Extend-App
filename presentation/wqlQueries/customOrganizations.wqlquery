@@ -1,4 +1,4 @@
 {
   "id": "customOrganizations",
-  "query": "SELECT id, descriptor, workdayID, organizationByName, code FROM topLevelOrganizations WHERE code contains 'X:'"
+  "query": "SELECT workdayID, organizationByName, code FROM topLevelOrganizations WHERE code contains 'X:'"
 }

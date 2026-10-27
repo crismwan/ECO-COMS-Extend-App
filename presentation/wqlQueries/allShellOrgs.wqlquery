@@ -1,4 +1,4 @@
 {
   "id": "allShellOrgs",
-  "query": "SELECT id, descriptor, workdayID, organizationByName, code, cf_active1 FROM topLevelOrganizations WHERE code contains 'X:'"
+  "query": "SELECT workdayID, organizationByName, code, cf_active1 FROM topLevelOrganizations WHERE code contains 'X:'"
 }
