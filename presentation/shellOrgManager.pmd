@@ -558,26 +558,26 @@
                 "type": "richText",
                 "id": "roleAssignmentsNote",
                 "enabled": false,
-                "value": "<span style=\"color:#374151;font-size:12px\">Each row represents one role assignment to a shell organization. Use <b>Manage Positions</b> to add or remove position restrictions on that assignment.</span>"
+                "value": "<span style=\"color:#374151;font-size:12px\">Each row represents one role and its shell organization assignments. The <b>Organizations</b> column lists all shell orgs this role is assigned to<% !empty(queryParams.appCode) ? ' for the selected application' : '' %>.</span>"
               },
               {
                 "type": "richText",
                 "id": "rolesEmptyMsg",
                 "enabled": false,
                 "value": "<span style=\"color:#374151;font-size:12px\">No shell role assignments found<% !empty(queryParams.appCode) ? ' for ' + (queryParams.appName ?? queryParams.appCode) : '' %>.</span>",
-                "visible": "<% size(shellRoles.data.flatMap(r => { r.roleAssignments != null ? r.roleAssignments.filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith(empty(queryParams.appCode) ? 'X:' : queryParams.appCode) }) : [] })) == 0 %>"
+                "visible": "<% size(shellRoles.data.filter(r => { r.roleAssignments != null && size(r.roleAssignments.filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith(empty(queryParams.appCode) ? 'X:' : queryParams.appCode) })) > 0 })) == 0 %>"
               },
               {
                 "type": "grid",
                 "gridType": "LIST",
                 "multiViewStylingEnabled": true,
                 "id": "roleAssignmentsGrid",
-                "rows": "<% shellRoles.data.flatMap(r => { r.roleAssignments != null ? r.roleAssignments.filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith(empty(queryParams.appCode) ? 'X:' : queryParams.appCode) }).map(ra => { {'roleId': r.role.id, 'roleName': r.role.descriptor, 'enabledOrgTypes': r.enabledForOrganizationTypes, 'orgId': ra.organization.id, 'orgDescriptor': ra.organization.descriptor, 'workersAssigned': ra.workersAssigned, 'positions': ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions} }) : [] }) %>",
-                "rowVariableName": "ra",
+                "rows": "<% shellRoles.data.filter(r => { r.roleAssignments != null && size(r.roleAssignments.filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith(empty(queryParams.appCode) ? 'X:' : queryParams.appCode) })) > 0 }) %>",
+                "rowVariableName": "r",
                 "enabled": false,
                 "label": "Role Assignments",
                 "autoPaging": true,
-                "visible": "<% size(shellRoles.data.flatMap(r => { r.roleAssignments != null ? r.roleAssignments.filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith(empty(queryParams.appCode) ? 'X:' : queryParams.appCode) }) : [] })) > 0 %>",
+                "visible": "<% size(shellRoles.data.filter(r => { r.roleAssignments != null && size(r.roleAssignments.filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith(empty(queryParams.appCode) ? 'X:' : queryParams.appCode) })) > 0 })) > 0 %>",
                 "columns": [
                   {
                     "type": "column",
@@ -587,7 +587,7 @@
                     "sortableAndFilterable": "true",
                     "cellTemplate": {
                       "type": "text",
-                      "value": "<% ra.roleName ?? '' %>",
+                      "value": "<% r.role.descriptor ?? '' %>",
                       "enabled": false
                     }
                   },
@@ -599,66 +599,32 @@
                     "sortableAndFilterable": "true",
                     "cellTemplate": {
                       "type": "text",
-                      "value": "<% ra.enabledOrgTypes != null ? ra.enabledOrgTypes.map(t => { t.descriptor }).join(', ') : '—' %>",
+                      "value": "<% r.enabledForOrganizationTypes != null ? r.enabledForOrganizationTypes.map(t => { t.descriptor }).join(', ') : '—' %>",
                       "enabled": false
                     }
                   },
                   {
                     "type": "column",
-                    "id": "colAssignmentOrg",
-                    "columnId": "colAssignmentOrg",
-                    "label": "Organization",
+                    "id": "colAssignmentOrgs",
+                    "columnId": "colAssignmentOrgs",
+                    "label": "Organizations",
                     "sortableAndFilterable": "true",
                     "cellTemplate": {
                       "type": "text",
-                      "value": "<% ra.orgDescriptor ?? '' %>",
+                      "value": "<% r.roleAssignments != null ? r.roleAssignments.filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith(empty(queryParams.appCode) ? 'X:' : queryParams.appCode) }).map(ra => { ra.organization.descriptor }).join('; ') : '—' %>",
                       "enabled": false
                     }
                   },
                   {
                     "type": "column",
-                    "id": "colAssignedTo",
-                    "columnId": "colAssignedTo",
-                    "label": "Workers Assigned",
+                    "id": "colAssignmentCount",
+                    "columnId": "colAssignmentCount",
+                    "label": "# Assignments",
                     "sortableAndFilterable": "true",
                     "cellTemplate": {
                       "type": "text",
-                      "value": "<% ra.workersAssigned != null && size(ra.workersAssigned) > 0 ? ra.workersAssigned.map(w => { w.descriptor }).join(', ') : '—' %>",
+                      "value": "<% r.roleAssignments != null ? size(r.roleAssignments.filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith(empty(queryParams.appCode) ? 'X:' : queryParams.appCode) })) : 0 %>",
                       "enabled": false
-                    }
-                  },
-                  {
-                    "type": "column",
-                    "id": "colPositions",
-                    "columnId": "colPositions",
-                    "label": "Position Restrictions",
-                    "sortableAndFilterable": "true",
-                    "cellTemplate": {
-                      "type": "text",
-                      "value": "<% ra.positions != null && size(ra.positions) > 0 ? ra.positions.map(p => { p.descriptor }).join(', ') : 'None' %>",
-                      "enabled": false
-                    }
-                  },
-                  {
-                    "type": "column",
-                    "id": "colManagePositions",
-                    "columnId": "colManagePositions",
-                    "label": "Manage Positions",
-                    "cellTemplate": {
-                      "type": "button",
-                      "action": "AUXILIARY",
-                      "label": "Manage Positions",
-                      "taskReference": {
-                        "taskId": "manageRolePositions",
-                        "parameterBindings": {
-                          "roleId": "<% ra.roleId %>",
-                          "roleName": "<% ra.roleName %>",
-                          "orgId": "<% ra.orgId %>",
-                          "orgDescriptor": "<% ra.orgDescriptor %>",
-                          "appCode": "<% queryParams.appCode ?? '' %>",
-                          "appName": "<% queryParams.appName ?? '' %>"
-                        }
-                      }
                     }
                   }
                 ]
