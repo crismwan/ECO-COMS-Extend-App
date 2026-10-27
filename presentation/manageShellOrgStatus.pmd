@@ -9,7 +9,7 @@
       {
         "name": "triggerManageOrgStatus",
         "baseUrlType": "orchestration",
-        "url": "<% '/ManageShellOrgStatus/launch?orgId=' + (queryParams.orgId ?? '') + '&action=' + (queryParams.currentStatus == 'Active' ? 'INACTIVATE' : 'ACTIVATE') + '&orgCode=' + (queryParams.orgCode ?? '') + '&orgName=' + (queryParams.orgName ?? '') %>",
+        "url": "<% '/ManageShellOrgStatus/launch?orgId=' + (queryParams.orgId ?? '') + '&action=' + (queryParams.currentStatus == 'Active' ? 'INACTIVATE' : 'ACTIVATE') + '&orgCode=' + (queryParams.orgCode ?? '') + '&orgName=' + (queryParams.orgName ?? '') + '&includeInactive=' + (queryParams.currentStatus == 'Active' ? 'true' : 'false') %>",
         "authType": "SSO",
         "httpMethod": "POST",
         "onSend": "<% {} %>",
