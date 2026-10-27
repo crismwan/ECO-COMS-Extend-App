@@ -194,9 +194,15 @@
                   "label": "Organization Name",
                   "sortableAndFilterable": "true",
                   "cellTemplate": {
-                    "type": "text",
-                    "value": "<% pattern.organizationByName.descriptor %>",
-                    "enabled": false
+                    "type": "instanceList",
+                    "view": true,
+                    "relatedTask": true,
+                    "instanceList": [
+                      {
+                        "descriptor": "<% pattern.organizationByName.descriptor ?? pattern.code %>",
+                        "wid": "<% pattern.workdayID %>"
+                      }
+                    ]
                   }
                 },
                 {
