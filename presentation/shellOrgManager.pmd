@@ -79,7 +79,7 @@
             {
               "type": "fieldSet",
               "id": "navFieldSet",
-              "title": "<% empty(queryParams.appCode) ? 'Shell Org Manager' : (queryParams.appName ?? queryParams.appCode ?? 'Shell Org Manager') %>",
+              "title": "<% queryParams.appName ?? queryParams.appCode ?? '' %>",
               "layout": {
                 "density": "high",
                 "alignment": "left",
@@ -107,9 +107,9 @@
                 },
                 {
                   "type": "richText",
-                  "id": "pageSubtitle",
+                  "id": "scopeWarning",
                   "enabled": false,
-                  "value": "<span style=\"color:#6b7280;font-size:12px\"><% empty(queryParams.appCode) ? 'Select an application to manage its shell orgs and patterns.' : (queryParams.appCode ?? '') + ' — manage shell orgs and URL patterns' %></span>"
+                  "value": "<% empty(queryParams.appCode) ? '<span style=\"display:inline-flex;align-items:center;gap:6px;background:#fef9c3;border:1px solid #fbbf24;border-radius:6px;padding:8px 12px;font-size:13px;color:#92400e\">⚠️ No application selected — showing shell org data across all applications. Select an application above to filter this view.</span>' : '<span style=\"display:inline-flex;align-items:center;gap:6px;background:#fef9c3;border:1px solid #fbbf24;border-radius:6px;padding:8px 12px;font-size:13px;color:#92400e\">⚠️ Viewing shell orgs and URL patterns for <strong>' + (queryParams.appName ?? queryParams.appCode) + '</strong> only. To see all applications, go back.</span>' %>"
                 }
               ]
             }
