@@ -73,47 +73,41 @@
       "id": "shellOrgManagerForm",
       "sections": [
         {
-          "type": "layoutSection",
+          "type": "fieldSet",
           "id": "navSection",
+          "layout": {
+            "density": "high",
+            "alignment": "left",
+            "horizontalSizing": "stretch",
+            "labelPosition": "top"
+          },
           "children": [
             {
-              "type": "fieldSet",
-              "id": "topHeaderBarFieldSet",
-              "layout": {
-                "density": "high",
-                "alignment": "left",
-                "horizontalSizing": "stretch",
-                "labelPosition": "top"
+              "type": "button",
+              "id": "backToApplicationsBtn",
+              "label": "← Back to Applications",
+              "taskReference": {
+                "taskId": "shellOrgManager"
               },
-              "children": [
-                {
-                  "type": "button",
-                  "id": "backToApplicationsBtn",
-                  "label": "← Back to Applications",
-                  "taskReference": {
-                    "taskId": "shellOrgManager"
-                  },
-                  "action": "LINK",
-                  "suppressDiscardDialog": true,
-                  "visible": "<% !empty(queryParams.appCode) %>"
-                },
-                {
-                  "type": "button",
-                  "id": "backToHomeBtn",
-                  "label": "← Home",
-                  "taskReference": {
-                    "taskId": "home"
-                  },
-                  "action": "LINK",
-                  "suppressDiscardDialog": true,
-                  "visible": "<% empty(queryParams.appCode) %>"
-                },
-                {
-                  "type": "readOnlyText",
-                  "id": "pageSubtitle",
-                  "value": "<% empty(queryParams.appCode) ? 'Select an application to manage its shell orgs and patterns.' : (queryParams.appCode ?? '') + (empty(queryParams.appName) ? '' : ' · ' + (queryParams.appName ?? '')) %>"
-                }
-              ]
+              "action": "LINK",
+              "suppressDiscardDialog": true,
+              "visible": "<% !empty(queryParams.appCode) %>"
+            },
+            {
+              "type": "button",
+              "id": "backToHomeBtn",
+              "label": "← Home",
+              "taskReference": {
+                "taskId": "home"
+              },
+              "action": "LINK",
+              "suppressDiscardDialog": true,
+              "visible": "<% empty(queryParams.appCode) %>"
+            },
+            {
+              "type": "readOnlyText",
+              "id": "pageSubtitle",
+              "value": "<% empty(queryParams.appCode) ? 'Select an application to manage its shell orgs and patterns.' : (queryParams.appCode ?? '') + (empty(queryParams.appName) ? '' : ' · ' + (queryParams.appName ?? '')) %>"
             }
           ]
         }
