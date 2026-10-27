@@ -65,7 +65,7 @@
     {
       "name": "posSearch",
       "baseUrlType": "workday-wql",
-      "url": "<% 'data?query=' + string:pathEncode('SELECT workdayID, position_PositionManagement FROM allPositions WHERE supervisoryOrganization is not empty AND cf_PositionID contains \\'positionId:\\' AND position_PositionManagement contains \\'' + instanceListQuery + '\\'') %>",
+      "url": "<% 'data?query=' + string:pathEncode('SELECT workdayID, position_PositionManagement FROM allPositions WHERE supervisoryOrganization is not empty AND cf_PositionID contains \\'positionId:\\' AND cf_PositionID contains \\'' + instanceListQuery + '\\'') %>",
       "authType": "sso",
       "isCollection": true,
       "bestEffort": "true",
@@ -484,7 +484,9 @@
                   "id": "fuhPicker",
                   "label": "Functional Unit Hierarchy",
                   "required": false,
-                  "values": "<% empty(instanceListQuery) ? [] : fuhSearch.data.map(o => { {'id': o.workdayID, 'descriptor': o.organization1.descriptor} }) %>",
+                  "values": "<% [] %>",
+                  "searchEndPoint": "<% endpoints.fuhSearch %>",
+                  "searchResultValues": "<% fuhSearch.data.map(o => { {'id': o.workdayID, 'descriptor': o.organization1.descriptor} }) %>",
                   "onChange": "<%\n            if (!empty(self.value) && !empty(academicUnitPicker.value)) {\n              self.setError('Cannot select both Functional Unit Hierarchy and Academic Unit.');\n            } else {\n              self.clearError();\n              academicUnitPicker.clearError();\n            }\n            let appDesc = !empty(applicationDropdown.value) ? applicationDropdown.selectedEntries[0].descriptor : '';\n            enabledForWidBinding.setValue(!empty(self.value) ? self.value[0] : (!empty(academicUnitPicker.value) ? academicUnitPicker.value[0] : ''));\n            enabledForDisplay.setValue(!empty(self.value) ? self.selectedEntries[0].descriptor : (!empty(academicUnitPicker.value) ? academicUnitPicker.selectedEntries[0].descriptor : 'Academic Unit - University of British Columbia'));\n            if (!empty(appDesc)) {\n              generatedRoleName.setValue(\n                !empty(self.value) ?\n                  'Organizations and Roles Assignment Administrator (' + appDesc + ', Functional Org)' :\n                !empty(academicUnitPicker.value) ?\n                  'Organizations and Roles Assignment Administrator (' + appDesc + ', Academic Unit)' :\n                  'Organizations and Roles Assignment Administrator (' + appDesc + ')'\n              );\n            }\n          %>",
                   "valuesOut": [
                     {
@@ -503,7 +505,9 @@
                   "id": "academicUnitPicker",
                   "label": "Academic Unit",
                   "required": false,
-                  "values": "<% empty(instanceListQuery) ? [] : auSearch.data.map(o => { {'id': o.workdayID, 'descriptor': o.academicUnit.descriptor} }) %>",
+                  "values": "<% [] %>",
+                  "searchEndPoint": "<% endpoints.auSearch %>",
+                  "searchResultValues": "<% auSearch.data.map(o => { {'id': o.workdayID, 'descriptor': o.academicUnit.descriptor} }) %>",
                   "onChange": "<%\n            if (!empty(self.value) && !empty(fuhPicker.value)) {\n              self.setError('Cannot select both Academic Unit and Functional Unit Hierarchy.');\n            } else {\n              self.clearError();\n              fuhPicker.clearError();\n            }\n            let appDesc = !empty(applicationDropdown.value) ? applicationDropdown.selectedEntries[0].descriptor : '';\n            enabledForWidBinding.setValue(!empty(fuhPicker.value) ? fuhPicker.value[0] : (!empty(self.value) ? self.value[0] : ''));\n            enabledForDisplay.setValue(!empty(fuhPicker.value) ? fuhPicker.selectedEntries[0].descriptor : (!empty(self.value) ? self.selectedEntries[0].descriptor : 'Academic Unit - University of British Columbia'));\n            if (!empty(appDesc)) {\n              generatedRoleName.setValue(\n                !empty(fuhPicker.value) ?\n                  'Organizations and Roles Assignment Administrator (' + appDesc + ', Functional Org)' :\n                !empty(self.value) ?\n                  'Organizations and Roles Assignment Administrator (' + appDesc + ', Academic Unit)' :\n                  'Organizations and Roles Assignment Administrator (' + appDesc + ')'\n              );\n            }\n          %>",
                   "valuesOut": [
                     {
@@ -530,7 +534,9 @@
                   "label": "Positions",
                   "required": false,
                   "multiSelect": true,
-                  "values": "<% empty(instanceListQuery) ? [] : posSearch.data.map(o => { {'id': o.workdayID, 'descriptor': o.position_PositionManagement.descriptor} }) %>",
+                  "values": "<% [] %>",
+                  "searchEndPoint": "<% endpoints.posSearch %>",
+                  "searchResultValues": "<% posSearch.data.map(o => { {'id': o.workdayID, 'descriptor': o.position_PositionManagement.descriptor} }) %>",
                   "valuesOut": [
                     {
                       "value": "<% self.value.join(',') %>",
