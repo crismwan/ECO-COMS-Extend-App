@@ -73,7 +73,7 @@
             },
             {
               "type": "button",
-              "label": "← Back to Applications",
+              "label": "\u2190 Back to Applications",
               "taskReference": {
                 "taskId": "shellOrgManager"
               },
@@ -82,7 +82,7 @@
             },
             {
               "type": "button",
-              "label": "← Home",
+              "label": "\u2190 Home",
               "taskReference": {
                 "taskId": "home"
               },
@@ -125,6 +125,18 @@
                     "type": "column",
                     "id": "colAppName",
                     "columnId": "colAppName",
+                    "label": "App ID",
+                    "sortableAndFilterable": "true",
+                    "cellTemplate": {
+                      "type": "text",
+                      "value": "<% app.appId ?? '' %>",
+                      "enabled": false
+                    }
+                  },
+                  {
+                    "type": "column",
+                    "id": "colAppFullName",
+                    "columnId": "colAppFullName",
                     "label": "Application Name",
                     "sortableAndFilterable": "true",
                     "cellTemplate": {
@@ -179,7 +191,7 @@
                 "type": "richText",
                 "id": "saveNote",
                 "enabled": false,
-                "value": "<span style=\"color:#d97706;font-size:11px;font-weight:700\">⚠ </span><span style=\"color:#92400e;font-size:11px\"><b>Warning:</b> Changing Status to Inactive does not automatically remove any Workday role assignments referencing this shell organization. Verify in Workday (Get_Assign_User_Based_Security_Groups) that no active role assignment uses this Custom Organization before inactivating.</span>"
+                "value": "<span style=\"color:#d97706;font-size:11px;font-weight:700\">\u26a0 </span><span style=\"color:#92400e;font-size:11px\"><b>Warning:</b> Changing Status to Inactive does not automatically remove any Workday role assignments referencing this shell organization. Verify in Workday (Get_Assign_User_Based_Security_Groups) that no active role assignment uses this Custom Organization before inactivating.</span>"
               },
               {
                 "type": "richText",
@@ -232,7 +244,7 @@
                     "sortableAndFilterable": "true",
                     "cellTemplate": {
                       "type": "richText",
-                      "value": "<% pattern.cf_active1 == true ? '<span style=\"color:#065f46;font-weight:600;font-size:11px\">✓ Active</span>' : '<span style=\"color:#6b7280;font-weight:600;font-size:11px\">○ Inactive</span>' %>"
+                      "value": "<% pattern.cf_active1 == true ? '<span style=\"color:#065f46;font-weight:600;font-size:11px\">\u2713 Active</span>' : '<span style=\"color:#6b7280;font-weight:600;font-size:11px\">\u25cb Inactive</span>' %>"
                     }
                   }
                 ]
@@ -245,6 +257,12 @@
             "enabled": false,
             "visible": "<% empty(queryParams.appCode) %>",
             "value": "<span style=\"color:#6b7280;font-size:13px\">Select an application from the list above to view its shell org patterns.</span>"
+          },
+          {
+            "type": "richText",
+            "id": "footerText0",
+            "enabled": false,
+            "value": "<span style=\"color:#002145;font-size:11px;font-weight:700;letter-spacing:2px\">ECO-COMS</span><span style=\"color:#6b7280;font-size:11px\"> \u00b7 </span><span style=\"color:#002145;font-size:11px\">University of British Columbia</span><span style=\"color:#6b7280;font-size:11px\"> \u00b7 </span><span style=\"color:#0055B7;font-size:11px;font-style:italic\">Custom Organization Management System</span>"
           }
         ]
       },
@@ -317,6 +335,12 @@
             "enabled": false,
             "visible": "<% empty(queryParams.appCode) %>",
             "value": "<span style=\"color:#6b7280;font-size:13px\">Select an application above to view its shell organizations.</span>"
+          },
+          {
+            "type": "richText",
+            "id": "footerText1",
+            "enabled": false,
+            "value": "<span style=\"color:#002145;font-size:11px;font-weight:700;letter-spacing:2px\">ECO-COMS</span><span style=\"color:#6b7280;font-size:11px\"> \u00b7 </span><span style=\"color:#002145;font-size:11px\">University of British Columbia</span><span style=\"color:#6b7280;font-size:11px\"> \u00b7 </span><span style=\"color:#0055B7;font-size:11px;font-style:italic\">Custom Organization Management System</span>"
           }
         ]
       },
@@ -337,6 +361,12 @@
               "taskId": "newShellOrg"
             },
             "action": "PRIMARY"
+          },
+          {
+            "type": "richText",
+            "id": "footerText2",
+            "enabled": false,
+            "value": "<span style=\"color:#002145;font-size:11px;font-weight:700;letter-spacing:2px\">ECO-COMS</span><span style=\"color:#6b7280;font-size:11px\"> \u00b7 </span><span style=\"color:#002145;font-size:11px\">University of British Columbia</span><span style=\"color:#6b7280;font-size:11px\"> \u00b7 </span><span style=\"color:#0055B7;font-size:11px;font-style:italic\">Custom Organization Management System</span>"
           }
         ]
       },
@@ -451,18 +481,15 @@
             "enabled": false,
             "visible": "<% empty(queryParams.appCode) %>",
             "value": "<span style=\"color:#6b7280;font-size:13px\">Select an application above to manage its role assignments.</span>"
+          },
+          {
+            "type": "richText",
+            "id": "footerText3",
+            "enabled": false,
+            "value": "<span style=\"color:#002145;font-size:11px;font-weight:700;letter-spacing:2px\">ECO-COMS</span><span style=\"color:#6b7280;font-size:11px\"> \u00b7 </span><span style=\"color:#002145;font-size:11px\">University of British Columbia</span><span style=\"color:#6b7280;font-size:11px\"> \u00b7 </span><span style=\"color:#0055B7;font-size:11px;font-style:italic\">Custom Organization Management System</span>"
           }
         ]
       }
-    ],
-    "footer": {
-      "type": "footer",
-      "children": [
-        {
-          "type": "pod",
-          "podId": "ecoComsFooter"
-        }
-      ]
-    }
+    ]
   }
 }
