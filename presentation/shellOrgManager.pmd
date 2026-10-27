@@ -73,7 +73,7 @@
       "id": "shellOrgManagerForm",
       "sections": [
         {
-          "type": "layoutSection",
+          "type": "section",
           "id": "navSection",
           "children": [
             {
@@ -116,7 +116,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "horizontal": false
         }
       ]
     },
