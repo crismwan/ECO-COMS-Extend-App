@@ -4,7 +4,7 @@
     "template": {
       "type": "richText",
       "enabled": "false",
-      "value": "<span style=\"color:#002145;font-size:11px;font-weight:700;letter-spacing:2px\">ECO-COMS</span><span style=\"color:#6b7280;font-size:11px\"> \u00b7 </span><span style=\"color:#002145;font-size:11px\">University of British Columbia</span><span style=\"color:#6b7280;font-size:11px\"> \u00b7 </span><span style=\"color:#0055B7;font-size:11px;font-style:italic\">Custom Organization Management System</span>"
+      "value": "<span style=\"display:block;border-top:2px solid #002145;margin-top:24px;padding-top:12px;text-align:center;\"><span style=\"color:#002145;font-size:11px;font-weight:700;font-family:Arial,sans-serif;letter-spacing:2px;\">ECO-COMS</span><span style=\"color:#6b7280;font-size:11px;font-family:Arial,sans-serif;\"> \u00b7 </span><span style=\"color:#002145;font-size:11px;font-family:Arial,sans-serif;\">University of British Columbia</span><span style=\"color:#6b7280;font-size:11px;font-family:Arial,sans-serif;\"> \u00b7 </span><span style=\"color:#0055B7;font-size:11px;font-family:Arial,sans-serif;font-style:italic;\">Custom Organization Management System</span></span>"
     }
   }
 }
