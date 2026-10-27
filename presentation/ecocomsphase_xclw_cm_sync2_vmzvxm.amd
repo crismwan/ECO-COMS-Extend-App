@@ -208,6 +208,20 @@
       "page": {
         "id": "newShellOrgSuccess"
       }
+    },
+    {
+      "id": "manageShellOrgStatus",
+      "routingPattern": "/manageShellOrgStatus",
+      "page": {
+        "id": "manageShellOrgStatus"
+      }
+    },
+    {
+      "id": "manageShellOrgStatusSuccess",
+      "routingPattern": "/manageShellOrgStatusSuccess",
+      "page": {
+        "id": "manageShellOrgStatusSuccess"
+      }
     }
   ],
   "applicationId": "ecocomsphase_xclw_cm_sync2_vmzvxm",

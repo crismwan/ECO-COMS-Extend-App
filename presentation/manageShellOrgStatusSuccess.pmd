@@ -1,0 +1,89 @@
+{
+  "id": "manageShellOrgStatusSuccess",
+  "presentation": {
+    "headerSize": "STANDARD",
+    "title": {
+      "type": "title",
+      "label": "Status Updated"
+    },
+    "body": {
+      "type": "basicFormLayout",
+      "id": "successForm",
+      "sections": [
+        {
+          "type": "layoutSection",
+          "id": "successSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "successFieldSet",
+              "title": "Status Updated Successfully",
+              "layout": {
+                "density": "medium",
+                "alignment": "left",
+                "horizontalSizing": "stretch",
+                "labelPosition": "top"
+              },
+              "children": [
+                {
+                  "type": "richText",
+                  "id": "successMessage",
+                  "enabled": false,
+                  "value": "<span style=\"color:#059669;font-size:11px;font-weight:700\">✓ </span><span style=\"color:#065f46;font-size:11px\">The organization status has been updated successfully.</span>"
+                },
+                {
+                  "type": "readOnlyText",
+                  "id": "orgCodeDisplay",
+                  "label": "Organization",
+                  "value": "<% queryParams.orgCode ?? '' %>"
+                },
+                {
+                  "type": "readOnlyText",
+                  "id": "newStatusDisplay",
+                  "label": "New Status",
+                  "value": "<% queryParams.currentStatus == 'Active' ? 'Inactive' : 'Active' %>"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "navSection",
+          "layout": {
+            "alignment": "left",
+            "labelPosition": "top"
+          },
+          "children": [
+            {
+              "type": "button",
+              "label": "Back to Shell Org Manager",
+              "taskReference": {
+                "taskId": "shellOrgManager"
+              },
+              "action": "PRIMARY"
+            },
+            {
+              "type": "button",
+              "label": "← Home",
+              "taskReference": {
+                "taskId": "home"
+              },
+              "action": "LINK"
+            }
+          ]
+        }
+      ]
+    },
+    "footer": {
+      "type": "footer",
+      "children": [
+        {
+          "type": "pod",
+          "podId": "ecoComsFooter"
+        }
+      ]
+    },
+    "pageType": "view"
+  }
+}

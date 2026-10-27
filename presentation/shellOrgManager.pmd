@@ -47,6 +47,17 @@
       "wqlQuery": {
         "queryId": "allShellAssignableRolesinTenant"
       }
+    },
+    {
+      "name": "allShellOrgs",
+      "baseUrlType": "workday-wql",
+      "url": "data",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "wqlQuery": {
+        "queryId": "allShellOrgs"
+      }
     }
   ],
   "presentation": {
@@ -263,10 +274,17 @@
         "label": "Application Shell Organizations",
         "children": [
           {
-            "type": "fieldSet",
-            "id": "shellOrgsFieldSet",
+            "type": "richText",
+            "id": "shellOrgsAppWarning",
+            "enabled": false,
             "visible": "<% !empty(queryParams.appCode) %>",
-            "title": "Shell Organizations",
+            "value": "<span style=\"color:#d97706;font-size:11px;font-weight:700\">\u26a0 </span><span style=\"color:#92400e;font-size:11px\"><b>Filtered view:</b> You selected <b><% queryParams.appCode ?? '' %></b> from the Application Patterns tab. Only shell organizations matching this application are shown below. <a href=\"javascript:void(0)\" style=\"color:#0055B7\">View all organizations</a> by navigating to Shell Org Manager without an application selected.</span>"
+          },
+          {
+            "type": "fieldSet",
+            "id": "allShellOrgsFieldSet",
+            "visible": "<% empty(queryParams.appCode) %>",
+            "title": "All Shell Organizations",
             "layout": {
               "density": "medium",
               "alignment": "left",
@@ -276,27 +294,27 @@
             "children": [
               {
                 "type": "richText",
-                "id": "shellOrgsEmptyMsg",
+                "id": "allShellOrgsEmptyMsg",
                 "enabled": false,
-                "value": "<span style=\"color:#374151;font-size:12px\">No shell organizations found for this application code.</span>",
-                "visible": "<% !empty(queryParams.appCode) && size(shellOrgs.data.filter(o => { o.code.startsWith((queryParams.appCode ?? '') + ':') && !o.code.contains(':PATTERN') })) == 0 %>"
+                "value": "<span style=\"color:#374151;font-size:12px\">No shell organizations found.</span>",
+                "visible": "<% empty(queryParams.appCode) && size(allShellOrgs.data.filter(o => { !o.code.contains(':PATTERN') })) == 0 %>"
               },
               {
                 "type": "grid",
                 "gridType": "LIST",
                 "multiViewStylingEnabled": true,
-                "id": "shellOrgsGrid",
-                "rows": "<% empty(queryParams.appCode) ? [] : shellOrgs.data.filter(o => { o.code.startsWith(queryParams.appCode + ':') && !o.code.contains(':PATTERN') }) %>",
+                "id": "allShellOrgsGrid",
+                "rows": "<% allShellOrgs.data.filter(o => { !o.code.contains(':PATTERN') }) %>",
                 "rowVariableName": "org",
                 "enabled": false,
-                "label": "<% 'Shell Organizations for ' + (queryParams.appName ?? queryParams.appCode ?? '') %>",
+                "label": "Shell Organizations",
                 "autoPaging": true,
-                "visible": "<% !empty(queryParams.appCode) && size(shellOrgs.data.filter(o => { o.code.startsWith((queryParams.appCode ?? '') + ':') && !o.code.contains(':PATTERN') })) > 0 %>",
+                "visible": "<% empty(queryParams.appCode) && size(allShellOrgs.data.filter(o => { !o.code.contains(':PATTERN') })) > 0 %>",
                 "columns": [
                   {
                     "type": "column",
-                    "id": "colOrgName",
-                    "columnId": "colOrgName",
+                    "id": "colAllOrgName",
+                    "columnId": "colAllOrgName",
                     "label": "Organization Name",
                     "sortableAndFilterable": "true",
                     "cellTemplate": {
@@ -307,14 +325,33 @@
                   },
                   {
                     "type": "column",
-                    "id": "colOrgCode",
-                    "columnId": "colOrgCode",
-                    "label": "Organization Code",
+                    "id": "colAllOrgStatus",
+                    "columnId": "colAllOrgStatus",
+                    "label": "Status",
                     "sortableAndFilterable": "true",
                     "cellTemplate": {
-                      "type": "text",
-                      "value": "<% org.code %>",
-                      "enabled": false
+                      "type": "richText",
+                      "value": "<% org.cf_active1 == true ? '<span style=\"color:#065f46;font-weight:600;font-size:11px\">\u2713 Active</span>' : '<span style=\"color:#6b7280;font-weight:600;font-size:11px\">\u25cb Inactive</span>' %>"
+                    }
+                  },
+                  {
+                    "type": "column",
+                    "id": "colAllOrgManage",
+                    "columnId": "colAllOrgManage",
+                    "label": "Manage",
+                    "cellTemplate": {
+                      "type": "button",
+                      "action": "AUXILIARY",
+                      "label": "Manage",
+                      "taskReference": {
+                        "taskId": "manageShellOrgStatus",
+                        "parameterBindings": {
+                          "orgId": "<% org.workdayID %>",
+                          "orgCode": "<% org.code %>",
+                          "orgName": "<% org.organizationByName.descriptor ?? org.code %>",
+                          "currentStatus": "<% org.cf_active1 == true ? 'Active' : 'Inactive' %>"
+                        }
+                      }
                     }
                   }
                 ]
@@ -322,11 +359,82 @@
             ]
           },
           {
-            "type": "richText",
-            "id": "shellOrgsSelectAppMsg",
-            "enabled": false,
-            "visible": "<% empty(queryParams.appCode) %>",
-            "value": "<span style=\"color:#6b7280;font-size:13px\">Select an application above to view its shell organizations.</span>"
+            "type": "fieldSet",
+            "id": "filteredShellOrgsFieldSet",
+            "visible": "<% !empty(queryParams.appCode) %>",
+            "title": "<% 'Shell Organizations \u2014 ' + (queryParams.appName ?? queryParams.appCode ?? '') %>",
+            "layout": {
+              "density": "medium",
+              "alignment": "left",
+              "horizontalSizing": "stretch",
+              "labelPosition": "top"
+            },
+            "children": [
+              {
+                "type": "richText",
+                "id": "filteredShellOrgsEmptyMsg",
+                "enabled": false,
+                "value": "<span style=\"color:#374151;font-size:12px\">No shell organizations found for this application code.</span>",
+                "visible": "<% !empty(queryParams.appCode) && size(allShellOrgs.data.filter(o => { o.code.startsWith((queryParams.appCode ?? '') + ':') && !o.code.contains(':PATTERN') })) == 0 %>"
+              },
+              {
+                "type": "grid",
+                "gridType": "LIST",
+                "multiViewStylingEnabled": true,
+                "id": "filteredShellOrgsGrid",
+                "rows": "<% empty(queryParams.appCode) ? [] : allShellOrgs.data.filter(o => { o.code.startsWith(queryParams.appCode + ':') && !o.code.contains(':PATTERN') }) %>",
+                "rowVariableName": "org",
+                "enabled": false,
+                "label": "<% 'Shell Organizations for ' + (queryParams.appName ?? queryParams.appCode ?? '') %>",
+                "autoPaging": true,
+                "visible": "<% !empty(queryParams.appCode) && size(allShellOrgs.data.filter(o => { o.code.startsWith((queryParams.appCode ?? '') + ':') && !o.code.contains(':PATTERN') })) > 0 %>",
+                "columns": [
+                  {
+                    "type": "column",
+                    "id": "colFiltOrgName",
+                    "columnId": "colFiltOrgName",
+                    "label": "Organization Name",
+                    "sortableAndFilterable": "true",
+                    "cellTemplate": {
+                      "type": "text",
+                      "value": "<% org.organizationByName.descriptor ?? '' %>",
+                      "enabled": false
+                    }
+                  },
+                  {
+                    "type": "column",
+                    "id": "colFiltOrgStatus",
+                    "columnId": "colFiltOrgStatus",
+                    "label": "Status",
+                    "sortableAndFilterable": "true",
+                    "cellTemplate": {
+                      "type": "richText",
+                      "value": "<% org.cf_active1 == true ? '<span style=\"color:#065f46;font-weight:600;font-size:11px\">\u2713 Active</span>' : '<span style=\"color:#6b7280;font-weight:600;font-size:11px\">\u25cb Inactive</span>' %>"
+                    }
+                  },
+                  {
+                    "type": "column",
+                    "id": "colFiltOrgManage",
+                    "columnId": "colFiltOrgManage",
+                    "label": "Manage",
+                    "cellTemplate": {
+                      "type": "button",
+                      "action": "AUXILIARY",
+                      "label": "Manage",
+                      "taskReference": {
+                        "taskId": "manageShellOrgStatus",
+                        "parameterBindings": {
+                          "orgId": "<% org.workdayID %>",
+                          "orgCode": "<% org.code %>",
+                          "orgName": "<% org.organizationByName.descriptor ?? org.code %>",
+                          "currentStatus": "<% org.cf_active1 == true ? 'Active' : 'Inactive' %>"
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
           },
           {
             "type": "richText",
