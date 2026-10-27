@@ -320,7 +320,21 @@
                     "cellTemplate": {
                       "type": "text",
                       "value": "<% org.organizationByName.descriptor ?? '' %>",
-                      "enabled": false
+                      "enabled": false,
+                      "relatedActions": [
+                        {
+                          "label": "Manage Status",
+                          "taskReference": {
+                            "taskId": "manageShellOrgStatus",
+                            "parameterBindings": {
+                              "orgId": "<% org.workdayID %>",
+                              "orgCode": "<% org.code %>",
+                              "orgName": "<% org.organizationByName.descriptor ?? org.code %>",
+                              "currentStatus": "<% org.cf_active1 == true ? 'Active' : 'Inactive' %>"
+                            }
+                          }
+                        }
+                      ]
                     }
                   },
                   {
@@ -398,7 +412,21 @@
                     "cellTemplate": {
                       "type": "text",
                       "value": "<% org.organizationByName.descriptor ?? '' %>",
-                      "enabled": false
+                      "enabled": false,
+                      "relatedActions": [
+                        {
+                          "label": "Manage Status",
+                          "taskReference": {
+                            "taskId": "manageShellOrgStatus",
+                            "parameterBindings": {
+                              "orgId": "<% org.workdayID %>",
+                              "orgCode": "<% org.code %>",
+                              "orgName": "<% org.organizationByName.descriptor ?? org.code %>",
+                              "currentStatus": "<% org.cf_active1 == true ? 'Active' : 'Inactive' %>"
+                            }
+                          }
+                        }
+                      ]
                     }
                   },
                   {
