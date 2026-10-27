@@ -36,26 +36,34 @@
       "exclude": "<% true %>"
     },
     {
-      "name": "customOrganizationsFUH",
+      "name": "fuhSearch",
       "baseUrlType": "workday-wql",
-      "url": "data",
+      "url": "<% 'data?query=' + string:pathEncode('SELECT workdayID, organization1 FROM customOrganizations WHERE type1 in (b40d8b016367100175b147f364840000) AND organization1 contains \\'' + instanceListQuery + '\\'') %>",
       "authType": "sso",
       "isCollection": true,
       "bestEffort": "true",
-      "wqlQuery": {
-        "queryId": "customOrganizationsFUH"
-      }
+      "deferred": "true",
+      "exclude": "<% empty instanceListQuery %>"
     },
     {
-      "name": "academicUnits",
+      "name": "auSearch",
       "baseUrlType": "workday-wql",
-      "url": "data",
+      "url": "<% 'data?query=' + string:pathEncode('SELECT workdayID, academicUnit FROM academicUnits WHERE inactive = false AND academicUnit contains \\'' + instanceListQuery + '\\'') %>",
       "authType": "sso",
       "isCollection": true,
       "bestEffort": "true",
-      "wqlQuery": {
-        "queryId": "academicUnits"
-      }
+      "deferred": "true",
+      "exclude": "<% empty instanceListQuery %>"
+    },
+    {
+      "name": "posSearch",
+      "baseUrlType": "workday-wql",
+      "url": "<% 'data?query=' + string:pathEncode('SELECT workdayID, position_PositionManagement FROM allPositions WHERE supervisoryOrganization is not empty AND cf_PositionID contains \\'positionId:\\' AND position_PositionManagement contains \\'' + instanceListQuery + '\\'') %>",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "deferred": "true",
+      "exclude": "<% empty instanceListQuery %>"
     },
     {
       "name": "positions",
@@ -488,7 +496,7 @@
                   "label": "Positions",
                   "required": true,
                   "multiSelect": true,
-                  "values": "<% empty(instanceListQuery) ? [] : allPositions.data.filter(o => { o.position_PositionManagement.descriptor.contains(instanceListQuery) }).map(o => { {'id': o.workdayID, 'descriptor': o.position_PositionManagement.descriptor} }) %>",
+                  "values": "<% empty(instanceListQuery) ? [] : posSearch.data.map(o => { {'id': o.workdayID, 'descriptor': o.position_PositionManagement.descriptor} }) %>",
                   "onChange": "<%\n            if (empty(self.value)) {\n              self.setError('At least one Position is required.');\n            } else {\n              self.clearError();\n            }\n          %>",
                   "valuesOut": [
                     {
@@ -519,7 +527,7 @@
                   "id": "fuhPicker",
                   "label": "Functional Unit Hierarchy",
                   "required": false,
-                  "values": "<% empty(instanceListQuery) ? [] : customOrganizationsFUH.data.filter(o => { o.organization1.descriptor.contains(instanceListQuery) }).map(o => { {'id': o.workdayID, 'descriptor': o.organization1.descriptor} }) %>",
+                  "values": "<% empty(instanceListQuery) ? [] : fuhSearch.data.map(o => { {'id': o.workdayID, 'descriptor': o.organization1.descriptor} }) %>",
                   "onChange": "<%\n            if (!empty(self.value) && !empty(academicUnitPicker.value)) {\n              self.setError('Cannot select both Functional Unit Hierarchy and Academic Unit.');\n            } else {\n              self.clearError();\n              academicUnitPicker.clearError();\n            }\n            enabledForWidBinding.setValue(!empty(self.value) ? self.value[0] : (!empty(academicUnitPicker.value) ? academicUnitPicker.value[0] : ''));\n            enabledForDisplay.setValue(\n              !empty(self.value) ? self.selectedEntries[0].descriptor :\n              (!empty(academicUnitPicker.value) ? academicUnitPicker.selectedEntries[0].descriptor : 'Academic Unit - University of British Columbia')\n            );\n          %>",
                   "valuesOut": [
                     {
@@ -538,7 +546,7 @@
                   "id": "academicUnitPicker",
                   "label": "Academic Unit",
                   "required": false,
-                  "values": "<% empty(instanceListQuery) ? [] : academicUnits.data.filter(o => { o.academicUnit.descriptor.contains(instanceListQuery) }).map(o => { {'id': o.workdayID, 'descriptor': o.academicUnit.descriptor} }) %>",
+                  "values": "<% empty(instanceListQuery) ? [] : auSearch.data.map(o => { {'id': o.workdayID, 'descriptor': o.academicUnit.descriptor} }) %>",
                   "onChange": "<%\n            if (!empty(self.value) && !empty(fuhPicker.value)) {\n              self.setError('Cannot select both Academic Unit and Functional Unit Hierarchy.');\n            } else {\n              self.clearError();\n              fuhPicker.clearError();\n            }\n            enabledForWidBinding.setValue(!empty(fuhPicker.value) ? fuhPicker.value[0] : (!empty(self.value) ? self.value[0] : ''));\n            enabledForDisplay.setValue(\n              !empty(fuhPicker.value) ? fuhPicker.selectedEntries[0].descriptor :\n              (!empty(self.value) ? self.selectedEntries[0].descriptor : 'Academic Unit - University of British Columbia')\n            );\n          %>",
                   "valuesOut": [
                     {
