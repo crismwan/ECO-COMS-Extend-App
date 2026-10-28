@@ -5,7 +5,7 @@
   ],
   "endPoints": [],
   "presentation": {
-    "pageType": "view",
+    "pageType": "VIEW",
     "headerSize": "STANDARD",
     "title": {
       "type": "title",
@@ -31,12 +31,6 @@
                   "value": "<span style=\"font-size:11px\">Review and action pending ISC role requests. Use the links below to view requests by type.</span>"
                 }
               ],
-              "_layout": {
-                "density": "medium",
-                "alignment": "left",
-                "horizontalSizing": "stretch",
-                "labelPosition": "top"
-              }
             }
           ]
         },

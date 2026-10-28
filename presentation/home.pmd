@@ -20,7 +20,7 @@
         {
           "type": "item",
           "task": {
-            "taskId": "iscRoleRequestsView"
+            "taskId": "iscRoleRequestsHub"
           },
           "label": "Pending ISC Requests",
           "icon": "wd-accent-clipboard-checklist"

@@ -49,7 +49,7 @@
     }
   },
   "presentation": {
-    "pageType": "view",
+    "pageType": "VIEW",
     "headerSize": "STANDARD",
     "title": {
       "type": "title",
@@ -307,17 +307,9 @@
                       }
                     }
                   ],
-                  "_defaultSortColumnId": "colRequestedDate",
-                  "_defaultSortOrder": "DESCENDING"
                 }
               ],
-              "_layout": {
-                "density": "medium",
-                "alignment": "left",
-                "horizontalSizing": "stretch",
-                "labelPosition": "top"
               }
-            }
           ]
         }
       ]
