@@ -20,7 +20,7 @@
     {
       "label": "Add Pattern",
       "taskReference": {
-        "taskId": "newShellOrgPattern"
+        "taskId": "createShellOrgPatternWizard"
       }
     }
   ]

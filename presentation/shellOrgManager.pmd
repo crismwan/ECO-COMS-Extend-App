@@ -124,6 +124,100 @@
     "tabs": [
       {
         "type": "section",
+        "label": "Summary",
+        "children": [
+          {
+            "type": "fieldSet",
+            "id": "summaryStatsFieldSet",
+            "title": "Shell Organization Summary",
+            "children": [
+              {
+                "type": "chartCard",
+                "id": "shellOrgStatusChart",
+                "chart": {
+                  "type": "donutChart2",
+                  "data": "<% [{status: 'Active', count: size(allShellOrgs.data.filter(o => { o.code.startsWith('X:') && !o.code.contains(':PATTERN') && o.cf_active1 == true }))}, {status: 'Inactive', count: size(allShellOrgs.data.filter(o => { o.code.startsWith('X:') && !o.code.contains(':PATTERN') && o.cf_active1 != true }))}] %>",
+                  "dataVariableName": "slice",
+                  "title": "<% size(allShellOrgs.data.filter(o => { o.code.startsWith('X:') && !o.code.contains(':PATTERN') })) + ' Total Orgs' %>",
+                  "sliceSizeDataSet": {
+                    "name": "Count",
+                    "value": "<% slice.count %>"
+                  },
+                  "sliceColorDataSet": {
+                    "name": "Status",
+                    "value": "<% slice.status %>"
+                  },
+                  "showPercentLabels": true,
+                  "animateOnLoad": true
+                }
+              },
+              {
+                "type": "readOnlyText",
+                "id": "summaryActiveCount",
+                "label": "Active Orgs",
+                "value": "<% size(allShellOrgs.data.filter(o => { o.code.startsWith('X:') && !o.code.contains(':PATTERN') && o.cf_active1 == true })) %>"
+              },
+              {
+                "type": "readOnlyText",
+                "id": "summaryInactiveCount",
+                "label": "Inactive Orgs",
+                "value": "<% size(allShellOrgs.data.filter(o => { o.code.startsWith('X:') && !o.code.contains(':PATTERN') && o.cf_active1 != true })) %>"
+              },
+              {
+                "type": "readOnlyText",
+                "id": "summaryPatternCount",
+                "label": "Total Patterns",
+                "value": "<% size(allShellOrgs.data.filter(o => { o.code.contains(':PATTERN') })) %>"
+              }
+            ],
+            "_layout": {
+              "density": "medium",
+              "alignment": "left",
+              "horizontalSizing": "stretch",
+              "labelPosition": "top"
+            }
+          },
+          {
+            "type": "fieldSet",
+            "id": "summaryNavFieldSet",
+            "title": "Quick Actions",
+            "children": [
+              {
+                "type": "button",
+                "label": "Add New Shell Organization",
+                "taskReference": {
+                  "taskId": "createShellOrgWizard"
+                },
+                "action": "PRIMARY"
+              },
+              {
+                "type": "button",
+                "label": "View Application Patterns",
+                "taskReference": {
+                  "taskId": "shellOrgManager"
+                },
+                "action": "AUXILIARY"
+              },
+              {
+                "type": "button",
+                "label": "← Home",
+                "taskReference": {
+                  "taskId": "home"
+                },
+                "action": "LINK"
+              }
+            ],
+            "_layout": {
+              "density": "medium",
+              "alignment": "left",
+              "horizontalSizing": "stretch",
+              "labelPosition": "top"
+            }
+          }
+        ]
+      },
+      {
+        "type": "section",
         "label": "Application Patterns",
         "children": [
           {

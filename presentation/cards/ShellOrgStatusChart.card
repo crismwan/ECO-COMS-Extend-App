@@ -1,0 +1,39 @@
+{
+  "id": "ShellOrgStatusChart",
+  "parameters": [
+    "activeCount",
+    "inactiveCount",
+    "totalPatterns"
+  ],
+  "header": {
+    "title": "Shell Org Overview",
+    "subtitle": "Active vs. Inactive shell organizations"
+  },
+  "body": {
+    "type": "chartCard",
+    "chart": {
+      "type": "donutChart2",
+      "data": "<% [{status: 'Active', count: activeCount ?? 0}, {status: 'Inactive', count: inactiveCount ?? 0}] %>",
+      "dataVariableName": "slice",
+      "title": "<% (totalPatterns ?? 0) + ' Total' %>",
+      "sliceSizeDataSet": {
+        "name": "Count",
+        "value": "<% slice.count %>"
+      },
+      "sliceColorDataSet": {
+        "name": "Status",
+        "value": "<% slice.status %>"
+      },
+      "showPercentLabels": true,
+      "animateOnLoad": true
+    }
+  },
+  "footer": [
+    {
+      "label": "Manage",
+      "taskReference": {
+        "taskId": "shellOrgManager"
+      }
+    }
+  ]
+}
