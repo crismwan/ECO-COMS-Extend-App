@@ -26,6 +26,14 @@ Component IDs are always **camelCase** and **end with the component type**.
 
 - An editable `grid` can start empty with `"rows": "<% [] %>"`; users add rows via the `+` icon (`doNotAdd`/`doNotRemove` default to false).
 
+- **`standardEditButtonsHidden` pitfall:** Setting `"standardEditButtonsHidden": true` on `presentation` WITHOUT also defining a custom `editButtonBar` leaves the page with **no submit button** — the user has no way to submit the form. Either remove `standardEditButtonsHidden` entirely (the standard OK/Cancel buttons will render) or pair it with an `editButtonBar` that includes an OK-equivalent submit button. Never set it alone.
+
+- **`cancelOverride`:** Overrides where the Cancel button navigates. Shape: `"cancelOverride": { "taskId": "<taskId>" }`. Use this on edit pages to keep users within the app (e.g. return to a list page) instead of falling back to the Workday home page.
+
+## Security domain enforcement
+
+Pages redirect to the hub/landing when the signed-in user lacks the required `securityDomains` entry. This is expected Workday platform behavior — not a page error. If a page immediately redirects away during testing, confirm the test user has the correct security domain assigned before debugging the page itself.
+
 ## Widget types
 
 - **Single boolean checkbox:** the widget `type` is `"checkBox"` (camelCase, capital B) — NOT `"checkbox"`. Binds to a boolean value, e.g. `"value": "<% row.isBrandNew ?? false %>"`. Distinct from `checkBoxList` (a multi-select list of options).
@@ -90,7 +98,39 @@ Note the escaping when a literal is embedded in the pattern: `'yyyy-MM-dd\\'T\\'
 
 Other attributes: `enabled`, `guide`, `helpText`, `id`, `label` (max 255 chars), `render`, `required`, `sortOrder`, `value`, `valueOutBinding`, `valuesOut`, `visible`.
 
-**`visible: false` DROPS the widget's `valueOutBinding`/`valuesOut` from the outbound payload** (true for widgets generally). To submit a hidden value, add it back in `onSend`.
+**`visible: false` DROPS the widget's `valueOutBinding`/`valuesOut` from the outbound payload**
+
+## guide attribute — rendering behavior
+
+The `guide` attribute places a **"?" tooltip icon** beside the widget label. It is placed as a sibling attribute on the widget definition:
+
+```json
+"guide": {
+  "type": "guide",
+  "id": "guideMyWidget",
+  "title": "Tooltip Title",
+  "text": "Tooltip body text explaining the field."
+}
+```
+
+**Critical rendering limitation (confirmed via accessibility tree analysis):** The `guide` attribute on `text` and `date` widget types inside a `fieldSet` with `labelPosition: "side_align_left"` does **NOT** render a visible "?" icon in the Workday UI. The code deploys without errors and is accepted by the platform, but no guide button or icon element is inserted into the DOM — it is a **silent failure**. This applies to `text`, `date`, `number`, and similar read-only/inline field widgets in that layout context.
+
+**What DOES render a guide icon:**
+
+- `fileUploader` — confirmed to show the guide icon correctly.
+- `dropdown` — renders the guide icon (confirmed working in production).
+- `instanceList` — renders the guide icon (confirmed working in production).
+- `textArea` — renders the guide icon (confirmed working in production).
+
+**Mitigation for text/date fields:** Use `richText` banners with an `ⓘ` prefix (inline HTML) for visible inline guidance on sections containing text/date-only fields. These render correctly as informational banners.
+
+```json
+{
+  "type": "richText",
+  "id": "sectionDesc",
+  "value": "<% '<span style=\"color:#374151;font-size:13px\">ⓘ Explanation of this section and its fields.</span>' %>"
+}
+``` (true for widgets generally). To submit a hidden value, add it back in `onSend`.
 
 ## Widget validation — `onChange` + `setError` / `clearError`
 
@@ -701,6 +741,27 @@ A **hub** is a container widget: a left navigation pane plus task pages rendered
 }
 
 ```
+
+## Common inbound endpoint patterns
+
+### Workday job positions (staffing)
+
+Fetch all job positions for filtering/display in grids. Uses `workday-staffing-v6` base URL:
+
+```json
+{
+  "name": "positions",
+  "baseUrlType": "workday-staffing-v6",
+  "url": "jobs",
+  "authType": "sso",
+  "isCollection": true,
+  "bestEffort": "true"
+}
+```
+
+Then filter in the grid `rows` binding: `"<% positions.data.filter(p => { myIdList.contains(p.id) }) %>"`.
+
+The AMD data provider key is `workday-staffing-v6` pointing to the Workday Staffing v6 API base URL.
 
 ## Submitting data (outbound endpoints)
 
