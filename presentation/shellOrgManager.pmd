@@ -22,7 +22,6 @@
       "authType": "sso",
       "isCollection": true,
       "bestEffort": "true",
-      "deferred": true,
       "wqlQuery": {
         "queryId": "existingPatterns"
       }
