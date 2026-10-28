@@ -352,7 +352,7 @@
             "id": "addNewOrgBtn",
             "label": "Add New Shell Organization",
             "taskReference": {
-              "taskId": "newShellOrg"
+              "taskId": "createShellOrgWizard"
             },
             "action": "PRIMARY"
           },
