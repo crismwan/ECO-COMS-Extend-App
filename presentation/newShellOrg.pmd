@@ -132,7 +132,7 @@
                   "type": "richText",
                   "id": "wizardCloseWarning",
                   "enabled": false,
-                  "value": "<span style=\"color:#B45309;font-size:11px;font-weight:700\">⚠ Important: </span><span style=\"color:#374151;font-size:11px\">Clicking the wizard’s <b>X (close)</b> button will navigate you to the last page you visited — which may be the Workday home page, taking you out of this app. To safely exit and return to Shell Org Manager, use the <b>← Shell Org Manager</b> button above, or click <b>Cancel</b> within any wizard step.</span>"
+                  "value": "<span style=\"color:#B45309;font-size:11px;font-weight:700\">⚠ Important: </span><span style=\"color:#374151;font-size:11px\">Clicking the wizard’s <b>X (close)</b> button will navigate you to the last page you visited — which may be the Workday home page, taking you out of this app. To safely exit and return to Shell Org Manager, use the <b>← Shell Org Manager</b> button above.</span>"
                 }
               ],
               "title": "Navigation Guide"

@@ -65,30 +65,11 @@
           "children": [
             {
               "type": "button",
-              "label": "\u2190 Home",
+              "label": "\u2190 ISC Role Requests",
               "taskReference": {
-                "taskId": "home"
+                "taskId": "iscRoleRequestsHub"
               },
-              "action": "LINK",
-              "visible": "<% empty(queryParams.view) %>"
-            },
-            {
-              "type": "button",
-              "label": "\u2190 My Role Requests",
-              "taskReference": {
-                "taskId": "assignableRoleManagerView"
-              },
-              "action": "LINK",
-              "visible": "<% queryParams.view == 'assignable' %>"
-            },
-            {
-              "type": "button",
-              "label": "\u2190 Admin Provisioning",
-              "taskReference": {
-                "taskId": "adminProvisioningView"
-              },
-              "action": "LINK",
-              "visible": "<% queryParams.view == 'aaa' %>"
+              "action": "LINK"
             }
           ]
         },
