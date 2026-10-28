@@ -24,7 +24,7 @@
                   "type": "text",
                   "id": "errorSummary401",
                   "enabled": false,
-                  "visible": "<% errorCode == '401' %>",
+                  "visible": "<% queryParams.errorCode == '401' %>",
                   "label": "⚠ Error 401 — Unauthorized",
                   "value": "We couldn't verify your identity, or you don't have access to this page. If you believe you should have access to ECO-COMS, contact your COMS Administrator."
                 },
@@ -32,7 +32,7 @@
                   "type": "text",
                   "id": "errorSummary403",
                   "enabled": false,
-                  "visible": "<% errorCode == '403' %>",
+                  "visible": "<% queryParams.errorCode == '403' %>",
                   "label": "⚠ Error 403 — Permission Denied",
                   "value": "You don't have permission to manage this application's shell organizations. COMS access is scoped per application. Contact your COMS Administrator to request access."
                 },
@@ -40,7 +40,7 @@
                   "type": "text",
                   "id": "errorSummary404",
                   "enabled": false,
-                  "visible": "<% errorCode == '404' %>",
+                  "visible": "<% queryParams.errorCode == '404' %>",
                   "label": "⚠ Error 404 — Page Not Found",
                   "value": "We couldn't find the page you're looking for. It may have been moved or the link may be incorrect."
                 },
@@ -48,7 +48,7 @@
                   "type": "text",
                   "id": "errorSummaryDefault",
                   "enabled": false,
-                  "visible": "<% errorCode != '401' && errorCode != '403' && errorCode != '404' %>",
+                  "visible": "<% empty(queryParams.errorCode) || (queryParams.errorCode != '401' && queryParams.errorCode != '403' && queryParams.errorCode != '404') %>",
                   "label": "⚠ Unexpected Error",
                   "value": "Something went wrong. Please try again, or contact your COMS Administrator if the problem persists."
                 }
@@ -73,8 +73,7 @@
               "taskReference": {
                 "taskId": "home"
               },
-              "action": "LINK",
-              "suppressDiscardDialog": true
+              "action": "LINK"
             },
             {
               "type": "button",
@@ -83,8 +82,7 @@
               "taskReference": {
                 "taskId": "shellOrgManager"
               },
-              "action": "LINK",
-              "suppressDiscardDialog": true
+              "action": "LINK"
             }
           ]
         }
@@ -98,11 +96,6 @@
           "podId": "ecoComsFooter"
         }
       ]
-    },
-    "pageType": "edit",
-    "standardEditButtonsHidden": true,
-    "cancelOverride": {
-      "taskId": "home"
     }
   }
 }
