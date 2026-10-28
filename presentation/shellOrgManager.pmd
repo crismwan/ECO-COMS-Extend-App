@@ -13,7 +13,8 @@
       "url": "/comsApplications",
       "authType": "sso",
       "isCollection": true,
-      "bestEffort": "true"
+      "bestEffort": "true",
+      "deferred": true
     },
     {
       "name": "shellOrgPatterns",
@@ -22,6 +23,7 @@
       "authType": "sso",
       "isCollection": true,
       "bestEffort": "true",
+      "deferred": true,
       "wqlQuery": {
         "queryId": "existingPatterns"
       }

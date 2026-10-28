@@ -87,6 +87,25 @@
         },
         {
           "type": "layoutSection",
+          "id": "actionsInfoSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "actionsInfoFieldSet",
+              "title": "About This Page",
+              "children": [
+                {
+                  "type": "richText",
+                  "id": "maintainActionInfo",
+                  "enabled": false,
+                  "value": "<% '<span style=\"color:#0055B7;font-size:11px;font-weight:700\">ℹ </span><span style=\"color:#374151;font-size:11px\">Click <b>Maintain</b> on any row to Approve or Deny a pending role request. Approving requires selecting a Workday Assignable Role. Denying requires providing a reason. Actioned requests will be removed from this queue.</span>' %>"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
           "id": "gridSection",
           "children": [
             {
