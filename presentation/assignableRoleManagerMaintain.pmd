@@ -31,6 +31,14 @@
       "wqlQuery": {
         "queryId": "allShellAssignableRolesinTenant"
       }
+    },
+    {
+      "name": "positions",
+      "baseUrlType": "workday-staffing-v6",
+      "url": "jobs",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true"
     }
   ],
   "outboundData": {
@@ -294,6 +302,12 @@
                   "required": true,
                   "enabled": true,
                   "values": "<% [{'id': 'Approve', 'descriptor': 'Approve'}, {'id': 'Deny', 'descriptor': 'Deny'}] %>",
+                  "guide": {
+                    "type": "guide",
+                    "id": "guideMaintainAction",
+                    "title": "ISC Action",
+                    "text": "Select Approve to grant the role request — you must also select a Workday Assignable Role. Select Deny to reject the request — you must provide a Denial Reason."
+                  },
                   "onChange": "<%\n            selectedAction.setValue(self.value);\n            if (self.value == 'Deny' && empty(denialReason.value)) {\n              denialReason.setError('Denial Reason is required when denying a role.');\n            } else {\n              denialReason.clearError();\n            }\n          %>"
                 },
                 {
@@ -307,6 +321,12 @@
                   "label": "Workday Assignable Role (required for Approve)",
                   "required": false,
                   "enabled": true,
+                  "guide": {
+                    "type": "guide",
+                    "id": "guideWorkdayRole",
+                    "title": "Workday Assignable Role",
+                    "text": "Required when approving a role request. Select the Workday Assignable Role that will be provisioned for this user. This maps the ECO-COMS role to an actual Workday security role."
+                  },
                   "values": "<% allShellRoles.data.map(r => { {'id': r.role.id, 'descriptor': r.role.descriptor} }) %>",
                   "valuesOut": [
                     {
@@ -326,6 +346,12 @@
                   "required": false,
                   "enabled": true,
                   "placeholder": "Provide a clear reason for denying this role request.",
+                  "guide": {
+                    "type": "guide",
+                    "id": "guideDenialReason",
+                    "title": "Denial Reason",
+                    "text": "Required when denying a role request. Provide a clear explanation so the requester understands why their request was denied (e.g., insufficient justification, incorrect role selected, not authorized for this shell org)."
+                  },
                   "onChange": "<%\n            if (maintainAction.value == 'Deny' && empty(self.value)) {\n              self.setError('Denial Reason is required when denying a role.');\n            } else {\n              self.clearError();\n            }\n          %>",
                   "valuesOut": [
                     {
@@ -419,7 +445,9 @@
         }
       ]
     },
-    "standardEditButtonsHidden": true
+    "cancelOverride": {
+      "taskId": "iscRoleRequestsView"
+    }
   },
   "onSubmit": "<%\n  let valid = true;\n  if (empty(maintainAction.value)) {\n    maintainAction.setError('Please select an action.');\n    valid = false;\n  }\n  if (maintainAction.value == 'Approve') {\n    if (empty(workdayRoleDropdown.value)) {\n      workdayRoleDropdown.setError('Please select a Workday Assignable Role to approve.');\n      valid = false;\n    }\n  }\n  if (maintainAction.value == 'Deny') {\n    if (empty(denialReason.value)) {\n      denialReason.setError('Denial Reason is required when denying a role.');\n      valid = false;\n    }\n  }\n  valid;\n%>"
 }
