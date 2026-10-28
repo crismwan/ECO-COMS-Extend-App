@@ -20,7 +20,9 @@ Component IDs are always **camelCase** and **end with the component type**.
 
 ## Edit pages
 
-- `pageType` is `"EDIT"` (counterpart to `"VIEW"`).
+- `pageType` is `"EDIT"` (counterpart to `"VIEW"`). **Both values must be uppercase.** Lowercase `"edit"` or `"view"` silently cause page errors. Always use `"EDIT"` or `"VIEW"`.
+
+- **Non-standard underscore attributes** (`_layout`, `_defaultSortColumnId`, `_defaultSortOrder`, `_tooltip`, `_successPage`, `_onSuccess`, `_color`) are silently ignored or cause runtime "1 Error" failures. These are App Builder auto-generated metadata that does NOT translate to valid PMD attributes. Remove any such attribute before deploying.
 
 - Edit pages render framework **OK/Cancel** buttons automatically. Defining a custom `footer` (e.g. a "Powered By" richText) does **not** suppress those buttons — the footer content and the OK/Cancel buttons coexist.
 
