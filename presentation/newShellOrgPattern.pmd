@@ -28,7 +28,7 @@
       "authType": "sso",
       "bestEffort": "true",
       "exclude": "<% empty(selectedApplicationId.value) %>"
-    },
+    }
   ],
   "outboundData": {
     "outboundEndPoints": [
