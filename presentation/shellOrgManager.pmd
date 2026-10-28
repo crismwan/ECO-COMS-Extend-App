@@ -188,7 +188,7 @@
                 "gridType": "LIST",
                 "multiViewStylingEnabled": true,
                 "id": "appsGrid",
-                "rows": "<% comsApplications.data %>",
+                "rows": "<% comsApplications.data ?? [] %>",
                 "rowVariableName": "app",
                 "enabled": false,
                 "label": "Applications",
