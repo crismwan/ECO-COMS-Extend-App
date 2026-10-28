@@ -43,11 +43,9 @@
             "url": "<% 'https://ubc.service-now.com' %>"
           },
           {
-            "type": "task",
-            "label": "Shell Org Manager",
-            "task": {
-              "taskId": "shellOrgManager"
-            }
+            "type": "external",
+            "label": "RBAC Rolename by Application",
+            "url": "<% 'https://confluence.it.ubc.ca/pages/viewpage.action?spaceKey=SD&title=RBAC+Rolename+landing+page+by+Application' %>"
           }
         ]
       }

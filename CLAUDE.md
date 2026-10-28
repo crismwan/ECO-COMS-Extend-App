@@ -98,7 +98,7 @@ Note the escaping when a literal is embedded in the pattern: `'yyyy-MM-dd\\'T\\'
 
 Other attributes: `enabled`, `guide`, `helpText`, `id`, `label` (max 255 chars), `render`, `required`, `sortOrder`, `value`, `valueOutBinding`, `valuesOut`, `visible`.
 
-**`visible: false` DROPS the widget's `valueOutBinding`/`valuesOut` from the outbound payload**
+**`visible: false` DROPS the widget's `valueOutBinding`/`valuesOut` from the outbound payload** (true for widgets generally). To submit a hidden value, add it back in `onSend`.
 
 ## guide attribute — rendering behavior
 
@@ -130,7 +130,7 @@ The `guide` attribute places a **"?" tooltip icon** beside the widget label. It 
   "id": "sectionDesc",
   "value": "<% '<span style=\"color:#374151;font-size:13px\">ⓘ Explanation of this section and its fields.</span>' %>"
 }
-``` (true for widgets generally). To submit a hidden value, add it back in `onSend`.
+```
 
 ## Widget validation — `onChange` + `setError` / `clearError`
 
