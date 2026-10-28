@@ -43,7 +43,7 @@
                   "type": "richText",
                   "id": "overviewDesc",
                   "enabled": false,
-                  "value": "<span style=\"color:#374151;font-size:13px\">The Functional Unit Hierarchy (FUH) represents the organizational structure used to scope role assignments and permissions within ECO-COMS. FUH organizations are Custom Organizations of type <b>Functional Unit Hierarchy</b> and are used to align shell org patterns to specific UBC academic or administrative units.</span>"
+                  "value": "<span style=\"color:#374151;font-size:13px\">FUH are Custom Organizations of type <b>Functional Unit Hierarchy</b> and are used specifically for UBC academic or administrative units.</span>"
                 }
               ],
               "_layout": {
@@ -55,125 +55,6 @@
             }
           ]
         },
-        {
-          "type": "layoutSection",
-          "id": "actionsSection",
-          "children": [
-            {
-              "type": "fieldSet",
-              "id": "shellOrgsActionsFieldSet",
-              "title": "Shell Organization Management",
-              "children": [
-                {
-                  "type": "richText",
-                  "id": "shellOrgsActionsDesc",
-                  "enabled": false,
-                  "value": "<span style=\"color:#374151;font-size:12px\">Manage shell organizations and URL patterns that are associated with FUH units.</span>"
-                },
-                {
-                  "type": "button",
-                  "label": "Open Shell Org Manager",
-                  "taskReference": {
-                    "taskId": "shellOrgManager"
-                  },
-                  "action": "PRIMARY"
-                },
-                {
-                  "type": "button",
-                  "label": "Add Shell Org Pattern",
-                  "taskReference": {
-                    "taskId": "createShellOrgPatternWizard"
-                  },
-                  "action": "AUXILIARY"
-                }
-              ],
-              "_layout": {
-                "density": "medium",
-                "alignment": "left",
-                "horizontalSizing": "stretch",
-                "labelPosition": "top"
-              }
-            },
-            {
-              "type": "fieldSet",
-              "id": "rolesActionsFieldSet",
-              "title": "Role Administration",
-              "children": [
-                {
-                  "type": "richText",
-                  "id": "rolesActionsDesc",
-                  "enabled": false,
-                  "value": "<span style=\"color:#374151;font-size:12px\">Submit and review assignable role requests, and manage AAA provisioning for FUH-scoped roles.</span>"
-                },
-                {
-                  "type": "button",
-                  "label": "Submit Role Request",
-                  "taskReference": {
-                    "taskId": "assignableRoleManager"
-                  },
-                  "action": "PRIMARY"
-                },
-                {
-                  "type": "button",
-                  "label": "View My Requests",
-                  "taskReference": {
-                    "taskId": "assignableRoleManagerView"
-                  },
-                  "action": "AUXILIARY"
-                },
-                {
-                  "type": "button",
-                  "label": "Submit AAA Provisioning",
-                  "taskReference": {
-                    "taskId": "adminProvisioning"
-                  },
-                  "action": "AUXILIARY"
-                }
-              ],
-              "_layout": {
-                "density": "medium",
-                "alignment": "left",
-                "horizontalSizing": "stretch",
-                "labelPosition": "top"
-              }
-            },
-            {
-              "type": "fieldSet",
-              "id": "auditActionsFieldSet",
-              "title": "Audit & Compliance",
-              "children": [
-                {
-                  "type": "richText",
-                  "id": "auditActionsDesc",
-                  "enabled": false,
-                  "value": "<span style=\"color:#374151;font-size:12px\">Review the audit trail of all ECO-COMS changes and pending ISC requests.</span>"
-                },
-                {
-                  "type": "button",
-                  "label": "View Audit Log",
-                  "taskReference": {
-                    "taskId": "auditLogViewer"
-                  },
-                  "action": "AUXILIARY"
-                },
-                {
-                  "type": "button",
-                  "label": "Pending ISC Requests",
-                  "taskReference": {
-                    "taskId": "iscRoleRequestsView"
-                  },
-                  "action": "AUXILIARY"
-                }
-              ],
-              "_layout": {
-                "density": "medium",
-                "alignment": "left",
-                "horizontalSizing": "stretch",
-                "labelPosition": "top"
-              }
-            }
-          ]
-        }
       ]
     },
     "footer": {
