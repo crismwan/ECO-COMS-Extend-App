@@ -61,7 +61,7 @@
               "type": "button",
               "label": "Add Another Organization",
               "taskReference": {
-                "taskId": "newShellOrg"
+                "taskId": "createShellOrgWizard"
               },
               "action": "PRIMARY"
             },
