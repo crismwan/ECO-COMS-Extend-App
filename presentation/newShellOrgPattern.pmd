@@ -29,17 +29,6 @@
       "bestEffort": "true",
       "exclude": "<% empty(selectedApplicationId.value) %>"
     },
-    {
-      "name": "existingPatterns",
-      "baseUrlType": "workday-wql",
-      "url": "data",
-      "authType": "sso",
-      "isCollection": true,
-      "bestEffort": "true",
-      "wqlQuery": {
-        "queryId": "existingPatterns"
-      }
-    }
   ],
   "outboundData": {
     "outboundEndPoints": [
@@ -176,48 +165,6 @@
               "id": "patternPreview",
               "label": "Pattern Name Preview",
               "value": "<% if (empty(selectedApplicationId.value)) { 'Select an application above' } else { let sa = comsApplications.data.filter(a => { a.id == selectedApplicationId.value[0] }); let ac = sa.size() > 0 ? sa[0].appId : ''; ac + ':PATTERN:' + (attribute1.value ?? '*') + ':' + (attribute2.value ?? '*') + ':' + (attribute3.value ?? '*') + ':' + (attribute5.value ?? '*') } %>"
-            },
-            {
-              "type": "grid",
-              "gridType": "LIST",
-              "multiViewStylingEnabled": true,
-              "id": "ExistingPatternsGrid",
-              "rows": "<% existingPatterns.data %>",
-              "rowVariableName": "pattern",
-              "enabled": false,
-              "label": "Existing Shell Org Patterns",
-              "columns": [
-                {
-                  "type": "column",
-                  "id": "colPatternName",
-                  "columnId": "colPatternName",
-                  "label": "Organization Name",
-                  "sortableAndFilterable": "true",
-                  "cellTemplate": {
-                    "type": "instanceList",
-                    "view": true,
-                    "relatedTask": true,
-                    "instanceList": [
-                      {
-                        "descriptor": "<% pattern.organizationByName.descriptor ?? pattern.code %>",
-                        "wid": "<% pattern.workdayID %>"
-                      }
-                    ]
-                  }
-                },
-                {
-                  "type": "column",
-                  "id": "colPatternCode",
-                  "columnId": "colPatternCode",
-                  "label": "Pattern Code",
-                  "sortableAndFilterable": "true",
-                  "cellTemplate": {
-                    "type": "text",
-                    "value": "<% pattern.code %>",
-                    "enabled": false
-                  }
-                }
-              ]
             },
             {
               "type": "fieldSet",
