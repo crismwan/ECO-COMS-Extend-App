@@ -874,6 +874,30 @@ Then filter in the grid `rows` binding: `"<% positions.data.filter(p => { myIdLi
 
 The AMD data provider key is `workday-staffing-v6` pointing to the Workday Staffing v6 API base URL.
 
+### Deferred endpoints — null guard required (`?? []`)
+
+An inbound endpoint marked `"deferred": true` does **not** fetch until its data is first needed (e.g. when a tab using it is opened). However, Workday evaluates **all PMD script expressions at page load time** — including `rows`, `visible`, and `filter` expressions on every tab, not just the active one. This means a deferred endpoint's `.data` property is accessed before the fetch has occurred, causing:
+
+```
+Property Error found: data. Script Excerpt: myEndpoint.data
+```
+
+**Fix:** Always guard deferred endpoint data with `?? []` in any PMD expression:
+
+```json
+"rows": "<% comsApplications.data ?? [] %>"
+```
+
+**Pattern to apply everywhere deferred endpoints are used:**
+
+- `"rows": "<% deferredEndpoint.data ?? [] %>"` — grids
+- `"visible": "<% (deferredEndpoint.data ?? []).size() > 0 %>"` — conditional visibility
+- `"values": "<% deferredEndpoint.data ?? [] %>"` — instanceList / dropdown
+
+**Non-deferred (eager) endpoints do NOT need this guard** — their data is fetched before the page renders, so `.data` is always a list.
+
+**Confirmed failure:** In `shellOrgManager.pmd`, the `comsApplications` endpoint (`deferred: true`) was referenced as bare `comsApplications.data` in the `appsGrid` rows expression. Even though `appsGrid` is on the "Application Patterns" tab (not the default Summary tab), Workday still evaluated the expression at page load — throwing the Property Error and crashing the entire page with a red "!" error indicator.
+
 ## Submitting data (outbound endpoints)
 
 Outbound endpoints are REST APIs that add/update/delete data. When the user clicks **OK** on an edit page, Presentation Components build the JSON request body from widget values and submit it. Defined in the PMD's `outboundData.outboundEndPoints[]`.
