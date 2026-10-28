@@ -22,7 +22,7 @@
                 {
                   "type": "card",
                   "cardId": "ShellOrgPatternReceiptCard",
-                  "parameters": "<% { 'patternName': flowVariables.patternName ?? '', 'applicationCode': flowVariables.comsAppId ?? '', 'effectiveDate': flowVariables.effectiveDate ?? '' } %>"
+                  "parameters": "<% { 'patternName': flowVariables.patternName ?? '', 'applicationCode': flowVariables.comsAppId ?? '', 'effectiveDate': flowVariables.effectiveDate ?? '', 'bodyText': 'Pattern: ' + (flowVariables.patternName ?? '') + ' | App: ' + (flowVariables.comsAppId ?? '') + ' | Effective: ' + (flowVariables.effectiveDate ?? '') } %>"
                 }
               ]
             }

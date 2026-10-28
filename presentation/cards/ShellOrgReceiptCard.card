@@ -1,6 +1,6 @@
 {
   "id": "ShellOrgReceiptCard",
-  "parameters": ["organizationName", "organizationCode", "applicationCode", "effectiveDate"],
+  "parameters": ["organizationName", "organizationCode", "applicationCode", "effectiveDate", "bodyText"],
   "header": {
     "title": "Organization Created Successfully",
     "subtitle": "<% organizationName ?? '' %>",
@@ -11,7 +11,7 @@
   },
   "body": {
     "type": "simpleCard",
-    "value": "<% 'Organization Code: ' + (organizationCode ?? '') + ' | Application: ' + (applicationCode ?? '') + ' | Effective Date: ' + (effectiveDate ?? '') %>"
+    "value": "<% bodyText ?? '' %>"
   },
   "footer": [
     {

@@ -1,6 +1,6 @@
 {
   "id": "ShellOrgPatternReceiptCard",
-  "parameters": ["patternName", "applicationCode", "effectiveDate"],
+  "parameters": ["patternName", "applicationCode", "effectiveDate", "bodyText"],
   "header": {
     "title": "Pattern Created Successfully",
     "subtitle": "<% patternName ?? '' %>",
@@ -11,7 +11,7 @@
   },
   "body": {
     "type": "simpleCard",
-    "value": "<% 'Pattern Name: ' + (patternName ?? '') + ' | Application: ' + (applicationCode ?? '') + ' | Effective Date: ' + (effectiveDate ?? '') %>"
+    "value": "<% bodyText ?? '' %>"
   },
   "footer": [
     {
