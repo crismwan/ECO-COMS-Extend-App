@@ -15,33 +15,14 @@
           "id": "successSection",
           "children": [
             {
-              "type": "fieldSet",
-              "id": "successFieldSet",
-              "title": "Organization Created Successfully",
-              "children": [
+              "type": "cardContainer",
+              "id": "shellOrgReceiptCardContainer",
+              "layout": "grid",
+              "cards": [
                 {
-                  "type": "richText",
-                  "id": "successMessage",
-                  "enabled": false,
-                  "value": "<span style=\"color:#059669;font-size:11px;font-weight:700\">✓ </span><span style=\"color:#065f46;font-size:11px\">The Shell Organization has been created in Workday.</span>"
-                },
-                {
-                  "type": "readOnlyText",
-                  "id": "orgNameDisplay",
-                  "label": "Organization Name",
-                  "value": "<% flowVariables.organizationName ?? '' %>"
-                },
-                {
-                  "type": "readOnlyText",
-                  "id": "orgCodeDisplay",
-                  "label": "Organization Code",
-                  "value": "<% flowVariables.organizationCode ?? '' %>"
-                },
-                {
-                  "type": "readOnlyText",
-                  "id": "copyHint",
-                  "label": " ",
-                  "value": "Use the organization code above to reference this org in downstream tasks."
+                  "type": "card",
+                  "cardId": "ShellOrgReceiptCard",
+                  "parameters": "<% { 'organizationName': flowVariables.organizationName ?? '', 'organizationCode': flowVariables.organizationCode ?? '', 'applicationCode': flowVariables.applicationCode ?? '', 'effectiveDate': flowVariables.effectiveDate ?? '' } %>"
                 }
               ]
             }

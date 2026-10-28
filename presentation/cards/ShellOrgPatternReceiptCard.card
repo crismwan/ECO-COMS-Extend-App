@@ -1,0 +1,30 @@
+{
+  "id": "ShellOrgPatternReceiptCard",
+  "parameters": ["patternName", "applicationCode", "effectiveDate"],
+  "header": {
+    "title": "✓ Pattern Created",
+    "subtitle": "<% patternName ?? '' %>",
+    "indicator": {
+      "label": "Success",
+      "color": "green"
+    }
+  },
+  "body": {
+    "type": "simpleCard",
+    "value": "<% 'Pattern Name: ' + (patternName ?? '') + '\nApplication: ' + (applicationCode ?? '') + '\nEffective Date: ' + (effectiveDate ?? '') %>"
+  },
+  "footer": [
+    {
+      "label": "View in Shell Org Manager",
+      "taskReference": {
+        "taskId": "shellOrgManager"
+      }
+    },
+    {
+      "label": "Add Another Pattern",
+      "taskReference": {
+        "taskId": "createShellOrgPatternWizard"
+      }
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "id": "ShellOrgReceiptCard",
+  "parameters": ["organizationName", "organizationCode", "applicationCode", "effectiveDate"],
+  "header": {
+    "title": "✓ Organization Created",
+    "subtitle": "<% organizationName ?? '' %>",
+    "indicator": {
+      "label": "Success",
+      "color": "green"
+    }
+  },
+  "body": {
+    "type": "simpleCard",
+    "value": "<% 'Organization Code: ' + (organizationCode ?? '') + '\nApplication: ' + (applicationCode ?? '') + '\nEffective Date: ' + (effectiveDate ?? '') %>"
+  },
+  "footer": [
+    {
+      "label": "View in Shell Org Manager",
+      "taskReference": {
+        "taskId": "shellOrgManager"
+      }
+    },
+    {
+      "label": "Add Another Organization",
+      "taskReference": {
+        "taskId": "createShellOrgWizard"
+      }
+    }
+  ]
+}
