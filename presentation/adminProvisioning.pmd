@@ -65,7 +65,7 @@
     {
       "name": "posSearch",
       "baseUrlType": "workday-wql",
-      "url": "<% 'data?query=' + string:pathEncode('SELECT workdayID, position_PositionManagement FROM allPositions WHERE (jobTitle contains \\'' + instanceListQuery + '\\' OR cf_PositionID contains \\'' + instanceListQuery + '\\')') %>",
+      "url": "<% 'data?query=' + string:pathEncode('SELECT workdayID, position_PositionManagement FROM allPositions WHERE jobTitle contains \\'' + instanceListQuery + '\\'') %>",
       "authType": "sso",
       "isCollection": true,
       "bestEffort": "true",
@@ -536,7 +536,7 @@
                   "multiSelect": true,
                   "values": "<% [] %>",
                   "searchEndPoint": "<% endpoints.posSearch %>",
-                  "searchResultValues": "<% empty(posSearch.data) ? [] : posSearch.data.map(o => { {'id': o.workdayID, 'descriptor': o.position_PositionManagement.descriptor} }) %>",
+                  "searchResultValues": "<% empty(posSearch.data) ? [] : posSearch.data.map(o => { {'id': o.workdayID, 'descriptor': empty(o.position_PositionManagement.descriptor) ? o.workdayID : o.position_PositionManagement.descriptor} }) %>",
                   "valuesOut": [
                     {
                       "value": "<% self.value.join(',') %>",
