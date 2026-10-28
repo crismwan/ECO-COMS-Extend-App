@@ -132,26 +132,6 @@
             "title": "Shell Organization Summary",
             "children": [
               {
-                "type": "chartCard",
-                "id": "shellOrgStatusChart",
-                "chart": {
-                  "type": "donutChart2",
-                  "data": "<% [{status: 'Active', count: size(allShellOrgs.data.filter(o => { o.code.startsWith('X:') && !o.code.contains(':PATTERN') && o.cf_active1 == true }))}, {status: 'Inactive', count: size(allShellOrgs.data.filter(o => { o.code.startsWith('X:') && !o.code.contains(':PATTERN') && o.cf_active1 != true }))}] %>",
-                  "dataVariableName": "slice",
-                  "title": "<% size(allShellOrgs.data.filter(o => { o.code.startsWith('X:') && !o.code.contains(':PATTERN') })) + ' Total Orgs' %>",
-                  "sliceSizeDataSet": {
-                    "name": "Count",
-                    "value": "<% slice.count %>"
-                  },
-                  "sliceColorDataSet": {
-                    "name": "Status",
-                    "value": "<% slice.status %>"
-                  },
-                  "showPercentLabels": true,
-                  "animateOnLoad": true
-                }
-              },
-              {
                 "type": "readOnlyText",
                 "id": "summaryActiveCount",
                 "label": "Active Orgs",
