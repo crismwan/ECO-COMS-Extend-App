@@ -241,7 +241,7 @@
       "id": "createShellOrgPatternWizard",
       "routingPattern": "/createShellOrgPatternWizard",
       "page": {
-        "taskId": "createShellOrgPatternWizard"
+        "id": "createShellOrgPatternWizard"
       }
     }
   ],
