@@ -13,97 +13,44 @@
       "sections": [
         {
           "type": "layoutSection",
-          "id": "error401Section",
+          "id": "errorSection",
           "children": [
             {
               "type": "fieldSet",
-              "id": "error401FieldSet",
-              "title": "Unauthorized",
-              "visible": "<% errorCode == '401' %>",
+              "id": "errorFieldSet",
+              "title": "Error Details",
               "children": [
                 {
-                  "type": "richText",
-                  "id": "errorBanner401",
+                  "type": "text",
+                  "id": "errorSummary401",
                   "enabled": false,
-                  "value": "<% '<span style=\"color:#B45309;font-size:13px;font-weight:700\">⚠ Error 401 — Unauthorized</span><br/><span style=\"color:#374151;font-size:12px\">We couldn\\'t verify your identity, or you don\\'t have access to this page. If you believe you should have access to ECO-COMS, contact your COMS Administrator.</span>' %>"
-                }
-              ],
-              "_layout": {
-                "density": "medium",
-                "alignment": "left",
-                "horizontalSizing": "stretch",
-                "labelPosition": "top"
-              }
-            }
-          ]
-        },
-        {
-          "type": "layoutSection",
-          "id": "error403Section",
-          "children": [
-            {
-              "type": "fieldSet",
-              "id": "error403FieldSet",
-              "title": "Permission Denied",
-              "visible": "<% errorCode == '403' %>",
-              "children": [
+                  "visible": "<% errorCode == '401' %>",
+                  "label": "⚠ Error 401 — Unauthorized",
+                  "value": "We couldn't verify your identity, or you don't have access to this page. If you believe you should have access to ECO-COMS, contact your COMS Administrator."
+                },
                 {
-                  "type": "richText",
-                  "id": "errorBanner403",
+                  "type": "text",
+                  "id": "errorSummary403",
                   "enabled": false,
-                  "value": "<% '<span style=\"color:#B45309;font-size:13px;font-weight:700\">⚠ Error 403 — Permission Denied</span><br/><span style=\"color:#374151;font-size:12px\">You don\\'t have permission to manage this application\\'s shell organizations. COMS access is scoped per application. Contact your COMS Administrator to request access.</span>' %>"
-                }
-              ],
-              "_layout": {
-                "density": "medium",
-                "alignment": "left",
-                "horizontalSizing": "stretch",
-                "labelPosition": "top"
-              }
-            }
-          ]
-        },
-        {
-          "type": "layoutSection",
-          "id": "error404Section",
-          "children": [
-            {
-              "type": "fieldSet",
-              "id": "error404FieldSet",
-              "title": "Page Not Found",
-              "visible": "<% errorCode == '404' %>",
-              "children": [
+                  "visible": "<% errorCode == '403' %>",
+                  "label": "⚠ Error 403 — Permission Denied",
+                  "value": "You don't have permission to manage this application's shell organizations. COMS access is scoped per application. Contact your COMS Administrator to request access."
+                },
                 {
-                  "type": "richText",
-                  "id": "errorBanner404",
+                  "type": "text",
+                  "id": "errorSummary404",
                   "enabled": false,
-                  "value": "<% '<span style=\"color:#B45309;font-size:13px;font-weight:700\">⚠ Error 404 — Page Not Found</span><br/><span style=\"color:#374151;font-size:12px\">We couldn\\'t find the page you\\'re looking for. It may have been moved or the link may be incorrect.</span>' %>"
-                }
-              ],
-              "_layout": {
-                "density": "medium",
-                "alignment": "left",
-                "horizontalSizing": "stretch",
-                "labelPosition": "top"
-              }
-            }
-          ]
-        },
-        {
-          "type": "layoutSection",
-          "id": "errorDefaultSection",
-          "children": [
-            {
-              "type": "fieldSet",
-              "id": "errorDefaultFieldSet",
-              "title": "Error",
-              "visible": "<% errorCode != '401' && errorCode != '403' && errorCode != '404' %>",
-              "children": [
+                  "visible": "<% errorCode == '404' %>",
+                  "label": "⚠ Error 404 — Page Not Found",
+                  "value": "We couldn't find the page you're looking for. It may have been moved or the link may be incorrect."
+                },
                 {
-                  "type": "richText",
-                  "id": "errorBannerDefault",
+                  "type": "text",
+                  "id": "errorSummaryDefault",
                   "enabled": false,
-                  "value": "<% '<span style=\"color:#B45309;font-size:13px;font-weight:700\">⚠ Unexpected Error</span><br/><span style=\"color:#374151;font-size:12px\">Something went wrong. Please try again, or contact your COMS Administrator if the problem persists.</span>' %>"
+                  "visible": "<% errorCode != '401' && errorCode != '403' && errorCode != '404' %>",
+                  "label": "⚠ Unexpected Error",
+                  "value": "Something went wrong. Please try again, or contact your COMS Administrator if the problem persists."
                 }
               ],
               "_layout": {
