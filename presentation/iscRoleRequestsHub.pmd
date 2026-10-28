@@ -21,7 +21,7 @@
     "body": {
       "type": "listDetailHub",
       "label": "ISC Role Requests",
-      "items": "<% comsAssignableRoles.data.filter(r => r.status == 'Pending ISC Review') %>",
+      "items": "<% comsAssignableRoles.data %>",
       "itemVariableName": "request",
       "icon": "wd-icon-checkboxes",
       "navigationTemplate": {
