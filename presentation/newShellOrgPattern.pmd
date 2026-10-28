@@ -180,6 +180,12 @@
                   "type": "text",
                   "id": "attribute1",
                   "label": "Subject",
+                  "guide": {
+                    "type": "guide",
+                    "id": "guideSubject",
+                    "title": "Subject Format",
+                    "text": "Exactly 4 uppercase letters (e.g. MATH, CPSC, COMM). Leave blank to match any subject (wildcard *)."
+                  },
                   "onChange": "<%\n            if (empty(selectedApplicationId.value)) {\n              self.setError(comsValidations.errorNoApp());\n            } else if (empty(self.value)) {\n              self.clearError();\n            } else if (!comsValidations.isValidSubject(self.value)) {\n              self.setError(comsValidations.errorSubject());\n            } else {\n              let pName = (comsApplications.data.filter(a => { a.id == selectedApplicationId.value[0] }).size() > 0 ? comsApplications.data.filter(a => { a.id == selectedApplicationId.value[0] })[0].appId : '') + ':PATTERN:' + (attribute1.value ?? '*') + ':' + (attribute2.value ?? '*') + ':' + (attribute3.value ?? '*') + ':' + (attribute5.value ?? '*');\n              let dupes = existingPatterns.data.filter(p => { p.code == pName });\n              if (dupes.size() > 0) {\n                self.setError(comsValidations.errorDuplicate(dupes[0].organizationByName.descriptor));\n              } else {\n                self.clearError();\n              }\n            }\n          %>",
                   "value": "<% flowVariables.attribute1 ?? '' %>",
                   "placeholder": "e.g. MATH"
@@ -188,6 +194,12 @@
                   "type": "text",
                   "id": "attribute2",
                   "label": "Course",
+                  "guide": {
+                    "type": "guide",
+                    "id": "guideCourse",
+                    "title": "Course Format",
+                    "text": "4 uppercase letters, a colon, and 3 digits, with an optional letter suffix (e.g. COMM:300, COMM:300A, COMM_V:300). Leave blank to match any course (wildcard *)."
+                  },
                   "onChange": "<%\n            if (empty(selectedApplicationId.value)) {\n              self.setError(comsValidations.errorNoApp());\n            } else if (empty(self.value)) {\n              self.clearError();\n            } else if (!comsValidations.isValidCourse(self.value)) {\n              self.setError(comsValidations.errorCourse());\n            } else {\n              let pName = (comsApplications.data.filter(a => { a.id == selectedApplicationId.value[0] }).size() > 0 ? comsApplications.data.filter(a => { a.id == selectedApplicationId.value[0] })[0].appId : '') + ':PATTERN:' + (attribute1.value ?? '*') + ':' + (attribute2.value ?? '*') + ':' + (attribute3.value ?? '*') + ':' + (attribute5.value ?? '*');\n              let dupes = existingPatterns.data.filter(p => { p.code == pName });\n              if (dupes.size() > 0) {\n                self.setError(comsValidations.errorDuplicate(dupes[0].organizationByName.descriptor));\n              } else {\n                self.clearError();\n              }\n            }\n            if (!empty(attribute3.value)) {\n              if (!comsValidations.isValidSection(attribute3.value, self.value ?? '')) {\n                attribute3.setError(comsValidations.errorSection(self.value ?? ''));\n              } else {\n                attribute3.clearError();\n              }\n            }\n          %>",
                   "value": "<% flowVariables.attribute2 ?? '' %>",
                   "placeholder": "e.g. MATH_V:300"
@@ -196,6 +208,12 @@
                   "type": "text",
                   "id": "attribute3",
                   "label": "Section",
+                  "guide": {
+                    "type": "guide",
+                    "id": "guideSection",
+                    "title": "Section Format",
+                    "text": "For most courses, 3 digits (e.g. 951). For _V courses, 3 digits followed by a letter (e.g. 951L). Leave blank to match any section (wildcard *)."
+                  },
                   "onChange": "<%\n            if (empty(selectedApplicationId.value)) {\n              self.setError(comsValidations.errorNoApp());\n            } else if (empty(self.value)) {\n              self.clearError();\n            } else if (!comsValidations.isValidSection(self.value, attribute2.value ?? '')) {\n              self.setError(comsValidations.errorSection(attribute2.value ?? ''));\n            } else {\n              let pName = (comsApplications.data.filter(a => { a.id == selectedApplicationId.value[0] }).size() > 0 ? comsApplications.data.filter(a => { a.id == selectedApplicationId.value[0] })[0].appId : '') + ':PATTERN:' + (attribute1.value ?? '*') + ':' + (attribute2.value ?? '*') + ':' + (attribute3.value ?? '*') + ':' + (attribute5.value ?? '*');\n              let dupes = existingPatterns.data.filter(p => { p.code == pName });\n              if (dupes.size() > 0) {\n                self.setError(comsValidations.errorDuplicate(dupes[0].organizationByName.descriptor));\n              } else {\n                self.clearError();\n              }\n            }\n          %>",
                   "value": "<% flowVariables.attribute3 ?? '' %>",
                   "placeholder": "e.g. 951"
@@ -213,6 +231,12 @@
                   "type": "text",
                   "id": "attribute5",
                   "label": "Academic Period",
+                  "guide": {
+                    "type": "guide",
+                    "id": "guideAcademicPeriod",
+                    "title": "Academic Period Format",
+                    "text": "Year (2026 or 2027) followed by S, W1, or W2 — representing Summer, Winter Session 1, or Winter Session 2 (e.g. 2026S, 2026W1, 2027W2). Leave blank to match any period (wildcard *)."
+                  },
                   "onChange": "<%\n            if (empty(selectedApplicationId.value)) {\n              self.setError(comsValidations.errorNoApp());\n            } else if (empty(self.value)) {\n              self.clearError();\n            } else if (!comsValidations.isValidAcademicPeriod(self.value)) {\n              self.setError(comsValidations.errorAcademicPeriod());\n            } else {\n              let pName = (comsApplications.data.filter(a => { a.id == selectedApplicationId.value[0] }).size() > 0 ? comsApplications.data.filter(a => { a.id == selectedApplicationId.value[0] })[0].appId : '') + ':PATTERN:' + (attribute1.value ?? '*') + ':' + (attribute2.value ?? '*') + ':' + (attribute3.value ?? '*') + ':' + (attribute5.value ?? '*');\n              let dupes = existingPatterns.data.filter(p => { p.code == pName });\n              if (dupes.size() > 0) {\n                self.setError(comsValidations.errorDuplicate(dupes[0].organizationByName.descriptor));\n              } else {\n                self.clearError();\n              }\n            }\n          %>",
                   "value": "<% flowVariables.attribute5 ?? '' %>",
                   "placeholder": "e.g. 2026S"
@@ -222,6 +246,12 @@
                   "id": "effectiveDate",
                   "label": "Effective Date",
                   "required": true,
+                  "guide": {
+                    "type": "guide",
+                    "id": "guideEffectiveDatePattern",
+                    "title": "Effective Date Rules",
+                    "text": "Must be a weekday (Monday–Friday) in 2026 or 2027. Weekends and dates outside this range will be rejected. The pattern will be active in Workday starting on this date."
+                  },
                   "value": "<% flowVariables.effectiveDate ?? '' %>",
                   "onChange": "<%\n            if (empty(self.value)) {\n              self.clearError();\n            } else if (!comsValidations.isWeekday(self.value)) {\n              self.setError(comsValidations.errorWeekday());\n            } else if (!comsValidations.isCurrentOrFutureYear(self.value)) {\n              self.setError(comsValidations.errorYear());\n            } else {\n              self.clearError();\n            }\n          %>"
                 }

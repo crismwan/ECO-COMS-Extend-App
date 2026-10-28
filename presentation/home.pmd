@@ -28,7 +28,29 @@
           "_color": "#002145"
         }
       ],
-      "_color": "#002145"
+      "_color": "#002145",
+      "additionalLinks": {
+        "title": "Resources",
+        "links": [
+          {
+            "type": "external",
+            "label": "UBC ECO-COMS Documentation",
+            "url": "<% 'https://wiki.ubc.ca/ECO-COMS' %>"
+          },
+          {
+            "type": "external",
+            "label": "Submit a Helpdesk Ticket",
+            "url": "<% 'https://ubc.service-now.com' %>"
+          },
+          {
+            "type": "task",
+            "label": "Shell Org Manager",
+            "task": {
+              "taskId": "shellOrgManager"
+            }
+          }
+        ]
+      }
     },
     "footer": {
       "type": "footer",

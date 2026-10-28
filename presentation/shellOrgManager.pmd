@@ -22,6 +22,7 @@
       "authType": "sso",
       "isCollection": true,
       "bestEffort": "true",
+      "deferred": true,
       "wqlQuery": {
         "queryId": "existingPatterns"
       }
@@ -33,6 +34,7 @@
       "authType": "sso",
       "isCollection": true,
       "bestEffort": "true",
+      "deferred": true,
       "wqlQuery": {
         "queryId": "allShellAssignableRolesinTenant"
       }
@@ -44,6 +46,7 @@
       "authType": "sso",
       "isCollection": true,
       "bestEffort": "true",
+      "deferred": true,
       "wqlQuery": {
         "queryId": "allShellOrgs"
       }
