@@ -626,6 +626,57 @@ To send variable data into a flow, use an `outboundVariable` endpoint with `"var
 
 **Reference it in a flow step transition (AMD):** `"condition": "<% flowVariables.isValid == true %>"`.
 
+## editWizard widget
+
+An `editWizard` guides users through a series of independent edit-page tasks in a single wizard container. It lives on a **view page** and is the **only tag** in that page's `presentation.body`.
+
+### Key constraints (confirmed from Workday developer docs)
+
+- **View page only.** The container PMD must be `pageType: "VIEW"` (or no pageType = view). Each step (`editTask`) must be an edit page.
+- **No flows within editWizard.** You cannot use AMD flow definitions inside an editWizard.
+- **No cancel destination attribute.** The editWizard has **no `cancelTask`, `cancelOverride`, or equivalent attribute**. When the user clicks the X / Cancel button, the wizard navigates to the **last viewed page** — this is a Workday platform limitation and cannot be overridden at the wizard level.
+  - The individual step edit pages CAN have `cancelOverride`, but that only controls the step-level Cancel button within the wizard, not the wizard container's close/X.
+  - **Workaround:** Ensure users arrive at the wizard from a meaningful "back" location (e.g. a landing page), so the platform default "last viewed page" navigation sends them somewhere sensible.
+- **Data is not submitted until OK.** All outbound endpoints on all edit pages submit when the user reaches the last page and clicks OK. Navigating away without clicking OK discards all entered data (it's cached on the server but not committed).
+- **No data passing between steps.** A step cannot use data created by a previous step — all steps submit simultaneously on final OK.
+- **No warnings support.** Calling `setWarning()` on a step page causes an error at submission time.
+- **Performance:** Limit to 2–3 grids across all pages. Too many widgets/endpoints slow performance significantly.
+- **Don't use an editWizard page as a hub navigation task.** Can be used as an `additionalLinks` entry in a hub.
+
+### Attributes reference
+
+| Attribute | Type | Required | Description |
+|---|---|---|---|
+| `type` | string | ✓ | `"editWizard"` |
+| `title` | stringScript | | Title at top of left nav pane |
+| `subtitle` | stringScript | | Subtitle under title in left nav pane |
+| `editTasks` | array | ✓ | List of tasks (max 10 active at runtime). Each: `{ "label": stringScript, "render": booleanScript, "task": { "taskId": string, "parameters": map } }` |
+| `summarySettings` | object | | `{ "enabled": booleanScript, "label": stringScript }`. Adds a summary review page. Default `enabled: true`. |
+| `conclusion` | object | | `{ "task": { "taskId": string, "parameters": map }, "render": booleanScript }`. After OK, redirect to this view page. Without it, navigates to last viewed page. |
+| `enableSaving` | boolean | | `true` enables Save for Later button + autosave. Requires `section` as top-level container on each step. Stores drafts 30 days. Default `false`. |
+| `id` | binding-String | | Unique identifier for this widget |
+
+### Summary / conclusion distinction
+
+- `summarySettings.enabled: true` — adds a "Review & Submit" panel inside the wizard showing all fields read-only before the user clicks OK.
+- `conclusion.task` — after the user clicks OK and data submits, the wizard redirects to this separate view page (e.g. a success/confirmation page).
+
+### Minimal example
+
+```json
+{
+  "type": "editWizard",
+  "title": "Create Shell Organization",
+  "subtitle": "ECO-COMS Shell Organization Manager",
+  "summarySettings": { "enabled": true, "label": "Review & Submit" },
+  "editTasks": [
+    { "label": "Organization Details", "task": { "taskId": "newShellOrg" } },
+    { "label": "Confirm & Submit", "task": { "taskId": "newShellOrgConfirm" } }
+  ],
+  "conclusion": { "task": { "taskId": "newShellOrgSuccess" }, "render": true }
+}
+```
+
 ## hub widget
 
 A **hub** is a container widget: a left navigation pane plus task pages rendered on the right. Use it to create a centralized area with nav links to contextual tasks and related info.
