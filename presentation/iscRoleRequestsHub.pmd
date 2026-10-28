@@ -17,6 +17,20 @@
       "sections": [
         {
           "type": "layoutSection",
+          "id": "navSection",
+          "children": [
+            {
+              "type": "button",
+              "label": "← Home",
+              "taskReference": {
+                "taskId": "home"
+              },
+              "action": "LINK"
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
           "id": "iscHubSection",
           "children": [
             {
@@ -67,14 +81,6 @@
                 }
               },
               "action": "AUXILIARY"
-            },
-            {
-              "type": "button",
-              "label": "← Home",
-              "taskReference": {
-                "taskId": "home"
-              },
-              "action": "LINK"
             }
           ]
         }
