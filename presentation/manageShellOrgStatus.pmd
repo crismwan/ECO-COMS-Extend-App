@@ -147,13 +147,40 @@
                   "type": "readOnlyText",
                   "id": "currentStatusDisplay",
                   "label": "Current Status",
-                  "value": "<% queryParams.currentStatus ?? '' %>"
+                  "value": "<% queryParams.currentStatus ?? '' %>",
+                  "guide": {
+                    "type": "guide",
+                    "id": "guideCurrentStatus",
+                    "title": "About Organization Status",
+                    "text": "Active organizations are available for role assignments in Workday. Inactive organizations are hidden from selection but existing role assignments are NOT automatically removed — verify in Workday before inactivating."
+                  }
                 },
                 {
                   "type": "readOnlyText",
                   "id": "newStatusDisplay",
                   "label": "New Status",
                   "value": "<% queryParams.currentStatus == 'Active' ? 'Inactive' : 'Active' %>"
+                },
+                {
+                  "type": "dynamicSection",
+                  "id": "statusImpactSection",
+                  "data": "<% queryParams.currentStatus ?? 'Active' %>",
+                  "dataVariableName": "currentStatus",
+                  "children": [
+                    {
+                      "type": "richText",
+                      "id": "statusImpactNote",
+                      "enabled": false,
+                      "value": "<% currentStatus == 'Active' ? '<span style=\"color:#92400e;font-size:11px\"><b>Impact of Inactivating:</b> The organization will no longer appear in Workday selection lists. Existing role assignments will NOT be removed automatically — you must remove them manually in Workday if needed.</span>' : '<span style=\"color:#065f46;font-size:11px\"><b>Impact of Activating:</b> The organization will become available again for new role assignments in Workday. No existing data will be changed.</span>' %>"
+                    }
+                  ]
+                },
+                {
+                  "type": "checkBox",
+                  "id": "confirmStatusChange",
+                  "label": "<% queryParams.currentStatus == 'Active' ? 'I confirm this organization should be inactivated and I have verified no active role assignments depend on it.' : 'I confirm I want to reactivate this organization and make it available for role assignments.' %>",
+                  "required": true,
+                  "helpText": "You must acknowledge before submitting this status change."
                 }
               ],
               "_layout": {

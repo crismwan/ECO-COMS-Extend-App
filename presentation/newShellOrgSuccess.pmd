@@ -36,6 +36,13 @@
                   "id": "orgCodeDisplay",
                   "label": "Organization Code",
                   "value": "<% flowVariables.organizationCode ?? '' %>"
+                },
+                {
+                  "type": "pageActionButton",
+                  "id": "copyOrgName",
+                  "label": "Copy Organization Name",
+                  "visible": "<% !empty(flowVariables.organizationName) %>",
+                  "onClick": "<% clipboard.write(flowVariables.organizationName ?? '') %>"
                 }
               ],
               "_layout": {

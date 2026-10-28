@@ -124,6 +124,23 @@
               "title": "Confirm New Shell Organization",
               "children": [
                 {
+                  "type": "fileUploader",
+                  "id": "supportingDocUploader",
+                  "label": "Attach Supporting Document (Optional)",
+                  "compact": true,
+                  "required": false,
+                  "singular": true,
+                  "maxFileSize": "5242880",
+                  "fileTypes": "pdf,doc,docx,jpg,png",
+                  "helpText": "Optionally attach an approval email or supporting document for audit purposes.",
+                  "guide": {
+                    "type": "guide",
+                    "id": "guideSupportingDoc",
+                    "title": "Supporting Document",
+                    "text": "Attach an optional PDF, Word doc, or image (max 5MB) as a record of the request authorization. Accepted types: pdf, doc, docx, jpg, png."
+                  }
+                },
+                {
                   "type": "text",
                   "id": "hiddenOrgName",
                   "label": "Organization Name",

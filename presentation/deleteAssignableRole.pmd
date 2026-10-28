@@ -354,13 +354,27 @@
                   "id": "selectedRoleDisplay",
                   "label": "Role to Delete",
                   "enabled": false,
-                  "value": "<% queryParams.roleName ?? '' %>"
+                  "value": "<% queryParams.roleName ?? '' %>",
+                  "guide": {
+                    "type": "guide",
+                    "id": "guideDeleteRole",
+                    "title": "What Happens When Deleted",
+                    "text": "Deleting this role request removes it from ECO-COMS and cancels any pending ISC review. If the role was already provisioned in Workday, you must also remove it there separately. This action is permanent and cannot be undone."
+                  }
                 },
                 {
                   "type": "richText",
                   "id": "deleteWarning",
                   "enabled": false,
                   "value": "<span style=\"color:#dc2626;font-size:11px;font-weight:700\">\u26a0 </span><span style=\"color:#991b1b;font-size:11px\"><b>Warning:</b> This action permanently deletes the selected role request and cannot be undone. Click OK to confirm.</span>"
+                },
+                {
+                  "type": "checkBox",
+                  "id": "confirmDeleteCheckBox",
+                  "label": "I confirm I want to permanently delete this role request. This action cannot be undone.",
+                  "required": true,
+                  "visible": "<% !empty(queryParams.roleId) %>",
+                  "helpText": "You must acknowledge before the delete can be submitted."
                 }
               ],
               "title": "Confirm Delete",

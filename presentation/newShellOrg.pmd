@@ -147,6 +147,12 @@
                   "id": "organizationCode",
                   "label": "Organization Code",
                   "helpText": "The full org name will be ApplicationCode:OrganizationCode.",
+                  "guide": {
+                    "type": "guide",
+                    "id": "guideOrgCode",
+                    "title": "Organization Code Format",
+                    "text": "Enter the unique suffix for this organization. The system will auto-generate the full name as ApplicationCode:OrganizationCode (e.g. X:CLW:ORG:ANY). Avoid spaces and special characters. Must be unique within the application."
+                  },
                   "onChange": "<%\n    if (!empty(self.value) && !empty(selectedApplicationId.value)) {\n      let ac = selectedApplicationId.value[0] ?? '';\n      let orgName = ac + ':' + self.value;\n      let dupes = existingOrgs.data.filter(o => { o.code == orgName });\n      if (dupes.size() > 0) {\n        self.setError('An organization with this code already exists: ' + dupes[0].organizationByName.descriptor);\n      } else {\n        self.clearError();\n      }\n    } else {\n      self.clearError();\n    }\n  %>"
                 },
                 {
@@ -160,6 +166,12 @@
                   "id": "effectiveDate",
                   "label": "Effective Date",
                   "required": true,
+                  "guide": {
+                    "type": "guide",
+                    "id": "guideEffectiveDate",
+                    "title": "Effective Date Rules",
+                    "text": "Must be a weekday (Monday–Friday) in 2026 or 2027. Weekends and dates outside this range will be rejected. The organization will be available in Workday starting on this date."
+                  },
                   "onChange": "<%\n    if (empty(self.value)) {\n      self.clearError();\n    } else {\n      let d = self.value;\n      let dow = d.dayOfWeek();\n      if (dow == 6 || dow == 7) {\n        self.setError('Effective Date must be a weekday. Saturdays and Sundays are not allowed.');\n      } else {\n        let y = d.year();\n        if (y < 2026 || y > 2027) {\n          self.setError('Effective Date year must be 2026 or 2027.');\n        } else {\n          self.clearError();\n        }\n      }\n    }\n  %>"
                 }
               ],
