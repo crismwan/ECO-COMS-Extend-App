@@ -35,15 +35,15 @@
         "title": "Quick Links",
         "links": [
           {
-            "label": "View All Requests (Grid)",
-            "task": {
-              "taskId": "iscRoleRequestsView"
-            }
-          },
-          {
             "label": "ECO-COMS Home",
             "task": {
               "taskId": "home"
+            }
+          },
+          {
+            "label": "Manage Assignable Roles",
+            "task": {
+              "taskId": "assignableRoleManager"
             }
           }
         ]
