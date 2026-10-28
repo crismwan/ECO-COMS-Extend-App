@@ -222,6 +222,20 @@
       "page": {
         "id": "manageShellOrgStatusSuccess"
       }
+    },
+    {
+      "id": "createShellOrgWizard",
+      "routingPattern": "/createShellOrgWizard",
+      "page": {
+        "id": "createShellOrgWizard"
+      }
+    },
+    {
+      "id": "iscRoleRequestsHub",
+      "routingPattern": "/iscRoleRequestsHub",
+      "page": {
+        "id": "iscRoleRequestsHub"
+      }
     }
   ],
   "applicationId": "ecocomsphase_xclw_cm_sync2_vmzvxm",
