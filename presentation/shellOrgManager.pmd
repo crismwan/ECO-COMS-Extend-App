@@ -297,19 +297,19 @@
                 "id": "emptyStateMsg",
                 "enabled": false,
                 "value": "<span style=\"color:#374151;font-size:12px\">No shell org patterns found for this application. Use the <b>Add Pattern</b> button above to create one.</span>",
-                "visible": "<% !empty(queryParams.appCode) && size(shellOrgPatterns.data.filter(p => { p.code.startsWith((queryParams.appCode ?? '') + ':PATTERN') })) == 0 %>"
+                "visible": "<% !empty(queryParams.appCode) && size((shellOrgPatterns.data ?? []).filter(p => { p.code.startsWith((queryParams.appCode ?? '') + ':PATTERN') })) == 0 %>"
               },
               {
                 "type": "grid",
                 "gridType": "LIST",
                 "multiViewStylingEnabled": true,
                 "id": "patternsGrid",
-                "rows": "<% empty(queryParams.appCode) ? [] : shellOrgPatterns.data.filter(p => { p.code.startsWith(queryParams.appCode + ':PATTERN') }) %>",
+                "rows": "<% empty(queryParams.appCode) ? [] : (shellOrgPatterns.data ?? []).filter(p => { p.code.startsWith(queryParams.appCode + ':PATTERN') }) %>",
                 "rowVariableName": "pattern",
                 "enabled": false,
                 "label": "<% 'Patterns for ' + (queryParams.appName ?? queryParams.appCode ?? '') %>",
                 "autoPaging": true,
-                "visible": "<% !empty(queryParams.appCode) && size(shellOrgPatterns.data.filter(p => { p.code.startsWith((queryParams.appCode ?? '') + ':PATTERN') })) > 0 %>",
+                "visible": "<% !empty(queryParams.appCode) && size((shellOrgPatterns.data ?? []).filter(p => { p.code.startsWith((queryParams.appCode ?? '') + ':PATTERN') })) > 0 %>",
                 "columns": [
                   {
                     "type": "column",
@@ -642,19 +642,19 @@
                 "id": "rolesEmptyMsg",
                 "enabled": false,
                 "value": "<span style=\"color:#374151;font-size:12px\">No shell role assignments found<% !empty(queryParams.appCode) ? ' for ' + (queryParams.appName ?? queryParams.appCode) : '' %>.</span>",
-                "visible": "<% size(shellRoles.data.filter(r => { r.roleAssignments != null && size(r.roleAssignments.filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith(empty(queryParams.appCode) ? 'X:' : queryParams.appCode) })) > 0 })) == 0 %>"
+                "visible": "<% size((shellRoles.data ?? []).filter(r => { r.roleAssignments != null && size(r.roleAssignments.filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith(empty(queryParams.appCode) ? 'X:' : queryParams.appCode) })) > 0 })) == 0 %>"
               },
               {
                 "type": "grid",
                 "gridType": "LIST",
                 "multiViewStylingEnabled": true,
                 "id": "roleAssignmentsGrid",
-                "rows": "<% shellRoles.data.filter(r => { r.roleAssignments != null && size(r.roleAssignments.filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith(empty(queryParams.appCode) ? 'X:' : queryParams.appCode) })) > 0 }) %>",
+                "rows": "<% (shellRoles.data ?? []).filter(r => { r.roleAssignments != null && size(r.roleAssignments.filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith(empty(queryParams.appCode) ? 'X:' : queryParams.appCode) })) > 0 }) %>",
                 "rowVariableName": "r",
                 "enabled": false,
                 "label": "Role Assignments",
                 "autoPaging": true,
-                "visible": "<% size(shellRoles.data.filter(r => { r.roleAssignments != null && size(r.roleAssignments.filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith(empty(queryParams.appCode) ? 'X:' : queryParams.appCode) })) > 0 })) > 0 %>",
+                "visible": "<% size((shellRoles.data ?? []).filter(r => { r.roleAssignments != null && size(r.roleAssignments.filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith(empty(queryParams.appCode) ? 'X:' : queryParams.appCode) })) > 0 })) > 0 %>",
                 "columns": [
                   {
                     "type": "column",
