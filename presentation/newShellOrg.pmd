@@ -114,15 +114,34 @@
                   "id": "pageDescription",
                   "enabled": false,
                   "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">\u2139 </span><span style=\"color:#374151;font-size:11px\">Add a new Shell Organization to Workday. Select the application and enter the Organization Code. The Organization Name will be auto-generated as <b>ApplicationCode:OrganizationCode</b> (e.g. X:CLW:ORG:ANY).</span>"
-                },
+                }
+              ],
+              "title": "About this page",
+              "_layout": {
+                "density": "medium",
+                "alignment": "left",
+                "horizontalSizing": "stretch",
+                "labelPosition": "top"
+              }
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "warningSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "wizardWarningFieldSet",
+              "children": [
                 {
                   "type": "richText",
                   "id": "wizardCloseWarning",
                   "enabled": false,
-                  "value": "<span style=\"color:#B45309;font-size:11px;font-weight:700\">\u26a0 </span><span style=\"color:#92400E;font-size:11px;font-weight:700\">Important: </span><span style=\"color:#374151;font-size:11px\">Clicking the wizard\u2019s <b>X (close)</b> button will navigate you to the last page you visited \u2014 which may be the Workday home page, taking you out of this app. To safely exit and return to Shell Org Manager, use the <b>\u2190 Shell Org Manager</b> button above, or click <b>Cancel</b> within any wizard step.</span>"
+                  "value": "<span style=\"color:#B45309;font-size:11px;font-weight:700\">⚠ Important: </span><span style=\"color:#374151;font-size:11px\">Clicking the wizard’s <b>X (close)</b> button will navigate you to the last page you visited — which may be the Workday home page, taking you out of this app. To safely exit and return to Shell Org Manager, use the <b>← Shell Org Manager</b> button above, or click <b>Cancel</b> within any wizard step.</span>"
                 }
               ],
-              "title": "About this page",
+              "title": "Navigation Guide",
               "_layout": {
                 "density": "medium",
                 "alignment": "left",
