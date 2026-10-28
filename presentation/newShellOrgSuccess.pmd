@@ -38,11 +38,10 @@
                   "value": "<% flowVariables.organizationCode ?? '' %>"
                 },
                 {
-                  "type": "pageActionButton",
-                  "id": "copyOrgName",
-                  "label": "Copy Organization Name",
-                  "visible": "<% !empty(flowVariables.organizationName) %>",
-                  "onClick": "<% clipboard.write(flowVariables.organizationName ?? '') %>"
+                  "type": "readOnlyText",
+                  "id": "copyHint",
+                  "label": " ",
+                  "value": "Use the organization code above to reference this org in downstream tasks."
                 }
               ],
               "_layout": {

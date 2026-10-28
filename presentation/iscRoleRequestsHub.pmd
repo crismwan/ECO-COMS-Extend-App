@@ -28,11 +28,7 @@
         "icon": "wd-icon-person",
         "label": "<% (request.roleName ?? 'Unknown Role') + ' — ' + (request.shellOrgCode ?? request.application ?? '') %>",
         "task": {
-          "taskId": "assignableRoleManagerMaintain",
-          "parameters": {
-            "roleId": "<% request.id %>",
-            "orgWid": "<% request.shellOrgWid ?? '' %>"
-          }
+          "taskId": "iscRoleRequestsView"
         }
       },
       "additionalLinks": {
