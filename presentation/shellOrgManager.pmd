@@ -210,9 +210,10 @@
             "children": [
               {
                 "type": "button",
+                "id": "addPatternBtn",
                 "label": "Add Pattern",
                 "taskReference": {
-                  "taskId": "newShellOrgPattern"
+                  "taskId": "createShellOrgPatternWizard"
                 },
                 "action": "PRIMARY"
               },

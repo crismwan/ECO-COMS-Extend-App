@@ -236,6 +236,13 @@
       "page": {
         "id": "iscRoleRequestsHub"
       }
+    },
+    {
+      "id": "createShellOrgPatternWizard",
+      "routingPattern": "/createShellOrgPatternWizard",
+      "page": {
+        "taskId": "createShellOrgPatternWizard"
+      }
     }
   ],
   "applicationId": "ecocomsphase_xclw_cm_sync2_vmzvxm",

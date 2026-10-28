@@ -1,0 +1,38 @@
+{
+  "id": "createShellOrgPatternWizard",
+  "securityDomains": [
+    "ManageCOMSShellOrgs"
+  ],
+  "endPoints": [],
+  "presentation": {
+    "body": {
+      "type": "editWizard",
+      "title": "ECO-COMS Shell Organization Manager",
+      "subtitle": "Add New Shell Org Pattern",
+      "summarySettings": {
+        "enabled": true,
+        "label": "Review & Submit"
+      },
+      "editTasks": [
+        {
+          "label": "Pattern Details",
+          "task": {
+            "taskId": "newShellOrgPattern"
+          }
+        },
+        {
+          "label": "Confirm & Submit",
+          "task": {
+            "taskId": "newShellOrgPatternConfirm"
+          }
+        }
+      ],
+      "conclusion": {
+        "task": {
+          "taskId": "newShellOrgPatternSuccess"
+        },
+        "render": true
+      }
+    }
+  }
+}

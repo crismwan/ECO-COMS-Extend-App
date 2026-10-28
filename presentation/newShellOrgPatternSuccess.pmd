@@ -48,7 +48,7 @@
               "type": "button",
               "label": "Add Another Pattern",
               "taskReference": {
-                "taskId": "newShellOrgPattern"
+                "taskId": "createShellOrgPatternWizard"
               },
               "action": "PRIMARY"
             },
