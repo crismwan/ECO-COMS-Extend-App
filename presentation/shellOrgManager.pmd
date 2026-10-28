@@ -173,19 +173,11 @@
               },
               {
                 "type": "button",
-                "label": "View Application Patterns",
+                "label": "Add Shell Org Pattern",
                 "taskReference": {
-                  "taskId": "shellOrgManager"
+                  "taskId": "createShellOrgPatternWizard"
                 },
                 "action": "AUXILIARY"
-              },
-              {
-                "type": "button",
-                "label": "← Home",
-                "taskReference": {
-                  "taskId": "home"
-                },
-                "action": "LINK"
               }
             ],
             "_layout": {

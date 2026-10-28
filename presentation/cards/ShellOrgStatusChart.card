@@ -27,13 +27,5 @@
       "showPercentLabels": true,
       "animateOnLoad": true
     }
-  },
-  "footer": [
-    {
-      "label": "Manage",
-      "taskReference": {
-        "taskId": "shellOrgManager"
-      }
-    }
-  ]
+  }
 }
