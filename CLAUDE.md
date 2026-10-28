@@ -1328,6 +1328,18 @@ File `simpleStatusCard.card` → `"id": "simpleStatusCard"`. Set `body.type` to 
 
 - `body` (object, **req**) — `type` (**req**, `"simpleCard"`) and `value` (stringScript, **req**) = the body content.
 
+  **CRITICAL — `.card` file script tokenization restriction:** Single-quoted string literals inside `<% %>` expressions in `.card` files cause a fatal `tokenization error in '''` during `wdcli` validation. This includes `simpleCard` `body.value` and any other `.card` attribute using `<% 'literal text' + variable %>` style concatenation. The workaround is to build the concatenated string in the PMD's `parameters` mapScript (where single-quoted literals are valid), pass it as a named parameter, and reference it in the card as `<% myParam ?? '' %>`. Example:
+
+  ```json
+  // PMD side — string concatenation with single-quoted literals is fine here:
+  "parameters": "<% { 'bodyText': 'Code: ' + (orgCode ?? '') + ' | App: ' + (appCode ?? '') } %>"
+
+  // .card side — just reference the pre-built parameter:
+  "body": { "type": "simpleCard", "value": "<% bodyText ?? '' %>" }
+  ```
+
+  Note: single-quoted string literals DO work inside `chartCard` `data` arrays (confirmed). The restriction applies to `simpleCard` (and likely `listCard`, `pillCard`, `imageCard`) body/header attributes — treat `.card` `<% %>` expressions as variable-reference-only to be safe.
+
 - `footer` (TaskButton array) — up to **5** links. Each: `label` (stringScript, **req**) plus **exactly one** of:
 
   - `taskReference` — `{ "taskId", "parameterBindings": { ... } }` to navigate to an app task.
