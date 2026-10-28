@@ -1996,3 +1996,189 @@ Then reference worker fields as `selectedWorker.id`, `selectedWorker.descriptor`
 
 Returns `{ "data": [...] }` — access items via `comsAssignableRoles.data`.
 
+## Button navigation — `parameterBindings` vs `parameters` pitfall
+
+On a `button`'s `taskReference`, both `parameters` and `parameterBindings` appear to work individually, but **`parameterBindings` silently overwrites `parameters` when both are present**. Only one key should ever appear. Prefer `parameterBindings` consistently:
+
+```json
+{
+  "type": "button",
+  "action": "PRIMARY",
+  "label": "Open",
+  "taskReference": {
+    "taskId": "shellOrgManager",
+    "parameterBindings": {
+      "appCode": "<% row.code %>",
+      "appName": "<% row.descriptor %>"
+    }
+  }
+}
+```
+
+**Never mix both keys** — the result is only the `parameterBindings` values, silently dropping anything in `parameters`.
+
+## Workday Script — lambda returning object literal (double-brace pattern)
+
+When using `.map()` or `.filter()` with a lambda that returns an **object literal**, the object must be wrapped in a **second nested brace block**:
+
+```
+workers.data.map(worker => {
+  {
+    'column1': worker.descriptor,
+    'column2': worker.businessTitle
+  }
+})
+```
+
+A single brace block `worker => { 'col': worker.x }` is parsed as a code block (series of statements), not an object. The outer braces delimit the lambda body; the inner braces create the returned map literal.
+
+## Workday Script — direct widget state mutation
+
+In `.script` event handlers, widget state is mutated directly by assignment — no setter method needed for `value` and `visible`:
+
+```javascript
+descriptor.value = myEndpoint.data[0].descriptor;
+workerDetail.visible = true;
+```
+
+This is the idiomatic pattern in the Workday DevRel corpus. The setter methods (`setValue()`, `setVisible()`) are also available, but direct assignment works and is commonly used in script files.
+
+## Endpoints — `failOnStatusCodes` required
+
+**Always set `failOnStatusCodes`** (at minimum `[400, 403]`) on every inbound endpoint. Without it, HTTP error responses are swallowed silently — the endpoint appears to succeed with no data:
+
+```json
+{
+  "name": "comsAssignableRoles",
+  "baseUrlType": "BUSINESS-OBJECT",
+  "url": "/comsAssignableRoles",
+  "authType": "sso",
+  "isCollection": true,
+  "bestEffort": "true",
+  "failOnStatusCodes": [400, 403, 404, 500]
+}
+```
+
+This is an enforced best-practice rule (EndpointFailOnStatusCodesRule) in the Workday DevRel Arcane Auditor.
+
+## Endpoints — REST collections default to 20 rows
+
+**Workday REST collection endpoints return only 20 rows by default** (max 100 per request). Always pass an explicit `limit` parameter, or paginate. Without it, your grid silently shows only the first 20 records even when more exist:
+
+```json
+{
+  "name": "allRoles",
+  "baseUrlType": "BUSINESS-OBJECT",
+  "url": "/comsAssignableRoles?limit=100",
+  "authType": "sso",
+  "isCollection": true
+}
+```
+
+For large datasets, use WQL with paging or RaaS (which has no pagination limit).
+
+## Endpoints — `isCollection: true` performance warning
+
+Using `isCollection: true` on inbound endpoints **can degrade the entire tenant under concurrent use** (NoIsCollectionOnEndpointsRule). For querying data, prefer **WQL** or **RaaS** instead of `isCollection`. Reserve `isCollection` only for small, bounded BO collections where WQL is unavailable.
+
+## Grid — do not combine paging with `sortableAndFilterable`
+
+**Never combine server-side paging with `sortableAndFilterable` columns.** Every page change triggers a refetch, re-sort and re-filter cycle, causing severe performance problems. Choose one approach:
+
+- Server-side paging + search prompts for filtering (no `sortableAndFilterable`)
+- Client-side sorting with `sortableAndFilterable` + keep the result set small and unpaged
+
+## Grid — `excelExportEnabled` row limit
+
+`"excelExportEnabled": true` on a grid has a **~60 second export limit**. Workday warns against it above ~4,000 rows. For large exports, use a **RaaS report** instead — RaaS has no pagination and is designed for bulk data export.
+
+## WQL — injection risk in string concatenation
+
+**Do not concatenate user input into WQL `contains(...)` expressions** in PMD script:
+
+```
+// UNSAFE — user controls the search string
+"query": "<% 'SELECT ... WHERE name contains \\'' + searchInput.value + '\\'' %>"
+```
+
+Instead, use a **WQL Query component** (`.wqlquery` file) with typed `parameters`, which passes values safely:
+
+```json
+{
+  "id": "searchOrgs",
+  "parameters": ["searchTerm"],
+  "query": "SELECT ... WHERE name contains \"<% searchTerm %>\""
+}
+```
+
+WQL Query component parameters are interpolated server-side — not string-concatenated by the PMD script — which prevents injection.
+
+## Orchestrations — ISU auth requires manual per-tenant setup
+
+An orchestration endpoint using `isuAuth` will **fail with HTTP 500 and an empty body** until the ISU (Integration System User) is explicitly assigned to the app in **Application Manager** for that tenant. Naming the ISU in the SMD is not sufficient — it must be configured in each environment after every promotion:
+
+1. Open Application Manager in Workday
+2. Find the deployed Extend app
+3. Assign the ISU to the app
+
+Re-check this after every promotion (dev → impl → sandbox → prod) as it does not carry forward.
+
+## Orchestrations — synchronous page limit is 25 seconds
+
+A **synchronous orchestration launched from a PMD page** has a **25-second total timeout** (overrides the orchestration's own 5-minute sync limit). Any orchestration that loops over many records (e.g. bulk creating/updating 50+ objects) will hit this limit and apply only partial work with no error shown to the user.
+
+For bulk operations:
+
+- Use **FlowAsync** (`"type": ".maya.FlowAsync"`) instead of FlowSync
+- Create a **status business object** the page can poll
+- Use **BatchLoop** with `SizeBasedBatchStrategy` to control chunk size
+- The async timeout is 48 hours; production process limit is 60 minutes
+
+## Orchestrations — no Excel parsing node
+
+There is **no Excel parsing node** in the Workday Extend orchestration toolkit. File ingestion examples in the official DevRel corpus all use **CSV** (via `asCSV()` and `CsvFormat`/`CsvColumn` nodes). Treat XLSX upload parsing as unproven in orchestrations until demonstrated in a specific tenant release.
+
+## Platform limits reference
+
+Checked against developer.workday.com "Limits on Extend App Components", "Orchestration Runtime Limits", "Limits on Presentation Components". Re-verify each release.
+
+**Model limits:**
+- 20 business objects per app
+- 50 fields per business object
+- 10 SINGLE_INSTANCE or MULTI_INSTANCE fields per object
+- 25 instance fields targeting Workday-delivered objects per app
+- 5 `enableReportingFromTarget` fields per app
+- 5 indexable fields per business object
+- 40 derived fields per business object
+- 3 searchable TEXT fields per app (enforced across the whole app, not per object)
+- 10 security domains, 5 business processes, 20 tasks, 10 reports, 5 attachment objects per app
+- 30 MB attachment size
+
+**Presentation limits:**
+- 24 seconds per endpoint
+- 60 seconds per PMD request total (load + submit + remote validation combined)
+- 30 outbound endpoints per PMD
+- 30 non-deferred inbound endpoints
+- 25 MB endpoint response
+- 75 pages per app
+- 100 KB per .pmd / .amd / .smd / .pod / .script file
+- PMD script: 5 seconds CPU, 25 call frames, 2 nested module levels
+- Labels: 255 characters max
+- fileUploader: 10 MB per file, 5 files max; XLSX is not in the default allowed types
+
+**Orchestration limits:**
+- 25 seconds when a page triggers a synchronous orchestration (page-side limit)
+- 5 minutes for a standalone synchronous orchestration
+- 48 hours asynchronous
+- 60 minutes per process in production; 45 minutes in other environments
+- 31 recursive synchronous self-calls
+- 300 steps per orchestration
+- 150 orchestrations and sub-orchestrations per app
+- 200 MB in-memory
+- 20 MB launch message
+
+**Data access limits:**
+- REST collections: 20 rows default, 100 rows maximum per request — always pass an explicit limit
+- WQL: 1,000,000 rows per query, 10,000 per page, 5-minute timeout via api.workday.com
+- RaaS: no pagination
+- API throttling: HTTP 429 under load — add RetryPolicy with BackOff in orchestrations
