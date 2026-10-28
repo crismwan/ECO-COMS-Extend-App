@@ -2,16 +2,16 @@
   "id": "ShellOrgReceiptCard",
   "parameters": ["organizationName", "organizationCode", "applicationCode", "effectiveDate"],
   "header": {
-    "title": "✓ Organization Created",
+    "title": "Organization Created Successfully",
     "subtitle": "<% organizationName ?? '' %>",
     "indicator": {
-      "label": "Success",
+      "label": "Created",
       "color": "green"
     }
   },
   "body": {
     "type": "simpleCard",
-    "value": "<% 'Organization Code: ' + (organizationCode ?? '') + '\nApplication: ' + (applicationCode ?? '') + '\nEffective Date: ' + (effectiveDate ?? '') %>"
+    "value": "<% 'Organization Code: ' + (organizationCode ?? '') + ' | Application: ' + (applicationCode ?? '') + ' | Effective Date: ' + (effectiveDate ?? '') %>"
   },
   "footer": [
     {
