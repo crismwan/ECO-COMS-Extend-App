@@ -15,8 +15,7 @@
             "taskId": "landingPage"
           },
           "label": "RBAC Hub",
-          "icon": "wd-accent-home",
-          "_color": "#002145"
+          "icon": "wd-accent-home"
         },
         {
           "type": "item",
@@ -24,11 +23,9 @@
             "taskId": "fuhLandingPage"
           },
           "label": "FUH Administration",
-          "icon": "wd-accent-worksheets",
-          "_color": "#002145"
+          "icon": "wd-accent-worksheets"
         }
       ],
-      "_color": "#002145",
       "additionalLinks": {
         "title": "Resources",
         "links": [

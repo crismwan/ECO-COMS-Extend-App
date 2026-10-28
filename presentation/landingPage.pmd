@@ -8,8 +8,7 @@
     "title": {
       "type": "title",
       "label": "Role-Based Access Control (RBAC) Solution",
-      "enabled": true,
-      "_textAlign": "center"
+      "enabled": true
     },
     "body": {
       "type": "basicFormLayout",
@@ -36,7 +35,7 @@
                   "cardId": "AdminProvisioningCard"
                 }
               ],
-              "_layout": "grid"
+              "layout": "grid"
             }
           ]
         },
@@ -57,7 +56,7 @@
                   "cardId": "AuditLogCard"
                 }
               ],
-              "_layout": "grid"
+              "layout": "grid"
             }
           ]
         }
@@ -72,6 +71,6 @@
         }
       ]
     },
-    "pageType": "view"
+    "pageType": "VIEW"
   }
 }

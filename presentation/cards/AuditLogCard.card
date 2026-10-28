@@ -7,8 +7,7 @@
   },
   "body": {
     "type": "simpleCard",
-    "value": "AUDIT & HISTORY",
-    "_color": "#0055B3"
+    "value": "AUDIT & HISTORY"
   },
   "footer": [
     {
