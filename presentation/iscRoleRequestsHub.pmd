@@ -3,51 +3,97 @@
   "securityDomains": [
     "MaintainCOMSAssignableRoles"
   ],
-  "endPoints": [
-    {
-      "name": "comsAssignableRoles",
-      "baseUrlType": "BUSINESS-OBJECT",
-      "url": "/comsAssignableRoles",
-      "authType": "sso",
-      "isCollection": true,
-      "bestEffort": "true"
-    }
-  ],
+  "endPoints": [],
   "presentation": {
+    "pageType": "view",
+    "headerSize": "STANDARD",
     "title": {
       "type": "title",
       "label": "ISC Role Requests"
     },
     "body": {
-      "type": "listDetailHub",
-      "label": "ISC Role Requests",
-      "items": "<% comsAssignableRoles.data %>",
-      "itemVariableName": "request",
-      "icon": "wd-icon-checkboxes",
-      "navigationTemplate": {
-        "icon": "wd-icon-person",
-        "label": "<% (request.roleName ?? 'Unknown Role') + ' — ' + (request.shellOrgCode ?? request.application ?? '') %>",
-        "task": {
-          "taskId": "iscRoleRequestsView"
+      "type": "basicFormLayout",
+      "id": "iscHubForm",
+      "sections": [
+        {
+          "type": "layoutSection",
+          "id": "iscHubSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "iscHubFieldSet",
+              "title": "ISC Role Request Queue",
+              "children": [
+                {
+                  "type": "richText",
+                  "id": "iscHubDesc",
+                  "enabled": false,
+                  "value": "<span style=\"font-size:11px\">Review and action pending ISC role requests. Use the links below to view requests by type.</span>"
+                }
+              ],
+              "_layout": {
+                "density": "medium",
+                "alignment": "left",
+                "horizontalSizing": "stretch",
+                "labelPosition": "top"
+              }
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "iscHubLinksSection",
+          "children": [
+            {
+              "type": "button",
+              "label": "View All Pending Requests",
+              "taskReference": {
+                "taskId": "iscRoleRequestsView"
+              },
+              "action": "PRIMARY"
+            },
+            {
+              "type": "button",
+              "label": "Pending AAA Provisioning",
+              "taskReference": {
+                "taskId": "iscRoleRequestsView",
+                "parameters": {
+                  "view": "aaa"
+                }
+              },
+              "action": "AUXILIARY"
+            },
+            {
+              "type": "button",
+              "label": "Pending Assignable Roles",
+              "taskReference": {
+                "taskId": "iscRoleRequestsView",
+                "parameters": {
+                  "view": "assignable"
+                }
+              },
+              "action": "AUXILIARY"
+            },
+            {
+              "type": "button",
+              "label": "← Home",
+              "taskReference": {
+                "taskId": "home"
+              },
+              "action": "LINK"
+            }
+          ]
         }
-      },
-      "additionalLinks": {
-        "title": "Quick Links",
-        "links": [
-          {
-            "label": "ECO-COMS Home",
-            "task": {
-              "taskId": "home"
-            }
-          },
-          {
-            "label": "Manage Assignable Roles",
-            "task": {
-              "taskId": "assignableRoleManager"
-            }
-          }
-        ]
-      }
+      ]
+    },
+    "footer": {
+      "type": "footer",
+      "children": [
+        {
+          "type": "pod",
+          "podId": "ecoComsFooter"
+        }
+      ]
     }
   }
 }
