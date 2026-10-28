@@ -1,9 +1,6 @@
 {
   "id": "iscErrorPage",
   "endPoints": [],
-  "outboundData": {
-    "outboundEndPoints": []
-  },
   "presentation": {
     "headerSize": "STANDARD",
     "title": {
@@ -20,14 +17,14 @@
           "children": [
             {
               "type": "fieldSet",
-              "id": "errorFieldSet",
-              "title": "Access Restricted",
+              "id": "iscErrorFieldSet",
+              "title": "ISC Access Required",
               "children": [
                 {
                   "type": "richText",
-                  "id": "iscErrorMessage",
+                  "id": "iscErrorBanner",
                   "enabled": false,
-                  "value": "<span style=\"color:#374151;font-size:13px\">This page is only available to ISC Security Administrators. If you have any questions, please raise an Incident Ticket with 'ISC Service Delivery'.</span>"
+                  "value": "<% '<span style=\"color:#B45309;font-size:13px;font-weight:700\">⚠ Access Restricted</span><br/><span style=\"color:#374151;font-size:12px\">This page is only available to <b>ISC Security Administrators</b>. If you believe you need access, please raise an Incident Ticket with <b>ISC Service Delivery</b>.</span>' %>"
                 }
               ],
               "_layout": {
@@ -45,12 +42,12 @@
           "children": [
             {
               "type": "button",
-              "label": "\u2190 Back to Home",
+              "id": "homeButton",
+              "label": "← Back to Home",
               "taskReference": {
                 "taskId": "home"
               },
-              "action": "LINK",
-              "_tooltip": "Return to the ECO-COMS home page."
+              "action": "LINK"
             }
           ]
         }

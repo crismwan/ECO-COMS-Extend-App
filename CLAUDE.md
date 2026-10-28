@@ -132,6 +132,41 @@ The `guide` attribute places a **"?" tooltip icon** beside the widget label. It 
 }
 ```
 
+## richText — multiple banners in one fieldSet (silent failure)
+
+**Confirmed failure pattern:** Placing two or more `richText` widgets as siblings inside the **same `fieldSet`** causes all but the first to be silently dropped — they do not appear in the DOM, no error is thrown, and the deploy succeeds.
+
+**Fix:** Give each `richText` banner its own dedicated `layoutSection` + `fieldSet`. Each `fieldSet` can have a descriptive `title` (e.g. `"About this page"`, `"Navigation Guide"`).
+
+```json
+{
+  "type": "layoutSection",
+  "id": "warningSection",
+  "children": [
+    {
+      "type": "fieldSet",
+      "id": "wizardWarningFieldSet",
+      "title": "Navigation Guide",
+      "children": [
+        {
+          "type": "richText",
+          "id": "wizardCloseWarning",
+          "enabled": false,
+          "value": "<% '<span style=\"color:#B45309;font-size:11px;font-weight:700\">⚠ Important: </span><span style=\"color:#374151;font-size:11px\">Warning text here.</span>' %>"
+        }
+      ]
+    }
+  ]
+}
+```
+
+**Color conventions used in this app:**
+- `color:#B45309` — amber/warning tone
+- `color:#0055B7` — blue/informational tone
+- `color:#374151` — body text (dark grey)
+
+**Do NOT** place two `richText` nodes in the same `fieldSet` expecting both to render — only the first will appear.
+
 ## Widget validation — `onChange` + `setError` / `clearError`
 
 This is the mechanism for conditional/cross-field validation, including **inside a grid `cellTemplate`**. `onChange` fires when the user changes the widget's value; `self` is the widget. Call `setError(msg)` to push a message into the page error window (blocking), `clearError()` to remove it. Always clear on the passing branch — an error set once persists until cleared.
