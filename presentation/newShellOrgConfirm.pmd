@@ -105,7 +105,7 @@
           "children": [
             {
               "type": "button",
-              "label": "\u2190 Back to Add Organization",
+              "label": "← Back to Add Organization",
               "taskReference": {
                 "taskId": "newShellOrg"
               },
@@ -157,7 +157,7 @@
                   "type": "richText",
                   "id": "confirmHelp",
                   "enabled": false,
-                  "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">\u2139 </span><span style=\"color:#374151;font-size:11px\">Please confirm the new Shell Organization below. This will create a new Custom Organization in Workday via the orchestration.</span>"
+                  "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">ℹ </span><span style=\"color:#374151;font-size:11px\">Please confirm the new Shell Organization below. This will create a new Custom Organization in Workday via the orchestration.</span>"
                 },
                 {
                   "type": "text",
@@ -183,13 +183,7 @@
                   "enabled": false,
                   "value": "<% flowVariables.effectiveDate %>"
                 }
-              ],
-              "_layout": {
-                "density": "medium",
-                "alignment": "left",
-                "horizontalSizing": "fixed",
-                "labelPosition": "side_align_left"
-              }
+              ]
             }
           ]
         }
@@ -204,7 +198,7 @@
         }
       ]
     },
-    "pageType": "edit",
+    "pageType": "EDIT",
     "standardEditButtonsHidden": true,
     "cancelOverride": {
       "taskId": "shellOrgManager"

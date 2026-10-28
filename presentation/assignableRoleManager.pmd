@@ -199,7 +199,7 @@
     ]
   },
   "presentation": {
-    "pageType": "edit",
+    "pageType": "EDIT",
     "headerSize": "STANDARD",
     "title": {
       "type": "title",
@@ -215,7 +215,7 @@
           "children": [
             {
               "type": "button",
-              "label": "\u2190 Home",
+              "label": "← Home",
               "taskReference": {
                 "taskId": "home"
               },
@@ -241,7 +241,7 @@
                   "type": "richText",
                   "id": "pendingDesc",
                   "enabled": false,
-                  "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">\u2139 </span><span style=\"color:#374151;font-size:11px\">The following Assignable Role requests are awaiting ISC review. Click <b>Maintain</b> to approve or deny a request.</span>"
+                  "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">ℹ </span><span style=\"color:#374151;font-size:11px\">The following Assignable Role requests are awaiting ISC review. Click <b>Maintain</b> to approve or deny a request.</span>"
                 },
                 {
                   "type": "grid",
@@ -296,7 +296,7 @@
                       "sortableAndFilterable": "true",
                       "cellTemplate": {
                         "type": "richText",
-                        "value": "<% role.status == 'Pending ISC Review' ? '<span style=\"color:#92400e;font-weight:600;font-size:11px\">\u23f3 Pending ISC Review</span>' : role.status == 'Approved' ? '<span style=\"color:#065f46;font-weight:600;font-size:11px\">\u2713 Approved</span>' : role.status == 'Denied' ? '<span style=\"color:#991b1b;font-weight:600;font-size:11px\">\u2717 Denied</span>' : role.status == 'Inactive' ? '<span style=\"color:#6b7280;font-weight:600;font-size:11px\">\u25cb Inactive</span>' : role.status ?? '' %>"
+                        "value": "<% role.status == 'Pending ISC Review' ? '<span style=\"color:#92400e;font-weight:600;font-size:11px\">⏳ Pending ISC Review</span>' : role.status == 'Approved' ? '<span style=\"color:#065f46;font-weight:600;font-size:11px\">✓ Approved</span>' : role.status == 'Denied' ? '<span style=\"color:#991b1b;font-weight:600;font-size:11px\">✗ Denied</span>' : role.status == 'Inactive' ? '<span style=\"color:#6b7280;font-weight:600;font-size:11px\">○ Inactive</span>' : role.status ?? '' %>"
                       }
                     },
                     {
@@ -387,13 +387,7 @@
                   ]
                 }
               ],
-              "title": "1. Pending ISC Review",
-              "_layout": {
-                "density": "medium",
-                "alignment": "left",
-                "horizontalSizing": "fixed",
-                "labelPosition": "side_align_left"
-              }
+              "title": "1. Pending ISC Review"
             },
             {
               "type": "fieldSet",
@@ -403,7 +397,7 @@
                   "type": "richText",
                   "id": "addNewDesc",
                   "enabled": false,
-                  "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">\u2139 </span><span style=\"color:#374151;font-size:11px\">Submit a new Assignable Role request. Select the Custom Organization, provide role details and select positions. Once submitted, status will be set to <b>Pending ISC Review</b>.</span>"
+                  "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">ℹ </span><span style=\"color:#374151;font-size:11px\">Submit a new Assignable Role request. Select the Custom Organization, provide role details and select positions. Once submitted, status will be set to <b>Pending ISC Review</b>.</span>"
                 },
                 {
                   "type": "instanceList",
@@ -511,7 +505,7 @@
                   "type": "richText",
                   "id": "activeNote",
                   "enabled": false,
-                  "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">\u2139 </span><span style=\"color:#374151;font-size:11px\">Role Assignment Active status is automatically set based on whether selected positions are filled.</span>"
+                  "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">ℹ </span><span style=\"color:#374151;font-size:11px\">Role Assignment Active status is automatically set based on whether selected positions are filled.</span>"
                 },
                 {
                   "type": "hidden",
@@ -585,13 +579,7 @@
                   ]
                 }
               ],
-              "title": "2. Submit New Assignable Role Request",
-              "_layout": {
-                "density": "medium",
-                "alignment": "left",
-                "horizontalSizing": "fixed",
-                "labelPosition": "side_align_left"
-              }
+              "title": "2. Submit New Assignable Role Request"
             }
           ]
         }

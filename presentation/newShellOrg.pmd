@@ -83,7 +83,7 @@
           "children": [
             {
               "type": "button",
-              "label": "\u2190 Shell Org Manager",
+              "label": "← Shell Org Manager",
               "taskReference": {
                 "taskId": "shellOrgManager"
               },
@@ -92,7 +92,7 @@
             },
             {
               "type": "button",
-              "label": "\u2190 Home",
+              "label": "← Home",
               "taskReference": {
                 "taskId": "home"
               },
@@ -113,16 +113,10 @@
                   "type": "richText",
                   "id": "pageDescription",
                   "enabled": false,
-                  "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">\u2139 </span><span style=\"color:#374151;font-size:11px\">Add a new Shell Organization to Workday. Select the application and enter the Organization Code. The Organization Name will be auto-generated as <b>ApplicationCode:OrganizationCode</b> (e.g. X:CLW:ORG:ANY).</span>"
+                  "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">ℹ </span><span style=\"color:#374151;font-size:11px\">Add a new Shell Organization to Workday. Select the application and enter the Organization Code. The Organization Name will be auto-generated as <b>ApplicationCode:OrganizationCode</b> (e.g. X:CLW:ORG:ANY).</span>"
                 }
               ],
-              "title": "About this page",
-              "_layout": {
-                "density": "medium",
-                "alignment": "left",
-                "horizontalSizing": "stretch",
-                "labelPosition": "top"
-              }
+              "title": "About this page"
             }
           ]
         },
@@ -141,13 +135,7 @@
                   "value": "<span style=\"color:#B45309;font-size:11px;font-weight:700\">⚠ Important: </span><span style=\"color:#374151;font-size:11px\">Clicking the wizard’s <b>X (close)</b> button will navigate you to the last page you visited — which may be the Workday home page, taking you out of this app. To safely exit and return to Shell Org Manager, use the <b>← Shell Org Manager</b> button above, or click <b>Cancel</b> within any wizard step.</span>"
                 }
               ],
-              "title": "Navigation Guide",
-              "_layout": {
-                "density": "medium",
-                "alignment": "left",
-                "horizontalSizing": "stretch",
-                "labelPosition": "top"
-              }
+              "title": "Navigation Guide"
             }
           ]
         },
@@ -200,13 +188,7 @@
                   "onChange": "<%\n    if (empty(self.value)) {\n      self.clearError();\n    } else {\n      let d = self.value;\n      let dow = d.dayOfWeek();\n      if (dow == 6 || dow == 7) {\n        self.setError('Effective Date must be a weekday. Saturdays and Sundays are not allowed.');\n      } else {\n        let y = d.year();\n        if (y < 2026 || y > 2027) {\n          self.setError('Effective Date year must be 2026 or 2027.');\n        } else {\n          self.clearError();\n        }\n      }\n    }\n  %>"
                 }
               ],
-              "title": "Organization Details",
-              "_layout": {
-                "density": "medium",
-                "alignment": "left",
-                "horizontalSizing": "fixed",
-                "labelPosition": "side_align_left"
-              }
+              "title": "Organization Details"
             }
           ]
         }
@@ -221,7 +203,7 @@
         }
       ]
     },
-    "pageType": "edit",
+    "pageType": "EDIT",
     "standardEditButtonsHidden": true,
     "cancelOverride": {
       "taskId": "shellOrgManager"

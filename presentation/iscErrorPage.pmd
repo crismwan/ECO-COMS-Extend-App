@@ -26,13 +26,7 @@
                   "enabled": false,
                   "value": "<% '<span style=\"color:#B45309;font-size:13px;font-weight:700\">⚠ Access Restricted</span><br/><span style=\"color:#374151;font-size:12px\">This page is only available to <b>ISC Security Administrators</b>. If you believe you need access, please raise an Incident Ticket with <b>ISC Service Delivery</b>.</span>' %>"
                 }
-              ],
-              "_layout": {
-                "density": "medium",
-                "alignment": "left",
-                "horizontalSizing": "stretch",
-                "labelPosition": "top"
-              }
+              ]
             }
           ]
         },

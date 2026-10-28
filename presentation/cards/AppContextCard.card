@@ -8,8 +8,7 @@
     "subtitle": "<% info.subtitle %>",
     "icon": "<% info.icon %>",
     "indicator": {
-      "label": "<% info.indicatorLabel %>",
-      "_color": "<% info.indicatorColor %>"
+      "label": "<% info.indicatorLabel %>"
     }
   },
   "body": {

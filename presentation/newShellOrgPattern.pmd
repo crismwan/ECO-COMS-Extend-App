@@ -95,7 +95,7 @@
           "children": [
             {
               "type": "button",
-              "label": "\u2190 Home",
+              "label": "← Home",
               "taskReference": {
                 "taskId": "home"
               },
@@ -104,7 +104,7 @@
             },
             {
               "type": "button",
-              "label": "\u2190 Shell Org Manager",
+              "label": "← Shell Org Manager",
               "taskReference": {
                 "taskId": "shellOrgManager"
               },
@@ -125,16 +125,10 @@
                   "type": "richText",
                   "id": "pageDescription",
                   "enabled": false,
-                  "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">\u2139 </span><span style=\"color:#374151;font-size:11px\">Add a new Shell Org Pattern for your application. Patterns define the CO naming structure used to create Custom Organizations in Workday. The pattern name is auto-generated from the fields below. A duplicate check is performed before submission.</span>"
+                  "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">ℹ </span><span style=\"color:#374151;font-size:11px\">Add a new Shell Org Pattern for your application. Patterns define the CO naming structure used to create Custom Organizations in Workday. The pattern name is auto-generated from the fields below. A duplicate check is performed before submission.</span>"
                 }
               ],
-              "title": "About this page",
-              "_layout": {
-                "density": "medium",
-                "alignment": "left",
-                "horizontalSizing": "stretch",
-                "labelPosition": "top"
-              }
+              "title": "About this page"
             }
           ]
         },
@@ -153,13 +147,7 @@
                   "value": "<span style=\"color:#B45309;font-size:11px;font-weight:700\">⚠ Important: </span><span style=\"color:#374151;font-size:11px\">Clicking the wizard’s <b>X (close)</b> button will navigate you to the last page you visited — which may be the Workday home page, taking you out of this app. To safely exit and return to Shell Org Manager, use the <b>← Shell Org Manager</b> button above, or click <b>Cancel</b> within any wizard step.</span>"
                 }
               ],
-              "title": "Navigation Guide",
-              "_layout": {
-                "density": "medium",
-                "alignment": "left",
-                "horizontalSizing": "stretch",
-                "labelPosition": "top"
-              }
+              "title": "Navigation Guide"
             }
           ]
         },
@@ -199,7 +187,7 @@
                   "type": "richText",
                   "id": "patternHelp",
                   "enabled": false,
-                  "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">\u2139 </span><span style=\"color:#374151;font-size:11px\">Fill in the pattern attributes below. Leave blank to use wildcard (*). The Pattern Name Preview above updates as you type.</span>"
+                  "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">ℹ </span><span style=\"color:#374151;font-size:11px\">Fill in the pattern attributes below. Leave blank to use wildcard (*). The Pattern Name Preview above updates as you type.</span>"
                 },
                 {
                   "type": "text",
@@ -281,13 +269,7 @@
                   "onChange": "<%\n            if (empty(self.value)) {\n              self.clearError();\n            } else if (!comsValidations.isWeekday(self.value)) {\n              self.setError(comsValidations.errorWeekday());\n            } else if (!comsValidations.isCurrentOrFutureYear(self.value)) {\n              self.setError(comsValidations.errorYear());\n            } else {\n              self.clearError();\n            }\n          %>"
                 }
               ],
-              "title": "Pattern Attributes",
-              "_layout": {
-                "density": "medium",
-                "alignment": "left",
-                "horizontalSizing": "fixed",
-                "labelPosition": "side_align_left"
-              }
+              "title": "Pattern Attributes"
             }
           ]
         }
@@ -302,7 +284,7 @@
         }
       ]
     },
-    "pageType": "edit",
+    "pageType": "EDIT",
     "standardEditButtonsHidden": true,
     "cancelOverride": {
       "taskId": "shellOrgManager"

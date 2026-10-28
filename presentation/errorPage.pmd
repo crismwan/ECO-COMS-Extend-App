@@ -52,13 +52,7 @@
                   "label": "⚠ Unexpected Error",
                   "value": "Something went wrong. Please try again, or contact your COMS Administrator if the problem persists."
                 }
-              ],
-              "_layout": {
-                "density": "medium",
-                "alignment": "left",
-                "horizontalSizing": "stretch",
-                "labelPosition": "top"
-              }
+              ]
             }
           ]
         },

@@ -102,7 +102,7 @@
           "children": [
             {
               "type": "button",
-              "label": "\u2190 Back to Add Pattern",
+              "label": "← Back to Add Pattern",
               "taskReference": {
                 "taskId": "newShellOrgPattern"
               },
@@ -137,7 +137,7 @@
                   "type": "richText",
                   "id": "confirmHelp",
                   "enabled": false,
-                  "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">\u2139 </span><span style=\"color:#374151;font-size:11px\">Please confirm the new Shell Org Pattern below. This will create a new pattern in COMS. The Orchestration will sync it to Workday automatically.</span>"
+                  "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">ℹ </span><span style=\"color:#374151;font-size:11px\">Please confirm the new Shell Org Pattern below. This will create a new pattern in COMS. The Orchestration will sync it to Workday automatically.</span>"
                 },
                 {
                   "type": "text",
@@ -181,13 +181,7 @@
                   "enabled": false,
                   "value": "<% flowVariables.effectiveDate %>"
                 }
-              ],
-              "_layout": {
-                "density": "medium",
-                "alignment": "left",
-                "horizontalSizing": "fixed",
-                "labelPosition": "side_align_left"
-              }
+              ]
             }
           ]
         }
@@ -202,7 +196,7 @@
         }
       ]
     },
-    "pageType": "edit",
+    "pageType": "EDIT",
     "standardEditButtonsHidden": true,
     "cancelOverride": {
       "taskId": "shellOrgManager"

@@ -29,7 +29,7 @@
           "children": [
             {
               "type": "button",
-              "label": "\u2190 Home",
+              "label": "← Home",
               "taskReference": {
                 "taskId": "home"
               },
@@ -52,13 +52,7 @@
                   "enabled": false
                 }
               ],
-              "title": "About this page",
-              "_layout": {
-                "density": "medium",
-                "alignment": "left",
-                "horizontalSizing": "stretch",
-                "labelPosition": "top"
-              }
+              "title": "About this page"
             }
           ]
         }
@@ -188,15 +182,13 @@
                 },
                 "sortableAndFilterable": "true"
               }
-            ],
-            "_defaultSortColumnId": "columnTimestamp",
-            "_defaultSortOrder": "DESCENDING"
+            ]
           },
           {
             "type": "richText",
             "id": "exportNote",
             "enabled": false,
-            "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">\u2139 </span><span style=\"color:#374151;font-size:11px\">Use the grid\u2019s built-in export action to download these results as CSV for compliance reporting.</span>"
+            "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">ℹ </span><span style=\"color:#374151;font-size:11px\">Use the grid’s built-in export action to download these results as CSV for compliance reporting.</span>"
           }
         ]
       }
@@ -210,6 +202,6 @@
         }
       ]
     },
-    "pageType": "view"
+    "pageType": "VIEW"
   }
 }

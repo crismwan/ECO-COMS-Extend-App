@@ -81,9 +81,6 @@
     ],
     "responseErrorDetail": {
       "errorSummary": "<% error ?? '' %>"
-    },
-    "_successPage": {
-      "taskId": "manageShellOrgStatusSuccess"
     }
   },
   "presentation": {
@@ -103,18 +100,14 @@
           "children": [
             {
               "type": "button",
-              "label": "\u2190 Shell Org Manager",
+              "label": "← Shell Org Manager",
               "taskReference": {
                 "taskId": "shellOrgManager"
               },
               "action": "LINK",
               "suppressDiscardDialog": true
             }
-          ],
-          "_layout": {
-            "alignment": "left",
-            "labelPosition": "top"
-          }
+          ]
         },
         {
           "type": "layoutSection",
@@ -129,7 +122,7 @@
                   "type": "richText",
                   "id": "warningMsg",
                   "enabled": false,
-                  "value": "<% queryParams.currentStatus == 'Active' ? '<span style=\"color:#d97706;font-size:11px;font-weight:700\">\u26a0 </span><span style=\"color:#92400e;font-size:11px\"><b>Warning:</b> Setting this organization to Inactive does not automatically remove any Workday role assignments referencing it. Verify in Workday that no active role assignments use this Custom Organization before proceeding.</span>' : '<span style=\"color:#0055B7;font-size:11px;font-weight:700\">\u2139 </span><span style=\"color:#374151;font-size:11px\">This will reactivate the organization and make it available for role assignments again.</span>' %>"
+                  "value": "<% queryParams.currentStatus == 'Active' ? '<span style=\"color:#d97706;font-size:11px;font-weight:700\">⚠ </span><span style=\"color:#92400e;font-size:11px\"><b>Warning:</b> Setting this organization to Inactive does not automatically remove any Workday role assignments referencing it. Verify in Workday that no active role assignments use this Custom Organization before proceeding.</span>' : '<span style=\"color:#0055B7;font-size:11px;font-weight:700\">ℹ </span><span style=\"color:#374151;font-size:11px\">This will reactivate the organization and make it available for role assignments again.</span>' %>"
                 },
                 {
                   "type": "readOnlyText",
@@ -182,13 +175,7 @@
                   "required": true,
                   "helpText": "You must acknowledge before submitting this status change."
                 }
-              ],
-              "_layout": {
-                "density": "medium",
-                "alignment": "left",
-                "horizontalSizing": "fixed",
-                "labelPosition": "side_align_left"
-              }
+              ]
             }
           ]
         }
@@ -203,7 +190,7 @@
         }
       ]
     },
-    "pageType": "edit",
+    "pageType": "EDIT",
     "standardEditButtonsHidden": false
   }
 }
