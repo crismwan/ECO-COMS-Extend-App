@@ -1751,3 +1751,248 @@ The leading `'' +` is what makes the quotient a string — without it, neither `
 When comparing an average against exact boundaries (0 or 100), skip rounding entirely and compare the raw quotient — those cases are exact.
 
 Keep percentages stored as **bare numbers** (`"progress": 85`) and append the `%` only at render time (`value.toString() + '%'`). Storing `"85%"` makes the value a display string and forces a `substringBefore('%')` + `toInt()` round-trip before any arithmetic.
+## SMD (Security Model Definition)
+
+The SMD file (`<appId>.smd`) lives alongside the AMD and defines site-level configuration. Key attributes:
+
+- `id` / `siteId` / `applicationId` — all set to the app's `applicationId`.
+- `languages` — array of `{ "code": "en-US", "description": "English" }`.
+- `siteAuth.authTypes` — defines auth schemes used by outbound endpoints. The only auth type needed for SSO apps: `{ "scheme": "SSO", "id": "sso" }`.
+- `errorPageConfigurations` — maps HTTP status codes to error PMD pages: `{ "statusCode": "404", "page": { "id": "errorPage" } }`. Common codes: 400, 401, 403, 404, 408, 500, 503.
+- `cdnEnabled` — boolean, typically `true`.
+- `siteProperties` — array, usually empty `[]`.
+- `headerBackgroundColor` — hex colour for the app header bar (e.g. `"#0055B3"` for UBC blue).
+- `titleAlignment` — `"center"` or `"left"`.
+
+```json
+{
+  "id": "myapp_id",
+  "siteId": "myapp_id",
+  "applicationId": "myapp_id",
+  "languages": [{ "code": "en-US", "description": "English" }],
+  "siteAuth": {
+    "authTypes": [{ "scheme": "SSO", "id": "sso" }]
+  },
+  "errorPageConfigurations": [
+    { "statusCode": "400", "page": { "id": "errorPage" } },
+    { "statusCode": "404", "page": { "id": "errorPage" } },
+    { "statusCode": "500", "page": { "id": "errorPage" } }
+  ],
+  "cdnEnabled": true,
+  "siteProperties": [],
+  "headerBackgroundColor": "#0055B3",
+  "titleAlignment": "center"
+}
+```
+
+## AMD data providers — this app's full list
+
+These `dataProviders` are registered in the AMD. All use `apiGatewayEndpoint` (the Workday gateway for the tenant):
+
+| Key | URL template | Use |
+|---|---|---|
+| `BUSINESS-OBJECT` | `https://api.workday.com/apps/{{site.applicationId}}/v1` | Extend model BOs |
+| `COMMON` | `https://api.workday.com/common/v1` | Static common API (worker `/me`) |
+| `workday-app` | `{{apiGatewayEndpoint}}/apps/{{site.applicationId}}/v1/` | Gateway BO endpoint |
+| `workday-common` | `{{apiGatewayEndpoint}}/common/v1/` | Gateway common API |
+| `workday-staffing` | `{{apiGatewayEndpoint}}/staffing/v1/` | Staffing v1 |
+| `workday-staffing-v6` | `{{apiGatewayEndpoint}}/staffing/v6/` | Staffing v6 (job positions) |
+| `workday-staffing-v7` | `{{apiGatewayEndpoint}}/staffing/v7/` | Staffing v7 |
+| `workday-academic` | `{{apiGatewayEndpoint}}/studentAcademicFoundation/v1/` | Academic Foundation API |
+| `workday-wql` | `{{apiGatewayEndpoint}}/wql/v1/` | WQL query endpoint |
+| `workday-orchestrate` | `{{apiGatewayEndpoint}}/orchestrate/v1/` | Orchestrate API |
+| `orchestrate` | `{{apiGatewayEndpoint}}/orchestrate/v1/apps/{{site.applicationId}}/orchestrations/` | App orchestration base |
+| `orchestration` | `apiGatewayEndpoint + '/orchestrate/v1/apps/' + site.applicationId + '/orchestrations'` | Alt orchestration key (script form) |
+| `workday-bp` | `{{apiGatewayEndpoint}}/businessProcess/v1/` | Business Process API |
+| `wdayCom` | `{{apiGatewayEndpoint}}/staffing/v1` | Alt staffing (no trailing slash) |
+| `wdayRef` | `{{apiGatewayEndpoint}}/referenceData/v1` | Reference Data API |
+| `workday-org` | `{{apiGatewayEndpoint}}/common/v1/` | Common API aliased as org |
+
+**Endpoint for the signed-in worker:** use `baseUrlType: "COMMON"`, `url: "/workers/me"`.
+
+**Endpoint for BO collections:** use `baseUrlType: "BUSINESS-OBJECT"`, `url: "/collectionName"` with `isCollection: true`.
+
+## Script include files (`.script`)
+
+PMD pages can reference shared Workday Script modules via the top-level `include` array:
+
+```json
+{
+  "id": "myPage",
+  "include": ["comsValidations.script"],
+  ...
+}
+```
+
+- Script files live in `presentation/scripts/` and have the extension `.script`.
+- The module name (without `.script`) becomes a variable in PMD script expressions: `comsValidations.isValidSubject(text)`.
+- A script file is a plain Workday Script file that exports an object map of named functions at its end: `{ "fnName": fnName, ... }`.
+- Calling convention in PMD: `<% scriptModuleName.functionName(arg1, arg2) %>`.
+
+**Example script module pattern:**
+```javascript
+var myFunction = function(arg) {
+  // ... logic ...
+  returnValue;
+};
+
+{
+  "myFunction": myFunction
+}
+```
+
+Scripts can reference Workday built-in namespaces (`date:`, `validate:`, `regex:`, etc.) and interact with business objects (`comsAuditLogs.create()`). They do NOT have page widget access (no `self`, no widget IDs) — they are pure functions operating on passed-in values.
+
+## footer / pod widget
+
+The page `footer` (inside `presentation`) renders a persistent footer bar below the page body. It references a `.pod` file by `podId`:
+
+```json
+"footer": {
+  "type": "footer",
+  "children": [
+    { "type": "pod", "podId": "ecoComsFooter" }
+  ]
+}
+```
+
+- Pod files live in `presentation/pods/` and have the `.pod` extension.
+- The `podId` must match the filename without extension.
+- Pods define reusable UI fragments (logos, branding, links) that can appear on multiple pages without repeating code.
+- Pod files can include their own PMD-style widget declarations.
+
+## Button `action` values
+
+A `button` widget's `action` attribute controls its visual style and role. Confirmed values in this codebase:
+
+| `action` | Visual | Use |
+|---|---|---|
+| `"PRIMARY"` | Filled/highlighted button | Main call-to-action (e.g. "Open", "Submit") |
+| `"AUXILIARY"` | Outlined/secondary button | Secondary actions (e.g. "Delete", "Add Pattern") |
+| `"LINK"` | Plain text link style | Low-emphasis navigation (e.g. "← Home", "← Back") |
+
+**Navigation buttons** use `taskReference` (app task) OR `workdayTaskReference` (delivered Workday task) — mutually exclusive, one required. Use `suppressDiscardDialog: true` on nav buttons inside edit pages to skip the "you have unsaved changes" warning.
+
+**`parameterBindings`** passes named params to the target task (read via `queryParams` on that page):
+
+```json
+{
+  "type": "button",
+  "action": "PRIMARY",
+  "label": "Open",
+  "taskReference": {
+    "taskId": "shellOrgManager",
+    "parameterBindings": {
+      "appCode": "<% row.code %>",
+      "appName": "<% row.descriptor %>"
+    }
+  }
+}
+```
+
+## Grid display attributes
+
+### `gridType`
+
+`"gridType": "LIST"` renders the grid as a styled list view rather than a spreadsheet-style table. Useful for records-style display pages. Seen used with `"multiViewStylingEnabled": true`.
+
+### `multiViewStylingEnabled`
+
+`"multiViewStylingEnabled": true` enables richer multi-view styling on the grid (confirms to Workday that the grid supports multiple display modes). Use alongside `gridType: "LIST"` on view pages.
+
+### `autoPaging`
+
+`"autoPaging": true` on a read-only grid automatically paginates large result sets without requiring the user to click a "load more" button. Use on view pages that may show many rows.
+
+### `sortableAndFilterable`
+
+`"sortableAndFilterable": "true"` (string, not boolean) on a `column` makes that column sortable and filterable by the user in the rendered grid. Apply to columns where user sorting is desired (e.g. status, date, name columns).
+
+```json
+{
+  "type": "column",
+  "columnId": "colStatus",
+  "label": "Status",
+  "sortableAndFilterable": "true",
+  "cellTemplate": {
+    "type": "text",
+    "value": "<% row.status ?? '' %>",
+    "enabled": false
+  }
+}
+```
+
+## chartCard (the .card file side)
+
+A `chartCard` embeds an interactive chart inside a Page Configuration Card. The `body.type` is `"chartCard"`.
+
+### `donutChart2`
+
+A donut/pie chart. All attributes:
+
+- `type` (**req**) — `"donutChart2"`.
+- `data` (listScript, **req**) — the data array. Each item is a map with at least two keys: one for slice size, one for slice color/label.
+- `dataVariableName` (string, **req**) — alias for each item in `data` (used in `sliceSizeDataSet.value` and `sliceColorDataSet.value`).
+- `title` (stringScript) — centre label inside the donut (e.g. total count).
+- `sliceSizeDataSet` (**req**) — `{ "name": "Label", "value": "<% slice['fieldName'] %>" }` — which field drives the slice size.
+- `sliceColorDataSet` (**req**) — `{ "name": "Label", "value": "<% slice['fieldName'] %>" }` — which field determines colour/legend label.
+- `showPercentLabels` (boolean) — show percentage on each slice.
+- `animateOnLoad` (boolean) — animate the chart when the card loads.
+
+```json
+{
+  "id": "ShellOrgStatusChart",
+  "parameters": ["activeCount", "inactiveCount", "totalPatterns"],
+  "header": {
+    "title": "Shell Org Overview",
+    "subtitle": "Active vs. Inactive shell organizations"
+  },
+  "body": {
+    "type": "chartCard",
+    "chart": {
+      "type": "donutChart2",
+      "data": "<% [{'status': 'Active', 'count': activeCount ?? 0}, {'status': 'Inactive', 'count': inactiveCount ?? 0}] %>",
+      "dataVariableName": "slice",
+      "title": "<% (totalPatterns ?? 0) + ' Total' %>",
+      "sliceSizeDataSet": { "name": "Count", "value": "<% slice['count'] %>" },
+      "sliceColorDataSet": { "name": "Status", "value": "<% slice['status'] %>" },
+      "showPercentLabels": true,
+      "animateOnLoad": true
+    }
+  }
+}
+```
+
+**Passing data to a chartCard:** parameters are passed from `cardContainer` just like `simpleCard` — via `parameters` mapScript. Guard against nulls with `?? 0`.
+
+## Common inbound endpoint patterns (continued)
+
+### Current worker
+
+```json
+{
+  "name": "selectedWorker",
+  "baseUrlType": "COMMON",
+  "url": "/workers/me",
+  "authType": "sso",
+  "bestEffort": "true"
+}
+```
+
+Then reference worker fields as `selectedWorker.id`, `selectedWorker.descriptor`, `selectedWorker.primaryJob.businessTitle`, etc.
+
+### Business-object collection
+
+```json
+{
+  "name": "comsAssignableRoles",
+  "baseUrlType": "BUSINESS-OBJECT",
+  "url": "/comsAssignableRoles",
+  "authType": "sso",
+  "isCollection": true,
+  "bestEffort": "true"
+}
+```
+
+Returns `{ "data": [...] }` — access items via `comsAssignableRoles.data`.
+
