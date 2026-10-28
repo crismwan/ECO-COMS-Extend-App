@@ -27,17 +27,6 @@
       }
     },
     {
-      "name": "shellOrgs",
-      "baseUrlType": "workday-wql",
-      "url": "data",
-      "authType": "sso",
-      "isCollection": true,
-      "bestEffort": "true",
-      "wqlQuery": {
-        "queryId": "customOrganizations"
-      }
-    },
-    {
       "name": "shellRoles",
       "baseUrlType": "workday-wql",
       "url": "data",
