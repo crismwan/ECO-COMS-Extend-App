@@ -58,7 +58,7 @@
     {
       "name": "posSearch",
       "baseUrlType": "workday-wql",
-      "url": "<% 'data?query=' + string:pathEncode('SELECT workdayID, position_PositionManagement FROM allPositions WHERE supervisoryOrganization is not empty AND (jobTitle contains \\'' + instanceListQuery + '\\' OR position_PositionManagement.descriptor contains \\'' + instanceListQuery + '\\')') %>",
+      "url": "<% 'data?query=' + string:pathEncode('SELECT workdayID, position_PositionManagement FROM allPositions WHERE (jobTitle contains \\'' + instanceListQuery + '\\' OR position_PositionManagement.descriptor contains \\'' + instanceListQuery + '\\')') %>",
       "authType": "sso",
       "isCollection": true,
       "bestEffort": "true",
