@@ -167,6 +167,8 @@ The `guide` attribute places a **"?" tooltip icon** beside the widget label. It 
 
 **Do NOT** place two `richText` nodes in the same `fieldSet` expecting both to render — only the first will appear.
 
+**Conditional visibility with `visible`:** For conditionally shown error/info messages, use `text` widgets (not `richText`) with the `visible` attribute. `richText` + `visible` inside a `fieldSet` may cause page-level errors. The safe confirmed pattern is `text` widgets with `visible` inside a single `fieldSet`:
+
 ## Widget validation — `onChange` + `setError` / `clearError`
 
 This is the mechanism for conditional/cross-field validation, including **inside a grid `cellTemplate`**. `onChange` fires when the user changes the widget's value; `self` is the widget. Call `setError(msg)` to push a message into the page error window (blocking), `clearError()` to remove it. Always clear on the passing branch — an error set once persists until cleared.
@@ -348,6 +350,27 @@ Read it via the fieldSet's own childrenMap: `sampleGrid.selectedRows[0].children
 ## AMD task registration
 
 Pages are registered in a `tasks` array in the **AMD**. Each entry: `{ "id": "<TaskId>", "routingPattern": "/...", "page": { "id": "<PageId>" } }`. The task `id` is what `taskId` references (hub `initialTask`/`navigationTasks`, flow `flowSteps`, button `taskReference`). The Home/landing task typically uses `"routingPattern": "/"`.
+
+## queryParams — accessing URL query parameters
+
+URL query parameters (e.g. `?errorCode=404&view=list`) are accessed in PMD scripts via **`queryParams.<paramName>`** — NOT as bare variable names.
+
+**Critical rule:** Bare variable references like `errorCode` or `view` do NOT resolve to query parameters and cause a **"1 Error" runtime failure** with an infinite spinner. Always use the `queryParams.` prefix.
+
+```json
+{ "type": "text", "id": "errorSummary404", "visible": "<% queryParams.errorCode == '404' %>" }
+```
+
+**Confirmed patterns:**
+
+- `queryParams.errorCode` ✅ — accesses `?errorCode=404`
+- `queryParams.roleId` ✅ — accesses `?roleId=abc123`
+- `queryParams.view` ✅ — accesses `?view=list`
+- `errorCode` ❌ — bare variable, causes "1 Error" at runtime
+
+**`empty()` guard:** `empty(queryParams.errorCode)` safely returns true when the param is absent. Use it for default/fallback visibility conditions.
+
+**Task registration note:** A task registered in the AMD with NO `parameters` block still receives query params — they arrive via `queryParams`, not via the `parameters` map. The AMD `parameters` block is for params passed programmatically from hub/flow navigation; URL query params always go through `queryParams`.
 
 ## instanceList widget
 
