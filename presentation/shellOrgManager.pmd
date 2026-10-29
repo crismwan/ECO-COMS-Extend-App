@@ -8,23 +8,6 @@
   ],
   "endPoints": [
     {
-      "name": "customOrganizations",
-      "baseUrlType": "workday-wql",
-      "url": "data",
-      "authType": "sso",
-      "isCollection": true,
-      "bestEffort": "true",
-      "deferred": true,
-      "wqlQuery": {
-        "queryId": "customOrganizations"
-      },
-      "failOnStatusCodes": [
-        400,
-        403,
-        500
-      ]
-    },
-    {
       "name": "shellOrgPatterns",
       "baseUrlType": "workday-wql",
       "url": "data",
@@ -196,7 +179,7 @@
                 "gridType": "LIST",
                 "multiViewStylingEnabled": true,
                 "id": "appsGrid",
-                "rows": "<%\n  let appCodes = [];\n  let result = [];\n  for (var org : (customOrganizations.data ?? [])) {\n    let code = org.code;\n    let appCode = code.contains('(') ?\n      code.substringBefore('(') + '(' + code.substringAfter('(').substringBefore(')') + ')' :\n      (code.substringAfter(':').contains(':') ?\n        code.substringBefore(':') + ':' + code.substringAfter(':').substringBefore(':') :\n        code);\n    if (!appCodes.contains(appCode)) {\n      appCodes.add(appCode);\n      result.add({'appCode': appCode});\n    }\n  }\n  result;\n%>",
+                "rows": "<%\n  let appCodes = [];\n  let result = [];\n  for (var pattern : (shellOrgPatterns.data ?? [])) {\n    let code = pattern.code;\n    let baseCode = code.substringBefore(':PATTERN');\n    let appCode = baseCode.contains('(') ?\n      baseCode.substringBefore('(') + '(' + baseCode.substringAfter('(').substringBefore(')') + ')' :\n      (baseCode.substringAfter(':').contains(':') ?\n        baseCode.substringBefore(':') + ':' + baseCode.substringAfter(':').substringBefore(':') :\n        baseCode);\n    if (!appCodes.contains(appCode)) {\n      appCodes.add(appCode);\n      result.add({'appCode': appCode});\n    }\n  }\n  result;\n%>",
                 "rowVariableName": "app",
                 "enabled": false,
                 "label": "Applications",
