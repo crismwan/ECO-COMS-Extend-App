@@ -203,6 +203,23 @@ Compare a Date against another **widget's** value, not a raw inbound string — 
 
 `setVisible()` only works reliably when the widget is inside a `fieldSet`.
 
+### Widget scripting — confirmed platform limitations (editWizard context)
+
+**`setValue()` on `text` widgets is silently ignored** — calling `someText.setValue(...)` from an `onChange` handler produces no visible update. This is a confirmed platform limitation, not a coding error.
+
+**`setLabel()` on `text` widgets does NOT update reactively** in `editWizard` step context — confirmed via live UI testing (2026-10-29). Even with real keyboard input triggering `onChange`, `setLabel()` calls execute without error but the label in the DOM never changes. The platform appears to render the label once at page load and ignore subsequent `setLabel()` calls on `text` widgets.
+
+**What DOES work in onChange handlers:**
+- `setError(String)` / `clearError()` — confirmed working for validation feedback
+- `setWarning(String)` / `clearWarning()` — confirmed working
+- `setEnabled(boolean)` — confirmed working (enable/disable a widget)
+- `setVisible(boolean)` — confirmed working (show/hide, must be inside a `fieldSet`)
+
+**For live preview / computed display fields:** Do NOT attempt reactive updates via `setLabel()` or `setValue()` on `text` widgets. Instead:
+- Use the `value` expression (evaluated at page load and on the wizard's Summary review step) for correct display in the summary
+- Use `setError()` to surface validation info (the only confirmed-working dynamic text display)
+- Use `richText` banners for static explanatory text about the naming format
+
 ## grid widget
 
 Grid columns are NOT typed widgets placed directly in `columns`. Putting `"type": "text"`/`"number"` as the column type errors with "invalid tag" — those types are only valid INSIDE a `cellTemplate`.
