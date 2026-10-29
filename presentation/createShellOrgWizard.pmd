@@ -19,12 +19,6 @@
           "task": {
             "taskId": "newShellOrg"
           }
-        },
-        {
-          "label": "Confirm & Submit",
-          "task": {
-            "taskId": "newShellOrgConfirm"
-          }
         }
       ],
       "conclusion": {

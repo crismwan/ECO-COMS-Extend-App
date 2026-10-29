@@ -48,49 +48,68 @@
   "outboundData": {
     "outboundEndPoints": [
       {
-        "name": "newPatternVars",
-        "type": "outboundVariable",
-        "variableScope": "flow",
+        "name": "triggerAddShellOrgPattern",
+        "baseUrlType": "orchestration",
+        "url": "<% let ac = (!empty(selectedApplicationId.value)) ? (selectedApplicationId.value.descriptor ?? '') : ''; let pName = ac + ':PATTERN:' + (attribute1.value ?? '*') + ':' + (attribute2.value ?? '*') + ':' + (attribute3.value ?? '*') + ':' + (attribute5.value ?? '*'); '/AddShellOrgPattern/launch?comsAppId=' + ((!empty(selectedApplicationId.value)) ? (selectedApplicationId.value.id ?? '') : '') + '&patternName=' + pName + '&workerId=' + (selectedWorker.id ?? '') + '&attribute1=' + (attribute1.value ?? '*') + '&attribute2=' + (attribute2.value ?? '*') + '&attribute3=' + (attribute3.value ?? '*') + '&attribute5=' + (attribute5.value ?? '*') + '&effectiveDate=' + (effectiveDate.value != null ? effectiveDate.value.format('yyyy-MM-dd') : '') %>",
+        "authType": "sso",
+        "httpMethod": "POST",
+        "onSend": "<% {} %>",
+        "headers": [
+          {
+            "name": "content-type",
+            "value": "application/json"
+          }
+        ],
+        "failOnStatusCodes": [
+          { "code": 400 },
+          { "code": 403 },
+          { "code": 404 },
+          { "code": 429 },
+          { "code": 500 }
+        ]
+      },
+      {
+        "name": "postAuditLog",
+        "baseUrlType": "BUSINESS-OBJECT",
+        "url": "/comsAuditLogs",
+        "httpMethod": "POST",
+        "authType": "sso",
         "values": [
           {
-            "outboundPath": "comsAppId",
-            "value": "<% (!empty(selectedApplicationId.value)) ? (selectedApplicationId.value.id ?? '') : '' %>"
+            "outboundPath": "timestamp",
+            "value": "<% date:now().format(\"yyyy-MM-dd'T'HH:mm:ss'Z'\") %>"
           },
           {
-            "outboundPath": "applicationCode",
-            "value": "<% (!empty(selectedApplicationId.value)) ? (selectedApplicationId.value.descriptor ?? '') : '' %>"
+            "outboundPath": "objectType",
+            "value": "Add New Shell Org Pattern"
           },
           {
-            "outboundPath": "attribute1",
-            "value": "<% empty(attribute1.value) ? '*' : attribute1.value %>"
+            "outboundPath": "action",
+            "value": "CREATE"
           },
           {
-            "outboundPath": "attribute2",
-            "value": "<% empty(attribute2.value) ? '*' : attribute2.value %>"
-          },
-          {
-            "outboundPath": "attribute3",
-            "value": "<% empty(attribute3.value) ? '*' : attribute3.value %>"
-          },
-          {
-            "outboundPath": "attribute5",
-            "value": "<% empty(attribute5.value) ? '*' : attribute5.value %>"
-          },
-          {
-            "outboundPath": "workerId",
-            "value": "<% selectedWorker.id %>"
-          },
-          {
-            "outboundPath": "patternName",
+            "outboundPath": "coName",
             "value": "<% let ac = (!empty(selectedApplicationId.value)) ? (selectedApplicationId.value.descriptor ?? '') : ''; ac + ':PATTERN:' + (attribute1.value ?? '*') + ':' + (attribute2.value ?? '*') + ':' + (attribute3.value ?? '*') + ':' + (attribute5.value ?? '*') %>"
           },
           {
-            "outboundPath": "effectiveDate",
-            "value": "<% effectiveDate.value != null ? effectiveDate.value.format('yyyy-MM-dd') : '' %>"
+            "outboundPath": "details",
+            "value": "<% 'Application: ' + ((!empty(selectedApplicationId.value)) ? (selectedApplicationId.value.descriptor ?? '') : '') + ', Effective Date: ' + (effectiveDate.value != null ? effectiveDate.value.format('yyyy-MM-dd') : '') %>"
+          },
+          {
+            "outboundPath": "triggeredBy",
+            "value": "<% selectedWorker.descriptor %>"
           }
+        ],
+        "failOnStatusCodes": [
+          { "code": 400 },
+          { "code": 403 },
+          { "code": 500 }
         ]
       }
-    ]
+    ],
+    "responseErrorDetail": {
+      "errorSummary": "<% error ?? '' %>"
+    }
   },
   "onSubmit": "<%\n  let valid = true;\n  if (!comsValidations.isValidSubject(attribute1.value)) {\n    attribute1.setError('Subject must be exactly 4 uppercase letters only (e.g. MATH, CPSC, COMM).');\n    valid = false;\n  }\n  if (!comsValidations.isValidCourse(attribute2.value)) {\n    attribute2.setError('Course must be 4 uppercase letters followed by a colon and exactly 3 digits, with an optional letter suffix (e.g. COMM:300, COMM:300A, COMM_V:300, COMM_V:300A).');\n    valid = false;\n  }\n  if (!comsValidations.isValidSection(attribute3.value, attribute2.value ?? '')) {\n    attribute3.setError(comsValidations.errorSection(attribute2.value ?? ''));\n    valid = false;\n  }\n  if (!comsValidations.isValidAcademicPeriod(attribute5.value)) {\n    attribute5.setError('Academic Period must be the current year (2026) or next year (2027) followed by S, W1, or W2 only (e.g. 2026S, 2026W1, 2027W2).');\n    valid = false;\n  }\n  if (!comsValidations.isWeekday(effectiveDate.value)) {\n    effectiveDate.setError('Effective Date must be a weekday. Saturdays and Sundays are not allowed.');\n    valid = false;\n  }\n  if (!comsValidations.isCurrentOrFutureYear(effectiveDate.value)) {\n    effectiveDate.setError('Effective Date year must be 2026 or 2027. Past or future years beyond next year are not allowed.');\n    valid = false;\n  }\n  valid;\n%>",
   "presentation": {
@@ -215,7 +234,6 @@
                     "text": "Exactly 4 uppercase letters (e.g. MATH, CPSC, COMM). Leave blank to match any subject (wildcard *)."
                   },
                   "onChange": "<%\n            if (empty(selectedApplicationId.value)) {\n              self.setError(comsValidations.errorNoApp());\n            } else if (empty(self.value)) {\n              self.clearError();\n            } else if (!comsValidations.isValidSubject(self.value)) {\n              self.setError(comsValidations.errorSubject());\n            } else {\n              let ac = selectedApplicationId.value.descriptor ?? '';\n              let pName = ac + ':PATTERN:' + (self.value ?? '*') + ':' + (attribute2.value ?? '*') + ':' + (attribute3.value ?? '*') + ':' + (attribute5.value ?? '*');\n              let dupes = (existingPatterns.data ?? []).filter(p => { p.code == pName });\n              if (dupes.size() > 0) {\n                self.setError(comsValidations.errorDuplicate(dupes[0].organizationByName.descriptor));\n              } else {\n                self.clearError();\n              }\n              patternPreview.setValue(pName);\n            }\n          %>",
-                  "value": "<% flowVariables.attribute1 ?? '' %>",
                   "placeholder": "e.g. MATH"
                 },
                 {
@@ -229,7 +247,6 @@
                     "text": "4 uppercase letters, a colon, and 3 digits, with an optional letter suffix (e.g. COMM:300, COMM:300A, COMM_V:300). Leave blank to match any course (wildcard *)."
                   },
                   "onChange": "<%\n            if (empty(selectedApplicationId.value)) {\n              self.setError(comsValidations.errorNoApp());\n            } else if (empty(self.value)) {\n              self.clearError();\n            } else if (!comsValidations.isValidCourse(self.value)) {\n              self.setError(comsValidations.errorCourse());\n            } else {\n              let ac = selectedApplicationId.value.descriptor ?? '';\n              let pName = ac + ':PATTERN:' + (attribute1.value ?? '*') + ':' + (self.value ?? '*') + ':' + (attribute3.value ?? '*') + ':' + (attribute5.value ?? '*');\n              let dupes = (existingPatterns.data ?? []).filter(p => { p.code == pName });\n              if (dupes.size() > 0) {\n                self.setError(comsValidations.errorDuplicate(dupes[0].organizationByName.descriptor));\n              } else {\n                self.clearError();\n              }\n              patternPreview.setValue(pName);\n            }\n            if (!empty(attribute3.value)) {\n              if (!comsValidations.isValidSection(attribute3.value, self.value ?? '')) {\n                attribute3.setError(comsValidations.errorSection(self.value ?? ''));\n              } else {\n                attribute3.clearError();\n              }\n            }\n          %>",
-                  "value": "<% flowVariables.attribute2 ?? '' %>",
                   "placeholder": "e.g. MATH_V:300"
                 },
                 {
@@ -243,14 +260,12 @@
                     "text": "For most courses, 3 digits (e.g. 951). For _V courses, 3 digits followed by a letter (e.g. 951L). Leave blank to match any section (wildcard *)."
                   },
                   "onChange": "<%\n            if (empty(selectedApplicationId.value)) {\n              self.setError(comsValidations.errorNoApp());\n            } else if (empty(self.value)) {\n              self.clearError();\n            } else if (!comsValidations.isValidSection(self.value, attribute2.value ?? '')) {\n              self.setError(comsValidations.errorSection(attribute2.value ?? ''));\n            } else {\n              let ac = selectedApplicationId.value.descriptor ?? '';\n              let pName = ac + ':PATTERN:' + (attribute1.value ?? '*') + ':' + (attribute2.value ?? '*') + ':' + (self.value ?? '*') + ':' + (attribute5.value ?? '*');\n              let dupes = (existingPatterns.data ?? []).filter(p => { p.code == pName });\n              if (dupes.size() > 0) {\n                self.setError(comsValidations.errorDuplicate(dupes[0].organizationByName.descriptor));\n              } else {\n                self.clearError();\n              }\n              patternPreview.setValue(pName);\n            }\n          %>",
-                  "value": "<% flowVariables.attribute3 ?? '' %>",
                   "placeholder": "e.g. 951"
                 },
                 {
                   "type": "text",
                   "id": "attribute4",
                   "label": "Course Reference",
-                  "value": "<% flowVariables.attribute4 ?? '' %>",
                   "placeholder": "e.g. MATH_V",
                   "visible": false,
                   "required": false
@@ -266,7 +281,6 @@
                     "text": "Year (2026 or 2027) followed by S, W1, or W2 — representing Summer, Winter Session 1, or Winter Session 2 (e.g. 2026S, 2026W1, 2027W2). Leave blank to match any period (wildcard *)."
                   },
                   "onChange": "<%\n            if (empty(selectedApplicationId.value)) {\n              self.setError(comsValidations.errorNoApp());\n            } else if (empty(self.value)) {\n              self.clearError();\n            } else if (!comsValidations.isValidAcademicPeriod(self.value)) {\n              self.setError(comsValidations.errorAcademicPeriod());\n            } else {\n              let ac = selectedApplicationId.value.descriptor ?? '';\n              let pName = ac + ':PATTERN:' + (attribute1.value ?? '*') + ':' + (attribute2.value ?? '*') + ':' + (attribute3.value ?? '*') + ':' + (self.value ?? '*');\n              let dupes = (existingPatterns.data ?? []).filter(p => { p.code == pName });\n              if (dupes.size() > 0) {\n                self.setError(comsValidations.errorDuplicate(dupes[0].organizationByName.descriptor));\n              } else {\n                self.clearError();\n              }\n              patternPreview.setValue(pName);\n            }\n          %>",
-                  "value": "<% flowVariables.attribute5 ?? '' %>",
                   "placeholder": "e.g. 2026S"
                 },
                 {
@@ -280,7 +294,6 @@
                     "title": "Effective Date Rules",
                     "text": "Must be a weekday (Monday–Friday) in 2026 or 2027. Weekends and dates outside this range will be rejected. The pattern will be active in Workday starting on this date."
                   },
-                  "value": "<% flowVariables.effectiveDate ?? '' %>",
                   "onChange": "<%\n            if (empty(self.value)) {\n              self.clearError();\n            } else if (!comsValidations.isWeekday(self.value)) {\n              self.setError(comsValidations.errorWeekday());\n            } else if (!comsValidations.isCurrentOrFutureYear(self.value)) {\n              self.setError(comsValidations.errorYear());\n            } else {\n              self.clearError();\n            }\n          %>"
                 }
               ],

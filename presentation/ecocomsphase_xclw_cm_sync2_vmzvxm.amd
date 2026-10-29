@@ -2,39 +2,6 @@
   "appProperties": [],
   "flowDefinitions": [
     {
-      "id": "newShellOrgPatternFlow",
-      "flowSteps": [
-        {
-          "id": "newShellOrgPatternStep",
-          "taskId": "newShellOrgPattern",
-          "startsFlow": true,
-          "transitions": [
-            {
-              "order": "a",
-              "value": "newShellOrgPatternConfirmStep",
-              "condition": "true"
-            }
-          ]
-        },
-        {
-          "id": "newShellOrgPatternConfirmStep",
-          "taskId": "newShellOrgPatternConfirm",
-          "transitions": [
-            {
-              "order": "a",
-              "value": "newShellOrgPatternSuccessStep",
-              "condition": "true"
-            }
-          ]
-        },
-        {
-          "id": "newShellOrgPatternSuccessStep",
-          "taskId": "newShellOrgPatternSuccess",
-          "endsFlow": true
-        }
-      ]
-    },
-    {
       "id": "manageShellOrgStatusFlow",
       "flowSteps": [
         {

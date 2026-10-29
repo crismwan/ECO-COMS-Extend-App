@@ -19,12 +19,6 @@
           "task": {
             "taskId": "newShellOrgPattern"
           }
-        },
-        {
-          "label": "Confirm & Submit",
-          "task": {
-            "taskId": "newShellOrgPatternConfirm"
-          }
         }
       ],
       "conclusion": {
