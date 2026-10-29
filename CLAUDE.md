@@ -235,12 +235,16 @@ Compare a Date against another **widget's** value, not a raw inbound string — 
 - Use `setWarning()` for non-blocking inline preview text below a field (e.g. "Generated name: X:CLW:ORG"). This IS reactive in onChange — confirmed working in editWizard step context (2026-10-29). **Important caveat from Workday docs:** The editWizard section also notes "No warnings support — calling `setWarning()` on a step page causes an error at submission time." If `setWarning()` on a disabled text widget blocks submit, fall back to `setError()` on a separate helper text widget, or use a `richText` banner.
 - Use `richText` banners for static explanatory text about the naming format
 
-**editWizard "Discard Changes?" dialog behavior (confirmed 2026-10-29):**
-- This dialog appears when clicking the wizard's built-in **Next** button if any widget value has changed (platform detects "dirty" form state)
-- **Cannot be suppressed** via `suppressDiscardDialog: true` (that only works on custom button `taskReference` navigation, not the wizard's own Next button)
-- Clicking **"Discard"** in the dialog navigates FORWARD — it is the "proceed" action, confusingly named
-- Data IS preserved by the platform — the wizard caches step data server-side; "Discard" does not actually discard entered data
-- Workaround: instruct users via a `richText` warning banner that "Discard" means "continue"
+**editWizard "Discard Changes?" dialog — ROOT CAUSE AND FIX (confirmed by live test 2026-10-29, supersedes earlier notes):**
+- Cause: the wizard step page had `"standardEditButtonsHidden": true`. The wizard's Next saves the step via the step's own OK; with OK hidden, Next is treated as navigating away from a dirty page, so Workday shows "Discard Changes?" — and clicking Discard really does drop the entered values (Review step showed empty fields).
+- Fix: do NOT set `standardEditButtonsHidden` (or a custom `editButtonBar`) on editWizard step pages. With it removed, Next goes straight to Review & Submit with all values preserved, no dialog. Confirmed on createShellOrgWizard and createShellOrgPatternWizard.
+- Step pages may keep `cancelOverride`.
+
+**Live preview fields in editWizard steps (confirmed live 2026-10-29):**
+- `readOnlyText` + `setValue()` in `onChange` DOES update reactively in the step (e.g. Generated Organization Name, Pattern Name Preview).
+- For a `values`-scripted dropdown or `instanceListLoopTag` dropdown, read the selected label with `<dropdown>.selectedEntries[0].descriptor` (guard with `!empty(<dropdown>.value)`). `.value.descriptor` raised "Property Error found: descriptor" on newShellOrg and returned empty on newShellOrgPattern.
+- The Review & Submit summary does NOT show the setValue'd preview, nor a `value` expression re-evaluated with entered data — it shows the page-load value. Other fields (dropdown, text, date) display correctly. Open question.
+- Don't use `setWarning()` on step pages (errors at submit per Workday docs).
 
 ## grid widget
 
