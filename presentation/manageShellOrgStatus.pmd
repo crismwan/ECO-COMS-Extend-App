@@ -35,6 +35,21 @@
         ]
       },
       {
+        "type": "outboundVariable",
+        "name": "manageStatusFlowVars",
+        "variableScope": "flow",
+        "values": [
+          {
+            "outboundPath": "orgCode",
+            "value": "<% queryParams.orgCode ?? '' %>"
+          },
+          {
+            "outboundPath": "currentStatus",
+            "value": "<% queryParams.currentStatus ?? '' %>"
+          }
+        ]
+      },
+      {
         "name": "postAuditLog",
         "baseUrlType": "BUSINESS-OBJECT",
         "url": "/comsAuditLogs",
@@ -190,14 +205,7 @@
           "type": "button",
           "id": "submitStatusChangeButton",
           "label": "<% queryParams.currentStatus == 'Active' ? 'Inactivate Organization' : 'Activate Organization' %>",
-          "action": "PRIMARY",
-          "taskReference": {
-            "taskId": "manageShellOrgStatusSuccess",
-            "parameterBindings": {
-              "orgCode": "<% queryParams.orgCode ?? '' %>",
-              "currentStatus": "<% queryParams.currentStatus ?? '' %>"
-            }
-          }
+          "action": "PRIMARY"
         },
         {
           "type": "button",

@@ -66,6 +66,28 @@
           "endsFlow": true
         }
       ]
+    },
+    {
+      "id": "manageShellOrgStatusFlow",
+      "flowSteps": [
+        {
+          "id": "manageShellOrgStatusStep",
+          "taskId": "manageShellOrgStatus",
+          "startsFlow": true,
+          "transitions": [
+            {
+              "order": "a",
+              "value": "manageShellOrgStatusSuccessStep",
+              "condition": "true"
+            }
+          ]
+        },
+        {
+          "id": "manageShellOrgStatusSuccessStep",
+          "taskId": "manageShellOrgStatusSuccess",
+          "endsFlow": true
+        }
+      ]
     }
   ],
   "tasks": [

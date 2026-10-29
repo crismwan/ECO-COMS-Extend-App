@@ -16,12 +16,6 @@
             "value": "application/json"
           }
         ],
-        "values": [
-          {
-            "outboundPath": "organizationName",
-            "value": "<% flowVariables.organizationName %>"
-          }
-        ],
         "failOnStatusCodes": [
           {
             "code": 400

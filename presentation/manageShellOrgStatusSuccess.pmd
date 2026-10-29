@@ -22,7 +22,7 @@
                 {
                   "type": "card",
                   "cardId": "ShellOrgStatusReceiptCard",
-                  "parameters": "<% { 'orgCode': queryParams.orgCode ?? '', 'newStatus': queryParams.currentStatus == 'Active' ? 'Inactive' : 'Active' } %>"
+                  "parameters": "<% { 'orgCode': flowVariables.orgCode ?? '', 'newStatus': flowVariables.currentStatus == 'Active' ? 'Inactive' : 'Active' } %>"
                 }
               ]
             }
@@ -47,13 +47,13 @@
                   "type": "readOnlyText",
                   "id": "orgCodeDisplay",
                   "label": "Organization",
-                  "value": "<% queryParams.orgCode ?? '' %>"
+                  "value": "<% flowVariables.orgCode ?? '' %>"
                 },
                 {
                   "type": "readOnlyText",
                   "id": "newStatusDisplay",
                   "label": "New Status",
-                  "value": "<% queryParams.currentStatus == 'Active' ? 'Inactive' : 'Active' %>"
+                  "value": "<% flowVariables.currentStatus == 'Active' ? 'Inactive' : 'Active' %>"
                 }
               ]
             }
