@@ -2228,6 +2228,16 @@ Instead, use a **WQL Query component** (`.wqlquery` file) with typed `parameters
 
 WQL Query component parameters are interpolated server-side — not string-concatenated by the PMD script — which prevents injection.
 
+## Orchestrations — debugging runs (confirmed 2026-10-29)
+
+- A page's "success" only means the orchestration launch returned 200. AddShellOrg / AddShellOrgPattern catch errors in a global error handler and still return 200, so **always verify the record exists** (Shell Org Manager counts) and read the run log.
+- Run logs: developer.workday.com → Apps → this app → **Logs** tab (last 15 min). Find the "Aggregated step totals" line for the run's commonId: it lists each step with success/failure counts. **Orchestration Activity** tab lists runs.
+- Root cause found this way: the PMD sent an empty `comsAppId` (`dropdown.value.id` is empty), so `GetApplication` hit `/comsApplications/` (the collection) and `ExtractOrgType` failed before the SOAP call.
+- Shell-org apps like X:ADM have no COMSApplication record. AddShellOrg now takes `orgType` (= application code) as a query param; its GetApplication node is disabled (`isDisabled: true`).
+- Organization_Code = Organization_Name = the generated name for both orchestrations (user decision).
+- The `Organization_Add_Update` SOAP body via `SendWorkdayApiRequest` POST `/soap/v42.2/Human_Resources` works (HTTP 200, org created) with Organization_Type_Name = `X:CLW` / `X:ADM` and subtype `X:Shell`.
+- Orchestration files are single-line JSON: when editing with a script, re-serialize compactly (`separators=(',',':')`) to keep diffs small.
+
 ## Orchestrations — ISU auth requires manual per-tenant setup
 
 An orchestration endpoint using `isuAuth` will **fail with HTTP 500 and an empty body** until the ISU (Integration System User) is explicitly assigned to the app in **Application Manager** for that tenant. Naming the ISU in the SMD is not sufficient — it must be configured in each environment after every promotion:
