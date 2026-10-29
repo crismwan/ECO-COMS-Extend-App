@@ -54,11 +54,11 @@
         "values": [
           {
             "outboundPath": "comsAppId",
-            "value": "<% selectedApplicationId.value.id %>"
+            "value": "<% (!empty(selectedApplicationId.value)) ? (selectedApplicationId.value.id ?? '') : '' %>"
           },
           {
             "outboundPath": "applicationCode",
-            "value": "<% selectedApplicationId.value.descriptor ?? '' %>"
+            "value": "<% (!empty(selectedApplicationId.value)) ? (selectedApplicationId.value.descriptor ?? '') : '' %>"
           },
           {
             "outboundPath": "attribute1",
@@ -82,7 +82,7 @@
           },
           {
             "outboundPath": "patternName",
-            "value": "<% let ac = selectedApplicationId.value.descriptor ?? ''; ac + ':PATTERN:' + (attribute1.value ?? '*') + ':' + (attribute2.value ?? '*') + ':' + (attribute3.value ?? '*') + ':' + (attribute5.value ?? '*') %>"
+            "value": "<% let ac = (!empty(selectedApplicationId.value)) ? (selectedApplicationId.value.descriptor ?? '') : ''; ac + ':PATTERN:' + (attribute1.value ?? '*') + ':' + (attribute2.value ?? '*') + ':' + (attribute3.value ?? '*') + ':' + (attribute5.value ?? '*') %>"
           },
           {
             "outboundPath": "effectiveDate",
