@@ -3,7 +3,7 @@
   "parameters": ["patternName", "applicationCode", "effectiveDate", "bodyText"],
   "header": {
     "title": "Pattern Created Successfully",
-    "subtitle": "<% patternName ?? '' %>",
+    "subtitle": "<% patternName ?? \"\" %>",
     "indicator": {
       "label": "Created",
       "color": "green"
@@ -11,7 +11,7 @@
   },
   "body": {
     "type": "simpleCard",
-    "value": "<% bodyText ?? '' %>"
+    "value": "<% bodyText ?? \"\" %>"
   },
   "footer": [
     {
