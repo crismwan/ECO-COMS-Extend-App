@@ -43,7 +43,7 @@
           },
           {
             "outboundPath": "applicationCode",
-            "value": "<% selectedApplicationId.value.id ?? '' %>"
+            "value": "<% (!empty(selectedApplicationId.value)) ? (selectedApplicationId.value.id ?? '') : '' %>"
           },
           {
             "outboundPath": "organizationCode",
