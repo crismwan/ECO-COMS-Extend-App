@@ -12,6 +12,10 @@ When there is any confusion about the right solution (syntax, attributes, widget
 2. **If the developer site doesn't answer it:** stop and ask the user. If I have an idea that goes beyond what CLAUDE.md says, describe it briefly and ask permission to try it before doing so.
 3. **After confirming something new**, add it to the relevant section of this file and note where it came from (developer.workday.com page, live test, or user).
 
+## Test data in the tenant
+
+Never put the text "claude" (any casing) into anything entered in the Workday tenant — test org codes, pattern values, role names, comments, audit details. Use neutral test values such as `TEST:ORG:1029`.
+
 ## Ask before guessing Workday syntax
 
 When I am unsure about Workday Extend syntax, attribute names, valid enum values, built-in Workday Script function signatures, widget capabilities, or any Workday platform behavior, I STOP and ask a specific, targeted question before proceeding — I do not guess or invent syntax.
