@@ -24,7 +24,7 @@
     {
       "name": "selectedApplication",
       "baseUrlType": "BUSINESS-OBJECT",
-      "url": "<% empty(selectedApplicationId.value) ? '/comsApplications/none' : '/comsApplications/' + selectedApplicationId.value.id %>",
+      "url": "<% empty(selectedApplicationId.value) ? '/comsApplications/none' : '/comsApplications/' + selectedApplicationId.selectedEntries[0].id %>",
       "authType": "sso",
       "bestEffort": "true",
       "exclude": "<% empty(selectedApplicationId.value) %>"
@@ -56,7 +56,7 @@
       {
         "name": "triggerAddShellOrgPattern",
         "baseUrlType": "orchestration",
-        "url": "<% let ac = (!empty(selectedApplicationId.value)) ? (selectedApplicationId.selectedEntries[0].descriptor ?? '') : ''; let pName = ac + ':PATTERN:' + (attribute1.value ?? '*') + ':' + (attribute2.value ?? '*') + ':' + (attribute3.value ?? '*') + ':' + (attribute5.value ?? '*'); '/AddShellOrgPattern/launch?comsAppId=' + ((!empty(selectedApplicationId.value)) ? (selectedApplicationId.value.id ?? '') : '') + '&patternName=' + pName + '&workerId=' + (selectedWorker.id ?? '') + '&attribute1=' + (attribute1.value ?? '*') + '&attribute2=' + (attribute2.value ?? '*') + '&attribute3=' + (attribute3.value ?? '*') + '&attribute5=' + (attribute5.value ?? '*') + '&effectiveDate=' + (effectiveDate.value != null ? effectiveDate.value.format('yyyy-MM-dd') : '') %>",
+        "url": "<% let ac = (!empty(selectedApplicationId.value)) ? (selectedApplicationId.selectedEntries[0].descriptor ?? '') : ''; let pName = ac + ':PATTERN:' + (attribute1.value ?? '*') + ':' + (attribute2.value ?? '*') + ':' + (attribute3.value ?? '*') + ':' + (attribute5.value ?? '*'); '/AddShellOrgPattern/launch?comsAppId=' + ((!empty(selectedApplicationId.value)) ? (selectedApplicationId.selectedEntries[0].id ?? '') : '') + '&patternName=' + pName + '&workerId=' + (selectedWorker.id ?? '') + '&attribute1=' + (attribute1.value ?? '*') + '&attribute2=' + (attribute2.value ?? '*') + '&attribute3=' + (attribute3.value ?? '*') + '&attribute5=' + (attribute5.value ?? '*') + '&effectiveDate=' + (effectiveDate.value != null ? effectiveDate.value.format('yyyy-MM-dd') : '') %>",
         "authType": "sso",
         "httpMethod": "POST",
         "onSend": "<% {} %>",
