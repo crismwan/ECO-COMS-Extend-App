@@ -218,7 +218,15 @@ Compare a Date against another **widget's** value, not a raw inbound string — 
 **For live preview / computed display fields:** Do NOT attempt reactive updates via `setLabel()` or `setValue()` on `text` widgets. Instead:
 - Use the `value` expression (evaluated at page load and on the wizard's Summary review step) for correct display in the summary
 - Use `setError()` to surface validation info (the only confirmed-working dynamic text display)
+- Use `setWarning()` for non-blocking inline preview text below a field (e.g. "Generated name: X:CLW:ORG"). This IS reactive in onChange — confirmed working in editWizard step context (2026-10-29). **Important caveat from Workday docs:** The editWizard section also notes "No warnings support — calling `setWarning()` on a step page causes an error at submission time." If `setWarning()` on a disabled text widget blocks submit, fall back to `setError()` on a separate helper text widget, or use a `richText` banner.
 - Use `richText` banners for static explanatory text about the naming format
+
+**editWizard "Discard Changes?" dialog behavior (confirmed 2026-10-29):**
+- This dialog appears when clicking the wizard's built-in **Next** button if any widget value has changed (platform detects "dirty" form state)
+- **Cannot be suppressed** via `suppressDiscardDialog: true` (that only works on custom button `taskReference` navigation, not the wizard's own Next button)
+- Clicking **"Discard"** in the dialog navigates FORWARD — it is the "proceed" action, confusingly named
+- Data IS preserved by the platform — the wizard caches step data server-side; "Discard" does not actually discard entered data
+- Workaround: instruct users via a `richText` warning banner that "Discard" means "continue"
 
 ## grid widget
 
