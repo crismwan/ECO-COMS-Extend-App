@@ -7,7 +7,7 @@
         "name": "triggerAddShellOrgPattern",
         "baseUrlType": "orchestration",
         "url": "<% '/AddShellOrgPattern/launch?comsAppId=' + (flowVariables.comsAppId ?? '') + '&patternName=' + (flowVariables.patternName ?? '') + '&workerId=' + (flowVariables.workerId ?? '') + '&attribute1=' + (flowVariables.attribute1 ?? '') + '&attribute2=' + (flowVariables.attribute2 ?? '') + '&attribute3=' + (flowVariables.attribute3 ?? '') + '&attribute5=' + (flowVariables.attribute5 ?? '') + '&effectiveDate=' + (flowVariables.effectiveDate ?? '') %>",
-        "authType": "SSO",
+        "authType": "sso",
         "httpMethod": "POST",
         "onSend": "<% {} %>",
         "headers": [

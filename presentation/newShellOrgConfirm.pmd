@@ -7,7 +7,7 @@
         "name": "triggerAddShellOrg",
         "baseUrlType": "orchestration",
         "url": "<% '/AddShellOrg/launch?comsAppId=' + (flowVariables.comsAppId ?? '') + '&organizationName=' + (flowVariables.organizationName ?? '') + '&organizationCode=' + (flowVariables.organizationCode ?? '') + '&workerId=' + (flowVariables.workerId ?? '') + '&effectiveDate=' + (flowVariables.effectiveDate ?? '') %>",
-        "authType": "SSO",
+        "authType": "sso",
         "httpMethod": "POST",
         "onSend": "<% {} %>",
         "headers": [

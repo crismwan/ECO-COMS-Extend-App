@@ -28,6 +28,21 @@
       "authType": "sso",
       "bestEffort": "true",
       "exclude": "<% empty(selectedApplicationId.value) %>"
+    },
+    {
+      "name": "existingPatterns",
+      "baseUrlType": "workday-wql",
+      "url": "data",
+      "authType": "sso",
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        { "code": 400 },
+        { "code": 403 },
+        { "code": 500 }
+      ],
+      "wqlQuery": {
+        "queryId": "existingPatterns"
+      }
     }
   ],
   "outboundData": {

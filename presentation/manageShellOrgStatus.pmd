@@ -10,7 +10,7 @@
         "name": "triggerManageOrgStatus",
         "baseUrlType": "orchestration",
         "url": "<% '/ManageShellOrgStatus/launch?orgId=' + (queryParams.orgId ?? '') + '&action=' + (queryParams.currentStatus == 'Active' ? 'INACTIVATE' : 'ACTIVATE') + '&orgCode=' + (queryParams.orgCode ?? '') + '&orgName=' + (queryParams.orgName ?? '') + '&includeInactive=' + (queryParams.currentStatus == 'Active' ? 'true' : 'false') + '&effectiveDate=' + date:now().format(\"yyyy-MM-dd\") + '&patternName=' + (queryParams.orgCode ?? '') + '&orgType=' + (queryParams.orgType ?? '') + '&comsAppId=' + (queryParams.comsAppId ?? '') %>",
-        "authType": "SSO",
+        "authType": "sso",
         "httpMethod": "POST",
         "onSend": "<% {} %>",
         "headers": [
@@ -155,18 +155,10 @@
                   "value": "<% queryParams.currentStatus == 'Active' ? 'Inactive' : 'Active' %>"
                 },
                 {
-                  "type": "dynamicSection",
-                  "id": "statusImpactSection",
-                  "data": "<% queryParams.currentStatus ?? 'Active' %>",
-                  "dataVariableName": "currentStatus",
-                  "children": [
-                    {
-                      "type": "richText",
-                      "id": "statusImpactNote",
-                      "enabled": false,
-                      "value": "<% currentStatus == 'Active' ? '<span style=\"color:#92400e;font-size:11px\"><b>Impact of Inactivating:</b> The organization will no longer appear in Workday selection lists. Existing role assignments will NOT be removed automatically — you must remove them manually in Workday if needed.</span>' : '<span style=\"color:#065f46;font-size:11px\"><b>Impact of Activating:</b> The organization will become available again for new role assignments in Workday. No existing data will be changed.</span>' %>"
-                    }
-                  ]
+                  "type": "richText",
+                  "id": "statusImpactNote",
+                  "enabled": false,
+                  "value": "<% queryParams.currentStatus == 'Active' ? '<span style=\"color:#92400e;font-size:11px\"><b>Impact of Inactivating:</b> The organization will no longer appear in Workday selection lists. Existing role assignments will NOT be removed automatically — you must remove them manually in Workday if needed.</span>' : '<span style=\"color:#065f46;font-size:11px\"><b>Impact of Activating:</b> The organization will become available again for new role assignments in Workday. No existing data will be changed.</span>' %>"
                 },
                 {
                   "type": "checkBox",
