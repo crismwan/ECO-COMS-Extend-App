@@ -22,7 +22,7 @@
                 {
                   "type": "card",
                   "cardId": "ShellOrgPatternReceiptCard",
-                  "parameters": "<% { 'patternName': flowVariables.patternName ?? '', 'organizationName': flowVariables.organizationName ?? '' } %>"
+                  "parameters": "<% { 'patternName': queryParams.patternName ?? '', 'organizationName': queryParams.organizationName ?? '' } %>"
                 }
               ]
             }
@@ -46,7 +46,7 @@
                 {
                   "type": "readOnlyText",
                   "id": "patternNameDisplay",
-                  "value": "<% flowVariables.patternName ?? '' %>"
+                  "value": "<% queryParams.patternName ?? '' %>"
                 }
               ]
             }
