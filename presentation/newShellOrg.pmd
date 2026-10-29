@@ -208,7 +208,7 @@
                   "type": "readOnlyText",
                   "id": "orgNamePreview",
                   "label": "Generated Organization Name",
-                  "value": "Select an application above"
+                  "value": "<% (!empty(selectedApplicationId.value)) ? ((selectedApplicationId.value.id ?? '') + ':' + (organizationCode.value ?? '')) : 'Select an application above' %>"
                 },
                 {
                   "type": "date",
