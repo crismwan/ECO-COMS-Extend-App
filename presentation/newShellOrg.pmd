@@ -39,7 +39,7 @@
         "values": [
           {
             "outboundPath": "comsAppId",
-            "value": "<% selectedApplicationId.value.id %>"
+            "value": "<% (!empty(selectedApplicationId.value)) ? (selectedApplicationId.value.id ?? '') : '' %>"
           },
           {
             "outboundPath": "applicationCode",
@@ -152,7 +152,7 @@
                   "id": "selectedApplicationId",
                   "label": "Application",
                   "required": true,
-                  "values": "<% (existingOrgs.data ?? []).map(org => { { 'appCode': org.code.substringAfter(':').contains(':') ? org.code.substringBefore(':') + ':' + org.code.substringAfter(':').substringBefore(':') : org.code.substringBefore(':') } }).filter(item => { !empty(item.appCode) }).map(item => { item.appCode }).distinct().map(appCode => { { 'id': appCode, 'descriptor': appCode } }) %>",
+                  "values": "<% (existingOrgs.data ?? []).filter(org => { !empty(org.code) }).map(org => { { 'appCode': org.code.substringAfter(':').contains(':') ? org.code.substringBefore(':') + ':' + org.code.substringAfter(':').substringBefore(':') : org.code.substringBefore(':') } }).filter(item => { !empty(item.appCode) }).map(item => { item.appCode }).distinct().map(appCode => { { 'id': appCode, 'descriptor': appCode } }) %>",
                   "helpText": "Select the application this shell organization belongs to.",
                   "onChange": "<%\n    let ac = (!empty(self.value)) ? (self.value.id ?? '') : '';\n    let oc = organizationCode.value ?? '';\n    if (!empty(ac) && !empty(oc)) {\n      orgNamePreview.value = ac + ':' + oc;\n    } else {\n      orgNamePreview.value = 'Select application and enter code above';\n    }\n  %>"
                 },
