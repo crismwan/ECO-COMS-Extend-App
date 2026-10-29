@@ -6,13 +6,13 @@
       "label": "ECO-COMS",
       "icon": "wd-accent-home",
       "initialTask": {
-        "taskId": "landingPage"
+        "taskId": "hubLanding"
       },
       "navigationTasks": [
         {
           "type": "item",
           "task": {
-            "taskId": "landingPage"
+            "taskId": "hubLanding"
           },
           "label": "RBAC Hub",
           "icon": "wd-accent-home"

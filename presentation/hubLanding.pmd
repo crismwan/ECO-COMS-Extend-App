@@ -1,0 +1,159 @@
+{
+  "id": "hubLanding",
+  "securityDomains": [
+    "ManageCOMSShellOrgs"
+  ],
+  "endPoints": [],
+  "presentation": {
+    "headerSize": "STANDARD",
+    "title": {
+      "type": "title",
+      "label": "ECO-COMS Hub"
+    },
+    "body": {
+      "type": "basicFormLayout",
+      "id": "hubLandingForm",
+      "sections": [
+        {
+          "type": "layoutSection",
+          "id": "shellOrgSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "shellOrgFieldSet",
+              "title": "Shell Organizations",
+              "children": [
+                {
+                  "type": "richText",
+                  "id": "shellOrgDesc",
+                  "enabled": false,
+                  "value": "<% '<span style=\"color:#374151;font-size:13px\">Manage Custom Organizations (Shell Orgs) used for RBAC role assignments in Workday. Add new organizations, manage patterns, and view or update organization status.</span>' %>"
+                },
+                {
+                  "type": "button",
+                  "id": "addShellOrgButton",
+                  "label": "Add Shell Org",
+                  "action": "AUXILIARY",
+                  "taskReference": {
+                    "taskId": "createShellOrgWizard"
+                  }
+                },
+                {
+                  "type": "button",
+                  "id": "addPatternButton",
+                  "label": "Add Pattern",
+                  "action": "AUXILIARY",
+                  "taskReference": {
+                    "taskId": "createShellOrgPatternWizard"
+                  }
+                },
+                {
+                  "type": "button",
+                  "id": "openShellOrgManagerButton",
+                  "label": "Open Manager",
+                  "action": "PRIMARY",
+                  "taskReference": {
+                    "taskId": "shellOrgManager"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "assignableRoleSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "assignableRoleFieldSet",
+              "title": "Assignable Roles",
+              "children": [
+                {
+                  "type": "richText",
+                  "id": "assignableRoleDesc",
+                  "enabled": false,
+                  "value": "<% '<span style=\"color:#374151;font-size:13px\">Submit requests for new Assignable Roles or view existing role requests and their current status.</span>' %>"
+                },
+                {
+                  "type": "button",
+                  "id": "submitNewRoleButton",
+                  "label": "Submit New Request",
+                  "action": "AUXILIARY",
+                  "taskReference": {
+                    "taskId": "assignableRoleManager"
+                  }
+                },
+                {
+                  "type": "button",
+                  "id": "viewRoleRequestsButton",
+                  "label": "View Requests",
+                  "action": "PRIMARY",
+                  "taskReference": {
+                    "taskId": "assignableRoleManagerView"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "adminSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "adminFieldSet",
+              "title": "Administration",
+              "children": [
+                {
+                  "type": "richText",
+                  "id": "adminDesc",
+                  "enabled": false,
+                  "value": "<% '<span style=\"color:#374151;font-size:13px\">Administrative tools for AAA role provisioning, ISC role request management, and audit log review.</span>' %>"
+                },
+                {
+                  "type": "button",
+                  "id": "submitAaaButton",
+                  "label": "Submit AAA Role",
+                  "action": "AUXILIARY",
+                  "taskReference": {
+                    "taskId": "adminProvisioning"
+                  }
+                },
+                {
+                  "type": "button",
+                  "id": "viewPendingIscButton",
+                  "label": "View Pending ISC Requests",
+                  "action": "PRIMARY",
+                  "taskReference": {
+                    "taskId": "iscRoleRequestsView"
+                  }
+                },
+                {
+                  "type": "button",
+                  "id": "viewAuditLogButton",
+                  "label": "View Audit Log",
+                  "action": "PRIMARY",
+                  "taskReference": {
+                    "taskId": "auditLogViewer"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "footer": {
+      "type": "footer",
+      "children": [
+        {
+          "type": "pod",
+          "podId": "ecoComsFooter"
+        }
+      ]
+    },
+    "pageType": "VIEW"
+  }
+}

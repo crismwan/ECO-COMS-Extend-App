@@ -265,6 +265,13 @@
       "page": {
         "id": "createShellOrgPatternWizard"
       }
+    },
+    {
+      "id": "hubLanding",
+      "routingPattern": "/hubLanding",
+      "page": {
+        "id": "hubLanding"
+      }
     }
   ],
   "applicationId": "ecocomsphase_xclw_cm_sync2_vmzvxm",
