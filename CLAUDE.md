@@ -1312,6 +1312,25 @@ Do NOT confuse these with **Extend Cards** (a different thing — admins add tho
 
 ```
 
+### `.card` file — unused parameters cause build failure
+
+**Workday enforces that every parameter declared in a card's `parameters` array MUST be referenced somewhere in the card body.** Declaring a parameter and never using it causes a fatal `ERROR` during the "Upload app to App Hub" CI step:
+
+```
+Remove unused parameters in the card. Unused parameters: <parameterName>.
+```
+
+This is an `ERROR` (not a `WARN`) and **blocks deployment**. The fix is to remove the unused parameter name from the `parameters` array. Note: passing extra params from the PMD's `parameters` map that are NOT declared in the card's `parameters` array is silently ignored and is fine — only declared-but-unused card parameters are an error.
+
+**Example fix:**
+```json
+// BROKEN — 'organizationCode' declared but never referenced in body:
+"parameters": ["organizationName", "organizationCode"]
+
+// FIXED — only declare params you actually use in the card:
+"parameters": ["organizationName"]
+```
+
 ### simpleCard (the .card file side)
 
 File `simpleStatusCard.card` → `"id": "simpleStatusCard"`. Set `body.type` to `"simpleCard"`.
