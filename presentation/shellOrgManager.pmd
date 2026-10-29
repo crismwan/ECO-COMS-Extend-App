@@ -12,7 +12,6 @@
       "baseUrlType": "workday-wql",
       "url": "data",
       "authType": "sso",
-      "isCollection": true,
       "bestEffort": "true",
       "deferred": true,
       "wqlQuery": {
@@ -24,7 +23,6 @@
       "baseUrlType": "workday-wql",
       "url": "data",
       "authType": "sso",
-      "isCollection": true,
       "bestEffort": "true",
       "deferred": true,
       "wqlQuery": {
@@ -36,7 +34,6 @@
       "baseUrlType": "workday-wql",
       "url": "data",
       "authType": "sso",
-      "isCollection": true,
       "bestEffort": "true",
       "wqlQuery": {
         "queryId": "allShellOrgs"
@@ -179,7 +176,7 @@
                 "gridType": "LIST",
                 "multiViewStylingEnabled": true,
                 "id": "appsGrid",
-                "rows": "<%\n  let appCodes = [];\n  let result = [];\n  for (var pattern : (shellOrgPatterns.data ?? [])) {\n    let code = pattern.code;\n    let baseCode = code.substringBefore(':PATTERN');\n    let appCode = baseCode.contains('(') ?\n      baseCode.substringBefore('(') + '(' + baseCode.substringAfter('(').substringBefore(')') + ')' :\n      (baseCode.substringAfter(':').contains(':') ?\n        baseCode.substringBefore(':') + ':' + baseCode.substringAfter(':').substringBefore(':') :\n        baseCode);\n    if (!appCodes.contains(appCode)) {\n      appCodes.add(appCode);\n      result.add({'appCode': appCode});\n    }\n  }\n  result;\n%>",
+                "rows": "<% (shellOrgPatterns.data ?? []).map(p => { p.code.substringBefore(':PATTERN').substringBefore(':') + ':' + p.code.substringBefore(':PATTERN').substringAfter(':').substringBefore(':') }).distinct().map(appCode => { {'appCode': appCode} }) %>",
                 "rowVariableName": "app",
                 "enabled": false,
                 "label": "Applications",
