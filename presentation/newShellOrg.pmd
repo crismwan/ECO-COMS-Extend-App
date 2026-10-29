@@ -186,7 +186,7 @@
                   "required": true,
                   "values": "<%\n  let appCodes = [];\n  let result = [];\n  for (var org : (existingOrgs.data ?? [])) {\n    let code = org.code;\n    let appCode = code.substringAfter(':').contains(':') ?\n      code.substringBefore(':') + ':' + code.substringAfter(':').substringBefore(':') :\n      code;\n    if (!empty(appCode) && !appCodes.contains(appCode)) {\n      appCodes.add(appCode);\n      result.add({'id': appCode, 'descriptor': appCode});\n    }\n  }\n  result;\n%>",
                   "helpText": "Select the application this shell organization belongs to.",
-                  "onChange": "<%\n  selectedApplicationId.clearError();\n  if (!empty(self.value)) {\n    orgNamePreview.setValue(self.value.descriptor + ':' + (organizationCode.value ?? ''));\n  } else {\n    orgNamePreview.setValue('Select an application above');\n  }\n%>"
+                  "onChange": "<%\n  selectedApplicationId.clearError();\n  if (!empty(self.value)) {\n    orgNamePreview.setValue(self.selectedEntries[0].descriptor + ':' + (organizationCode.value ?? ''));\n  } else {\n    orgNamePreview.setValue('Select an application above');\n  }\n%>"
                 },
                 {
                   "type": "text",
@@ -200,7 +200,7 @@
                     "title": "Organization Code Format",
                     "text": "Enter the unique suffix for this organization. The system will auto-generate the full name as ApplicationCode:OrganizationCode (e.g. X:CLW:ORG:ANY). Avoid spaces and special characters. Must be unique within the application."
                   },
-                  "onChange": "<%\n  self.clearError();\n  if (!empty(selectedApplicationId.value)) {\n    orgNamePreview.setValue(selectedApplicationId.value.descriptor + ':' + (self.value ?? ''));\n  } else {\n    orgNamePreview.setValue('Select an application above');\n  }\n%>"
+                  "onChange": "<%\n  self.clearError();\n  if (!empty(selectedApplicationId.value)) {\n    orgNamePreview.setValue(selectedApplicationId.selectedEntries[0].descriptor + ':' + (self.value ?? ''));\n  } else {\n    orgNamePreview.setValue('Select an application above');\n  }\n%>"
                 },
                 {
                   "type": "readOnlyText",
