@@ -53,15 +53,15 @@
           },
           {
             "outboundPath": "coReferenceId",
-            "value": "<% (!empty(selectedApplicationId.value)) ? ((selectedApplicationId.value.id ?? '') + ':' + (organizationCode.value ?? '')) : (organizationCode.value ?? '') %>"
+            "value": "<% (!empty(selectedApplicationId.value)) ? ((selectedApplicationId.selectedEntries[0].descriptor ?? '') + ':' + (organizationCode.value ?? '')) : (organizationCode.value ?? '') %>"
           },
           {
             "outboundPath": "coName",
-            "value": "<% (!empty(selectedApplicationId.value)) ? ((selectedApplicationId.value.id ?? '') + ':' + (organizationCode.value ?? '')) : (organizationCode.value ?? '') %>"
+            "value": "<% (!empty(selectedApplicationId.value)) ? ((selectedApplicationId.selectedEntries[0].descriptor ?? '') + ':' + (organizationCode.value ?? '')) : (organizationCode.value ?? '') %>"
           },
           {
             "outboundPath": "details",
-            "value": "<% 'Application: ' + ((!empty(selectedApplicationId.value)) ? (selectedApplicationId.value.id ?? '') : '') + ', Effective Date: ' + (effectiveDate.value != null ? effectiveDate.value.format('yyyy-MM-dd') : '') %>"
+            "value": "<% 'Application: ' + ((!empty(selectedApplicationId.value)) ? (selectedApplicationId.selectedEntries[0].descriptor ?? '') : '') + ', Effective Date: ' + (effectiveDate.value != null ? effectiveDate.value.format('yyyy-MM-dd') : '') %>"
           },
           {
             "outboundPath": "triggeredBy",
@@ -83,7 +83,7 @@
       {
         "name": "triggerAddShellOrg",
         "baseUrlType": "orchestration",
-        "url": "<% '/AddShellOrg/launch?comsAppId=' + ((!empty(selectedApplicationId.value)) ? (selectedApplicationId.value.id ?? '') : '') + '&organizationName=' + ((!empty(selectedApplicationId.value)) ? ((selectedApplicationId.value.id ?? '') + ':' + (organizationCode.value ?? '')) : (organizationCode.value ?? '')) + '&organizationCode=' + (organizationCode.value ?? '') + '&workerId=' + (selectedWorker.id ?? '') + '&effectiveDate=' + (effectiveDate.value != null ? effectiveDate.value.format('yyyy-MM-dd') : '') %>",
+        "url": "<% '/AddShellOrg/launch?comsAppId=' + ((!empty(selectedApplicationId.value)) ? (selectedApplicationId.selectedEntries[0].descriptor ?? '') : '') + '&orgType=' + ((!empty(selectedApplicationId.value)) ? (selectedApplicationId.selectedEntries[0].descriptor ?? '') : '') + '&organizationName=' + ((!empty(selectedApplicationId.value)) ? ((selectedApplicationId.selectedEntries[0].descriptor ?? '') + ':' + (organizationCode.value ?? '')) : (organizationCode.value ?? '')) + '&organizationCode=' + (organizationCode.value ?? '') + '&workerId=' + (selectedWorker.id ?? '') + '&effectiveDate=' + (effectiveDate.value != null ? effectiveDate.value.format('yyyy-MM-dd') : '') %>",
         "authType": "sso",
         "httpMethod": "POST",
         "onSend": "<% {} %>",
@@ -116,7 +116,7 @@
       "errorSummary": "<% error ?? '' %>"
     }
   },
-  "onSubmit": "<%\n  let valid = true;\n  if (empty(selectedApplicationId.value)) {\n    selectedApplicationId.setError('Please select an application.');\n    valid = false;\n  }\n  if (empty(organizationCode.value)) {\n    organizationCode.setError('Organization Code is required.');\n    valid = false;\n  } else if (!empty(selectedApplicationId.value)) {\n    let ac = (!empty(selectedApplicationId.value)) ? (selectedApplicationId.value.id ?? '') : '';\n    let oc = organizationCode.value ?? '';\n    let orgName = ac + ':' + oc;\n    let dupes = (existingOrgs.data ?? []).filter(o => { o.code == orgName });\n    if (dupes.size() > 0) {\n      let dupeName = (!empty(dupes[0].organizationByName)) ? (dupes[0].organizationByName.descriptor ?? orgName) : orgName;\n      organizationCode.setError('An organization with this code already exists: ' + dupeName);\n      valid = false;\n    }\n  }\n  if (empty(effectiveDate.value)) {\n    effectiveDate.setError('Effective Date is required.');\n    valid = false;\n  } else {\n    let d = effectiveDate.value;\n    let y = d.year();\n    if (y < 2026 || y > 2027) {\n      effectiveDate.setError('Effective Date year must be 2026 or 2027.');\n      valid = false;\n    }\n  }\n  valid;\n%>",
+  "onSubmit": "<%\n  let valid = true;\n  if (empty(selectedApplicationId.value)) {\n    selectedApplicationId.setError('Please select an application.');\n    valid = false;\n  }\n  if (empty(organizationCode.value)) {\n    organizationCode.setError('Organization Code is required.');\n    valid = false;\n  } else if (!empty(selectedApplicationId.value)) {\n    let ac = (!empty(selectedApplicationId.value)) ? (selectedApplicationId.selectedEntries[0].descriptor ?? '') : '';\n    let oc = organizationCode.value ?? '';\n    let orgName = ac + ':' + oc;\n    let dupes = (existingOrgs.data ?? []).filter(o => { o.code == orgName });\n    if (dupes.size() > 0) {\n      let dupeName = (!empty(dupes[0].organizationByName)) ? (dupes[0].organizationByName.descriptor ?? orgName) : orgName;\n      organizationCode.setError('An organization with this code already exists: ' + dupeName);\n      valid = false;\n    }\n  }\n  if (empty(effectiveDate.value)) {\n    effectiveDate.setError('Effective Date is required.');\n    valid = false;\n  } else {\n    let d = effectiveDate.value;\n    let y = d.year();\n    if (y < 2026 || y > 2027) {\n      effectiveDate.setError('Effective Date year must be 2026 or 2027.');\n      valid = false;\n    }\n  }\n  valid;\n%>",
   "presentation": {
     "headerSize": "STANDARD",
     "title": {
