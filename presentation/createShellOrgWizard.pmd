@@ -23,11 +23,7 @@
       ],
       "conclusion": {
         "task": {
-          "taskId": "newShellOrgSuccess",
-          "parameters": {
-            "organizationName": "<% (!empty(selectedApplicationId.value)) ? ((selectedApplicationId.value.id ?? '') + ':' + (organizationCode.value ?? '')) : (organizationCode.value ?? '') %>",
-            "organizationCode": "<% organizationCode.value ?? '' %>"
-          }
+          "taskId": "newShellOrgSuccess"
         },
         "render": true
       }

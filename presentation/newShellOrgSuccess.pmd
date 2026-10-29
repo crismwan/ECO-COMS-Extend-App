@@ -12,24 +12,6 @@
       "sections": [
         {
           "type": "layoutSection",
-          "id": "receiptCardSection",
-          "children": [
-            {
-              "type": "cardContainer",
-              "id": "receiptCardContainer",
-              "layout": "grid",
-              "cards": [
-                {
-                  "type": "card",
-                  "cardId": "ShellOrgReceiptCard",
-                  "parameters": "<% { 'organizationName': queryParams.organizationName ?? '' } %>"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "type": "layoutSection",
           "id": "successSection",
           "children": [
             {
@@ -45,21 +27,9 @@
                 },
                 {
                   "type": "readOnlyText",
-                  "id": "orgNameDisplay",
-                  "label": "Organization Name",
-                  "value": "<% queryParams.organizationName ?? '' %>"
-                },
-                {
-                  "type": "readOnlyText",
-                  "id": "orgCodeDisplay",
-                  "label": "Organization Code",
-                  "value": "<% queryParams.organizationCode ?? '' %>"
-                },
-                {
-                  "type": "readOnlyText",
                   "id": "copyHint",
                   "label": " ",
-                  "value": "Use the organization code above to reference this org in downstream tasks."
+                  "value": "The Shell Organization has been submitted to Workday via the orchestration. Check the Audit Log in Shell Org Manager for status."
                 }
               ]
             }
