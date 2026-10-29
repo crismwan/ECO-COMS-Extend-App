@@ -187,7 +187,7 @@
                   "id": "selectedApplicationId",
                   "label": "Application",
                   "required": true,
-                  "values": "<% (comsApplications.data ?? []).filter(app => { app.appId != 'X' && app.name != 'X' }).map(app => { { 'id': app.appId ?? app.id, 'descriptor': app.name ?? app.descriptor } }) %>",
+                  "values": "<% (comsApplications.data ?? []).filter(app => { app.appId != 'X' }).map(app => { { 'id': app.appId ?? app.id, 'descriptor': app.name ?? app.descriptor } }) %>",
                   "helpText": "Select the application this shell organization belongs to.",
                   "onChange": "<%\n    if (!empty(self.value)) {\n      selectedApplicationId.clearError();\n    }\n    let ac = (!empty(self.value)) ? (self.value.id ?? '') : '';\n    let oc = organizationCode.value ?? '';\n    if (!empty(ac)) {\n      orgNamePreview.setValue(ac + ':' + oc);\n    } else {\n      orgNamePreview.setValue('Select an application above');\n    }\n  %>"
                 },
