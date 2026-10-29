@@ -1,0 +1,174 @@
+{
+  "id": "seedComsApplications",
+  "securityDomains": [
+    "ManageCOMSApplicationSetup"
+  ],
+  "endPoints": [
+    {
+      "name": "existingApps",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "url": "/comsApplications?limit=100",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "failOnStatusCodes": [400, 403, 500]
+    }
+  ],
+  "outboundData": {
+    "outboundEndPoints": [
+      {
+        "name": "createClockwork",
+        "baseUrlType": "BUSINESS-OBJECT",
+        "url": "/comsApplications",
+        "httpMethod": "POST",
+        "authType": "sso",
+        "values": [
+          { "outboundPath": "name", "value": "Clockwork - Exam Coordination" },
+          { "outboundPath": "appId", "value": "X:CLW" },
+          { "outboundPath": "orgType", "value": "X:CLW" },
+          { "outboundPath": "orgSubtype", "value": "X:Shell" },
+          { "outboundPath": "namePrefix", "value": "X:CLW:PATTERN" },
+          { "outboundPath": "idPrefix", "value": "CLWSO" },
+          { "outboundPath": "active", "value": "<% createClockworkCheckbox.value ?? true %>" },
+          { "outboundPath": "downstreamConsumer", "value": "Clockwork (exam coordination)" }
+        ],
+        "exclude": "<% !createClockworkCheckbox.value %>",
+        "failOnStatusCodes": [400, 403, 500]
+      },
+      {
+        "name": "createBPMS",
+        "baseUrlType": "BUSINESS-OBJECT",
+        "url": "/comsApplications",
+        "httpMethod": "POST",
+        "authType": "sso",
+        "values": [
+          { "outboundPath": "name", "value": "BPMS - Assessment Outcomes" },
+          { "outboundPath": "appId", "value": "X:BPMS(AOC)" },
+          { "outboundPath": "orgType", "value": "X:BPMS(AOC)" },
+          { "outboundPath": "orgSubtype", "value": "X:Shell" },
+          { "outboundPath": "namePrefix", "value": "X:BPMS(AOC):CP" },
+          { "outboundPath": "idPrefix", "value": "AOCSO" },
+          { "outboundPath": "active", "value": "<% createBPMSCheckbox.value ?? true %>" },
+          { "outboundPath": "downstreamConsumer", "value": "Assessment Outcomes" }
+        ],
+        "exclude": "<% !createBPMSCheckbox.value %>",
+        "failOnStatusCodes": [400, 403, 500]
+      }
+    ],
+    "responseErrorDetail": {
+      "errorSummary": "<% error ?? '' %>"
+    }
+  },
+  "presentation": {
+    "headerSize": "STANDARD",
+    "title": {
+      "type": "title",
+      "label": "Seed COMS Applications"
+    },
+    "body": {
+      "type": "basicFormLayout",
+      "id": "seedForm",
+      "sections": [
+        {
+          "type": "layoutSection",
+          "id": "navSection",
+          "children": [
+            {
+              "type": "button",
+              "label": "← Shell Org Manager",
+              "taskReference": { "taskId": "shellOrgManager" },
+              "action": "LINK",
+              "suppressDiscardDialog": true
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "existingSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "existingFieldSet",
+              "title": "Currently Registered Applications",
+              "children": [
+                {
+                  "type": "richText",
+                  "id": "existingNote",
+                  "enabled": false,
+                  "value": "<% existingApps.data.size() == 0 ? '<span style=\"color:#B45309;font-size:11px\">⚠ No COMS Applications registered yet. Use checkboxes below to seed the initial applications.</span>' : '<span style=\"color:#065f46;font-size:11px\">✓ ' + existingApps.data.size() + ' application(s) currently registered.</span>' %>"
+                },
+                {
+                  "type": "grid",
+                  "id": "existingAppsGrid",
+                  "label": "Existing Applications",
+                  "rows": "<% existingApps.data ?? [] %>",
+                  "readOnly": true,
+                  "visible": "<% (existingApps.data ?? []).size() > 0 %>",
+                  "columns": [
+                    {
+                      "type": "column",
+                      "columnId": "appIdCol",
+                      "label": "App ID",
+                      "cellTemplate": { "type": "text", "id": "existingAppId", "value": "<% row.appId ?? '' %>", "enabled": false }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "nameCol",
+                      "label": "Name",
+                      "cellTemplate": { "type": "text", "id": "existingName", "value": "<% row.name ?? '' %>", "enabled": false }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "activeCol",
+                      "label": "Active",
+                      "cellTemplate": { "type": "text", "id": "existingActive", "value": "<% row.active == true ? 'Yes' : 'No' %>", "enabled": false }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "seedSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "seedFieldSet",
+              "title": "Select Applications to Create",
+              "children": [
+                {
+                  "type": "richText",
+                  "id": "seedWarning",
+                  "enabled": false,
+                  "value": "<span style=\"color:#B45309;font-size:11px;font-weight:700\">⚠ Warning: </span><span style=\"color:#374151;font-size:11px\">Only create records that do not already exist. Creating duplicates will result in multiple records with the same App ID.</span>"
+                },
+                {
+                  "type": "checkBox",
+                  "id": "createClockworkCheckbox",
+                  "label": "Create X:CLW — Clockwork (Exam Coordination)",
+                  "value": "<% true %>"
+                },
+                {
+                  "type": "checkBox",
+                  "id": "createBPMSCheckbox",
+                  "label": "Create X:BPMS(AOC) — BPMS Assessment Outcomes",
+                  "value": "<% true %>"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "footer": {
+      "type": "footer",
+      "children": [
+        { "type": "pod", "podId": "ecoComsFooter" }
+      ]
+    },
+    "pageType": "EDIT",
+    "cancelOverride": { "taskId": "shellOrgManager" }
+  }
+}
