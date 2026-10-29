@@ -189,12 +189,13 @@
                   "required": true,
                   "values": "<%\n  let appCodes = [];\n  let result = [];\n  for (var org : (existingOrgs.data ?? [])) {\n    let code = org.code;\n    let appCode = code.substringAfter(':').contains(':') ?\n      code.substringBefore(':') + ':' + code.substringAfter(':').substringBefore(':') :\n      code;\n    if (!empty(appCode) && !appCodes.contains(appCode)) {\n      appCodes.add(appCode);\n      result.add({'id': appCode, 'descriptor': appCode});\n    }\n  }\n  result;\n%>",
                   "helpText": "Select the application this shell organization belongs to.",
-                  "onChange": "<%  %>"
+                  "onChange": "<%\n  organizationCode.clearError();\n  selectedApplicationId.clearError();\n%>"
                 },
                 {
                   "type": "text",
                   "id": "organizationCode",
                   "label": "Organization Code",
+                  "required": true,
                   "helpText": "The full org name will be ApplicationCode:OrganizationCode.",
                   "guide": {
                     "type": "guide",
@@ -202,14 +203,15 @@
                     "title": "Organization Code Format",
                     "text": "Enter the unique suffix for this organization. The system will auto-generate the full name as ApplicationCode:OrganizationCode (e.g. X:CLW:ORG:ANY). Avoid spaces and special characters. Must be unique within the application."
                   },
-                  "onChange": "<%  %>"
+                  "onChange": "<%\n  organizationCode.clearError();\n  let ac = (!empty(selectedApplicationId.value)) ? (selectedApplicationId.value.id ?? '') : '';\n  let oc = self.value ?? '';\n  if (!empty(ac) && !empty(oc)) {\n    orgNamePreview.setLabel('Generated Name: ' + ac + ':' + oc);\n  } else if (!empty(ac)) {\n    orgNamePreview.setLabel('Generated Name: ' + ac + ':...');\n  } else {\n    orgNamePreview.setLabel('Generated Organization Name');\n  }\n%>"
                 },
                 {
                   "type": "text",
                   "id": "orgNamePreview",
                   "label": "Generated Organization Name",
                   "enabled": false,
-                  "value": "<% (!empty(selectedApplicationId.value) && !empty(organizationCode.value)) ? ((selectedApplicationId.value.id ?? '') + ':' + (organizationCode.value ?? '')) : ((!empty(selectedApplicationId.value)) ? ((selectedApplicationId.value.id ?? '') + ':') : 'Select an application above') %>"
+                  "value": "<% (!empty(selectedApplicationId.value) && !empty(organizationCode.value)) ? (((!empty(selectedApplicationId.value)) ? (selectedApplicationId.value.id ?? '') : '') + ':' + (organizationCode.value ?? '')) : ((!empty(selectedApplicationId.value)) ? (((!empty(selectedApplicationId.value)) ? (selectedApplicationId.value.id ?? '') : '') + ':') : '') %>",
+                  "helpText": "Auto-generated from Application Code + Organization Code. Will be confirmed on the Review step."
                 },
                 {
                   "type": "date",
@@ -222,7 +224,7 @@
                     "title": "Effective Date Rules",
                     "text": "Must be a weekday (Monday–Friday) in 2026 or 2027. Weekends and dates outside this range will be rejected. The organization will be available in Workday starting on this date."
                   },
-                  "onChange": "<%  %>"
+                  "onChange": "<% effectiveDate.clearError(); %>"
                 }
               ],
               "title": "Organization Details"
@@ -241,9 +243,6 @@
       ]
     },
     "pageType": "EDIT",
-    "standardEditButtonsHidden": true,
-    "cancelOverride": {
-      "taskId": "shellOrgManager"
-    }
+    "standardEditButtonsHidden": true
   }
 }
