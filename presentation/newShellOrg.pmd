@@ -152,7 +152,7 @@
                   "id": "selectedApplicationId",
                   "label": "Application",
                   "required": true,
-                  "values": "<%\n    let appCodes = [];\n    let result = [];\n    for (var org : existingOrgs.data) {\n      let code = org.code;\n      let appCode = code.substringAfter(':').contains(':') ?\n        code.substringBefore(':') + ':' + code.substringAfter(':').substringBefore(':') :\n        code.substringBefore(':');\n      if (!empty(appCode) && !appCodes.contains(appCode)) {\n        appCodes.add(appCode);\n        result.add({'id': appCode, 'descriptor': appCode});\n      }\n    }\n    result;\n  %>",
+                  "values": "<% (existingOrgs.data ?? []).map(org => { { 'appCode': org.code.substringAfter(':').contains(':') ? org.code.substringBefore(':') + ':' + org.code.substringAfter(':').substringBefore(':') : org.code.substringBefore(':') } }).filter(item => { !empty(item.appCode) }).map(item => { item.appCode }).distinct().map(appCode => { { 'id': appCode, 'descriptor': appCode } }) %>",
                   "helpText": "Select the application this shell organization belongs to."
                 },
                 {

@@ -126,6 +126,25 @@
         },
         {
           "type": "layoutSection",
+          "id": "warningSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "warningFieldSet",
+              "title": "Status Change Warning",
+              "children": [
+                {
+                  "type": "richText",
+                  "id": "warningMsg",
+                  "enabled": false,
+                  "value": "<% queryParams.currentStatus == 'Active' ? '<span style=\"color:#d97706;font-size:11px;font-weight:700\">⚠ </span><span style=\"color:#92400e;font-size:11px\"><b>Warning:</b> Setting this organization to Inactive does not automatically remove any Workday role assignments referencing it. Verify in Workday that no active role assignments use this Custom Organization before proceeding.</span>' : '<span style=\"color:#0055B7;font-size:11px;font-weight:700\">ℹ </span><span style=\"color:#374151;font-size:11px\">This will reactivate the organization and make it available for role assignments again.</span>' %>"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
           "id": "confirmSection",
           "children": [
             {
@@ -133,12 +152,6 @@
               "id": "confirmFieldSet",
               "title": "Confirm Status Change",
               "children": [
-                {
-                  "type": "richText",
-                  "id": "warningMsg",
-                  "enabled": false,
-                  "value": "<% queryParams.currentStatus == 'Active' ? '<span style=\"color:#d97706;font-size:11px;font-weight:700\">⚠ </span><span style=\"color:#92400e;font-size:11px\"><b>Warning:</b> Setting this organization to Inactive does not automatically remove any Workday role assignments referencing it. Verify in Workday that no active role assignments use this Custom Organization before proceeding.</span>' : '<span style=\"color:#0055B7;font-size:11px;font-weight:700\">ℹ </span><span style=\"color:#374151;font-size:11px\">This will reactivate the organization and make it available for role assignments again.</span>' %>"
-                },
                 {
                   "type": "readOnlyText",
                   "id": "orgNameDisplay",
@@ -170,17 +183,30 @@
                   "value": "<% queryParams.currentStatus == 'Active' ? 'Inactive' : 'Active' %>"
                 },
                 {
-                  "type": "richText",
-                  "id": "statusImpactNote",
-                  "enabled": false,
-                  "value": "<% queryParams.currentStatus == 'Active' ? '<span style=\"color:#92400e;font-size:11px\"><b>Impact of Inactivating:</b> The organization will no longer appear in Workday selection lists. Existing role assignments will NOT be removed automatically — you must remove them manually in Workday if needed.</span>' : '<span style=\"color:#065f46;font-size:11px\"><b>Impact of Activating:</b> The organization will become available again for new role assignments in Workday. No existing data will be changed.</span>' %>"
-                },
-                {
                   "type": "checkBox",
                   "id": "confirmStatusChange",
                   "label": "<% queryParams.currentStatus == 'Active' ? 'I confirm this organization should be inactivated and I have verified no active role assignments depend on it.' : 'I confirm I want to reactivate this organization and make it available for role assignments.' %>",
                   "required": true,
                   "helpText": "You must acknowledge before submitting this status change."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "impactSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "impactFieldSet",
+              "title": "Impact of This Change",
+              "children": [
+                {
+                  "type": "richText",
+                  "id": "statusImpactNote",
+                  "enabled": false,
+                  "value": "<% queryParams.currentStatus == 'Active' ? '<span style=\"color:#92400e;font-size:11px\"><b>Impact of Inactivating:</b> The organization will no longer appear in Workday selection lists. Existing role assignments will NOT be removed automatically — you must remove them manually in Workday if needed.</span>' : '<span style=\"color:#065f46;font-size:11px\"><b>Impact of Activating:</b> The organization will become available again for new role assignments in Workday. No existing data will be changed.</span>' %>"
                 }
               ]
             }
