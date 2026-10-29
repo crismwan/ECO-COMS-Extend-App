@@ -70,13 +70,6 @@
   ],
   "tasks": [
     {
-      "id": "seedComsApplications",
-      "routingPattern": "/seedComsApplications",
-      "page": {
-        "id": "seedComsApplications"
-      }
-    },
-    {
       "id": "home",
       "routingPattern": "/",
       "page": {

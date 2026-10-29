@@ -8,13 +8,21 @@
   ],
   "endPoints": [
     {
-      "name": "comsApplications",
-      "baseUrlType": "BUSINESS-OBJECT",
-      "url": "/comsApplications",
+      "name": "customOrganizations",
+      "baseUrlType": "workday-wql",
+      "url": "data",
       "authType": "sso",
       "isCollection": true,
       "bestEffort": "true",
-      "deferred": true
+      "deferred": true,
+      "wqlQuery": {
+        "queryId": "customOrganizations"
+      },
+      "failOnStatusCodes": [
+        400,
+        403,
+        500
+      ]
     },
     {
       "name": "shellOrgPatterns",
@@ -76,7 +84,7 @@
                 {
                   "type": "button",
                   "id": "backToHomeBtn",
-                  "label": "← Home",
+                  "label": "\u2190 Home",
                   "taskReference": {
                     "taskId": "home"
                   },
@@ -87,7 +95,7 @@
                 {
                   "type": "button",
                   "id": "backToApplicationsBtn",
-                  "label": "← Back to Applications",
+                  "label": "\u2190 Back to Applications",
                   "taskReference": {
                     "taskId": "shellOrgManager"
                   },
@@ -99,7 +107,7 @@
                   "type": "richText",
                   "id": "scopeWarning",
                   "enabled": false,
-                  "value": "<% empty(queryParams.appCode) ? '<span style=\"display:inline-flex;align-items:center;gap:6px;background:#fef9c3;border:1px solid #fbbf24;border-radius:6px;padding:8px 12px;font-size:13px;color:#92400e\">⚠️ No application selected — data below reflects all applications. Click Manage on an application to view its shell orgs and URL patterns.</span>' : '<span style=\"display:inline-flex;align-items:center;gap:6px;background:#fef9c3;border:1px solid #fbbf24;border-radius:6px;padding:8px 12px;font-size:13px;color:#92400e\">⚠️ Showing shell orgs and URL patterns for <strong>' + (queryParams.appName ?? queryParams.appCode) + '</strong> only. Go back to view all applications.</span>' %>"
+                  "value": "<% empty(queryParams.appCode) ? '<span style=\"display:inline-flex;align-items:center;gap:6px;background:#fef9c3;border:1px solid #fbbf24;border-radius:6px;padding:8px 12px;font-size:13px;color:#92400e\">\u26a0\ufe0f No application selected \u2014 data below reflects all applications. Click Manage on an application to view its shell orgs and URL patterns.</span>' : '<span style=\"display:inline-flex;align-items:center;gap:6px;background:#fef9c3;border:1px solid #fbbf24;border-radius:6px;padding:8px 12px;font-size:13px;color:#92400e\">\u26a0\ufe0f Showing shell orgs and URL patterns for <strong>' + (queryParams.appName ?? queryParams.appCode) + '</strong> only. Go back to view all applications.</span>' %>"
                 }
               ]
             }
@@ -188,7 +196,7 @@
                 "gridType": "LIST",
                 "multiViewStylingEnabled": true,
                 "id": "appsGrid",
-                "rows": "<% comsApplications.data ?? [] %>",
+                "rows": "<%\n  let appCodes = [];\n  let result = [];\n  for (var org : (customOrganizations.data ?? [])) {\n    let code = org.code;\n    let appCode = code.contains('(') ?\n      code.substringBefore('(') + '(' + code.substringAfter('(').substringBefore(')') + ')' :\n      (code.substringAfter(':').contains(':') ?\n        code.substringBefore(':') + ':' + code.substringAfter(':').substringBefore(':') :\n        code);\n    if (!appCodes.contains(appCode)) {\n      appCodes.add(appCode);\n      result.add({'appCode': appCode});\n    }\n  }\n  result;\n%>",
                 "rowVariableName": "app",
                 "enabled": false,
                 "label": "Applications",
@@ -203,26 +211,13 @@
                     "cellTemplate": {
                       "type": "button",
                       "action": "LINK",
-                      "label": "<% app.appId ?? '' %>",
+                      "label": "<% app.appCode ?? '' %>",
                       "taskReference": {
                         "taskId": "shellOrgManager",
                         "parameterBindings": {
-                          "appCode": "<% app.appId %>",
-                          "appName": "<% app.name %>"
+                          "appCode": "<% app.appCode %>"
                         }
                       }
-                    }
-                  },
-                  {
-                    "type": "column",
-                    "id": "colAppDisplayName",
-                    "columnId": "colAppDisplayName",
-                    "label": "Application Name",
-                    "sortableAndFilterable": "true",
-                    "cellTemplate": {
-                      "type": "text",
-                      "value": "<% app.name ?? '' %>",
-                      "enabled": false
                     }
                   },
                   {
@@ -237,8 +232,7 @@
                       "taskReference": {
                         "taskId": "shellOrgManager",
                         "parameterBindings": {
-                          "appCode": "<% app.appId %>",
-                          "appName": "<% app.name %>"
+                          "appCode": "<% app.appCode %>"
                         }
                       }
                     }
@@ -266,7 +260,7 @@
                 "type": "richText",
                 "id": "saveNote",
                 "enabled": false,
-                "value": "<span style=\"color:#d97706;font-size:11px;font-weight:700\">⚠ </span><span style=\"color:#92400e;font-size:11px\"><b>Warning:</b> Changing Status to Inactive does not automatically remove any Workday role assignments referencing this shell organization. Verify in Workday (Get_Assign_User_Based_Security_Groups) that no active role assignment uses this Custom Organization before inactivating.</span>"
+                "value": "<span style=\"color:#d97706;font-size:11px;font-weight:700\">\u26a0 </span><span style=\"color:#92400e;font-size:11px\"><b>Warning:</b> Changing Status to Inactive does not automatically remove any Workday role assignments referencing this shell organization. Verify in Workday (Get_Assign_User_Based_Security_Groups) that no active role assignment uses this Custom Organization before inactivating.</span>"
               },
               {
                 "type": "richText",
@@ -325,7 +319,7 @@
                     "sortableAndFilterable": "true",
                     "cellTemplate": {
                       "type": "richText",
-                      "value": "<% pattern.cf_active1 == true ? '<span style=\"color:#065f46;font-weight:600;font-size:11px\">✓ Active</span>' : '<span style=\"color:#6b7280;font-weight:600;font-size:11px\">○ Inactive</span>' %>"
+                      "value": "<% pattern.cf_active1 == true ? '<span style=\"color:#065f46;font-weight:600;font-size:11px\">\u2713 Active</span>' : '<span style=\"color:#6b7280;font-weight:600;font-size:11px\">\u25cb Inactive</span>' %>"
                     }
                   },
                   {
@@ -364,7 +358,7 @@
                 "type": "richText",
                 "id": "footerText0",
                 "enabled": false,
-                "value": "<p style=\"text-align:center\"><span style=\"color:#002145;font-size:11px;font-weight:700;font-family:Arial,sans-serif;letter-spacing:2px;\">ECO-COMS</span><span style=\"color:#6b7280;font-size:11px;font-family:Arial,sans-serif;\"> · </span><span style=\"color:#0055B7;font-size:11px;font-family:Arial,sans-serif;font-style:italic;\">Custom Organization Management System</span></p>"
+                "value": "<p style=\"text-align:center\"><span style=\"color:#002145;font-size:11px;font-weight:700;font-family:Arial,sans-serif;letter-spacing:2px;\">ECO-COMS</span><span style=\"color:#6b7280;font-size:11px;font-family:Arial,sans-serif;\"> \u00b7 </span><span style=\"color:#0055B7;font-size:11px;font-family:Arial,sans-serif;font-style:italic;\">Custom Organization Management System</span></p>"
               }
             ]
           }
@@ -379,7 +373,7 @@
             "id": "shellOrgsAppWarning",
             "enabled": false,
             "visible": "<% !empty(queryParams.appCode) %>",
-            "value": "<span style=\"color:#d97706;font-size:11px;font-weight:700\">⚠ </span><span style=\"color:#92400e;font-size:11px\"><b>Filtered view:</b> You selected <b><% queryParams.appCode ?? '' %></b> from the Application Patterns tab. Only shell organizations matching this application are shown below. <a href=\"javascript:void(0)\" style=\"color:#0055B7\">View all organizations</a> by navigating to Shell Org Manager without an application selected.</span>"
+            "value": "<span style=\"color:#d97706;font-size:11px;font-weight:700\">\u26a0 </span><span style=\"color:#92400e;font-size:11px\"><b>Filtered view:</b> You selected <b><% queryParams.appCode ?? '' %></b> from the Application Patterns tab. Only shell organizations matching this application are shown below. <a href=\"javascript:void(0)\" style=\"color:#0055B7\">View all organizations</a> by navigating to Shell Org Manager without an application selected.</span>"
           },
           {
             "type": "button",
@@ -441,7 +435,7 @@
                     "sortableAndFilterable": "true",
                     "cellTemplate": {
                       "type": "richText",
-                      "value": "<% org.cf_active1 == true ? '<span style=\"color:#065f46;font-weight:600;font-size:11px\">✓ Active</span>' : '<span style=\"color:#6b7280;font-weight:600;font-size:11px\">○ Inactive</span>' %>"
+                      "value": "<% org.cf_active1 == true ? '<span style=\"color:#065f46;font-weight:600;font-size:11px\">\u2713 Active</span>' : '<span style=\"color:#6b7280;font-weight:600;font-size:11px\">\u25cb Inactive</span>' %>"
                     }
                   },
                   {
@@ -476,7 +470,7 @@
             "type": "fieldSet",
             "id": "filteredShellOrgsFieldSet",
             "visible": "<% !empty(queryParams.appCode) %>",
-            "title": "<% 'Shell Organizations — ' + (queryParams.appName ?? queryParams.appCode ?? '') %>",
+            "title": "<% 'Shell Organizations \u2014 ' + (queryParams.appName ?? queryParams.appCode ?? '') %>",
             "children": [
               {
                 "type": "richText",
@@ -523,7 +517,7 @@
                     "sortableAndFilterable": "true",
                     "cellTemplate": {
                       "type": "richText",
-                      "value": "<% org.cf_active1 == true ? '<span style=\"color:#065f46;font-weight:600;font-size:11px\">✓ Active</span>' : '<span style=\"color:#6b7280;font-weight:600;font-size:11px\">○ Inactive</span>' %>"
+                      "value": "<% org.cf_active1 == true ? '<span style=\"color:#065f46;font-weight:600;font-size:11px\">\u2713 Active</span>' : '<span style=\"color:#6b7280;font-weight:600;font-size:11px\">\u25cb Inactive</span>' %>"
                     }
                   },
                   {
@@ -562,7 +556,7 @@
                 "type": "richText",
                 "id": "footerText1",
                 "enabled": false,
-                "value": "<p style=\"text-align:center\"><span style=\"color:#002145;font-size:11px;font-weight:700;font-family:Arial,sans-serif;letter-spacing:2px;\">ECO-COMS</span><span style=\"color:#6b7280;font-size:11px;font-family:Arial,sans-serif;\"> · </span><span style=\"color:#0055B7;font-size:11px;font-family:Arial,sans-serif;font-style:italic;\">Custom Organization Management System</span></p>"
+                "value": "<p style=\"text-align:center\"><span style=\"color:#002145;font-size:11px;font-weight:700;font-family:Arial,sans-serif;letter-spacing:2px;\">ECO-COMS</span><span style=\"color:#6b7280;font-size:11px;font-family:Arial,sans-serif;\"> \u00b7 </span><span style=\"color:#0055B7;font-size:11px;font-family:Arial,sans-serif;font-style:italic;\">Custom Organization Management System</span></p>"
               }
             ]
           }
@@ -622,7 +616,7 @@
                     "sortableAndFilterable": "true",
                     "cellTemplate": {
                       "type": "text",
-                      "value": "<% r.enabledForOrganizationTypes != null ? r.enabledForOrganizationTypes.map(t => { t.descriptor }).join(', ') : '—' %>",
+                      "value": "<% r.enabledForOrganizationTypes != null ? r.enabledForOrganizationTypes.map(t => { t.descriptor }).join(', ') : '\u2014' %>",
                       "enabled": false
                     }
                   },
@@ -634,7 +628,7 @@
                     "sortableAndFilterable": "true",
                     "cellTemplate": {
                       "type": "text",
-                      "value": "<% r.roleAssignments != null ? r.roleAssignments.filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith(empty(queryParams.appCode) ? 'X:' : queryParams.appCode) }).map(ra => { ra.organization.descriptor }).join('; ') : '—' %>",
+                      "value": "<% r.roleAssignments != null ? r.roleAssignments.filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith(empty(queryParams.appCode) ? 'X:' : queryParams.appCode) }).map(ra => { ra.organization.descriptor }).join('; ') : '\u2014' %>",
                       "enabled": false
                     }
                   },
@@ -662,7 +656,7 @@
                 "type": "richText",
                 "id": "footerText3",
                 "enabled": false,
-                "value": "<p style=\"text-align:center\"><span style=\"color:#002145;font-size:11px;font-weight:700;font-family:Arial,sans-serif;letter-spacing:2px;\">ECO-COMS</span><span style=\"color:#6b7280;font-size:11px;font-family:Arial,sans-serif;\"> · </span><span style=\"color:#0055B7;font-size:11px;font-family:Arial,sans-serif;font-style:italic;\">Custom Organization Management System</span></p>"
+                "value": "<p style=\"text-align:center\"><span style=\"color:#002145;font-size:11px;font-weight:700;font-family:Arial,sans-serif;letter-spacing:2px;\">ECO-COMS</span><span style=\"color:#6b7280;font-size:11px;font-family:Arial,sans-serif;\"> \u00b7 </span><span style=\"color:#0055B7;font-size:11px;font-family:Arial,sans-serif;font-style:italic;\">Custom Organization Management System</span></p>"
               }
             ]
           }
