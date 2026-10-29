@@ -898,6 +898,29 @@ Property Error found: data. Script Excerpt: myEndpoint.data
 
 **Confirmed failure:** In `shellOrgManager.pmd`, the `comsApplications` endpoint (`deferred: true`) was referenced as bare `comsApplications.data` in the `appsGrid` rows expression. Even though `appsGrid` is on the "Application Patterns" tab (not the default Summary tab), Workday still evaluated the expression at page load — throwing the Property Error and crashing the entire page with a red "!" error indicator.
 
+### Deferred endpoints — WQL tab grids NEVER fetch (confirmed 2026-10-29)
+
+**Critical additional pitfall:** Even with the `?? []` null guard in place, a `deferred: true` WQL endpoint used in a grid `rows` binding will **never auto-fetch its data**, even when the user clicks the tab. The guard prevents the page crash, but the grid silently shows 0 rows forever.
+
+**Why:** Workday evaluates `rows` at page load (returning `[]` via the `?? []` guard), then considers the expression "resolved." It never re-evaluates it when the tab becomes visible, and because no widget explicitly calls `.invoke()` on the endpoint, the deferred fetch is never triggered. Network inspection shows zero WQL requests for the endpoint.
+
+**Symptoms:**
+- Grid shows "No items available." with 0 items
+- No network call to the WQL endpoint appears in browser dev tools — not on page load, not after clicking the tab
+- No page error (the `?? []` guard prevents the crash, masking the problem)
+
+**Fix:** Remove `"deferred": true` from any WQL endpoint whose data is needed in a tab grid's `rows` binding. Make it eager so it fetches on page load:
+
+```json
+// BROKEN — grid always shows 0 items even when data exists:
+{ "name": "shellOrgPatterns", "baseUrlType": "workday-wql", "url": "data", "deferred": true, ... }
+
+// FIXED — fetches eagerly on page load, grid populates correctly:
+{ "name": "shellOrgPatterns", "baseUrlType": "workday-wql", "url": "data", ... }
+```
+
+**Rule:** Only use `deferred: true` when the endpoint is explicitly invoked via `.invoke()` in a script or `onSearch` handler. Never use it for data that a grid `rows` binding reads passively.
+
 ## Submitting data (outbound endpoints)
 
 Outbound endpoints are REST APIs that add/update/delete data. When the user clicks **OK** on an edit page, Presentation Components build the JSON request body from widget values and submit it. Defined in the PMD's `outboundData.outboundEndPoints[]`.
