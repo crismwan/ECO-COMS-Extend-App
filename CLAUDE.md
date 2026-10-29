@@ -2194,3 +2194,35 @@ Checked against developer.workday.com "Limits on Extend App Components", "Orches
 - WQL: 1,000,000 rows per query, 10,000 per page, 5-minute timeout via api.workday.com
 - RaaS: no pagination
 - API throttling: HTTP 429 under load — add RetryPolicy with BackOff in orchestrations
+
+## CI/CD — GitHub Actions deploy pipeline
+
+The deploy workflow (`.github/workflows/deploy.yml`) pushes to Workday on every `main` branch push. After every `git push`, check `gh run list` and confirm `conclusion: success` before declaring anything deployed.
+
+### WD_DEV_TOKEN expiry (most common failure)
+
+**Symptom:** GitHub Actions run fails in ~11–16 seconds at the step "Pre-populate wdcli config with developer token". All other steps are skipped.
+
+**Root cause:** The `WD_DEV_TOKEN` GitHub secret holds a Workday PKCE user token (JWT) scoped to `ubc_wcpdev2`. This token has an ~8-hour TTL. When it expires, the workflow decodes the JWT, compares `exp` to `now`, and exits 1 with:
+```
+WARNING: WD_DEV_TOKEN EXPIRED (exp=..., now=..., expired ...s ago)
+ACTION: run 'wdcli app deploy ...' locally, log in, update WD_DEV_TOKEN secret
+```
+
+**Fix (must be done by the user — requires browser login):**
+1. On the local machine with `wdcli` installed, run:
+   ```
+   wdcli app deploy ecocomsphase_xclw_cm_sync2_vmzvxm
+   ```
+2. Complete the browser login for the `ubc_wcpdev2` tenant.
+3. Open `~/.config/@workday/wdcli/config.json` and copy the value at `wcpTenantAccessToken["ubc_wcpdev2"]`.
+4. Update the `WD_DEV_TOKEN` GitHub secret at:
+   `https://github.com/crismwan/ECO-COMS-Extend-App/settings/secrets/actions`
+5. Re-run the failed workflow with `gh run rerun <run-id>`.
+
+**Important:** The code itself is fine when this failure occurs — do not revert commits or alter the code. The failure is purely an infrastructure/secrets rotation issue.
+
+### Run time baseline
+
+- A healthy deploy run completes in **~1m15s**.
+- A run that finishes in **<20 seconds** has almost certainly failed at the token step (not a code error).
