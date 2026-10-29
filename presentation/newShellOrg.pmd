@@ -68,7 +68,11 @@
             "value": "<% selectedWorker.descriptor %>"
           }
         ],
-        "failOnStatusCodes": [400, 403, 500]
+        "failOnStatusCodes": [
+          { "code": 400 },
+          { "code": 403 },
+          { "code": 500 }
+        ]
       },
       {
         "name": "newShellOrgVars",
