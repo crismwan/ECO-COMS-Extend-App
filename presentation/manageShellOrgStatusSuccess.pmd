@@ -12,6 +12,24 @@
       "sections": [
         {
           "type": "layoutSection",
+          "id": "receiptCardSection",
+          "children": [
+            {
+              "type": "cardContainer",
+              "id": "receiptCardContainer",
+              "layout": "grid",
+              "cards": [
+                {
+                  "type": "card",
+                  "cardId": "ShellOrgStatusReceiptCard",
+                  "parameters": "<% { 'orgCode': queryParams.orgCode ?? '', 'newStatus': queryParams.currentStatus == 'Active' ? 'Inactive' : 'Active' } %>"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
           "id": "successSection",
           "children": [
             {

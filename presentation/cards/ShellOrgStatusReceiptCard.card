@@ -1,0 +1,27 @@
+{
+  "id": "ShellOrgStatusReceiptCard",
+  "parameters": [
+    "orgCode",
+    "newStatus"
+  ],
+  "header": {
+    "title": "Shell Organization Status Updated",
+    "icon": "wd-accent-award-medal",
+    "indicator": {
+      "label": "Updated",
+      "color": "green"
+    }
+  },
+  "body": {
+    "type": "simpleCard",
+    "value": "<% orgCode ?? \"\" %>"
+  },
+  "footer": [
+    {
+      "label": "Back to Shell Org Manager",
+      "taskReference": {
+        "taskId": "shellOrgManager"
+      }
+    }
+  ]
+}

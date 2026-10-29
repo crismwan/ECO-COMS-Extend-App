@@ -12,6 +12,24 @@
       "sections": [
         {
           "type": "layoutSection",
+          "id": "receiptCardSection",
+          "children": [
+            {
+              "type": "cardContainer",
+              "id": "receiptCardContainer",
+              "layout": "grid",
+              "cards": [
+                {
+                  "type": "card",
+                  "cardId": "ShellOrgPatternReceiptCard",
+                  "parameters": "<% { 'patternName': flowVariables.patternName ?? '', 'organizationName': flowVariables.organizationName ?? '' } %>"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
           "id": "successSection",
           "children": [
             {

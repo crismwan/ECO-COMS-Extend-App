@@ -1,0 +1,33 @@
+{
+  "id": "ShellOrgPatternReceiptCard",
+  "parameters": [
+    "patternName",
+    "organizationName"
+  ],
+  "header": {
+    "title": "Custom Organization Pattern Created",
+    "icon": "wd-accent-award-medal",
+    "indicator": {
+      "label": "Created",
+      "color": "green"
+    }
+  },
+  "body": {
+    "type": "simpleCard",
+    "value": "<% patternName ?? \"\" %>"
+  },
+  "footer": [
+    {
+      "label": "View in Shell Org Manager",
+      "taskReference": {
+        "taskId": "shellOrgManager"
+      }
+    },
+    {
+      "label": "Add Another Pattern",
+      "taskReference": {
+        "taskId": "createShellOrgPatternWizard"
+      }
+    }
+  ]
+}
