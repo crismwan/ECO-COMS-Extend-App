@@ -1710,6 +1710,20 @@ Signatures below use the doc's own convention: an entry with no leading target a
 
 - **Confirmed working in a real app:** `list:filter(list, key, value)`, `.map(closure)`, `.reduce(closure)`, `.size()`, `.substringBefore(separator)`, `date.toString()`, and `'' + number` for stringifying.
 
+- **Widget `.value` property access on null — use `!empty()` guard, NOT `?? ''`.** Accessing a sub-property like `.id` or `.descriptor` on a widget's `.value` when the value is null throws a null-pointer equivalent BEFORE the `?? ''` fallback can catch it. This is a silent, hard-to-diagnose runtime error.
+
+  **WRONG (crashes if nothing selected):**
+  ```json
+  "<% selectedApplicationId.value.id ?? '' %>"
+  ```
+
+  **CORRECT — guard with `!empty()` first:**
+  ```json
+  "<% (!empty(selectedApplicationId.value)) ? (selectedApplicationId.value.id ?? '') : '' %>"
+  ```
+
+  Apply this pattern everywhere a widget value (especially from a `dropdown` or `instanceList`) has sub-properties accessed on it. The `!empty()` function safely returns `true` when the value is null, avoiding the NPE. After the guard passes, the inner `?? ''` catches any edge cases where the property itself is null.
+
 ### bool
 
 `all (expression1, expressionN)` · `any (expression1, expressionN)`

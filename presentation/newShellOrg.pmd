@@ -51,7 +51,7 @@
           },
           {
             "outboundPath": "organizationName",
-            "value": "<% (selectedApplicationId.value.id ?? '') + ':' + (organizationCode.value ?? '') %>"
+            "value": "<% (!empty(selectedApplicationId.value)) ? ((selectedApplicationId.value.id ?? '') + ':' + (organizationCode.value ?? '')) : ('' + ':' + (organizationCode.value ?? '')) %>"
           },
           {
             "outboundPath": "workerId",
