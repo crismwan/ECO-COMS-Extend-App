@@ -8,7 +8,7 @@
     "headerSize": "STANDARD",
     "title": {
       "type": "title",
-      "label": "ECO-COMS Hub"
+      "label": "RBAC Hub"
     },
     "body": {
       "type": "basicFormLayout",
@@ -127,7 +127,7 @@
                   "label": "View Pending ISC Requests",
                   "action": "PRIMARY",
                   "taskReference": {
-                    "taskId": "iscRoleRequestsView"
+                    "taskId": "iscRoleRequestsHub"
                   }
                 },
                 {
