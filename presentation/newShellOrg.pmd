@@ -83,7 +83,7 @@
       {
         "name": "triggerAddShellOrg",
         "baseUrlType": "orchestration",
-        "url": "<% '/AddShellOrg/launch?comsAppId=' + ((!empty(selectedApplicationId.value)) ? (selectedApplicationId.selectedEntries[0].descriptor ?? '') : '') + '&orgType=' + ((!empty(selectedApplicationId.value)) ? (selectedApplicationId.selectedEntries[0].descriptor ?? '') : '') + '&organizationName=' + ((!empty(selectedApplicationId.value)) ? ((selectedApplicationId.selectedEntries[0].descriptor ?? '') + ':' + (organizationCode.value ?? '')) : (organizationCode.value ?? '')) + '&organizationCode=' + (organizationCode.value ?? '') + '&workerId=' + (selectedWorker.id ?? '') + '&effectiveDate=' + (effectiveDate.value != null ? effectiveDate.value.format('yyyy-MM-dd') : '') %>",
+        "url": "<% '/AddShellOrg/launch?comsAppId=' + ((!empty(selectedApplicationId.value)) ? (selectedApplicationId.selectedEntries[0].descriptor ?? '') : '') + '&orgType=' + (((organizationCode.value ?? '').startsWith('TEST:FAIL')) ? 'X:NOTYPE' : ((!empty(selectedApplicationId.value)) ? (selectedApplicationId.selectedEntries[0].descriptor ?? '') : '')) + '&organizationName=' + ((!empty(selectedApplicationId.value)) ? ((selectedApplicationId.selectedEntries[0].descriptor ?? '') + ':' + (organizationCode.value ?? '')) : (organizationCode.value ?? '')) + '&organizationCode=' + (organizationCode.value ?? '') + '&workerId=' + (selectedWorker.id ?? '') + '&effectiveDate=' + (effectiveDate.value != null ? effectiveDate.value.format('yyyy-MM-dd') : '') %>",
         "authType": "sso",
         "httpMethod": "POST",
         "onSend": "<% {} %>",
