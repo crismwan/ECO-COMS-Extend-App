@@ -65,7 +65,7 @@
       }
     ]
   },
-  "onSubmit": "<%\n  let valid = true;\n  if (empty(selectedApplicationId.value)) {\n    selectedApplicationId.setError('Please select an application.');\n    valid = false;\n  }\n  if (empty(effectiveDate.value)) {\n    effectiveDate.setError('Effective Date is required.');\n    valid = false;\n  } else {\n    let d = effectiveDate.value;\n    let dow = d.dayOfWeek();\n    if (dow == 6 || dow == 7) {\n      effectiveDate.setError('Effective Date must be a weekday. Saturdays and Sundays are not allowed.');\n      valid = false;\n    } else {\n      let y = d.year();\n      if (y < 2026 || y > 2027) {\n        effectiveDate.setError('Effective Date year must be 2026 or 2027.');\n        valid = false;\n      }\n    }\n  }\n  valid;\n%>",
+  "onSubmit": "<%\n  let valid = true;\n  if (empty(selectedApplicationId.value)) {\n    selectedApplicationId.setError('Please select an application.');\n    valid = false;\n  }\n  if (empty(effectiveDate.value)) {\n    effectiveDate.setError('Effective Date is required.');\n    valid = false;\n  } else {\n    let d = effectiveDate.value;\n    let y = d.year();\n    if (y < 2026 || y > 2027) {\n      effectiveDate.setError('Effective Date year must be 2026 or 2027.');\n      valid = false;\n    }\n  }\n  valid;\n%>",
   "presentation": {
     "headerSize": "STANDARD",
     "title": {
@@ -186,7 +186,7 @@
                     "title": "Effective Date Rules",
                     "text": "Must be a weekday (Monday–Friday) in 2026 or 2027. Weekends and dates outside this range will be rejected. The organization will be available in Workday starting on this date."
                   },
-                  "onChange": "<%\n    if (empty(self.value)) {\n      self.clearError();\n    } else {\n      let d = self.value;\n      let dow = d.dayOfWeek();\n      if (dow == 6 || dow == 7) {\n        self.setError('Effective Date must be a weekday. Saturdays and Sundays are not allowed.');\n      } else {\n        let y = d.year();\n        if (y < 2026 || y > 2027) {\n          self.setError('Effective Date year must be 2026 or 2027.');\n        } else {\n          self.clearError();\n        }\n      }\n    }\n  %>"
+                  "onChange": "<%\n    if (empty(self.value)) {\n      self.clearError();\n    } else {\n      let d = self.value;\n      let y = d.year();\n      if (y < 2026 || y > 2027) {\n        self.setError('Effective Date year must be 2026 or 2027.');\n      } else {\n        self.clearError();\n      }\n    }\n  %>"
                 }
               ],
               "title": "Organization Details"
