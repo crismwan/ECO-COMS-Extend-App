@@ -22,6 +22,50 @@
           "endsFlow": true
         }
       ]
+    },
+    {
+      "id": "newShellOrgFlow",
+      "flowSteps": [
+        {
+          "id": "newShellOrgStep",
+          "taskId": "newShellOrg",
+          "startsFlow": true,
+          "transitions": [
+            {
+              "order": "a",
+              "value": "newShellOrgSuccessStep",
+              "condition": "true"
+            }
+          ]
+        },
+        {
+          "id": "newShellOrgSuccessStep",
+          "taskId": "newShellOrgSuccess",
+          "endsFlow": true
+        }
+      ]
+    },
+    {
+      "id": "newShellOrgPatternFlow",
+      "flowSteps": [
+        {
+          "id": "newShellOrgPatternStep",
+          "taskId": "newShellOrgPattern",
+          "startsFlow": true,
+          "transitions": [
+            {
+              "order": "a",
+              "value": "newShellOrgPatternSuccessStep",
+              "condition": "true"
+            }
+          ]
+        },
+        {
+          "id": "newShellOrgPatternSuccessStep",
+          "taskId": "newShellOrgPatternSuccess",
+          "endsFlow": true
+        }
+      ]
     }
   ],
   "tasks": [

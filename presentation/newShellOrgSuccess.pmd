@@ -27,6 +27,18 @@
                 },
                 {
                   "type": "readOnlyText",
+                  "id": "orgNameDisplay",
+                  "label": "Organization Name",
+                  "value": "<% flowVariables.organizationName ?? '' %>"
+                },
+                {
+                  "type": "readOnlyText",
+                  "id": "orgEffDisplay",
+                  "label": "Effective Date",
+                  "value": "<% flowVariables.effectiveDate ?? '' %>"
+                },
+                {
+                  "type": "readOnlyText",
                   "id": "copyHint",
                   "label": " ",
                   "value": "The Shell Organization has been submitted to Workday via the orchestration. Check the Audit Log in Shell Org Manager for status."
@@ -43,7 +55,7 @@
               "type": "button",
               "label": "Add Another Organization",
               "taskReference": {
-                "taskId": "createShellOrgWizard"
+                "taskId": "newShellOrg"
               },
               "action": "PRIMARY"
             },

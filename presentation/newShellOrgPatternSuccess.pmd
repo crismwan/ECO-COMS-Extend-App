@@ -22,7 +22,7 @@
                 {
                   "type": "card",
                   "cardId": "ShellOrgPatternReceiptCard",
-                  "parameters": "<% { 'patternName': queryParams.patternName ?? '', 'organizationName': queryParams.organizationName ?? '' } %>"
+                  "parameters": "<% { 'patternName': flowVariables.patternName ?? '', 'organizationName': flowVariables.applicationCode ?? '' } %>"
                 }
               ]
             }
@@ -46,7 +46,7 @@
                 {
                   "type": "readOnlyText",
                   "id": "patternNameDisplay",
-                  "value": "<% queryParams.patternName ?? '' %>"
+                  "value": "<% flowVariables.patternName ?? '' %>"
                 }
               ]
             }
@@ -60,7 +60,7 @@
               "type": "button",
               "label": "Add Another Pattern",
               "taskReference": {
-                "taskId": "createShellOrgPatternWizard"
+                "taskId": "newShellOrgPattern"
               },
               "action": "PRIMARY"
             },

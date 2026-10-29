@@ -69,9 +69,15 @@
           }
         ],
         "failOnStatusCodes": [
-          { "code": 400 },
-          { "code": 403 },
-          { "code": 500 }
+          {
+            "code": 400
+          },
+          {
+            "code": 403
+          },
+          {
+            "code": 500
+          }
         ]
       },
       {
@@ -88,11 +94,44 @@
           }
         ],
         "failOnStatusCodes": [
-          { "code": 400 },
-          { "code": 403 },
-          { "code": 404 },
-          { "code": 429 },
-          { "code": 500 }
+          {
+            "code": 400
+          },
+          {
+            "code": 403
+          },
+          {
+            "code": 404
+          },
+          {
+            "code": 429
+          },
+          {
+            "code": 500
+          }
+        ]
+      },
+      {
+        "type": "outboundVariable",
+        "name": "newShellOrgFlowVars",
+        "variableScope": "flow",
+        "values": [
+          {
+            "outboundPath": "organizationName",
+            "value": "<% ((!empty(selectedApplicationId.value) ? selectedApplicationId.selectedEntries[0].descriptor : '') + ':' + (organizationCode.value ?? '')) %>"
+          },
+          {
+            "outboundPath": "organizationCode",
+            "value": "<% organizationCode.value ?? '' %>"
+          },
+          {
+            "outboundPath": "applicationCode",
+            "value": "<% (!empty(selectedApplicationId.value) ? selectedApplicationId.selectedEntries[0].descriptor : '') %>"
+          },
+          {
+            "outboundPath": "effectiveDate",
+            "value": "<% effectiveDate.value != null ? effectiveDate.value.format('yyyy-MM-dd') : '' %>"
+          }
         ]
       }
     ],
@@ -157,25 +196,6 @@
         },
         {
           "type": "layoutSection",
-          "id": "warningSection",
-          "children": [
-            {
-              "type": "fieldSet",
-              "id": "wizardWarningFieldSet",
-              "children": [
-                {
-                  "type": "richText",
-                  "id": "wizardCloseWarning",
-                  "enabled": false,
-                  "value": "<span style=\"color:#B45309;font-size:11px;font-weight:700\">⚠ Important: </span><span style=\"color:#374151;font-size:11px\">When clicking <b>Next</b>, if a \"Discard Changes?\" dialog appears — click <b>Discard</b> to continue. Your data is preserved. (This is a Workday platform dialog for wizard navigation.) To exit without submitting, use the <b>← Shell Org Manager</b> button above.</span>"
-                }
-              ],
-              "title": "Navigation Guide"
-            }
-          ]
-        },
-        {
-          "type": "layoutSection",
           "id": "formSection",
           "children": [
             {
@@ -189,7 +209,7 @@
                   "required": true,
                   "values": "<%\n  let appCodes = [];\n  let result = [];\n  for (var org : (existingOrgs.data ?? [])) {\n    let code = org.code;\n    let appCode = code.substringAfter(':').contains(':') ?\n      code.substringBefore(':') + ':' + code.substringAfter(':').substringBefore(':') :\n      code;\n    if (!empty(appCode) && !appCodes.contains(appCode)) {\n      appCodes.add(appCode);\n      result.add({'id': appCode, 'descriptor': appCode});\n    }\n  }\n  result;\n%>",
                   "helpText": "Select the application this shell organization belongs to.",
-                  "onChange": "<%\n  organizationCode.clearError();\n  selectedApplicationId.clearError();\n  let ac = (!empty(self.value)) ? (self.value.id ?? '') : '';\n  let oc = organizationCode.value ?? '';\n  if (!empty(ac) && !empty(oc)) {\n    orgNamePreview.clearWarning();\n    orgNamePreview.setWarning('Generated name: ' + ac + ':' + oc);\n  } else if (!empty(ac)) {\n    orgNamePreview.clearWarning();\n    orgNamePreview.setWarning('Generated name: ' + ac + ':...');\n  } else {\n    orgNamePreview.clearWarning();\n  }\n%>"
+                  "onChange": "<%\n  selectedApplicationId.clearError();\n  orgNamePreview.setValue(\n    !empty(self.value) ?\n      (!empty(organizationCode.value) ? self.selectedEntries[0].descriptor + ':' + organizationCode.value : self.selectedEntries[0].descriptor + ':')\n    : ''\n  );\n%>"
                 },
                 {
                   "type": "text",
@@ -203,15 +223,15 @@
                     "title": "Organization Code Format",
                     "text": "Enter the unique suffix for this organization. The system will auto-generate the full name as ApplicationCode:OrganizationCode (e.g. X:CLW:ORG:ANY). Avoid spaces and special characters. Must be unique within the application."
                   },
-                  "onChange": "<%\n  organizationCode.clearError();\n  let ac = (!empty(selectedApplicationId.value)) ? (selectedApplicationId.value.id ?? '') : '';\n  let oc = self.value ?? '';\n  if (!empty(ac) && !empty(oc)) {\n    orgNamePreview.clearWarning();\n    orgNamePreview.setWarning('Generated name: ' + ac + ':' + oc);\n  } else if (!empty(ac)) {\n    orgNamePreview.clearWarning();\n    orgNamePreview.setWarning('Generated name: ' + ac + ':...');\n  } else {\n    orgNamePreview.clearWarning();\n  }\n%>"
+                  "onChange": "<%\n  self.clearError();\n  orgNamePreview.setValue(\n    !empty(selectedApplicationId.value) ?\n      selectedApplicationId.selectedEntries[0].descriptor + ':' + (self.value ?? '')\n    : ''\n  );\n%>"
                 },
                 {
                   "type": "text",
                   "id": "orgNamePreview",
                   "label": "Generated Organization Name",
                   "enabled": false,
-                  "value": "<% (!empty(selectedApplicationId.value) && !empty(organizationCode.value)) ? (((!empty(selectedApplicationId.value)) ? (selectedApplicationId.value.id ?? '') : '') + ':' + (organizationCode.value ?? '')) : ((!empty(selectedApplicationId.value)) ? (((!empty(selectedApplicationId.value)) ? (selectedApplicationId.value.id ?? '') : '') + ':') : '') %>",
-                  "helpText": "Auto-generated from Application Code + Organization Code. Will be confirmed on the Review step."
+                  "value": "<% '' %>",
+                  "helpText": "Auto-generated as ApplicationCode:OrganizationCode. This is the organization name that will be created in Workday."
                 },
                 {
                   "type": "date",
@@ -243,6 +263,26 @@
       ]
     },
     "pageType": "EDIT",
-    "standardEditButtonsHidden": true
+    "standardEditButtonsHidden": true,
+    "editButtonBar": {
+      "buttons": [
+        {
+          "type": "button",
+          "id": "submitShellOrgButton",
+          "label": "Create Shell Organization",
+          "action": "PRIMARY"
+        },
+        {
+          "type": "button",
+          "id": "cancelShellOrgButton",
+          "label": "Cancel",
+          "action": "AUXILIARY",
+          "suppressDiscardDialog": true,
+          "taskReference": {
+            "taskId": "shellOrgManager"
+          }
+        }
+      ]
+    }
   }
 }

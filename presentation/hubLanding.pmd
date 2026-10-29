@@ -35,7 +35,7 @@
                   "label": "Add Shell Org",
                   "action": "AUXILIARY",
                   "taskReference": {
-                    "taskId": "createShellOrgWizard"
+                    "taskId": "newShellOrg"
                   }
                 },
                 {
@@ -44,7 +44,7 @@
                   "label": "Add Pattern",
                   "action": "AUXILIARY",
                   "taskReference": {
-                    "taskId": "createShellOrgPatternWizard"
+                    "taskId": "newShellOrgPattern"
                   }
                 },
                 {
