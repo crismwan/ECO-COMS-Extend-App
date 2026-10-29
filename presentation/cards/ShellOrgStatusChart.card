@@ -13,16 +13,16 @@
     "type": "chartCard",
     "chart": {
       "type": "donutChart2",
-      "data": "<% [{'status': 'Active', 'count': activeCount ?? 0}, {'status': 'Inactive', 'count': inactiveCount ?? 0}] %>",
+      "data": "<% [{\"status\": \"Active\", \"count\": activeCount ?? 0}, {\"status\": \"Inactive\", \"count\": inactiveCount ?? 0}] %>",
       "dataVariableName": "slice",
-      "title": "<% (totalPatterns ?? 0) + ' Total' %>",
+      "title": "<% (totalPatterns ?? 0) + \" Total\" %>",
       "sliceSizeDataSet": {
         "name": "Count",
-        "value": "<% slice['count'] %>"
+        "value": "<% slice[\"count\"] %>"
       },
       "sliceColorDataSet": {
         "name": "Status",
-        "value": "<% slice['status'] %>"
+        "value": "<% slice[\"status\"] %>"
       },
       "showPercentLabels": true,
       "animateOnLoad": true

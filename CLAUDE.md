@@ -1338,7 +1338,7 @@ File `simpleStatusCard.card` → `"id": "simpleStatusCard"`. Set `body.type` to 
   "body": { "type": "simpleCard", "value": "<% bodyText ?? '' %>" }
   ```
 
-  Note: single-quoted string literals DO work inside `chartCard` `data` arrays (confirmed). The restriction applies to `simpleCard` (and likely `listCard`, `pillCard`, `imageCard`) body/header attributes — treat `.card` `<% %>` expressions as variable-reference-only to be safe.
+  **CORRECTION:** Single-quoted string literals do NOT work inside `chartCard` `data` arrays either — this was incorrectly noted as confirmed. The tokenization restriction applies to ALL `.card` file `<% %>` expressions regardless of card type. Always use escaped double-quotes (`\"`) for string literals inside `<% %>` in any `.card` file, or pass pre-built values as parameters from the PMD.
 
 - `footer` (TaskButton array) — up to **5** links. Each: `label` (stringScript, **req**) plus **exactly one** of:
 
