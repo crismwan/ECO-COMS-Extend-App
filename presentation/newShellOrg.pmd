@@ -110,29 +110,6 @@
             "code": 500
           }
         ]
-      },
-      {
-        "type": "outboundVariable",
-        "name": "newShellOrgFlowVars",
-        "variableScope": "flow",
-        "values": [
-          {
-            "outboundPath": "organizationName",
-            "value": "<% ((!empty(selectedApplicationId.value) ? selectedApplicationId.selectedEntries[0].descriptor : '') + ':' + (organizationCode.value ?? '')) %>"
-          },
-          {
-            "outboundPath": "organizationCode",
-            "value": "<% organizationCode.value ?? '' %>"
-          },
-          {
-            "outboundPath": "applicationCode",
-            "value": "<% (!empty(selectedApplicationId.value) ? selectedApplicationId.selectedEntries[0].descriptor : '') %>"
-          },
-          {
-            "outboundPath": "effectiveDate",
-            "value": "<% effectiveDate.value != null ? effectiveDate.value.format('yyyy-MM-dd') : '' %>"
-          }
-        ]
       }
     ],
     "responseErrorDetail": {
@@ -209,7 +186,7 @@
                   "required": true,
                   "values": "<%\n  let appCodes = [];\n  let result = [];\n  for (var org : (existingOrgs.data ?? [])) {\n    let code = org.code;\n    let appCode = code.substringAfter(':').contains(':') ?\n      code.substringBefore(':') + ':' + code.substringAfter(':').substringBefore(':') :\n      code;\n    if (!empty(appCode) && !appCodes.contains(appCode)) {\n      appCodes.add(appCode);\n      result.add({'id': appCode, 'descriptor': appCode});\n    }\n  }\n  result;\n%>",
                   "helpText": "Select the application this shell organization belongs to.",
-                  "onChange": "<%\n  selectedApplicationId.clearError();\n  orgNamePreview.setValue(\n    !empty(self.value) ?\n      (!empty(organizationCode.value) ? self.selectedEntries[0].descriptor + ':' + organizationCode.value : self.selectedEntries[0].descriptor + ':')\n    : ''\n  );\n%>"
+                  "onChange": "<%\n  selectedApplicationId.clearError();\n  if (!empty(self.value)) {\n    orgNamePreview.setValue(self.value.descriptor + ':' + (organizationCode.value ?? ''));\n  } else {\n    orgNamePreview.setValue('Select an application above');\n  }\n%>"
                 },
                 {
                   "type": "text",
@@ -223,15 +200,13 @@
                     "title": "Organization Code Format",
                     "text": "Enter the unique suffix for this organization. The system will auto-generate the full name as ApplicationCode:OrganizationCode (e.g. X:CLW:ORG:ANY). Avoid spaces and special characters. Must be unique within the application."
                   },
-                  "onChange": "<%\n  self.clearError();\n  orgNamePreview.setValue(\n    !empty(selectedApplicationId.value) ?\n      selectedApplicationId.selectedEntries[0].descriptor + ':' + (self.value ?? '')\n    : ''\n  );\n%>"
+                  "onChange": "<%\n  self.clearError();\n  if (!empty(selectedApplicationId.value)) {\n    orgNamePreview.setValue(selectedApplicationId.value.descriptor + ':' + (self.value ?? ''));\n  } else {\n    orgNamePreview.setValue('Select an application above');\n  }\n%>"
                 },
                 {
-                  "type": "text",
+                  "type": "readOnlyText",
                   "id": "orgNamePreview",
                   "label": "Generated Organization Name",
-                  "enabled": false,
-                  "value": "<% '' %>",
-                  "helpText": "Auto-generated as ApplicationCode:OrganizationCode. This is the organization name that will be created in Workday."
+                  "value": "Select an application above"
                 },
                 {
                   "type": "date",
@@ -263,26 +238,8 @@
       ]
     },
     "pageType": "EDIT",
-    "standardEditButtonsHidden": true,
-    "editButtonBar": {
-      "buttons": [
-        {
-          "type": "button",
-          "id": "submitShellOrgButton",
-          "label": "Create Shell Organization",
-          "action": "PRIMARY"
-        },
-        {
-          "type": "button",
-          "id": "cancelShellOrgButton",
-          "label": "Cancel",
-          "action": "AUXILIARY",
-          "suppressDiscardDialog": true,
-          "taskReference": {
-            "taskId": "shellOrgManager"
-          }
-        }
-      ]
+    "cancelOverride": {
+      "taskId": "shellOrgManager"
     }
   }
 }

@@ -12,24 +12,6 @@
       "sections": [
         {
           "type": "layoutSection",
-          "id": "receiptCardSection",
-          "children": [
-            {
-              "type": "cardContainer",
-              "id": "receiptCardContainer",
-              "layout": "grid",
-              "cards": [
-                {
-                  "type": "card",
-                  "cardId": "ShellOrgPatternReceiptCard",
-                  "parameters": "<% { 'patternName': flowVariables.patternName ?? '', 'organizationName': flowVariables.applicationCode ?? '' } %>"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "type": "layoutSection",
           "id": "successSection",
           "children": [
             {
@@ -45,8 +27,9 @@
                 },
                 {
                   "type": "readOnlyText",
-                  "id": "patternNameDisplay",
-                  "value": "<% flowVariables.patternName ?? '' %>"
+                  "id": "patternHint",
+                  "label": " ",
+                  "value": "The Shell Org Pattern has been submitted to Workday via the orchestration. Check Shell Org Manager for the new pattern."
                 }
               ]
             }
@@ -60,7 +43,7 @@
               "type": "button",
               "label": "Add Another Pattern",
               "taskReference": {
-                "taskId": "newShellOrgPattern"
+                "taskId": "createShellOrgPatternWizard"
               },
               "action": "PRIMARY"
             },

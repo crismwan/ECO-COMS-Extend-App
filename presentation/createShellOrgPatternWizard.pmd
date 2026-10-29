@@ -23,11 +23,7 @@
       ],
       "conclusion": {
         "task": {
-          "taskId": "newShellOrgPatternSuccess",
-          "parameters": {
-            "patternName": "<% let ac = (!empty(selectedApplicationId.value)) ? (selectedApplicationId.value.descriptor ?? '') : ''; ac + ':PATTERN:' + (attribute1.value ?? '*') + ':' + (attribute2.value ?? '*') + ':' + (attribute3.value ?? '*') + ':' + (attribute5.value ?? '*') %>",
-            "organizationName": "<% (!empty(selectedApplicationId.value)) ? (selectedApplicationId.value.descriptor ?? '') : '' %>"
-          }
+          "taskId": "newShellOrgPatternSuccess"
         },
         "render": true
       }

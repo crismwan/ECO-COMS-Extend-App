@@ -127,25 +127,6 @@
             "code": 500
           }
         ]
-      },
-      {
-        "type": "outboundVariable",
-        "name": "newShellOrgPatternFlowVars",
-        "variableScope": "flow",
-        "values": [
-          {
-            "outboundPath": "patternName",
-            "value": "<% ((!empty(selectedApplicationId.value) ? (selectedApplicationId.value.descriptor ?? '') : '') + ':PATTERN:' + (attribute1.value ?? '*') + ':' + (attribute2.value ?? '*') + ':' + (attribute3.value ?? '*') + ':' + (attribute5.value ?? '*')) %>"
-          },
-          {
-            "outboundPath": "applicationCode",
-            "value": "<% (!empty(selectedApplicationId.value) ? (selectedApplicationId.value.descriptor ?? '') : '') %>"
-          },
-          {
-            "outboundPath": "effectiveDate",
-            "value": "<% effectiveDate.value != null ? effectiveDate.value.format('yyyy-MM-dd') : '' %>"
-          }
-        ]
       }
     ],
     "responseErrorDetail": {
@@ -335,26 +316,8 @@
       ]
     },
     "pageType": "EDIT",
-    "standardEditButtonsHidden": true,
-    "editButtonBar": {
-      "buttons": [
-        {
-          "type": "button",
-          "id": "submitPatternButton",
-          "label": "Create Pattern",
-          "action": "PRIMARY"
-        },
-        {
-          "type": "button",
-          "id": "cancelPatternButton",
-          "label": "Cancel",
-          "action": "AUXILIARY",
-          "suppressDiscardDialog": true,
-          "taskReference": {
-            "taskId": "shellOrgManager"
-          }
-        }
-      ]
+    "cancelOverride": {
+      "taskId": "shellOrgManager"
     }
   }
 }

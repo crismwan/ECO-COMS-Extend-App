@@ -143,7 +143,7 @@
                 "type": "button",
                 "label": "Add New Shell Organization",
                 "taskReference": {
-                  "taskId": "newShellOrg"
+                  "taskId": "createShellOrgWizard"
                 },
                 "action": "PRIMARY"
               },
@@ -151,7 +151,7 @@
                 "type": "button",
                 "label": "Add Shell Org Pattern",
                 "taskReference": {
-                  "taskId": "newShellOrgPattern"
+                  "taskId": "createShellOrgPatternWizard"
                 },
                 "action": "AUXILIARY"
               }
@@ -230,7 +230,7 @@
                 "id": "addPatternBtn",
                 "label": "Add Pattern",
                 "taskReference": {
-                  "taskId": "newShellOrgPattern"
+                  "taskId": "createShellOrgPatternWizard"
                 },
                 "action": "PRIMARY"
               },
@@ -358,7 +358,7 @@
             "id": "addNewOrgBtn",
             "label": "Add New Shell Organization",
             "taskReference": {
-              "taskId": "newShellOrg"
+              "taskId": "createShellOrgWizard"
             },
             "action": "PRIMARY"
           },
