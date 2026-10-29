@@ -187,16 +187,7 @@
                   "id": "selectedApplicationId",
                   "label": "Application",
                   "required": true,
-                  "instanceListLoopTag": {
-                    "id": "selectedApplicationIdList",
-                    "type": "instanceLoop",
-                    "templateInstance": {
-                      "id": "<% app.appId %>",
-                      "descriptor": "<% app.name %>"
-                    },
-                    "on": "<% (comsApplications.data ?? []).filter(app => { (app.active ?? false) == true }) %>",
-                    "as": "app"
-                  },
+                  "values": "<% (comsApplications.data ?? []).filter(app => { app.active == true && app.appId != 'X' && app.name != 'X' }).map(app => { { 'id': app.appId ?? app.descriptor, 'descriptor': app.name ?? app.descriptor } }) %>",
                   "helpText": "Select the application this shell organization belongs to.",
                   "onChange": "<%\n    if (!empty(self.value)) {\n      selectedApplicationId.clearError();\n    }\n    let ac = (!empty(self.value)) ? (self.value.id ?? '') : '';\n    let oc = organizationCode.value ?? '';\n    if (!empty(ac)) {\n      orgNamePreview.setValue(ac + ':' + oc);\n    } else {\n      orgNamePreview.setValue('Select an application above');\n    }\n  %>"
                 },
