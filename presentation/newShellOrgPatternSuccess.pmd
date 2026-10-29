@@ -17,33 +17,18 @@
             {
               "type": "fieldSet",
               "id": "successFieldSet",
+              "title": "Pattern Created Successfully",
               "children": [
                 {
-                  "type": "text",
-                  "id": "successMessageText",
-                  "value": "<% \"Pattern \" + (flowVariables.patternName ?? \"\") + \" has been created successfully.\" %>",
-                  "enabled": false
+                  "type": "richText",
+                  "id": "successMessage",
+                  "enabled": false,
+                  "value": "<span style=\"color:#059669;font-size:11px;font-weight:700\">✓ </span><span style=\"color:#065f46;font-size:11px\">The Custom Organization has been created in Workday.</span>"
                 },
                 {
-                  "type": "text",
-                  "id": "patternNameText",
-                  "label": "Pattern Name",
-                  "value": "<% flowVariables.patternName ?? \"\" %>",
-                  "enabled": false
-                },
-                {
-                  "type": "text",
-                  "id": "appCodeText",
-                  "label": "Application",
-                  "value": "<% flowVariables.comsAppId ?? \"\" %>",
-                  "enabled": false
-                },
-                {
-                  "type": "text",
-                  "id": "effectiveDateText",
-                  "label": "Effective Date",
-                  "value": "<% flowVariables.effectiveDate ?? \"\" %>",
-                  "enabled": false
+                  "type": "readOnlyText",
+                  "id": "patternNameDisplay",
+                  "value": "<% flowVariables.patternName ?? '' %>"
                 }
               ]
             }
@@ -71,7 +56,7 @@
             },
             {
               "type": "button",
-              "label": "Home",
+              "label": "← Home",
               "taskReference": {
                 "taskId": "home"
               },

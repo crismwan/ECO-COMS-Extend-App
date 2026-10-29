@@ -17,33 +17,31 @@
             {
               "type": "fieldSet",
               "id": "successFieldSet",
+              "title": "Organization Created Successfully",
               "children": [
                 {
-                  "type": "text",
-                  "id": "successMessageText",
-                  "value": "<% \"Organization \" + (flowVariables.organizationName ?? \"\") + \" has been created successfully.\" %>",
-                  "enabled": false
+                  "type": "richText",
+                  "id": "successMessage",
+                  "enabled": false,
+                  "value": "<span style=\"color:#059669;font-size:11px;font-weight:700\">✓ </span><span style=\"color:#065f46;font-size:11px\">The Shell Organization has been created in Workday.</span>"
                 },
                 {
-                  "type": "text",
-                  "id": "orgCodeText",
+                  "type": "readOnlyText",
+                  "id": "orgNameDisplay",
+                  "label": "Organization Name",
+                  "value": "<% flowVariables.organizationName ?? '' %>"
+                },
+                {
+                  "type": "readOnlyText",
+                  "id": "orgCodeDisplay",
                   "label": "Organization Code",
-                  "value": "<% flowVariables.organizationCode ?? \"\" %>",
-                  "enabled": false
+                  "value": "<% flowVariables.organizationCode ?? '' %>"
                 },
                 {
-                  "type": "text",
-                  "id": "appCodeText",
-                  "label": "Application",
-                  "value": "<% flowVariables.applicationCode ?? \"\" %>",
-                  "enabled": false
-                },
-                {
-                  "type": "text",
-                  "id": "effectiveDateText",
-                  "label": "Effective Date",
-                  "value": "<% flowVariables.effectiveDate ?? \"\" %>",
-                  "enabled": false
+                  "type": "readOnlyText",
+                  "id": "copyHint",
+                  "label": " ",
+                  "value": "Use the organization code above to reference this org in downstream tasks."
                 }
               ]
             }
@@ -71,7 +69,7 @@
             },
             {
               "type": "button",
-              "label": "Home",
+              "label": "← Home",
               "taskReference": {
                 "taskId": "home"
               },
