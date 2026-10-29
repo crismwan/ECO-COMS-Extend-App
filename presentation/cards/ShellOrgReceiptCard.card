@@ -1,0 +1,33 @@
+{
+  "id": "ShellOrgReceiptCard",
+  "parameters": [
+    "organizationName",
+    "organizationCode"
+  ],
+  "header": {
+    "title": "Shell Organization Created",
+    "icon": "wd-accent-award-medal",
+    "indicator": {
+      "label": "Created",
+      "color": "green"
+    }
+  },
+  "body": {
+    "type": "simpleCard",
+    "value": "<% organizationName ?? \"\" %>"
+  },
+  "footer": [
+    {
+      "label": "View in Shell Org Manager",
+      "taskReference": {
+        "taskId": "shellOrgManager"
+      }
+    },
+    {
+      "label": "Add Another Organization",
+      "taskReference": {
+        "taskId": "createShellOrgWizard"
+      }
+    }
+  ]
+}
