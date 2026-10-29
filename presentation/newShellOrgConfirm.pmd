@@ -33,7 +33,7 @@
             "code": 500
           }
         ]
-      },
+      }
     ],
     "responseErrorDetail": {
       "errorSummary": "<% error ?? '' %>"
