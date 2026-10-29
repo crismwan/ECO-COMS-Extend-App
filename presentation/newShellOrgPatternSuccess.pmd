@@ -15,14 +15,35 @@
           "id": "successSection",
           "children": [
             {
-              "type": "cardContainer",
-              "id": "patternReceiptCardContainer",
-              "layout": "grid",
-              "cards": [
+              "type": "fieldSet",
+              "id": "successFieldSet",
+              "children": [
                 {
-                  "type": "card",
-                  "cardId": "ShellOrgPatternReceiptCard",
-                  "parameters": "<% { 'patternName': flowVariables.patternName ?? '', 'applicationCode': flowVariables.comsAppId ?? '', 'effectiveDate': flowVariables.effectiveDate ?? '', 'bodyText': 'Pattern: ' + (flowVariables.patternName ?? '') + ' | App: ' + (flowVariables.comsAppId ?? '') + ' | Effective: ' + (flowVariables.effectiveDate ?? '') } %>"
+                  "type": "text",
+                  "id": "successMessageText",
+                  "value": "<% \"Pattern \" + (flowVariables.patternName ?? \"\") + \" has been created successfully.\" %>",
+                  "enabled": false
+                },
+                {
+                  "type": "text",
+                  "id": "patternNameText",
+                  "label": "Pattern Name",
+                  "value": "<% flowVariables.patternName ?? \"\" %>",
+                  "enabled": false
+                },
+                {
+                  "type": "text",
+                  "id": "appCodeText",
+                  "label": "Application",
+                  "value": "<% flowVariables.comsAppId ?? \"\" %>",
+                  "enabled": false
+                },
+                {
+                  "type": "text",
+                  "id": "effectiveDateText",
+                  "label": "Effective Date",
+                  "value": "<% flowVariables.effectiveDate ?? \"\" %>",
+                  "enabled": false
                 }
               ]
             }
@@ -50,7 +71,7 @@
             },
             {
               "type": "button",
-              "label": "← Home",
+              "label": "Home",
               "taskReference": {
                 "taskId": "home"
               },
