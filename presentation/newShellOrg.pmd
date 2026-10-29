@@ -154,7 +154,7 @@
                   "required": true,
                   "values": "<% (existingOrgs.data ?? []).filter(org => { !empty(org.code) }).map(org => { { 'appCode': org.code.substringAfter(':').contains(':') ? org.code.substringBefore(':') + ':' + org.code.substringAfter(':').substringBefore(':') : org.code.substringBefore(':') } }).filter(item => { !empty(item.appCode) }).map(item => { item.appCode }).distinct().map(appCode => { { 'id': appCode, 'descriptor': appCode } }) %>",
                   "helpText": "Select the application this shell organization belongs to.",
-                  "onChange": "<%\n    let ac = (!empty(self.value)) ? (self.value.id ?? '') : '';\n    let oc = organizationCode.value ?? '';\n    if (!empty(ac) && !empty(oc)) {\n      orgNamePreview.setValue(ac + ':' + oc);\n    } else {\n      orgNamePreview.setValue('Select application and enter code above');\n    }\n  %>"
+                  "onChange": "<%\n    if (!empty(self.value)) {\n      selectedApplicationId.clearError();\n    }\n  %>"
                 },
                 {
                   "type": "text",
@@ -167,14 +167,13 @@
                     "title": "Organization Code Format",
                     "text": "Enter the unique suffix for this organization. The system will auto-generate the full name as ApplicationCode:OrganizationCode (e.g. X:CLW:ORG:ANY). Avoid spaces and special characters. Must be unique within the application."
                   },
-                  "onChange": "<%\n    let ac = (!empty(selectedApplicationId.value)) ? (selectedApplicationId.value.id ?? '') : '';\n    let oc = self.value ?? '';\n    if (!empty(ac) && !empty(oc)) {\n      orgNamePreview.setValue(ac + ':' + oc);\n      let orgName = ac + ':' + oc;\n      let dupes = (existingOrgs.data ?? []).filter(o => { o.code == orgName });\n      if (dupes.size() > 0) {\n        let dupeName = (!empty(dupes[0].organizationByName)) ? (dupes[0].organizationByName.descriptor ?? orgName) : orgName;\n        self.setError('An organization with this code already exists: ' + dupeName);\n      } else {\n        self.clearError();\n      }\n    } else {\n      orgNamePreview.setValue('Select application and enter code above');\n      self.clearError();\n    }\n  %>"
+                  "onChange": "<%\n    let ac = (!empty(selectedApplicationId.value)) ? (selectedApplicationId.value.id ?? '') : '';\n    let oc = self.value ?? '';\n    if (!empty(ac) && !empty(oc)) {\n      let orgName = ac + ':' + oc;\n      let dupes = (existingOrgs.data ?? []).filter(o => { o.code == orgName });\n      if (dupes.size() > 0) {\n        let dupeName = (!empty(dupes[0].organizationByName)) ? (dupes[0].organizationByName.descriptor ?? orgName) : orgName;\n        self.setError('An organization with this code already exists: ' + dupeName);\n      } else {\n        self.clearError();\n      }\n    } else {\n      self.clearError();\n    }\n  %>"
                 },
                 {
-                  "type": "text",
-                  "id": "orgNamePreview",
-                  "label": "Generated Organization Name",
-                  "value": "Select application and enter code above",
-                  "enabled": true
+                  "type": "richText",
+                  "id": "orgNameFormatNote",
+                  "enabled": false,
+                  "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">ℹ Generated Name: </span><span style=\"color:#374151;font-size:11px\">The organization name will be auto-built as <b>ApplicationCode:OrganizationCode</b> (e.g. <b>X:CLW:AUDITTEST001</b>). You will see the exact name on the confirmation screen before submitting.</span>"
                 },
                 {
                   "type": "date",
