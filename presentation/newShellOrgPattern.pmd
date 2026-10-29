@@ -16,7 +16,7 @@
     {
       "name": "comsApplications",
       "baseUrlType": "BUSINESS-OBJECT",
-      "url": "/comsApplications?active=true",
+      "url": "/comsApplications",
       "authType": "sso",
       "isCollection": true,
       "bestEffort": "true"

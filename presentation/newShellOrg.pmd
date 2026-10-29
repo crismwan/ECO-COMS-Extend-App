@@ -13,7 +13,7 @@
     {
       "name": "comsApplications",
       "baseUrlType": "BUSINESS-OBJECT",
-      "url": "/comsApplications?active=true",
+      "url": "/comsApplications",
       "authType": "sso",
       "isCollection": true,
       "bestEffort": "true"
@@ -187,7 +187,7 @@
                   "id": "selectedApplicationId",
                   "label": "Application",
                   "required": true,
-                  "values": "<% (comsApplications.data ?? []).filter(app => { app.active == true }).map(app => { { 'id': app.appId ?? app.descriptor, 'descriptor': app.name ?? app.descriptor } }) %>",
+                  "values": "<% (comsApplications.data ?? []).filter(app => { (app.active ?? false) == true }).map(app => { { 'id': app.appId ?? app.id, 'descriptor': app.name ?? app.descriptor } }) %>",
                   "helpText": "Select the application this shell organization belongs to.",
                   "onChange": "<%\n    if (!empty(self.value)) {\n      selectedApplicationId.clearError();\n    }\n  %>"
                 },
