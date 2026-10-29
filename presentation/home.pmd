@@ -20,14 +20,6 @@
         {
           "type": "item",
           "task": {
-            "taskId": "iscRoleRequestsHub"
-          },
-          "label": "Pending ISC Requests",
-          "icon": "wd-accent-clipboard-checklist"
-        },
-        {
-          "type": "item",
-          "task": {
             "taskId": "fuhLandingPage"
           },
           "label": "FUH Administration",

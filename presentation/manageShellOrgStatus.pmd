@@ -191,6 +191,33 @@
       ]
     },
     "pageType": "EDIT",
-    "standardEditButtonsHidden": false
+    "standardEditButtonsHidden": true,
+    "editButtonBar": {
+      "buttons": [
+        {
+          "type": "button",
+          "id": "submitStatusChangeButton",
+          "label": "<% queryParams.currentStatus == 'Active' ? 'Inactivate Organization' : 'Activate Organization' %>",
+          "action": "PRIMARY",
+          "taskReference": {
+            "taskId": "manageShellOrgStatusSuccess",
+            "parameterBindings": {
+              "orgCode": "<% queryParams.orgCode ?? '' %>",
+              "currentStatus": "<% queryParams.currentStatus ?? '' %>"
+            }
+          }
+        },
+        {
+          "type": "button",
+          "id": "cancelStatusChangeButton",
+          "label": "Cancel",
+          "action": "AUXILIARY",
+          "suppressDiscardDialog": true,
+          "taskReference": {
+            "taskId": "shellOrgManager"
+          }
+        }
+      ]
+    }
   }
 }
