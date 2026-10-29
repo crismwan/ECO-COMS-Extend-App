@@ -214,7 +214,7 @@
               "type": "readOnlyText",
               "id": "patternPreview",
               "label": "Pattern Name Preview",
-              "value": "Select an application above"
+              "value": "<% !empty(selectedApplicationId.value) ? ((selectedApplicationId.value.descriptor ?? '') + ':PATTERN:' + (attribute1.value ?? '*') + ':' + (attribute2.value ?? '*') + ':' + (attribute3.value ?? '*') + ':' + (attribute5.value ?? '*')) : 'Select an application above' %>"
             },
             {
               "type": "fieldSet",
