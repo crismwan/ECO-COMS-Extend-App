@@ -100,7 +100,7 @@
       "errorSummary": "<% error ?? '' %>"
     }
   },
-  "onSubmit": "<%\n  let valid = true;\n  if (empty(selectedApplicationId.value)) {\n    selectedApplicationId.setError('Please select an application.');\n    valid = false;\n  }\n  if (empty(effectiveDate.value)) {\n    effectiveDate.setError('Effective Date is required.');\n    valid = false;\n  } else {\n    let d = effectiveDate.value;\n    let y = d.year();\n    if (y < 2026 || y > 2027) {\n      effectiveDate.setError('Effective Date year must be 2026 or 2027.');\n      valid = false;\n    }\n  }\n  valid;\n%>",
+  "onSubmit": "<%\n  let valid = true;\n  if (empty(selectedApplicationId.value)) {\n    selectedApplicationId.setError('Please select an application.');\n    valid = false;\n  }\n  if (empty(organizationCode.value)) {\n    organizationCode.setError('Organization Code is required.');\n    valid = false;\n  } else if (!empty(selectedApplicationId.value)) {\n    let ac = (!empty(selectedApplicationId.value)) ? (selectedApplicationId.value.id ?? '') : '';\n    let oc = organizationCode.value ?? '';\n    let orgName = ac + ':' + oc;\n    let dupes = (existingOrgs.data ?? []).filter(o => { o.code == orgName });\n    if (dupes.size() > 0) {\n      let dupeName = (!empty(dupes[0].organizationByName)) ? (dupes[0].organizationByName.descriptor ?? orgName) : orgName;\n      organizationCode.setError('An organization with this code already exists: ' + dupeName);\n      valid = false;\n    }\n  }\n  if (empty(effectiveDate.value)) {\n    effectiveDate.setError('Effective Date is required.');\n    valid = false;\n  } else {\n    let d = effectiveDate.value;\n    let y = d.year();\n    if (y < 2026 || y > 2027) {\n      effectiveDate.setError('Effective Date year must be 2026 or 2027.');\n      valid = false;\n    }\n  }\n  valid;\n%>",
   "presentation": {
     "headerSize": "STANDARD",
     "title": {
@@ -189,7 +189,7 @@
                   "required": true,
                   "values": "<%\n  let appCodes = [];\n  let result = [];\n  for (var org : (existingOrgs.data ?? [])) {\n    let code = org.code;\n    let appCode = code.substringAfter(':').contains(':') ?\n      code.substringBefore(':') + ':' + code.substringAfter(':').substringBefore(':') :\n      code;\n    if (!empty(appCode) && !appCodes.contains(appCode)) {\n      appCodes.add(appCode);\n      result.add({'id': appCode, 'descriptor': appCode});\n    }\n  }\n  result;\n%>",
                   "helpText": "Select the application this shell organization belongs to.",
-                  "onChange": "<%\n    if (!empty(self.value)) {\n      selectedApplicationId.clearError();\n    }\n    let ac = (!empty(self.value)) ? (self.value.id ?? '') : '';\n    let oc = organizationCode.value ?? '';\n    if (!empty(ac)) {\n      orgNamePreview.setValue(ac + ':' + oc);\n    } else {\n      orgNamePreview.setValue('Select an application above');\n    }\n  %>"
+                  "onChange": "<%  %>"
                 },
                 {
                   "type": "text",
@@ -202,7 +202,7 @@
                     "title": "Organization Code Format",
                     "text": "Enter the unique suffix for this organization. The system will auto-generate the full name as ApplicationCode:OrganizationCode (e.g. X:CLW:ORG:ANY). Avoid spaces and special characters. Must be unique within the application."
                   },
-                  "onChange": "<%\n    let ac = (!empty(selectedApplicationId.value)) ? (selectedApplicationId.value.id ?? '') : '';\n    let oc = self.value ?? '';\n    if (!empty(ac)) {\n      orgNamePreview.setValue(ac + ':' + oc);\n    } else {\n      orgNamePreview.setValue('Select an application above');\n    }\n    if (!empty(ac) && !empty(oc)) {\n      let orgName = ac + ':' + oc;\n      let dupes = (existingOrgs.data ?? []).filter(o => { o.code == orgName });\n      if (dupes.size() > 0) {\n        let dupeName = (!empty(dupes[0].organizationByName)) ? (dupes[0].organizationByName.descriptor ?? orgName) : orgName;\n        self.setError('An organization with this code already exists: ' + dupeName);\n      } else {\n        self.clearError();\n      }\n    } else {\n      self.clearError();\n    }\n  %>"
+                  "onChange": "<%  %>"
                 },
                 {
                   "type": "text",
@@ -222,7 +222,7 @@
                     "title": "Effective Date Rules",
                     "text": "Must be a weekday (Monday–Friday) in 2026 or 2027. Weekends and dates outside this range will be rejected. The organization will be available in Workday starting on this date."
                   },
-                  "onChange": "<%\n    if (empty(self.value)) {\n      self.clearError();\n    } else {\n      let d = self.value;\n      let y = d.year();\n      if (y < 2026 || y > 2027) {\n        self.setError('Effective Date year must be 2026 or 2027.');\n      } else {\n        self.clearError();\n      }\n    }\n  %>"
+                  "onChange": "<%  %>"
                 }
               ],
               "title": "Organization Details"
