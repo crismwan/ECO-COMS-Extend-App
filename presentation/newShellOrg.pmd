@@ -241,6 +241,7 @@
     },
     "pageType": "EDIT",
     "standardEditButtonsHidden": true,
+    "suppressDiscardWarning": true,
     "cancelOverride": {
       "taskId": "shellOrgManager"
     }
