@@ -2,6 +2,16 @@
 
 These preferences apply to **all** Workday Extend apps I work on (not any single project).
 
+## This file is a guide, NOT the single source of truth
+
+CLAUDE.md captures notes and findings from past sessions. It is incomplete and can be wrong or out of date. Do not treat it as authoritative, and do not keep retrying approaches just because this file suggests them.
+
+When there is any confusion about the right solution (syntax, attributes, widget behavior, platform limitations, or a fix that isn't working):
+
+1. **Check the Workday developer site first:** go to https://developer.workday.com/ and use the site's **search bar** to look up the widget, attribute, function, or error. Prefer the official docs over this file when they disagree.
+2. **If the developer site doesn't answer it:** stop and ask the user. If I have an idea that goes beyond what CLAUDE.md says, describe it briefly and ask permission to try it before doing so.
+3. **After confirming something new**, add it to the relevant section of this file and note where it came from (developer.workday.com page, live test, or user).
+
 ## Ask before guessing Workday syntax
 
 When I am unsure about Workday Extend syntax, attribute names, valid enum values, built-in Workday Script function signatures, widget capabilities, or any Workday platform behavior, I STOP and ask a specific, targeted question before proceeding — I do not guess or invent syntax.
