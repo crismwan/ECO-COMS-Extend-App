@@ -1,8 +1,7 @@
 {
   "id": "ShellOrgStatusReceiptCard",
   "parameters": [
-    "orgCode",
-    "newStatus"
+    "orgCode"
   ],
   "header": {
     "title": "Shell Organization Status Updated",

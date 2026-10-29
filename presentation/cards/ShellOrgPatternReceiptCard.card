@@ -1,8 +1,7 @@
 {
   "id": "ShellOrgPatternReceiptCard",
   "parameters": [
-    "patternName",
-    "organizationName"
+    "patternName"
   ],
   "header": {
     "title": "Custom Organization Pattern Created",

@@ -1,8 +1,7 @@
 {
   "id": "ShellOrgReceiptCard",
   "parameters": [
-    "organizationName",
-    "organizationCode"
+    "organizationName"
   ],
   "header": {
     "title": "Shell Organization Created",

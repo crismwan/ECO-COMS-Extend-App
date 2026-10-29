@@ -22,7 +22,7 @@
                 {
                   "type": "card",
                   "cardId": "ShellOrgReceiptCard",
-                  "parameters": "<% { 'organizationName': flowVariables.organizationName ?? '', 'organizationCode': flowVariables.organizationCode ?? '' } %>"
+                  "parameters": "<% { 'organizationName': flowVariables.organizationName ?? '' } %>"
                 }
               ]
             }
