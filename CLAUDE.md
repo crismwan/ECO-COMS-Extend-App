@@ -126,6 +126,10 @@ The `guide` attribute places a **"?" tooltip icon** beside the widget label. It 
 
 **Mitigation for text/date fields:** Use `richText` banners with an `ⓘ` prefix (inline HTML) for visible inline guidance on sections containing text/date-only fields. These render correctly as informational banners.
 
+**`richText` value format — two equivalent forms:**
+- **Script-wrapped:** `"value": "<% '<span style=\"...\">text</span>' %>"` — required when the string contains dynamic expressions or variable interpolation.
+- **Direct HTML:** `"value": "<span style=\"...\">text</span>"` — valid for purely static content with no PMD expressions. Both forms are used throughout this codebase and both deploy/render correctly.
+
 ```json
 {
   "type": "richText",
