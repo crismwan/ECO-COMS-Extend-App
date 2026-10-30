@@ -578,11 +578,14 @@
                     "id": "colRoleName",
                     "columnId": "colRoleName",
                     "label": "Role",
-                    "sortableAndFilterable": "true",
                     "cellTemplate": {
-                      "type": "text",
-                      "value": "<% ra.role.descriptor ?? '' %>",
-                      "enabled": false
+                      "type": "instanceList",
+                      "id": "colRoleNameInstanceList",
+                      "view": true,
+                      "relatedTask": true,
+                      "enabled": false,
+                      "values": "<% ra.role != null ? [ra.role] : [] %>",
+                      "widKey": "id"
                     }
                   },
                   {
@@ -590,11 +593,14 @@
                     "id": "colAssignmentOrg",
                     "columnId": "colAssignmentOrg",
                     "label": "Organization",
-                    "sortableAndFilterable": "true",
                     "cellTemplate": {
-                      "type": "text",
-                      "value": "<% ra.org.descriptor ?? '' %>",
-                      "enabled": false
+                      "type": "instanceList",
+                      "id": "colAssignmentOrgInstanceList",
+                      "view": true,
+                      "relatedTask": true,
+                      "enabled": false,
+                      "values": "<% ra.org != null ? [ra.org] : [] %>",
+                      "widKey": "id"
                     }
                   },
                   {
@@ -602,11 +608,14 @@
                     "id": "colPositions",
                     "columnId": "colPositions",
                     "label": "Positions",
-                    "sortableAndFilterable": "true",
                     "cellTemplate": {
-                      "type": "text",
-                      "value": "<% size(ra.positions) > 0 ? ra.positions.map(p => { p.descriptor }).join('; ') : '—' %>",
-                      "enabled": false
+                      "type": "instanceList",
+                      "id": "colPositionsInstanceList",
+                      "view": true,
+                      "relatedTask": true,
+                      "enabled": false,
+                      "values": "<% ra.positions %>",
+                      "widKey": "id"
                     }
                   },
                   {
@@ -614,11 +623,14 @@
                     "id": "colWorkers",
                     "columnId": "colWorkers",
                     "label": "Workers",
-                    "sortableAndFilterable": "true",
                     "cellTemplate": {
-                      "type": "text",
-                      "value": "<% size(ra.workers) > 0 ? ra.workers.map(w => { w.descriptor }).join('; ') : '—' %>",
-                      "enabled": false
+                      "type": "instanceList",
+                      "id": "colWorkersInstanceList",
+                      "view": true,
+                      "relatedTask": true,
+                      "enabled": false,
+                      "values": "<% ra.workers %>",
+                      "widKey": "id"
                     }
                   },
                   {
