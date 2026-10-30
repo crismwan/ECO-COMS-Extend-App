@@ -194,6 +194,24 @@ async function smoke(token, me) {
     if (bad.length) throw new Error(`${bad.length} BP-approved request(s) with no securityGroupName, e.g. ${bad[0].roleName}`);
     pass('Requests.approvedHaveGroup', 'BP-approved requests record their security group');
   });
+  // Tamper check: a request's status must match how its Workday review event ended.
+  // Catches a status changed outside the business process (e.g. a direct API PATCH).
+  await test('BP.statusMatchesEvent', async () => {
+    const closed = roles.filter((r) => ['Approved', 'Denied'].includes(r.status) && r.reviewEventWid).slice(0, 25);
+    if (!closed.length) return skip('BP.statusMatchesEvent', 'no Approved/Denied requests with a review event');
+    let checked = 0;
+    for (const r of closed) {
+      const ev = await request('GET', `${BP}/events/${r.reviewEventWid}`, token);
+      const st = String(ev?.status?.descriptor || ev?.overallStatus?.descriptor || '');
+      if (!st) continue;
+      checked++;
+      const ok = r.status === 'Approved' ? /complete/i.test(st) && !/denied|cancel|rescind/i.test(st) : /denied|cancel|rescind/i.test(st);
+      if (!ok) throw new Error(`${r.roleName} is ${r.status} in ECO-COMS but its review event is "${st}"`);
+    }
+    if (!checked) return skip('BP.statusMatchesEvent', 'review event status not readable from the BP API');
+    pass('BP.statusMatchesEvent', `${checked} closed request(s) match their review event outcome`);
+  });
+
   await test('BP.pendingEventsOpen', async () => {
     const pending = roles.filter((r) => r.status === 'Pending ISC Review' && r.reviewEventWid).slice(0, 5);
     if (!pending.length) return skip('BP.pendingEventsOpen', 'no pending requests with a review event');

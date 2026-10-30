@@ -192,6 +192,14 @@ for g in ("presentation/**/*", "model/*", "orchestration/*"):
             except OSError:
                 pass
 
+# ── 8b. Audit and request writes go through the ISU (users get view-only access) ─
+for path, d in pmds.items():
+    for e in (d.get("outboundData") or {}).get("outboundEndPoints", []):
+        u = str(e.get("url", ""))
+        if e.get("baseUrlType") == "BUSINESS-OBJECT" and ("comsAuditLogs" in u or "comsAssignableRoles" in u) \
+                and e.get("authType") != "isuAuth":
+            err("isuWrites", f"{os.path.basename(path)}: outbound {e.get('name')!r} writes {u.split('?')[0]} as the user; set authType \"isuAuth\"")
+
 # ── 9. Inbound endpoints should fail loudly (warning only) ────────────────────
 for path, d in pmds.items():
     def check_ep(node, pk, name=os.path.basename(path)):

@@ -113,7 +113,7 @@
         "name": "patchRequestGroup",
         "baseUrlType": "BUSINESS-OBJECT",
         "url": "<% '/comsAssignableRoles/' + request.id %>",
-        "authType": "sso",
+        "authType": "isuAuth",
         "failOnStatusCodes": [
           {
             "code": 400

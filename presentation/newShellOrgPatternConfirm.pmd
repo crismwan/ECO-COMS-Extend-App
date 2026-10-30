@@ -39,7 +39,7 @@
         "baseUrlType": "BUSINESS-OBJECT",
         "url": "/comsAuditLogs",
         "httpMethod": "POST",
-        "authType": "sso",
+        "authType": "isuAuth",
         "values": [
           {
             "outboundPath": "timestamp",

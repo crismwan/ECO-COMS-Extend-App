@@ -48,7 +48,7 @@
         "baseUrlType": "BUSINESS-OBJECT",
         "url": "<% '/comsAssignableRoles/' + queryParams.roleId %>",
         "httpMethod": "PUT",
-        "authType": "sso",
+        "authType": "isuAuth",
         "exclude": "<% selectedAction.value != 'Approve' %>",
         "onSend": "<% self.data %>",
         "values": [
@@ -89,7 +89,7 @@
         "baseUrlType": "BUSINESS-OBJECT",
         "url": "<% '/comsAssignableRoles/' + queryParams.roleId %>",
         "httpMethod": "PUT",
-        "authType": "sso",
+        "authType": "isuAuth",
         "exclude": "<% selectedAction.value != 'Deny' %>",
         "onSend": "<% self.data %>",
         "values": [
@@ -122,7 +122,7 @@
         "baseUrlType": "BUSINESS-OBJECT",
         "url": "/comsAuditLogs",
         "httpMethod": "POST",
-        "authType": "sso",
+        "authType": "isuAuth",
         "values": [
           {
             "outboundPath": "timestamp",
@@ -182,7 +182,7 @@
         "baseUrlType": "BUSINESS-OBJECT",
         "url": "/comsAuditLogs",
         "httpMethod": "POST",
-        "authType": "sso",
+        "authType": "isuAuth",
         "values": [
           {
             "outboundPath": "timestamp",
