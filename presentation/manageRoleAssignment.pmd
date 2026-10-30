@@ -129,7 +129,7 @@
                   "relatedTask": true,
                   "enabled": false,
                   "multiSelect": true,
-                  "values": "<% list:flatten(list:flatten((shellRoles.data ?? []).filter(r => { r.role.id == (queryParams.roleId ?? '') }).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ra.organization.id == (queryParams.orgId ?? '') }).map(ra => { ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? [] }) })))) %>",
+                  "values": "<% list:flatten(list:flatten((shellRoles.data ?? []).filter(r => { r.role.id == (queryParams.roleId ?? '') }).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ra.organization.id == (queryParams.orgId ?? '') }).map(ra => { ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? [] }) }))) %>",
                   "widKey": "id"
                 },
                 {
