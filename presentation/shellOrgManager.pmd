@@ -174,7 +174,7 @@
                 "gridType": "LIST",
                 "multiViewStylingEnabled": true,
                 "id": "appsGrid",
-                "rows": "<% (shellOrgPatterns.data ?? []).map(p => { p.code.substringBefore(':PATTERN').substringBefore(':') + ':' + p.code.substringBefore(':PATTERN').substringAfter(':').substringBefore(':') }).distinct().map(appCode => { {'appCode': appCode} }) %>",
+                "rows": "<% (shellOrgPatterns.data ?? []).filter(p => { (p.code ?? '').startsWith('X:') && (p.code ?? '').contains(':PATTERN:') }).map(p => { p.code.substringBefore(':PATTERN').substringBefore(':') + ':' + p.code.substringBefore(':PATTERN').substringAfter(':').substringBefore(':') }).distinct().map(appCode => { {'appCode': appCode} }) %>",
                 "rowVariableName": "app",
                 "enabled": false,
                 "label": "Applications",
@@ -245,19 +245,19 @@
                 "id": "emptyStateMsg",
                 "enabled": false,
                 "value": "<span style=\"color:#374151;font-size:12px\">No shell org patterns found for this application. Use the <b>Add Pattern</b> button above to create one.</span>",
-                "visible": "<% !empty(queryParams.appCode) && size((shellOrgPatterns.data ?? []).filter(p => { p.code.startsWith((queryParams.appCode ?? '') + ':PATTERN') })) == 0 %>"
+                "visible": "<% !empty(queryParams.appCode) && size((shellOrgPatterns.data ?? []).filter(p => { (p.code ?? '').startsWith('X:') && (p.code ?? '').contains(':PATTERN:') }).filter(p => { p.code.startsWith((queryParams.appCode ?? '') + ':PATTERN') })) == 0 %>"
               },
               {
                 "type": "grid",
                 "gridType": "LIST",
                 "multiViewStylingEnabled": true,
                 "id": "patternsGrid",
-                "rows": "<% empty(queryParams.appCode) ? [] : (shellOrgPatterns.data ?? []).filter(p => { p.code.startsWith(queryParams.appCode + ':PATTERN') }) %>",
+                "rows": "<% empty(queryParams.appCode) ? [] : (shellOrgPatterns.data ?? []).filter(p => { (p.code ?? '').startsWith('X:') && (p.code ?? '').contains(':PATTERN:') }).filter(p => { p.code.startsWith(queryParams.appCode + ':PATTERN') }) %>",
                 "rowVariableName": "pattern",
                 "enabled": false,
                 "label": "<% 'Patterns for ' + (queryParams.appName ?? queryParams.appCode ?? '') %>",
                 "autoPaging": true,
-                "visible": "<% !empty(queryParams.appCode) && size((shellOrgPatterns.data ?? []).filter(p => { p.code.startsWith((queryParams.appCode ?? '') + ':PATTERN') })) > 0 %>",
+                "visible": "<% !empty(queryParams.appCode) && size((shellOrgPatterns.data ?? []).filter(p => { (p.code ?? '').startsWith('X:') && (p.code ?? '').contains(':PATTERN:') }).filter(p => { p.code.startsWith((queryParams.appCode ?? '') + ':PATTERN') })) > 0 %>",
                 "columns": [
                   {
                     "type": "column",

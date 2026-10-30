@@ -325,6 +325,17 @@ async function full(token, me) {
     pass('Pattern.add', `${pname} created, audited and inactivated effective ${later}`);
   });
 
+  await test('Guard.patternName', async () => {
+    const app = ((await request('GET', `${BO}/comsApplications?limit=1`, token)).data || [])[0];
+    if (!app) return skip('Guard.patternName', 'no COMS application');
+    // A name that doesn't start with the application code must be rejected (nothing created, no audit).
+    await expectRejected(token, 'AddShellOrgPattern', {
+      comsAppId: app.id, patternName: `TEST:PATTERN:TEST:TEST:${run3}:901:${now.getUTCFullYear()}W1`, workerId: me.id,
+      attribute1: 'TEST', attribute2: `TEST:${run3}`, attribute3: '901', attribute5: `${now.getUTCFullYear()}W1`, effectiveDate: today, ...who(),
+    });
+    pass('Guard.patternName', 'a pattern name that does not start with the application code is rejected');
+  });
+
   // ── Role assignment: add a position to the test role, then remove it (net no change) ──
   await test('RoleAssignment.addRemove', async () => {
     const roleName = TEST_ROLE;
