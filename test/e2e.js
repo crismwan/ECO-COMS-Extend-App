@@ -79,6 +79,12 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // ─── Results ──────────────────────────────────────────────────────────────────
 const results = [];
+// Everything printed is also kept for the GitHub run summary (job logs are often truncated).
+const transcript = [];
+for (const k of ['log', 'error']) {
+  const orig = console[k].bind(console);
+  console[k] = (...a) => { transcript.push(a.join(' ')); orig(...a); };
+}
 const record = (status, name, msg) => {
   results.push({ status, name, msg });
   const icon = { PASS: 'PASS', FAIL: 'FAIL', SKIP: 'SKIP' }[status];
@@ -224,6 +230,88 @@ async function full(token, me) {
   });
 }
 
+// ─── Cleanup (dry run unless --apply) ─────────────────────────────────────────
+// Test data is anything carrying TEST in its name/code (TEST:ORG, TESTROLE, TEST:CI) plus the
+// pattern orgs created during testing, which have no TEST marker. Everything else is reported
+// as "kept" so a human can check nothing real is caught, and nothing extra is missed.
+const KNOWN_TEST_PATTERNS = [
+  'X:CLW:PATTERN:MATH:MATH:300:951:2026W1',
+  'X:CLW:PATTERN:MATH:MATH:301:951:2026W1',
+  'X:CLW:PATTERN:MATH:MATH:302:951:2026W1',
+  'X:CLW:PATTERN:MATH:MATH_V:303:951:2026W1',
+];
+const EXTRA_TEST_IDS = (arg('--also') || '').split(',').map((s) => s.trim()).filter(Boolean);
+const isTestText = (...vals) => vals.some((v) => {
+  const s = String(v ?? '');
+  return /TEST/.test(s) || KNOWN_TEST_PATTERNS.some((p) => s.includes(p));
+});
+const wid = (v) => (v && typeof v === 'object' ? v.id : v);
+const code = (o) => o.code?.descriptor || o.code || o.organizationByName?.descriptor || '';
+
+async function cleanup(token, me) {
+  const APPLY = argv.includes('--apply');
+  console.log(`\n-- Cleanup (${APPLY ? 'APPLY' : 'DRY RUN: nothing will change'}) --`);
+  const today = new Date().toISOString().slice(0, 10);
+  const ts = new Date().toISOString().replace(/\.\d+Z$/, 'Z');
+
+  // 1. Active test orgs and patterns -> inactivate effective today (Workday orgs can't be deleted).
+  const orgs = (await wql(token, 'SELECT workdayID, organizationByName, code, cf_active1 FROM topLevelOrganizations WHERE code contains \'X:\'', 10000)).data || [];
+  const testOrgs = orgs.filter((o) => isTestText(code(o)));
+  const activeTest = testOrgs.filter((o) => o.cf_active1 === true || o.cf_active1 === 'true' || o.cf_active1 === 1);
+  console.log(`\nOrgs: ${orgs.length} X: orgs, ${testOrgs.length} test orgs, ${activeTest.length} still active (to inactivate):`);
+  activeTest.forEach((o) => console.log(`   inactivate  ${code(o)}`));
+  testOrgs.filter((o) => !activeTest.includes(o)).forEach((o) => console.log(`   already inactive  ${code(o)}`));
+
+  // 2. Test role requests -> delete (pending ones included; their review events are reported).
+  const roles = (await request('GET', `${BO}/comsAssignableRoles?limit=100`, token)).data || [];
+  const testRoles = roles.filter((r) => EXTRA_TEST_IDS.includes(r.id) || isTestText(r.roleName, r.referenceId, r.shellOrgCode));
+  console.log(`\nRole requests: ${roles.length} total, ${testRoles.length} to delete:`);
+  testRoles.forEach((r) => console.log(`   delete  ${r.id}  ${r.roleName}  [${r.status}]${r.reviewEventWid ? '  review event ' + r.reviewEventWid : ''}`));
+  console.log('   kept (not identified as test):');
+  roles.filter((r) => !testRoles.includes(r)).forEach((r) => console.log(`     ${r.id}  ${r.roleName}  [${r.status}]  requested ${r.requestedDate || '?'}`));
+
+  // 3. Test audit entries -> delete. Done last so the inactivation records above are removed too.
+  const audits = (await request('GET', `${BO}/comsAuditLogs?limit=100`, token)).data || [];
+  const testAudit = (a) => EXTRA_TEST_IDS.includes(a.id) || isTestText(a.coName, a.coReferenceId, a.roleName, a.details);
+  console.log(`\nAudit entries: ${audits.length} read, ${audits.filter(testAudit).length} to delete:`);
+  audits.filter(testAudit).forEach((a) => console.log(`   delete  ${a.id}  ${a.timestamp}  ${a.objectType}/${a.action}  ${a.coName || ''} ${a.roleName || ''}`.trimEnd()));
+  console.log('   kept (not identified as test):');
+  audits.filter((a) => !testAudit(a)).forEach((a) => console.log(`     ${a.id}  ${a.timestamp}  ${a.objectType}/${a.action}  ${a.coName || ''} ${a.roleName || ''} ${a.positionName || ''}`.trimEnd()));
+
+  if (!APPLY) {
+    pass('Cleanup.dryRun', `would inactivate ${activeTest.length} org(s), delete ${testRoles.length} request(s) and ${audits.filter(testAudit).length}+ audit entr(ies)`);
+    return;
+  }
+
+  for (const o of activeTest) {
+    await test(`Cleanup.inactivate ${code(o)}`, async () => {
+      await launchAndVerify(token, 'ManageShellOrgStatus', {
+        orgId: wid(o.workdayID), action: 'INACTIVATE', orgCode: code(o), orgName: code(o), includeInactive: 'false',
+        effectiveDate: today, patternName: code(o), orgType: code(o).split(':').slice(0, 2).join(':'),
+        comsAppId: code(o).split(':').slice(0, 2).join(':'), validateOnly: 'false',
+        changedBy: me.descriptor, changedByWid: me.id, timestamp: ts,
+      });
+      pass(`Cleanup.inactivate ${code(o)}`, `inactivated effective ${today}`);
+    });
+  }
+  for (const r of testRoles) {
+    await test(`Cleanup.deleteRequest ${r.roleName}`, async () => {
+      await request('DELETE', `${BO}/comsAssignableRoles/${r.id}`, token);
+      pass(`Cleanup.deleteRequest ${r.roleName}`, 'deleted');
+    });
+  }
+  // Re-read so audit entries written by the inactivations above are cleared too.
+  const auditsNow = (await request('GET', `${BO}/comsAuditLogs?limit=100`, token)).data || [];
+  let deleted = 0;
+  for (const a of auditsNow.filter(testAudit)) {
+    await test(`Cleanup.deleteAudit ${a.id}`, async () => {
+      await request('DELETE', `${BO}/comsAuditLogs/${a.id}`, token);
+      deleted++;
+    });
+  }
+  pass('Cleanup.audit', `deleted ${deleted} test audit entr(ies)`);
+}
+
 // ─── Main ─────────────────────────────────────────────────────────────────────
 (async () => {
   const token = resolveToken();
@@ -240,8 +328,12 @@ async function full(token, me) {
     fail('Auth', e.message);
   }
   if (me) {
-    await smoke(token, me);
-    if (SUITE === 'full') await full(token, me);
+    if (SUITE === 'cleanup') {
+      await cleanup(token, me);
+    } else {
+      await smoke(token, me);
+      if (SUITE === 'full') await full(token, me);
+    }
   }
 
   const count = (s) => results.filter((r) => r.status === s).length;
@@ -253,7 +345,8 @@ async function full(token, me) {
   if (process.env.GITHUB_STEP_SUMMARY) {
     const lines = [`## ECO-COMS e2e (${SUITE})`, '', `${summary.passed} passed, ${summary.failed} failed, ${summary.skipped} skipped`, '',
       '| Result | Test | Detail |', '|---|---|---|',
-      ...results.map((r) => `| ${r.status} | ${r.name} | ${String(r.msg).replace(/\|/g, '/').slice(0, 160)} |`)];
+      ...results.map((r) => `| ${r.status} | ${r.name} | ${String(r.msg).replace(/\|/g, '/').slice(0, 160)} |`),
+      '', '<details><summary>Full output</summary>', '', '```', ...transcript, '```', '</details>'];
     fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, lines.join('\n') + '\n');
   }
   process.exit(summary.failed ? 1 : 0);
