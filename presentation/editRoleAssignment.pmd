@@ -92,7 +92,6 @@
               "type": "grid",
               "id": "currentAssignmentGrid",
               "label": "Current Assignment",
-              "readOnly": true,
               "rows": "<% list:flatten((shellRoles.data ?? []).filter(r => { r.role.id == (queryParams.roleId ?? '') }).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ra.organization.id == (queryParams.orgId ?? '') }).map(ra => { { 'role': r.role, 'org': ra.organization, 'positions': ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? [] } }) })) %>",
               "rowVariableName": "ra",
               "columns": [
@@ -107,8 +106,10 @@
                     "view": true,
                     "relatedTask": true,
                     "enabled": false,
-                    "values": "<% ra.role != null ? [ra.role] : [] %>",
-                    "widKey": "id"
+                    "widKey": "id",
+                    "values": "<% [] %>",
+                    "multiSelect": true,
+                    "selectedValuesAndDescriptors": "<% (ra.role != null ? [ra.role] : []).map(i => { {'id': i.id, 'descriptor': i.descriptor} }) %>"
                   }
                 },
                 {
@@ -122,8 +123,10 @@
                     "view": true,
                     "relatedTask": true,
                     "enabled": false,
-                    "values": "<% ra.org != null ? [ra.org] : [] %>",
-                    "widKey": "id"
+                    "widKey": "id",
+                    "values": "<% [] %>",
+                    "multiSelect": true,
+                    "selectedValuesAndDescriptors": "<% (ra.org != null ? [ra.org] : []).map(i => { {'id': i.id, 'descriptor': i.descriptor} }) %>"
                   }
                 },
                 {
@@ -137,11 +140,15 @@
                     "view": true,
                     "relatedTask": true,
                     "enabled": false,
-                    "values": "<% ra.positions %>",
-                    "widKey": "id"
+                    "widKey": "id",
+                    "values": "<% [] %>",
+                    "multiSelect": true,
+                    "selectedValuesAndDescriptors": "<% (ra.positions).map(i => { {'id': i.id, 'descriptor': i.descriptor} }) %>"
                   }
                 }
-              ]
+              ],
+              "doNotAdd": true,
+              "doNotRemove": true
             }
           ]
         },
