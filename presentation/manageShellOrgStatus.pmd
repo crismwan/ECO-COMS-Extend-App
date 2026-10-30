@@ -17,13 +17,6 @@
       "url": "<% 'data?limit=' + lim + '&query=SELECT%20workdayID%2C%20code%2C%20cf_active1%20FROM%20topLevelOrganizations%20WHERE%20code%20contains%20%27X%3A%27' %>",
       "authType": "sso",
       "deferred": "true"
-    },
-    {
-      "name": "wqlDsDiag",
-      "baseUrlType": "workday-wql",
-      "url": "dataSources?alias=topLevelOrganizations&limit=5",
-      "authType": "sso",
-      "bestEffort": "true"
     }
   ],
   "outboundData": {
@@ -147,12 +140,6 @@
               "id": "confirmFieldSet",
               "title": "Confirm Status Change",
               "children": [
-                {
-                  "type": "readOnlyText",
-                  "id": "diagText",
-                  "label": "Diagnostic",
-                  "value": "<% json:stringify(wqlDsDiag.data ?? []) %>"
-                },
                 {
                   "type": "readOnlyText",
                   "id": "orgNameDisplay",
