@@ -94,22 +94,43 @@
               "title": "Role Assignment",
               "children": [
                 {
-                  "type": "readOnlyText",
-                  "id": "roleNameText",
+                  "type": "instanceList",
+                  "id": "roleInstanceList",
                   "label": "Role",
-                  "value": "<% queryParams.roleName ?? '' %>"
+                  "view": true,
+                  "relatedTask": true,
+                  "enabled": false,
+                  "instanceList": [
+                    {
+                      "descriptor": "<% queryParams.roleName ?? '' %>",
+                      "wid": "<% queryParams.roleId ?? '' %>"
+                    }
+                  ]
                 },
                 {
-                  "type": "readOnlyText",
-                  "id": "orgNameText",
+                  "type": "instanceList",
+                  "id": "orgInstanceList",
                   "label": "Organization",
-                  "value": "<% queryParams.orgName ?? '' %>"
+                  "view": true,
+                  "relatedTask": true,
+                  "enabled": false,
+                  "instanceList": [
+                    {
+                      "descriptor": "<% queryParams.orgName ?? '' %>",
+                      "wid": "<% queryParams.orgId ?? '' %>"
+                    }
+                  ]
                 },
                 {
-                  "type": "readOnlyText",
-                  "id": "currentPositionsText",
+                  "type": "instanceList",
+                  "id": "currentPositionsInstanceList",
                   "label": "Current Positions",
-                  "value": "<% size(list:flatten(list:flatten((shellRoles.data ?? []).filter(r => { r.role.id == (queryParams.roleId ?? '') }).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ra.organization.id == (queryParams.orgId ?? '') }).map(ra => { ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? [] }) })))) > 0 ? list:flatten(list:flatten((shellRoles.data ?? []).filter(r => { r.role.id == (queryParams.roleId ?? '') }).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ra.organization.id == (queryParams.orgId ?? '') }).map(ra => { ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? [] }) }))).map(p => { p.descriptor }).join('; ') : 'None' %>"
+                  "view": true,
+                  "relatedTask": true,
+                  "enabled": false,
+                  "multiSelect": true,
+                  "values": "<% list:flatten(list:flatten((shellRoles.data ?? []).filter(r => { r.role.id == (queryParams.roleId ?? '') }).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ra.organization.id == (queryParams.orgId ?? '') }).map(ra => { ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? [] }) })))) %>",
+                  "widKey": "id"
                 },
                 {
                   "type": "instanceList",
