@@ -643,7 +643,7 @@
                       "action": "AUXILIARY",
                       "label": "Manage",
                       "taskReference": {
-                        "taskId": "manageRoleAssignment",
+                        "taskId": "editRoleAssignment",
                         "parameterBindings": {
                           "roleId": "<% ra.role.id ?? '' %>",
                           "roleName": "<% ra.role.descriptor ?? '' %>",

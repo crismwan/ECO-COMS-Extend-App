@@ -208,13 +208,6 @@
       }
     },
     {
-      "id": "manageRoleAssignment",
-      "routingPattern": "/manageRoleAssignment",
-      "page": {
-        "id": "manageRoleAssignment"
-      }
-    },
-    {
       "id": "editRoleAssignment",
       "routingPattern": "/editRoleAssignment",
       "page": {

@@ -43,12 +43,12 @@
     "headerSize": "STANDARD",
     "title": {
       "type": "title",
-      "label": "<% 'Add or Remove Positions: ' + (queryParams.roleName ?? 'Role') %>",
+      "label": "<% 'Manage Role Assignment: ' + (queryParams.roleName ?? 'Role') %>",
       "enabled": true
     },
     "body": {
       "type": "basicFormLayout",
-      "id": "manageRoleAssignmentForm",
+      "id": "editRoleAssignmentForm",
       "sections": [
         {
           "type": "layoutSection",
@@ -78,7 +78,68 @@
                   "type": "richText",
                   "id": "aboutText",
                   "enabled": false,
-                  "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">ℹ </span><span style=\"color:#374151;font-size:11px\">Add or remove the positions this role is assigned to on this shell organization. Changes run through the Workday Assign Roles business process and are not rescindable.</span>"
+                  "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">ℹ </span><span style=\"color:#374151;font-size:11px\">Hover a role, organization or position for its related actions. Use Change Positions to add or remove positions; changes run through the Workday Assign Roles business process and are not rescindable.</span>"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "currentAssignmentSection",
+          "children": [
+            {
+              "type": "grid",
+              "id": "currentAssignmentGrid",
+              "label": "Current Assignment",
+              "readOnly": true,
+              "rows": "<% list:flatten((shellRoles.data ?? []).filter(r => { r.role.id == (queryParams.roleId ?? '') }).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ra.organization.id == (queryParams.orgId ?? '') }).map(ra => { { 'role': r.role, 'org': ra.organization, 'positions': ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? [] } }) })) %>",
+              "rowVariableName": "ra",
+              "columns": [
+                {
+                  "type": "column",
+                  "id": "currentRoleName",
+                  "columnId": "currentRoleName",
+                  "label": "Role",
+                  "cellTemplate": {
+                    "type": "instanceList",
+                    "id": "currentRoleNameInstanceList",
+                    "view": true,
+                    "relatedTask": true,
+                    "enabled": false,
+                    "values": "<% ra.role != null ? [ra.role] : [] %>",
+                    "widKey": "id"
+                  }
+                },
+                {
+                  "type": "column",
+                  "id": "currentAssignmentOrg",
+                  "columnId": "currentAssignmentOrg",
+                  "label": "Organization",
+                  "cellTemplate": {
+                    "type": "instanceList",
+                    "id": "currentAssignmentOrgInstanceList",
+                    "view": true,
+                    "relatedTask": true,
+                    "enabled": false,
+                    "values": "<% ra.org != null ? [ra.org] : [] %>",
+                    "widKey": "id"
+                  }
+                },
+                {
+                  "type": "column",
+                  "id": "currentPositions",
+                  "columnId": "currentPositions",
+                  "label": "Current Positions",
+                  "cellTemplate": {
+                    "type": "instanceList",
+                    "id": "currentPositionsInstanceList",
+                    "view": true,
+                    "relatedTask": true,
+                    "enabled": false,
+                    "values": "<% ra.positions %>",
+                    "widKey": "id"
+                  }
                 }
               ]
             }
@@ -91,44 +152,8 @@
             {
               "type": "fieldSet",
               "id": "assignmentFieldSet",
-              "title": "Role Assignment",
+              "title": "Change Positions",
               "children": [
-                {
-                  "type": "instanceList",
-                  "id": "roleInstanceList",
-                  "label": "Role",
-                  "view": false,
-                  "relatedTask": false,
-                  "enabled": false,
-                  "multiSelect": false,
-                  "values": "<% [] %>",
-                  "selectedValuesAndDescriptors": "<% [{'id': queryParams.roleId ?? '', 'descriptor': queryParams.roleName ?? ''}] %>",
-                  "widKey": "id"
-                },
-                {
-                  "type": "instanceList",
-                  "id": "orgInstanceList",
-                  "label": "Organization",
-                  "view": false,
-                  "relatedTask": false,
-                  "enabled": false,
-                  "multiSelect": false,
-                  "values": "<% [] %>",
-                  "selectedValuesAndDescriptors": "<% [{'id': queryParams.orgId ?? '', 'descriptor': queryParams.orgName ?? ''}] %>",
-                  "widKey": "id"
-                },
-                {
-                  "type": "instanceList",
-                  "id": "currentPositionsInstanceList",
-                  "label": "Current Positions",
-                  "view": false,
-                  "relatedTask": false,
-                  "enabled": false,
-                  "multiSelect": true,
-                  "values": "<% [] %>",
-                  "widKey": "id",
-                  "selectedValuesAndDescriptors": "<% list:flatten(list:flatten((shellRoles.data ?? []).filter(r => { r.role.id == (queryParams.roleId ?? '') }).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ra.organization.id == (queryParams.orgId ?? '') }).map(ra => { ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? [] }) }))).map(p => { {'id': p.id, 'descriptor': p.descriptor} }) %>"
-                },
                 {
                   "type": "instanceList",
                   "id": "positionsToAddInstanceList",
