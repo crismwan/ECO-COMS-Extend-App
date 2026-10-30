@@ -105,6 +105,8 @@ const latestAudit = async (token) => {
   const all = (await request('GET', `${BO}/comsAuditLogs?limit=100`, token)).data || [];
   return all.sort((a, b) => String(b.timestamp || '').localeCompare(String(a.timestamp || '')))[0];
 };
+// ManageShellOrgStatus picks inactivate vs reactivate from includeInactive ("true" = inactivate),
+// not from action; action is only written to the audit record. Send both, as the page does.
 const launch = (token, name, params) => {
   const qs = Object.entries(params).map(([k, v]) => `${k}=${encodeURIComponent(v ?? '')}`).join('&');
   return request('POST', `${ORCH}/${name}/launch?${qs}`, token, {});
@@ -222,7 +224,7 @@ async function full(token, me) {
   await test('ShellOrg.inactivate', async () => {
     if (!orgWid) return skip('ShellOrg.inactivate', 'no org from ShellOrg.add');
     const a = await launchAndVerify(token, 'ManageShellOrgStatus', {
-      orgId: orgWid, action: 'INACTIVATE', orgCode: orgName, orgName, includeInactive: 'false',
+      orgId: orgWid, action: 'INACTIVATE', orgCode: orgName, orgName, includeInactive: 'true',
       effectiveDate: later, patternName: orgName, orgType: 'X:ADM', comsAppId: 'X:ADM', validateOnly: 'false', ...who,
     });
     if (a.objectType !== 'Org Status' || a.action !== 'INACTIVATE') throw new Error(`audit record is ${a.objectType}/${a.action}, expected Org Status/INACTIVATE`);
@@ -292,7 +294,7 @@ async function cleanup(token, me) {
   for (const o of activeTest) {
     await test(`Cleanup.inactivate ${code(o)}`, async () => {
       const params = (eff) => ({
-        orgId: wid(o.workdayID), action: 'INACTIVATE', orgCode: code(o), orgName: code(o), includeInactive: 'false',
+        orgId: wid(o.workdayID), action: 'INACTIVATE', orgCode: code(o), orgName: code(o), includeInactive: 'true',
         effectiveDate: eff, patternName: code(o), orgType: code(o).split(':').slice(0, 2).join(':'),
         comsAppId: code(o).split(':').slice(0, 2).join(':'), validateOnly: 'false',
         changedBy: me.descriptor, changedByWid: me.id, timestamp: ts,
