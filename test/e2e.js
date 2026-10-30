@@ -264,7 +264,12 @@ async function cleanup(token, me) {
 
   // 2. Test role requests -> delete (pending ones included; their review events are reported).
   const roles = (await request('GET', `${BO}/comsAssignableRoles?limit=100`, token)).data || [];
-  const testRoles = roles.filter((r) => EXTRA_TEST_IDS.includes(r.id) || isTestText(r.roleName, r.referenceId, r.shellOrgCode));
+  const testRolesAll = roles.filter((r) => EXTRA_TEST_IDS.includes(r.id) || isTestText(r.roleName, r.referenceId, r.shellOrgCode));
+  // A request linked to a Workday review event can't be deleted (HTTP 500 "Attempt to delete
+  // instance ... with references"); the event is permanent history. Those are reported and kept.
+  const testRoles = testRolesAll.filter((r) => !r.reviewEventWid);
+  testRolesAll.filter((r) => r.reviewEventWid).forEach((r) =>
+    console.log(`   keep (linked to review event, can't be deleted)  ${r.roleName}  [${r.status}]`));
   console.log(`\nRole requests: ${roles.length} total, ${testRoles.length} to delete:`);
   testRoles.forEach((r) => console.log(`   delete  ${r.id}  ${r.roleName}  [${r.status}]${r.reviewEventWid ? '  review event ' + r.reviewEventWid : ''}`));
   console.log('   kept (not identified as test):');
@@ -283,15 +288,22 @@ async function cleanup(token, me) {
     return;
   }
 
+  const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
   for (const o of activeTest) {
     await test(`Cleanup.inactivate ${code(o)}`, async () => {
-      await launchAndVerify(token, 'ManageShellOrgStatus', {
+      const params = (eff) => ({
         orgId: wid(o.workdayID), action: 'INACTIVATE', orgCode: code(o), orgName: code(o), includeInactive: 'false',
-        effectiveDate: today, patternName: code(o), orgType: code(o).split(':').slice(0, 2).join(':'),
+        effectiveDate: eff, patternName: code(o), orgType: code(o).split(':').slice(0, 2).join(':'),
         comsAppId: code(o).split(':').slice(0, 2).join(':'), validateOnly: 'false',
         changedBy: me.descriptor, changedByWid: me.id, timestamp: ts,
       });
-      pass(`Cleanup.inactivate ${code(o)}`, `inactivated effective ${today}`);
+      // An org with another status change already dated today is rejected; try tomorrow instead.
+      let eff = today;
+      try { await launchAndVerify(token, 'ManageShellOrgStatus', params(today)); } catch (_) {
+        eff = tomorrow;
+        await launchAndVerify(token, 'ManageShellOrgStatus', params(tomorrow));
+      }
+      pass(`Cleanup.inactivate ${code(o)}`, `inactivated effective ${eff}`);
     });
   }
   for (const r of testRoles) {
