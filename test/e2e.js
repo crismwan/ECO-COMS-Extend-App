@@ -3,7 +3,7 @@
  * ECO-COMS live end-to-end tests against the ubc_wcpdev2 tenant.
  *
  *   node test/e2e.js                 # smoke suite: read-only, safe on every deploy
- *   node test/e2e.js --suite full    # smoke + write tests (creates and inactivates a TEST shell org)
+ *   node test/e2e.js --suite full    # smoke + write tests for every orchestrated flow (TEST data; see README)
  *   node test/e2e.js --verbose
  *
  * Token (never printed): --token <t>, else WD_DEV_TOKEN, else ~/.config/@workday/wdcli/config.json
@@ -36,6 +36,7 @@ const SUITE = arg('--suite') || 'smoke';
 // orchestration started writing something the viewer and reports don't expect.
 const OBJECT_TYPES = ['Shell Org', 'Shell Org Pattern', 'Org Status', 'Role Assignment', 'Assignable Role'];
 const ACTIONS = ['ADD', 'INACTIVATE', 'REACTIVATE', 'ASSIGN POSITION', 'REMOVE POSITION', 'REQUEST', 'APPROVE', 'DENY', 'DELETE'];
+const TEST_ROLE = arg('--role') || process.env.E2E_ROLE || 'X:BPMS(ODMT):ROLE:ADVISORS';
 const BO_COLLECTIONS = ['comsApplications', 'comsAssignableRoles', 'comsAuditLogs', 'comsRoleAssignments', 'comsShellOrgRequests'];
 
 // ─── Token ────────────────────────────────────────────────────────────────────
@@ -171,6 +172,13 @@ async function smoke(token, me) {
     if (bad.length) throw new Error(`${bad.length} record(s) outside the fixed vocabulary, e.g. ${JSON.stringify({ objectType: bad[0].objectType, action: bad[0].action })}`);
     pass('Audit.vocabulary', 'all objectType/action values are in the fixed vocabulary');
   });
+  await test('Audit.positionFullName', async () => {
+    const ra = audits.filter((a) => a.objectType === 'Role Assignment');
+    if (!ra.length) return skip('Audit.positionFullName', 'no role assignment audit records');
+    const bare = ra.filter((a) => /^P-\d+$/.test(String(a.positionName || '').trim()) || !String(a.positionName || '').trim());
+    if (bare.length) throw new Error(`${bare.length} role assignment record(s) show only a position ID or nothing, e.g. ${bare[0].id} "${bare[0].positionName || ''}"`);
+    pass('Audit.positionFullName', `${ra.length} role assignment record(s) show the full position name`);
+  });
   await test('Audit.requiredFields', async () => {
     const bad = audits.filter((a) => !a.timestamp || !a.objectType || !a.action);
     if (bad.length) throw new Error(`${bad.length} record(s) missing timestamp/objectType/action`);
@@ -194,13 +202,31 @@ async function smoke(token, me) {
     if (bad.length) throw new Error(`${bad.length} BP-approved request(s) with no securityGroupName, e.g. ${bad[0].roleName}`);
     pass('Requests.approvedHaveGroup', 'BP-approved requests record their security group');
   });
+  // Tamper check: a request's status must match how its Workday review event ended.
+  // Catches a status changed outside the business process (e.g. a direct API PATCH).
+  await test('BP.statusMatchesEvent', async () => {
+    const closed = roles.filter((r) => ['Approved', 'Denied'].includes(r.status) && r.reviewEventWid).slice(0, 25);
+    if (!closed.length) return skip('BP.statusMatchesEvent', 'no Approved/Denied requests with a review event');
+    let checked = 0;
+    for (const r of closed) {
+      const ev = await request('GET', `${BP}/events/${r.reviewEventWid}`, token);
+      const st = String(ev?.status?.descriptor || ev?.overallStatus?.descriptor || '');
+      if (!st) continue;
+      checked++;
+      const ok = r.status === 'Approved' ? /complete/i.test(st) && !/denied|cancel|rescind|terminat/i.test(st) : /denied|cancel|rescind|terminat/i.test(st);
+      if (!ok) throw new Error(`${r.roleName} is ${r.status} in ECO-COMS but its review event is "${st}"`);
+    }
+    if (!checked) return skip('BP.statusMatchesEvent', 'review event status not readable from the BP API');
+    pass('BP.statusMatchesEvent', `${checked} closed request(s) match their review event outcome`);
+  });
+
   await test('BP.pendingEventsOpen', async () => {
     const pending = roles.filter((r) => r.status === 'Pending ISC Review' && r.reviewEventWid).slice(0, 5);
     if (!pending.length) return skip('BP.pendingEventsOpen', 'no pending requests with a review event');
     for (const r of pending) {
       const ev = await request('GET', `${BP}/events/${r.reviewEventWid}`, token);
       const status = ev?.status?.descriptor || ev?.overallStatus?.descriptor || '';
-      if (/denied|cancel|rescind/i.test(status)) throw new Error(`${r.roleName} is Pending in ECO-COMS but its review event is ${status}`);
+      if (/denied|cancel|rescind|terminat/i.test(status)) throw new Error(`${r.roleName} is Pending in ECO-COMS but its review event is ${status}`);
     }
     pass('BP.pendingEventsOpen', `${pending.length} pending request(s) have an open review event`);
   });
@@ -208,54 +234,177 @@ async function smoke(token, me) {
 
 // ─── Full suite (writes to the tenant) ────────────────────────────────────────
 async function full(token, me) {
-  console.log('\n-- Full (writes TEST data, then inactivates it) --');
-  const stamp = new Date().toISOString().replace(/\D/g, '').slice(2, 12); // yyMMddHHmm
-  const orgName = `X:ADM:TEST:CI:${stamp}`;
+  console.log('\n-- Full (writes TEST data, then reverts or inactivates it) --');
+  // Short, readable run id: the GitHub run number (RUN15), or a random number for local runs.
+  const runNo = process.env.GITHUB_RUN_NUMBER || String(100 + Math.floor(Math.random() * 900));
+  const run3 = String(runNo).slice(-3).padStart(3, '0');
+  const orgName = `X:ADM:TEST:CI:RUN${runNo}`;
   const now = new Date();
-  const ts = now.toISOString().replace(/\.\d+Z$/, 'Z');
-  const today = ts.slice(0, 10);
+  const today = now.toISOString().slice(0, 10);
   const later = new Date(now.getTime() + 45 * 86400000).toISOString().slice(0, 10);
-  const who = { changedBy: me.descriptor, changedByWid: me.id, timestamp: ts };
+  // Fresh timestamp per call so each audit record shows when its own change happened.
+  const who = () => ({ changedBy: me.descriptor, changedByWid: me.id, timestamp: new Date().toISOString().replace(/\.\d+Z$/, 'Z') });
+  const expectAudit = (a, type, action) => {
+    if (a.objectType !== type || a.action !== action) throw new Error(`audit record is ${a.objectType}/${a.action}, expected ${type}/${action}`);
+  };
+  const status = (orgId, code, orgType, inactivate, effectiveDate, validateOnly = 'false') => ({
+    orgId, action: inactivate ? 'INACTIVATE' : 'REACTIVATE', orgCode: code, orgName: code,
+    includeInactive: inactivate ? 'true' : 'false', effectiveDate, patternName: code,
+    orgType, comsAppId: orgType, validateOnly, ...who(),
+  });
+  const findOrg = async (code) => {
+    const r = await wql(token, `SELECT workdayID, code FROM topLevelOrganizations WHERE code = '${code}'`, 1);
+    return r.data?.[0]?.workdayID?.id || r.data?.[0]?.workdayID || null;
+  };
 
+  // ── Shell org: add → inactivate today → reactivate → inactivate 45 days out ──
   let orgWid = null;
   await test('ShellOrg.add', async () => {
     const a = await launchAndVerify(token, 'AddShellOrg', {
       comsAppId: '', orgType: 'X:ADM', organizationName: orgName, organizationCode: orgName,
-      workerId: me.id, effectiveDate: today, ...who,
+      workerId: me.id, effectiveDate: today, ...who(),
     });
-    if (a.objectType !== 'Shell Org' || a.action !== 'ADD') throw new Error(`audit record is ${a.objectType}/${a.action}, expected Shell Org/ADD`);
-    const r = await wql(token, `SELECT workdayID, code FROM topLevelOrganizations WHERE code = '${orgName}'`, 1);
-    orgWid = r.data?.[0]?.workdayID?.id || r.data?.[0]?.workdayID;
+    expectAudit(a, 'Shell Org', 'ADD');
+    orgWid = await findOrg(orgName);
     if (!orgWid) throw new Error(`${orgName} not found by WQL after the audit record was written`);
     pass('ShellOrg.add', `${orgName} created and audited`);
   });
 
   await test('Guard.actionMismatch', async () => {
     if (!orgWid) return skip('Guard.actionMismatch', 'no org from ShellOrg.add');
-    await expectRejected(token, 'ManageShellOrgStatus', {
-      orgId: orgWid, action: 'INACTIVATE', orgCode: orgName, orgName, includeInactive: 'false',
-      effectiveDate: later, patternName: orgName, orgType: 'X:ADM', comsAppId: 'X:ADM', validateOnly: 'false', ...who,
-    });
+    await expectRejected(token, 'ManageShellOrgStatus', { ...status(orgWid, orgName, 'X:ADM', false, later), action: 'INACTIVATE' });
     pass('Guard.actionMismatch', 'action that disagrees with includeInactive is rejected');
   });
 
   await test('Guard.notShellOrg', async () => {
     // orgId is a worker, not an X: shell org; validateOnly=true so nothing changes even if the guard failed.
-    await expectRejected(token, 'ManageShellOrgStatus', {
-      orgId: me.id, action: 'INACTIVATE', orgCode: orgName, orgName, includeInactive: 'true',
-      effectiveDate: later, patternName: orgName, orgType: 'X:ADM', comsAppId: 'X:ADM', validateOnly: 'true', ...who,
-    });
+    await expectRejected(token, 'ManageShellOrgStatus', status(me.id, orgName, 'X:ADM', true, later, 'true'));
     pass('Guard.notShellOrg', 'an orgId outside the X: shell orgs is rejected even with an X: orgCode');
+  });
+
+  let inactiveToday = false;
+  await test('ShellOrg.inactivateToday', async () => {
+    if (!orgWid) return skip('ShellOrg.inactivateToday', 'no org from ShellOrg.add');
+    const a = await launchAndVerify(token, 'ManageShellOrgStatus', status(orgWid, orgName, 'X:ADM', true, today));
+    expectAudit(a, 'Org Status', 'INACTIVATE');
+    inactiveToday = true;
+    pass('ShellOrg.inactivateToday', `${orgName} inactivated effective ${today}`);
+  });
+
+  await test('ShellOrg.reactivate', async () => {
+    if (!inactiveToday) return skip('ShellOrg.reactivate', 'org was not inactivated today');
+    const a = await launchAndVerify(token, 'ManageShellOrgStatus', status(orgWid, orgName, 'X:ADM', false, today));
+    expectAudit(a, 'Org Status', 'REACTIVATE');
+    pass('ShellOrg.reactivate', `${orgName} reactivated`);
   });
 
   await test('ShellOrg.inactivate', async () => {
     if (!orgWid) return skip('ShellOrg.inactivate', 'no org from ShellOrg.add');
-    const a = await launchAndVerify(token, 'ManageShellOrgStatus', {
-      orgId: orgWid, action: 'INACTIVATE', orgCode: orgName, orgName, includeInactive: 'true',
-      effectiveDate: later, patternName: orgName, orgType: 'X:ADM', comsAppId: 'X:ADM', validateOnly: 'false', ...who,
+    const a = await launchAndVerify(token, 'ManageShellOrgStatus', status(orgWid, orgName, 'X:ADM', true, later));
+    expectAudit(a, 'Org Status', 'INACTIVATE');
+    pass('ShellOrg.inactivate', `${orgName} inactivated effective ${later} (left for cleanup)`);
+  });
+
+  // ── Shell org pattern: add, then inactivate 45 days out ──
+  await test('Pattern.add', async () => {
+    const app = ((await request('GET', `${BO}/comsApplications?limit=1`, token)).data || [])[0];
+    if (!app) return skip('Pattern.add', 'no COMS application to create a pattern for');
+    const appCode = app.appId; // same value the New Pattern page uses (e.g. X:CLW)
+    if (!/^X:/.test(appCode || '')) throw new Error(`COMS application appId "${appCode}" is not an X: code`);
+    const [a1, a2, a3, a5] = ['TEST', `TEST:${run3}`, '900', `${now.getUTCFullYear()}W1`];
+    const pname = `${appCode}:PATTERN:${a1}:${a2}:${a3}:${a5}`;
+    const a = await launchAndVerify(token, 'AddShellOrgPattern', {
+      comsAppId: app.id, patternName: pname, workerId: me.id, attribute1: a1, attribute2: a2, attribute3: a3,
+      attribute5: a5, effectiveDate: today, ...who(),
     });
-    if (a.objectType !== 'Org Status' || a.action !== 'INACTIVATE') throw new Error(`audit record is ${a.objectType}/${a.action}, expected Org Status/INACTIVATE`);
-    pass('ShellOrg.inactivate', `${orgName} inactivated effective ${later}`);
+    expectAudit(a, 'Shell Org Pattern', 'ADD');
+    const pwid = await findOrg(pname);
+    if (!pwid) throw new Error(`${pname} not found by WQL after the audit record was written`);
+    const b = await launchAndVerify(token, 'ManageShellOrgStatus', status(pwid, pname, appCode, true, later));
+    expectAudit(b, 'Org Status', 'INACTIVATE');
+    pass('Pattern.add', `${pname} created, audited and inactivated effective ${later}`);
+  });
+
+  // ── Role assignment: add a position to the test role, then remove it (net no change) ──
+  await test('RoleAssignment.addRemove', async () => {
+    const roleName = TEST_ROLE;
+    const readRole = async () => {
+      const r = await wql(token, `SELECT role, roleAssignments{organization, cf_ZCF_EE_RoleAssignedToAsPositionRestrictions} as roleAssignments FROM assignableRoles WHERE roleName = '${roleName}'`, 5);
+      const row = (r.data || [])[0];
+      const ra = (row?.roleAssignments || []).find((x) => String(x.organization?.descriptor || '').startsWith('X:'));
+      return row && ra ? { role: row.role, org: ra.organization, positions: ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions || [] } : null;
+    };
+    const cur = await readRole();
+    if (!cur) return skip('RoleAssignment.addRemove', `test role ${roleName} has no X: organization assignment`);
+    const assigned = cur.positions.map((p) => String(p.descriptor || ''));
+    const pos = ((await wql(token, 'SELECT cf_PositionID, workdayID, position_PositionManagement, cf_PositionText, cf_PositionIsFilled FROM allPositions WHERE supervisoryOrganization is not empty', 300)).data || [])
+      .filter((p) => p.cf_PositionID && p.cf_PositionIsFilled !== false && !assigned.some((d) => d.includes(p.cf_PositionID)))[0];
+    if (!pos) return skip('RoleAssignment.addRemove', `no unassigned position found for ${roleName}`);
+    const posWid = pos.workdayID?.id || pos.workdayID;
+    // Same full name the Manage Role Assignment page sends (its search results' descriptor).
+    const posName = pos.position_PositionManagement?.descriptor || pos.cf_PositionText || pos.cf_PositionID;
+    const base = { roleId: cur.role.id, roleName, orgId: cur.org.id, orgName: cur.org.descriptor, effectiveDate: today };
+    const add = await launchAndVerify(token, 'AssignRolePositions', {
+      ...base, positionId: pos.cf_PositionID, positionIdType: 'Position_ID', positionName: posName,
+      mode: 'ADD', positionWid: posWid, ...who(),
+    });
+    expectAudit(add, 'Role Assignment', 'ASSIGN POSITION');
+    let added = null;
+    for (let i = 0; i < 6 && !added; i++) {
+      const after = await readRole();
+      added = (after?.positions || []).find((p) => !cur.positions.some((q) => q.id === p.id));
+      if (!added) await sleep(3000);
+    }
+    if (!added) throw new Error(`${pos.cf_PositionID} was audited as added to ${roleName} but is not on the role assignment`);
+    const rem = await launchAndVerify(token, 'AssignRolePositions', {
+      ...base, positionId: added.id, positionIdType: 'WID', positionName: added.descriptor || pos.cf_PositionID,
+      mode: 'REMOVE', positionWid: added.id, ...who(),
+    });
+    expectAudit(rem, 'Role Assignment', 'REMOVE POSITION');
+    // The audit log must show the same full position name for both changes, never a bare ID.
+    for (const a of [add, rem]) {
+      if (/^P-\d+$/.test(String(a.positionName || '').trim())) throw new Error(`${a.action} audit shows only the position ID "${a.positionName}"`);
+    }
+    if (add.positionName !== rem.positionName) throw new Error(`position name differs: assign "${add.positionName}" vs remove "${rem.positionName}"`);
+    pass('RoleAssignment.addRemove', `${pos.cf_PositionID} added to and removed from ${roleName} on ${cur.org.descriptor}`);
+  });
+
+  // ── Role request: create → start review BP → cancel the event → DenyRoleRequest marks it Denied ──
+  // Leaves one Denied TESTROLECI request: requests linked to a BP event can't be deleted.
+  await test('Request.reviewCancelDeny', async () => {
+    const roleName = `X:ADM:ROLE:TESTROLECIRUN${runNo}`;
+    const ref = `CI-RUN${runNo}-${Math.random().toString(36).slice(2, 8)}`;
+    const req = await request('POST', `${BO}/comsAssignableRoles`, token, {
+      referenceId: ref, roleName, application: 'X:ADM', status: 'Pending ISC Review', requestedDate: today,
+      requestedBy: { id: me.id }, active: false, effectiveDate: today, workdayRoleId: roleName,
+    });
+    const reqId = req.id;
+    if (!reqId) throw new Error('request POST returned no id');
+    await launch(token, 'StartRoleRequestReview', { ref });
+    let eventWid = null;
+    for (let i = 0; i < 10 && !eventWid; i++) {
+      await sleep(3000);
+      eventWid = (await request('GET', `${BO}/comsAssignableRoles/${reqId}`, token)).reviewEventWid || null;
+    }
+    if (!eventWid) throw new Error(`StartRoleRequestReview did not link a review event to ${roleName} within 30 s`);
+    const ev = await request('GET', `${BP}/events/${eventWid}`, token);
+    const st = String(ev?.status?.descriptor || ev?.overallStatus?.descriptor || '');
+    if (/complete|terminat|cancel|denied/i.test(st)) throw new Error(`new review event is already "${st}"`);
+    pass('Request.startReview', `${roleName} has an open review event ("${st || 'in progress'}")`);
+
+    await request('POST', `${BP}/events/${eventWid}/cancel`, token, { comment: 'Automated test run: cancel test request' });
+    // Cancel is paired with DenyRoleRequest; BP-triggered orchestrations take ~2-3 min (up to 15).
+    let r = null;
+    for (let i = 0; i < 40; i++) {
+      await sleep(15000);
+      r = await request('GET', `${BO}/comsAssignableRoles/${reqId}`, token);
+      if (r.status === 'Denied') break;
+    }
+    if (r?.status !== 'Denied') throw new Error(`${roleName} still "${r?.status}" 10 min after cancelling its review (DenyRoleRequest did not run)`);
+    if (r.active !== false) throw new Error(`${roleName} is Denied but active=${r.active}`);
+    const audits = ((await request('GET', `${BO}/comsAuditLogs?limit=100`, token)).data || []).filter((a) => a.roleName === roleName && a.action === 'DENY');
+    if (!audits.length) throw new Error(`${roleName} is Denied but has no DENY audit record`);
+    pass('Request.reviewCancelDeny', `${roleName}: cancelling the review marked it Denied, inactive, with a DENY audit`);
   });
 }
 
@@ -306,7 +455,12 @@ async function cleanup(token, me) {
 
   // 3. Test audit entries -> delete. Done last so the inactivation records above are removed too.
   const audits = (await request('GET', `${BO}/comsAuditLogs?limit=100`, token)).data || [];
-  const testAudit = (a) => EXTRA_TEST_IDS.includes(a.id) || isTestText(a.coName, a.coReferenceId, a.roleName, a.details);
+  // Role assignment tests add a position to TEST_ROLE and remove it again: an ASSIGN and a
+  // REMOVE for the same position ID on that role are test records (net no change).
+  const pid = (a) => (String(a.positionName || '').match(/P-\d+/) || [])[0];
+  const onTestRole = audits.filter((a) => a.objectType === 'Role Assignment' && a.roleName === TEST_ROLE && pid(a));
+  const pairedIds = new Set(onTestRole.filter((a) => onTestRole.some((b) => pid(b) === pid(a) && b.action !== a.action)).map((a) => a.id));
+  const testAudit = (a) => EXTRA_TEST_IDS.includes(a.id) || pairedIds.has(a.id) || isTestText(a.coName, a.coReferenceId, a.roleName, a.details);
   console.log(`\nAudit entries: ${audits.length} read, ${audits.filter(testAudit).length} to delete:`);
   audits.filter(testAudit).forEach((a) => console.log(`   delete  ${a.id}  ${a.timestamp}  ${a.objectType}/${a.action}  ${a.coName || ''} ${a.roleName || ''}`.trimEnd()));
   console.log('   kept (not identified as test):');
