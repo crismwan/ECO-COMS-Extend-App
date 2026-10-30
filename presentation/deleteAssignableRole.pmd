@@ -92,6 +92,10 @@
           {
             "outboundPath": "roleName",
             "value": "<% selectedRoleDisplay.value ?? '' %>"
+          },
+          {
+            "outboundPath": "changedByWid",
+            "value": "<% selectedWorker.id ?? '' %>"
           }
         ],
         "failOnStatusCodes": [

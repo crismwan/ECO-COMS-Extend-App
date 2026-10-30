@@ -179,6 +179,10 @@
           {
             "outboundPath": "effectiveDate",
             "value": "<% empty(effectiveDate.value) ? null : effectiveDate.value.format('yyyy-MM-dd') %>"
+          },
+          {
+            "outboundPath": "changedByWid",
+            "value": "<% selectedWorker.id ?? '' %>"
           }
         ],
         "failOnStatusCodes": [

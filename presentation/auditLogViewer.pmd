@@ -116,9 +116,27 @@
                 "columnId": "columnOrganization",
                 "label": "Organization",
                 "cellTemplate": {
-                  "type": "text",
-                  "value": "<% logEntry.coName ?? '' %>",
-                  "enabled": false
+                  "type": "fieldSet",
+                  "id": "organizationFieldSet",
+                  "children": [
+                    {
+                      "type": "instanceList",
+                      "id": "organizationInstanceList",
+                      "view": true,
+                      "relatedTask": true,
+                      "enabled": false,
+                      "visible": "<% !empty(logEntry.orgWid) %>",
+                      "values": "<% empty(logEntry.orgWid) ? [] : [{'id': logEntry.orgWid, 'descriptor': logEntry.coName ?? ''}] %>",
+                      "widKey": "id"
+                    },
+                    {
+                      "type": "text",
+                      "id": "organizationText",
+                      "enabled": false,
+                      "visible": "<% empty(logEntry.orgWid) %>",
+                      "value": "<% logEntry.coName ?? '' %>"
+                    }
+                  ]
                 },
                 "sortableAndFilterable": "true"
               },
@@ -128,9 +146,27 @@
                 "columnId": "columnRole",
                 "label": "Role",
                 "cellTemplate": {
-                  "type": "text",
-                  "value": "<% logEntry.roleName ?? '' %>",
-                  "enabled": false
+                  "type": "fieldSet",
+                  "id": "roleFieldSet",
+                  "children": [
+                    {
+                      "type": "instanceList",
+                      "id": "roleInstanceList",
+                      "view": true,
+                      "relatedTask": true,
+                      "enabled": false,
+                      "visible": "<% !empty(logEntry.roleWid) %>",
+                      "values": "<% empty(logEntry.roleWid) ? [] : [{'id': logEntry.roleWid, 'descriptor': logEntry.roleName ?? ''}] %>",
+                      "widKey": "id"
+                    },
+                    {
+                      "type": "text",
+                      "id": "roleText",
+                      "enabled": false,
+                      "visible": "<% empty(logEntry.roleWid) %>",
+                      "value": "<% logEntry.roleName ?? '' %>"
+                    }
+                  ]
                 },
                 "sortableAndFilterable": "true"
               },
@@ -140,9 +176,27 @@
                 "columnId": "columnPosition",
                 "label": "Position",
                 "cellTemplate": {
-                  "type": "text",
-                  "value": "<% logEntry.positionName ?? '' %>",
-                  "enabled": false
+                  "type": "fieldSet",
+                  "id": "positionFieldSet",
+                  "children": [
+                    {
+                      "type": "instanceList",
+                      "id": "positionInstanceList",
+                      "view": true,
+                      "relatedTask": true,
+                      "enabled": false,
+                      "visible": "<% !empty(logEntry.positionWid) %>",
+                      "values": "<% empty(logEntry.positionWid) ? [] : [{'id': logEntry.positionWid, 'descriptor': logEntry.positionName ?? ''}] %>",
+                      "widKey": "id"
+                    },
+                    {
+                      "type": "text",
+                      "id": "positionText",
+                      "enabled": false,
+                      "visible": "<% empty(logEntry.positionWid) %>",
+                      "value": "<% logEntry.positionName ?? '' %>"
+                    }
+                  ]
                 },
                 "sortableAndFilterable": "true"
               },
@@ -164,9 +218,27 @@
                 "columnId": "columnChangedBy",
                 "label": "Changed By",
                 "cellTemplate": {
-                  "type": "text",
-                  "value": "<% logEntry.triggeredBy ?? '' %>",
-                  "enabled": false
+                  "type": "fieldSet",
+                  "id": "changedByFieldSet",
+                  "children": [
+                    {
+                      "type": "instanceList",
+                      "id": "changedByInstanceList",
+                      "view": true,
+                      "relatedTask": true,
+                      "enabled": false,
+                      "visible": "<% !empty(logEntry.changedByWid) %>",
+                      "values": "<% empty(logEntry.changedByWid) ? [] : [{'id': logEntry.changedByWid, 'descriptor': logEntry.triggeredBy ?? ''}] %>",
+                      "widKey": "id"
+                    },
+                    {
+                      "type": "text",
+                      "id": "changedByText",
+                      "enabled": false,
+                      "visible": "<% empty(logEntry.changedByWid) %>",
+                      "value": "<% logEntry.triggeredBy ?? '' %>"
+                    }
+                  ]
                 },
                 "sortableAndFilterable": "true"
               },

@@ -85,6 +85,30 @@
       "name": "positionName",
       "label": "Position",
       "type": "TEXT"
+    },
+    {
+      "id": 13,
+      "name": "changedByWid",
+      "label": "Changed By WID",
+      "type": "TEXT"
+    },
+    {
+      "id": 14,
+      "name": "orgWid",
+      "label": "Organization WID",
+      "type": "TEXT"
+    },
+    {
+      "id": 15,
+      "name": "roleWid",
+      "label": "Role WID",
+      "type": "TEXT"
+    },
+    {
+      "id": 16,
+      "name": "positionWid",
+      "label": "Position WID",
+      "type": "TEXT"
     }
   ]
 }

@@ -213,13 +213,6 @@
       "page": {
         "id": "editRoleAssignment"
       }
-    },
-    {
-      "id": "purgeAuditLogs",
-      "routingPattern": "/purgeAuditLogs",
-      "page": {
-        "id": "purgeAuditLogs"
-      }
     }
   ],
   "applicationId": "ecocomsphase_xclw_cm_sync2_vmzvxm",
