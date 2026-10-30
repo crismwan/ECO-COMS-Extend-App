@@ -306,6 +306,7 @@ async function full(token, me) {
   });
 
   // ── Shell org pattern: add, then inactivate 45 days out ──
+  let pattern = null; // { code, wid, appCode } for the pending-request test
   await test('Pattern.add', async () => {
     const app = ((await request('GET', `${BO}/comsApplications?limit=1`, token)).data || [])[0];
     if (!app) return skip('Pattern.add', 'no COMS application to create a pattern for');
@@ -320,6 +321,7 @@ async function full(token, me) {
     expectAudit(a, 'Shell Org Pattern', 'ADD');
     const pwid = await findOrg(pname);
     if (!pwid) throw new Error(`${pname} not found by WQL after the audit record was written`);
+    pattern = { code: pname, wid: pwid, appCode };
     const b = await launchAndVerify(token, 'ManageShellOrgStatus', status(pwid, pname, appCode, true, later));
     expectAudit(b, 'Org Status', 'INACTIVATE');
     pass('Pattern.add', `${pname} created, audited and inactivated effective ${later}`);
@@ -417,6 +419,47 @@ async function full(token, me) {
     if (!audits.length) throw new Error(`${roleName} is Denied but has no DENY audit record`);
     pass('Request.reviewCancelDeny', `${roleName}: cancelling the review marked it Denied, inactive, with a DENY audit`);
   });
+
+  // ── Two pending ISC requests, left open for review: one on the new shell org, one on the new pattern ──
+  // Built the way the Assignable Role Manager page builds them (<org code>:ROLE:<name>, REQUEST audit,
+  // then StartRoleRequestReview). Cleanup cancels their reviews, which marks them Denied.
+  const pendingRequest = async (name, orgCode, orgWid, appCode) => {
+    const roleName = `${orgCode}:ROLE:TESTROLE`;
+    const ref = `CI-RUN${runNo}-${name}-${Math.random().toString(36).slice(2, 8)}`;
+    const req = await request('POST', `${BO}/comsAssignableRoles`, token, {
+      referenceId: ref, roleName, workdayRoleId: roleName, application: appCode, shellOrgCode: orgCode, shellOrgWid: orgWid,
+      status: 'Pending ISC Review', requestedDate: today, requestedBy: { id: me.id }, active: false, effectiveDate: today,
+    });
+    if (!req.id) throw new Error('request POST returned no id');
+    await request('POST', `${BO}/comsAuditLogs`, token, {
+      timestamp: who().timestamp, objectType: 'Assignable Role', action: 'REQUEST', coReferenceId: roleName, coName: orgCode,
+      details: `Assignable role request submitted: ${roleName} for org ${orgCode}`, triggeredBy: me.descriptor,
+      roleName, effectiveDate: today, changedByWid: me.id, positionName: '',
+    });
+    await launch(token, 'StartRoleRequestReview', { ref });
+    let eventWid = null;
+    for (let i = 0; i < 10 && !eventWid; i++) {
+      await sleep(3000);
+      eventWid = (await request('GET', `${BO}/comsAssignableRoles/${req.id}`, token)).reviewEventWid || null;
+    }
+    if (!eventWid) throw new Error(`StartRoleRequestReview did not link a review event to ${roleName} within 30 s`);
+    const ev = await request('GET', `${BP}/events/${eventWid}`, token);
+    const st = String(ev?.status?.descriptor || ev?.overallStatus?.descriptor || '');
+    if (/complete|terminat|cancel|denied/i.test(st)) throw new Error(`review event for ${roleName} is already "${st}"`);
+    return { roleName, st };
+  };
+
+  await test('Request.pendingShellOrg', async () => {
+    if (!orgWid) return skip('Request.pendingShellOrg', 'no org from ShellOrg.add');
+    const r = await pendingRequest('ORG', orgName, orgWid, 'X:ADM');
+    pass('Request.pendingShellOrg', `${r.roleName} is pending ISC review ("${r.st || 'in progress'}")`);
+  });
+
+  await test('Request.pendingPattern', async () => {
+    if (!pattern) return skip('Request.pendingPattern', 'no pattern from Pattern.add');
+    const r = await pendingRequest('PAT', pattern.code, pattern.wid, pattern.appCode);
+    pass('Request.pendingPattern', `${r.roleName} is pending ISC review ("${r.st || 'in progress'}")`);
+  });
 }
 
 // ─── Cleanup (dry run unless --apply) ─────────────────────────────────────────
@@ -460,6 +503,10 @@ async function cleanup(token, me) {
   testRolesAll.filter((r) => r.reviewEventWid).forEach((r) =>
     console.log(`   keep (linked to review event, can't be deleted)  ${r.roleName}  [${r.status}]`));
   console.log(`\nRole requests: ${roles.length} total, ${testRoles.length} to delete:`);
+  // Pending test requests can't be deleted either; cancelling their review closes them (DenyRoleRequest
+  // then marks them Denied with a DENY audit, which step 3 removes).
+  const pendingTest = testRolesAll.filter((r) => r.reviewEventWid && r.status === 'Pending ISC Review');
+  pendingTest.forEach((r) => console.log(`   cancel review  ${r.roleName}  (event ${r.reviewEventWid})`));
   testRoles.forEach((r) => console.log(`   delete  ${r.id}  ${r.roleName}  [${r.status}]${r.reviewEventWid ? '  review event ' + r.reviewEventWid : ''}`));
   console.log('   kept (not identified as test):');
   roles.filter((r) => !testRoles.includes(r)).forEach((r) => console.log(`     ${r.id}  ${r.roleName}  [${r.status}]  requested ${r.requestedDate || '?'}`));
@@ -478,7 +525,7 @@ async function cleanup(token, me) {
   audits.filter((a) => !testAudit(a)).forEach((a) => console.log(`     ${a.id}  ${a.timestamp}  ${a.objectType}/${a.action}  ${a.coName || ''} ${a.roleName || ''} ${a.positionName || ''}`.trimEnd()));
 
   if (!APPLY) {
-    pass('Cleanup.dryRun', `would inactivate ${activeTest.length} org(s), delete ${testRoles.length} request(s) and ${audits.filter(testAudit).length}+ audit entr(ies)`);
+    pass('Cleanup.dryRun', `would inactivate ${activeTest.length} org(s), cancel ${pendingTest.length} pending review(s), delete ${testRoles.length} request(s) and ${audits.filter(testAudit).length}+ audit entr(ies)`);
     return;
   }
 
@@ -503,6 +550,25 @@ async function cleanup(token, me) {
         await launchAndVerify(token, 'ManageShellOrgStatus', params(tomorrow));
       }
       pass(`Cleanup.inactivate ${code(o)}`, `inactivated effective ${eff}`);
+    });
+  }
+  for (const r of pendingTest) {
+    await test(`Cleanup.cancelReview ${r.roleName}`, async () => {
+      await request('POST', `${BP}/events/${r.reviewEventWid}/cancel`, token, { comment: 'Test cleanup: cancel test request' });
+      pass(`Cleanup.cancelReview ${r.roleName}`, 'review cancelled');
+    });
+  }
+  if (pendingTest.length) {
+    // Wait for DenyRoleRequest (usually 2-3 min) so its DENY audit records are cleared below.
+    await test('Cleanup.pendingClosed', async () => {
+      const ids = pendingTest.map((r) => r.id);
+      for (let i = 0; i < 24; i++) {
+        await sleep(15000);
+        const open = ((await request('GET', `${BO}/comsAssignableRoles?limit=100`, token)).data || [])
+          .filter((r) => ids.includes(r.id) && r.status !== 'Denied');
+        if (!open.length) return pass('Cleanup.pendingClosed', `${ids.length} pending test request(s) now Denied`);
+      }
+      throw new Error('some cancelled test requests are not Denied after 6 min (DenyRoleRequest may still be queued)');
     });
   }
   for (const r of testRoles) {

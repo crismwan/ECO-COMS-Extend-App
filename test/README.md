@@ -7,7 +7,7 @@ Three layers run on every push to `main` (`.github/workflows/deploy.yml`). Flows
 | Presentation shape | `.github/scripts/validate_pmd.py` | before upload | yes | none |
 | Static checks | `test/static_checks.py` | before upload | yes | none |
 | Smoke e2e | `node test/e2e.js` | after deploy, every push | marks the run failed | none (read-only) |
-| Full e2e | `node test/e2e.js --suite full` | manual run (Actions → E2E tests → task = full, or Deploy → e2e_suite = full) | marks the run failed | per run: one `X:ADM:TEST:CI:RUN<n>` shell org and one `X:CLW:PATTERN:TEST:TEST:<nnn>:900:<yyyy>W1` pattern (both left inactive 45 days out), adds and removes one position on `X:BPMS(ODMT):ROLE:ADVISORS` (net no change), one Denied `X:ADM:ROLE:TESTROLECIRUN<n>` request (can't be deleted: linked to its review event), ~9 audit records (removed by cleanup) |
+| Full e2e | `node test/e2e.js --suite full` | manual run (Actions → E2E tests → task = full, or Deploy → e2e_suite = full) | marks the run failed | per run: one `X:ADM:TEST:CI:RUN<n>` shell org and one `X:CLW:PATTERN:TEST:TEST:<nnn>:900:<yyyy>W1` pattern (both left inactive 45 days out), adds and removes one position on `X:BPMS(ODMT):ROLE:ADVISORS` (net no change), one Denied `X:ADM:ROLE:TESTROLECIRUN<n>` request (can't be deleted: linked to its review event), two pending ISC requests left open for review (`<shell org>:ROLE:TESTROLE` and `<pattern>:ROLE:TESTROLE`; cleanup cancels them), ~9 audit records (removed by cleanup) |
 
 Run locally: `python3 test/static_checks.py` and `node test/e2e.js [--suite full] [--verbose]` (uses `WD_DEV_TOKEN` or your wdcli login).
 
@@ -39,14 +39,14 @@ Known issues are listed in `KNOWN_ISSUES` at the top of the script. They are rep
 | Add shell org pattern (AddShellOrgPattern) | launch target exists | `existingPatterns` WQL runs | add, verify by WQL, audit `Shell Org Pattern / ADD`, inactivate | wizard UI |
 | Inactivate / reactivate org (ManageShellOrgStatus) | launch target exists | none | inactivate today, reactivate, inactivate 45 days out (each audited); guard rejects a mismatched action and a non-shell org | page UI |
 | Role position assign / remove (AssignRolePositions) | launch target exists | WQL runs; every role assignment audit shows the full position name | add an unassigned position to the test role, confirm it's on the assignment, remove it; both audits show the same full position name | page UI |
-| Assignable role / AAA request (+ StartRoleRequestReview) | launch target exists | requests readable | create request, start review, confirm an open event | page UI (REQUEST audit is written by the page) |
+| Assignable role / AAA request (+ StartRoleRequestReview) | launch target exists | requests readable | create request, start review, confirm an open event; leave two pending requests (one on the run's shell org, one on its pattern) with REQUEST audits | page UI |
 | ISC review BP: approve path | BP routes match AMD tasks | BP-approved requests have a security group; pending requests have an open event | none | yes (needs approver) |
 | ISC review BP: deny / cancel (DenyRoleRequest) | none | every Denied request is inactive; every closed request matches its review event | cancel the review event → request Denied, inactive, DENY audit | approver Deny |
 | Audit log viewer | page shape | audit readable; fixed vocabulary; required fields | every write is checked through its audit record | none |
 | BO data access | none | all 5 collections readable | none | none |
 | Completion notification, step help text | none | none | none | yes |
 
-Cleanup: Actions → E2E tests → task = cleanup-dry-run, then cleanup-apply. Orgs that already have a scheduled inactivation are reported as failed (Workday allows only one); they still go inactive on that date.
+Cleanup: Actions → E2E tests → task = cleanup-dry-run, then cleanup-apply. It cancels the reviews of pending test requests and waits for them to turn Denied. Orgs that already have a scheduled inactivation are reported as failed (Workday allows only one); they still go inactive on that date.
 
 ## Manual checklist (before each phase sign-off)
 
