@@ -36,6 +36,7 @@ const SUITE = arg('--suite') || 'smoke';
 // orchestration started writing something the viewer and reports don't expect.
 const OBJECT_TYPES = ['Shell Org', 'Shell Org Pattern', 'Org Status', 'Role Assignment', 'Assignable Role'];
 const ACTIONS = ['ADD', 'INACTIVATE', 'REACTIVATE', 'ASSIGN POSITION', 'REMOVE POSITION', 'REQUEST', 'APPROVE', 'DENY', 'DELETE'];
+const TEST_ROLE = arg('--role') || process.env.E2E_ROLE || 'X:BPMS(ODMT):ROLE:ADVISORS';
 const BO_COLLECTIONS = ['comsApplications', 'comsAssignableRoles', 'comsAuditLogs', 'comsRoleAssignments', 'comsShellOrgRequests'];
 
 // ─── Token ────────────────────────────────────────────────────────────────────
@@ -234,8 +235,10 @@ async function smoke(token, me) {
 // ─── Full suite (writes to the tenant) ────────────────────────────────────────
 async function full(token, me) {
   console.log('\n-- Full (writes TEST data, then reverts or inactivates it) --');
-  const stamp = new Date().toISOString().replace(/\D/g, '').slice(2, 12); // yyMMddHHmm
-  const orgName = `X:ADM:TEST:CI:${stamp}`;
+  // Short, readable run id: the GitHub run number (RUN15), or a random number for local runs.
+  const runNo = process.env.GITHUB_RUN_NUMBER || String(100 + Math.floor(Math.random() * 900));
+  const run3 = String(runNo).slice(-3).padStart(3, '0');
+  const orgName = `X:ADM:TEST:CI:RUN${runNo}`;
   const now = new Date();
   const today = now.toISOString().slice(0, 10);
   const later = new Date(now.getTime() + 45 * 86400000).toISOString().slice(0, 10);
@@ -308,7 +311,7 @@ async function full(token, me) {
     if (!app) return skip('Pattern.add', 'no COMS application to create a pattern for');
     const appCode = app.appId; // same value the New Pattern page uses (e.g. X:CLW)
     if (!/^X:/.test(appCode || '')) throw new Error(`COMS application appId "${appCode}" is not an X: code`);
-    const [a1, a2, a3, a5] = ['TEST', `TEST:${stamp.slice(4, 7)}`, stamp.slice(7, 10), `${now.getUTCFullYear()}W1`];
+    const [a1, a2, a3, a5] = ['TEST', `TEST:${run3}`, '900', `${now.getUTCFullYear()}W1`];
     const pname = `${appCode}:PATTERN:${a1}:${a2}:${a3}:${a5}`;
     const a = await launchAndVerify(token, 'AddShellOrgPattern', {
       comsAppId: app.id, patternName: pname, workerId: me.id, attribute1: a1, attribute2: a2, attribute3: a3,
@@ -324,7 +327,7 @@ async function full(token, me) {
 
   // ── Role assignment: add a position to the test role, then remove it (net no change) ──
   await test('RoleAssignment.addRemove', async () => {
-    const roleName = arg('--role') || process.env.E2E_ROLE || 'X:BPMS(ODMT):ROLE:ADVISORS';
+    const roleName = TEST_ROLE;
     const readRole = async () => {
       const r = await wql(token, `SELECT role, roleAssignments{organization, cf_ZCF_EE_RoleAssignedToAsPositionRestrictions} as roleAssignments FROM assignableRoles WHERE roleName = '${roleName}'`, 5);
       const row = (r.data || [])[0];
@@ -369,8 +372,8 @@ async function full(token, me) {
   // ── Role request: create → start review BP → cancel the event → DenyRoleRequest marks it Denied ──
   // Leaves one Denied TESTROLECI request: requests linked to a BP event can't be deleted.
   await test('Request.reviewCancelDeny', async () => {
-    const roleName = `X:ADM:ROLE:TESTROLECI${stamp}`;
-    const ref = `CI-${stamp}-${Math.random().toString(36).slice(2, 8)}`;
+    const roleName = `X:ADM:ROLE:TESTROLECIRUN${runNo}`;
+    const ref = `CI-RUN${runNo}-${Math.random().toString(36).slice(2, 8)}`;
     const req = await request('POST', `${BO}/comsAssignableRoles`, token, {
       referenceId: ref, roleName, application: 'X:ADM', status: 'Pending ISC Review', requestedDate: today,
       requestedBy: { id: me.id }, active: false, effectiveDate: today, workdayRoleId: roleName,
@@ -452,7 +455,12 @@ async function cleanup(token, me) {
 
   // 3. Test audit entries -> delete. Done last so the inactivation records above are removed too.
   const audits = (await request('GET', `${BO}/comsAuditLogs?limit=100`, token)).data || [];
-  const testAudit = (a) => EXTRA_TEST_IDS.includes(a.id) || isTestText(a.coName, a.coReferenceId, a.roleName, a.details);
+  // Role assignment tests add a position to TEST_ROLE and remove it again: an ASSIGN and a
+  // REMOVE for the same position ID on that role are test records (net no change).
+  const pid = (a) => (String(a.positionName || '').match(/P-\d+/) || [])[0];
+  const onTestRole = audits.filter((a) => a.objectType === 'Role Assignment' && a.roleName === TEST_ROLE && pid(a));
+  const pairedIds = new Set(onTestRole.filter((a) => onTestRole.some((b) => pid(b) === pid(a) && b.action !== a.action)).map((a) => a.id));
+  const testAudit = (a) => EXTRA_TEST_IDS.includes(a.id) || pairedIds.has(a.id) || isTestText(a.coName, a.coReferenceId, a.roleName, a.details);
   console.log(`\nAudit entries: ${audits.length} read, ${audits.filter(testAudit).length} to delete:`);
   audits.filter(testAudit).forEach((a) => console.log(`   delete  ${a.id}  ${a.timestamp}  ${a.objectType}/${a.action}  ${a.coName || ''} ${a.roleName || ''}`.trimEnd()));
   console.log('   kept (not identified as test):');
