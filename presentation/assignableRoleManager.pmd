@@ -598,7 +598,9 @@
         }
       ]
     },
-    "standardEditButtonsHidden": true
+    "cancelOverride": {
+      "taskId": "home"
+    }
   },
   "securityDomains": [
     "ManageCOMSAssignableRoles"

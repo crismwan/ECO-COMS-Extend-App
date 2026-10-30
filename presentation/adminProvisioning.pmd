@@ -576,7 +576,9 @@
       ]
     },
     "pageType": "EDIT",
-    "standardEditButtonsHidden": true
+    "cancelOverride": {
+      "taskId": "home"
+    }
   },
   "onSubmit": "<%\n  let valid = true;\n  if (empty(applicationDropdown.value)) {\n    applicationDropdown.setError('Application is required.');\n    valid = false;\n  }\n  if (empty(effectiveDate.value)) {\n    effectiveDate.setError('Effective Date is required.');\n    valid = false;\n  }\n  if (!empty(generatedRoleName.value) && comsValidations.isDuplicateAAARole(generatedRoleName.value, allAAAroles.data)) {\n    generatedRoleName.setError(comsValidations.errorDuplicateAAARole(generatedRoleName.value));\n    valid = false;\n  }\n  valid;\n%>"
 }
