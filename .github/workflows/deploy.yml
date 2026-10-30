@@ -102,6 +102,35 @@ jobs:
           # Export org UUID for later steps
           echo "ORG_UUID=${WD_ORG_UUID}" >> $GITHUB_ENV
 
+      - name: Check platform token (WD_WCP_TOKEN) expiry
+        env:
+          WD_WCP_TOKEN: ${{ secrets.WD_WCP_TOKEN }}
+        run: |
+          # The AOS deploy also needs WD_WCP_TOKEN (config.json wcpAccessToken from an interactive
+          # wdcli login). When only this one has expired, deploy fails late with a 401
+          # "The supplied authentication is invalid". Fail early with a clear message instead.
+          python3 - <<'PY'
+          import base64, json, os, sys, time
+          tok = os.environ.get("WD_WCP_TOKEN", "")
+          try:
+              part = tok.split(".")[1]
+              exp = json.loads(base64.urlsafe_b64decode(part + "=" * (-len(part) % 4))).get("exp")
+          except Exception:
+              print("WD_WCP_TOKEN: could not decode expiry; continuing")
+              sys.exit(0)
+          left = int(exp) - int(time.time()) if exp else None
+          if left is None:
+              print("WD_WCP_TOKEN: no exp claim; continuing")
+          elif left < 0:
+              print(f"ERROR: WD_WCP_TOKEN expired {-left}s ago.")
+              print("ACTION: run 'wdcli app deploy ecocomsphase_xclw_cm_sync2_vmzvxm' locally, log in, then update")
+              print("BOTH secrets from ~/.config/@workday/wdcli/config.json: WD_DEV_TOKEN = wcpTenantAccessToken.ubc_wcpdev2,")
+              print("WD_WCP_TOKEN = wcpAccessToken.")
+              sys.exit(1)
+          else:
+              print(f"WD_WCP_TOKEN valid for another {left // 60} min")
+          PY
+
       - name: Authenticate as system user (for upload)
         env:
           WDCLI_CLIENT_ID: ${{ secrets.WD_CLIENT_ID }}

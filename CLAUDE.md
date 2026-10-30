@@ -2481,6 +2481,13 @@ ACTION: run 'wdcli app deploy ...' locally, log in, update WD_DEV_TOKEN secret
 - Unverified until the first CI run: that the PKCE `WD_DEV_TOKEN` works for `api.workday.com` REST/WQL/BP calls, and that orchestration launch via `POST api.workday.com/orchestrate/v1/apps/<app>/orchestrations/<Name>/launch` works outside a page.
 - `ManageShellOrgStatus` writes its audit record even when `validateOnly=true`, so validate-only can't be used for safe per-deploy write tests until the audit write is made conditional.
 
+### WD_WCP_TOKEN expiry (2026-10-30)
+
+- **Symptom:** "Pre-populate" passes, then "Deploy to ubc_wcpdev2 via wdcli" fails with `[CI-401] UNAUTHORIZED URL: https://api.us.wcp.workday.com/aos/v1/deploy` and "The supplied authentication is invalid". It started about 20:00 UTC on 2026-10-30, roughly 1 h after the 19:49 success.
+- **Likely cause:** the platform token `WD_WCP_TOKEN` (config.json `wcpAccessToken`) expired while `WD_DEV_TOKEN` was still valid. This is not confirmed.
+- A new step, "Check platform token (WD_WCP_TOKEN) expiry", now fails early with instructions if it can decode an expired `exp`.
+- **Fix:** do the same interactive `wdcli app deploy`, then update BOTH secrets from config.json: `WD_DEV_TOKEN` = `wcpTenantAccessToken.ubc_wcpdev2`, `WD_WCP_TOKEN` = `wcpAccessToken`.
+
 ### Run time baseline
 
 - A healthy deploy run completes in **~1m15s**.
