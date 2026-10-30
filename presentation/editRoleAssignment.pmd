@@ -104,7 +104,12 @@
                     "type": "instanceList",
                     "id": "currentRoleNameInstanceList",
                     "view": true,
-                    "instanceList": "<% ([ra.role]).map(i => { {'descriptor': i.descriptor ?? '', 'wid': i.id ?? ''} }) %>"
+                    "instanceList": [
+                      {
+                        "descriptor": "<% ra.role.descriptor ?? '' %>",
+                        "wid": "<% ra.role.id ?? '' %>"
+                      }
+                    ]
                   }
                 },
                 {
@@ -116,7 +121,12 @@
                     "type": "instanceList",
                     "id": "currentAssignmentOrgInstanceList",
                     "view": true,
-                    "instanceList": "<% ([ra.org]).map(i => { {'descriptor': i.descriptor ?? '', 'wid': i.id ?? ''} }) %>"
+                    "instanceList": [
+                      {
+                        "descriptor": "<% ra.org.descriptor ?? '' %>",
+                        "wid": "<% ra.org.id ?? '' %>"
+                      }
+                    ]
                   }
                 },
                 {
@@ -128,7 +138,16 @@
                     "type": "instanceList",
                     "id": "currentPositionsInstanceList",
                     "view": true,
-                    "instanceList": "<% (ra.positions).map(i => { {'descriptor': i.descriptor ?? '', 'wid': i.id ?? ''} }) %>"
+                    "instanceListLoopTag": {
+                      "id": "currentPositionsLoop",
+                      "type": "instanceLoop",
+                      "templateInstance": {
+                        "descriptor": "<% pos.descriptor ?? '' %>",
+                        "wid": "<% pos.id ?? '' %>"
+                      },
+                      "on": "<% ra.positions ?? [] %>",
+                      "as": "pos"
+                    }
                   }
                 }
               ],
