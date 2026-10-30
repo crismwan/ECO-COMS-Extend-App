@@ -205,7 +205,7 @@ async function smoke(token, me) {
       const st = String(ev?.status?.descriptor || ev?.overallStatus?.descriptor || '');
       if (!st) continue;
       checked++;
-      const ok = r.status === 'Approved' ? /complete/i.test(st) && !/denied|cancel|rescind/i.test(st) : /denied|cancel|rescind/i.test(st);
+      const ok = r.status === 'Approved' ? /complete/i.test(st) && !/denied|cancel|rescind|terminat/i.test(st) : /denied|cancel|rescind|terminat/i.test(st);
       if (!ok) throw new Error(`${r.roleName} is ${r.status} in ECO-COMS but its review event is "${st}"`);
     }
     if (!checked) return skip('BP.statusMatchesEvent', 'review event status not readable from the BP API');
@@ -218,7 +218,7 @@ async function smoke(token, me) {
     for (const r of pending) {
       const ev = await request('GET', `${BP}/events/${r.reviewEventWid}`, token);
       const status = ev?.status?.descriptor || ev?.overallStatus?.descriptor || '';
-      if (/denied|cancel|rescind/i.test(status)) throw new Error(`${r.roleName} is Pending in ECO-COMS but its review event is ${status}`);
+      if (/denied|cancel|rescind|terminat/i.test(status)) throw new Error(`${r.roleName} is Pending in ECO-COMS but its review event is ${status}`);
     }
     pass('BP.pendingEventsOpen', `${pending.length} pending request(s) have an open review event`);
   });
