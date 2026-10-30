@@ -113,6 +113,14 @@
           {
             "outboundPath": "active",
             "value": "<% false %>"
+          },
+          {
+            "outboundPath": "shellOrgCode",
+            "value": "<% !empty(applicationDropdown.value) ? (applicationDropdown.selectedEntries[0].descriptor ?? '') : '' %>"
+          },
+          {
+            "outboundPath": "shellOrgWid",
+            "value": "<% !empty(applicationDropdown.value) ? (applicationDropdown.value[0] ?? '') : '' %>"
           }
         ],
         "failOnStatusCodes": [
@@ -445,7 +453,7 @@
                   "onChange": "<%\n            generatedRoleName.setValue(\n              !empty(self.value) ?\n                !empty(fuhPicker.value) ?\n                  'Organizations and Roles Assignment Administrator (' + self.selectedEntries[0].descriptor + ', Functional Org)' :\n                !empty(academicUnitPicker.value) ?\n                  'Organizations and Roles Assignment Administrator (' + self.selectedEntries[0].descriptor + ', Academic Unit)' :\n                  'Organizations and Roles Assignment Administrator (' + self.selectedEntries[0].descriptor + ')'\n              : ''\n            );\n          %>",
                   "valuesOut": [
                     {
-                      "value": "<% self.value[0] %>",
+                      "value": "<% !empty(self.value) ? (self.selectedEntries[0].descriptor ?? '') : '' %>",
                       "valueOutBinding": "postAssignableRole.application"
                     }
                   ]

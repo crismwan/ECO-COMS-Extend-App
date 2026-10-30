@@ -423,7 +423,7 @@
                   "visible": false,
                   "valuesOut": [
                     {
-                      "value": "<% self.value[0] %>",
+                      "value": "<% !empty(self.value) ? (self.selectedEntries[0].descriptor ?? '') : '' %>",
                       "valueOutBinding": "postAssignableRole.application"
                     }
                   ],
