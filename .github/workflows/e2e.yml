@@ -14,6 +14,14 @@ on:
         description: "cleanup only: extra record ids (comma-separated) to treat as test data"
         required: false
         default: ""
+      effective:
+        description: "cleanup only: inactivation effective date yyyy-MM-dd (default today, falling back to tomorrow)"
+        required: false
+        default: ""
+      only:
+        description: "cleanup only: limit inactivation to these org codes (comma-separated)"
+        required: false
+        default: ""
 
 jobs:
   e2e:
@@ -28,12 +36,14 @@ jobs:
           WD_DEV_TOKEN: ${{ secrets.WD_DEV_TOKEN }}
           TASK: ${{ github.event.inputs.task }}
           ALSO: ${{ github.event.inputs.also }}
+          EFFECTIVE: ${{ github.event.inputs.effective }}
+          ONLY: ${{ github.event.inputs.only }}
         run: |
           case "${TASK}" in
             smoke)           node test/e2e.js --suite smoke ;;
             full)            node test/e2e.js --suite full ;;
             cleanup-dry-run) node test/e2e.js --suite cleanup --also "${ALSO}" ;;
-            cleanup-apply)   node test/e2e.js --suite cleanup --apply --also "${ALSO}" ;;
+            cleanup-apply)   node test/e2e.js --suite cleanup --apply --also "${ALSO}" ${EFFECTIVE:+--effective "$EFFECTIVE"} ${ONLY:+--only "$ONLY"} ;;
           esac
 
       - name: Upload results

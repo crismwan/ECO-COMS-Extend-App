@@ -291,7 +291,11 @@ async function cleanup(token, me) {
   }
 
   const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
-  for (const o of activeTest) {
+  // --effective yyyy-MM-dd: use this date only (e.g. after future-dated events that block earlier dates).
+  // --only CODE1,CODE2: limit inactivation to these org codes.
+  const FIXED = arg('--effective');
+  const ONLY = (arg('--only') || '').split(',').map((x) => x.trim()).filter(Boolean);
+  for (const o of activeTest.filter((x) => !ONLY.length || ONLY.includes(code(x)))) {
     await test(`Cleanup.inactivate ${code(o)}`, async () => {
       const params = (eff) => ({
         orgId: wid(o.workdayID), action: 'INACTIVATE', orgCode: code(o), orgName: code(o), includeInactive: 'true',
@@ -300,8 +304,9 @@ async function cleanup(token, me) {
         changedBy: me.descriptor, changedByWid: me.id, timestamp: ts,
       });
       // An org with another status change already dated today is rejected; try tomorrow instead.
-      let eff = today;
-      try { await launchAndVerify(token, 'ManageShellOrgStatus', params(today)); } catch (_) {
+      let eff = FIXED || today;
+      if (FIXED) await launchAndVerify(token, 'ManageShellOrgStatus', params(FIXED));
+      else try { await launchAndVerify(token, 'ManageShellOrgStatus', params(today)); } catch (_) {
         eff = tomorrow;
         await launchAndVerify(token, 'ManageShellOrgStatus', params(tomorrow));
       }
