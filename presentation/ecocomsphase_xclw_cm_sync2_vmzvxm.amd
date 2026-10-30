@@ -206,6 +206,13 @@
       "page": {
         "id": "hubLanding"
       }
+    },
+    {
+      "id": "manageRoleAssignment",
+      "routingPattern": "/manageRoleAssignment",
+      "page": {
+        "id": "manageRoleAssignment"
+      }
     }
   ],
   "applicationId": "ecocomsphase_xclw_cm_sync2_vmzvxm",

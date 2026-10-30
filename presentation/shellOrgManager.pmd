@@ -569,7 +569,6 @@
                 "id": "roleAssignmentsGrid",
                 "rows": "<% list:flatten((shellRoles.data ?? []).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith((empty(queryParams.appCode) ? 'X:' : queryParams.appCode)) }).map(ra => { { 'role': r.role, 'org': ra.organization, 'positions': ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? [], 'workers': ra.workersAssigned ?? [] } }) })) %>",
                 "rowVariableName": "ra",
-                "enabled": false,
                 "label": "Role Assignments",
                 "autoPaging": true,
                 "visible": "<% size(list:flatten((shellRoles.data ?? []).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith((empty(queryParams.appCode) ? 'X:' : queryParams.appCode)) }).map(ra => { { 'role': r.role, 'org': ra.organization, 'positions': ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? [], 'workers': ra.workersAssigned ?? [] } }) }))) > 0 %>",
@@ -620,6 +619,26 @@
                       "type": "text",
                       "value": "<% size(ra.workers) > 0 ? ra.workers.map(w => { w.descriptor }).join('; ') : '—' %>",
                       "enabled": false
+                    }
+                  },
+                  {
+                    "type": "column",
+                    "id": "colRoleManage",
+                    "columnId": "colRoleManage",
+                    "label": "Manage",
+                    "cellTemplate": {
+                      "type": "button",
+                      "action": "AUXILIARY",
+                      "label": "Manage",
+                      "taskReference": {
+                        "taskId": "manageRoleAssignment",
+                        "parameterBindings": {
+                          "roleId": "<% ra.role.id ?? '' %>",
+                          "roleName": "<% ra.role.descriptor ?? '' %>",
+                          "orgId": "<% ra.org.id ?? '' %>",
+                          "orgName": "<% ra.org.descriptor ?? '' %>"
+                        }
+                      }
                     }
                   }
                 ]
