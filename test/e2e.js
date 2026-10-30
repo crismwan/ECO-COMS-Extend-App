@@ -299,8 +299,8 @@ async function full(token, me) {
   await test('Pattern.add', async () => {
     const app = ((await request('GET', `${BO}/comsApplications?limit=1`, token)).data || [])[0];
     if (!app) return skip('Pattern.add', 'no COMS application to create a pattern for');
-    const appCode = app.descriptor || app.code || app.applicationCode;
-    if (!appCode) throw new Error('COMS application has no descriptor/code');
+    const appCode = app.appId; // same value the New Pattern page uses (e.g. X:CLW)
+    if (!/^X:/.test(appCode || '')) throw new Error(`COMS application appId "${appCode}" is not an X: code`);
     const [a1, a2, a3, a5] = ['TEST', `TEST:${stamp.slice(4, 7)}`, stamp.slice(7, 10), `${now.getUTCFullYear()}W1`];
     const pname = `${appCode}:PATTERN:${a1}:${a2}:${a3}:${a5}`;
     const a = await launchAndVerify(token, 'AddShellOrgPattern', {
