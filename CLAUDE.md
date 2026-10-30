@@ -2477,3 +2477,20 @@ ACTION: run 'wdcli app deploy ...' locally, log in, update WD_DEV_TOKEN secret
 
 - A healthy deploy run completes in **~1m15s**.
 - A run that finishes in **<20 seconds** has almost certainly failed at the token step (not a code error).
+
+## ISC review business process (confirmed live 2026-10-30)
+
+- `model/ReviewCOMSAssignableRoleRequest.businessprocess` targets COMSAssignableRole. Steps: details (VIEW `/reviewRoleRequestDetails/{eventId}`), approval (VIEW `/reviewRoleRequestApproval/{eventId}`), action steps CreateSecurityGroup and AddWorkdayAssignableRole (EDIT `/...{eventStepId}`). AMD tasks use those routingPatterns.
+- Request pages save a fixed `referenceId` (hidden `requestRefHidden`, set at page load) and then launch `StartRoleRequestReview` (outbound POST, `orchestration` base, `?ref=`). The orchestration finds the request by `referenceId` (now indexed), POSTs `/apps/<app>/v1/reviewCOMSAssignableRoleRequestEvents` with `businessProcessTarget.id`, and PATCHes `reviewEventWid` onto the request.
+- Orchestration build error "Function stringAtJsonPath cannot be applied to an instance of DataType": read API responses as `data.X.response.asJSON().stringAtJsonPath(...)`.
+- Step pages get context with `GET workday-bp eventSteps/<eventStepId>` → `event.id`, then `GET workday-bp events/<id>` → `for.id` (the request WID). Inbound endpoints can reference earlier ones in their URL.
+- An action step is completed by outbound `POST workday-bp eventSteps/<id>/submit` with `stepAction.id = d9e4223e446c11de98360015c5e6daf6` (Submitted). Tested: the step closed and the next step arrived in the inbox.
+- Tenant setup, done by hand:
+  1. BP type page → **Edit Policy**. HR Administrator on Initiate, both action steps, View All, Approve, Cancel, Deny.
+  2. **Activate Pending Security Policy Changes**.
+  3. **Create Business Process Definition (Default Definition)** → Edit Definition: a Initiation, b Approval, c Action Create Security Group, d Action Add Workday Assignable Role, each with Group HR Administrator.
+  - Step groups only appear in the prompt AFTER the policy is activated ("No matches found" before that).
+  - The definition is found by searching `bp: <name>`. Its related actions → Business Process → Edit Definition / Configure Orchestrations.
+- When the initiator is in the approval group, Workday auto-completes the approval step. HR Admin testing goes straight to step 3.
+- Not done yet: Deny handling. The approval page can't call outbound, so set status Denied + audit through Configure Orchestrations on the definition.
+- Browser pane tips: narrow window → Workday prompts open as full-screen pickers. Use resize_window 1600x1000 for BP grids. Related-action menus need hover to open sub-menus. Date fields need per-key input (`key "1 0 3 0 2 0 2 6"`).
