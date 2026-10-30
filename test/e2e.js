@@ -171,6 +171,13 @@ async function smoke(token, me) {
     if (bad.length) throw new Error(`${bad.length} record(s) outside the fixed vocabulary, e.g. ${JSON.stringify({ objectType: bad[0].objectType, action: bad[0].action })}`);
     pass('Audit.vocabulary', 'all objectType/action values are in the fixed vocabulary');
   });
+  await test('Audit.positionFullName', async () => {
+    const ra = audits.filter((a) => a.objectType === 'Role Assignment');
+    if (!ra.length) return skip('Audit.positionFullName', 'no role assignment audit records');
+    const bare = ra.filter((a) => /^P-\d+$/.test(String(a.positionName || '').trim()) || !String(a.positionName || '').trim());
+    if (bare.length) throw new Error(`${bare.length} role assignment record(s) show only a position ID or nothing, e.g. ${bare[0].id} "${bare[0].positionName || ''}"`);
+    pass('Audit.positionFullName', `${ra.length} role assignment record(s) show the full position name`);
+  });
   await test('Audit.requiredFields', async () => {
     const bad = audits.filter((a) => !a.timestamp || !a.objectType || !a.action);
     if (bad.length) throw new Error(`${bad.length} record(s) missing timestamp/objectType/action`);
@@ -327,13 +334,15 @@ async function full(token, me) {
     const cur = await readRole();
     if (!cur) return skip('RoleAssignment.addRemove', `test role ${roleName} has no X: organization assignment`);
     const assigned = cur.positions.map((p) => String(p.descriptor || ''));
-    const pos = ((await wql(token, 'SELECT cf_PositionID, workdayID, cf_PositionIsFilled FROM allPositions WHERE supervisoryOrganization is not empty', 300)).data || [])
+    const pos = ((await wql(token, 'SELECT cf_PositionID, workdayID, position_PositionManagement, cf_PositionText, cf_PositionIsFilled FROM allPositions WHERE supervisoryOrganization is not empty', 300)).data || [])
       .filter((p) => p.cf_PositionID && p.cf_PositionIsFilled !== false && !assigned.some((d) => d.includes(p.cf_PositionID)))[0];
     if (!pos) return skip('RoleAssignment.addRemove', `no unassigned position found for ${roleName}`);
     const posWid = pos.workdayID?.id || pos.workdayID;
+    // Same full name the Manage Role Assignment page sends (its search results' descriptor).
+    const posName = pos.position_PositionManagement?.descriptor || pos.cf_PositionText || pos.cf_PositionID;
     const base = { roleId: cur.role.id, roleName, orgId: cur.org.id, orgName: cur.org.descriptor, effectiveDate: today };
     const add = await launchAndVerify(token, 'AssignRolePositions', {
-      ...base, positionId: pos.cf_PositionID, positionIdType: 'Position_ID', positionName: pos.cf_PositionID,
+      ...base, positionId: pos.cf_PositionID, positionIdType: 'Position_ID', positionName: posName,
       mode: 'ADD', positionWid: posWid, ...who(),
     });
     expectAudit(add, 'Role Assignment', 'ASSIGN POSITION');
@@ -349,6 +358,11 @@ async function full(token, me) {
       mode: 'REMOVE', positionWid: added.id, ...who(),
     });
     expectAudit(rem, 'Role Assignment', 'REMOVE POSITION');
+    // The audit log must show the same full position name for both changes, never a bare ID.
+    for (const a of [add, rem]) {
+      if (/^P-\d+$/.test(String(a.positionName || '').trim())) throw new Error(`${a.action} audit shows only the position ID "${a.positionName}"`);
+    }
+    if (add.positionName !== rem.positionName) throw new Error(`position name differs: assign "${add.positionName}" vs remove "${rem.positionName}"`);
     pass('RoleAssignment.addRemove', `${pos.cf_PositionID} added to and removed from ${roleName} on ${cur.org.descriptor}`);
   });
 
