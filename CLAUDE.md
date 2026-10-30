@@ -2502,6 +2502,8 @@ ACTION: run 'wdcli app deploy ...' locally, log in, update WD_DEV_TOKEN secret
   2. Assign it to the app with the **App Manager** task.
   3. Create orchestration credentials in Orchestration Builder. ISU credentials can't be used in Custom Agent Action orchestrations.
 - Planned use: make audit records and request status writable only by the ISU, through app logic, with users on View only.
+- **Branch `isu-writes` (2026-10-30, pushed, not merged):** the SMD adds `isuAuth` with username `DNU_ISU_ECO_COMS_DEPLOY_CMM` (ISSG `DNU_ISSG_ECO_COMS_DEPLOY_CMM`, which already has Get/Put on Manage: COMS Assignable Roles and View: COMS Audit Log). 14 outbound BO writes to comsAuditLogs / comsAssignableRoles use `isuAuth`; static check 8b enforces it. `launchReview` and BP step `submit` stay `sso` so the requester stays the BP initiator (needed by Exclude Initiator). The ISU therefore needs nothing on the BP security policy.
+- **BP API status for a denied/cancelled event is "Process Terminated"** (not "Denied"). The smoke check BP.statusMatchesEvent compares each request's ECO-COMS status with its review event status.
 
 ### Test-only workflow and cleanup (confirmed live 2026-10-30)
 
