@@ -78,7 +78,7 @@
                   "type": "richText",
                   "id": "aboutText",
                   "enabled": false,
-                  "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">ℹ </span><span style=\"color:#374151;font-size:11px\">Current role assignment is shown below (related actions are on the Shell Org Manager grid). Use Change Positions to add or remove positions; changes run through the Workday Assign Roles business process and are not rescindable.</span>"
+                  "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">ℹ </span><span style=\"color:#374151;font-size:11px\">Current role assignment is shown below (hover a value for its related actions). Use Change Positions to add or remove positions; changes run through the Workday Assign Roles business process and are not rescindable.</span>"
                 }
               ]
             }
@@ -104,12 +104,7 @@
                     "type": "instanceList",
                     "id": "currentRoleNameInstanceList",
                     "view": true,
-                    "relatedTask": true,
-                    "enabled": false,
-                    "widKey": "id",
-                    "values": "<% [] %>",
-                    "multiSelect": true,
-                    "selectedValuesAndDescriptors": "<% (ra.role != null ? [ra.role] : []).map(i => { {'id': i.id, 'descriptor': i.descriptor} }) %>"
+                    "instanceList": "<% ([ra.role]).map(i => { {'descriptor': i.descriptor ?? '', 'wid': i.id ?? ''} }) %>"
                   }
                 },
                 {
@@ -121,12 +116,7 @@
                     "type": "instanceList",
                     "id": "currentAssignmentOrgInstanceList",
                     "view": true,
-                    "relatedTask": true,
-                    "enabled": false,
-                    "widKey": "id",
-                    "values": "<% [] %>",
-                    "multiSelect": true,
-                    "selectedValuesAndDescriptors": "<% (ra.org != null ? [ra.org] : []).map(i => { {'id': i.id, 'descriptor': i.descriptor} }) %>"
+                    "instanceList": "<% ([ra.org]).map(i => { {'descriptor': i.descriptor ?? '', 'wid': i.id ?? ''} }) %>"
                   }
                 },
                 {
@@ -138,17 +128,13 @@
                     "type": "instanceList",
                     "id": "currentPositionsInstanceList",
                     "view": true,
-                    "relatedTask": true,
-                    "enabled": false,
-                    "widKey": "id",
-                    "values": "<% [] %>",
-                    "multiSelect": true,
-                    "selectedValuesAndDescriptors": "<% (ra.positions).map(i => { {'id': i.id, 'descriptor': i.descriptor} }) %>"
+                    "instanceList": "<% (ra.positions).map(i => { {'descriptor': i.descriptor ?? '', 'wid': i.id ?? ''} }) %>"
                   }
                 }
               ],
-              "doNotAdd": true,
-              "doNotRemove": true
+              "gridType": "LIST",
+              "multiViewStylingEnabled": true,
+              "enabled": false
             }
           ]
         },
