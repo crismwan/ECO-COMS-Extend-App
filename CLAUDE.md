@@ -2257,15 +2257,39 @@ Used by newShellOrg / newShellOrgPattern so a Workday rejection blocks OK instea
 - In an editWizard, Next on a step runs the step's `onSubmit` validation, and the final OK runs it again. The launch only fires once all validation passes, on OK.
 - Tested: forced failure → field error, nothing created; valid submit → success page, record verified (Active Orgs 195→196, patterns 377→378).
 
-## manageShellOrgStatus — known broken (found 2026-10-30)
+## manageShellOrgStatus — working (confirmed live 2026-10-30)
 
-- The page sets `standardEditButtonsHidden: true` with a custom `editButtonBar`. That bar renders **no buttons** on a standalone EDIT page, so the page can't submit at all.
-- ManageShellOrgStatus.orchestration has the AddShellOrg bugs that were already fixed there:
-  - GetApplication uses `comsAppId` (it gets `X:ADM`, not a WID).
-  - ExtractOrgType reads it, but the page sends `orgType` empty.
-  - The global error handler swallows failures.
-  - The audit path is missing `/apps/`.
-- **Open question (unverified):** the SOAP body is `Organization_Add_Update` with only Name/Code + `Inactive`. It's not confirmed whether Workday then updates the existing org or creates a new one, since no `Organization_Reference_ID` is sent. Check the WWS docs before running it.
+- **`Organization_Add_Update` cannot change status.** Its `Organization_DataType` (v42.2 WSDL) has no Inactive element. Sending `<bsvc:Inactive>` returns the SOAP fault "Invalid Subelement Inactive ... for element Organization_Data". Source: the tenant WSDL at `https://wcpdev-services1.wd101.myworkday.com/ccx/service/ubc_wcpdev2/Human_Resources/v42.2?wsdl`. The community.workday.com docs page has moved.
+- **The status change uses `Organization_Inactivate` / `Reactivate_Organization_Request`** in the same Human_Resources service:
+  ```xml
+  <bsvc:Organization_Inactivate bsvc:version="v42.2">
+    <bsvc:Validate_Only>false</bsvc:Validate_Only>
+    <bsvc:Organization_Reference_Data>
+      <bsvc:Integration_ID_Reference><bsvc:ID bsvc:System_ID="WD-WID">{{orgWID}}</bsvc:ID></bsvc:Integration_ID_Reference>
+    </bsvc:Organization_Reference_Data>
+    <bsvc:Organization_Inactivate_Data bsvc:Effective_Date="{{yyyy-MM-dd}}"/>
+  </bsvc:Organization_Inactivate>
+
+  <bsvc:Reactivate_Organization_Request bsvc:version="v42.2">
+    <bsvc:Organization_Reference><bsvc:ID bsvc:type="WID">{{orgWID}}</bsvc:ID></bsvc:Organization_Reference>
+  </bsvc:Reactivate_Organization_Request>
+  ```
+  `System_ID="WD-WID"` with the org's WID is accepted. A success response is an empty SOAP Body. Reactivate is untested.
+- **Use `Validate_Only=true` to test a WWS call safely.** Workday checks the request fully and changes nothing.
+- **Orchestration text templates support `{{#if}}` but NOT `{{else}}`.** The build fails with "illegal start of simple expression". Use two `{{#if}}` blocks with Boolean flags. Handlebars treats any non-empty string as true, so the flags come from CreateValues Boolean assignments: `data.GetInputParams.includeInactive.equals("true")` (type `Boolean`, Expr `["Expr","Boolean"]`). This uploaded and ran fine.
+- **Logging the WWS response:** a `Log` node with message `"..." + data.CallOrganizationUpdate.response.toString()` writes the full SOAP response, including fault text, to developer.workday.com → app → Logs. Kept in ManageShellOrgStatus as `LogWWSResponse`.
+- **Reading CI build errors:** `gh run view --log` is blocked from the cloud container. The GitHub run page (Summary → "Upload Failure") in the browser shows the App Hub build output.
+- **Page check (run-and-verify):**
+  - The page reads `GET BUSINESS-OBJECT /comsAuditLogs?limit=1` `.total` before and after the launch. The orchestration writes an audit record only when Workday accepts the change.
+  - A WQL count of `comsAuditLogs` lagged and gave false "rejected" errors.
+  - Checking `cf_active1` can't work for future-dated changes, because the org is still active today.
+- The page has an **Effective Date** field (sent to the SOAP request) and standard OK/Cancel, with `cancelOverride` to shellOrgManager.
+- **Scope note:** a status change dated in the future leaves Shell Org Manager showing "Active" until that date.
+- Test records inactivated effective 2026-12-15:
+  - `X:ADM:TEST:ORG:1029`, `1030`, `1031`
+  - `X:CLW:PATTERN:MATH:MATH:300/301/302:951:2026W1`
+  - 1029 was confirmed in its Workday audit trail ("made inactive on 2026-12-15").
+
 ## Orchestrations — ISU auth requires manual per-tenant setup
 
 An orchestration endpoint using `isuAuth` will **fail with HTTP 500 and an empty body** until the ISU (Integration System User) is explicitly assigned to the app in **Application Manager** for that tenant. Naming the ISU in the SMD is not sufficient — it must be configured in each environment after every promotion:
