@@ -81,7 +81,7 @@
                 "label": "Timestamp",
                 "cellTemplate": {
                   "type": "text",
-                  "value": "<% logEntry.timestamp %>",
+                  "value": "<% logEntry.timestamp ?? '' %>",
                   "enabled": false
                 },
                 "sortableAndFilterable": "true"
@@ -93,7 +93,7 @@
                 "label": "Object Type",
                 "cellTemplate": {
                   "type": "text",
-                  "value": "<% logEntry.objectType %>",
+                  "value": "<% logEntry.objectType ?? '' %>",
                   "enabled": false
                 },
                 "sortableAndFilterable": "true"
@@ -105,7 +105,7 @@
                 "label": "Action",
                 "cellTemplate": {
                   "type": "text",
-                  "value": "<% logEntry.action %>",
+                  "value": "<% logEntry.action ?? '' %>",
                   "enabled": false
                 },
                 "sortableAndFilterable": "true"
@@ -117,7 +117,7 @@
                 "label": "CO Reference ID",
                 "cellTemplate": {
                   "type": "text",
-                  "value": "<% logEntry.coReferenceId %>",
+                  "value": "<% logEntry.coReferenceId ?? '' %>",
                   "enabled": false
                 },
                 "sortableAndFilterable": "true"
@@ -129,7 +129,7 @@
                 "label": "CO Name",
                 "cellTemplate": {
                   "type": "text",
-                  "value": "<% logEntry.coName %>",
+                  "value": "<% logEntry.coName ?? '' %>",
                   "enabled": false
                 },
                 "sortableAndFilterable": "true"
@@ -141,7 +141,7 @@
                 "label": "Worker",
                 "cellTemplate": {
                   "type": "text",
-                  "value": "<% logEntry.worker.descriptor %>",
+                  "value": "<% !empty(logEntry.worker) ? (logEntry.worker.descriptor ?? '') : '' %>",
                   "enabled": false
                 },
                 "sortableAndFilterable": "true"
@@ -153,7 +153,7 @@
                 "label": "Application",
                 "cellTemplate": {
                   "type": "text",
-                  "value": "<% logEntry.application.descriptor %>",
+                  "value": "<% !empty(logEntry.application) ? (logEntry.application.descriptor ?? '') : '' %>",
                   "enabled": false
                 },
                 "sortableAndFilterable": "true"
@@ -165,7 +165,7 @@
                 "label": "Triggered By",
                 "cellTemplate": {
                   "type": "text",
-                  "value": "<% logEntry.triggeredBy %>",
+                  "value": "<% logEntry.triggeredBy ?? '' %>",
                   "enabled": false
                 },
                 "sortableAndFilterable": "true"
@@ -177,7 +177,7 @@
                 "label": "Details",
                 "cellTemplate": {
                   "type": "text",
-                  "value": "<% logEntry.details %>",
+                  "value": "<% logEntry.details ?? '' %>",
                   "enabled": false
                 },
                 "sortableAndFilterable": "true"

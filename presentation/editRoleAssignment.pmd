@@ -148,7 +148,9 @@
                 }
               ],
               "doNotAdd": true,
-              "doNotRemove": true
+              "doNotRemove": true,
+              "gridType": "LIST",
+              "multiViewStylingEnabled": true
             }
           ]
         },
