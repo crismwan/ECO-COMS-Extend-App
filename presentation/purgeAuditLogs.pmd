@@ -17,21 +17,14 @@
       ]
     }
   ],
-  "onSubmit": "<% if (confirmPurgeCheckBox.value != true) { confirmPurgeCheckBox.setError('Tick the box to confirm.'); false; } else { true; } %>",
   "outboundData": {
     "outboundEndPoints": [
       {
-        "name": "bulkDeleteAuditLogs",
+        "name": "deleteAuditLog",
         "baseUrlType": "BUSINESS-OBJECT",
-        "url": "/comsAuditLogs?bulk=true",
+        "url": "<% '/comsAuditLogs/' + auditIdText.value %>",
         "httpMethod": "DELETE",
-        "authType": "sso",
-        "values": [
-          {
-            "outboundPath": "data",
-            "value": "<% (allAuditLogs.data ?? []).map(a => { {'id': a.id} }) %>"
-          }
-        ]
+        "authType": "sso"
       }
     ],
     "responseErrorDetail": {
@@ -66,12 +59,45 @@
                   "label": "Records to delete",
                   "enabled": false,
                   "value": "<% '' + size(allAuditLogs.data ?? []) %>"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "purgeGridSection",
+          "children": [
+            {
+              "type": "grid",
+              "id": "auditLogsGrid",
+              "label": "Audit records (remove rows, then OK)",
+              "rows": "<% allAuditLogs.data ?? [] %>",
+              "rowVariableName": "logRow",
+              "doNotAdd": true,
+              "deleteEndPoint": "deleteAuditLog",
+              "columns": [
+                {
+                  "type": "column",
+                  "columnId": "idColumn",
+                  "label": "Id",
+                  "cellTemplate": {
+                    "type": "text",
+                    "id": "auditIdText",
+                    "value": "<% logRow.id ?? '' %>",
+                    "enabled": false
+                  }
                 },
                 {
-                  "type": "checkBox",
-                  "id": "confirmPurgeCheckBox",
-                  "label": "I confirm all audit records will be permanently deleted",
-                  "value": "<% false %>"
+                  "type": "column",
+                  "columnId": "typeColumn",
+                  "label": "Type",
+                  "cellTemplate": {
+                    "type": "text",
+                    "id": "auditTypeText",
+                    "value": "<% (logRow.objectType ?? '') + ' ' + (logRow.action ?? '') %>",
+                    "enabled": false
+                  }
                 }
               ]
             }
