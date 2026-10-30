@@ -155,7 +155,7 @@
           },
           {
             "outboundPath": "coName",
-            "value": "<% generatedRoleName.value ?? '' %>"
+            "value": "<% !empty(applicationDropdown.value) ? (applicationDropdown.selectedEntries[0].descriptor ?? '') : '' %>"
           },
           {
             "outboundPath": "details",
@@ -176,6 +176,10 @@
           {
             "outboundPath": "changedByWid",
             "value": "<% selectedWorker.id ?? '' %>"
+          },
+          {
+            "outboundPath": "positionName",
+            "value": "<% (positionsList.selectedEntries ?? []).map(p => { p.descriptor }).join(', ') %>"
           }
         ],
         "failOnStatusCodes": [

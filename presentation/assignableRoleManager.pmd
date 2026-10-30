@@ -183,6 +183,10 @@
           {
             "outboundPath": "changedByWid",
             "value": "<% selectedWorker.id ?? '' %>"
+          },
+          {
+            "outboundPath": "positionName",
+            "value": "<% (positionsList.selectedEntries ?? []).map(p => { p.descriptor }).join(', ') %>"
           }
         ],
         "failOnStatusCodes": [
