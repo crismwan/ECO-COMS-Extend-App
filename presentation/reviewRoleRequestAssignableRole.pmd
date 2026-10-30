@@ -320,7 +320,7 @@
                   "type": "richText",
                   "id": "arHelpRichText",
                   "enabled": false,
-                  "value": "<% '<span style=\"color:#374151;font-size:13px\">ⓘ Select the Workday assignable role created in step 3 and enter the role-based security group created in step 4, then click OK. This approves the request and removes it from Pending ISC Requests.</span>' %>"
+                  "value": "<% '<span style=\"color:#374151;font-size:13px\">ⓘ Select the Workday assignable role created in step 3 and confirm the role-based security group created in step 4 (named with the full role name, prefilled here), then click OK. This approves the request and removes it from Pending ISC Requests.</span>' %>"
                 }
               ]
             }
@@ -358,7 +358,7 @@
                   "id": "securityGroupNameText",
                   "label": "Role-Based Security Group",
                   "required": true,
-                  "value": "<% request.securityGroupName ?? '' %>",
+                  "value": "<% request.securityGroupName ?? (request.roleName ?? '') %>",
                   "valueOutBinding": "approveRequest.securityGroupName"
                 }
               ]
