@@ -4,6 +4,12 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      e2e_suite:
+        description: "Post-deploy e2e suite: smoke (read-only) or full (also creates and inactivates a TEST shell org)"
+        type: choice
+        options: [smoke, full]
+        default: smoke
 
 jobs:
   deploy:
@@ -112,6 +118,9 @@ jobs:
 
       - name: Validate presentation files before upload
         run: python3 .github/scripts/validate_pmd.py
+
+      - name: Static checks (block upload on known platform pitfalls)
+        run: python3 test/static_checks.py
 
       - name: Upload app to App Hub
         env:
@@ -382,3 +391,20 @@ jobs:
             echo "=== wdcli deploy FAILED with exit code ${DEPLOY_EXIT} ==="
             exit ${DEPLOY_EXIT}
           fi
+
+      - name: Post-deploy e2e tests
+        env:
+          WD_DEV_TOKEN: ${{ secrets.WD_DEV_TOKEN }}
+          E2E_SUITE: ${{ github.event.inputs.e2e_suite || 'smoke' }}
+        run: |
+          # Give the new version a moment to go live before testing it.
+          sleep 30
+          node test/e2e.js --suite "${E2E_SUITE}"
+
+      - name: Upload e2e results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-results
+          path: test/e2e-results.json
+          if-no-files-found: ignore

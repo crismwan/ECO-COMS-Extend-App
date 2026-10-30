@@ -2473,6 +2473,14 @@ ACTION: run 'wdcli app deploy ...' locally, log in, update WD_DEV_TOKEN secret
 
 **Important:** The code itself is fine when this failure occurs — do not revert commits or alter the code. The failure is purely an infrastructure/secrets rotation issue.
 
+### Tests in the pipeline (added 2026-10-30)
+
+- `test/static_checks.py` runs before upload and blocks on known pitfalls (pageType case, `_` attributes, hidden OK with no editButtonBar, unresolved taskIds, missing orchestrations, BP routes, card params/quotes, forbidden test text, size limits). Known issues go in `KNOWN_ISSUES` with a reason and show as warnings.
+- `node test/e2e.js` runs after deploy (read-only smoke) with `WD_DEV_TOKEN`. `--suite full` (manual workflow_dispatch input `e2e_suite=full`) also creates and inactivates an `X:ADM:TEST:CI:<stamp>` org.
+- Coverage map and manual checklist: `test/README.md`.
+- Unverified until the first CI run: that the PKCE `WD_DEV_TOKEN` works for `api.workday.com` REST/WQL/BP calls, and that orchestration launch via `POST api.workday.com/orchestrate/v1/apps/<app>/orchestrations/<Name>/launch` works outside a page.
+- `ManageShellOrgStatus` writes its audit record even when `validateOnly=true`, so validate-only can't be used for safe per-deploy write tests until the audit write is made conditional.
+
 ### Run time baseline
 
 - A healthy deploy run completes in **~1m15s**.
