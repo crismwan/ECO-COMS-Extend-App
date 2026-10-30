@@ -100,11 +100,6 @@ async function test(name, fn) {
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const wql = (token, query, limit = 100) =>
   request('GET', `${WQL}?limit=${limit}&query=${encodeURIComponent(query)}`, token);
-const auditTotal = async (token) => (await request('GET', `${BO}/comsAuditLogs?limit=1`, token)).total;
-const latestAudit = async (token) => {
-  const all = (await request('GET', `${BO}/comsAuditLogs?limit=100`, token)).data || [];
-  return all.sort((a, b) => String(b.timestamp || '').localeCompare(String(a.timestamp || '')))[0];
-};
 // ManageShellOrgStatus picks inactivate vs reactivate from includeInactive ("true" = inactivate),
 // not from action; action is only written to the audit record. Send both, as the page does.
 const launch = (token, name, params) => {
@@ -114,11 +109,14 @@ const launch = (token, name, params) => {
 // Same check the pages use (run-and-verify): the orchestration writes an audit record only
 // after Workday accepts the change, so a +1 audit total means the call really worked.
 async function launchAndVerify(token, name, params) {
-  const before = await auditTotal(token);
+  const ids = async () => ((await request('GET', `${BO}/comsAuditLogs?limit=100`, token)).data || []);
+  const before = new Set((await ids()).map((a) => a.id));
   await launch(token, name, params);
   for (let i = 0; i < 10; i++) {
     await sleep(2000);
-    if ((await auditTotal(token)) > before) return latestAudit(token);
+    // Match the new record by id: timestamps can tie, so "newest" is not reliable.
+    const fresh = (await ids()).filter((a) => !before.has(a.id));
+    if (fresh.length) return fresh[0];
   }
   throw new Error(`${name}: no new audit record after 20 s (Workday rejected the call or the orchestration failed; check app Logs)`);
 }
@@ -181,7 +179,9 @@ async function smoke(token, me) {
     pass('Requests.deniedInactive', 'every Denied request is inactive (DenyRoleRequest orchestration)');
   });
   await test('Requests.approvedHaveGroup', async () => {
-    const bad = roles.filter((r) => r.status === 'Approved' && r.reviewEventWid && !r.securityGroupName);
+    // TESTROLE1033 was approved before securityGroupName existed and can't be deleted (linked to its review event).
+    const LEGACY = ['2ea70ec010b490020488f73e422e0000'];
+    const bad = roles.filter((r) => r.status === 'Approved' && r.reviewEventWid && !r.securityGroupName && !LEGACY.includes(r.id));
     if (bad.length) throw new Error(`${bad.length} BP-approved request(s) with no securityGroupName, e.g. ${bad[0].roleName}`);
     pass('Requests.approvedHaveGroup', 'BP-approved requests record their security group');
   });
