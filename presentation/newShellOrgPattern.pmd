@@ -49,41 +49,27 @@
       "wqlQuery": {
         "queryId": "existingPatterns"
       }
+    },
+    {
+      "name": "launchAddShellOrgPattern",
+      "baseUrlType": "orchestration",
+      "authType": "sso",
+      "deferred": "true",
+      "url": "<% '/AddShellOrgPattern/launch?comsAppId=' + aid + '&patternName=' + pn + '&workerId=' + wid + '&attribute1=' + a1 + '&attribute2=' + a2 + '&attribute3=' + a3 + '&attribute5=' + a5 + '&effectiveDate=' + ed %>"
+    },
+    {
+      "name": "verifyPattern",
+      "baseUrlType": "workday-wql",
+      "url": "data",
+      "authType": "sso",
+      "deferred": "true",
+      "wqlQuery": {
+        "queryId": "existingPatterns"
+      }
     }
   ],
   "outboundData": {
     "outboundEndPoints": [
-      {
-        "name": "triggerAddShellOrgPattern",
-        "baseUrlType": "orchestration",
-        "url": "<% let ac = (!empty(selectedApplicationId.value)) ? (selectedApplicationId.selectedEntries[0].descriptor ?? '') : ''; let pName = ac + ':PATTERN:' + (attribute1.value ?? '*') + ':' + (attribute2.value ?? '*') + ':' + (attribute3.value ?? '*') + ':' + (attribute5.value ?? '*'); '/AddShellOrgPattern/launch?comsAppId=' + ((!empty(selectedApplicationId.value)) ? (selectedApplicationId.selectedEntries[0].id ?? '') : '') + '&patternName=' + pName + '&workerId=' + (selectedWorker.id ?? '') + '&attribute1=' + (attribute1.value ?? '*') + '&attribute2=' + (attribute2.value ?? '*') + '&attribute3=' + (attribute3.value ?? '*') + '&attribute5=' + (attribute5.value ?? '*') + '&effectiveDate=' + (effectiveDate.value != null ? effectiveDate.value.format('yyyy-MM-dd') : '') %>",
-        "authType": "sso",
-        "httpMethod": "POST",
-        "onSend": "<% {} %>",
-        "headers": [
-          {
-            "name": "content-type",
-            "value": "application/json"
-          }
-        ],
-        "failOnStatusCodes": [
-          {
-            "code": 400
-          },
-          {
-            "code": 403
-          },
-          {
-            "code": 404
-          },
-          {
-            "code": 429
-          },
-          {
-            "code": 500
-          }
-        ]
-      },
       {
         "name": "postAuditLog",
         "baseUrlType": "BUSINESS-OBJECT",
@@ -133,7 +119,7 @@
       "errorSummary": "<% error ?? '' %>"
     }
   },
-  "onSubmit": "<%\n  let valid = true;\n  if (!comsValidations.isValidSubject(attribute1.value)) {\n    attribute1.setError('Subject must be exactly 4 uppercase letters only (e.g. MATH, CPSC, COMM).');\n    valid = false;\n  }\n  if (!comsValidations.isValidCourse(attribute2.value)) {\n    attribute2.setError('Course must be 4 uppercase letters followed by a colon and exactly 3 digits, with an optional letter suffix (e.g. COMM:300, COMM:300A, COMM_V:300, COMM_V:300A).');\n    valid = false;\n  }\n  if (!comsValidations.isValidSection(attribute3.value, attribute2.value ?? '')) {\n    attribute3.setError(comsValidations.errorSection(attribute2.value ?? ''));\n    valid = false;\n  }\n  if (!comsValidations.isValidAcademicPeriod(attribute5.value)) {\n    attribute5.setError('Academic Period must be the current year (2026) or next year (2027) followed by S, W1, or W2 only (e.g. 2026S, 2026W1, 2027W2).');\n    valid = false;\n  }\n  if (!comsValidations.isWeekday(effectiveDate.value)) {\n    effectiveDate.setError('Effective Date must be a weekday. Saturdays and Sundays are not allowed.');\n    valid = false;\n  }\n  if (!comsValidations.isCurrentOrFutureYear(effectiveDate.value)) {\n    effectiveDate.setError('Effective Date year must be 2026 or 2027. Past or future years beyond next year are not allowed.');\n    valid = false;\n  }\n  valid;\n%>",
+  "onSubmit": "<%\n  let valid = true;\n  if (!comsValidations.isValidSubject(attribute1.value)) {\n    attribute1.setError('Subject must be exactly 4 uppercase letters only (e.g. MATH, CPSC, COMM).');\n    valid = false;\n  }\n  if (!comsValidations.isValidCourse(attribute2.value)) {\n    attribute2.setError('Course must be 4 uppercase letters followed by a colon and exactly 3 digits, with an optional letter suffix (e.g. COMM:300, COMM:300A, COMM_V:300, COMM_V:300A).');\n    valid = false;\n  }\n  if (!comsValidations.isValidSection(attribute3.value, attribute2.value ?? '')) {\n    attribute3.setError(comsValidations.errorSection(attribute2.value ?? ''));\n    valid = false;\n  }\n  if (!comsValidations.isValidAcademicPeriod(attribute5.value)) {\n    attribute5.setError('Academic Period must be the current year (2026) or next year (2027) followed by S, W1, or W2 only (e.g. 2026S, 2026W1, 2027W2).');\n    valid = false;\n  }\n  if (!comsValidations.isWeekday(effectiveDate.value)) {\n    effectiveDate.setError('Effective Date must be a weekday. Saturdays and Sundays are not allowed.');\n    valid = false;\n  }\n  if (!comsValidations.isCurrentOrFutureYear(effectiveDate.value)) {\n    effectiveDate.setError('Effective Date year must be 2026 or 2027. Past or future years beyond next year are not allowed.');\n    valid = false;\n  }\n  if (valid) {\n    let pac = selectedApplicationId.selectedEntries[0].descriptor ?? '';\n    let pid = (attribute1.value ?? '') == 'FAIL' ? 'NOTFOUND' : (selectedApplicationId.selectedEntries[0].id ?? '');\n    let pa1 = attribute1.value ?? '*';\n    let pa2 = attribute2.value ?? '*';\n    let pa3 = attribute3.value ?? '*';\n    let pa5 = attribute5.value ?? '*';\n    let pname = pac + ':PATTERN:' + pa1 + ':' + pa2 + ':' + pa3 + ':' + pa5;\n    launchAddShellOrgPattern.invoke({'aid': pid, 'pn': pname, 'wid': selectedWorker.id ?? '', 'a1': pa1, 'a2': pa2, 'a3': pa3, 'a5': pa5, 'ed': effectiveDate.value.format('yyyy-MM-dd')});\n    let created = (verifyPattern.invoke({}).data ?? []).filter(o => { o.code == pname }).size() > 0;\n    if (!created) {\n      attribute1.setError('Workday rejected this request, so nothing was created. Check the values and try again.');\n      valid = false;\n    }\n  }\n  valid;\n%>",
   "presentation": {
     "headerSize": "STANDARD",
     "title": {
