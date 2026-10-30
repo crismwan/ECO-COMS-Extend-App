@@ -2481,7 +2481,7 @@ ACTION: run 'wdcli app deploy ...' locally, log in, update WD_DEV_TOKEN secret
 - Unverified until the first CI run: that the PKCE `WD_DEV_TOKEN` works for `api.workday.com` REST/WQL/BP calls, and that orchestration launch via `POST api.workday.com/orchestrate/v1/apps/<app>/orchestrations/<Name>/launch` works outside a page.
 - `ManageShellOrgStatus` writes its audit record even when `validateOnly=true`, so validate-only can't be used for safe per-deploy write tests until the audit write is made conditional.
 
-### ManageShellOrgStatus input guard (2026-10-30, built, not yet deployed)
+### ManageShellOrgStatus input guard (deployed and confirmed live 2026-10-30 21:46 UTC)
 
 - `auditAction` (ExtractInactiveFlag) = `(if (data.ExtractInactiveFlag.isInactivate) "INACTIVATE" else "REACTIVATE")`. The audit template and logs use it, not the caller's `action`.
 - `LookupShellOrgs`: GET `/wql/v1/data?limit=10000&query=<encoded: SELECT workdayID FROM topLevelOrganizations WHERE code contains 'X:'>` with the default credential. Untested: that the orchestration's Workday API path base accepts `/wql/v1/...`.
@@ -2493,6 +2493,8 @@ ACTION: run 'wdcli app deploy ...' locally, log in, update WD_DEV_TOKEN secret
   - LookupShellOrgs response `.toString().contains(orgId)`
 - String member functions (developer.workday.com "Reference: String Member Functions") include contains, startsWith, equals, isEmpty, toString.
 - e2e full adds Guard.actionMismatch and Guard.notShellOrg (orgId = the worker's WID, validateOnly=true) to prove rejection.
+- Full e2e passed 23/0/1 after deploy: both Guard tests rejected as expected, so the orchestration GET to `/wql/v1/data?...` (LookupShellOrgs) works with the default credential.
+- **A WD_DEV_TOKEN copied from a stale config.json can expire mid-deploy.** wdcli then fails with "Cannot read properties of undefined (reading 'success')" instead of a 401. Rerun right after updating the secrets.
 
 ### ISU authentication (developer.workday.com "Configure ISU Authentication in Presentation Components")
 
