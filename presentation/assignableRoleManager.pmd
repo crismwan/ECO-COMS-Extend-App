@@ -349,7 +349,7 @@
                       "label": "Positions / Delegated Roles",
                       "cellTemplate": {
                         "type": "text",
-                        "value": "<% empty(role.positions) || empty(positions.data) ? '' : positions.data.filter(p => { role.positions.contains(p.id) }).map(p => { p.descriptor }).join(', ') %>",
+                        "value": "<% !empty(role.positionNames) ? role.positionNames : (empty(role.positions) || empty(positions.data) ? '' : positions.data.filter(p => { role.positions.contains(p.id) }).map(p => { p.descriptor }).join(', ')) %>",
                         "enabled": false
                       }
                     },

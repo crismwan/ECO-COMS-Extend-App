@@ -220,6 +220,14 @@ async function smoke(token, me) {
     pass('BP.statusMatchesEvent', `${checked} closed request(s) match their review event outcome`);
   });
 
+  await test('Requests.pendingHavePositions', async () => {
+    const pending = roles.filter((r) => r.status === 'Pending ISC Review');
+    if (!pending.length) return skip('Requests.pendingHavePositions', 'no pending requests');
+    const bad = pending.filter((r) => !(r.positions || r.positionWids) || !r.positionNames);
+    if (bad.length) throw new Error(`${bad.length} pending request(s) without positions or position names, e.g. ${bad[0].roleName}`);
+    pass('Requests.pendingHavePositions', `${pending.length} pending request(s) carry positions and their names`);
+  });
+
   await test('BP.pendingEventsOpen', async () => {
     const pending = roles.filter((r) => r.status === 'Pending ISC Review' && r.reviewEventWid).slice(0, 5);
     if (!pending.length) return skip('BP.pendingEventsOpen', 'no pending requests with a review event');
@@ -423,18 +431,30 @@ async function full(token, me) {
   // ── Two pending ISC requests, left open for review: one on the new shell org, one on the new pattern ──
   // Built the way the Assignable Role Manager page builds them (<org code>:ROLE:<name>, REQUEST audit,
   // then StartRoleRequestReview). Cleanup cancels their reviews, which marks them Denied.
+  // One filled position, sent like the page's Positions field: WIDs in positions/positionWids, full names in positionNames.
+  let testPos = null;
+  const pickPosition = async () => {
+    if (testPos) return testPos;
+    const p = ((await wql(token, 'SELECT cf_PositionID, workdayID, position_PositionManagement, cf_PositionText, cf_PositionIsFilled FROM allPositions WHERE supervisoryOrganization is not empty', 50)).data || [])
+      .find((x) => x.cf_PositionIsFilled !== false && (x.position_PositionManagement?.descriptor || x.cf_PositionText));
+    if (!p) throw new Error('no filled position found for the test requests');
+    testPos = { wid: p.workdayID?.id || p.workdayID, name: p.position_PositionManagement?.descriptor || p.cf_PositionText };
+    return testPos;
+  };
   const pendingRequest = async (name, orgCode, orgWid, appCode) => {
     const roleName = `${orgCode}:ROLE:TESTROLE`;
+    const pos = await pickPosition();
     const ref = `CI-RUN${runNo}-${name}-${Math.random().toString(36).slice(2, 8)}`;
     const req = await request('POST', `${BO}/comsAssignableRoles`, token, {
       referenceId: ref, roleName, workdayRoleId: roleName, application: appCode, shellOrgCode: orgCode, shellOrgWid: orgWid,
       status: 'Pending ISC Review', requestedDate: today, requestedBy: { id: me.id }, active: false, effectiveDate: today,
+      positions: pos.wid, positionWids: pos.wid, positionNames: pos.name,
     });
     if (!req.id) throw new Error('request POST returned no id');
     await request('POST', `${BO}/comsAuditLogs`, token, {
       timestamp: who().timestamp, objectType: 'Assignable Role', action: 'REQUEST', coReferenceId: roleName, coName: orgCode,
       details: `Assignable role request submitted: ${roleName} for org ${orgCode}`, triggeredBy: me.descriptor,
-      roleName, effectiveDate: today, changedByWid: me.id, positionName: '',
+      roleName, effectiveDate: today, changedByWid: me.id, positionName: pos.name,
     });
     await launch(token, 'StartRoleRequestReview', { ref });
     let eventWid = null;
@@ -446,19 +466,19 @@ async function full(token, me) {
     const ev = await request('GET', `${BP}/events/${eventWid}`, token);
     const st = String(ev?.status?.descriptor || ev?.overallStatus?.descriptor || '');
     if (/complete|terminat|cancel|denied/i.test(st)) throw new Error(`review event for ${roleName} is already "${st}"`);
-    return { roleName, st };
+    return { roleName, st, pos: pos.name };
   };
 
   await test('Request.pendingShellOrg', async () => {
     if (!orgWid) return skip('Request.pendingShellOrg', 'no org from ShellOrg.add');
     const r = await pendingRequest('ORG', orgName, orgWid, 'X:ADM');
-    pass('Request.pendingShellOrg', `${r.roleName} is pending ISC review ("${r.st || 'in progress'}")`);
+    pass('Request.pendingShellOrg', `${r.roleName} (position ${r.pos}) is pending ISC review ("${r.st || 'in progress'}")`);
   });
 
   await test('Request.pendingPattern', async () => {
     if (!pattern) return skip('Request.pendingPattern', 'no pattern from Pattern.add');
     const r = await pendingRequest('PAT', pattern.code, pattern.wid, pattern.appCode);
-    pass('Request.pendingPattern', `${r.roleName} is pending ISC review ("${r.st || 'in progress'}")`);
+    pass('Request.pendingPattern', `${r.roleName} (position ${r.pos}) is pending ISC review ("${r.st || 'in progress'}")`);
   });
 }
 
@@ -544,10 +564,15 @@ async function cleanup(token, me) {
       });
       // An org with another status change already dated today is rejected; try tomorrow instead.
       let eff = FIXED || today;
-      if (FIXED) await launchAndVerify(token, 'ManageShellOrgStatus', params(FIXED));
-      else try { await launchAndVerify(token, 'ManageShellOrgStatus', params(today)); } catch (_) {
-        eff = tomorrow;
-        await launchAndVerify(token, 'ManageShellOrgStatus', params(tomorrow));
+      try {
+        if (FIXED) await launchAndVerify(token, 'ManageShellOrgStatus', params(FIXED));
+        else try { await launchAndVerify(token, 'ManageShellOrgStatus', params(today)); } catch (_) {
+          eff = tomorrow;
+          await launchAndVerify(token, 'ManageShellOrgStatus', params(tomorrow));
+        }
+      } catch (_) {
+        // Workday allows one pending status change: an org whose inactivation is already scheduled is rejected.
+        return skip(`Cleanup.inactivate ${code(o)}`, 'not changed: it most likely already has an inactivation scheduled');
       }
       pass(`Cleanup.inactivate ${code(o)}`, `inactivated effective ${eff}`);
     });

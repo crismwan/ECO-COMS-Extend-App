@@ -400,7 +400,7 @@
                   "gridType": "LIST",
                   "id": "posGrid",
                   "label": "Positions",
-                  "rows": "<% empty(selectedRole.positionWids) ? (empty(selectedRole.positions) ? [] : positions.data.filter(p => { selectedRole.positions.contains(p.id) })) : positions.data.filter(p => { selectedRole.positionWids.contains(p.id) }) %>",
+                  "rows": "<% !empty(selectedRole.positionNames) ? (!empty(selectedRole.positions) ? selectedRole.positions : (selectedRole.positionWids ?? '')).splitByRegex(',').map((pid, i) => { { 'id': pid.trim(), 'descriptor': (!empty(selectedRole.positionNames) && selectedRole.positionNames.splitByRegex(', ').size() > i) ? selectedRole.positionNames.splitByRegex(', ')[i] : pid.trim() } }) : (empty(selectedRole.positionWids) ? (empty(selectedRole.positions) ? [] : positions.data.filter(p => { selectedRole.positions.contains(p.id) })) : positions.data.filter(p => { selectedRole.positionWids.contains(p.id) })) %>",
                   "rowVariableName": "pos",
                   "enabled": false,
                   "columns": [
