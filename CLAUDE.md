@@ -2242,10 +2242,30 @@ WQL Query component parameters are interpolated server-side — not string-conca
 
 - AddShellOrg / AddShellOrgPattern now have a **Continue on Conditions** step `CheckWWSAccepted` right after `CallAddUpdateOrganization`: assertion `data.CallAddUpdateOrganization.responseStatusCode.is2xxStatusCode().not().or(data.CallAddUpdateOrganization.response.isSoapFault()).not()`, message `"Workday rejected the request for " + <name>`. Node `_type` is `ContinueOnConditions` with `assertions: List<Assertion{assertion: Expr Boolean, message: Expr String}>` (JSON taken from Orchestration Builder output, source: developer.workday.com "Concept: Orchestration Logic Components").
 - The global error handler was removed (it only logged and swallowed errors).
-- **Confirmed:** a forced WWS rejection (SOAP 500) → CheckWWSAccepted fails with an ERROR log → nothing created. **But the Orchestrate `/launch` call still returns HTTP 200** (text/plain body ~107 bytes) to the PMD, so the page's `failOnStatusCodes` never fires and the success page still shows. The page cannot see failures through the outbound launch endpoint. Open decision on how to surface it.
+- **Confirmed:** a forced WWS rejection (SOAP 500) → CheckWWSAccepted fails with an ERROR log → nothing created. **But the Orchestrate `/launch` call still returns HTTP 200** (text/plain body ~107 bytes) to the PMD, so the page's `failOnStatusCodes` never fires and the success page still shows. The page cannot see failures through the outbound launch endpoint. Solved by run-and-verify, below.
 - Getting real JSON for a component the repo doesn't use yet: add it in Orchestration Builder (drag from Components; synthetic drags need HTML5 DragEvents), save that orchestration to App Hub (no deploy), then console → app → Related Actions → **View Source** → Activity build → open the `.orchestration` file. CI's next upload overwrites App Hub with the repo version.
 - Orchestration Builder may show "Updates Available in App Hub" with an old session; Discard Session loads the latest.
 
+
+### Run-and-verify in `onSubmit` (confirmed live 2026-10-30)
+
+Used by newShellOrg / newShellOrgPattern so a Workday rejection blocks OK instead of showing "Created":
+
+- Launch the orchestration from `onSubmit` through a **deferred inbound** endpoint (`baseUrlType: "orchestration"`, url `'/<Name>/launch?param=' + p + ...`, params bare in the URL) with `endpoint.invoke({'p': value, ...})`.
+- Then re-read the data with a second deferred endpoint and check the record exists. If it doesn't, call `someField.setError('Workday rejected this request, so nothing was created...')` and return `false`.
+- **`.invoke()` on a WQL endpoint that uses `wqlQuery` / `queryId` throws `Unknown Function call: .invoke({ })`.** Instead, call WQL as a plain GET: `"baseUrlType": "workday-wql"`, `"url": "<% 'data?limit=' + lim + '&query=<URL-encoded WQL>' %>"`, and invoke it with `.invoke({'lim': '10000'})`. Keep the WQL static (no user input) and filter in script.
+- In an editWizard, Next on a step runs the step's `onSubmit` validation, and the final OK runs it again. The launch only fires once all validation passes, on OK.
+- Tested: forced failure → field error, nothing created; valid submit → success page, record verified (Active Orgs 195→196, patterns 377→378).
+
+## manageShellOrgStatus — known broken (found 2026-10-30)
+
+- The page sets `standardEditButtonsHidden: true` with a custom `editButtonBar`. That bar renders **no buttons** on a standalone EDIT page, so the page can't submit at all.
+- ManageShellOrgStatus.orchestration has the AddShellOrg bugs that were already fixed there:
+  - GetApplication uses `comsAppId` (it gets `X:ADM`, not a WID).
+  - ExtractOrgType reads it, but the page sends `orgType` empty.
+  - The global error handler swallows failures.
+  - The audit path is missing `/apps/`.
+- **Open question (unverified):** the SOAP body is `Organization_Add_Update` with only Name/Code + `Inactive`. It's not confirmed whether Workday then updates the existing org or creates a new one, since no `Organization_Reference_ID` is sent. Check the WWS docs before running it.
 ## Orchestrations — ISU auth requires manual per-tenant setup
 
 An orchestration endpoint using `isuAuth` will **fail with HTTP 500 and an empty body** until the ISU (Integration System User) is explicitly assigned to the app in **Application Manager** for that tenant. Naming the ISU in the SMD is not sufficient — it must be configured in each environment after every promotion:
