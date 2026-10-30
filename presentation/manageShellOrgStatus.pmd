@@ -9,7 +9,7 @@
       "baseUrlType": "orchestration",
       "authType": "sso",
       "deferred": "true",
-      "url": "<% '/ManageShellOrgStatus/launch?orgId=' + oid + '&action=' + act + '&orgCode=' + oc + '&orgName=' + on + '&includeInactive=' + inact + '&effectiveDate=' + ed + '&patternName=' + oc + '&orgType=' + ot + '&comsAppId=' + ot %>"
+      "url": "<% '/ManageShellOrgStatus/launch?orgId=' + oid + '&action=' + act + '&orgCode=' + oc + '&orgName=' + on + '&includeInactive=' + inact + '&effectiveDate=' + ed + '&patternName=' + oc + '&orgType=' + ot + '&comsAppId=' + ot + '&validateOnly=' + vo %>"
     },
     {
       "name": "verifyOrgStatus",
@@ -85,7 +85,7 @@
       "errorSummary": "<% error ?? '' %>"
     }
   },
-  "onSubmit": "<%\n  let valid = true;\n  if (confirmStatusChange.value != true) {\n    confirmStatusChange.setError('Please confirm the status change.');\n    valid = false;\n  }\n  if (empty(effectiveDate.value)) {\n    effectiveDate.setError('Effective Date is required.');\n    valid = false;\n  }\n  if (valid) {\n    let oc = queryParams.orgCode ?? '';\n    let ot = oc.substringBefore(':') + ':' + oc.substringAfter(':').substringBefore(':');\n    let inactivating = queryParams.currentStatus == 'Active';\n    launchManageStatus.invoke({'oid': queryParams.orgId ?? '', 'act': inactivating ? 'INACTIVATE' : 'ACTIVATE', 'oc': oc, 'on': queryParams.orgName ?? oc, 'inact': inactivating ? 'true' : 'false', 'ed': effectiveDate.value.format('yyyy-MM-dd'), 'ot': ot});\n    let matches = (verifyOrgStatus.invoke({'lim': '10000'}).data ?? []).filter(o => { o.code == oc });\n    let changed = inactivating ? (matches.size() == 0 || matches[0].cf_active1 != true) : (matches.size() > 0 && matches[0].cf_active1 == true);\n    if (!changed) {\n      confirmStatusChange.setError('Workday rejected this status change, so nothing was changed. Try again or check the organization in Workday.');\n      valid = false;\n    }\n  }\n  valid;\n%>",
+  "onSubmit": "<%\n  let valid = true;\n  if (confirmStatusChange.value != true) {\n    confirmStatusChange.setError('Please confirm the status change.');\n    valid = false;\n  }\n  if (empty(effectiveDate.value)) {\n    effectiveDate.setError('Effective Date is required.');\n    valid = false;\n  }\n  if (valid) {\n    let oc = queryParams.orgCode ?? '';\n    let ot = oc.substringBefore(':') + ':' + oc.substringAfter(':').substringBefore(':');\n    let inactivating = queryParams.currentStatus == 'Active';\n    launchManageStatus.invoke({'oid': queryParams.orgId ?? '', 'act': inactivating ? 'INACTIVATE' : 'ACTIVATE', 'oc': oc, 'on': queryParams.orgName ?? oc, 'inact': inactivating ? 'true' : 'false', 'ed': effectiveDate.value.format('yyyy-MM-dd'), 'ot': ot, 'vo': 'true'});\n    let matches = (verifyOrgStatus.invoke({'lim': '10000'}).data ?? []).filter(o => { o.code == oc });\n    let changed = inactivating ? (matches.size() == 0 || matches[0].cf_active1 != true) : (matches.size() > 0 && matches[0].cf_active1 == true);\n    if (!changed) {\n      confirmStatusChange.setError('Workday rejected this status change, so nothing was changed. Try again or check the organization in Workday.');\n      valid = false;\n    }\n  }\n  valid;\n%>",
   "presentation": {
     "headerSize": "STANDARD",
     "title": {
