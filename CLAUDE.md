@@ -2358,6 +2358,22 @@ Used by newShellOrg / newShellOrgPattern so a Workday rejection blocks OK instea
   - A report can take multiple `defaultSecurityDomains`.
   - Unused WQL components were removed: academicUnits, auditLog, customOrganizationsFUH, shellOrgManager.
 - **COMSShellOrgRequest business object:** nothing writes to it. Its only reader (assignableRoleManager) is `exclude: true`. It predates creating shell orgs directly via WWS, and its report was kept.
+- **Full end-to-end test, all six flows (2026-10-30 ~17:30–17:55 UTC).** Each wrote exactly one complete audit record:
+  - Assignable role request `X:ADM:ROLE:TESTROLE1030` (now Pending ISC Review)
+  - AAA request for X:ADM
+  - Shell org `X:ADM:TEST:ORG:1032`
+  - Pattern `X:CLW:PATTERN:MATH:MATH_V:303:951:2026W1`
+  - Inactivate and **Reactivate** of 1032. This was the first live Reactivate; 1032 is Active again.
+- **Fixed during the test:**
+  - assignableRoleManager and adminProvisioning had `standardEditButtonsHidden: true` with no editButtonBar, so there was no way to submit. The flag was removed and `cancelOverride` set to home.
+  - Org names for inactive orgs carry " (inactive)". manageShellOrgStatus must `urlEncode()` the name and code (InvalidEndPointUrlException "Illegal character ' '") and strip " (inactive)". newShellOrg and newShellOrgPattern now urlEncode their names too.
+  - Request audit records now include the selected positions and, for AAA, the application as Organization. Deployed but not yet seen live.
+- **Linking to Workday events (developer.workday.com "Reference: Context Global Functions" + tenant WSDLs):**
+  - `context.orchestrateId()` returns the orchestration instance ID (X-Orchestrate-Id). It is not a tenant instance, so it can be stored as text but cannot have related actions.
+  - Staffing `Assign_Roles_Response` returns `Assign_Roles_Event_Reference`, the BP event. This is linkable.
+  - Human_Resources `Organization_Add_Update` and `Organization_Inactivate` have **no output message** (one-way, empty body). They give no event and no new-org WID.
+  - `Reactivate_Organization_Response` returns `Organization_Reference`.
+- **CI:** a run stuck at "in_progress" with every step completed (job conclusion success) had actually deployed. `gh run cancel/rerun` and force-cancel all refuse such a run. Check the job conclusion with `gh api .../runs/<id>/jobs`.
 - **CI:** a failure at "Authenticate as system user (for upload)" in about 20s was transient; a rerun passed.
 
 ## Orchestrations — ISU auth requires manual per-tenant setup
