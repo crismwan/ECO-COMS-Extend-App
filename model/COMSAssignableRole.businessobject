@@ -228,6 +228,12 @@
       "name": "securityGroupName",
       "label": "Security Group",
       "type": "TEXT"
+    },
+    {
+      "id": 38,
+      "name": "positionNames",
+      "type": "TEXT",
+      "label": "Position Names"
     }
   ]
 }

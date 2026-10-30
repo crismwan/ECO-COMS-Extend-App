@@ -564,6 +564,10 @@
                     {
                       "value": "<% self.value.join(',') %>",
                       "valueOutBinding": "postAssignableRole.positions"
+                    },
+                    {
+                      "value": "<% (self.selectedEntries ?? []).map(p => { p.descriptor }).join(', ') %>",
+                      "valueOutBinding": "postAssignableRole.positionNames"
                     }
                   ]
                 },
