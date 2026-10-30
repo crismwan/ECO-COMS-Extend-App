@@ -236,7 +236,7 @@
           },
           {
             "outboundPath": "details",
-            "value": "<% 'Approved through business process ' + (bpEvent.descriptor ?? '') + '. Security group: ' + (request.securityGroupName ?? '') + '. Workday role: ' + (!empty(workdayRoleInstanceList.value) ? (workdayRoleInstanceList.selectedEntries[0].descriptor ?? '') : '') %>"
+            "value": "<% 'Approved through business process ' + (bpEvent.descriptor ?? '') + '. Security group: ' + (securityGroupNameText.value ?? '') + '. Workday role: ' + (!empty(workdayRoleInstanceList.value) ? (workdayRoleInstanceList.selectedEntries[0].descriptor ?? '') : '') %>"
           },
           {
             "outboundPath": "triggeredBy",
@@ -295,13 +295,13 @@
             {
               "type": "fieldSet",
               "id": "progressFieldSet",
-              "title": "Step 4 of 4: Add Workday Assignable Role",
+              "title": "Step 5 of 5: Link Workday Role",
               "children": [
                 {
                   "type": "richText",
                   "id": "progressRichText",
                   "enabled": false,
-                  "value": "<% '<span style=\"font-size:12px\"><span style=\"color:#6B7280\">1. Role Details</span> &nbsp;→&nbsp; <span style=\"color:#6B7280\">2. Approve / Deny</span> &nbsp;→&nbsp; <span style=\"color:#6B7280\">3. Create Security Group</span> &nbsp;→&nbsp; <span style=\"font-weight:700;color:#0055B7\">4. Add Workday Assignable Role</span></span>' %>"
+                  "value": "<% '<span style=\"font-size:12px\"><span style=\"color:#6B7280\">1. Role Details</span> &nbsp;→&nbsp; <span style=\"color:#6B7280\">2. Approve / Deny</span> &nbsp;→&nbsp; <span style=\"color:#6B7280\">3. Add Assignable Role</span> &nbsp;→&nbsp; <span style=\"color:#6B7280\">4. Create Role-Based Security Group</span> &nbsp;→&nbsp; <span style=\"font-weight:700;color:#0055B7\">5. Link Workday Role</span></span>' %>"
                 }
               ]
             }
@@ -320,7 +320,7 @@
                   "type": "richText",
                   "id": "arHelpRichText",
                   "enabled": false,
-                  "value": "<% '<span style=\"color:#374151;font-size:13px\">ⓘ In Workday, run the Create Assignable Role task (using the security group from step 3), then select the new role below and click OK. This approves the request and removes it from Pending ISC Requests.</span>' %>"
+                  "value": "<% '<span style=\"color:#374151;font-size:13px\">ⓘ Select the Workday assignable role created in step 3 and enter the role-based security group created in step 4, then click OK. This approves the request and removes it from Pending ISC Requests.</span>' %>"
                 }
               ]
             }
@@ -352,6 +352,14 @@
                       "valueOutBinding": "approveRequest.workdayRoleId"
                     }
                   ]
+                },
+                {
+                  "type": "text",
+                  "id": "securityGroupNameText",
+                  "label": "Role-Based Security Group",
+                  "required": true,
+                  "value": "<% request.securityGroupName ?? '' %>",
+                  "valueOutBinding": "approveRequest.securityGroupName"
                 }
               ]
             }

@@ -22,7 +22,8 @@
       "id": 2,
       "name": "roleName",
       "label": "Role Name",
-      "type": "TEXT"
+      "type": "TEXT",
+      "useForDisplay": true
     },
     {
       "id": 4,

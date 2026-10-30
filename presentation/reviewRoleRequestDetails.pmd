@@ -105,13 +105,13 @@
             {
               "type": "fieldSet",
               "id": "progressFieldSet",
-              "title": "Step 1 of 4: Role Details",
+              "title": "Step 1 of 5: Role Details",
               "children": [
                 {
                   "type": "richText",
                   "id": "progressRichText",
                   "enabled": false,
-                  "value": "<% '<span style=\"font-size:12px\"><span style=\"font-weight:700;color:#0055B7\">1. Role Details</span> &nbsp;→&nbsp; <span style=\"color:#6B7280\">2. Approve / Deny</span> &nbsp;→&nbsp; <span style=\"color:#6B7280\">3. Create Security Group</span> &nbsp;→&nbsp; <span style=\"color:#6B7280\">4. Add Workday Assignable Role</span></span>' %>"
+                  "value": "<% '<span style=\"font-size:12px\"><span style=\"font-weight:700;color:#0055B7\">1. Role Details</span> &nbsp;→&nbsp; <span style=\"color:#6B7280\">2. Approve / Deny</span> &nbsp;→&nbsp; <span style=\"color:#6B7280\">3. Add Assignable Role</span> &nbsp;→&nbsp; <span style=\"color:#6B7280\">4. Create Role-Based Security Group</span> &nbsp;→&nbsp; <span style=\"color:#6B7280\">5. Link Workday Role</span></span>' %>"
                 }
               ]
             }

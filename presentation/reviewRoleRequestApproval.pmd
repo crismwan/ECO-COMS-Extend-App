@@ -105,13 +105,13 @@
             {
               "type": "fieldSet",
               "id": "progressFieldSet",
-              "title": "Step 2 of 4: Approve / Deny",
+              "title": "Step 2 of 5: Approve / Deny",
               "children": [
                 {
                   "type": "richText",
                   "id": "progressRichText",
                   "enabled": false,
-                  "value": "<% '<span style=\"font-size:12px\"><span style=\"color:#6B7280\">1. Role Details</span> &nbsp;→&nbsp; <span style=\"font-weight:700;color:#0055B7\">2. Approve / Deny</span> &nbsp;→&nbsp; <span style=\"color:#6B7280\">3. Create Security Group</span> &nbsp;→&nbsp; <span style=\"color:#6B7280\">4. Add Workday Assignable Role</span></span>' %>"
+                  "value": "<% '<span style=\"font-size:12px\"><span style=\"color:#6B7280\">1. Role Details</span> &nbsp;→&nbsp; <span style=\"font-weight:700;color:#0055B7\">2. Approve / Deny</span> &nbsp;→&nbsp; <span style=\"color:#6B7280\">3. Add Assignable Role</span> &nbsp;→&nbsp; <span style=\"color:#6B7280\">4. Create Role-Based Security Group</span> &nbsp;→&nbsp; <span style=\"color:#6B7280\">5. Link Workday Role</span></span>' %>"
                 }
               ]
             }
@@ -130,7 +130,7 @@
                   "type": "richText",
                   "id": "approvalHelpRichText",
                   "enabled": false,
-                  "value": "<% '<span style=\"color:#374151;font-size:13px\">ⓘ Approve sends the request to Create Security Group, then Add Workday Assignable Role. Deny ends the process and marks the request Denied.</span>' %>"
+                  "value": "<% '<span style=\"color:#374151;font-size:13px\">ⓘ Approve sends the request to the To Dos (Add Assignable Role, Create Role-Based Security Group), then Link Workday Role. Deny ends the process and marks the request Denied.</span>' %>"
                 }
               ]
             }
