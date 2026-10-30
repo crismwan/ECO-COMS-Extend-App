@@ -2481,6 +2481,17 @@ ACTION: run 'wdcli app deploy ...' locally, log in, update WD_DEV_TOKEN secret
 - Unverified until the first CI run: that the PKCE `WD_DEV_TOKEN` works for `api.workday.com` REST/WQL/BP calls, and that orchestration launch via `POST api.workday.com/orchestrate/v1/apps/<app>/orchestrations/<Name>/launch` works outside a page.
 - `ManageShellOrgStatus` writes its audit record even when `validateOnly=true`, so validate-only can't be used for safe per-deploy write tests until the audit write is made conditional.
 
+### Test-only workflow and cleanup (confirmed live 2026-10-30)
+
+- `.github/workflows/e2e.yml` runs `test/e2e.js` without deploying. Tasks: smoke, full, cleanup-dry-run, cleanup-apply. Cleanup options: also, effective, only.
+- Dispatch it with `gh api -X POST repos/crismwan/ECO-COMS-Extend-App/actions/workflows/e2e.yml/dispatches -f ref=main -f 'inputs[task]=full'`. `gh workflow run` fails because GraphQL is blocked.
+- Read results on the run's Summary page in the browser. e2e.js writes its full output to `GITHUB_STEP_SUMMARY`; job logs are truncated or blocked.
+- **The PKCE `WD_DEV_TOKEN` works for api.workday.com BO REST, WQL, BP events and orchestration `POST .../orchestrations/<Name>/launch`.** The first full run passed 21 tests.
+- **ManageShellOrgStatus picks inactivate vs reactivate from `includeInactive`** ("true" = inactivate), **not from `action`**. `action` only goes into the audit record. Sending action=INACTIVATE with includeInactive=false reactivated 6 test orgs, cancelling their 2026-12-15 inactivations, and wrote INACTIVATE audit records.
+- **Future-dated events block status changes.** "Organization has conflicting events (in progress or future events) so it cannot be inactivated." Choose an effective date after the last future event. The 6 orgs were re-inactivated effective 2026-12-16.
+- **A request linked to a BP event can't be deleted:** HTTP 500 "Attempt to delete instance ... with references". TESTROLE1031-1038 remain (Approved/Denied, not pending). Audit records and unlinked requests delete fine via REST DELETE, so the audit log is not immutable.
+- Each full run leaves one `X:ADM:TEST:CI:<stamp>` org (inactive 45 days out) and 2 audit records. cleanup-apply removes the audit records.
+
 ### WD_WCP_TOKEN expiry (2026-10-30)
 
 - **Symptom:** "Pre-populate" passes, then "Deploy to ubc_wcpdev2 via wdcli" fails with `[CI-401] UNAUTHORIZED URL: https://api.us.wcp.workday.com/aos/v1/deploy` and "The supplied authentication is invalid". It started about 20:00 UTC on 2026-10-30, roughly 1 h after the 19:49 success.
