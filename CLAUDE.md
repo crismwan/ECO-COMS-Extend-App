@@ -2290,6 +2290,31 @@ Used by newShellOrg / newShellOrgPattern so a Workday rejection blocks OK instea
   - `X:CLW:PATTERN:MATH:MATH:300/301/302:951:2026W1`
   - 1029 was confirmed in its Workday audit trail ("made inactive on 2026-12-15").
 
+## Role assignments (Assign_Roles) — working (confirmed live 2026-10-30)
+
+- Pages:
+  - shellOrgManager "Manage Role Assignments" grid has one row per role + org, with positions taken from `cf_ZCF_EE_RoleAssignedToAsPositionRestrictions`.
+  - Manage → `manageRoleAssignment` (VIEW, related actions).
+  - Add or Remove Positions → `editRoleAssignment` (EDIT).
+  - The edit page's `onSubmit` launches `AssignRolePositions` once per change and run-and-verifies with the `/comsAuditLogs?limit=1` `.total` count.
+- WWS: Staffing v42.2 `Assign_Roles_Request` (`/soap/v42.2/Staffing`). Structure matches the user's Assign Roles EIB v35.0:
+  - Event_Target_Assignee
+  - Role_Assigner (WID)
+  - Assignable_Role (WID)
+  - Update_Later_Dated_Assignments=true
+  - Assignees_to_Add / Assignees_to_Remove
+  - Auto_Complete=true, Run_Now=true
+- **Assignee IDs:**
+  - The `allPositions` WID is rejected ("The provided Role Assignee is not valid as an Event Target Role Assignee").
+  - **Add:** use `bsvc:type="Position_ID"` with `cf_PositionID` (e.g. P-00010).
+  - **Remove:** use `type="WID"` with the current assignee id from the role-assignment data.
+  - Both were tested live: P-00010 was added to X:BPMS(ODMT):ROLE:ADVISORS and then removed.
+- **`relatedTask` / instance links on instanceList render only on VIEW pages** (developer.workday.com instanceList reference). This is why there are separate view and edit pages.
+  - On VIEW grids: an instanceList cell with `values` + `widKey:"id"` + `view:true` + `relatedTask:true` gives related actions on hover.
+- **Read-only instanceList on an EDIT page:** `values` alone or `instanceList` showed "(empty)". Use `"values": "<% [] %>"` + `selectedValuesAndDescriptors`.
+- **URL-encode free text in launch URLs** (`name.urlEncode()`). A space in a role or org name gives InvalidEndPointUrlException "Illegal character".
+- After OK, the edit page returns to the app home, not the manage page (seen on both tests). A flow or conclusion page would be needed to land back on Shell Org Manager.
+
 ## Orchestrations — ISU auth requires manual per-tenant setup
 
 An orchestration endpoint using `isuAuth` will **fail with HTTP 500 and an empty body** until the ISU (Integration System User) is explicitly assigned to the app in **Application Manager** for that tenant. Naming the ISU in the SMD is not sufficient — it must be configured in each environment after every promotion:
