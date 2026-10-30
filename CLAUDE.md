@@ -2294,8 +2294,7 @@ Used by newShellOrg / newShellOrgPattern so a Workday rejection blocks OK instea
 
 - Pages:
   - shellOrgManager "Manage Role Assignments" grid has one row per role + org, with positions taken from `cf_ZCF_EE_RoleAssignedToAsPositionRestrictions`.
-  - Manage → `manageRoleAssignment` (VIEW, related actions).
-  - Add or Remove Positions → `editRoleAssignment` (EDIT).
+  - Manage → `editRoleAssignment` (EDIT) directly; the separate view page was removed 2026-10-30 at the user's request (fewer clicks). Related actions stay on the shellOrgManager grid.
   - The edit page's `onSubmit` launches `AssignRolePositions` once per change and run-and-verifies with the `/comsAuditLogs?limit=1` `.total` count.
 - WWS: Staffing v42.2 `Assign_Roles_Request` (`/soap/v42.2/Staffing`). Structure matches the user's Assign Roles EIB v35.0:
   - Event_Target_Assignee
@@ -2308,7 +2307,7 @@ Used by newShellOrg / newShellOrgPattern so a Workday rejection blocks OK instea
   - The `allPositions` WID is rejected ("The provided Role Assignee is not valid as an Event Target Role Assignee").
   - **Add:** use `bsvc:type="Position_ID"` with `cf_PositionID` (e.g. P-00010).
   - **Remove:** use `type="WID"` with the current assignee id from the role-assignment data.
-  - Both were tested live: P-00010 was added to X:BPMS(ODMT):ROLE:ADVISORS and then removed.
+  - Both were tested live: P-00010 was added to X:BPMS(ODMT):ROLE:ADVISORS and then removed. Multi-position also tested: P-00009 + P-00010 added in one submit, then both removed in one submit (2 launches each, audit-count check passed).
 - **`relatedTask` / instance links on instanceList render only on VIEW pages** (developer.workday.com instanceList reference). This is why there are separate view and edit pages.
   - On VIEW grids: an instanceList cell with `values` + `widKey:"id"` + `view:true` + `relatedTask:true` gives related actions on hover.
 - **Read-only instanceList on an EDIT page:** `values` alone or `instanceList` showed "(empty)". Use `"values": "<% [] %>"` + `selectedValuesAndDescriptors`.
