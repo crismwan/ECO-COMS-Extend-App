@@ -2481,6 +2481,28 @@ ACTION: run 'wdcli app deploy ...' locally, log in, update WD_DEV_TOKEN secret
 - Unverified until the first CI run: that the PKCE `WD_DEV_TOKEN` works for `api.workday.com` REST/WQL/BP calls, and that orchestration launch via `POST api.workday.com/orchestrate/v1/apps/<app>/orchestrations/<Name>/launch` works outside a page.
 - `ManageShellOrgStatus` writes its audit record even when `validateOnly=true`, so validate-only can't be used for safe per-deploy write tests until the audit write is made conditional.
 
+### ManageShellOrgStatus input guard (2026-10-30, built, not yet deployed)
+
+- `auditAction` (ExtractInactiveFlag) = `(if (data.ExtractInactiveFlag.isInactivate) "INACTIVATE" else "REACTIVATE")`. The audit template and logs use it, not the caller's `action`.
+- `LookupShellOrgs`: GET `/wql/v1/data?limit=10000&query=<encoded: SELECT workdayID FROM topLevelOrganizations WHERE code contains 'X:'>` with the default credential. Untested: that the orchestration's Workday API path base accepts `/wql/v1/...`.
+- `CheckInputs` (ContinueOnConditions) runs before the SOAP call. It requires:
+  - includeInactive is true or false
+  - action equals auditAction
+  - orgCode startsWith "X:"
+  - orgId is not empty
+  - LookupShellOrgs response `.toString().contains(orgId)`
+- String member functions (developer.workday.com "Reference: String Member Functions") include contains, startsWith, equals, isEmpty, toString.
+- e2e full adds Guard.actionMismatch and Guard.notShellOrg (orgId = the worker's WID, validateOnly=true) to prove rejection.
+
+### ISU authentication (developer.workday.com "Configure ISU Authentication in Presentation Components")
+
+- SMD: `"siteAuth": {"authTypes": [{"id": "isuAuth", "scheme": "ISU", "username": "<ISU username>"}]}`. On each PMD endpoint, set `"authType": "isuAuth"`.
+- Setup ("Create Integration System Users for apps"):
+  1. Create the ISU.
+  2. Assign it to the app with the **App Manager** task.
+  3. Create orchestration credentials in Orchestration Builder. ISU credentials can't be used in Custom Agent Action orchestrations.
+- Planned use: make audit records and request status writable only by the ISU, through app logic, with users on View only.
+
 ### Test-only workflow and cleanup (confirmed live 2026-10-30)
 
 - `.github/workflows/e2e.yml` runs `test/e2e.js` without deploying. Tasks: smoke, full, cleanup-dry-run, cleanup-apply. Cleanup options: also, effective, only.
@@ -2532,6 +2554,10 @@ ACTION: run 'wdcli app deploy ...' locally, log in, update WD_DEV_TOKEN secret
 - **Approval group must be able to resolve people (live 2026-10-30):** with step b set to "Accounts Payable Data Entry Specialist" (a *constrained* role-based group), TESTROLE1036's approval showed Awaiting Action with **All Persons = 0**. Confirmed: the app domain "Manage: COMS Assignable Roles" lists **Allowed Security Group Types: Public Groups, Unconstrained Groups** (View Domain page), because COMSAssignableRole has no organization context. Use a user-based group or the **(Unconstrained)** variant.
   - An approver needs the group in **three** policies: the BP security policy (Approve, Deny, View All), the domain **Maintain: COMS Assignable Roles** (secures the four step pages; on 2026-10-30 it held only HR Administrator + the deploy ISSG), and **Manage: COMS Assignable Roles** (the request data). Then Activate Pending Security Policy Changes. The agent may not edit security policies; the user does this.
 - **Fixed (live 2026-10-30):** with "Accounts Payable Data Entry Specialist (Unconstrained)" on the BP policy (View All, Approve, Deny), both domains, and step b, TESTROLE1038's approval resolved **8 persons** (incl. James Walker). Real Deny then tested end to end: James Walker (proxied by the user) denied TESTROLE1038 at 13:30:17, DenyRoleRequest completed the same second, a DENY audit record was written and the request left the pending list. An in-flight request keeps its original routing; definition changes only affect new requests. Edit Definition shows a page error if a step's group isn't in the BP policy.
+- **Self-approval blocked (2026-10-30):** step b → View Workflow Step → related actions → Business Process → **Maintain Advanced Routing** → Routing Restrictions → **Exclude Initiator** = Yes. The definition grid shows "Restriction: Initiator".
+  - The review is started by StartRoleRequestReview running as the requester (AccessTokenFromInitiatingUser), so the initiator is the requester.
+  - Per Workday docs (Business Process Step Types), if a restriction excludes everyone eligible, the step is marked **Not Required** and skipped. Consider an Alternate Security Group so a lone approver who is also the requester can't skip approval.
+  - Not yet tested live. Testing needs a requester who is in the approval group, and temporarily swapping the step group was blocked for the agent (permission change).
 - **Step help text:** definition related actions → Business Process → **Maintain Help Text** → pick the step → Edit Step Help Text → fill Help Text → OK → Done. Rewritten for all 5 steps on 2026-10-30 in one format: bold "Step N of 5: <name>" title (+ who does it), one-line purpose, bold "Check" / "How to" label with a bulleted list, then a bold "Next:" or "Outcome:" line. Step numbers match the "Step X of 5" banners on the ECO-COMS step pages. Example names use X:ADM:ROLE:EXAMPLE.
   - The Help Text cell is a plain textarea plus a **Format Text** button that opens a ProseMirror rich-text editor (bold, italic, underline, colour, bulleted list, link, email). No numbered list. Line breaks typed in the textarea are kept.
   - Agent technique: clear the *textarea* first (click it, ctrl+a, Delete; keys reach the textarea but not the ProseMirror editor), open Format Text, then dispatch a synthetic `paste` ClipboardEvent with `text/html` on `.ProseMirror`. Formatting is preserved. Then Done → OK.
