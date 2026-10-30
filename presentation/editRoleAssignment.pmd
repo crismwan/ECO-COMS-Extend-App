@@ -107,9 +107,13 @@
                     "instanceList": [
                       {
                         "descriptor": "<% ra.role.descriptor ?? '' %>",
-                        "wid": "<% ra.role.id ?? '' %>"
+                        "wid": "<% ra.role.id ?? '' %>",
+                        "id": "<% ra.role.id ?? '' %>"
                       }
-                    ]
+                    ],
+                    "multiSelect": true,
+                    "relatedTask": true,
+                    "selectedValues": "<% [ra.role.id ?? ''] %>"
                   }
                 },
                 {
@@ -124,9 +128,13 @@
                     "instanceList": [
                       {
                         "descriptor": "<% ra.org.descriptor ?? '' %>",
-                        "wid": "<% ra.org.id ?? '' %>"
+                        "wid": "<% ra.org.id ?? '' %>",
+                        "id": "<% ra.org.id ?? '' %>"
                       }
-                    ]
+                    ],
+                    "multiSelect": true,
+                    "relatedTask": true,
+                    "selectedValues": "<% [ra.org.id ?? ''] %>"
                   }
                 },
                 {
@@ -143,11 +151,15 @@
                       "type": "instanceLoop",
                       "templateInstance": {
                         "descriptor": "<% pos.descriptor ?? '' %>",
-                        "wid": "<% pos.id ?? '' %>"
+                        "wid": "<% pos.id ?? '' %>",
+                        "id": "<% pos.id ?? '' %>"
                       },
                       "on": "<% ra.positions ?? [] %>",
                       "as": "pos"
-                    }
+                    },
+                    "multiSelect": true,
+                    "relatedTask": true,
+                    "selectedValues": "<% (ra.positions ?? []).map(p => { p.id }) %>"
                   }
                 }
               ],
