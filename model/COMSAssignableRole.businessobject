@@ -15,7 +15,8 @@
       "name": "referenceId",
       "label": "Reference ID",
       "type": "TEXT",
-      "isReferenceId": true
+      "isReferenceId": true,
+      "enableIndex": true
     },
     {
       "id": 2,
@@ -214,6 +215,18 @@
       "id": 33,
       "name": "organizationRoleAssignments",
       "label": "Organization - Role Assignments",
+      "type": "TEXT"
+    },
+    {
+      "id": 36,
+      "name": "reviewEventWid",
+      "label": "Review Event WID",
+      "type": "TEXT"
+    },
+    {
+      "id": 37,
+      "name": "securityGroupName",
+      "label": "Security Group",
       "type": "TEXT"
     }
   ]

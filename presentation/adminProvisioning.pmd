@@ -108,7 +108,7 @@
           },
           {
             "outboundPath": "referenceId",
-            "value": "<% date:now().format('yyyyMMddHHmmss') %>"
+            "value": "<% requestRefHidden.value %>"
           },
           {
             "outboundPath": "active",
@@ -135,6 +135,19 @@
           },
           {
             "code": 500
+          }
+        ]
+      },
+      {
+        "name": "launchReview",
+        "baseUrlType": "orchestration",
+        "url": "<% '/StartRoleRequestReview/launch?ref=' + requestRefHidden.value %>",
+        "httpMethod": "POST",
+        "authType": "sso",
+        "values": [
+          {
+            "outboundPath": "ref",
+            "value": "<% requestRefHidden.value %>"
           }
         ]
       },
@@ -570,6 +583,11 @@
                       "valueOutBinding": "postAssignableRole.enabledForWid"
                     }
                   ]
+                },
+                {
+                  "type": "hidden",
+                  "id": "requestRefHidden",
+                  "value": "<% date:now().format('yyyyMMddHHmmssSSS') %>"
                 }
               ],
               "title": "2. Submit New Assignable Role Request"

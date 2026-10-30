@@ -213,6 +213,34 @@
       "page": {
         "id": "editRoleAssignment"
       }
+    },
+    {
+      "id": "reviewRoleRequestDetails",
+      "routingPattern": "/reviewRoleRequestDetails/{eventId}",
+      "page": {
+        "id": "reviewRoleRequestDetails"
+      }
+    },
+    {
+      "id": "reviewRoleRequestApproval",
+      "routingPattern": "/reviewRoleRequestApproval/{eventId}",
+      "page": {
+        "id": "reviewRoleRequestApproval"
+      }
+    },
+    {
+      "id": "reviewRoleRequestSecurityGroup",
+      "routingPattern": "/reviewRoleRequestSecurityGroup/{eventStepId}",
+      "page": {
+        "id": "reviewRoleRequestSecurityGroup"
+      }
+    },
+    {
+      "id": "reviewRoleRequestAssignableRole",
+      "routingPattern": "/reviewRoleRequestAssignableRole/{eventStepId}",
+      "page": {
+        "id": "reviewRoleRequestAssignableRole"
+      }
     }
   ],
   "applicationId": "ecocomsphase_xclw_cm_sync2_vmzvxm",

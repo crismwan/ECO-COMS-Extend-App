@@ -1,0 +1,330 @@
+{
+  "id": "reviewRoleRequestSecurityGroup",
+  "securityDomains": [
+    "MaintainCOMSAssignableRoles"
+  ],
+  "endPoints": [
+    {
+      "name": "selectedWorker",
+      "baseUrlType": "COMMON",
+      "url": "/workers/me",
+      "authType": "sso",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 403
+        },
+        {
+          "code": 404
+        },
+        {
+          "code": 500
+        }
+      ]
+    },
+    {
+      "name": "bpStep",
+      "baseUrlType": "workday-bp",
+      "url": "<% 'eventSteps/' + queryParams.eventStepId %>",
+      "authType": "sso",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 403
+        },
+        {
+          "code": 404
+        },
+        {
+          "code": 500
+        }
+      ]
+    },
+    {
+      "name": "bpEvent",
+      "baseUrlType": "workday-bp",
+      "url": "<% 'events/' + bpStep.event.id %>",
+      "authType": "sso",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 403
+        },
+        {
+          "code": 404
+        },
+        {
+          "code": 500
+        }
+      ]
+    },
+    {
+      "name": "request",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "url": "<% '/comsAssignableRoles/' + bpEvent.for.id %>",
+      "authType": "sso",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 403
+        },
+        {
+          "code": 404
+        },
+        {
+          "code": 500
+        }
+      ]
+    },
+    {
+      "name": "positions",
+      "baseUrlType": "workday-staffing-v6",
+      "url": "jobs?limit=100",
+      "authType": "sso",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 403
+        },
+        {
+          "code": 404
+        },
+        {
+          "code": 500
+        }
+      ],
+      "isCollection": true,
+      "bestEffort": "true"
+    }
+  ],
+  "outboundData": {
+    "outboundEndPoints": [
+      {
+        "name": "patchRequestGroup",
+        "baseUrlType": "BUSINESS-OBJECT",
+        "url": "<% '/comsAssignableRoles/' + request.id %>",
+        "authType": "sso",
+        "failOnStatusCodes": [
+          {
+            "code": 400
+          },
+          {
+            "code": 403
+          },
+          {
+            "code": 404
+          },
+          {
+            "code": 500
+          }
+        ],
+        "httpMethod": "PATCH"
+      },
+      {
+        "name": "submitStep",
+        "baseUrlType": "workday-bp",
+        "url": "<% 'eventSteps/' + queryParams.eventStepId + '/submit' %>",
+        "authType": "sso",
+        "failOnStatusCodes": [
+          {
+            "code": 400
+          },
+          {
+            "code": 403
+          },
+          {
+            "code": 404
+          },
+          {
+            "code": 500
+          }
+        ],
+        "httpMethod": "POST",
+        "values": [
+          {
+            "outboundPath": "stepAction.id",
+            "value": "d9e4223e446c11de98360015c5e6daf6"
+          }
+        ]
+      }
+    ]
+  },
+  "presentation": {
+    "pageType": "EDIT",
+    "title": {
+      "type": "title",
+      "label": "Create Security Group"
+    },
+    "headerSize": "STANDARD",
+    "body": {
+      "type": "basicFormLayout",
+      "id": "reviewForm",
+      "sections": [
+        {
+          "type": "layoutSection",
+          "id": "progressSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "progressFieldSet",
+              "title": "Step 3 of 4: Create Security Group",
+              "children": [
+                {
+                  "type": "richText",
+                  "id": "progressRichText",
+                  "enabled": false,
+                  "value": "<% '<span style=\"font-size:12px\"><span style=\"color:#6B7280\">1. Role Details</span> &nbsp;→&nbsp; <span style=\"color:#6B7280\">2. Approve / Deny</span> &nbsp;→&nbsp; <span style=\"font-weight:700;color:#0055B7\">3. Create Security Group</span> &nbsp;→&nbsp; <span style=\"color:#6B7280\">4. Add Workday Assignable Role</span></span>' %>"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "sgHelpSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "sgHelpFieldSet",
+              "title": "Instructions",
+              "children": [
+                {
+                  "type": "richText",
+                  "id": "sgHelpRichText",
+                  "enabled": false,
+                  "value": "<% '<span style=\"color:#374151;font-size:13px\">ⓘ In Workday, run the Create Security Group task for this role, then enter the new group name below and click OK.</span>' %>"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "sgEntrySection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "sgEntryFieldSet",
+              "title": "Security Group",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "securityGroupNameText",
+                  "label": "Security Group Name",
+                  "required": true,
+                  "value": "<% request.securityGroupName ?? '' %>",
+                  "valueOutBinding": "patchRequestGroup.securityGroupName"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "detailSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "roleDetailFieldSet",
+              "title": "Role Request Details",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "roleNameText",
+                  "label": "Role Name",
+                  "enabled": false,
+                  "value": "<% request.roleName ?? '' %>"
+                },
+                {
+                  "type": "text",
+                  "id": "applicationText",
+                  "label": "Application / Organization",
+                  "enabled": false,
+                  "value": "<% request.shellOrgCode ?? (request.application ?? '') %>"
+                },
+                {
+                  "type": "text",
+                  "id": "enabledForText",
+                  "label": "Enabled For",
+                  "enabled": false,
+                  "value": "<% request.enabledForOrganizationTypes ?? '' %>"
+                },
+                {
+                  "type": "text",
+                  "id": "positionsText",
+                  "label": "Positions",
+                  "enabled": false,
+                  "value": "<% empty(request.positionWids) ? (request.positions ?? '') : (positions.data ?? []).filter(p => { request.positionWids.contains(p.id) }).map(p => { p.descriptor }).join(', ') %>"
+                },
+                {
+                  "type": "text",
+                  "id": "requestedByText",
+                  "label": "Requested By",
+                  "enabled": false,
+                  "value": "<% !empty(request.requestedBy) ? (request.requestedBy.descriptor ?? '') : '' %>"
+                },
+                {
+                  "type": "text",
+                  "id": "requestedDateText",
+                  "label": "Requested Date",
+                  "enabled": false,
+                  "value": "<% request.requestedDate ?? '' %>"
+                },
+                {
+                  "type": "text",
+                  "id": "effectiveDateText",
+                  "label": "Effective Date",
+                  "enabled": false,
+                  "value": "<% request.effectiveDate ?? '' %>"
+                },
+                {
+                  "type": "text",
+                  "id": "statusText",
+                  "label": "Status",
+                  "enabled": false,
+                  "value": "<% request.status ?? '' %>"
+                },
+                {
+                  "type": "text",
+                  "id": "securityGroupText",
+                  "label": "Security Group",
+                  "enabled": false,
+                  "value": "<% request.securityGroupName ?? '' %>"
+                },
+                {
+                  "type": "text",
+                  "id": "notesText",
+                  "label": "Notes",
+                  "enabled": false,
+                  "value": "<% request.notes ?? '' %>"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "footer": {
+      "type": "footer",
+      "children": [
+        {
+          "type": "pod",
+          "podId": "ecoComsFooter"
+        }
+      ]
+    },
+    "cancelOverride": {
+      "taskId": "iscRoleRequestsView"
+    }
+  }
+}

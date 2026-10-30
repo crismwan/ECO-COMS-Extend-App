@@ -1,0 +1,458 @@
+{
+  "id": "reviewRoleRequestAssignableRole",
+  "securityDomains": [
+    "MaintainCOMSAssignableRoles"
+  ],
+  "endPoints": [
+    {
+      "name": "selectedWorker",
+      "baseUrlType": "COMMON",
+      "url": "/workers/me",
+      "authType": "sso",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 403
+        },
+        {
+          "code": 404
+        },
+        {
+          "code": 500
+        }
+      ]
+    },
+    {
+      "name": "bpStep",
+      "baseUrlType": "workday-bp",
+      "url": "<% 'eventSteps/' + queryParams.eventStepId %>",
+      "authType": "sso",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 403
+        },
+        {
+          "code": 404
+        },
+        {
+          "code": 500
+        }
+      ]
+    },
+    {
+      "name": "bpEvent",
+      "baseUrlType": "workday-bp",
+      "url": "<% 'events/' + bpStep.event.id %>",
+      "authType": "sso",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 403
+        },
+        {
+          "code": 404
+        },
+        {
+          "code": 500
+        }
+      ]
+    },
+    {
+      "name": "request",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "url": "<% '/comsAssignableRoles/' + bpEvent.for.id %>",
+      "authType": "sso",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 403
+        },
+        {
+          "code": 404
+        },
+        {
+          "code": 500
+        }
+      ]
+    },
+    {
+      "name": "positions",
+      "baseUrlType": "workday-staffing-v6",
+      "url": "jobs?limit=100",
+      "authType": "sso",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 403
+        },
+        {
+          "code": 404
+        },
+        {
+          "code": 500
+        }
+      ],
+      "isCollection": true,
+      "bestEffort": "true"
+    },
+    {
+      "name": "allShellRoles",
+      "baseUrlType": "workday-wql",
+      "url": "data",
+      "authType": "sso",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 403
+        },
+        {
+          "code": 404
+        },
+        {
+          "code": 500
+        }
+      ],
+      "isCollection": true,
+      "bestEffort": "true",
+      "wqlQuery": {
+        "queryId": "allShellAssignableRolesinTenant"
+      }
+    }
+  ],
+  "outboundData": {
+    "outboundEndPoints": [
+      {
+        "name": "approveRequest",
+        "baseUrlType": "BUSINESS-OBJECT",
+        "url": "<% '/comsAssignableRoles/' + request.id %>",
+        "authType": "sso",
+        "failOnStatusCodes": [
+          {
+            "code": 400
+          },
+          {
+            "code": 403
+          },
+          {
+            "code": 404
+          },
+          {
+            "code": 500
+          }
+        ],
+        "httpMethod": "PATCH",
+        "values": [
+          {
+            "outboundPath": "status",
+            "value": "Approved"
+          },
+          {
+            "outboundPath": "active",
+            "value": "<% true %>"
+          },
+          {
+            "outboundPath": "approvedBy.id",
+            "value": "<% selectedWorker.id %>"
+          },
+          {
+            "outboundPath": "approvedDate",
+            "value": "<% date:now().format('yyyy-MM-dd') %>"
+          }
+        ]
+      },
+      {
+        "name": "postAuditLog",
+        "baseUrlType": "BUSINESS-OBJECT",
+        "url": "/comsAuditLogs",
+        "authType": "sso",
+        "failOnStatusCodes": [
+          {
+            "code": 400
+          },
+          {
+            "code": 403
+          },
+          {
+            "code": 404
+          },
+          {
+            "code": 500
+          }
+        ],
+        "httpMethod": "POST",
+        "values": [
+          {
+            "outboundPath": "timestamp",
+            "value": "<% date:now().format(\"yyyy-MM-dd'T'HH:mm:ss'Z'\") %>"
+          },
+          {
+            "outboundPath": "objectType",
+            "value": "Assignable Role"
+          },
+          {
+            "outboundPath": "action",
+            "value": "APPROVE"
+          },
+          {
+            "outboundPath": "coReferenceId",
+            "value": "<% request.referenceId ?? '' %>"
+          },
+          {
+            "outboundPath": "coName",
+            "value": "<% request.shellOrgCode ?? (request.application ?? '') %>"
+          },
+          {
+            "outboundPath": "roleName",
+            "value": "<% request.roleName ?? '' %>"
+          },
+          {
+            "outboundPath": "positionName",
+            "value": "<% positionsText.value ?? '' %>"
+          },
+          {
+            "outboundPath": "roleWid",
+            "value": "<% workdayRoleInstanceList.value[0] ?? '' %>"
+          },
+          {
+            "outboundPath": "orgWid",
+            "value": "<% request.shellOrgWid ?? '' %>"
+          },
+          {
+            "outboundPath": "effectiveDate",
+            "value": "<% request.effectiveDate ?? '' %>"
+          },
+          {
+            "outboundPath": "details",
+            "value": "<% 'Approved through business process ' + (bpEvent.descriptor ?? '') + '. Security group: ' + (request.securityGroupName ?? '') + '. Workday role: ' + (!empty(workdayRoleInstanceList.value) ? (workdayRoleInstanceList.selectedEntries[0].descriptor ?? '') : '') %>"
+          },
+          {
+            "outboundPath": "triggeredBy",
+            "value": "<% selectedWorker.descriptor %>"
+          },
+          {
+            "outboundPath": "changedByWid",
+            "value": "<% selectedWorker.id ?? '' %>"
+          }
+        ]
+      },
+      {
+        "name": "submitStep",
+        "baseUrlType": "workday-bp",
+        "url": "<% 'eventSteps/' + queryParams.eventStepId + '/submit' %>",
+        "authType": "sso",
+        "failOnStatusCodes": [
+          {
+            "code": 400
+          },
+          {
+            "code": 403
+          },
+          {
+            "code": 404
+          },
+          {
+            "code": 500
+          }
+        ],
+        "httpMethod": "POST",
+        "values": [
+          {
+            "outboundPath": "stepAction.id",
+            "value": "d9e4223e446c11de98360015c5e6daf6"
+          }
+        ]
+      }
+    ]
+  },
+  "presentation": {
+    "pageType": "EDIT",
+    "title": {
+      "type": "title",
+      "label": "Add Workday Assignable Role"
+    },
+    "headerSize": "STANDARD",
+    "body": {
+      "type": "basicFormLayout",
+      "id": "reviewForm",
+      "sections": [
+        {
+          "type": "layoutSection",
+          "id": "progressSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "progressFieldSet",
+              "title": "Step 4 of 4: Add Workday Assignable Role",
+              "children": [
+                {
+                  "type": "richText",
+                  "id": "progressRichText",
+                  "enabled": false,
+                  "value": "<% '<span style=\"font-size:12px\"><span style=\"color:#6B7280\">1. Role Details</span> &nbsp;→&nbsp; <span style=\"color:#6B7280\">2. Approve / Deny</span> &nbsp;→&nbsp; <span style=\"color:#6B7280\">3. Create Security Group</span> &nbsp;→&nbsp; <span style=\"font-weight:700;color:#0055B7\">4. Add Workday Assignable Role</span></span>' %>"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "arHelpSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "arHelpFieldSet",
+              "title": "Instructions",
+              "children": [
+                {
+                  "type": "richText",
+                  "id": "arHelpRichText",
+                  "enabled": false,
+                  "value": "<% '<span style=\"color:#374151;font-size:13px\">ⓘ In Workday, run the Create Assignable Role task (using the security group from step 3), then select the new role below and click OK. This approves the request and removes it from Pending ISC Requests.</span>' %>"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "arEntrySection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "arEntryFieldSet",
+              "title": "Workday Assignable Role",
+              "children": [
+                {
+                  "type": "instanceList",
+                  "id": "workdayRoleInstanceList",
+                  "label": "Workday Assignable Role",
+                  "required": true,
+                  "multiSelect": false,
+                  "values": "<% (allShellRoles.data ?? []).filter(r => { !empty(r.role) }).map(r => { {'id': r.role.id, 'descriptor': r.role.descriptor} }) %>",
+                  "valuesOut": [
+                    {
+                      "value": "<% self.value[0] ?? '' %>",
+                      "valueOutBinding": "approveRequest.workdayAssignableRole"
+                    },
+                    {
+                      "value": "<% !empty(self.value) ? (self.selectedEntries[0].descriptor ?? '') : '' %>",
+                      "valueOutBinding": "approveRequest.workdayRoleId"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "detailSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "roleDetailFieldSet",
+              "title": "Role Request Details",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "roleNameText",
+                  "label": "Role Name",
+                  "enabled": false,
+                  "value": "<% request.roleName ?? '' %>"
+                },
+                {
+                  "type": "text",
+                  "id": "applicationText",
+                  "label": "Application / Organization",
+                  "enabled": false,
+                  "value": "<% request.shellOrgCode ?? (request.application ?? '') %>"
+                },
+                {
+                  "type": "text",
+                  "id": "enabledForText",
+                  "label": "Enabled For",
+                  "enabled": false,
+                  "value": "<% request.enabledForOrganizationTypes ?? '' %>"
+                },
+                {
+                  "type": "text",
+                  "id": "positionsText",
+                  "label": "Positions",
+                  "enabled": false,
+                  "value": "<% empty(request.positionWids) ? (request.positions ?? '') : (positions.data ?? []).filter(p => { request.positionWids.contains(p.id) }).map(p => { p.descriptor }).join(', ') %>"
+                },
+                {
+                  "type": "text",
+                  "id": "requestedByText",
+                  "label": "Requested By",
+                  "enabled": false,
+                  "value": "<% !empty(request.requestedBy) ? (request.requestedBy.descriptor ?? '') : '' %>"
+                },
+                {
+                  "type": "text",
+                  "id": "requestedDateText",
+                  "label": "Requested Date",
+                  "enabled": false,
+                  "value": "<% request.requestedDate ?? '' %>"
+                },
+                {
+                  "type": "text",
+                  "id": "effectiveDateText",
+                  "label": "Effective Date",
+                  "enabled": false,
+                  "value": "<% request.effectiveDate ?? '' %>"
+                },
+                {
+                  "type": "text",
+                  "id": "statusText",
+                  "label": "Status",
+                  "enabled": false,
+                  "value": "<% request.status ?? '' %>"
+                },
+                {
+                  "type": "text",
+                  "id": "securityGroupText",
+                  "label": "Security Group",
+                  "enabled": false,
+                  "value": "<% request.securityGroupName ?? '' %>"
+                },
+                {
+                  "type": "text",
+                  "id": "notesText",
+                  "label": "Notes",
+                  "enabled": false,
+                  "value": "<% request.notes ?? '' %>"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "footer": {
+      "type": "footer",
+      "children": [
+        {
+          "type": "pod",
+          "podId": "ecoComsFooter"
+        }
+      ]
+    },
+    "cancelOverride": {
+      "taskId": "iscRoleRequestsView"
+    }
+  }
+}

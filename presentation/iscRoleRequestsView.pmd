@@ -65,7 +65,7 @@
           "children": [
             {
               "type": "button",
-              "label": "\u2190 ISC Role Requests",
+              "label": "← ISC Role Requests",
               "taskReference": {
                 "taskId": "iscRoleRequestsHub"
               },
@@ -177,7 +177,7 @@
                       "sortableAndFilterable": "true",
                       "cellTemplate": {
                         "type": "richText",
-                        "value": "<% role.status == 'Pending ISC Review' ? '<span style=\"color:#92400e;font-weight:600;font-size:11px\">\u23f3 Pending ISC Review</span>' : role.status == 'Approved' ? '<span style=\"color:#065f46;font-weight:600;font-size:11px\">\u2713 Approved</span>' : role.status == 'Denied' ? '<span style=\"color:#991b1b;font-weight:600;font-size:11px\">\u2717 Denied</span>' : role.status == 'Inactive' ? '<span style=\"color:#6b7280;font-weight:600;font-size:11px\">\u25cb Inactive</span>' : role.status ?? '' %>"
+                        "value": "<% role.status == 'Pending ISC Review' ? '<span style=\"color:#92400e;font-weight:600;font-size:11px\">⏳ Pending ISC Review</span>' : role.status == 'Approved' ? '<span style=\"color:#065f46;font-weight:600;font-size:11px\">✓ Approved</span>' : role.status == 'Denied' ? '<span style=\"color:#991b1b;font-weight:600;font-size:11px\">✗ Denied</span>' : role.status == 'Inactive' ? '<span style=\"color:#6b7280;font-weight:600;font-size:11px\">○ Inactive</span>' : role.status ?? '' %>"
                       }
                     },
                     {
@@ -280,28 +280,32 @@
                       "type": "column",
                       "id": "colActions",
                       "columnId": "colActions",
-                      "label": "Actions",
+                      "label": "Review",
                       "cellTemplate": {
-                        "type": "section",
-                        "horizontal": true,
+                        "type": "fieldSet",
+                        "id": "reviewActionFieldSet",
                         "children": [
                           {
-                            "type": "section",
-                            "horizontal": false,
-                            "children": [
-                              {
-                                "type": "button",
-                                "action": "PRIMARY",
-                                "label": "Maintain",
-                                "taskReference": {
-                                  "taskId": "assignableRoleManagerMaintain",
-                                  "parameterBindings": {
-                                    "roleId": "<% role.id %>",
-                                    "orgWid": "<% role.shellOrgWid ?? '' %>"
-                                  }
-                                }
+                            "type": "instanceList",
+                            "id": "reviewEventInstanceList",
+                            "widKey": "id",
+                            "view": true,
+                            "relatedTask": true,
+                            "visible": "<% !empty(role.reviewEventWid) %>",
+                            "values": "<% !empty(role.reviewEventWid) ? [{'id': role.reviewEventWid, 'descriptor': 'Review Process: ' + (role.roleName ?? '')}] : [] %>"
+                          },
+                          {
+                            "type": "button",
+                            "action": "PRIMARY",
+                            "label": "Maintain",
+                            "taskReference": {
+                              "taskId": "assignableRoleManagerMaintain",
+                              "parameterBindings": {
+                                "roleId": "<% role.id %>",
+                                "orgWid": "<% role.shellOrgWid ?? '' %>"
                               }
-                            ]
+                            },
+                            "visible": "<% empty(role.reviewEventWid) %>"
                           }
                         ]
                       }
@@ -309,7 +313,7 @@
                   ]
                 }
               ]
-              }
+            }
           ]
         }
       ]

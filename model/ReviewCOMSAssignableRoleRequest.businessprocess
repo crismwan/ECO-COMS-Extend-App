@@ -1,0 +1,38 @@
+{
+  "id": 2,
+  "name": "ReviewCOMSAssignableRoleRequest",
+  "label": "Review COMS Assignable Role Request",
+  "description": "ISC review of an assignable role or AAA role request: approve or deny, create the security group, then add the Workday assignable role.",
+  "targetBusinessObject": "COMSAssignableRole",
+  "securityDomains": [
+    "MaintainCOMSAssignableRoles"
+  ],
+  "allowsCancel": true,
+  "useForOrchestrate": true,
+  "approvalStep": {
+    "actions": [
+      "APPROVE",
+      "DENY"
+    ],
+    "pageRoute": "/reviewRoleRequestApproval/{eventId}"
+  },
+  "details": {
+    "pageRoute": "/reviewRoleRequestDetails/{eventId}"
+  },
+  "actionSteps": [
+    {
+      "id": 1,
+      "name": "CreateSecurityGroup",
+      "label": "Create Security Group",
+      "description": "Create the security group for the approved role request",
+      "pageRoute": "/reviewRoleRequestSecurityGroup/{eventStepId}"
+    },
+    {
+      "id": 2,
+      "name": "AddWorkdayAssignableRole",
+      "label": "Add Workday Assignable Role",
+      "description": "Create the Workday assignable role and link it to the request",
+      "pageRoute": "/reviewRoleRequestAssignableRole/{eventStepId}"
+    }
+  ]
+}
