@@ -78,7 +78,7 @@
                   "type": "richText",
                   "id": "aboutText",
                   "enabled": false,
-                  "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">ℹ </span><span style=\"color:#374151;font-size:11px\">Current role assignment is shown below (hover a value for its related actions). Use Change Positions to add or remove positions; changes run through the Workday Assign Roles business process and are not rescindable.</span>"
+                  "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">ℹ </span><span style=\"color:#374151;font-size:11px\">Current role assignment is shown below (related actions are on the Shell Org Manager grid). Use Change Positions to add or remove positions; changes run through the Workday Assign Roles business process and are not rescindable.</span>"
                 }
               ]
             }
@@ -104,16 +104,12 @@
                     "type": "instanceList",
                     "id": "currentRoleNameInstanceList",
                     "view": true,
-                    "instanceList": [
-                      {
-                        "descriptor": "<% ra.role.descriptor ?? '' %>",
-                        "wid": "<% ra.role.id ?? '' %>",
-                        "id": "<% ra.role.id ?? '' %>"
-                      }
-                    ],
-                    "multiSelect": true,
                     "relatedTask": true,
-                    "selectedValues": "<% [ra.role.id ?? ''] %>"
+                    "enabled": false,
+                    "widKey": "id",
+                    "values": "<% [] %>",
+                    "multiSelect": true,
+                    "selectedValuesAndDescriptors": "<% (ra.role != null ? [ra.role] : []).map(i => { {'id': i.id, 'descriptor': i.descriptor} }) %>"
                   }
                 },
                 {
@@ -125,16 +121,12 @@
                     "type": "instanceList",
                     "id": "currentAssignmentOrgInstanceList",
                     "view": true,
-                    "instanceList": [
-                      {
-                        "descriptor": "<% ra.org.descriptor ?? '' %>",
-                        "wid": "<% ra.org.id ?? '' %>",
-                        "id": "<% ra.org.id ?? '' %>"
-                      }
-                    ],
-                    "multiSelect": true,
                     "relatedTask": true,
-                    "selectedValues": "<% [ra.org.id ?? ''] %>"
+                    "enabled": false,
+                    "widKey": "id",
+                    "values": "<% [] %>",
+                    "multiSelect": true,
+                    "selectedValuesAndDescriptors": "<% (ra.org != null ? [ra.org] : []).map(i => { {'id': i.id, 'descriptor': i.descriptor} }) %>"
                   }
                 },
                 {
@@ -146,26 +138,17 @@
                     "type": "instanceList",
                     "id": "currentPositionsInstanceList",
                     "view": true,
-                    "instanceListLoopTag": {
-                      "id": "currentPositionsLoop",
-                      "type": "instanceLoop",
-                      "templateInstance": {
-                        "descriptor": "<% pos.descriptor ?? '' %>",
-                        "wid": "<% pos.id ?? '' %>",
-                        "id": "<% pos.id ?? '' %>"
-                      },
-                      "on": "<% ra.positions ?? [] %>",
-                      "as": "pos"
-                    },
-                    "multiSelect": true,
                     "relatedTask": true,
-                    "selectedValues": "<% (ra.positions ?? []).map(p => { p.id }) %>"
+                    "enabled": false,
+                    "widKey": "id",
+                    "values": "<% [] %>",
+                    "multiSelect": true,
+                    "selectedValuesAndDescriptors": "<% (ra.positions).map(i => { {'id': i.id, 'descriptor': i.descriptor} }) %>"
                   }
                 }
               ],
-              "gridType": "LIST",
-              "multiViewStylingEnabled": true,
-              "enabled": false
+              "doNotAdd": true,
+              "doNotRemove": true
             }
           ]
         },
