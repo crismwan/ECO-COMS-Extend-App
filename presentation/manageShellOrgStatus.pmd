@@ -3,37 +3,24 @@
   "securityDomains": [
     "ManageCOMSShellOrgs"
   ],
-  "endPoints": [],
+  "endPoints": [
+    {
+      "name": "launchManageStatus",
+      "baseUrlType": "orchestration",
+      "authType": "sso",
+      "deferred": "true",
+      "url": "<% '/ManageShellOrgStatus/launch?orgId=' + oid + '&action=' + act + '&orgCode=' + oc + '&orgName=' + on + '&includeInactive=' + inact + '&effectiveDate=' + ed + '&patternName=' + oc + '&orgType=' + ot + '&comsAppId=' + ot %>"
+    },
+    {
+      "name": "verifyOrgStatus",
+      "baseUrlType": "workday-wql",
+      "url": "<% 'data?limit=' + lim + '&query=SELECT%20workdayID%2C%20code%2C%20cf_active1%20FROM%20topLevelOrganizations%20WHERE%20code%20contains%20%27X%3A%27' %>",
+      "authType": "sso",
+      "deferred": "true"
+    }
+  ],
   "outboundData": {
     "outboundEndPoints": [
-      {
-        "name": "triggerManageOrgStatus",
-        "baseUrlType": "orchestration",
-        "url": "<% '/ManageShellOrgStatus/launch?orgId=' + (queryParams.orgId ?? '') + '&action=' + (queryParams.currentStatus == 'Active' ? 'INACTIVATE' : 'ACTIVATE') + '&orgCode=' + (queryParams.orgCode ?? '') + '&orgName=' + (queryParams.orgName ?? '') + '&includeInactive=' + (queryParams.currentStatus == 'Active' ? 'true' : 'false') + '&effectiveDate=' + date:now().format(\"yyyy-MM-dd\") + '&patternName=' + (queryParams.orgCode ?? '') + '&orgType=' + (queryParams.orgType ?? '') + '&comsAppId=' + (queryParams.comsAppId ?? '') %>",
-        "authType": "sso",
-        "httpMethod": "POST",
-        "onSend": "<% {} %>",
-        "headers": [
-          {
-            "name": "content-type",
-            "value": "application/json"
-          }
-        ],
-        "failOnStatusCodes": [
-          {
-            "code": 400
-          },
-          {
-            "code": 403
-          },
-          {
-            "code": 404
-          },
-          {
-            "code": 500
-          }
-        ]
-      },
       {
         "type": "outboundVariable",
         "name": "manageStatusFlowVars",
@@ -98,6 +85,7 @@
       "errorSummary": "<% error ?? '' %>"
     }
   },
+  "onSubmit": "<%\n  let valid = true;\n  if (confirmStatusChange.value != true) {\n    confirmStatusChange.setError('Please confirm the status change.');\n    valid = false;\n  }\n  if (valid) {\n    let oc = queryParams.orgCode ?? '';\n    let ot = oc.substringBefore(':') + ':' + oc.substringAfter(':').substringBefore(':');\n    let inactivating = queryParams.currentStatus == 'Active';\n    launchManageStatus.invoke({'oid': queryParams.orgId ?? '', 'act': inactivating ? 'INACTIVATE' : 'ACTIVATE', 'oc': oc, 'on': queryParams.orgName ?? oc, 'inact': inactivating ? 'true' : 'false', 'ed': date:now().format('yyyy-MM-dd'), 'ot': ot});\n    let matches = (verifyOrgStatus.invoke({'lim': '10000'}).data ?? []).filter(o => { o.code == oc });\n    let changed = inactivating ? (matches.size() == 0 || matches[0].cf_active1 != true) : (matches.size() > 0 && matches[0].cf_active1 == true);\n    if (!changed) {\n      confirmStatusChange.setError('Workday rejected this status change, so nothing was changed. Try again or check the organization in Workday.');\n      valid = false;\n    }\n  }\n  valid;\n%>",
   "presentation": {
     "headerSize": "STANDARD",
     "title": {
@@ -224,26 +212,8 @@
       ]
     },
     "pageType": "EDIT",
-    "standardEditButtonsHidden": true,
-    "editButtonBar": {
-      "buttons": [
-        {
-          "type": "button",
-          "id": "submitStatusChangeButton",
-          "label": "<% queryParams.currentStatus == 'Active' ? 'Inactivate Organization' : 'Activate Organization' %>",
-          "action": "PRIMARY"
-        },
-        {
-          "type": "button",
-          "id": "cancelStatusChangeButton",
-          "label": "Cancel",
-          "action": "AUXILIARY",
-          "suppressDiscardDialog": true,
-          "taskReference": {
-            "taskId": "shellOrgManager"
-          }
-        }
-      ]
+    "cancelOverride": {
+      "taskId": "shellOrgManager"
     }
   }
 }
