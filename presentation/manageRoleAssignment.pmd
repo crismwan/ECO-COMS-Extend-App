@@ -12,38 +12,13 @@
       "wqlQuery": {
         "queryId": "allShellAssignableRolesinTenant"
       }
-    },
-    {
-      "name": "posSearch",
-      "baseUrlType": "workday-wql",
-      "url": "<% 'data?query=' + string:pathEncode('SELECT cf_PositionID, workdayID, position_PositionManagement, cf_PositionIsFilled, cf_PositionText FROM allPositions WHERE supervisoryOrganization is not empty AND cf_PositionText contains \\'' + instanceListQuery + '\\'') %>",
-      "authType": "sso",
-      "isCollection": true,
-      "bestEffort": "true",
-      "deferred": "true",
-      "exclude": "<% empty instanceListQuery %>"
-    },
-    {
-      "name": "launchAssignRole",
-      "baseUrlType": "orchestration",
-      "authType": "sso",
-      "deferred": "true",
-      "url": "<% '/AssignRolePositions/launch?roleId=' + rid + '&roleName=' + rn + '&orgId=' + oid + '&orgName=' + on + '&positionId=' + pid + '&positionName=' + pn + '&mode=' + md + '&effectiveDate=' + ed %>"
-    },
-    {
-      "name": "verifyRoleAudit",
-      "baseUrlType": "BUSINESS-OBJECT",
-      "url": "<% '/comsAuditLogs?limit=' + lim %>",
-      "authType": "sso",
-      "deferred": "true"
     }
   ],
-  "onSubmit": "<%\n  let valid = true;\n  let adds = positionsToAddInstanceList.selectedEntries ?? [];\n  let removes = positionsToRemoveInstanceList.selectedEntries ?? [];\n  if (size(adds) + size(removes) == 0) {\n    positionsToAddInstanceList.setError('Select at least one position to add or remove.');\n    valid = false;\n  }\n  if (empty(effectiveDate.value)) {\n    effectiveDate.setError('Effective Date is required.');\n    valid = false;\n  }\n  if (valid) {\n    let ed = effectiveDate.value.format('yyyy-MM-dd');\n    let before = verifyRoleAudit.invoke({'lim': '1'}).total ?? 0;\n    let count = 0;\n    for (var p : adds) {\n      launchAssignRole.invoke({'rid': queryParams.roleId ?? '', 'rn': queryParams.roleName ?? '', 'oid': queryParams.orgId ?? '', 'on': queryParams.orgName ?? '', 'pid': p.id, 'pn': p.descriptor ?? '', 'md': 'ADD', 'ed': ed});\n      count = count + 1;\n    }\n    for (var p : removes) {\n      launchAssignRole.invoke({'rid': queryParams.roleId ?? '', 'rn': queryParams.roleName ?? '', 'oid': queryParams.orgId ?? '', 'on': queryParams.orgName ?? '', 'pid': p.id, 'pn': p.descriptor ?? '', 'md': 'REMOVE', 'ed': ed});\n      count = count + 1;\n    }\n    let after = verifyRoleAudit.invoke({'lim': '1'}).total ?? 0;\n    if (after - before < count) {\n      positionsToAddInstanceList.setError('Workday rejected ' + (count - (after - before)) + ' of ' + count + ' changes. Check the role assignment in Workday and try again.');\n      valid = false;\n    }\n  }\n  valid;\n%>",
   "presentation": {
     "headerSize": "STANDARD",
     "title": {
       "type": "title",
-      "label": "<% 'Manage Positions: ' + (queryParams.roleName ?? 'Role') %>",
+      "label": "<% 'Role Assignment: ' + (queryParams.roleName ?? 'Role') %>",
       "enabled": true
     },
     "body": {
@@ -78,7 +53,7 @@
                   "type": "richText",
                   "id": "aboutText",
                   "enabled": false,
-                  "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">ℹ </span><span style=\"color:#374151;font-size:11px\">Add or remove the positions this role is assigned to on this shell organization. Changes run through the Workday Assign Roles business process and are not rescindable.</span>"
+                  "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">ℹ </span><span style=\"color:#374151;font-size:11px\">This role's assignment on this shell organization. Hover a value for its related actions. Use <b>Add or Remove Positions</b> to change who holds the role.</span>"
                 }
               ]
             }
@@ -99,11 +74,12 @@
                   "label": "Role",
                   "view": true,
                   "relatedTask": true,
-                  "enabled": false,
-                  "multiSelect": false,
-                  "values": "<% [] %>",
-                  "selectedValuesAndDescriptors": "<% [{'id': queryParams.roleId ?? '', 'descriptor': queryParams.roleName ?? ''}] %>",
-                  "widKey": "id"
+                  "instanceList": [
+                    {
+                      "descriptor": "<% queryParams.roleName ?? '' %>",
+                      "wid": "<% queryParams.roleId ?? '' %>"
+                    }
+                  ]
                 },
                 {
                   "type": "instanceList",
@@ -111,11 +87,12 @@
                   "label": "Organization",
                   "view": true,
                   "relatedTask": true,
-                  "enabled": false,
-                  "multiSelect": false,
-                  "values": "<% [] %>",
-                  "selectedValuesAndDescriptors": "<% [{'id': queryParams.orgId ?? '', 'descriptor': queryParams.orgName ?? ''}] %>",
-                  "widKey": "id"
+                  "instanceList": [
+                    {
+                      "descriptor": "<% queryParams.orgName ?? '' %>",
+                      "wid": "<% queryParams.orgId ?? '' %>"
+                    }
+                  ]
                 },
                 {
                   "type": "instanceList",
@@ -123,39 +100,32 @@
                   "label": "Current Positions",
                   "view": true,
                   "relatedTask": true,
-                  "enabled": false,
-                  "multiSelect": true,
-                  "values": "<% [] %>",
-                  "widKey": "id",
-                  "selectedValuesAndDescriptors": "<% list:flatten(list:flatten((shellRoles.data ?? []).filter(r => { r.role.id == (queryParams.roleId ?? '') }).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ra.organization.id == (queryParams.orgId ?? '') }).map(ra => { ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? [] }) }))).map(p => { {'id': p.id, 'descriptor': p.descriptor} }) %>"
+                  "values": "<% list:flatten(list:flatten((shellRoles.data ?? []).filter(r => { r.role.id == (queryParams.roleId ?? '') }).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ra.organization.id == (queryParams.orgId ?? '') }).map(ra => { ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? [] }) }))) %>",
+                  "widKey": "id"
                 },
                 {
                   "type": "instanceList",
-                  "id": "positionsToAddInstanceList",
-                  "label": "Positions to Add",
-                  "required": false,
-                  "multiSelect": true,
-                  "values": "<% [] %>",
-                  "searchEndPoint": "<% endpoints.posSearch %>",
-                  "searchResultValues": "<% empty(posSearch.data) ? [] : posSearch.data.map(o => { {'id': o.workdayID, 'descriptor': !empty(o.position_PositionManagement.descriptor) ? o.position_PositionManagement.descriptor : (!empty(o.cf_PositionText) ? o.cf_PositionText : (!empty(o.cf_PositionID) ? o.cf_PositionID : o.workdayID))} }) %>",
-                  "helpText": "Search by position name or ID. Each selected position is added to this role on this organization."
+                  "id": "workersInstanceList",
+                  "label": "Workers",
+                  "view": true,
+                  "relatedTask": true,
+                  "values": "<% list:flatten(list:flatten((shellRoles.data ?? []).filter(r => { r.role.id == (queryParams.roleId ?? '') }).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ra.organization.id == (queryParams.orgId ?? '') }).map(ra => { ra.workersAssigned ?? [] }) }))) %>",
+                  "widKey": "id"
                 },
                 {
-                  "type": "instanceList",
-                  "id": "positionsToRemoveInstanceList",
-                  "label": "Positions to Remove",
-                  "multiSelect": true,
-                  "required": false,
-                  "values": "<% list:flatten(list:flatten((shellRoles.data ?? []).filter(r => { r.role.id == (queryParams.roleId ?? '') }).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ra.organization.id == (queryParams.orgId ?? '') }).map(ra => { ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? [] }) }))).map(p => { {'id': p.id, 'descriptor': p.descriptor} }) %>",
-                  "helpText": "Pick from the positions currently assigned."
-                },
-                {
-                  "type": "date",
-                  "id": "effectiveDate",
-                  "label": "Effective Date",
-                  "required": true,
-                  "helpText": "The date the change takes effect in Workday.",
-                  "onChange": "<% effectiveDate.clearError(); %>"
+                  "type": "button",
+                  "id": "editPositionsButton",
+                  "label": "Add or Remove Positions",
+                  "action": "PRIMARY",
+                  "taskReference": {
+                    "taskId": "editRoleAssignment",
+                    "parameterBindings": {
+                      "roleId": "<% queryParams.roleId ?? '' %>",
+                      "roleName": "<% queryParams.roleName ?? '' %>",
+                      "orgId": "<% queryParams.orgId ?? '' %>",
+                      "orgName": "<% queryParams.orgName ?? '' %>"
+                    }
+                  }
                 }
               ]
             }
@@ -172,9 +142,6 @@
         }
       ]
     },
-    "pageType": "EDIT",
-    "cancelOverride": {
-      "taskId": "shellOrgManager"
-    }
+    "pageType": "VIEW"
   }
 }

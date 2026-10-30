@@ -213,6 +213,13 @@
       "page": {
         "id": "manageRoleAssignment"
       }
+    },
+    {
+      "id": "editRoleAssignment",
+      "routingPattern": "/editRoleAssignment",
+      "page": {
+        "id": "editRoleAssignment"
+      }
     }
   ],
   "applicationId": "ecocomsphase_xclw_cm_sync2_vmzvxm",
