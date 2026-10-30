@@ -121,6 +121,15 @@ async function launchAndVerify(token, name, params) {
   throw new Error(`${name}: no new audit record after 20 s (Workday rejected the call or the orchestration failed; check app Logs)`);
 }
 
+// The guard in ManageShellOrgStatus must reject the call: no audit record may appear.
+async function expectRejected(token, name, params) {
+  const before = new Set((((await request('GET', `${BO}/comsAuditLogs?limit=100`, token)).data) || []).map((a) => a.id));
+  await launch(token, name, params);
+  await sleep(20000);
+  const fresh = (((await request('GET', `${BO}/comsAuditLogs?limit=100`, token)).data) || []).filter((a) => !before.has(a.id));
+  if (fresh.length) throw new Error(`${name} accepted a call it should reject (audit ${fresh[0].objectType}/${fresh[0].action})`);
+}
+
 // ─── Smoke suite (read-only) ──────────────────────────────────────────────────
 async function smoke(token, me) {
   console.log('\n-- Smoke (read-only) --');
@@ -219,6 +228,24 @@ async function full(token, me) {
     orgWid = r.data?.[0]?.workdayID?.id || r.data?.[0]?.workdayID;
     if (!orgWid) throw new Error(`${orgName} not found by WQL after the audit record was written`);
     pass('ShellOrg.add', `${orgName} created and audited`);
+  });
+
+  await test('Guard.actionMismatch', async () => {
+    if (!orgWid) return skip('Guard.actionMismatch', 'no org from ShellOrg.add');
+    await expectRejected(token, 'ManageShellOrgStatus', {
+      orgId: orgWid, action: 'INACTIVATE', orgCode: orgName, orgName, includeInactive: 'false',
+      effectiveDate: later, patternName: orgName, orgType: 'X:ADM', comsAppId: 'X:ADM', validateOnly: 'false', ...who,
+    });
+    pass('Guard.actionMismatch', 'action that disagrees with includeInactive is rejected');
+  });
+
+  await test('Guard.notShellOrg', async () => {
+    // orgId is a worker, not an X: shell org; validateOnly=true so nothing changes even if the guard failed.
+    await expectRejected(token, 'ManageShellOrgStatus', {
+      orgId: me.id, action: 'INACTIVATE', orgCode: orgName, orgName, includeInactive: 'true',
+      effectiveDate: later, patternName: orgName, orgType: 'X:ADM', comsAppId: 'X:ADM', validateOnly: 'true', ...who,
+    });
+    pass('Guard.notShellOrg', 'an orgId outside the X: shell orgs is rejected even with an X: orgCode');
   });
 
   await test('ShellOrg.inactivate', async () => {
