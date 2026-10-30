@@ -1,4 +1,0 @@
-{
-  "id": "shellOrgManager",
-  "query": "SELECT role, enabledForOrganizationTypes, roleAssignments{organization, workersAssigned, cf_ZCF_EE_RoleAssignedToAsPositionRestrictions} as roleAssignments FROM assignableRoles WHERE ON roleAssignments cf_ZCF_FT_Organization contains 'X:' WHERE roleName contains 'X:'"
-}

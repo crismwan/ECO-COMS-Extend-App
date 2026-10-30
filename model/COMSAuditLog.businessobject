@@ -61,10 +61,30 @@
       "label": "Details",
       "type": "TEXT"
     },
-    { "id": 9, 
-      "name": "objectType", 
-      "label": "Object Type", 
-      "type": "TEXT" 
-      }
+    {
+      "id": 9,
+      "name": "objectType",
+      "label": "Object Type",
+      "type": "TEXT"
+    },
+    {
+      "id": 10,
+      "name": "effectiveDate",
+      "label": "Effective Date",
+      "type": "DATE",
+      "precision": "DAY"
+    },
+    {
+      "id": 11,
+      "name": "roleName",
+      "label": "Role",
+      "type": "TEXT"
+    },
+    {
+      "id": 12,
+      "name": "positionName",
+      "label": "Position",
+      "type": "TEXT"
+    }
   ]
 }

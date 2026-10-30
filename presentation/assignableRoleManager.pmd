@@ -150,19 +150,11 @@
           },
           {
             "outboundPath": "objectType",
-            "value": "COMSAssignableRole"
+            "value": "Assignable Role"
           },
           {
             "outboundPath": "action",
-            "value": "ADD"
-          },
-          {
-            "outboundPath": "worker",
-            "value": "<% selectedWorker.id %>"
-          },
-          {
-            "outboundPath": "application",
-            "value": "<% applicationDropdown.value ?? '' %>"
+            "value": "REQUEST"
           },
           {
             "outboundPath": "coReferenceId",
@@ -179,6 +171,14 @@
           {
             "outboundPath": "triggeredBy",
             "value": "<% selectedWorker.descriptor %>"
+          },
+          {
+            "outboundPath": "roleName",
+            "value": "<% generatedRoleName.value ?? '' %>"
+          },
+          {
+            "outboundPath": "effectiveDate",
+            "value": "<% empty(effectiveDate.value) ? null : effectiveDate.value.format('yyyy-MM-dd') %>"
           }
         ],
         "failOnStatusCodes": [

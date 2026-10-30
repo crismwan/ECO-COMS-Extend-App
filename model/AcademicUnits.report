@@ -1,18 +1,55 @@
 {
-    "id": 9,
-    "name": "AcademicUnits",
-    "label": "Custom Organization Management All Academic Units",
-    "businessObject": "COMSApplication",
-    "defaultSecurityDomains": ["ManageCOMSAdminProvisioning"],
-    "sortConfigs": [
-      { "id": 1, "order": "a", "field": "workdayOrgName", "direction": "ASCENDING" }
-    ],
-    "columns": [
-      { "id": 1, "name": "Academic Unit",    "order": "a", "field": "workdayOrgName" },
-      { "id": 2, "name": "Workday ID",       "order": "b", "field": "workdayOrgId" },
-      { "id": 3, "name": "Application Name", "order": "c", "field": "name" },
-      { "id": 4, "name": "App ID",           "order": "d", "field": "appId" },
-      { "id": 5, "name": "Org Type",         "order": "e", "field": "orgType" },
-      { "id": 6, "name": "Active",           "order": "f", "field": "active" }
-    ]
-  }
+  "id": 9,
+  "name": "AcademicUnits",
+  "label": "All COMS Applications",
+  "businessObject": "COMSApplication",
+  "defaultSecurityDomains": [
+    "ManageCOMSAdminProvisioning"
+  ],
+  "sortConfigs": [
+    {
+      "id": 1,
+      "order": "a",
+      "field": "workdayOrgName",
+      "direction": "ASCENDING"
+    }
+  ],
+  "columns": [
+    {
+      "id": 1,
+      "name": "Academic Unit",
+      "order": "a",
+      "field": "workdayOrgName"
+    },
+    {
+      "id": 2,
+      "name": "Workday ID",
+      "order": "b",
+      "field": "workdayOrgId"
+    },
+    {
+      "id": 3,
+      "name": "Application Name",
+      "order": "c",
+      "field": "name"
+    },
+    {
+      "id": 4,
+      "name": "App ID",
+      "order": "d",
+      "field": "appId"
+    },
+    {
+      "id": 5,
+      "name": "Org Type",
+      "order": "e",
+      "field": "orgType"
+    },
+    {
+      "id": 6,
+      "name": "Active",
+      "order": "f",
+      "field": "active"
+    }
+  ]
+}

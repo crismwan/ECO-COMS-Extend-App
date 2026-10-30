@@ -34,7 +34,7 @@
       "baseUrlType": "orchestration",
       "authType": "sso",
       "deferred": "true",
-      "url": "<% '/AddShellOrg/launch?comsAppId=' + ac + '&orgType=' + ot + '&organizationName=' + on + '&organizationCode=' + oc + '&workerId=' + wid + '&effectiveDate=' + ed %>"
+      "url": "<% '/AddShellOrg/launch?comsAppId=' + ac + '&orgType=' + ot + '&organizationName=' + on + '&organizationCode=' + oc + '&workerId=' + wid + '&effectiveDate=' + ed + '&changedBy=' + cb + '&timestamp=' + ts %>"
     },
     {
       "name": "verifyShellOrg",
@@ -44,62 +44,7 @@
       "deferred": "true"
     }
   ],
-  "outboundData": {
-    "outboundEndPoints": [
-      {
-        "name": "postAuditLog",
-        "baseUrlType": "BUSINESS-OBJECT",
-        "url": "/comsAuditLogs",
-        "httpMethod": "POST",
-        "authType": "sso",
-        "values": [
-          {
-            "outboundPath": "timestamp",
-            "value": "<% date:now().format(\"yyyy-MM-dd'T'HH:mm:ss'Z'\") %>"
-          },
-          {
-            "outboundPath": "objectType",
-            "value": "Add New Shell Organization"
-          },
-          {
-            "outboundPath": "action",
-            "value": "CREATE"
-          },
-          {
-            "outboundPath": "coReferenceId",
-            "value": "<% (!empty(selectedApplicationId.value)) ? ((selectedApplicationId.selectedEntries[0].descriptor ?? '') + ':' + (organizationCode.value ?? '')) : (organizationCode.value ?? '') %>"
-          },
-          {
-            "outboundPath": "coName",
-            "value": "<% (!empty(selectedApplicationId.value)) ? ((selectedApplicationId.selectedEntries[0].descriptor ?? '') + ':' + (organizationCode.value ?? '')) : (organizationCode.value ?? '') %>"
-          },
-          {
-            "outboundPath": "details",
-            "value": "<% 'Application: ' + ((!empty(selectedApplicationId.value)) ? (selectedApplicationId.selectedEntries[0].descriptor ?? '') : '') + ', Effective Date: ' + (effectiveDate.value != null ? effectiveDate.value.format('yyyy-MM-dd') : '') %>"
-          },
-          {
-            "outboundPath": "triggeredBy",
-            "value": "<% selectedWorker.descriptor %>"
-          }
-        ],
-        "failOnStatusCodes": [
-          {
-            "code": 400
-          },
-          {
-            "code": 403
-          },
-          {
-            "code": 500
-          }
-        ]
-      }
-    ],
-    "responseErrorDetail": {
-      "errorSummary": "<% error ?? '' %>"
-    }
-  },
-  "onSubmit": "<%\n  let valid = true;\n  if (empty(selectedApplicationId.value)) {\n    selectedApplicationId.setError('Please select an application.');\n    valid = false;\n  }\n  if (empty(organizationCode.value)) {\n    organizationCode.setError('Organization Code is required.');\n    valid = false;\n  } else if (!empty(selectedApplicationId.value)) {\n    let ac = (!empty(selectedApplicationId.value)) ? (selectedApplicationId.selectedEntries[0].descriptor ?? '') : '';\n    let oc = organizationCode.value ?? '';\n    let orgName = ac + ':' + oc;\n    let dupes = (existingOrgs.data ?? []).filter(o => { o.code == orgName });\n    if (dupes.size() > 0) {\n      let dupeName = (!empty(dupes[0].organizationByName)) ? (dupes[0].organizationByName.descriptor ?? orgName) : orgName;\n      organizationCode.setError('An organization with this code already exists: ' + dupeName);\n      valid = false;\n    }\n  }\n  if (empty(effectiveDate.value)) {\n    effectiveDate.setError('Effective Date is required.');\n    valid = false;\n  } else {\n    let d = effectiveDate.value;\n    let y = d.year();\n    if (y < 2026 || y > 2027) {\n      effectiveDate.setError('Effective Date year must be 2026 or 2027.');\n      valid = false;\n    }\n  }\n  if (valid) {\n    let lac = selectedApplicationId.selectedEntries[0].descriptor ?? '';\n    let loc = organizationCode.value ?? '';\n    let lname = lac + ':' + loc;\n    let lot = lac;\n    launchAddShellOrg.invoke({'ac': lac, 'ot': lot, 'on': lname, 'oc': loc, 'wid': selectedWorker.id ?? '', 'ed': effectiveDate.value.format('yyyy-MM-dd')});\n    let created = (verifyShellOrg.invoke({'lim': '10000'}).data ?? []).filter(o => { o.code == lname }).size() > 0;\n    if (!created) {\n      organizationCode.setError('Workday rejected this request, so nothing was created. Check the values and try again.');\n      valid = false;\n    }\n  }\n  valid;\n%>",
+  "onSubmit": "<%\n  let valid = true;\n  if (empty(selectedApplicationId.value)) {\n    selectedApplicationId.setError('Please select an application.');\n    valid = false;\n  }\n  if (empty(organizationCode.value)) {\n    organizationCode.setError('Organization Code is required.');\n    valid = false;\n  } else if (!empty(selectedApplicationId.value)) {\n    let ac = (!empty(selectedApplicationId.value)) ? (selectedApplicationId.selectedEntries[0].descriptor ?? '') : '';\n    let oc = organizationCode.value ?? '';\n    let orgName = ac + ':' + oc;\n    let dupes = (existingOrgs.data ?? []).filter(o => { o.code == orgName });\n    if (dupes.size() > 0) {\n      let dupeName = (!empty(dupes[0].organizationByName)) ? (dupes[0].organizationByName.descriptor ?? orgName) : orgName;\n      organizationCode.setError('An organization with this code already exists: ' + dupeName);\n      valid = false;\n    }\n  }\n  if (empty(effectiveDate.value)) {\n    effectiveDate.setError('Effective Date is required.');\n    valid = false;\n  } else {\n    let d = effectiveDate.value;\n    let y = d.year();\n    if (y < 2026 || y > 2027) {\n      effectiveDate.setError('Effective Date year must be 2026 or 2027.');\n      valid = false;\n    }\n  }\n  if (valid) {\n    let lac = selectedApplicationId.selectedEntries[0].descriptor ?? '';\n    let loc = organizationCode.value ?? '';\n    let lname = lac + ':' + loc;\n    let lot = lac;\n    launchAddShellOrg.invoke({'cb': (selectedWorker.descriptor ?? '').urlEncode(), 'ts': date:now().format(\"yyyy-MM-dd'T'HH:mm:ss'Z'\").urlEncode(), 'ac': lac, 'ot': lot, 'on': lname, 'oc': loc, 'wid': selectedWorker.id ?? '', 'ed': effectiveDate.value.format('yyyy-MM-dd')});\n    let created = (verifyShellOrg.invoke({'lim': '10000'}).data ?? []).filter(o => { o.code == lname }).size() > 0;\n    if (!created) {\n      organizationCode.setError('Workday rejected this request, so nothing was created. Check the values and try again.');\n      valid = false;\n    }\n  }\n  valid;\n%>",
   "presentation": {
     "headerSize": "STANDARD",
     "title": {

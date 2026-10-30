@@ -3,19 +3,71 @@
   "name": "AllAuditLogs",
   "label": "All Audit Logs",
   "businessObject": "COMSAuditLog",
-  "defaultSecurityDomains": ["ViewCOMSAuditLog"],
+  "defaultSecurityDomains": [
+    "ViewCOMSAuditLog"
+  ],
   "sortConfigs": [
-    { "id": 1, "order": "a", "field": "timestamp", "direction": "DESCENDING" }
+    {
+      "id": 1,
+      "order": "a",
+      "field": "timestamp",
+      "direction": "DESCENDING"
+    }
   ],
   "columns": [
-    { "id": 1, "name": "Timestamp",       "order": "a", "field": "timestamp" },
-    { "id": 2, "name": "Object Type",     "order": "b", "field": "objectType" },
-    { "id": 3, "name": "Action",          "order": "c", "field": "action" },
-    { "id": 4, "name": "Triggered By",    "order": "d", "field": "triggeredBy" },
-    { "id": 5, "name": "Worker",          "order": "e", "field": "worker" },
-    { "id": 6, "name": "Application",     "order": "f", "field": "application" },
-    { "id": 7, "name": "CO Reference ID", "order": "g", "field": "coReferenceId" },
-    { "id": 8, "name": "CO Name",         "order": "h", "field": "coName" },
-    { "id": 9, "name": "Details",         "order": "i", "field": "details" }
+    {
+      "id": 1,
+      "name": "Timestamp",
+      "order": "a",
+      "field": "timestamp"
+    },
+    {
+      "id": 2,
+      "name": "Change Type",
+      "order": "b",
+      "field": "objectType"
+    },
+    {
+      "id": 3,
+      "name": "Action",
+      "order": "c",
+      "field": "action"
+    },
+    {
+      "id": 4,
+      "name": "Organization",
+      "order": "d",
+      "field": "coName"
+    },
+    {
+      "id": 5,
+      "name": "Role",
+      "order": "e",
+      "field": "roleName"
+    },
+    {
+      "id": 6,
+      "name": "Position",
+      "order": "f",
+      "field": "positionName"
+    },
+    {
+      "id": 7,
+      "name": "Effective Date",
+      "order": "g",
+      "field": "effectiveDate"
+    },
+    {
+      "id": 8,
+      "name": "Changed By",
+      "order": "h",
+      "field": "triggeredBy"
+    },
+    {
+      "id": 9,
+      "name": "Details",
+      "order": "i",
+      "field": "details"
+    }
   ]
 }

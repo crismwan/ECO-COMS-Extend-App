@@ -1,20 +1,147 @@
 {
   "id": 2,
   "name": "AllAssignableRoles",
-  "label": "All Shell Organization Assignable Roles",
-    "businessObject": "COMSAssignableRole",
-    "defaultSecurityDomains": ["ManageCOMSAssignableRoles"],
-    "sortConfigs": [
-      { "id": 1, "order": "a", "field": "roleName", "direction": "ASCENDING" }
-    ],
-    "columns": [
-      { "id": 1, "name": "Role Name",                      "order": "a", "field": "roleName" },
-      { "id": 2, "name": "Enabled For Organization Types", "order": "b", "field": "enabledForOrganizationTypes" },
-      { "id": 3, "name": "Organization - Role Assignments","order": "c", "field": "organizationRoleAssignments" },
-      { "id": 4, "name": "Workers Assigned",               "order": "d", "field": "workersAssigned" },
-      { "id": 5, "name": "Position Restrictions",          "order": "e", "field": "positionRestrictions" },
-      { "id": 6, "name": "Shell Org Code",                 "order": "f", "field": "shellOrgCode" },
-      { "id": 7, "name": "Active",                         "order": "g", "field": "active" },
-      { "id": 8, "name": "Status",                         "order": "h", "field": "status" }
+  "label": "All Assignable Role Requests",
+  "businessObject": "COMSAssignableRole",
+  "defaultSecurityDomains": [
+    "ManageCOMSAssignableRoles",
+    "ManageCOMSAdminProvisioning",
+    "MaintainCOMSAssignableRoles"
+  ],
+  "sortConfigs": [
+    {
+      "id": 1,
+      "order": "a",
+      "field": "roleName",
+      "direction": "ASCENDING"
+    }
+  ],
+  "columns": [
+    {
+      "id": 1,
+      "name": "Role Name",
+      "order": "a",
+      "field": "roleName"
+    },
+    {
+      "id": 2,
+      "name": "Enabled For Organization Types",
+      "order": "b",
+      "field": "enabledForOrganizationTypes"
+    },
+    {
+      "id": 3,
+      "name": "Organization - Role Assignments",
+      "order": "c",
+      "field": "organizationRoleAssignments"
+    },
+    {
+      "id": 4,
+      "name": "Workers Assigned",
+      "order": "d",
+      "field": "workersAssigned"
+    },
+    {
+      "id": 5,
+      "name": "Position Restrictions",
+      "order": "e",
+      "field": "positionRestrictions"
+    },
+    {
+      "id": 6,
+      "name": "Shell Org Code",
+      "order": "f",
+      "field": "shellOrgCode"
+    },
+    {
+      "id": 7,
+      "name": "Active",
+      "order": "g",
+      "field": "active"
+    },
+    {
+      "id": 8,
+      "name": "Status",
+      "order": "h",
+      "field": "status"
+    },
+    {
+      "id": 9,
+      "name": "Org Type",
+      "order": "i",
+      "field": "orgType"
+    },
+    {
+      "id": 10,
+      "name": "Workday Role ID",
+      "order": "j",
+      "field": "workdayRoleId"
+    },
+    {
+      "id": 11,
+      "name": "Workday Assignable Role",
+      "order": "k",
+      "field": "workdayAssignableRole"
+    },
+    {
+      "id": 12,
+      "name": "Effective Date",
+      "order": "l",
+      "field": "effectiveDate"
+    },
+    {
+      "id": 13,
+      "name": "Positions-Delegated Roles",
+      "order": "m",
+      "field": "positions"
+    },
+    {
+      "id": 14,
+      "name": "Requested By",
+      "order": "n",
+      "field": "requestedBy"
+    },
+    {
+      "id": 15,
+      "name": "Requested Date",
+      "order": "o",
+      "field": "requestedDate"
+    },
+    {
+      "id": 16,
+      "name": "Approved By",
+      "order": "p",
+      "field": "approvedBy"
+    },
+    {
+      "id": 17,
+      "name": "Approved Date",
+      "order": "q",
+      "field": "approvedDate"
+    },
+    {
+      "id": 18,
+      "name": "ISC Ticket Reference",
+      "order": "r",
+      "field": "iscTicketReference"
+    },
+    {
+      "id": 19,
+      "name": "Notes",
+      "order": "s",
+      "field": "notes"
+    },
+    {
+      "id": 20,
+      "name": "Workday Position ID",
+      "order": "t",
+      "field": "workdayPositionId"
+    },
+    {
+      "id": 21,
+      "name": "Position Is Filled",
+      "order": "u",
+      "field": "positionIsFilled"
+    }
   ]
 }

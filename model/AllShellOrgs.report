@@ -1,16 +1,86 @@
 {
   "id": 11,
   "name": "AllShellOrgs",
-  "label": "All Shell Organizations",
+  "label": "All Shell Org Requests",
   "businessObject": "COMSShellOrgRequest",
-  "defaultSecurityDomains": ["ManageCOMSShellOrgs"],
+  "defaultSecurityDomains": [
+    "ManageCOMSShellOrgs",
+    "ManageCOMSApplicationSetup"
+  ],
   "sortConfigs": [
-    { "id": 1, "order": "a", "field": "coReferenceId", "direction": "ASCENDING" }
+    {
+      "id": 1,
+      "order": "a",
+      "field": "coReferenceId",
+      "direction": "ASCENDING"
+    }
   ],
   "columns": [
-    { "id": 1, "name": "Shell Org Code",    "order": "a", "field": "coReferenceId" },
-    { "id": 2, "name": "Organization Name", "order": "b", "field": "organizationName" },
-    { "id": 3, "name": "Workday ID",        "order": "c", "field": "workdayOrgId" },
-    { "id": 4, "name": "Status",            "order": "d", "field": "status" }
+    {
+      "id": 1,
+      "name": "Shell Org Code",
+      "order": "a",
+      "field": "coReferenceId"
+    },
+    {
+      "id": 2,
+      "name": "Organization Name",
+      "order": "b",
+      "field": "organizationName"
+    },
+    {
+      "id": 3,
+      "name": "Workday ID",
+      "order": "c",
+      "field": "workdayOrgId"
+    },
+    {
+      "id": 4,
+      "name": "Status",
+      "order": "d",
+      "field": "status"
+    },
+    {
+      "id": 5,
+      "name": "CO Name",
+      "order": "e",
+      "field": "coName"
+    },
+    {
+      "id": 6,
+      "name": "Created By",
+      "order": "f",
+      "field": "createdBy"
+    },
+    {
+      "id": 7,
+      "name": "Created Date",
+      "order": "g",
+      "field": "createdDate"
+    },
+    {
+      "id": 8,
+      "name": "Type",
+      "order": "h",
+      "field": "orgType"
+    },
+    {
+      "id": 9,
+      "name": "Subtype",
+      "order": "i",
+      "field": "orgSubtype"
+    },
+    {
+      "id": 10,
+      "name": "Attribute 1",
+      "order": "j",
+      "field": "attribute1"
+    },
+    {
+      "id": 11,
+      "name": "Attribute 2",
+      "order": "k",
+      "field": "attribute2"
+    }
   ]
 }

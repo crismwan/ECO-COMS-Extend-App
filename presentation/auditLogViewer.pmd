@@ -48,7 +48,7 @@
                 {
                   "type": "richText",
                   "id": "pageDescriptionText",
-                  "value": "<span style=\"color:#374151;font-size:12px\">Immutable, searchable log of every COMS-initiated Custom Organization change. Records are created automatically when shell organizations or patterns are added, and when their status is changed. Records cannot be deleted.</span>",
+                  "value": "<span style=\"color:#374151;font-size:12px\">Log of every change made through ECO-COMS: shell orgs and patterns added, org status changes, role position assignments, and assignable role requests, approvals and deletions. A record is written only when Workday accepts the change. Newest first.</span>",
                   "enabled": false
                 }
               ],
@@ -69,7 +69,7 @@
             "multiViewStylingEnabled": true,
             "id": "AuditLogGrid",
             "autoPaging": true,
-            "rows": "<% auditLogs.data %>",
+            "rows": "<% list:sort(auditLogs.data ?? [], 'timestamp', false) %>",
             "rowVariableName": "logEntry",
             "enabled": false,
             "label": "Audit Log",
@@ -88,9 +88,9 @@
               },
               {
                 "type": "column",
-                "id": "columnObjectType",
-                "columnId": "columnObjectType",
-                "label": "Object Type",
+                "id": "columnChangeType",
+                "columnId": "columnChangeType",
+                "label": "Change Type",
                 "cellTemplate": {
                   "type": "text",
                   "value": "<% logEntry.objectType ?? '' %>",
@@ -112,21 +112,9 @@
               },
               {
                 "type": "column",
-                "id": "columnCoReferenceId",
-                "columnId": "columnCoReferenceId",
-                "label": "CO Reference ID",
-                "cellTemplate": {
-                  "type": "text",
-                  "value": "<% logEntry.coReferenceId ?? '' %>",
-                  "enabled": false
-                },
-                "sortableAndFilterable": "true"
-              },
-              {
-                "type": "column",
-                "id": "columnCoName",
-                "columnId": "columnCoName",
-                "label": "CO Name",
+                "id": "columnOrganization",
+                "columnId": "columnOrganization",
+                "label": "Organization",
                 "cellTemplate": {
                   "type": "text",
                   "value": "<% logEntry.coName ?? '' %>",
@@ -136,33 +124,45 @@
               },
               {
                 "type": "column",
-                "id": "columnWorker",
-                "columnId": "columnWorker",
-                "label": "Worker",
+                "id": "columnRole",
+                "columnId": "columnRole",
+                "label": "Role",
                 "cellTemplate": {
                   "type": "text",
-                  "value": "<% !empty(logEntry.worker) ? (logEntry.worker.descriptor ?? '') : '' %>",
+                  "value": "<% logEntry.roleName ?? '' %>",
                   "enabled": false
                 },
                 "sortableAndFilterable": "true"
               },
               {
                 "type": "column",
-                "id": "columnApplication",
-                "columnId": "columnApplication",
-                "label": "Application",
+                "id": "columnPosition",
+                "columnId": "columnPosition",
+                "label": "Position",
                 "cellTemplate": {
                   "type": "text",
-                  "value": "<% !empty(logEntry.application) ? (logEntry.application.descriptor ?? '') : '' %>",
+                  "value": "<% logEntry.positionName ?? '' %>",
                   "enabled": false
                 },
                 "sortableAndFilterable": "true"
               },
               {
                 "type": "column",
-                "id": "columnTriggeredBy",
-                "columnId": "columnTriggeredBy",
-                "label": "Triggered By",
+                "id": "columnEffectiveDate",
+                "columnId": "columnEffectiveDate",
+                "label": "Effective Date",
+                "cellTemplate": {
+                  "type": "text",
+                  "value": "<% logEntry.effectiveDate ?? '' %>",
+                  "enabled": false
+                },
+                "sortableAndFilterable": "true"
+              },
+              {
+                "type": "column",
+                "id": "columnChangedBy",
+                "columnId": "columnChangedBy",
+                "label": "Changed By",
                 "cellTemplate": {
                   "type": "text",
                   "value": "<% logEntry.triggeredBy ?? '' %>",

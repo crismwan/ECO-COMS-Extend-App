@@ -5,11 +5,18 @@
   ],
   "endPoints": [
     {
+      "name": "selectedWorker",
+      "baseUrlType": "COMMON",
+      "url": "/workers/me",
+      "authType": "sso",
+      "bestEffort": "true"
+    },
+    {
       "name": "launchManageStatus",
       "baseUrlType": "orchestration",
       "authType": "sso",
       "deferred": "true",
-      "url": "<% '/ManageShellOrgStatus/launch?orgId=' + oid + '&action=' + act + '&orgCode=' + oc + '&orgName=' + on + '&includeInactive=' + inact + '&effectiveDate=' + ed + '&patternName=' + oc + '&orgType=' + ot + '&comsAppId=' + ot + '&validateOnly=' + vo %>"
+      "url": "<% '/ManageShellOrgStatus/launch?orgId=' + oid + '&action=' + act + '&orgCode=' + oc + '&orgName=' + on + '&includeInactive=' + inact + '&effectiveDate=' + ed + '&patternName=' + oc + '&orgType=' + ot + '&comsAppId=' + ot + '&validateOnly=' + vo + '&changedBy=' + cb + '&timestamp=' + ts %>"
     },
     {
       "name": "verifyOrgStatus",
@@ -35,57 +42,13 @@
             "value": "<% queryParams.currentStatus ?? '' %>"
           }
         ]
-      },
-      {
-        "name": "postAuditLog",
-        "baseUrlType": "BUSINESS-OBJECT",
-        "url": "/comsAuditLogs",
-        "httpMethod": "POST",
-        "authType": "sso",
-        "values": [
-          {
-            "outboundPath": "timestamp",
-            "value": "<% date:now().format(\"yyyy-MM-dd'T'HH:mm:ss'Z'\") %>"
-          },
-          {
-            "outboundPath": "objectType",
-            "value": "<% queryParams.currentStatus == 'Active' ? 'Inactivate Organization' : 'Activate Organization' %>"
-          },
-          {
-            "outboundPath": "action",
-            "value": "<% queryParams.currentStatus == 'Active' ? 'INACTIVATE' : 'ACTIVATE' %>"
-          },
-          {
-            "outboundPath": "coReferenceId",
-            "value": "<% queryParams.orgCode ?? '' %>"
-          },
-          {
-            "outboundPath": "coName",
-            "value": "<% queryParams.orgName ?? '' %>"
-          },
-          {
-            "outboundPath": "details",
-            "value": "<% 'Status changed from ' + (queryParams.currentStatus ?? 'Unknown') + ' to ' + (queryParams.currentStatus == 'Active' ? 'Inactive' : 'Active') %>"
-          }
-        ],
-        "failOnStatusCodes": [
-          {
-            "code": 400
-          },
-          {
-            "code": 403
-          },
-          {
-            "code": 500
-          }
-        ]
       }
     ],
     "responseErrorDetail": {
       "errorSummary": "<% error ?? '' %>"
     }
   },
-  "onSubmit": "<%\n  let valid = true;\n  if (confirmStatusChange.value != true) {\n    confirmStatusChange.setError('Please confirm the status change.');\n    valid = false;\n  }\n  if (empty(effectiveDate.value)) {\n    effectiveDate.setError('Effective Date is required.');\n    valid = false;\n  }\n  if (valid) {\n    let oc = queryParams.orgCode ?? '';\n    let ot = oc.substringBefore(':') + ':' + oc.substringAfter(':').substringBefore(':');\n    let inactivating = queryParams.currentStatus == 'Active';\n    let act = inactivating ? 'INACTIVATE' : 'ACTIVATE';\n    let oid = queryParams.orgId ?? '';\n    let before = verifyOrgStatus.invoke({'lim': '1'}).total ?? 0;\n    launchManageStatus.invoke({'oid': oid, 'act': act, 'oc': oc, 'on': queryParams.orgName ?? oc, 'inact': inactivating ? 'true' : 'false', 'ed': effectiveDate.value.format('yyyy-MM-dd'), 'ot': ot, 'vo': 'false'});\n    let after = verifyOrgStatus.invoke({'lim': '1'}).total ?? 0;\n    let changed = after > before;\n    if (!changed) {\n      confirmStatusChange.setError('Workday rejected this status change, so nothing was changed. Try again or check the organization in Workday.');\n      valid = false;\n    }\n  }\n  valid;\n%>",
+  "onSubmit": "<%\n  let valid = true;\n  if (confirmStatusChange.value != true) {\n    confirmStatusChange.setError('Please confirm the status change.');\n    valid = false;\n  }\n  if (empty(effectiveDate.value)) {\n    effectiveDate.setError('Effective Date is required.');\n    valid = false;\n  }\n  if (valid) {\n    let oc = queryParams.orgCode ?? '';\n    let ot = oc.substringBefore(':') + ':' + oc.substringAfter(':').substringBefore(':');\n    let inactivating = queryParams.currentStatus == 'Active';\n    let act = inactivating ? 'INACTIVATE' : 'REACTIVATE';\n    let oid = queryParams.orgId ?? '';\n    let before = verifyOrgStatus.invoke({'lim': '1'}).total ?? 0;\n    launchManageStatus.invoke({'cb': (selectedWorker.descriptor ?? '').urlEncode(), 'ts': date:now().format(\"yyyy-MM-dd'T'HH:mm:ss'Z'\").urlEncode(), 'oid': oid, 'act': act, 'oc': oc, 'on': queryParams.orgName ?? oc, 'inact': inactivating ? 'true' : 'false', 'ed': effectiveDate.value.format('yyyy-MM-dd'), 'ot': ot, 'vo': 'false'});\n    let after = verifyOrgStatus.invoke({'lim': '1'}).total ?? 0;\n    let changed = after > before;\n    if (!changed) {\n      confirmStatusChange.setError('Workday rejected this status change, so nothing was changed. Try again or check the organization in Workday.');\n      valid = false;\n    }\n  }\n  valid;\n%>",
   "presentation": {
     "headerSize": "STANDARD",
     "title": {

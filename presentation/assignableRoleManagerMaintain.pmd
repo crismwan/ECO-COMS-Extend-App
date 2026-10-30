@@ -130,19 +130,11 @@
           },
           {
             "outboundPath": "objectType",
-            "value": "COMSAssignableRole"
+            "value": "Assignable Role"
           },
           {
             "outboundPath": "action",
-            "value": "MODIFY"
-          },
-          {
-            "outboundPath": "worker",
-            "value": "<% selectedWorker.id %>"
-          },
-          {
-            "outboundPath": "application",
-            "value": ""
+            "value": "APPROVE"
           },
           {
             "outboundPath": "coReferenceId",
@@ -159,6 +151,10 @@
           {
             "outboundPath": "triggeredBy",
             "value": "<% selectedWorker.descriptor %>"
+          },
+          {
+            "outboundPath": "roleName",
+            "value": "<% roleNameText.value ?? '' %>"
           }
         ],
         "failOnStatusCodes": [
@@ -190,19 +186,11 @@
           },
           {
             "outboundPath": "objectType",
-            "value": "COMSAssignableRole"
+            "value": "Assignable Role"
           },
           {
             "outboundPath": "action",
-            "value": "MODIFY"
-          },
-          {
-            "outboundPath": "worker",
-            "value": "<% selectedWorker.id %>"
-          },
-          {
-            "outboundPath": "application",
-            "value": ""
+            "value": "DENY"
           },
           {
             "outboundPath": "coReferenceId",
@@ -219,6 +207,10 @@
           {
             "outboundPath": "triggeredBy",
             "value": "<% selectedWorker.descriptor %>"
+          },
+          {
+            "outboundPath": "roleName",
+            "value": "<% roleNameText.value ?? '' %>"
           }
         ],
         "failOnStatusCodes": [

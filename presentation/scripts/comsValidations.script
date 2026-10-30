@@ -134,35 +134,6 @@ var errorDuplicateAAARole = function(requestedRoleName) {
   'This AAA role already exists in Workday: "' + requestedRoleName + '". Please review the existing role before submitting a duplicate request.';
 };
 
-// ─────────────────────────────────────────────────────────────
-// AUDIT LOG HELPER
-// Call this after every successful ADD / MODIFY / DELETE on any BO.
-//
-// Parameters:
-//   objectType    – the BO name: "COMSApplication" | "COMSAssignableRole" |
-//                   "COMSShellOrgRequest" | "COMSRoleAssignment"
-//   action        – "ADD" | "MODIFY" | "DELETE"
-//   worker        – the worker instance the record belongs to (or null)
-//   application   – the linked COMSApplication instance (or null)
-//   coReferenceId – the record's reference ID as a string (or null)
-//   coName        – human-readable name of the record
-//   details       – plain-text description of what changed
-//   triggeredBy   – descriptor of the user who performed the action
-// ─────────────────────────────────────────────────────────────
-var writeAuditLog = function(objectType, action, worker, application, coReferenceId, coName, details, triggeredBy) {
-  let auditRecord = comsAuditLogs.create();
-  auditRecord.timestamp = date:now().format("yyyy-MM-dd'T'HH:mm:ss'Z'");
-  auditRecord.objectType = objectType;
-  auditRecord.action = action;
-  auditRecord.worker = worker;
-  auditRecord.application = application;
-  auditRecord.coReferenceId = coReferenceId ?? '';
-  auditRecord.coName = coName ?? '';
-  auditRecord.details = details ?? '';
-  auditRecord.triggeredBy = triggeredBy ?? '';
-  auditRecord.save();
-};
-
 {
   "isWeekday": isWeekday,
   "isCurrentOrFutureYear": isCurrentOrFutureYear,
@@ -190,6 +161,5 @@ var writeAuditLog = function(objectType, action, worker, application, coReferenc
   "isValidApproveRole": isValidApproveRole,
   "errorApproveRole": errorApproveRole,
   "isDuplicateAAARole": isDuplicateAAARole,
-  "errorDuplicateAAARole": errorDuplicateAAARole,
-  "writeAuditLog": writeAuditLog
+  "errorDuplicateAAARole": errorDuplicateAAARole
 }

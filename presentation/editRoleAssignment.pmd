@@ -5,6 +5,13 @@
   ],
   "endPoints": [
     {
+      "name": "selectedWorker",
+      "baseUrlType": "COMMON",
+      "url": "/workers/me",
+      "authType": "sso",
+      "bestEffort": "true"
+    },
+    {
       "name": "shellRoles",
       "baseUrlType": "workday-wql",
       "url": "data",
@@ -28,7 +35,7 @@
       "baseUrlType": "orchestration",
       "authType": "sso",
       "deferred": "true",
-      "url": "<% '/AssignRolePositions/launch?roleId=' + rid + '&roleName=' + rn + '&orgId=' + oid + '&orgName=' + on + '&positionId=' + pid + '&positionIdType=' + pt + '&positionName=' + pn + '&mode=' + md + '&effectiveDate=' + ed %>"
+      "url": "<% '/AssignRolePositions/launch?roleId=' + rid + '&roleName=' + rn + '&orgId=' + oid + '&orgName=' + on + '&positionId=' + pid + '&positionIdType=' + pt + '&positionName=' + pn + '&mode=' + md + '&effectiveDate=' + ed + '&changedBy=' + cb + '&timestamp=' + ts %>"
     },
     {
       "name": "verifyRoleAudit",
@@ -38,7 +45,7 @@
       "deferred": "true"
     }
   ],
-  "onSubmit": "<%\n  let valid = true;\n  let adds = positionsToAddInstanceList.selectedEntries ?? [];\n  let removes = positionsToRemoveInstanceList.selectedEntries ?? [];\n  if (size(adds) + size(removes) == 0) {\n    positionsToAddInstanceList.setError('Select at least one position to add or remove.');\n    valid = false;\n  }\n  if (empty(effectiveDate.value)) {\n    effectiveDate.setError('Effective Date is required.');\n    valid = false;\n  }\n  if (valid) {\n    let ed = effectiveDate.value.format('yyyy-MM-dd');\n    let before = verifyRoleAudit.invoke({'lim': '1'}).total ?? 0;\n    let count = 0;\n    for (var p : adds) {\n      launchAssignRole.invoke({'rid': queryParams.roleId ?? '', 'rn': (queryParams.roleName ?? '').urlEncode(), 'oid': queryParams.orgId ?? '', 'on': (queryParams.orgName ?? '').urlEncode(), 'pid': p.id, 'pn': (p.descriptor ?? '').urlEncode(), 'md': 'ADD', 'pt': 'Position_ID', 'ed': ed});\n      count = count + 1;\n    }\n    for (var p : removes) {\n      launchAssignRole.invoke({'rid': queryParams.roleId ?? '', 'rn': (queryParams.roleName ?? '').urlEncode(), 'oid': queryParams.orgId ?? '', 'on': (queryParams.orgName ?? '').urlEncode(), 'pid': p.id, 'pn': (p.descriptor ?? '').urlEncode(), 'md': 'REMOVE', 'pt': 'WID', 'ed': ed});\n      count = count + 1;\n    }\n    let after = verifyRoleAudit.invoke({'lim': '1'}).total ?? 0;\n    if (after - before < count) {\n      positionsToAddInstanceList.setError('Workday rejected ' + (count - (after - before)) + ' of ' + count + ' changes. Check the role assignment in Workday and try again.');\n      valid = false;\n    }\n  }\n  valid;\n%>",
+  "onSubmit": "<%\n  let valid = true;\n  let adds = positionsToAddInstanceList.selectedEntries ?? [];\n  let removes = positionsToRemoveInstanceList.selectedEntries ?? [];\n  if (size(adds) + size(removes) == 0) {\n    positionsToAddInstanceList.setError('Select at least one position to add or remove.');\n    valid = false;\n  }\n  if (empty(effectiveDate.value)) {\n    effectiveDate.setError('Effective Date is required.');\n    valid = false;\n  }\n  if (valid) {\n    let ed = effectiveDate.value.format('yyyy-MM-dd');\n    let before = verifyRoleAudit.invoke({'lim': '1'}).total ?? 0;\n    let count = 0;\n    for (var p : adds) {\n      launchAssignRole.invoke({'cb': (selectedWorker.descriptor ?? '').urlEncode(), 'ts': date:now().format(\"yyyy-MM-dd'T'HH:mm:ss'Z'\").urlEncode(), 'rid': queryParams.roleId ?? '', 'rn': (queryParams.roleName ?? '').urlEncode(), 'oid': queryParams.orgId ?? '', 'on': (queryParams.orgName ?? '').urlEncode(), 'pid': p.id, 'pn': (p.descriptor ?? '').urlEncode(), 'md': 'ADD', 'pt': 'Position_ID', 'ed': ed});\n      count = count + 1;\n    }\n    for (var p : removes) {\n      launchAssignRole.invoke({'cb': (selectedWorker.descriptor ?? '').urlEncode(), 'ts': date:now().format(\"yyyy-MM-dd'T'HH:mm:ss'Z'\").urlEncode(), 'rid': queryParams.roleId ?? '', 'rn': (queryParams.roleName ?? '').urlEncode(), 'oid': queryParams.orgId ?? '', 'on': (queryParams.orgName ?? '').urlEncode(), 'pid': p.id, 'pn': (p.descriptor ?? '').urlEncode(), 'md': 'REMOVE', 'pt': 'WID', 'ed': ed});\n      count = count + 1;\n    }\n    let after = verifyRoleAudit.invoke({'lim': '1'}).total ?? 0;\n    if (after - before < count) {\n      positionsToAddInstanceList.setError('Workday rejected ' + (count - (after - before)) + ' of ' + count + ' changes. Check the role assignment in Workday and try again.');\n      valid = false;\n    }\n  }\n  valid;\n%>",
   "presentation": {
     "headerSize": "STANDARD",
     "title": {

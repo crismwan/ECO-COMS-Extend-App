@@ -1,0 +1,86 @@
+{
+  "id": "purgeAuditLogs",
+  "securityDomains": [
+    "ViewCOMSAuditLog"
+  ],
+  "endPoints": [
+    {
+      "name": "allAuditLogs",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "url": "/comsAuditLogs?limit=100",
+      "authType": "sso",
+      "failOnStatusCodes": [
+        400,
+        403,
+        404,
+        500
+      ]
+    }
+  ],
+  "onSubmit": "<% if (confirmPurgeCheckBox.value != true) { confirmPurgeCheckBox.setError('Tick the box to confirm.'); false; } else { true; } %>",
+  "outboundData": {
+    "outboundEndPoints": [
+      {
+        "name": "bulkDeleteAuditLogs",
+        "baseUrlType": "BUSINESS-OBJECT",
+        "url": "/comsAuditLogs?bulk=true",
+        "httpMethod": "DELETE",
+        "authType": "sso",
+        "values": [
+          {
+            "outboundPath": "data",
+            "value": "<% (allAuditLogs.data ?? []).map(a => { {'id': a.id} }) %>"
+          }
+        ]
+      }
+    ],
+    "responseErrorDetail": {
+      "errorSummary": "<% error %>",
+      "errors": "<% empty errors ? [] : errors.map(err => { err.error }) %>"
+    }
+  },
+  "presentation": {
+    "pageType": "EDIT",
+    "headerSize": "STANDARD",
+    "title": {
+      "type": "title",
+      "label": "Purge Audit Log (temporary)",
+      "enabled": true
+    },
+    "body": {
+      "type": "basicFormLayout",
+      "id": "purgeAuditLogsForm",
+      "sections": [
+        {
+          "type": "layoutSection",
+          "id": "purgeSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "purgeFieldSet",
+              "title": "Delete all audit records",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "recordCountText",
+                  "label": "Records to delete",
+                  "enabled": false,
+                  "value": "<% '' + size(allAuditLogs.data ?? []) %>"
+                },
+                {
+                  "type": "checkBox",
+                  "id": "confirmPurgeCheckBox",
+                  "label": "I confirm all audit records will be permanently deleted",
+                  "value": "<% false %>"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "cancelOverride": {
+      "taskId": "auditLogViewer"
+    }
+  }
+}

@@ -67,19 +67,11 @@
           },
           {
             "outboundPath": "objectType",
-            "value": "COMSAssignableRole"
+            "value": "Assignable Role"
           },
           {
             "outboundPath": "action",
             "value": "DELETE"
-          },
-          {
-            "outboundPath": "worker",
-            "value": "<% selectedWorker.id %>"
-          },
-          {
-            "outboundPath": "application",
-            "value": ""
           },
           {
             "outboundPath": "coReferenceId",
@@ -96,6 +88,10 @@
           {
             "outboundPath": "triggeredBy",
             "value": "<% selectedWorker.descriptor %>"
+          },
+          {
+            "outboundPath": "roleName",
+            "value": "<% selectedRoleDisplay.value ?? '' %>"
           }
         ],
         "failOnStatusCodes": [

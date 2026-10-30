@@ -1,4 +1,0 @@
-{
-  "id": "customOrganizationsFUH",
-  "query": "SELECT workdayID, organization1, code, type1, subtype FROM customOrganizations WHERE type1 in (b40d8b016367100175b147f364840000)"
-}
