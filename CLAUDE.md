@@ -267,6 +267,8 @@ This is the mechanism for conditional/cross-field validation, including **inside
 
 Compare a Date against another **widget's** value, not a raw inbound string — the widget has already parsed the string into a Date object.
 
+**The same applies to `onSubmit`.** An error it sets stays after the user fixes the cause, and OK keeps failing until a reload (confirmed live 2026-10-31). Clear every widget's error at the start of `onSubmit`, and give confirmation checkboxes `"onChange": "<% self.clearError() %>"`.
+
 **Scripting methods available on widgets:** `clearError()`, `clearWarning()`, `setError(String)`, `setWarning(String)` (non-blocking), `getLabel()` / `setLabel(String)`, `getValue()` / `setValue(Object)`, `getValueOutBinding()` / `setValueOutBinding(String)`, `isEnabled()` / `setEnabled(boolean)`, `isRequired()` / `setRequired(boolean)`, `isVisible()` / `setVisible(boolean)`, `isUpdated()` (changed by the end user), `isUpdatedByScript()` (changed by a PMD script).
 
 `setVisible()` only works reliably when the widget is inside a `fieldSet`.
@@ -1252,6 +1254,7 @@ Everything below was learned from App Builder–authored orchestrations in a rea
 
   - `...arrayAtJsonPath("$.list")` (Json)
 
+- **Reading an uploaded CSV** (confirmed live 2026-10-31): `GET` the attachment object record with no Accept header (response type Any), then `data.<get>.response.asCSV().rows()` as the Loop input, typed explicitly as `["Iterator",["CsvRow",{"_type":["Opt","CsvFormatRef"],"_value":null}]]` (auto-typing fails the build with "columnValueAtIndex cannot be applied to an instance of AnyType"). Read cells with `item.columnValueAtIndex(n)`; `countRows()` counts rows. Quoted cells with commas inside and CRLF line ends (as Excel saves) parse correctly. The header row comes through as a row, so skip it by content.
 - **There's no object extractor in use**, only arrays. To pass one record through untouched, send it from the PMD as a one-element list and use the bulk API.
 
 - `end` is `EndSync`. `body` is `null` (no response) or a `DataRefBody` whose source is e.g. `data.someGroup.response`.
