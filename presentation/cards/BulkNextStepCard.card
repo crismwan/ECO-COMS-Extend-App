@@ -1,0 +1,24 @@
+{
+  "id": "BulkNextStepCard",
+  "header": {
+    "title": "Next step",
+    "icon": "wd-accent-checkmarked-page"
+  },
+  "body": {
+    "type": "pillCard",
+    "pills": [
+      {
+        "label": "Upload a file",
+        "taskReference": {
+          "taskId": "bulkRoleChanges"
+        }
+      },
+      {
+        "label": "View results",
+        "taskReference": {
+          "taskId": "bulkRoleResults"
+        }
+      }
+    ]
+  }
+}

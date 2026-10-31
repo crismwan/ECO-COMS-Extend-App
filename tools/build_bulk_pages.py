@@ -9,6 +9,11 @@ def note(sid, fid, title, rid, html, color='#0055B7', mark='ⓘ'):
     return {"type": "layoutSection", "id": sid, "children": [{"type": "fieldSet", "id": fid, "title": title, "children": [
         {"type": "richText", "id": rid, "enabled": False,
          "value": '<span style="color:' + color + ';font-size:12px;font-weight:700">' + mark + ' </span><span style="color:#374151;font-size:12px">' + html + '</span>'}]}]}
+def with_card(section, card_id):
+    """Adds a card under a help section's text (the ISC 'Show' pattern: fieldSet, then cards)."""
+    section['children'].append({"type": "cardContainer", "id": section['id'].replace('Section', '') + "CardContainer", "layout": "grid",
+                                "cards": [{"type": "card", "cardId": card_id}]})
+    return section
 def nav(*buttons):
     return {"type": "layoutSection", "id": "navSection", "children": [
         {"type": "button", "id": bid, "label": label, "action": "LINK", "taskReference": {"taskId": task}} for bid, label, task in buttons]}
@@ -27,13 +32,13 @@ template = {"id": "bulkRoleTemplate", "securityDomains": ["ManageCOMSShellOrgs"]
                  "wqlQuery": {"queryId": "allShellAssignableRolesinTenant"}, "failOnStatusCodes": FOS([400, 429])}],
   "presentation": {"headerSize": "STANDARD", "title": {"type": "title", "label": "ECO-COMS: Bulk Role Changes – Template"},
     "body": {"type": "basicFormLayout", "id": "bulkTemplateForm", "sections": [
-      nav(("homeButton", "← Home", "home"), ("uploadButton", "Upload a file →", "bulkRoleChanges")),
-      note("aboutSection", "aboutFieldSet", "How to use this template", "aboutRichText",
+      nav(("homeButton", "← Home", "home")),
+      with_card(note("aboutSection", "aboutFieldSet", "How to use this template", "aboutRichText",
         "Each row is one position that currently holds a role on a shell organization. Export the grid to Excel (the export icon on the grid), then:<br/>"
         "1. In <b>Action</b>, type <b>REMOVE</b> on the rows to take a position off a role.<br/>"
         "2. To add a position, copy a row of the same role, type <b>ADD</b> in Action and put the new <b>Position ID</b> (for example P-00123) in that column. Leave Assignee WID empty on ADD rows.<br/>"
         "3. Leave Action empty on rows you don't want to change. Keep the columns in this order and don't edit the WID columns.<br/>"
-        "4. Save as <b>CSV</b> (Excel: File → Save As → CSV) and upload it on the Bulk Role Changes page. At most 200 rows."),
+        "4. Save as <b>CSV</b> (Excel: File → Save As → CSV) and upload it on the Bulk Role Changes page. At most 200 rows."), "BulkNextStepCard"),
       {"type": "layoutSection", "id": "gridSection", "children": [{"type": "fieldSet", "id": "templateFieldSet", "title": "Current role assignments", "children": [
         {"type": "grid", "id": "bulkTemplateGrid", "gridType": "LIST", "multiViewStylingEnabled": True, "autoPaging": True, "enabled": False,
          "excelExportEnabled": True, "rowVariableName": "tr", "rows": ROWS,
@@ -95,12 +100,12 @@ upload = {"id": "bulkRoleChanges", "securityDomains": ["ManageCOMSShellOrgs"], "
   "presentation": {"headerSize": "STANDARD", "title": {"type": "title", "label": "ECO-COMS: Bulk Role Changes"},
     "cancelOverride": {"taskId": "home"},
     "body": {"type": "basicFormLayout", "id": "bulkUploadForm", "sections": [
-      nav(("templateButton", "← Download the template", "bulkRoleTemplate"), ("resultsButton", "View results →", "bulkRoleResults")),
-      note("aboutSection", "aboutFieldSet", "How it works", "aboutRichText",
+      nav(("homeButton", "← Home", "home")),
+      with_card(note("aboutSection", "aboutFieldSet", "How it works", "aboutRichText",
         "Upload the CSV made from the template. Run it as <b>Validate only</b> first: every row is checked and nothing changes in Workday. "
         "Then upload the same file again with <b>Real run</b> ticked: each ADD or REMOVE row is applied in Workday's Assign Roles, "
         "one row at a time, and each change is written to the Audit Log. A row that Workday rejects is recorded as FAILED and the run carries on. "
-        "Both runs work in the background; the results page shows progress. At most 200 rows per file."),
+        "Both runs work in the background; the results page shows progress. At most 200 rows per file."), "BulkRelatedCard"),
       note("warningSection", "warningFieldSet", "Before you submit", "warningRichText",
         "A real run changes who holds security roles in Workday straight away. Changes that succeed are not undone if later rows fail. Validate first.",
         '#B45309', '⚠'),
@@ -172,6 +177,10 @@ results = {"id": "bulkRoleResults", "securityDomains": ["ManageCOMSShellOrgs"],
                      txt("colMessage", "Message", "<% rr.message ?? '' %>")]}]}]}]},
     "footer": FOOT, "pageType": "VIEW"}}
 save('bulkRoleResults', results)
+for cid, title, pills in [("BulkNextStepCard", "Next step", [("Upload a file", "bulkRoleChanges"), ("View results", "bulkRoleResults")]),
+                          ("BulkRelatedCard", "Related", [("Download template", "bulkRoleTemplate"), ("View results", "bulkRoleResults")])]:
+    open(os.path.join(ROOT, 'cards', cid + '.card'), 'w').write(json.dumps({"id": cid, "header": {"title": title, "icon": "wd-accent-checkmarked-page"},
+        "body": {"type": "pillCard", "pills": [{"label": l, "taskReference": {"taskId": t}} for l, t in pills]}}, indent=2, ensure_ascii=False) + '\n')
 actions_card = {"id": "BulkActionsPillCard", "parameters": ["batch"],
   "header": {"title": "Actions", "subtitle": "Refresh while a run is in progress", "icon": "wd-accent-checkmarked-page"},
   "body": {"type": "pillCard", "pills": [

@@ -45,15 +45,6 @@
               "taskReference": {
                 "taskId": "home"
               }
-            },
-            {
-              "type": "button",
-              "id": "uploadButton",
-              "label": "Upload a file →",
-              "action": "LINK",
-              "taskReference": {
-                "taskId": "bulkRoleChanges"
-              }
             }
           ]
         },
@@ -71,6 +62,17 @@
                   "id": "aboutRichText",
                   "enabled": false,
                   "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">Each row is one position that currently holds a role on a shell organization. Export the grid to Excel (the export icon on the grid), then:<br/>1. In <b>Action</b>, type <b>REMOVE</b> on the rows to take a position off a role.<br/>2. To add a position, copy a row of the same role, type <b>ADD</b> in Action and put the new <b>Position ID</b> (for example P-00123) in that column. Leave Assignee WID empty on ADD rows.<br/>3. Leave Action empty on rows you don't want to change. Keep the columns in this order and don't edit the WID columns.<br/>4. Save as <b>CSV</b> (Excel: File → Save As → CSV) and upload it on the Bulk Role Changes page. At most 200 rows.</span>"
+                }
+              ]
+            },
+            {
+              "type": "cardContainer",
+              "id": "aboutCardContainer",
+              "layout": "grid",
+              "cards": [
+                {
+                  "type": "card",
+                  "cardId": "BulkNextStepCard"
                 }
               ]
             }
