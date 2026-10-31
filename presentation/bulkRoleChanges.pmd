@@ -26,7 +26,7 @@
       ]
     }
   ],
-  "onSubmit": "<%\n  let valid = true;\n  if (empty(bulkFileUploader.children)) {\n    bulkFileUploader.setError('Choose the CSV file to upload.');\n    valid = false;\n  }\n  if (empty(effectiveDate.value)) {\n    effectiveDate.setError('Effective Date is required.');\n    valid = false;\n  } else if (!comsValidations.isWeekday(effectiveDate.value)) {\n    effectiveDate.setError(comsValidations.errorWeekday());\n    valid = false;\n  } else if (!comsValidations.isCurrentOrFutureYear(effectiveDate.value)) {\n    effectiveDate.setError(comsValidations.errorYear());\n    valid = false;\n  }\n  if (valid && realRunCheckBox.value == true && confirmRealRunCheckBox.value != true) {\n    confirmRealRunCheckBox.setError('Tick this to confirm the real run, or untick Real run to validate first.');\n    valid = false;\n  }\n  valid;\n%>",
+  "onSubmit": "<%\n  bulkFileUploader.clearError();\n  effectiveDate.clearError();\n  confirmRealRunCheckBox.clearError();\n  let valid = true;\n  if (empty(bulkFileUploader.children)) {\n    bulkFileUploader.setError('Choose the CSV file to upload.');\n    valid = false;\n  }\n  if (empty(effectiveDate.value)) {\n    effectiveDate.setError('Effective Date is required.');\n    valid = false;\n  } else if (!comsValidations.isWeekday(effectiveDate.value)) {\n    effectiveDate.setError(comsValidations.errorWeekday());\n    valid = false;\n  } else if (!comsValidations.isCurrentOrFutureYear(effectiveDate.value)) {\n    effectiveDate.setError(comsValidations.errorYear());\n    valid = false;\n  }\n  if (valid && realRunCheckBox.value == true && confirmRealRunCheckBox.value != true) {\n    confirmRealRunCheckBox.setError('Tick this to confirm the real run, or untick Real run to validate first.');\n    valid = false;\n  }\n  valid;\n%>",
   "outboundData": {
     "outboundEndPoints": [
       {
@@ -199,7 +199,8 @@
                   "type": "checkBox",
                   "id": "confirmRealRunCheckBox",
                   "label": "I have validated this file and want to apply it",
-                  "value": "<% false %>"
+                  "value": "<% false %>",
+                  "onChange": "<% self.clearError() %>"
                 },
                 {
                   "type": "hidden",

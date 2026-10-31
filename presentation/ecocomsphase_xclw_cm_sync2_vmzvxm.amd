@@ -24,6 +24,28 @@
       ]
     },
     {
+      "id": "editRoleAssignmentFlow",
+      "flowSteps": [
+        {
+          "id": "editRoleAssignmentStep",
+          "taskId": "editRoleAssignment",
+          "startsFlow": true,
+          "transitions": [
+            {
+              "order": "a",
+              "value": "roleAssignmentSuccessStep",
+              "condition": "true"
+            }
+          ]
+        },
+        {
+          "id": "roleAssignmentSuccessStep",
+          "taskId": "roleAssignmentSuccess",
+          "endsFlow": true
+        }
+      ]
+    },
+    {
       "id": "bulkRoleApplyFlow",
       "flowSteps": [
         {
@@ -63,28 +85,6 @@
         {
           "id": "bulkRoleResultsStep",
           "taskId": "bulkRoleResults",
-          "endsFlow": true
-        }
-      ]
-    },
-    {
-      "id": "editRoleAssignmentFlow",
-      "flowSteps": [
-        {
-          "id": "editRoleAssignmentStep",
-          "taskId": "editRoleAssignment",
-          "startsFlow": true,
-          "transitions": [
-            {
-              "order": "a",
-              "value": "roleAssignmentSuccessStep",
-              "condition": "true"
-            }
-          ]
-        },
-        {
-          "id": "roleAssignmentSuccessStep",
-          "taskId": "roleAssignmentSuccess",
           "endsFlow": true
         }
       ]

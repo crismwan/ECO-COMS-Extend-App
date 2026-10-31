@@ -47,6 +47,9 @@ save('bulkRoleTemplate', template)
 
 # ── 2. Upload: file, effective date, validate-only or real run ──
 SUBMIT = """<%
+  bulkFileUploader.clearError();
+  effectiveDate.clearError();
+  confirmRealRunCheckBox.clearError();
   let valid = true;
   if (empty(bulkFileUploader.children)) {
     bulkFileUploader.setError('Choose the CSV file to upload.');
@@ -109,7 +112,7 @@ upload = {"id": "bulkRoleChanges", "securityDomains": ["ManageCOMSShellOrgs"], "
          "onChange": "<%\n  if (empty(self.value)) { self.clearError(); }\n  else if (!comsValidations.isWeekday(self.value)) { self.setError(comsValidations.errorWeekday()); }\n  else if (!comsValidations.isCurrentOrFutureYear(self.value)) { self.setError(comsValidations.errorYear()); }\n  else { self.clearError(); }\n%>"},
         {"type": "checkBox", "id": "realRunCheckBox", "label": "Real run (make the changes in Workday)", "value": "<% false %>",
          "guide": {"type": "guide", "id": "realRunGuide", "title": "Validate only or real run", "text": "Leave this unticked to validate only: every row is checked and nothing changes. Tick it to apply the ADD and REMOVE rows in Workday."}},
-        {"type": "checkBox", "id": "confirmRealRunCheckBox", "label": "I have validated this file and want to apply it", "value": "<% false %>"},
+        {"type": "checkBox", "id": "confirmRealRunCheckBox", "label": "I have validated this file and want to apply it", "value": "<% false %>", "onChange": "<% self.clearError() %>"},
         {"type": "hidden", "id": "batchRefHidden", "value": "<% 'BULK' + date:now().format('yyyyMMddHHmmss') + (selectedWorker.id ?? '').substring(0, 6) %>"}]}]}]},
     "footer": FOOT, "pageType": "EDIT"}}
 save('bulkRoleChanges', upload)
@@ -179,6 +182,7 @@ ROWS4 = "(list:flatten([storedRows0.data ?? [], storedRows1.data ?? []]).filter(
 n4 = lambda r: "size(" + ROWS4 + ".filter(x => { x.result == '" + r + "' }))"
 APPLY_SUBMIT = """<%
   let up = """ + UP + """;
+  confirmApplyCheckBox.clearError();
   let valid = true;
   if ((up.status ?? '') != 'Validated') {
     confirmApplyCheckBox.setError('Only an upload with status Validated can be applied. This one is ' + (up.status ?? 'not found') + '.');
@@ -225,7 +229,7 @@ apply = {"id": "bulkRoleApply", "securityDomains": ["ManageCOMSShellOrgs"],
         {"type": "text", "id": "effectiveDateText", "label": "Effective Date", "enabled": False, "value": "<% " + UP + ".effectiveDate ?? '' %>"},
         {"type": "text", "id": "validRowsText", "label": "VALID rows (will be applied)", "enabled": False, "value": "<% '' + " + n4('VALID') + " %>"},
         {"type": "text", "id": "invalidRowsText", "label": "INVALID rows", "enabled": False, "value": "<% '' + " + n4('INVALID') + " %>"},
-        {"type": "checkBox", "id": "confirmApplyCheckBox", "label": "Apply these rows in Workday now", "value": "<% false %>"}]}]}]},
+        {"type": "checkBox", "id": "confirmApplyCheckBox", "label": "Apply these rows in Workday now", "value": "<% false %>", "onChange": "<% self.clearError() %>"}]}]}]},
     "footer": FOOT, "pageType": "EDIT"}}
 save('bulkRoleApply', apply)
 

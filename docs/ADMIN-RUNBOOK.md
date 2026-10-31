@@ -272,7 +272,7 @@ Also outstanding:
 - Fixed 2026-10-31: after OK, Manage Role Assignments now goes to a confirmation page (`roleAssignmentSuccess`, flow `editRoleAssignmentFlow`) with a button back to Shell Org Manager for the same application.
 - Done 2026-10-31: P-00001 was removed from `X:BPMS(ODMT):ROLE:ADVISORS`.
 - The stray org "COMS Application:PATTERN:TEST:TEST:302:152:2026W1" is still active and needs someone with organization maintenance rights to inactivate it.
-- Bulk Role Changes: a successful real run (and the Apply button's OK) is not yet tested live.
+- Done 2026-10-31: Bulk Role Changes real runs (Apply button and direct) tested live on ADVISORS; the role was left as it was.
 
 ## 7. Test data that can't be deleted
 

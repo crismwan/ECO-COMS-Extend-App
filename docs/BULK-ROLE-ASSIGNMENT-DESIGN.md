@@ -137,4 +137,8 @@ Confirmed on ubc_wcpdev2:
 - Validate run after the lookup (BULK202610312008303aa555): P-00012 INVALID "not found in Workday" (it doesn't exist; that was the cause), P-00010 VALID, P-99999 INVALID.
 - The Apply page loads a stored upload with its status, effective date and VALID/INVALID counts (1 / 2 here). OK was not clicked.
 
-Still to prove: a successful real-run ADD and REMOVE (with a position known to work, e.g. P-00010 after removing it), the audit record a successful row writes, and the Apply button flow.
+- Real runs that succeed (2026-10-31, effective 2026-10-30, role X:BPMS(ODMT):ROLE:ADVISORS):
+  - **Apply button path:** validated a REMOVE of P-00010 (BULK202610312106013aa555), then applied it from the Apply page. Row DONE, upload Completed, P-00010 gone from the role in Workday, and a REMOVE POSITION audit record ("Bulk upload BULK202610312106013aa555: removed position P-00010 ...") at 21:09:07Z. The Apply page refused OK without the confirmation tick.
+  - **Direct real run:** uploaded an ADD of P-00010 with Real run ticked (BULK202610312111053aa555). Row DONE, P-00010 back on the role; the role ended exactly as it started (P-00009, P-00010, P-00011, P-00139, P-00759).
+  - The Position cell was written the way Excel saves it, quoted with a comma inside (`"P-00010 Director, Payroll Operations - Beth Liu"`), with CRLF line ends: `asCSV()` handled both.
+- Bug found and fixed: a validation error on the upload and Apply pages stayed after the user fixed the cause, blocking OK until a reload. Both pages now clear their errors at the start of each submit, and the confirmation ticks clear theirs when changed.
