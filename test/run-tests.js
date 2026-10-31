@@ -519,6 +519,14 @@ async function smoke(token, me) {
     if (legacy.length) return warn('Requests.pendingHaveEvent', `${legacy.length} pending request(s) without a review event (only the legacy Maintain page can act on them): ${legacy.map((r) => r.roleName).join(', ')}`);
     pass('Requests.pendingHaveEvent', 'every pending request has a review event');
   });
+  // Shape of an event's comments (GET events/{id}/comments), used to copy the Deny comment into the request.
+  await test('BP.eventComments', async () => {
+    const closed = roles.filter((r) => r.status === 'Denied' && r.reviewEventWid).slice(-1)[0];
+    if (!closed) return skip('BP.eventComments', 'no denied request with a review event');
+    const c = await request('GET', `${BP}/events/${closed.reviewEventWid}/comments`, token);
+    const first = (c.data || [])[0];
+    pass('BP.eventComments', `${(c.data || []).length} comment(s) on ${closed.roleName}; first: ${JSON.stringify(first || {}).slice(0, 300)}`);
+  });
   await test('BP.pendingEventsOpen', async () => {
     const pending = roles.filter((r) => r.status === 'Pending ISC Review' && r.reviewEventWid).slice(0, 5);
     if (!pending.length) return skip('BP.pendingEventsOpen', 'no pending requests with a review event');
