@@ -4,7 +4,7 @@ ECO-COMS (Custom Organization Management System) is a Workday Extend app for rol
 
 - create **shell organizations** (Custom Organizations such as `X:CLW:ORG:ANY`) and **shell org patterns** (such as `X:CLW:PATTERN:MATH:MATH_V:303:951:2026W1`) in Workday
 - inactivate or reactivate those organizations
-- add or remove the positions assigned to a role on a shell organization
+- add or remove the positions assigned to a role on a shell organization, one at a time or many at once from a CSV file
 - request new **assignable roles** and **AAA (Admin Provisioning)** roles, which ISC reviews in a Workday business process
 - see every change in the **Audit Log Viewer**
 
@@ -184,6 +184,18 @@ Outcomes:
 
 You need the **View: COMS Audit Log** domain to open this page.
 
+### Bulk Role Changes (many positions from one file)
+
+Use this to add or remove many positions on shell organization roles at once. It's on Home under **Bulk Role Changes** and needs the same access as Manage Role Assignments.
+
+1. **Download Template.** The grid lists every position that holds a role on a shell organization. Export it to Excel with the grid's export icon.
+2. **Edit the file.** Type **REMOVE** in the Action column on rows to take off. To add a position, copy a row of the same role, type **ADD** and put the new **Position ID** (for example P-00123) in that column, with Assignee WID empty. Leave Action empty on everything else and keep the columns in order. Save as **CSV**. At most 200 rows.
+3. **Upload File** and pick an effective date. Leave **Real run** unticked to **validate only**: every row is checked (including that each ADD Position ID exists in Workday) and nothing changes.
+4. On the results page, click **Refresh** until the status is **Validated**. Each row is **VALID** or **INVALID** with a reason. Fix INVALID rows in the file and upload it again.
+5. When there are no INVALID rows, click **Apply** on that upload, tick the confirmation and click OK. Each row is applied in Workday's Assign Roles. Rows show **DONE** or **FAILED** with Workday's message; a failed row doesn't stop the others, and changes that succeed aren't undone. Each DONE row writes an ASSIGN POSITION or REMOVE POSITION record to the Audit Log.
+
+You can also tick **Real run** on the upload page to validate and apply in one go, but validating first is safer. Runs work in the background, so the results page fills in over a minute or two.
+
 ---
 
 ## Part 2: ISC reviewers and approvers
@@ -235,6 +247,8 @@ The approval step has the routing restriction **Exclude Initiator**. The request
 | "Workday rejected this request, so nothing was created. Check the values and try again." | ECO-COMS asked Workday to create the org or pattern, then checked, and it isn't there. | Check the values (code, dates). Try again. If it keeps failing, raise a helpdesk ticket with the name you entered and the time. |
 | "Workday rejected this status change, so nothing was changed..." | Workday refused the inactivate or reactivate. The usual cause is a future-dated change already scheduled on the org. | Pick an effective date after the scheduled change, or wait for it to take effect. |
 | "Workday rejected N of M changes. Check the role assignment in Workday and try again." | Some position changes failed. The rest went through. | Check the role's current positions, then redo only the missing changes. |
+| Bulk row INVALID: "Position ID … was not found in Workday." | The Position ID in the ADD row doesn't match a position. | Check the ID (format P-00123) and upload the file again. |
+| Bulk row FAILED: "Workday rejected the change: …" | Workday refused that one row (for example, the position can't hold the role). The other rows still ran. | Fix or remove that row and run a new file with only the rows that are left. |
 | "An organization with this code already exists" / "A Shell Org Pattern with this name already exists" | Duplicate name. | Use a different code, or use the existing org. |
 | "This AAA role already exists in Workday" | Duplicate AAA request. | Review the existing role instead. |
 | "Cannot select both Functional Unit Hierarchy and Academic Unit." | Enabled For takes one or the other. | Clear one of them. |

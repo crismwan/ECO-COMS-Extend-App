@@ -1,6 +1,6 @@
 # Bulk role assignment by file: design proposal
 
-Status: **decided 2026-10-31; first build committed (not yet deployed: the deploy token expired).** See "Decisions" and "What was built" at the end. Written 2026-10-31 from the product owner's idea (UI phase 2, question 9): download the role assignments a person may change, edit the file, upload it, and let ECO-COMS add or remove positions, like an EIB.
+Status: **decided 2026-10-31; built and deployed; validate mode proven live, real run reached Workday (see "Live test results").** See "Decisions" and "What was built" at the end. Written 2026-10-31 from the product owner's idea (UI phase 2, question 9): download the role assignments a person may change, edit the file, upload it, and let ECO-COMS add or remove positions, like an EIB.
 
 Sources: developer.workday.com "Concept: Attachment Objects", "Reference: String Member Functions", "Concept: Orchestration Logic Components in Extend Apps", "Orchestration Runtime Limits", "Limits on Presentation Components" (checked 2026-10-31); this repo's AssignRolePositions orchestration, which already does one add or remove per call and is tested live. Items marked **(verify)** are not confirmed yet.
 
@@ -118,10 +118,23 @@ A batch with any rejected row can't be submitted; the user fixes the file and up
 
 `Action` (ADD / REMOVE / empty) · `Role` · `Role WID` · `Organization` · `Organization WID` · `Position` · `Position ID` (needed for ADD) · `Assignee WID` (needed for REMOVE). Rows with an empty Action, and the header row, are ignored.
 
-### Still to prove on the tenant (first deploy)
+### Added after the first live run (2026-10-31)
 
-- The attachment upload with metadata set in `onMultiPartSend`, and `csv` being an allowed file type in the tenant.
-- The async launch from an outbound endpoint and `data("start","queryParams")` in an asynchronous flow.
-- The indexed `batchRef` query parameter (`?batchRef=`); the orchestration checks the match and stops with a clear message if the parameter is ignored.
-- `asCSV().rows()` on the attachment response, and whether the header row is skipped (it's ignored either way).
-- The App Hub build of the generated orchestration (typed loop input is left to auto-typing).
+- **Position lookup.** Each ADD row's Position ID is looked up in `allPositions` (the WQL the single-change page uses). An unknown ID is INVALID ("Position ID … was not found in Workday") in both validate and real runs, so it never reaches Assign_Roles. An unfilled position is VALID but flagged in the message.
+- **Apply a validated upload** (`bulkRoleApply`, the **Apply** button on the results page): runs the stored file for real with the effective date chosen at validation. Allowed only when the status is Validated and no row is INVALID. It marks the upload Queued / APPLY and launches the orchestration; the results page then shows only the rows of the latest run.
+- **Refresh** on the results page, which also defaults to an upload that is still Uploaded, Queued or Running.
+
+### Live test results (2026-10-31)
+
+Confirmed on ubc_wcpdev2:
+
+- Upload with metadata set in `onMultiPartSend`; `csv` is an allowed file type.
+- Asynchronous launch from an outbound endpoint; `data("start","queryParams").getParam(...)` works in a FlowAsync.
+- `?batchRef=` on the indexed field filters the collection.
+- `GET` on the attachment (no Accept header) → `asCSV().rows()`; the header row and rows with an empty Action are skipped.
+- Validate run: VALID / VALID / INVALID as expected, status Validated.
+- Real run: Assign_Roles was called per row and each rejection was recorded as FAILED with Workday's message, status Completed. The deliberate bad REMOVE (an all-zero WID) failed as intended. The ADD of P-00012 failed with "The provided Role Assignee is not valid as an Event Target Role Assignee"; the role was unchanged. The position lookup above was added in response.
+- Validate run after the lookup (BULK202610312008303aa555): P-00012 INVALID "not found in Workday" (it doesn't exist; that was the cause), P-00010 VALID, P-99999 INVALID.
+- The Apply page loads a stored upload with its status, effective date and VALID/INVALID counts (1 / 2 here). OK was not clicked.
+
+Still to prove: a successful real-run ADD and REMOVE (with a position known to work, e.g. P-00010 after removing it), the audit record a successful row writes, and the Apply button flow.
