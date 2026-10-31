@@ -146,9 +146,8 @@ results = {"id": "bulkRoleResults", "securityDomains": ["ManageCOMSShellOrgs"],
         "When a validation run shows no INVALID rows, click <b>Apply</b> on that upload to run the same file for real. "
         "<b>VALID</b>/<b>INVALID</b>: validation run, nothing changed. <b>DONE</b>/<b>FAILED</b>: real run."),
       {"type": "layoutSection", "id": "summarySection", "children": [{"type": "cardContainer", "id": "bulkSummaryCardContainer", "layout": "grid", "cards": [
-        {"type": "card", "cardId": "CountCard", "parameters": "<% { 'title': 'Rows processed', 'subtitle': 'Selected upload', 'countText': " + rows_text("size(" + RES + ")") + " } %>"},
-        {"type": "card", "cardId": "CountCard", "parameters": "<% { 'title': 'Succeeded', 'subtitle': 'DONE or VALID', 'countText': " + rows_text(cnt("x.result == 'DONE' || x.result == 'VALID'")) + " } %>"},
-        {"type": "card", "cardId": "CountCard", "parameters": "<% { 'title': 'Need attention', 'subtitle': 'FAILED or INVALID', 'countText': " + rows_text(cnt("x.result == 'FAILED' || x.result == 'INVALID'")) + " } %>"},
+        {"type": "card", "cardId": "CountCard", "parameters": "<% { 'title': 'Succeeded', 'subtitle': 'DONE or VALID', 'countText': '' + " + cnt("x.result == 'DONE' || x.result == 'VALID'") + " + ' of ' + " + rows_text("size(" + RES + ")") + " } %>"},
+        {"type": "card", "cardId": "CountCard", "parameters": "<% { 'title': 'Need attention', 'subtitle': 'FAILED or INVALID', 'countText': '' + " + cnt("x.result == 'FAILED' || x.result == 'INVALID'") + " + ' of ' + " + rows_text("size(" + RES + ")") + " } %>"},
         {"type": "card", "cardId": "BulkActionsPillCard", "parameters": "<% { 'batch': " + REF + " } %>"}]}]},
       {"type": "layoutSection", "id": "uploadsSection", "children": [{"type": "fieldSet", "id": "uploadsFieldSet", "title": "My uploads", "children": [
         {"type": "grid", "id": "uploadsGrid", "gridType": "LIST", "multiViewStylingEnabled": True, "autoPaging": True, "enabled": False, "excelExportEnabled": True,

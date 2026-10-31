@@ -224,10 +224,6 @@
                 {
                   "type": "card",
                   "cardId": "HomeRoleRequestActionsCard"
-                },
-                {
-                  "type": "card",
-                  "cardId": "HomeAdminActionsCard"
                 }
               ]
             }

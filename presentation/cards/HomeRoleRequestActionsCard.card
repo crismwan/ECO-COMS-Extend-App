@@ -1,8 +1,8 @@
 {
   "id": "HomeRoleRequestActionsCard",
   "header": {
-    "title": "Assignable Roles",
-    "subtitle": "Request a new assignable role, or follow and withdraw your requests.",
+    "title": "Role Requests",
+    "subtitle": "Request assignable or AAA roles, follow your requests, and review the ISC queue.",
     "icon": "wd-accent-clipboard-checklist"
   },
   "body": {
@@ -18,6 +18,24 @@
         "label": "Submit New Request",
         "taskReference": {
           "taskId": "assignableRoleManager"
+        }
+      },
+      {
+        "label": "Open ISC Queue",
+        "taskReference": {
+          "taskId": "iscRoleRequestsHub"
+        }
+      },
+      {
+        "label": "View AAA Requests",
+        "taskReference": {
+          "taskId": "adminProvisioningView"
+        }
+      },
+      {
+        "label": "Submit AAA Role Request",
+        "taskReference": {
+          "taskId": "adminProvisioning"
         }
       }
     ]

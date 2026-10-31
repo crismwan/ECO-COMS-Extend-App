@@ -98,10 +98,9 @@ ACTIONS = [
    [("Open Shell Org Manager", "shellOrgManager"), ("Add Shell Org", "createShellOrgWizard"), ("Add Pattern", "createShellOrgPatternWizard")]),
   ("HomeBulkActionsCard", "Bulk Role Changes", "Add or remove many positions from one CSV file. Validate first, then run it for real.", "wd-accent-checkmarked-page",
    [("Upload File", "bulkRoleChanges"), ("Download Template", "bulkRoleTemplate"), ("View Results", "bulkRoleResults")]),
-  ("HomeRoleRequestActionsCard", "Assignable Roles", "Request a new assignable role, or follow and withdraw your requests.", "wd-accent-clipboard-checklist",
-   [("View My Requests", "assignableRoleManagerView"), ("Submit New Request", "assignableRoleManager")]),
-  ("HomeAdminActionsCard", "Administration", "AAA role provisioning, the ISC review queue and the audit log.", "wd-accent-award-medal",
-   [("Open ISC Queue", "iscRoleRequestsHub"), ("Open Audit Log", "auditLogViewer"), ("View AAA Requests", "adminProvisioningView"), ("Submit AAA Role Request", "adminProvisioning")]),
+  ("HomeRoleRequestActionsCard", "Role Requests", "Request assignable or AAA roles, follow your requests, and review the ISC queue.", "wd-accent-clipboard-checklist",
+   [("View My Requests", "assignableRoleManagerView"), ("Submit New Request", "assignableRoleManager"), ("Open ISC Queue", "iscRoleRequestsHub"),
+    ("View AAA Requests", "adminProvisioningView"), ("Submit AAA Role Request", "adminProvisioning")]),
 ]
 for cid, title, sub, icon, pills in ACTIONS:
     card = {"id": cid, "header": {"title": title, "subtitle": sub, "icon": icon},
