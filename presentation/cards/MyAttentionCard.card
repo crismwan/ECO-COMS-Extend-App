@@ -1,0 +1,30 @@
+{
+  "id": "MyAttentionCard",
+  "parameters": [
+    "requestsText",
+    "bulkText"
+  ],
+  "header": {
+    "title": "Needs my attention",
+    "subtitle": "Your own role requests and bulk uploads.",
+    "icon": "wd-accent-clipboard-checklist"
+  },
+  "body": {
+    "type": "simpleCard",
+    "value": "<% (requestsText ?? \"\") + \" | \" + (bulkText ?? \"\") %>"
+  },
+  "footer": [
+    {
+      "label": "My requests",
+      "taskReference": {
+        "taskId": "assignableRoleManagerView"
+      }
+    },
+    {
+      "label": "My bulk uploads",
+      "taskReference": {
+        "taskId": "bulkRoleResults"
+      }
+    }
+  ]
+}

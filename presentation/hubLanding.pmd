@@ -9,6 +9,50 @@
   ],
   "endPoints": [
     {
+      "name": "selectedWorker",
+      "baseUrlType": "COMMON",
+      "url": "/workers/me",
+      "authType": "sso",
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 403
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "name": "bulkUploadCount",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "url": "/comsBulkUploads?limit=1",
+      "authType": "sso",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "name": "bulkUploadPage0",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "authType": "sso",
+      "isCollection": true,
+      "failOnStatusCodes": [
+        {
+          "code": 429
+        }
+      ],
+      "url": "<% let t = bulkUploadCount.total ?? 0; let start = (t - 100) < 0 ? 0 : (t - 100); let cnt = t - start; '/comsBulkUploads?limit=' + (cnt > 0 ? cnt : 1) + '&offset=' + (cnt > 0 ? start : t) %>"
+    },
+    {
       "name": "pendingRequestsCount",
       "baseUrlType": "BUSINESS-OBJECT",
       "url": "/comsAssignableRoles?limit=1",
@@ -131,6 +175,11 @@
               "id": "dashboardCardContainer",
               "layout": "grid",
               "cards": [
+                {
+                  "type": "card",
+                  "cardId": "MyAttentionCard",
+                  "parameters": "<% { 'requestsText': comsRequestStats.myRequestsText(list:flatten([pendingRequestsPage0.data ?? [], pendingRequestsPage1.data ?? [], pendingRequestsPage2.data ?? []]), selectedWorker.id ?? ''), 'bulkText': (size((bulkUploadPage0.data ?? []).filter(u => { (u.uploadedByWid ?? '') == (selectedWorker.id ?? '') }).filter(u => { ['Uploaded', 'Queued', 'Running'].contains(u.status ?? '') })) > 0 ? ('' + size((bulkUploadPage0.data ?? []).filter(u => { (u.uploadedByWid ?? '') == (selectedWorker.id ?? '') }).filter(u => { ['Uploaded', 'Queued', 'Running'].contains(u.status ?? '') })) + ' bulk upload(s) still running') : 'No bulk uploads running') + (size((bulkUploadPage0.data ?? []).filter(u => { (u.uploadedByWid ?? '') == (selectedWorker.id ?? '') }).filter(u => { (u.status ?? '') == 'Rejected' })) > 0 ? (' · ' + size((bulkUploadPage0.data ?? []).filter(u => { (u.uploadedByWid ?? '') == (selectedWorker.id ?? '') }).filter(u => { (u.status ?? '') == 'Rejected' })) + ' rejected (over 200 rows)') : '') } %>"
+                },
                 {
                   "type": "card",
                   "cardId": "PendingIscCard",

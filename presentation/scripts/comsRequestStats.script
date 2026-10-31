@@ -67,8 +67,24 @@ var countStatus = function(list, status) {
   list.filter(r => { r.status == status }).size();
 };
 
+/* Home "Needs my attention": the signed-in user's own requests. */
+var isMine = function(r, meId) {
+  !empty(meId) && !empty(r.requestedBy) && r.requestedBy.id == meId;
+};
+
+var myRequestsText = function(list, meId) {
+  let mine = list.filter(r => { isMine(r, meId) });
+  let month = date:now().format('yyyy-MM');
+  let approved = mine.filter(r => { r.status == 'Approved' && ('' + (r.approvedDate ?? '')).startsWith(month) }).size();
+  size(mine) == 0
+    ? 'You have no role requests.'
+    : ('' + countPending(mine) + ' pending ISC review · ' + approved + ' approved this month · ' + countStatus(mine, 'Denied') + ' denied or withdrawn');
+};
+
 {
   "isAaa": isAaa,
+  "isMine": isMine,
+  "myRequestsText": myRequestsText,
   "inView": inView,
   "statusOrDefault": statusOrDefault,
   "filterRequests": filterRequests,
