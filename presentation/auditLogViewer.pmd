@@ -7,9 +7,20 @@
     {
       "name": "auditLogs",
       "baseUrlType": "BUSINESS-OBJECT",
-      "url": "/comsAuditLogs",
+      "url": "/comsAuditLogs?limit=100",
       "authType": "sso",
-      "isCollection": true
+      "isCollection": true,
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 403
+        },
+        {
+          "code": 429
+        }
+      ]
     },
     {
       "name": "allShellOrgs",
@@ -19,7 +30,15 @@
       "bestEffort": "true",
       "wqlQuery": {
         "queryId": "allShellOrgs"
-      }
+      },
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 429
+        }
+      ]
     },
     {
       "name": "shellRoles",
@@ -29,7 +48,15 @@
       "bestEffort": "true",
       "wqlQuery": {
         "queryId": "allShellAssignableRolesinTenant"
-      }
+      },
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 429
+        }
+      ]
     },
     {
       "name": "aaaRoles",
@@ -39,7 +66,15 @@
       "bestEffort": "true",
       "wqlQuery": {
         "queryId": "allAAArolesinTenant"
-      }
+      },
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 429
+        }
+      ]
     }
   ],
   "presentation": {

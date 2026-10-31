@@ -82,13 +82,6 @@
       }
     },
     {
-      "id": "newShellOrgPatternConfirm",
-      "routingPattern": "/newShellOrgPatternConfirm",
-      "page": {
-        "id": "newShellOrgPatternConfirm"
-      }
-    },
-    {
       "id": "newShellOrgPatternSuccess",
       "routingPattern": "/newShellOrgPatternSuccess",
       "page": {
@@ -149,13 +142,6 @@
       "routingPattern": "/newShellOrg",
       "page": {
         "id": "newShellOrg"
-      }
-    },
-    {
-      "id": "newShellOrgConfirm",
-      "routingPattern": "/newShellOrgConfirm",
-      "page": {
-        "id": "newShellOrgConfirm"
       }
     },
     {

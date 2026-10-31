@@ -2,5 +2,6 @@
   "id": 3,
   "name": "ManageCOMSShellOrgs",
   "label": "Manage: COMS Shell Organizations",
-  "enabledForPageSecurity": true
+  "enabledForPageSecurity": true,
+  "enabledForOrchestrationSecurity": true
 }

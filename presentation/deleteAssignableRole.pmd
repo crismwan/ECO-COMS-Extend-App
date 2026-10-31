@@ -11,15 +11,37 @@
       "name": "selectedWorker",
       "baseUrlType": "COMMON",
       "url": "/workers/me",
-      "authType": "sso"
+      "authType": "sso",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 403
+        },
+        {
+          "code": 429
+        }
+      ]
     },
     {
       "name": "comsAssignableRoles",
       "baseUrlType": "BUSINESS-OBJECT",
-      "url": "/comsAssignableRoles",
+      "url": "/comsAssignableRoles?limit=100",
       "authType": "sso",
       "isCollection": true,
-      "bestEffort": "true"
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 403
+        },
+        {
+          "code": 429
+        }
+      ]
     },
     {
       "name": "positions",
@@ -27,18 +49,57 @@
       "url": "jobs",
       "authType": "sso",
       "isCollection": true,
-      "bestEffort": "true"
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 429
+        }
+      ]
     }
   ],
   "outboundData": {
     "outboundEndPoints": [
+      {
+        "name": "cancelReview",
+        "baseUrlType": "workday-bp",
+        "url": "<% 'events/' + (size((comsAssignableRoles.data ?? []).filter(r => { r.id == (queryParams.roleId ?? '') && r.status == 'Pending ISC Review' && !empty(r.requestedBy) && r.requestedBy.id == (selectedWorker.id ?? '') })) > 0 ? ((comsAssignableRoles.data ?? []).filter(r => { r.id == (queryParams.roleId ?? '') && r.status == 'Pending ISC Review' && !empty(r.requestedBy) && r.requestedBy.id == (selectedWorker.id ?? '') })[0].reviewEventWid ?? '') : '') + '/cancel' %>",
+        "httpMethod": "POST",
+        "authType": "sso",
+        "values": [
+          {
+            "outboundPath": "comment",
+            "value": "<% 'Withdrawn by the requester in ECO-COMS: ' + (queryParams.roleName ?? '') %>"
+          }
+        ],
+        "exclude": "<% empty((size((comsAssignableRoles.data ?? []).filter(r => { r.id == (queryParams.roleId ?? '') && r.status == 'Pending ISC Review' && !empty(r.requestedBy) && r.requestedBy.id == (selectedWorker.id ?? '') })) > 0 ? ((comsAssignableRoles.data ?? []).filter(r => { r.id == (queryParams.roleId ?? '') && r.status == 'Pending ISC Review' && !empty(r.requestedBy) && r.requestedBy.id == (selectedWorker.id ?? '') })[0].reviewEventWid ?? '') : '')) %>",
+        "failOnStatusCodes": [
+          {
+            "code": 400
+          },
+          {
+            "code": 403
+          },
+          {
+            "code": 404
+          },
+          {
+            "code": 429
+          },
+          {
+            "code": 500
+          }
+        ]
+      },
       {
         "name": "deleteRole",
         "baseUrlType": "BUSINESS-OBJECT",
         "url": "<% '/comsAssignableRoles/' + queryParams.roleId %>",
         "httpMethod": "DELETE",
         "authType": "sso",
-        "exclude": "<% empty(queryParams.roleId) %>",
+        "exclude": "<% empty(queryParams.roleId) || !empty((size((comsAssignableRoles.data ?? []).filter(r => { r.id == (queryParams.roleId ?? '') && r.status == 'Pending ISC Review' && !empty(r.requestedBy) && r.requestedBy.id == (selectedWorker.id ?? '') })) > 0 ? ((comsAssignableRoles.data ?? []).filter(r => { r.id == (queryParams.roleId ?? '') && r.status == 'Pending ISC Review' && !empty(r.requestedBy) && r.requestedBy.id == (selectedWorker.id ?? '') })[0].reviewEventWid ?? '') : '')) %>",
         "failOnStatusCodes": [
           {
             "code": 400
@@ -83,7 +144,7 @@
           },
           {
             "outboundPath": "details",
-            "value": "<% 'Assignable role deleted: ' + (selectedRoleDisplay.value ?? '') + ' (id: ' + (queryParams.roleId ?? '') + ')' %>"
+            "value": "<% 'Assignable role request withdrawn and deleted (no review event): ' + (selectedRoleDisplay.value ?? '') + ' (id: ' + (queryParams.roleId ?? '') + ')' %>"
           },
           {
             "outboundPath": "triggeredBy",
@@ -112,7 +173,7 @@
             "code": 500
           }
         ],
-        "exclude": "<% empty(queryParams.roleId) %>"
+        "exclude": "<% empty(queryParams.roleId) || !empty((size((comsAssignableRoles.data ?? []).filter(r => { r.id == (queryParams.roleId ?? '') && r.status == 'Pending ISC Review' && !empty(r.requestedBy) && r.requestedBy.id == (selectedWorker.id ?? '') })) > 0 ? ((comsAssignableRoles.data ?? []).filter(r => { r.id == (queryParams.roleId ?? '') && r.status == 'Pending ISC Review' && !empty(r.requestedBy) && r.requestedBy.id == (selectedWorker.id ?? '') })[0].reviewEventWid ?? '') : '')) %>"
       }
     ],
     "responseErrorDetail": {
@@ -125,7 +186,7 @@
     "headerSize": "STANDARD",
     "title": {
       "type": "title",
-      "label": "ECO-COMS: Delete Assignable Role Request"
+      "label": "ECO-COMS: Withdraw Assignable Role Request"
     },
     "body": {
       "type": "basicFormLayout",
@@ -165,7 +226,7 @@
               "type": "richText",
               "id": "pageDesc",
               "enabled": false,
-              "value": "<span style=\"color:#374151;font-size:13px\">Select a Pending ISC Review role request to delete. Only roles with status Pending ISC Review can be deleted. This action cannot be undone.</span>"
+              "value": "<span style=\"color:#374151;font-size:13px\">Select one of your requests that is still Pending ISC Review to withdraw it. Withdrawing cancels its ISC review in Workday; the request is then marked Denied and the change is recorded in the audit log.</span>"
             }
           ]
         },
@@ -176,15 +237,15 @@
             {
               "type": "fieldSet",
               "id": "pendingRolesFieldSet",
-              "title": "Pending Assignable Role Requests",
+              "title": "My Pending Assignable Role Requests",
               "children": [
                 {
                   "type": "grid",
                   "gridType": "LIST",
                   "multiViewStylingEnabled": true,
                   "id": "pendingRolesGrid",
-                  "label": "Pending Assignable Role Requests",
-                  "rows": "<% comsAssignableRoles.data.filter(r => { r.status == 'Pending ISC Review' && (empty(queryParams.view) || (queryParams.view == 'aaa' ? r.roleName.startsWith('Organizations and Roles Assignment Administrator') : !r.roleName.startsWith('Organizations and Roles Assignment Administrator'))) }) %>",
+                  "label": "My Pending Assignable Role Requests",
+                  "rows": "<% (comsAssignableRoles.data ?? []).filter(r => { r.status == 'Pending ISC Review' && !empty(r.requestedBy) && r.requestedBy.id == (selectedWorker.id ?? '') && (empty(queryParams.view) || (queryParams.view == 'aaa' ? r.roleName.startsWith('Organizations and Roles Assignment Administrator') : !r.roleName.startsWith('Organizations and Roles Assignment Administrator'))) }) %>",
                   "rowVariableName": "role",
                   "enabled": false,
                   "columns": [
@@ -192,7 +253,7 @@
                       "type": "column",
                       "id": "colSelect",
                       "columnId": "colSelect",
-                      "label": "Delete",
+                      "label": "Withdraw",
                       "cellTemplate": {
                         "type": "button",
                         "action": "AUXILIARY",
@@ -334,7 +395,7 @@
               "type": "richText",
               "id": "confirmDelete",
               "enabled": false,
-              "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">ℹ </span><span style=\"color:#374151;font-size:11px\">Select a role from the grid above, then click <b>OK</b> to permanently delete the request.</span>"
+              "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">ℹ </span><span style=\"color:#374151;font-size:11px\">Select a request from the grid above, tick the confirmation, then click <b>OK</b> to withdraw it.</span>"
             },
             {
               "type": "fieldSet",
@@ -344,32 +405,26 @@
                 {
                   "type": "text",
                   "id": "selectedRoleDisplay",
-                  "label": "Role to Delete",
+                  "label": "Request to Withdraw",
                   "enabled": false,
-                  "value": "<% queryParams.roleName ?? '' %>",
-                  "guide": {
-                    "type": "guide",
-                    "id": "guideDeleteRole",
-                    "title": "What Happens When Deleted",
-                    "text": "Deleting this role request removes it from ECO-COMS and cancels any pending ISC review. If the role was already provisioned in Workday, you must also remove it there separately. This action is permanent and cannot be undone."
-                  }
+                  "value": "<% queryParams.roleName ?? '' %>"
                 },
                 {
                   "type": "richText",
                   "id": "deleteWarning",
                   "enabled": false,
-                  "value": "<span style=\"color:#dc2626;font-size:11px;font-weight:700\">⚠ </span><span style=\"color:#991b1b;font-size:11px\"><b>Warning:</b> This action permanently deletes the selected role request and cannot be undone. Click OK to confirm.</span>"
+                  "value": "<span style=\"color:#dc2626;font-size:11px;font-weight:700\">⚠ </span><span style=\"color:#991b1b;font-size:11px\"><b>Note:</b> The ISC review is cancelled and can't be restarted; submit a new request if you still need the role. A role already created in Workday must be removed there separately.</span>"
                 },
                 {
                   "type": "checkBox",
                   "id": "confirmDeleteCheckBox",
-                  "label": "I confirm I want to permanently delete this role request. This action cannot be undone.",
+                  "label": "I confirm I want to withdraw this request.",
                   "required": true,
                   "visible": "<% !empty(queryParams.roleId) %>",
-                  "helpText": "You must acknowledge before the delete can be submitted."
+                  "helpText": "You must confirm before the withdrawal can be submitted."
                 }
               ],
-              "title": "Confirm Delete"
+              "title": "Confirm Withdrawal"
             }
           ]
         }
@@ -384,7 +439,9 @@
         }
       ]
     },
-    "standardEditButtonsHidden": true
+    "cancelOverride": {
+      "taskId": "home"
+    }
   },
-  "onSubmit": "<%\n  let valid = true;\n  if (empty(queryParams.roleId)) {\n    valid = false;\n  }\n  valid;\n%>"
+  "onSubmit": "<%\n  let valid = true;\n  if (empty(queryParams.roleId)) {\n    valid = false;\n  } else if (size((comsAssignableRoles.data ?? []).filter(r => { r.id == (queryParams.roleId ?? '') && r.status == 'Pending ISC Review' && !empty(r.requestedBy) && r.requestedBy.id == (selectedWorker.id ?? '') })) == 0) {\n    confirmDeleteCheckBox.setError('This request is not one of your pending requests, so it can\\'t be withdrawn here.');\n    valid = false;\n  } else if (confirmDeleteCheckBox.value != true) {\n    confirmDeleteCheckBox.setError('Tick the box to confirm the withdrawal.');\n    valid = false;\n  }\n  valid;\n%>"
 }

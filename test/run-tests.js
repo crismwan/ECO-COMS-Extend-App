@@ -75,9 +75,6 @@ async function test(name, fn) {
 // Known issues: reported as WARN instead of FAIL until fixed. Each needs a reason.
 // Remove an entry as soon as the issue is fixed so the check protects it again.
 const KNOWN_ISSUES = {
-  'submitButton|deleteAssignableRole.pmd': 'no way to submit; decide delete vs cancelling the ISC review BP before re-enabling',
-  'submitButton|newShellOrgConfirm.pmd': 'page no longer used by createShellOrgWizard; candidate for removal',
-  'submitButton|newShellOrgPatternConfirm.pmd': 'page no longer used by createShellOrgPatternWizard; candidate for removal',
 };
 const AMD_PATH = 'presentation/ecocomsphase_xclw_cm_sync2_vmzvxm.amd';
 const MAX_FILE_BYTES = 100 * 1024; // platform limit for .pmd/.amd/.smd/.pod/.script
@@ -158,6 +155,16 @@ function staticSuite() {
     if (/<%[^%]*(?<![\w.])errorCode\b/.test(JSON.stringify(d))) err('queryParams', `${name}: bare 'errorCode' in a script; use queryParams.errorCode`);
   }
 
+  // 3b. Search text typed by the user must not go into a WQL query raw (WQL injection).
+  for (const [f, d] of Object.entries(pmds)) {
+    walk(d, (node) => {
+      const u = String(node.url || '');
+      if (/data\?query=/.test(u) && /(instanceListQuery|event\.query)(?!\.replace\('\\'', ''\))/.test(u)) {
+        err('wqlInjection', `${path.basename(f)}: endpoint '${node.name || '?'}' puts user search text into WQL without removing quotes; use instanceListQuery.replace('\\'', '').replace('\\\\', '')`);
+      }
+    });
+  }
+
   // 4. Task references resolve
   const tasks = Object.fromEntries((amd.tasks || []).filter((t) => t && typeof t === 'object').map((t) => [t.id, t]));
   const pageIds = new Set(Object.values(pmds).map((d) => d.id));
@@ -179,6 +186,23 @@ function staticSuite() {
   for (const [f, d] of Object.entries(pmds)) {
     for (const m of JSON.stringify(d).matchAll(/\/([A-Za-z0-9_]+)\/launch/g)) {
       if (!orchNames.has(m[1])) err('orchestration', `${path.basename(f)}: launches '${m[1]}', but orchestration/${m[1]}.orchestration does not exist`);
+    }
+  }
+
+  // 5b. Orchestrations a user can launch must be secured by a domain enabled for orchestration security
+  // (otherwise anyone who can reach the launch URL can run them). BP-triggered ones run as the
+  // tenant's launch user and are exempt.
+  const domains = Object.fromEntries(listFiles('model').filter((f) => f.endsWith('.securitydomain'))
+    .map((f) => docs[f]).filter(Boolean).map((d) => [d.name, d]));
+  for (const f of listFiles('orchestration').filter((x) => x.endsWith('.orchestration'))) {
+    const v = (docs[f] || {})._value || {};
+    if (String(v.type?._value || '').includes('BusinessProcessTriggered')) continue;
+    const secured = ((v.securityDomains || {})._value || {})._value || [];
+    const names = secured.map((x) => x._value);
+    if (!names.length) { err('orchSecurity', `${path.basename(f)}: no securityDomains; anyone who can reach its launch URL can run it`); continue; }
+    for (const n of names) {
+      if (!domains[n]) err('orchSecurity', `${path.basename(f)}: security domain '${n}' is not defined in model/`);
+      else if (domains[n].enabledForOrchestrationSecurity !== true) err('orchSecurity', `${path.basename(f)}: domain '${n}' needs "enabledForOrchestrationSecurity": true`);
     }
   }
 

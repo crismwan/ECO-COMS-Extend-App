@@ -1,8 +1,10 @@
 {
   "id": 10,
   "name": "DeleteAssignableRole",
-  "label": "Delete Assignable Role Request",
-  "securityDomains": ["ManageCOMSAssignableRoles"],
+  "label": "Withdraw Assignable Role Request",
+  "securityDomains": [
+    "ManageCOMSAssignableRoles"
+  ],
   "routePath": "/deleteAssignableRole",
   "businessObject": "COMSAssignableRole"
 }

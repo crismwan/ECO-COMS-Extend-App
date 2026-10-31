@@ -9,7 +9,18 @@
       "baseUrlType": "COMMON",
       "url": "/workers/me",
       "authType": "sso",
-      "bestEffort": "true"
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 403
+        },
+        {
+          "code": 429
+        }
+      ]
     },
     {
       "name": "shellRoles",
@@ -18,12 +29,20 @@
       "authType": "sso",
       "wqlQuery": {
         "queryId": "allShellAssignableRolesinTenant"
-      }
+      },
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 429
+        }
+      ]
     },
     {
       "name": "posSearch",
       "baseUrlType": "workday-wql",
-      "url": "<% 'data?query=' + string:pathEncode('SELECT cf_PositionID, workdayID, position_PositionManagement, cf_PositionIsFilled, cf_PositionText FROM allPositions WHERE supervisoryOrganization is not empty AND cf_PositionText contains \\'' + instanceListQuery + '\\'') %>",
+      "url": "<% 'data?query=' + string:pathEncode('SELECT cf_PositionID, workdayID, position_PositionManagement, cf_PositionIsFilled, cf_PositionText FROM allPositions WHERE supervisoryOrganization is not empty AND cf_PositionText contains \\'' + instanceListQuery.replace('\\'', '').replace('\\\\', '') + '\\'') %>",
       "authType": "sso",
       "isCollection": true,
       "bestEffort": "true",

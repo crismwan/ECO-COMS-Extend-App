@@ -9,15 +9,37 @@
       "baseUrlType": "COMMON",
       "url": "/workers/me",
       "authType": "sso",
-      "bestEffort": "true"
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 403
+        },
+        {
+          "code": 429
+        }
+      ]
     },
     {
       "name": "comsAssignableRoles",
       "baseUrlType": "BUSINESS-OBJECT",
-      "url": "/comsAssignableRoles",
+      "url": "/comsAssignableRoles?limit=100",
       "authType": "sso",
       "isCollection": true,
-      "bestEffort": "true"
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 403
+        },
+        {
+          "code": 429
+        }
+      ]
     }
   ],
   "presentation": {
@@ -54,7 +76,7 @@
             },
             {
               "type": "button",
-              "label": "Delete Request",
+              "label": "Withdraw Request",
               "taskReference": {
                 "taskId": "deleteAssignableRole",
                 "parameterBindings": {

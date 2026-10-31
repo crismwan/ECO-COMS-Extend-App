@@ -11,7 +11,18 @@
       "name": "selectedWorker",
       "baseUrlType": "COMMON",
       "url": "/workers/me",
-      "authType": "sso"
+      "authType": "sso",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 403
+        },
+        {
+          "code": 429
+        }
+      ]
     },
     {
       "name": "selectedRole",
@@ -19,7 +30,18 @@
       "url": "<% empty(queryParams.roleId) ? '/comsAssignableRoles/none' : '/comsAssignableRoles/' + queryParams.roleId %>",
       "authType": "sso",
       "bestEffort": "true",
-      "exclude": "<% empty(queryParams.roleId) %>"
+      "exclude": "<% empty(queryParams.roleId) %>",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 403
+        },
+        {
+          "code": 429
+        }
+      ]
     },
     {
       "name": "allShellRoles",
@@ -30,7 +52,15 @@
       "bestEffort": "true",
       "wqlQuery": {
         "queryId": "allShellAssignableRolesinTenant"
-      }
+      },
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 429
+        }
+      ]
     },
     {
       "name": "positions",
@@ -38,7 +68,15 @@
       "url": "jobs",
       "authType": "sso",
       "isCollection": true,
-      "bestEffort": "true"
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 429
+        }
+      ]
     }
   ],
   "outboundData": {
