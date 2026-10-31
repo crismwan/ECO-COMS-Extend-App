@@ -146,9 +146,13 @@ tab['children'] = [
   {"type": "cardContainer", "id": "summaryCardContainer", "layout": "grid", "cards": [
     {"type": "card", "cardId": "CountCard", "parameters": "<% { 'title': 'Active', 'subtitle': " + SCOPE + ", 'countText': '' + " + ACT + " + (" + ACT + " == 1 ? ' shell organization' : ' shell organizations') } %>"},
     {"type": "card", "cardId": "CountCard", "parameters": "<% { 'title': 'Inactive', 'subtitle': " + SCOPE + ", 'countText': '' + " + INA + " + (" + INA + " == 1 ? ' shell organization' : ' shell organizations') } %>"},
-    {"type": "card", "cardId": "CountCard", "parameters": "<% { 'title': 'Patterns', 'subtitle': " + SCOPE + ", 'countText': '' + size(" + PATS + ") + (size(" + PATS + ") == 1 ? ' pattern' : ' patterns') } %>"},
-    {"type": "card", "cardId": "ShellOrgQuickActionsCard"}]},
-  {"type": "cardContainer", "id": "statusChartContainer", "cards": [
+    {"type": "card", "cardId": "CountCard", "parameters": "<% { 'title': 'Patterns', 'subtitle': " + SCOPE + ", 'countText': '' + size(" + PATS + ") + (size(" + PATS + ") == 1 ? ' pattern' : ' patterns') } %>"}]},
+  {"type": "cardContainer", "id": "statusChartContainer", "layout": "masonry", "cards": [
+    {"type": "card", "cardId": "ShellOrgQuickActionsCard"},
     {"type": "card", "cardId": "ShellOrgStatusChart", "parameters": "<% { 'activeCount': " + ACT + ", 'inactiveCount': " + INA + " } %>"}]}]
 save('shellOrgManager.pmd', som)
 print('summary ok')
+
+som = load('shellOrgManager.pmd')
+som['presentation']['title']['label'] = "<% empty(queryParams.appName) ? 'ECO-COMS: Shell Org Manager' : ('ECO-COMS: Shell Org Manager – ' + queryParams.appName) %>"
+save('shellOrgManager.pmd', som)
