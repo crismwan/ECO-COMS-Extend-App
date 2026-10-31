@@ -155,6 +155,25 @@
         },
         {
           "type": "layoutSection",
+          "id": "livePatternNoticeSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "livePatternNoticeFieldSet",
+              "title": "Before you submit",
+              "children": [
+                {
+                  "type": "richText",
+                  "id": "livePatternNoticeRichText",
+                  "enabled": false,
+                  "value": "<span style=\"color:#B45309;font-size:11px;font-weight:700\">⚠ </span><span style=\"color:#374151;font-size:11px\">Submitting creates a live pattern (Custom Organization) in Workday straight away. It can't be deleted afterwards, only inactivated from Shell Org Manager. Every create is recorded in the Audit Log.</span>"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
           "id": "formSection",
           "children": [
             {

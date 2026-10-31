@@ -3,9 +3,6 @@
   "securityDomains": [
     "ManageCOMSShellOrgs"
   ],
-  "include": [
-    "comsCardGenerator.script"
-  ],
   "endPoints": [
     {
       "name": "shellOrgPatterns",
@@ -189,6 +186,19 @@
         "children": [
           {
             "type": "fieldSet",
+            "id": "patternsAboutFieldSet",
+            "title": "About this tab",
+            "children": [
+              {
+                "type": "richText",
+                "id": "patternsAboutRichText",
+                "enabled": false,
+                "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">A <b>pattern</b> is a Custom Organization whose code follows <b>&lt;application&gt;:PATTERN:&lt;subject&gt;:&lt;course&gt;:&lt;section&gt;:&lt;academic period&gt;</b>, for example X:CLW:PATTERN:MATH:MATH:100:201:2026W1. Roles assigned on a pattern apply to that course section only. Pick an application on the left to see its patterns; use <b>Add Pattern</b> to create one. Patterns can be inactivated but not deleted.</span>"
+              }
+            ]
+          },
+          {
+            "type": "fieldSet",
             "id": "appsFieldSet",
             "visible": "<% empty(queryParams.appCode) %>",
             "title": "Applications",
@@ -201,7 +211,7 @@
                 "rows": "<% (shellOrgPatterns.data ?? []).filter(p => { (p.code ?? '').startsWith('X:') && (p.code ?? '').contains(':PATTERN:') }).map(p => { p.code.substringBefore(':PATTERN').substringBefore(':') + ':' + p.code.substringBefore(':PATTERN').substringAfter(':').substringBefore(':') }).distinct().map(appCode => { {'appCode': appCode} }) %>",
                 "rowVariableName": "app",
                 "enabled": false,
-                "label": "Applications",
+                "label": "<% 'Applications' + ' (' + size((shellOrgPatterns.data ?? []).filter(p => { (p.code ?? '').startsWith('X:') && (p.code ?? '').contains(':PATTERN:') }).map(p => { p.code.substringBefore(':PATTERN').substringBefore(':') + ':' + p.code.substringBefore(':PATTERN').substringAfter(':').substringBefore(':') }).distinct().map(appCode => { {'appCode': appCode} })) + ')' %>",
                 "autoPaging": true,
                 "columns": [
                   {
@@ -265,11 +275,11 @@
                 "value": "<span style=\"color:#d97706;font-size:11px;font-weight:700\">⚠ </span><span style=\"color:#92400e;font-size:11px\"><b>Warning:</b> Changing Status to Inactive does not automatically remove any Workday role assignments referencing this shell organization. Verify in Workday (Get_Assign_User_Based_Security_Groups) that no active role assignment uses this Custom Organization before inactivating.</span>"
               },
               {
-                "type": "richText",
-                "id": "emptyStateMsg",
+                "type": "text",
+                "id": "patternsEmptyText",
                 "enabled": false,
-                "value": "<span style=\"color:#374151;font-size:12px\">No shell org patterns found for this application. Use the <b>Add Pattern</b> button above to create one.</span>",
-                "visible": "<% !empty(queryParams.appCode) && size((shellOrgPatterns.data ?? []).filter(p => { (p.code ?? '').startsWith('X:') && (p.code ?? '').contains(':PATTERN:') }).filter(p => { p.code.startsWith((queryParams.appCode ?? '') + ':PATTERN') })) == 0 %>"
+                "visible": "<% !empty(queryParams.appCode) && size((shellOrgPatterns.data ?? []).filter(p => { (p.code ?? '').startsWith('X:') && (p.code ?? '').contains(':PATTERN:') }).filter(p => { p.code.startsWith((queryParams.appCode ?? '') + ':PATTERN') })) == 0 %>",
+                "value": "No shell org patterns found for this application. Use the Add Pattern button above to create one."
               },
               {
                 "type": "grid",
@@ -279,7 +289,7 @@
                 "rows": "<% empty(queryParams.appCode) ? [] : (shellOrgPatterns.data ?? []).filter(p => { (p.code ?? '').startsWith('X:') && (p.code ?? '').contains(':PATTERN:') }).filter(p => { p.code.startsWith(queryParams.appCode + ':PATTERN') }) %>",
                 "rowVariableName": "pattern",
                 "enabled": false,
-                "label": "<% 'Patterns for ' + (queryParams.appName ?? queryParams.appCode ?? '') %>",
+                "label": "<% 'Patterns for ' + (queryParams.appName ?? queryParams.appCode ?? '') + ' (' + size(empty(queryParams.appCode) ? [] : (shellOrgPatterns.data ?? []).filter(p => { (p.code ?? '').startsWith('X:') && (p.code ?? '').contains(':PATTERN:') }).filter(p => { p.code.startsWith(queryParams.appCode + ':PATTERN') })) + ')' %>",
                 "autoPaging": true,
                 "visible": "<% !empty(queryParams.appCode) && size((shellOrgPatterns.data ?? []).filter(p => { (p.code ?? '').startsWith('X:') && (p.code ?? '').contains(':PATTERN:') }).filter(p => { p.code.startsWith((queryParams.appCode ?? '') + ':PATTERN') })) > 0 %>",
                 "columns": [
@@ -371,6 +381,19 @@
         "label": "Application Shell Organizations",
         "children": [
           {
+            "type": "fieldSet",
+            "id": "shellOrgsAboutFieldSet",
+            "title": "About this tab",
+            "children": [
+              {
+                "type": "richText",
+                "id": "shellOrgsAboutRichText",
+                "enabled": false,
+                "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">A <b>shell organization</b> is a Custom Organization (type = the application code, for example X:CLW) that exists only so roles can be assigned on it. It holds no workers. <b>Status</b> shows whether it can still be used: inactivating one stops new assignments but does <b>not</b> remove existing role assignments, so check the Manage Role Assignments tab first.</span>"
+              }
+            ]
+          },
+          {
             "type": "richText",
             "id": "shellOrgsAppWarning",
             "enabled": false,
@@ -407,7 +430,7 @@
                 "rows": "<% allShellOrgs.data.filter(o => { o.code.startsWith('X:') && !o.code.contains(':PATTERN') }) %>",
                 "rowVariableName": "org",
                 "enabled": false,
-                "label": "Shell Organizations",
+                "label": "<% 'Shell Organizations' + ' (' + size(allShellOrgs.data.filter(o => { o.code.startsWith('X:') && !o.code.contains(':PATTERN') })) + ')' %>",
                 "autoPaging": true,
                 "visible": "<% empty(queryParams.appCode) && size(allShellOrgs.data.filter(o => { o.code.startsWith('X:') && !o.code.contains(':PATTERN') })) > 0 %>",
                 "columns": [
@@ -489,7 +512,7 @@
                 "rows": "<% empty(queryParams.appCode) ? [] : allShellOrgs.data.filter(o => { o.code.startsWith(queryParams.appCode + ':') && !o.code.contains(':PATTERN') }) %>",
                 "rowVariableName": "org",
                 "enabled": false,
-                "label": "<% 'Shell Organizations for ' + (queryParams.appName ?? queryParams.appCode ?? '') %>",
+                "label": "<% 'Shell Organizations for ' + (queryParams.appName ?? queryParams.appCode ?? '') + ' (' + size(empty(queryParams.appCode) ? [] : allShellOrgs.data.filter(o => { o.code.startsWith(queryParams.appCode + ':') && !o.code.contains(':PATTERN') })) + ')' %>",
                 "autoPaging": true,
                 "visible": "<% !empty(queryParams.appCode) && size(allShellOrgs.data.filter(o => { o.code.startsWith((queryParams.appCode ?? '') + ':') && !o.code.contains(':PATTERN') })) > 0 %>",
                 "columns": [
@@ -577,14 +600,14 @@
                 "type": "richText",
                 "id": "roleAssignmentsNote",
                 "enabled": false,
-                "value": "<span style=\"color:#374151;font-size:12px\">Each row is one role assigned on one shell organization, with the positions and workers it is assigned to<% !empty(queryParams.appCode) ? ' for the selected application' : '' %>.</span>"
+                "value": "<span style=\"color:#374151;font-size:12px\">Each row is one <b>role</b> assigned on one <b>shell organization</b>. <b>Positions</b> are the positions that hold the role; <b>Workers</b> are the people currently in those positions, so a vacant position shows no worker. Use the row's action to add or remove positions; every change is written to the Audit Log<% !empty(queryParams.appCode) ? '. Showing the selected application only' : '' %>.</span>"
               },
               {
-                "type": "richText",
-                "id": "rolesEmptyMsg",
+                "type": "text",
+                "id": "rolesEmptyText",
                 "enabled": false,
-                "value": "<span style=\"color:#374151;font-size:12px\">No shell role assignments found<% !empty(queryParams.appCode) ? ' for ' + (queryParams.appName ?? queryParams.appCode) : '' %>.</span>",
-                "visible": "<% size(list:flatten((shellRoles.data ?? []).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith((empty(queryParams.appCode) ? 'X:' : queryParams.appCode)) }).map(ra => { { 'role': r.role, 'org': ra.organization, 'positions': ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? [], 'workers': ra.workersAssigned ?? [] } }) }))) == 0 %>"
+                "visible": "<% size(list:flatten((shellRoles.data ?? []).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith((empty(queryParams.appCode) ? 'X:' : queryParams.appCode)) }).map(ra => { { 'role': r.role, 'org': ra.organization, 'positions': ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? [], 'workers': ra.workersAssigned ?? [] } }) }))) == 0 %>",
+                "value": "<% 'No shell role assignments found' + (!empty(queryParams.appCode) ? ' for ' + (queryParams.appName ?? queryParams.appCode) : '') + '.' %>"
               },
               {
                 "type": "grid",

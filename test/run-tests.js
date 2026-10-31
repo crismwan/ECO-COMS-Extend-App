@@ -887,26 +887,6 @@ async function repair(token, me) {
   const who = () => ({ changedBy: me.descriptor, changedByWid: me.id, timestamp: new Date().toISOString().replace(/\.\d+Z$/, 'Z') });
   const idOf = (v) => String(v && typeof v === 'object' ? v.id : v || '');
 
-  // --probe: harmless launches that tell whether orchestration launches are allowed at all
-  // (a guard-rejected status change with validateOnly, and a review start for a request that doesn't exist).
-  if (argv.includes('--probe')) await test('Repair.probeLaunch', async () => {
-    const out = [];
-    const ts = new Date().toISOString().replace(/\.\d+Z$/, 'Z');
-    for (const [name, params] of [
-      ['ManageShellOrgStatus', { orgId: me.id, action: 'INACTIVATE', orgCode: 'X:ADM:TEST:PROBE', orgName: 'X:ADM:TEST:PROBE', includeInactive: 'true', effectiveDate: today, patternName: 'X:ADM:TEST:PROBE', orgType: 'X:ADM', comsAppId: 'X:ADM', validateOnly: 'true', changedBy: me.descriptor, changedByWid: me.id, timestamp: ts }],
-      ['StartRoleRequestReview', { ref: 'PROBE-NO-SUCH-REQUEST' }],
-      ['AssignRolePositions', { mode: 'PROBE' }],
-      // A gateway that filters request text may refuse certain words in the query string.
-      ['AssignRolePositions', { mode: 'PROBE', positionName: 'P-00001 Chief Officer - Steve Morgan' }],
-      ['AssignRolePositions', { mode: 'PROBE', positionName: 'P-00001 Chief Executive Officer - Steve Morgan' }],
-      ['AssignRolePositions', { mode: 'PROBE', positionName: 'Executive' }],
-      ['AssignRolePositions', { mode: 'PROBE', positionName: 'Exec' }],
-    ]) {
-      try { await launch(token, name, params); out.push(`${name}${params.positionName ? ' [' + params.positionName + ']' : ''}: launched`); } catch (e) { out.push(`${name}${params.positionName ? ' [' + params.positionName + ']' : ''}: ${e.message.slice(0, 12)}`); }
-    }
-    pass('Repair.probeLaunch', out.join('; '));
-  });
-
   const unassign = arg('--unassign');
   if (unassign) await test('Repair.unassign', async () => {
     const readRole = async () => {
@@ -923,21 +903,7 @@ async function repair(token, me) {
       roleId: cur.role.id, roleName: TEST_ROLE, orgId: cur.org.id, orgName: cur.org.descriptor, effectiveDate: today,
       positionId: hit.id, positionIdType: 'WID', positionName: hit.descriptor, mode: 'REMOVE', positionWid: hit.id, ...who(),
     };
-    if (!apply) {
-      // Same call with mode PROBE (Workday rejects it, nothing changes): shows whether the gateway accepts these values.
-      const res = [];
-      for (const k of ['', ...Object.keys(params)]) {
-        const p = { ...params, mode: 'PROBE' };
-        if (k && k !== 'mode') p[k] = 'x'; else if (k) continue;
-        try { await launch(token, 'AssignRolePositions', p); res.push(`${k || 'all'}:ok`); } catch (e) { res.push(`${k || 'all'}:${e.message.slice(5, 8)}`); }
-      }
-      console.log(`  probe (value replaced by x -> result): ${res.join(' ')}`);
-      // Same call with ( ) and other reserved characters percent-encoded.
-      const enc = (v) => encodeURIComponent(v ?? '').replace(/[!'()*]/g, (c) => '%' + c.charCodeAt(0).toString(16).toUpperCase());
-      const qs = Object.entries({ ...params, mode: 'PROBE' }).map(([k, v]) => `${k}=${enc(v)}`).join('&');
-      try { await request('POST', `${ORCH}/AssignRolePositions/launch?${qs}`, token, {}); console.log('  probe with ( ) encoded: ok'); } catch (e) { console.log(`  probe with ( ) encoded: ${e.message.slice(0, 8)}`); }
-      return pass('Repair.unassign', `would remove "${hit.descriptor}" from ${TEST_ROLE} on ${cur.org.descriptor}`);
-    }
+    if (!apply) return pass('Repair.unassign', `would remove "${hit.descriptor}" from ${TEST_ROLE} on ${cur.org.descriptor}`);
     const rem = await launchAndVerify(token, 'AssignRolePositions', params);
     if (rem.objectType !== 'Role Assignment' || rem.action !== 'REMOVE POSITION') throw new Error(`audit is ${rem.objectType}/${rem.action}`);
     let gone = false;
@@ -947,6 +913,17 @@ async function repair(token, me) {
     }
     if (!gone) throw new Error(`REMOVE POSITION audited but "${hit.descriptor}" still shows on ${TEST_ROLE} after 90 s`);
     pass('Repair.unassign', `removed "${hit.descriptor}" from ${TEST_ROLE} (audit ${rem.id})`);
+  });
+
+  // Audit records with no action: written by test calls that reached AssignRolePositions with a
+  // mode other than ADD/REMOVE (before its mode guard existed). They describe no change.
+  await test('Repair.auditNoAction', async () => {
+    const all = (await request('GET', `${BO}/comsAuditLogs?limit=100`, token)).data || [];
+    const junk = all.filter((a) => a.objectType === 'Role Assignment' && !a.action);
+    if (!junk.length) return pass('Repair.auditNoAction', 'no audit records without an action');
+    if (!apply) return pass('Repair.auditNoAction', `would delete ${junk.length} Role Assignment audit record(s) with no action`);
+    for (const a of junk) await request('DELETE', `${BO}/comsAuditLogs/${a.id}`, token);
+    pass('Repair.auditNoAction', `deleted ${junk.length} Role Assignment audit record(s) with no action`);
   });
 
   await test('Repair.enabledFor', async () => {

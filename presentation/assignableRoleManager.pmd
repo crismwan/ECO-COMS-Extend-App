@@ -520,7 +520,13 @@
                   "required": true,
                   "helpText": "Select the Custom Organization this role applies to.",
                   "values": "<% shellOrgPatterns.data.map(org => { {'id': org.organizationByName.id, 'descriptor': org.code, 'workdayID': org.workdayID} }) %>",
-                  "onChange": "<%\n            roleName.setValue(null);\n            delegatedRoles.setValue([]);\n            generatedRoleName.setValue('');\n            if (!empty(self.value)) {\n              let orgCode = self.selectedEntries[0].descriptor;\n              let appCode = orgCode.contains('(') ?\n                orgCode.substringAfter('(').substringBefore(')') :\n                (orgCode.substringAfter(':').contains(':') ?\n                  orgCode.substringBefore(':') + ':' + orgCode.substringAfter(':').substringBefore(':') :\n                  orgCode);\n              let matched = shellOrgPatterns.data.filter(o => {\n                let c = o.code;\n                let ac = c.contains('(') ?\n                  c.substringAfter('(').substringBefore(')') :\n                  (c.substringAfter(':').contains(':') ?\n                    c.substringBefore(':') + ':' + c.substringAfter(':').substringBefore(':') :\n                    c);\n                ac == appCode;\n              });\n              if (matched.size() > 0) {\n                applicationDropdown.setValue([matched[0].workdayID]);\n              }\n              let orgMatched = shellOrgPatterns.data.filter(o => { o.code == orgCode });\n              if (orgMatched.size() > 0) {\n                shellOrgWidBinding.setValue(orgMatched[0].workdayID ?? '');\n              }\n            }\n          %>"
+                  "onChange": "<%\n            roleName.setValue(null);\n            delegatedRoles.setValue([]);\n            generatedRoleName.setValue('');\n            if (!empty(self.value)) {\n              let orgCode = self.selectedEntries[0].descriptor;\n              let appCode = orgCode.contains('(') ?\n                orgCode.substringAfter('(').substringBefore(')') :\n                (orgCode.substringAfter(':').contains(':') ?\n                  orgCode.substringBefore(':') + ':' + orgCode.substringAfter(':').substringBefore(':') :\n                  orgCode);\n              let matched = shellOrgPatterns.data.filter(o => {\n                let c = o.code;\n                let ac = c.contains('(') ?\n                  c.substringAfter('(').substringBefore(')') :\n                  (c.substringAfter(':').contains(':') ?\n                    c.substringBefore(':') + ':' + c.substringAfter(':').substringBefore(':') :\n                    c);\n                ac == appCode;\n              });\n              if (matched.size() > 0) {\n                applicationDropdown.setValue([matched[0].workdayID]);\n              }\n              let orgMatched = shellOrgPatterns.data.filter(o => { o.code == orgCode });\n              if (orgMatched.size() > 0) {\n                shellOrgWidBinding.setValue(orgMatched[0].workdayID ?? '');\n              }\n            }\n          %>",
+                  "guide": {
+                    "type": "guide",
+                    "id": "customOrgGuide",
+                    "title": "Shell organization",
+                    "text": "The shell organization the new role is scoped to. The role name is built from this organization's code, so pick the one for the application the role belongs to."
+                  }
                 },
                 {
                   "type": "dropdown",
@@ -533,7 +539,13 @@
                       "valueOutBinding": "postAssignableRole.application"
                     }
                   ],
-                  "values": "<%\n  let appCodes = [];\n  let result = [];\n  for (var org : shellOrgPatterns.data) {\n    let code = org.code;\n    let appCode = code.contains('(') ?\n      code.substringAfter('(').substringBefore(')') :\n      (code.substringAfter(':').contains(':') ?\n        code.substringBefore(':') + ':' + code.substringAfter(':').substringBefore(':') :\n        code);\n    if (!appCodes.contains(appCode)) {\n      appCodes.add(appCode);\n      result.add({'id': org.workdayID, 'descriptor': appCode});\n    }\n  }\n  result;\n%>"
+                  "values": "<%\n  let appCodes = [];\n  let result = [];\n  for (var org : shellOrgPatterns.data) {\n    let code = org.code;\n    let appCode = code.contains('(') ?\n      code.substringAfter('(').substringBefore(')') :\n      (code.substringAfter(':').contains(':') ?\n        code.substringBefore(':') + ':' + code.substringAfter(':').substringBefore(':') :\n        code);\n    if (!appCodes.contains(appCode)) {\n      appCodes.add(appCode);\n      result.add({'id': org.workdayID, 'descriptor': appCode});\n    }\n  }\n  result;\n%>",
+                  "guide": {
+                    "type": "guide",
+                    "id": "applicationDropdownGuide",
+                    "title": "Application",
+                    "text": "The application the new assignable role belongs to. The generated role name starts with this application code."
+                  }
                 },
                 {
                   "type": "instanceList",
@@ -543,7 +555,13 @@
                   "multiSelect": true,
                   "values": "<% allShellRoles.data.map(r => { {'id': r.role.id, 'descriptor': r.role.descriptor.substringAfter(':ROLE:')} }) %>",
                   "onChange": "<%\n            self.clearError();\n            let orgCode = !empty(selectedShellOrgId.value) ? selectedShellOrgId.selectedEntries[0].descriptor : '';\n            if (!empty(self.value)) {\n              generatedRoleName.setValue(orgCode + ':ROLE:' + self.selectedEntries[0].descriptor);\n            } else if (!empty(roleName.value)) {\n              generatedRoleName.setValue(orgCode + ':ROLE:' + roleName.value);\n            } else {\n              generatedRoleName.setValue('');\n            }\n          %>",
-                  "helpText": "Select an existing delegated role, or enter a new one below."
+                  "helpText": "Select an existing delegated role, or enter a new one below.",
+                  "guide": {
+                    "type": "guide",
+                    "id": "delegatedRolesGuide",
+                    "title": "Delegated roles",
+                    "text": "Existing roles in the same application that holders of the new role will be allowed to assign. Only roles under the same application code are valid."
+                  }
                 },
                 {
                   "type": "text",
@@ -611,13 +629,13 @@
                       "value": "<% (self.selectedEntries ?? []).map(p => { p.descriptor }).join(', ') %>",
                       "valueOutBinding": "postAssignableRole.positionNames"
                     }
-                  ]
-                },
-                {
-                  "type": "richText",
-                  "id": "activeNote",
-                  "enabled": false,
-                  "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">ℹ </span><span style=\"color:#374151;font-size:11px\">Role Assignment Active status is automatically set based on whether selected positions are filled.</span>"
+                  ],
+                  "guide": {
+                    "type": "guide",
+                    "id": "positionsListGuide",
+                    "title": "Positions",
+                    "text": "The positions that will hold the role once ISC approves the request. Search by position title or ID (for example P-00010). Vacant positions can be added; the role then applies to whoever fills them."
+                  }
                 },
                 {
                   "type": "hidden",
@@ -639,7 +657,13 @@
                   "searchEndPoint": "<% endpoints.fuhSearch %>",
                   "searchResultValues": "<% empty(fuhSearch.data) ? [] : fuhSearch.data.map(o => { {'id': o.workdayID, 'descriptor': o.organization1.descriptor} }) %>",
                   "onChange": "<%\n            if (!empty(self.value) && !empty(academicUnitPicker.value)) {\n              self.setError('Cannot select both Functional Unit Hierarchy and Academic Unit.');\n            } else {\n              self.clearError();\n              academicUnitPicker.clearError();\n            }\n            enabledForWidBinding.setValue(!empty(self.value) ? self.value[0] : (!empty(academicUnitPicker.value) ? academicUnitPicker.value[0] : ''));\n            enabledForDisplay.setValue(\n              !empty(self.value) ? self.selectedEntries[0].descriptor :\n              (!empty(academicUnitPicker.value) ? academicUnitPicker.selectedEntries[0].descriptor : 'Academic Unit - University of British Columbia')\n            );\n          %>",
-                  "multiSelect": false
+                  "multiSelect": false,
+                  "guide": {
+                    "type": "guide",
+                    "id": "fuhPickerGuide",
+                    "title": "Functional Unit Hierarchy",
+                    "text": "Limits where the role applies to one Functional Unit Hierarchy. Pick either an FUH or an Academic Unit, not both. Leave both empty for the whole university (Academic Unit - University of British Columbia)."
+                  }
                 },
                 {
                   "type": "instanceList",
@@ -650,7 +674,13 @@
                   "searchEndPoint": "<% endpoints.auSearch %>",
                   "searchResultValues": "<% empty(auSearch.data) ? [] : auSearch.data.map(o => { {'id': o.workdayID, 'descriptor': o.academicUnit.descriptor} }) %>",
                   "onChange": "<%\n            if (!empty(self.value) && !empty(fuhPicker.value)) {\n              self.setError('Cannot select both Academic Unit and Functional Unit Hierarchy.');\n            } else {\n              self.clearError();\n              fuhPicker.clearError();\n            }\n            enabledForWidBinding.setValue(!empty(fuhPicker.value) ? fuhPicker.value[0] : (!empty(self.value) ? self.value[0] : ''));\n            enabledForDisplay.setValue(\n              !empty(fuhPicker.value) ? fuhPicker.selectedEntries[0].descriptor :\n              (!empty(self.value) ? self.selectedEntries[0].descriptor : 'Academic Unit - University of British Columbia')\n            );\n          %>",
-                  "multiSelect": false
+                  "multiSelect": false,
+                  "guide": {
+                    "type": "guide",
+                    "id": "academicUnitPickerGuide",
+                    "title": "Academic Unit",
+                    "text": "Limits where the role applies to one Academic Unit. Pick either an Academic Unit or an FUH, not both. Leave both empty for the whole university."
+                  }
                 },
                 {
                   "type": "text",
@@ -671,6 +701,25 @@
                 }
               ],
               "title": "2. Submit New Assignable Role Request"
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "activeNoteSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "activeNoteFieldSet",
+              "title": "Before you submit",
+              "children": [
+                {
+                  "type": "richText",
+                  "id": "activeNote",
+                  "enabled": false,
+                  "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:11px\">Submitting sends the request to ISC for review in Workday; nothing changes in Workday until it is approved. The role assignment's Active status is set automatically from whether the selected positions are filled. You can withdraw your own request while it is pending.</span>"
+                }
+              ]
             }
           ]
         }

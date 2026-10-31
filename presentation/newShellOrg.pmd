@@ -3,6 +3,9 @@
   "securityDomains": [
     "ManageCOMSShellOrgs"
   ],
+  "include": [
+    "comsValidations.script"
+  ],
   "endPoints": [
     {
       "name": "selectedWorker",
@@ -74,7 +77,7 @@
       "deferred": "true"
     }
   ],
-  "onSubmit": "<%\n  let valid = true;\n  if (empty(selectedApplicationId.value)) {\n    selectedApplicationId.setError('Please select an application.');\n    valid = false;\n  }\n  if (empty(organizationCode.value)) {\n    organizationCode.setError('Organization Code is required.');\n    valid = false;\n  } else if (!empty(selectedApplicationId.value)) {\n    let ac = (!empty(selectedApplicationId.value)) ? (selectedApplicationId.selectedEntries[0].descriptor ?? '') : '';\n    let oc = organizationCode.value ?? '';\n    let orgName = ac + ':' + oc;\n    let dupes = (existingOrgs.data ?? []).filter(o => { o.code == orgName });\n    if (dupes.size() > 0) {\n      let dupeName = (!empty(dupes[0].organizationByName)) ? (dupes[0].organizationByName.descriptor ?? orgName) : orgName;\n      organizationCode.setError('An organization with this code already exists: ' + dupeName);\n      valid = false;\n    }\n  }\n  if (empty(effectiveDate.value)) {\n    effectiveDate.setError('Effective Date is required.');\n    valid = false;\n  } else {\n    let d = effectiveDate.value;\n    let y = d.year();\n    if (y < 2026 || y > 2027) {\n      effectiveDate.setError('Effective Date year must be 2026 or 2027.');\n      valid = false;\n    }\n  }\n  if (valid) {\n    let lac = selectedApplicationId.selectedEntries[0].descriptor ?? '';\n    let loc = organizationCode.value ?? '';\n    let lname = lac + ':' + loc;\n    let lot = lac;\n    launchAddShellOrg.invoke({'cbw': selectedWorker.id ?? '', 'cb': (selectedWorker.descriptor ?? '').urlEncode(), 'ts': date:now().format(\"yyyy-MM-dd'T'HH:mm:ss'Z'\").urlEncode(), 'ac': lac, 'ot': lot, 'on': lname.urlEncode(), 'oc': loc.urlEncode(), 'wid': selectedWorker.id ?? '', 'ed': effectiveDate.value.format('yyyy-MM-dd')});\n    let created = (verifyShellOrg.invoke({'lim': '10000'}).data ?? []).filter(o => { o.code == lname }).size() > 0;\n    if (!created) {\n      organizationCode.setError('Workday rejected this request, so nothing was created. Check the values and try again.');\n      valid = false;\n    }\n  }\n  valid;\n%>",
+  "onSubmit": "<%\n  let valid = true;\n  if (empty(selectedApplicationId.value)) {\n    selectedApplicationId.setError('Please select an application.');\n    valid = false;\n  }\n  if (empty(organizationCode.value)) {\n    organizationCode.setError('Organization Code is required.');\n    valid = false;\n  } else if (!empty(selectedApplicationId.value)) {\n    let ac = (!empty(selectedApplicationId.value)) ? (selectedApplicationId.selectedEntries[0].descriptor ?? '') : '';\n    let oc = organizationCode.value ?? '';\n    let orgName = ac + ':' + oc;\n    let dupes = (existingOrgs.data ?? []).filter(o => { o.code == orgName });\n    if (dupes.size() > 0) {\n      let dupeName = (!empty(dupes[0].organizationByName)) ? (dupes[0].organizationByName.descriptor ?? orgName) : orgName;\n      organizationCode.setError('An organization with this code already exists: ' + dupeName);\n      valid = false;\n    }\n  }\n  if (empty(effectiveDate.value)) {\n    effectiveDate.setError('Effective Date is required.');\n    valid = false;\n  } else {\n    if (!comsValidations.isWeekday(effectiveDate.value)) {\n      effectiveDate.setError(comsValidations.errorWeekday());\n      valid = false;\n    } else if (!comsValidations.isCurrentOrFutureYear(effectiveDate.value)) {\n      effectiveDate.setError(comsValidations.errorYear());\n      valid = false;\n    }\n  }\n  if (valid) {\n    let lac = selectedApplicationId.selectedEntries[0].descriptor ?? '';\n    let loc = organizationCode.value ?? '';\n    let lname = lac + ':' + loc;\n    let lot = lac;\n    launchAddShellOrg.invoke({'cbw': selectedWorker.id ?? '', 'cb': (selectedWorker.descriptor ?? '').urlEncode(), 'ts': date:now().format(\"yyyy-MM-dd'T'HH:mm:ss'Z'\").urlEncode(), 'ac': lac, 'ot': lot, 'on': lname.urlEncode(), 'oc': loc.urlEncode(), 'wid': selectedWorker.id ?? '', 'ed': effectiveDate.value.format('yyyy-MM-dd')});\n    let created = (verifyShellOrg.invoke({'lim': '10000'}).data ?? []).filter(o => { o.code == lname }).size() > 0;\n    if (!created) {\n      organizationCode.setError('Workday rejected this request, so nothing was created. Check the values and try again.');\n      valid = false;\n    }\n  }\n  valid;\n%>",
   "presentation": {
     "headerSize": "STANDARD",
     "title": {
@@ -131,6 +134,25 @@
         },
         {
           "type": "layoutSection",
+          "id": "liveOrgNoticeSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "liveOrgNoticeFieldSet",
+              "title": "Before you submit",
+              "children": [
+                {
+                  "type": "richText",
+                  "id": "liveOrgNoticeRichText",
+                  "enabled": false,
+                  "value": "<span style=\"color:#B45309;font-size:11px;font-weight:700\">⚠ </span><span style=\"color:#374151;font-size:11px\">Submitting creates a live Custom Organization in Workday straight away. It can't be deleted afterwards, only inactivated from Shell Org Manager. Every create is recorded in the Audit Log.</span>"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
           "id": "formSection",
           "children": [
             {
@@ -175,9 +197,9 @@
                     "type": "guide",
                     "id": "guideEffectiveDate",
                     "title": "Effective Date Rules",
-                    "text": "Must be a weekday (Monday–Friday) in 2026 or 2027. Weekends and dates outside this range will be rejected. The organization will be available in Workday starting on this date."
+                    "text": "Must be a weekday (Monday to Friday) in this year or next year. Weekends and other years are rejected when you click Next. The organization is available in Workday from this date."
                   },
-                  "onChange": "<% effectiveDate.clearError(); %>"
+                  "onChange": "<%\n            if (empty(self.value)) {\n              self.clearError();\n            } else if (!comsValidations.isWeekday(self.value)) {\n              self.setError(comsValidations.errorWeekday());\n            } else if (!comsValidations.isCurrentOrFutureYear(self.value)) {\n              self.setError(comsValidations.errorYear());\n            } else {\n              self.clearError();\n            }\n          %>"
                 }
               ],
               "title": "Organization Details"
