@@ -892,11 +892,22 @@ async function repair(token, me) {
     if (!cur) throw new Error(`${TEST_ROLE} has no X: organization assignment`);
     const hit = cur.positions.find((p) => String(p.descriptor || '').includes(unassign));
     if (!hit) return pass('Repair.unassign', `${unassign} is not assigned to ${TEST_ROLE}: nothing to do`);
-    if (!apply) return pass('Repair.unassign', `would remove "${hit.descriptor}" from ${TEST_ROLE} on ${cur.org.descriptor}`);
-    const rem = await launchAndVerify(token, 'AssignRolePositions', {
+    const params = {
       roleId: cur.role.id, roleName: TEST_ROLE, orgId: cur.org.id, orgName: cur.org.descriptor, effectiveDate: today,
       positionId: hit.id, positionIdType: 'WID', positionName: hit.descriptor, mode: 'REMOVE', positionWid: hit.id, ...who(),
-    });
+    };
+    if (!apply) {
+      // Same call with mode PROBE (Workday rejects it, nothing changes): shows whether the gateway accepts these values.
+      const res = [];
+      for (const k of ['', ...Object.keys(params)]) {
+        const p = { ...params, mode: 'PROBE' };
+        if (k && k !== 'mode') p[k] = 'x'; else if (k) continue;
+        try { await launch(token, 'AssignRolePositions', p); res.push(`${k || 'all'}:ok`); } catch (e) { res.push(`${k || 'all'}:${e.message.slice(5, 8)}`); }
+      }
+      console.log(`  probe (value replaced by x -> result): ${res.join(' ')}`);
+      return pass('Repair.unassign', `would remove "${hit.descriptor}" from ${TEST_ROLE} on ${cur.org.descriptor}`);
+    }
+    const rem = await launchAndVerify(token, 'AssignRolePositions', params);
     if (rem.objectType !== 'Role Assignment' || rem.action !== 'REMOVE POSITION') throw new Error(`audit is ${rem.objectType}/${rem.action}`);
     let gone = false;
     for (let i = 0; i < 18 && !gone; i++) {
