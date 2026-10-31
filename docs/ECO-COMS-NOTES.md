@@ -314,9 +314,10 @@ ACTION: run 'wdcli app deploy ...' locally, log in, update WD_DEV_TOKEN secret
 
 - `DenyRoleRequest` did not run once (TESTROLECIRUN22, 2026-10-30); it has run every time since. Keep an eye on it after deploys that change it.
 - The two older pending requests (KEYCLOAK COORDINATOR and the AAA request) were corrected on 2026-10-31 with `node test/run-tests.js repair --apply`: Enabled For now reads "Faculty of Medicine" (FUH), with the WID in `enabledForWid` / `functionalUnitHierarchyWid`.
-- **P-00001 is still assigned to X:BPMS(ODMT):ROLE:ADVISORS** (left by an early test run). Removing it through AssignRolePositions is refused by the API gateway (HTML 403) for that exact combination of values; see CLAUDE.md "Orchestrations — debugging". Remove it by hand: Manage Role Assignments in ECO-COMS (may hit the same 403), or Workday's Assign Roles task.
+- P-00001 was removed from X:BPMS(ODMT):ROLE:ADVISORS on 2026-10-31 through the Manage Role Assignments page (REMOVE POSITION audit at 18:58:57Z). The same removal sent by the test runner was refused by the API gateway (HTML 403); the page's request went through.
 - Branch `isu-writes` (ISU page writes) is unmerged; its static check lives in the isu suite of `test/run-tests.js`.
-- The stray org "COMS Application:PATTERN:TEST:TEST:302:152:2026W1" is still active (hidden in the app).
+- The stray org "COMS Application:PATTERN:TEST:TEST:302:152:2026W1" is still active (hidden in the app). Logan McNeil has no inactivate action on it in Workday (related actions only offer view tasks), and ManageShellOrgStatus rightly refuses codes that don't start with X:. Someone with organization maintenance rights must inactivate it in Workday.
+- ISU lockdown (`isu-writes`): App Manager → Configure for the app shows no ISU assignment, and a search for DNU_ISU_ECO_COMS_DEPLOY_CMM finds nothing for Logan McNeil (2026-10-31). Not merged; see ADMIN-RUNBOOK section 3 for the setup steps.
 
 ## UI phase 2 (built 2026-10-31)
 
