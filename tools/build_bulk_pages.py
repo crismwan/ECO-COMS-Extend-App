@@ -259,3 +259,7 @@ if not any(s.get('id') == 'bulkSection' for s in secs):
         {"type": "button", "id": "bulkResultsButton", "label": "View Results", "action": "AUXILIARY", "taskReference": {"taskId": "bulkRoleResults"}}]}]})
     open(hp, 'w').write(json.dumps(hub, indent=2, ensure_ascii=False) + '\n')
 print('ok')
+
+# keep the 'Nothing to show' messages that tools/add_empty_messages.py adds to the results page
+import subprocess, sys
+subprocess.run([sys.executable, os.path.join(os.path.dirname(__file__), 'add_empty_messages.py')], check=True)

@@ -186,6 +186,14 @@
                   "enabled": false
                 },
                 {
+                  "type": "text",
+                  "id": "aaaRolesEmptyText",
+                  "enabled": false,
+                  "label": "ⓘ Nothing to show",
+                  "visible": "<% size(list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]).filter(r => r.roleName.startsWith('Organizations and Roles Assignment Administrator'))) == 0 %>",
+                  "value": "No AAA role requests yet. Use Submit AAA Role Request to start one."
+                },
+                {
                   "type": "grid",
                   "gridType": "LIST",
                   "multiViewStylingEnabled": true,

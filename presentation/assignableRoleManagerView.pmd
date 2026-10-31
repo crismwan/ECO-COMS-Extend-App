@@ -204,6 +204,14 @@
                   "enabled": false
                 },
                 {
+                  "type": "text",
+                  "id": "assignableRolesEmptyText",
+                  "enabled": false,
+                  "label": "ⓘ Nothing to show",
+                  "visible": "<% size(list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]).filter(r => !r.roleName.startsWith('Organizations and Roles Assignment Administrator') && r.requestedBy.id == selectedWorker.id)) == 0 %>",
+                  "value": "You haven't submitted any assignable role requests. Use Submit New Request to start one."
+                },
+                {
                   "type": "grid",
                   "gridType": "LIST",
                   "multiViewStylingEnabled": true,
@@ -306,6 +314,29 @@
                       },
                       "excel": {
                         "enabled": false
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colAgain",
+                      "label": "Request Again",
+                      "excel": {
+                        "enabled": false
+                      },
+                      "cellTemplate": {
+                        "type": "button",
+                        "id": "requestAgainButton",
+                        "action": "AUXILIARY",
+                        "label": "<% (role.status ?? '') == 'Denied' ? 'Request again' : 'Request similar' %>",
+                        "taskReference": {
+                          "taskId": "assignableRoleManager",
+                          "parameterBindings": {
+                            "againRoleName": "<% ((role.roleName ?? '').contains(':ROLE:') ? (role.roleName ?? '').substringAfter(':ROLE:') : (role.roleName ?? '')) %>",
+                            "againFrom": "<% role.roleName ?? '' %>",
+                            "againStatus": "<% role.status ?? '' %>",
+                            "againReason": "<% role.denialReason ?? '' %>"
+                          }
+                        }
                       }
                     }
                   ],

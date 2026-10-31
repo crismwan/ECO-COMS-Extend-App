@@ -297,6 +297,14 @@
               "title": "<% (comsRequestStats.statusOrDefault(queryParams.status ?? '') == 'All' ? 'All' : (comsRequestStats.statusOrDefault(queryParams.status ?? '') == 'Pending ISC Review' ? 'Pending' : comsRequestStats.statusOrDefault(queryParams.status ?? ''))) + ' ' + (queryParams.view == 'aaa' ? 'AAA Provisioning Requests' : (queryParams.view == 'assignable' ? 'Assignable Role Requests' : 'Role Requests')) %>",
               "children": [
                 {
+                  "type": "text",
+                  "id": "allPendingEmptyText",
+                  "enabled": false,
+                  "label": "ⓘ Nothing to show",
+                  "visible": "<% size(comsRequestStats.filterRequests(list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? [], (queryParams.view ?? ''), (queryParams.status ?? ''))) == 0 %>",
+                  "value": "No requests match this view and status. Choose All to see every request."
+                },
+                {
                   "type": "grid",
                   "gridType": "LIST",
                   "multiViewStylingEnabled": true,

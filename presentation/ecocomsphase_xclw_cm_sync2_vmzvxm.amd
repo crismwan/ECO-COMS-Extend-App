@@ -307,6 +307,13 @@
       "page": {
         "id": "roleAssignmentSuccess"
       }
+    },
+    {
+      "id": "shellOrgDetail",
+      "routingPattern": "/shellOrgDetail",
+      "page": {
+        "id": "shellOrgDetail"
+      }
     }
   ],
   "applicationId": "ecocomsphase_xclw_cm_sync2_vmzvxm",

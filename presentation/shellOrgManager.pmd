@@ -438,7 +438,7 @@
                 "gridType": "LIST",
                 "multiViewStylingEnabled": true,
                 "id": "allShellOrgsGrid",
-                "rows": "<% allShellOrgs.data.filter(o => { o.code.startsWith('X:') && !o.code.contains(':PATTERN') }) %>",
+                "rows": "<% list:flatten([(allShellOrgs.data.filter(o => { o.code.startsWith('X:') && !o.code.contains(':PATTERN') })).filter(o => { o.cf_active1 == true }), (allShellOrgs.data.filter(o => { o.code.startsWith('X:') && !o.code.contains(':PATTERN') })).filter(o => { o.cf_active1 != true })]) %>",
                 "rowVariableName": "org",
                 "enabled": false,
                 "label": "<% 'Shell Organizations' + ' (' + size(allShellOrgs.data.filter(o => { o.code.startsWith('X:') && !o.code.contains(':PATTERN') })) + ')' %>",
@@ -472,6 +472,30 @@
                     "cellTemplate": {
                       "type": "richText",
                       "value": "<% org.cf_active1 == true ? '<span style=\"color:#065f46;font-weight:600;font-size:11px\">✓ Active</span>' : '<span style=\"color:#6b7280;font-weight:600;font-size:11px\">○ Inactive</span>' %>"
+                    }
+                  },
+                  {
+                    "type": "column",
+                    "columnId": "colAllOrgDetails",
+                    "label": "Details",
+                    "excel": {
+                      "enabled": false
+                    },
+                    "cellTemplate": {
+                      "type": "button",
+                      "id": "colAllOrgDetailsButton",
+                      "label": "Details",
+                      "action": "AUXILIARY",
+                      "taskReference": {
+                        "taskId": "shellOrgDetail",
+                        "parameterBindings": {
+                          "orgId": "<% org.workdayID ?? '' %>",
+                          "orgCode": "<% org.code ?? '' %>",
+                          "orgName": "<% org.organizationByName.descriptor ?? org.code ?? '' %>",
+                          "appCode": "<% queryParams.appCode ?? '' %>",
+                          "appName": "<% queryParams.appName ?? '' %>"
+                        }
+                      }
                     }
                   },
                   {
@@ -520,11 +544,19 @@
                 "visible": "<% !empty(queryParams.appCode) && size(allShellOrgs.data.filter(o => { o.code.startsWith((queryParams.appCode ?? '') + ':') && !o.code.contains(':PATTERN') })) == 0 %>"
               },
               {
+                "type": "text",
+                "id": "filteredShellOrgsEmptyText",
+                "enabled": false,
+                "label": "ⓘ Nothing to show",
+                "visible": "<% size(list:flatten([(empty(queryParams.appCode) ? [] : allShellOrgs.data.filter(o => { o.code.startsWith(queryParams.appCode + ':') && !o.code.contains(':PATTERN') })).filter(o => { o.cf_active1 == true }), (empty(queryParams.appCode) ? [] : allShellOrgs.data.filter(o => { o.code.startsWith(queryParams.appCode + ':') && !o.code.contains(':PATTERN') })).filter(o => { o.cf_active1 != true })])) == 0 %>",
+                "value": "This application has no shell organizations yet, or no application is selected. Use Add New Shell Organization, or pick an application on the Applications tab."
+              },
+              {
                 "type": "grid",
                 "gridType": "LIST",
                 "multiViewStylingEnabled": true,
                 "id": "filteredShellOrgsGrid",
-                "rows": "<% empty(queryParams.appCode) ? [] : allShellOrgs.data.filter(o => { o.code.startsWith(queryParams.appCode + ':') && !o.code.contains(':PATTERN') }) %>",
+                "rows": "<% list:flatten([(empty(queryParams.appCode) ? [] : allShellOrgs.data.filter(o => { o.code.startsWith(queryParams.appCode + ':') && !o.code.contains(':PATTERN') })).filter(o => { o.cf_active1 == true }), (empty(queryParams.appCode) ? [] : allShellOrgs.data.filter(o => { o.code.startsWith(queryParams.appCode + ':') && !o.code.contains(':PATTERN') })).filter(o => { o.cf_active1 != true })]) %>",
                 "rowVariableName": "org",
                 "enabled": false,
                 "label": "<% 'Shell Organizations for ' + (queryParams.appName ?? queryParams.appCode ?? '') + ' (' + size(empty(queryParams.appCode) ? [] : allShellOrgs.data.filter(o => { o.code.startsWith(queryParams.appCode + ':') && !o.code.contains(':PATTERN') })) + ')' %>",
@@ -558,6 +590,30 @@
                     "cellTemplate": {
                       "type": "richText",
                       "value": "<% org.cf_active1 == true ? '<span style=\"color:#065f46;font-weight:600;font-size:11px\">✓ Active</span>' : '<span style=\"color:#6b7280;font-weight:600;font-size:11px\">○ Inactive</span>' %>"
+                    }
+                  },
+                  {
+                    "type": "column",
+                    "columnId": "colFiltOrgDetails",
+                    "label": "Details",
+                    "excel": {
+                      "enabled": false
+                    },
+                    "cellTemplate": {
+                      "type": "button",
+                      "id": "colFiltOrgDetailsButton",
+                      "label": "Details",
+                      "action": "AUXILIARY",
+                      "taskReference": {
+                        "taskId": "shellOrgDetail",
+                        "parameterBindings": {
+                          "orgId": "<% org.workdayID ?? '' %>",
+                          "orgCode": "<% org.code ?? '' %>",
+                          "orgName": "<% org.organizationByName.descriptor ?? org.code ?? '' %>",
+                          "appCode": "<% queryParams.appCode ?? '' %>",
+                          "appName": "<% queryParams.appName ?? '' %>"
+                        }
+                      }
                     }
                   },
                   {
@@ -627,6 +683,14 @@
                 "enabled": false,
                 "visible": "<% size(list:flatten((shellRoles.data ?? []).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith((empty(queryParams.appCode) ? 'X:' : queryParams.appCode)) }).map(ra => { { 'role': r.role, 'org': ra.organization, 'positions': ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? [], 'workers': ra.workersAssigned ?? [] } }) }))) == 0 %>",
                 "value": "<% 'No shell role assignments found' + (!empty(queryParams.appCode) ? ' for ' + (queryParams.appName ?? queryParams.appCode) : '') + '.' %>"
+              },
+              {
+                "type": "text",
+                "id": "roleAssignmentsEmptyText",
+                "enabled": false,
+                "label": "ⓘ Nothing to show",
+                "visible": "<% size(list:flatten((shellRoles.data ?? []).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith((empty(queryParams.appCode) ? 'X:' : queryParams.appCode)) }).map(ra => { { 'role': r.role, 'org': ra.organization, 'positions': ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? [], 'workers': ra.workersAssigned ?? [] } }) }))) == 0 %>",
+                "value": "No shell roles are assigned on these organizations."
               },
               {
                 "type": "grid",

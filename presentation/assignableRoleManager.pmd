@@ -383,6 +383,26 @@
         },
         {
           "type": "layoutSection",
+          "id": "againSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "againFieldSet",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "againNoteText",
+                  "enabled": false,
+                  "label": "ⓘ Requesting again",
+                  "visible": "<% !empty(queryParams.againFrom) %>",
+                  "value": "<% 'Based on ' + (queryParams.againFrom ?? '') + ' (' + (queryParams.againStatus ?? '') + ')' + (empty(queryParams.againReason) ? '' : ('. Reason given: ' + queryParams.againReason)) + '. The role name is filled in; choose the application, organization, positions and effective date again.' %>"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
           "id": "contentSection",
           "children": [
             {
@@ -578,7 +598,8 @@
                       "valueOutBinding": "postAssignableRole.roleName"
                     }
                   ],
-                  "helpText": "Type in ALL CAPS. Leave blank if selecting an existing role above."
+                  "helpText": "Type in ALL CAPS. Leave blank if selecting an existing role above.",
+                  "value": "<% queryParams.againRoleName ?? '' %>"
                 },
                 {
                   "type": "text",
