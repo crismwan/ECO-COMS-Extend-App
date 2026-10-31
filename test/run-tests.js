@@ -200,6 +200,7 @@ function staticSuite() {
     const secured = ((v.securityDomains || {})._value || {})._value || [];
     const names = secured.map((x) => x._value);
     if (!names.length) { err('orchSecurity', `${path.basename(f)}: no securityDomains; anyone who can reach its launch URL can run it`); continue; }
+    if (names.length > 1) err('orchSecurity', `${path.basename(f)}: ${names.length} security domains; App Hub allows only one per orchestration (use one orchestration per launching page)`);
     for (const n of names) {
       if (!domains[n]) err('orchSecurity', `${path.basename(f)}: security domain '${n}' is not defined in model/`);
       else if (domains[n].enabledForOrchestrationSecurity !== true) err('orchSecurity', `${path.basename(f)}: domain '${n}' needs "enabledForOrchestrationSecurity": true`);

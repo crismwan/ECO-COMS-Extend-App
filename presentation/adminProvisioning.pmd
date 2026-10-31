@@ -203,7 +203,7 @@
       {
         "name": "launchReview",
         "baseUrlType": "orchestration",
-        "url": "<% '/StartRoleRequestReview/launch?ref=' + requestRefHidden.value %>",
+        "url": "<% '/StartAAARequestReview/launch?ref=' + requestRefHidden.value %>",
         "httpMethod": "POST",
         "authType": "sso",
         "values": [

@@ -146,7 +146,8 @@ Every orchestration a user can launch is secured by the same domain as the page 
 | Orchestration | Security domain |
 |---|---|
 | AddShellOrg, AddShellOrgPattern, ManageShellOrgStatus, AssignRolePositions | Manage: COMS Shell Organizations |
-| StartRoleRequestReview | Manage: COMS Assignable Roles, Manage: COMS Admin Provisioning |
+| StartRoleRequestReview (Assignable Role Manager) | Manage: COMS Assignable Roles |
+| StartAAARequestReview (Admin Provisioning; same steps) | Manage: COMS Admin Provisioning |
 | DenyRoleRequest | none (launched by the business process as the tenant's launch user) |
 
 Those three domains have `enabledForOrchestrationSecurity: true`. After deploying:
