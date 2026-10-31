@@ -350,6 +350,18 @@ function request(method, url, token, body) {
 }
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+// Every record of a business-object collection. The REST API returns 100 rows at most per call,
+// oldest first, so a single ?limit=100 read misses the newest records once there are more than 100.
+async function readAll(token, collection, max = 3000) {
+  const out = [];
+  for (let offset = 0; offset < max; offset += 100) {
+    const page = await request('GET', `${BO}/${collection}?limit=100&offset=${offset}`, token);
+    out.push(...(page.data || []));
+    if ((page.data || []).length < 100 || out.length >= (page.total ?? 0)) break;
+  }
+  return out;
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const wql = (token, query, limit = 100) =>
   request('GET', `${WQL}?limit=${limit}&query=${encodeURIComponent(query)}`, token);
@@ -362,7 +374,7 @@ const launch = (token, name, params) => {
 // Same check the pages use (run-and-verify): the orchestration writes an audit record only
 // after Workday accepts the change, so a +1 audit total means the call really worked.
 async function launchAndVerify(token, name, params) {
-  const ids = async () => ((await request('GET', `${BO}/comsAuditLogs?limit=100`, token)).data || []);
+  const ids = async () => (await readAll(token, 'comsAuditLogs'));
   const before = new Set((await ids()).map((a) => a.id));
   await launch(token, name, params);
   for (let i = 0; i < 10; i++) {
@@ -376,10 +388,10 @@ async function launchAndVerify(token, name, params) {
 
 // The guard in ManageShellOrgStatus must reject the call: no audit record may appear.
 async function expectRejected(token, name, params) {
-  const before = new Set((((await request('GET', `${BO}/comsAuditLogs?limit=100`, token)).data) || []).map((a) => a.id));
+  const before = new Set((await readAll(token, 'comsAuditLogs')).map((a) => a.id));
   await launch(token, name, params);
   await sleep(20000);
-  const fresh = (((await request('GET', `${BO}/comsAuditLogs?limit=100`, token)).data) || []).filter((a) => !before.has(a.id));
+  const fresh = (await readAll(token, 'comsAuditLogs')).filter((a) => !before.has(a.id));
   if (fresh.length) throw new Error(`${name} accepted a call it should reject (audit ${fresh[0].objectType}/${fresh[0].action})`);
 }
 
@@ -416,7 +428,7 @@ async function smoke(token, me) {
 
   let audits = [];
   await test('Audit.read', async () => {
-    audits = (await request('GET', `${BO}/comsAuditLogs?limit=100`, token)).data || [];
+    audits = await readAll(token, 'comsAuditLogs');
     pass('Audit.read', `${audits.length} recent records`);
   });
   // Pages read business-object collections 100 rows at a time. These report the totals, the order
@@ -429,7 +441,7 @@ async function smoke(token, me) {
     let page2 = '';
     if (total > 100) {
       const p2 = (await request('GET', `${BO}/comsAuditLogs?limit=100&offset=100`, token)).data || [];
-      const overlap = p2.filter((a) => audits.some((b) => b.id === a.id)).length;
+      const overlap = p2.filter((a) => audits.slice(0, 100).some((b) => b.id === a.id)).length;
       page2 = `; offset=100 gave ${p2.length} rows, ${overlap} repeated from the first page`;
     }
     // The viewer asks for offset=total when a page has nothing left to load: that must come back empty.
@@ -458,7 +470,7 @@ async function smoke(token, me) {
 
   let roles = [];
   await test('Requests.read', async () => {
-    roles = (await request('GET', `${BO}/comsAssignableRoles?limit=100`, token)).data || [];
+    roles = await readAll(token, 'comsAssignableRoles');
     pass('Requests.read', `${roles.length} role requests`);
   });
   await test('Requests.deniedInactive', async () => {
@@ -724,7 +736,7 @@ async function full(token, me) {
     }
     if (r?.status !== 'Denied') throw new Error(`${roleName} still "${r?.status}" 10 min after cancelling its review (DenyRoleRequest did not run)`);
     if (r.active !== false) throw new Error(`${roleName} is Denied but active=${r.active}`);
-    const audits = ((await request('GET', `${BO}/comsAuditLogs?limit=100`, token)).data || []).filter((a) => a.roleName === roleName && a.action === 'DENY');
+    const audits = (await readAll(token, 'comsAuditLogs')).filter((a) => a.roleName === roleName && a.action === 'DENY');
     if (!audits.length) throw new Error(`${roleName} is Denied but has no DENY audit record`);
     // The DENY record must name the person who denied or cancelled (here: the test user), not the BP.
     const by = audits[0];
@@ -732,7 +744,9 @@ async function full(token, me) {
     if (by.triggeredBy !== me.descriptor || !by.changedByWid) {
       throw new Error(`DENY record shows Changed By "${by.triggeredBy}" (${by.changedByWid || 'no WID'}); expected ${me.descriptor}`);
     }
-    pass('Request.reviewCancelDeny', `${roleName}: cancelling the review marked it Denied, inactive, with a DENY audit naming ${me.descriptor}`);
+    // DenyRoleRequest copies the event's comment (here the cancel comment) into Denial Reason.
+    if (!/Automated test run/.test(r.denialReason || '')) throw new Error(`${roleName} Denial Reason is "${r.denialReason || ''}", expected the cancel comment`);
+    pass('Request.reviewCancelDeny', `${roleName}: cancelling the review marked it Denied, inactive, with the cancel comment as Denial Reason and a DENY audit naming ${me.descriptor}`);
   });
 
   // ── Two pending ISC requests, left open for review: one on the new shell org, one on the new pattern ──
@@ -834,7 +848,7 @@ async function cleanup(token, me) {
   testOrgs.filter((o) => !activeTest.includes(o)).forEach((o) => console.log(`   already inactive  ${code(o)}`));
 
   // 2. Test role requests -> delete (pending ones included; their review events are reported).
-  const roles = (await request('GET', `${BO}/comsAssignableRoles?limit=100`, token)).data || [];
+  const roles = await readAll(token, 'comsAssignableRoles');
   const testRolesAll = roles.filter((r) => EXTRA_TEST_IDS.includes(r.id) || isTestText(r.roleName, r.referenceId, r.shellOrgCode));
   // A request linked to a Workday review event can't be deleted (HTTP 500 "Attempt to delete
   // instance ... with references"); the event is permanent history. Those are reported and kept.
@@ -851,7 +865,7 @@ async function cleanup(token, me) {
   roles.filter((r) => !testRoles.includes(r)).forEach((r) => console.log(`     ${r.id}  ${r.roleName}  [${r.status}]  requested ${r.requestedDate || '?'}`));
 
   // 3. Test audit entries -> delete. Done last so the inactivation records above are removed too.
-  const audits = (await request('GET', `${BO}/comsAuditLogs?limit=100`, token)).data || [];
+  const audits = await readAll(token, 'comsAuditLogs');
   // Role assignment tests add a position to TEST_ROLE and remove it again: an ASSIGN and a
   // REMOVE for the same position ID on that role are test records (net no change).
   const pid = (a) => (String(a.positionName || '').match(/P-\d+/) || [])[0];
@@ -908,7 +922,7 @@ async function cleanup(token, me) {
       const ids = pendingTest.map((r) => r.id);
       for (let i = 0; i < 24; i++) {
         await sleep(15000);
-        const open = ((await request('GET', `${BO}/comsAssignableRoles?limit=100`, token)).data || [])
+        const open = (await readAll(token, 'comsAssignableRoles'))
           .filter((r) => ids.includes(r.id) && r.status !== 'Denied');
         if (!open.length) return pass('Cleanup.pendingClosed', `${ids.length} pending test request(s) now Denied`);
       }
@@ -922,7 +936,7 @@ async function cleanup(token, me) {
     });
   }
   // Re-read so audit entries written by the inactivations above are cleared too.
-  const auditsNow = (await request('GET', `${BO}/comsAuditLogs?limit=100`, token)).data || [];
+  const auditsNow = await readAll(token, 'comsAuditLogs');
   let deleted = 0;
   for (const a of auditsNow.filter(testAudit)) {
     await test(`Cleanup.deleteAudit ${a.id}`, async () => {
@@ -976,7 +990,7 @@ async function repair(token, me) {
   // Audit records with no action: written by test calls that reached AssignRolePositions with a
   // mode other than ADD/REMOVE (before its mode guard existed). They describe no change.
   await test('Repair.auditNoAction', async () => {
-    const all = (await request('GET', `${BO}/comsAuditLogs?limit=100`, token)).data || [];
+    const all = await readAll(token, 'comsAuditLogs');
     const junk = all.filter((a) => a.objectType === 'Role Assignment' && !a.action);
     if (!junk.length) return pass('Repair.auditNoAction', 'no audit records without an action');
     if (!apply) return pass('Repair.auditNoAction', `would delete ${junk.length} Role Assignment audit record(s) with no action`);
@@ -985,7 +999,7 @@ async function repair(token, me) {
   });
 
   await test('Repair.enabledFor', async () => {
-    const roles = (await request('GET', `${BO}/comsAssignableRoles?limit=100`, token)).data || [];
+    const roles = await readAll(token, 'comsAssignableRoles');
     const bad = roles.filter((r) => r.status === 'Pending ISC Review' && /^[0-9a-f]{32}$/.test(r.enabledForOrganizationTypes || ''));
     if (!bad.length) return pass('Repair.enabledFor', 'no pending request holds a bare WID in Enabled For');
     const fuh = (await wql(token, 'SELECT workdayID, organization1, code FROM customOrganizations WHERE type1 in (b40d8b016367100175b147f364840000)', 10000)).data || [];
@@ -1038,7 +1052,7 @@ async function isuSuite(token, me) {
     () => request('POST', `${BO}/comsAssignableRoles`, token, { referenceId: `ISU-PROBE-${Date.now()}`, roleName: 'X:ADM:ROLE:TESTROLEISUPROBE', status: 'Pending ISC Review', active: false }),
     (id) => request('DELETE', `${BO}/comsAssignableRoles/${id}`, token)));
   await test('ISU.userCannotEditRequest', async () => {
-    const r = ((await request('GET', `${BO}/comsAssignableRoles?limit=100`, token)).data || []).find((x) => /TEST/.test(x.roleName || ''));
+    const r = (await readAll(token, 'comsAssignableRoles')).find((x) => /TEST/.test(x.roleName || ''));
     if (!r) return skip('ISU.userCannotEditRequest', 'no TEST request to probe');
     // PATCH a field to its current value: harmless if it goes through.
     await refused('ISU.userCannotEditRequest', async () => { await request('PATCH', `${BO}/comsAssignableRoles/${r.id}`, token, { notes: r.notes ?? '' }); return {}; }, async () => {});
