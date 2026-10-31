@@ -174,27 +174,25 @@ Other attributes: `enabled`, `guide`, `helpText`, `id`, `label` (max 255 chars),
 
 ## guide attribute — rendering behavior
 
-The `guide` attribute places a **"?" tooltip icon** beside the widget label. It is placed as a sibling attribute on the widget definition:
+Source: developer.workday.com "guide" (PMD Tags > Basic UI), checked 2026-10-31, and a live check the same day.
+
+The `guide` attribute adds a "?" beside a widget on an **edit page**. It's a sibling attribute on the widget:
 
 ```json
 "guide": {
   "type": "guide",
-  "id": "guideMyWidget",
+  "id": "myFieldGuide",
   "title": "Tooltip Title",
-  "text": "Tooltip body text explaining the field."
+  "text": "Tooltip body text explaining the field.",
+  "linkText": "Optional link text",
+  "linkUrl": "https://example.com/more"
 }
 ```
 
-**Critical rendering limitation (confirmed via accessibility tree analysis):** The `guide` attribute on `text` and `date` widget types inside a `fieldSet` with `labelPosition: "side_align_left"` does **NOT** render a visible "?" icon in the Workday UI. The code deploys without errors and is accepted by the platform, but no guide button or icon element is inserted into the DOM — it is a **silent failure**. This applies to `text`, `date`, `number`, and similar read-only/inline field widgets in that layout context.
-
-**What DOES render a guide icon:**
-
-- `fileUploader` — confirmed to show the guide icon correctly.
-- `dropdown` — renders the guide icon (confirmed working in production).
-- `instanceList` — renders the guide icon (confirmed working in production).
-- `textArea` — renders the guide icon (confirmed working in production).
-
-**Mitigation for text/date fields:** Use `richText` banners with an `ⓘ` prefix (inline HTML) for visible inline guidance on sections containing text/date-only fields. These render correctly as informational banners.
+- **Guides are hidden by default.** The page banner shows a "?" button ("Start guided tours"); the user clicks it and the "?" appears beside every widget with a guide. That's why guides look like a silent failure: they render only after that click. (The tenant setting Edit Tenant Setup - System > Always Show Guided Tours shows them all the time.) An earlier note here said guides on `text`/`date` never render; that was wrong: confirmed live, text and date guides appear once guided tours are on.
+- **Supported widgets:** `checkBox`, `date`, `dropdown`, `number`, `readOnlyText`, `richText`, `text`, `textArea`, `time`. **Not `instanceList`** (deploys, but no "?" ever appears), and not widgets inside a grid.
+- Attributes: `id`, `title`, `text`, `linkText`, `linkUrl`, `render`.
+- For help that must always be visible, or on an `instanceList`, put the text in the section's description `richText` instead.
 
 **`richText` value format — two equivalent forms:**
 - **Script-wrapped:** `"value": "<% '<span style=\"...\">text</span>' %>"` — required when the string contains dynamic expressions or variable interpolation.
@@ -2214,6 +2212,19 @@ Source: developer.workday.com "endPoints" reference (checked 2026-10-31).
 
 For large datasets, use WQL with paging or RaaS (which has no pagination limit).
 
+
+**Order and paging (confirmed live 2026-10-31 on an app business object):** the collection comes back **oldest first**, so `?limit=100` shows the *oldest* 100 rows once there are more. `?limit=1` gives the total in `.total`; `offset` works, and an `offset` equal to the total returns an empty `data` list. To show the newest rows, add a count endpoint and offset pages that reference it (inbound endpoints can use an earlier endpoint in their URL):
+
+```json
+{ "name": "auditLogCount", "baseUrlType": "BUSINESS-OBJECT", "url": "/comsAuditLogs?limit=1", "authType": "sso" },
+{ "name": "auditPage0", "baseUrlType": "BUSINESS-OBJECT", "authType": "sso", "isCollection": true,
+  "url": "<% let t = auditLogCount.total ?? 0; let start = (t - 100) < 0 ? 0 : (t - 100); let cnt = t - start; '/comsAuditLogs?limit=' + (cnt > 0 ? cnt : 1) + '&offset=' + (cnt > 0 ? start : t) %>" }
+```
+
+Join several pages with `list:flatten([auditPage0.data ?? [], auditPage1.data ?? []])`. Leave 400 out of `failOnStatusCodes` on the extra pages so an empty page never fails the load. Tests that look for a just-written record must read every page too.
+
+**Bulk DELETE can't be used from a PMD** (developer.workday.com "Reference: Business Object API Requests"); use a grid `deleteEndPoint` or an orchestration.
+
 ## Endpoints — `isCollection: true` performance warning
 
 Using `isCollection: true` on inbound endpoints **can degrade the entire tenant under concurrent use** (NoIsCollectionOnEndpointsRule). For querying data, prefer **WQL** or **RaaS** instead of `isCollection`. Reserve `isCollection` only for small, bounded BO collections where WQL is unavailable.
@@ -2286,6 +2297,11 @@ Pattern that lets a Workday rejection block OK instead of showing a false succes
 - **Who denied / cancelled:** `bp.initiatingPerson()` returns a **Person** reference (not a Worker; `getIDValues("WID").get(0)` gives the Person WID, so `/common/v1/workers/{id}` won't find it). `GET /person/v4/people/{id}` returns only links; the name is at `GET /person/v4/people/{id}/preferredName` → `$.data[0].descriptor` (confirmed live 2026-10-31 with the default credential). An InstanceReference has no descriptor function, only IDs. Checked only where the requester was also the canceller.
 - **Deny is offered only while an approval is awaiting action.** If the initiator is in the approval group, the approval auto-completes and only Cancel remains, so pair the same "close the request" orchestration with **Cancel** as well as Deny.
 
+
+- **The API gateway can refuse a launch with an HTML 403** (body starts with `<style>`), before the orchestration or its security runs. Seen 2026-10-31: one AssignRolePositions call was refused every time, while the same call with any one of roleName, orgName or changedByWid changed went through; percent-encoding `( )` didn't help. It looks like a content filter scoring the whole query string. If a launch from a page fails this way, try shorter text values or pass ids the orchestration can look up instead of free text **(cause unverified)**.
+- **Guard `mode`-style parameters.** A launch with an unexpected mode (neither ADD nor REMOVE) still called Workday and wrote audit records with no action. Check allowed values in a Continue on Conditions step before any Workday call.
+- **String functions** in orchestration expressions include `replace`, `replaceOnce`, `normalizeSpace` (collapses whitespace and newlines), `truncate`, `escapeXml`, `trim`, `substringBefore/After`, `urlEncode` (developer.workday.com "Reference: String Member Functions"). To put free text into a JSON template: `.normalizeSpace().replace("\\", "/").replace("\"", "'")` (deploys; not yet tested with real quotes).
+
 ## Business processes on Extend business objects
 
 - Tenant setup order: BP type → **Edit Policy** (Initiate, steps, View All, Approve, Deny, Cancel) → **Activate Pending Security Policy Changes** → **Create Business Process Definition** → Edit Definition. Step groups only show in the prompt after the policy is activated. Find the definition by searching `bp: <name>`.
@@ -2299,6 +2315,8 @@ Pattern that lets a Workday rejection block OK instead of showing a false succes
 - **Inbox titles** use the target's display value: `useForDisplay: true` on the BO's name field.
 - **Step help text:** definition related actions → Business Process → **Maintain Help Text** → step → Edit Step Help Text. The cell is a plain textarea plus a **Format Text** button that opens a rich-text editor (bold, italic, underline, colour, bulleted list, link; no numbered list). A consistent format works well: bold "Step N of M: <name>" title, one-line purpose, a bold "Check"/"How to" bulleted list, then a bold "Next:" or "Outcome:" line.
 - **Completion notification:** definition related actions → Business Process → **Add Notification** → Trigger on Status = Completed, Recipients = Initiator. Completed fires on the approve path only. Remove any empty Email Addresses row before OK.
+
+- **Event comments:** `GET businessProcess/v1/events/<id>/comments` returns `{ "data": [ { "person": {id, descriptor}, "comment": "...", "commentDate": "..." } ] }` (confirmed live 2026-10-31). A Deny or Cancel comment shows up here, so a BP-triggered orchestration can copy it into the record (e.g. Denial Reason).
 
 ## Security and ISU writes
 
@@ -2423,3 +2441,5 @@ A typical pipeline: on push to `main`, run static checks, log in, upload to App 
 - Rich-text editors (ProseMirror) ignore scripted selection and key events. Clear the underlying textarea first, then dispatch a synthetic `paste` ClipboardEvent with `text/html` on `.ProseMirror`; formatting is kept.
 - Find an org with the search prefix `org: <name>`, a BP definition with `bp: <name>`.
 - Changes to security policies and permission grants are for the person to make, not the assistant.
+- An Extend app page opens at `https://<tenant host>/<tenant>/d/wday/app/<appId>/<appId>/<taskId>.htmld?param=value`, e.g. `.../errorPage.htmld?errorCode=404`. A `#/task` hash on the app root doesn't navigate.
+- A page's text is readable with `document.body.innerText` after ~10 s; cards render lazily, so scroll a card into view before reading it.

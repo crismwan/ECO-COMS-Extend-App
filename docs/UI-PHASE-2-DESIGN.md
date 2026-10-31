@@ -6,6 +6,52 @@ Source: *ECO-COMS UI Recommendations* (PDF, 23 pages, 28 Oct 2026). Every recomm
 
 Platform constraints come from `CLAUDE.md` and `docs/ECO-COMS-NOTES.md`. Anything marked **VERIFY ON developer.workday.com** is syntax or behaviour that neither those files nor the repo settle. Look it up (search bar on developer.workday.com) or ask before building it.
 
+## Build status (2026-10-31, after the product owner's answers)
+
+Built, deployed to ubc_wcpdev2 and checked live in the tenant unless marked otherwise.
+
+| Item | Decision (question) | Status |
+|---|---|---|
+| N1 / N1b row limits | >100 audit records expected (Q14) | **Done.** Audit viewer loads the newest 500 (count + 5 offset pages; the API returns oldest first). Request pages load 300. WQL not needed yet. |
+| N2 dropped banners | | **Done.** Empty states are `text` widgets; activeNote has its own section. |
+| N3 weekday rule | Same rule as patterns (Q4) | **Done**, checked live (Saturday rejected). |
+| N4 orphans | Delete (Q7) | **Done**, plus MyRoleRequestsCard and AdminProvisioningCard (orphaned by landingPage) and the Maintain page. |
+| R1 guides | Wording by the builder (Q10) | **Done, adjusted.** developer.workday.com: guides are hidden until the user clicks the banner's "?" (Start guided tours), and `instanceList` is not a supported guide widget. Text/date guides do render (checked live). Help for instanceLists moved into the form description. |
+| R6 error page | Keep the 2 external links (Q3) | **Done.** |
+| R10 live-org notice | | **Done** (both create pages). |
+| R11 Withdraw | Keep DENY (Q5); requesters may cancel (Q6) | **Done.** The cancel comment becomes Denial Reason. |
+| R12 / R14 Maintain page | Retire it (Q2) | **Done (retired).** |
+| R13 gap: Deny comment | Copy it (Q2) | **Done.** DenyRoleRequest reads `events/{id}/comments`. |
+| R16 / R17 receipts | | **Done**, checked live on the pattern success page. |
+| R19 / R21 home cards + chart | All three numbers, plus a chart (Q1) | **Done.** |
+| R22 grid counts | | **Done** (not on the role-assignment grid: its expression is too heavy to run twice). |
+| R24 / R27 explanations | Builder's wording (Q10) | **Done.** |
+| R25 ISC cards | Overdue = more than 3 business days (Q11) | **Done.** |
+| R26 ISC status filter | | **Done.** |
+| R29a audit presets | Builder's choice (Q13) | **Done:** period (all, 24h, 7d, 30d) × change type. Per-action buttons left out (the donut shows actions). |
+| R29b custom date range | Builder's choice (Q13) | **Not built.** Presets cover normal use; the export plus Excel handles one-off ranges. |
+| R30 audit donut, R31 export | | **Done.** |
+| R33 Admin Provisioning cards | | **Done** (and on My Requests). |
+| R32 FUH page | Leave as is (Q8) | No change. |
+| R35 attachments | See Q9 below | Not built; see "Bulk role assignment by file". |
+| Naming (Q12) | Builder's choice | No new pages were needed. New component ids follow camelCase + type suffix; new scripts and cards follow the existing names. |
+
+### Bulk role assignment by file (Q9)
+
+The idea: download the role assignments a person may change, edit the file, upload it, and the app adds or removes positions, like an EIB.
+
+It's feasible, with limits:
+
+- **Download:** the Manage Role Assignments grid can get `excelExportEnabled`, or a report on the role assignments. That part is small.
+- **Upload:** a `fileUploader` on an edit page stores the file in an attachment business object (5 per app limit; 10 MB per file; `.xlsx` isn't in the default allowed types).
+- **Processing:** an **asynchronous** orchestration (a page-launched synchronous one stops after 25 seconds) reads the file with `asCSV()`, checks each row (role and organization exist, position exists, the person may change that role, ADD/REMOVE only), calls Assign_Roles per row, and writes one audit record per change. There is **no Excel parser** in orchestrations, so the upload must be **CSV**: people export to Excel, edit, then save as CSV.
+- **Feedback:** a status business object (one row per upload: counts, errors) that the page polls, plus a results file or grid listing rejected rows.
+- **Risk:** a bulk change to security roles. It needs a dry-run mode (validate only, show what would change) and should probably require the ISC approval step before it applies.
+
+Effort: large (about 1–2 weeks with testing). Recommend a short design review first: who may use it, whether ISC must approve a batch, and the file format.
+
+---
+
 ## Summary
 
 Status key: **Done**, **Partly** (partly done), **Not done**, **Won't do** (conflicts with a platform limit or overtaken by the BP design), **New** (a problem found during this review that the PDF doesn't mention).

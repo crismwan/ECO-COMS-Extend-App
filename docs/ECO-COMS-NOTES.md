@@ -310,11 +310,30 @@ ACTION: run 'wdcli app deploy ...' locally, log in, update WD_DEV_TOKEN secret
 - **Orchestration Builder "Open Current Source Code"** (orchestration Settings page) shows the JSON without saving to App Hub — easier than Save + View Source. A stale App Builder session can be reset with ⋮ → Revert to App Hub.
 - Browser pane tips: narrow window → Workday prompts open as full-screen pickers. Use resize_window 1600x1000 for BP grids. Related-action menus need hover to open sub-menus. Date fields need per-key input (`key "1 0 3 0 2 0 2 6"`).
 
-## Open items (2026-10-30, Workday down overnight)
+## Open items (updated 2026-10-31)
 
-- `DenyRoleRequest` did not run for test request `X:ADM:ROLE:TESTROLECIRUN22` after its review was cancelled (no failed runs in Orchestration Activity, simply no launch). The run-20 cancel worked. Check the event's Orchestrations tab (Find Events) and the BP's Configure Orchestrations after the deploy that changed the orchestration.
-- Two real pending requests (`X:ADM:KEYCLOAK:ANY:ROLE:COORDINATOR` and the AAA request) were saved before the Enabled For fix and hold a WID (`b40d8b01636710017a4c968020320000`) as their Enabled For text. The smoke check Requests.pendingEnabledFor fails on them until they're corrected or closed (user decision pending).
-- Branch `isu-writes` (ISU page writes) is unmerged; its static check now lives in the isu suite of `test/run-tests.js`. When merging, drop its edits to the deleted `test/static_checks.py` / `test/e2e.js`.
+- `DenyRoleRequest` did not run once (TESTROLECIRUN22, 2026-10-30); it has run every time since. Keep an eye on it after deploys that change it.
+- The two older pending requests (KEYCLOAK COORDINATOR and the AAA request) were corrected on 2026-10-31 with `node test/run-tests.js repair --apply`: Enabled For now reads "Faculty of Medicine" (FUH), with the WID in `enabledForWid` / `functionalUnitHierarchyWid`.
+- **P-00001 is still assigned to X:BPMS(ODMT):ROLE:ADVISORS** (left by an early test run). Removing it through AssignRolePositions is refused by the API gateway (HTML 403) for that exact combination of values; see CLAUDE.md "Orchestrations — debugging". Remove it by hand: Manage Role Assignments in ECO-COMS (may hit the same 403), or Workday's Assign Roles task.
+- Branch `isu-writes` (ISU page writes) is unmerged; its static check lives in the isu suite of `test/run-tests.js`.
+- The stray org "COMS Application:PATTERN:TEST:TEST:302:152:2026W1" is still active (hidden in the app).
+
+## UI phase 2 (built 2026-10-31)
+
+Design: `docs/UI-PHASE-2-DESIGN.md` (with the product owner's answers). Built and checked live in the tenant:
+
+- **Home (hubLanding):** count cards (pending + overdue requests, active shell orgs, audit changes in the last 24 hours) and the Shell Org Overview donut. The nav cards PendingIscCard, ShellOrgCard and AuditLogCard take a `countText` parameter.
+- **ISC queue (iscRoleRequestsView):** `?status=` filter buttons (Pending default, Approved, Denied, All) combined with `?view=`; Pending / Overdue / Approved this month cards (`CountCard`); "· overdue" on rows pending more than 3 business days. Logic in `scripts/comsRequestStats.script`.
+- **Audit Log Viewer:** `?period=` (all, 24h, 7d, 30d) and `?changeType=` buttons, a "Showing N of M" line, the AuditActionChart donut, Excel export. Loads the newest 500 records (count + 5 offset pages). Logic in `scripts/comsAuditFilters.script`; periods compare timestamp text with the hours/days in the period (no date parsing).
+- **Request pages** read up to 300 requests (count + 3 offset pages); the collection API returns oldest first.
+- **Request summary cards** on adminProvisioningView and assignableRoleManagerView; a **Review Process** link column replaces the old Maintain buttons.
+- **Legacy Maintain page retired** (assignableRoleManagerMaintain page, AMD task and model task deleted). Every pending request has a review event (smoke check Requests.pendingHaveEvent).
+- **DenyRoleRequest** copies the review event's comment (`GET events/{id}/comments` → `$.data[0].comment`) into the request's `denialReason` and the DENY audit details.
+- **New Shell Org:** weekday + this-year-or-next check (comsValidations), "Before you submit" live-org notice (also on New Pattern). Success pages show a receipt card from the user's newest ADD audit record.
+- Shell Org Manager: About-this-tab notes, row counts in grid labels, empty-state messages that render (text widgets), unused include removed.
+- Error page: clearer 403 text, extra links on 404.
+- Orphans deleted: landingPage, iscErrorPage, AppContextCard, StatusGuideCard, QuickLinksCard, MyRoleRequestsCard, AdminProvisioningCard, comsCardGenerator.script.
+- AssignRolePositions: a Continue on Conditions step `CheckMode` (mode ADD/REMOVE; roleId, orgId, positionId required).
 
 ## DENY audit names the actor (2026-10-31)
 

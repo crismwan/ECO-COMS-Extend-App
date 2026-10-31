@@ -18,7 +18,7 @@ Part 1 is for requesters. Part 2 is for ISC reviewers and approvers.
 
 Open the app from Workday. The **ECO-COMS** hub opens on the **RBAC Hub** page. The left pane has:
 
-- **RBAC Hub**: the main page, with three sections:
+- **RBAC Hub**: the main page. At the top, four cards: **Pending ISC Requests** (how many are pending and how many are overdue), **Shell Org Manager** (active shell organizations), **Audit Log** (changes in the last 24 hours) and the **Shell Org Overview** donut (active vs inactive). Each card's link opens that area. Below the cards are three sections:
   - **Shell Organizations**: **Add Shell Org**, **Add Pattern**, **Open Manager** (Shell Org Manager)
   - **Assignable Roles**: **Submit New Request**, **View Requests**
   - **Administration**: **Submit AAA Role**, **View Pending ISC Requests**, **View Audit Log**
@@ -32,6 +32,8 @@ Most pages have a **← Home** link at the top. What you see depends on your sec
 **Open Manager** opens **ECO-COMS: Shell Org Manager**. Its sections:
 
 - **Summary**: counts of **Active Orgs**, **Inactive Orgs** and **Total Patterns**, plus **Quick Actions** to add an org or a pattern.
+Each tab after Summary starts with an **About this tab** note, and each grid's title shows how many rows it has.
+
 - **Application Patterns**: the **Applications** grid. Click **Manage** on an application to see only its patterns and orgs; **← Back to Applications** returns to the full view. The **Shell Org Patterns** grid shows each pattern's name, code and status, with an **Inactivate** / **Activate** button.
 - **Application Shell Organizations**: every shell org with its status and a **Manage** button.
 - **Manage Role Assignments**: one row per role on one shell org, with its positions and workers, and a **Manage** button.
@@ -44,9 +46,13 @@ Only pattern codes that start with `X:` and contain `:PATTERN:` are listed.
 2. On **Organization Details**:
    1. **Application**: pick the application the org belongs to.
    2. **Organization Code**: enter the suffix only, without spaces or special characters. **Generated Organization Name** shows the full name, `ApplicationCode:OrganizationCode` (for example `X:CLW:ORG:ANY`).
-   3. **Effective Date**: the date the org becomes available. The year must be 2026 or 2027. The field tooltip also asks for a weekday (Monday to Friday). The page itself checks only the year (to confirm whether Workday rejects weekend dates).
+   3. **Effective Date**: the date the org becomes available: a weekday (Monday to Friday) in this year or next year. A weekend or another year shows an error as soon as you leave the field, and again on **Next**.
 3. Click **Next**, check the **Review & Submit** summary, then click **OK**.
-4. ECO-COMS creates the org in Workday and checks that it now exists. If it does, **Shell Organization Created** opens with **Add Another Organization** and **View in Shell Org Manager**.
+4. ECO-COMS creates the org in Workday and checks that it now exists. If it does, **Shell Organization Created** opens with a receipt card (organization name, effective date, and when it was created) plus **Add Another Organization** and **View in Shell Org Manager**. The receipt shows the newest organization *you* created.
+
+The **Before you submit** note on the form is a reminder that the organization is live straight away and can only be inactivated afterwards, not deleted.
+
+**Field help:** click the **?** in the page banner ("Start guided tours") to show a **?** beside the fields that have help, then click a field's **?** to read it.
 
 The page stops you if the code already exists ("An organization with this code already exists: ...") or if Workday refused the request (see [Troubleshooting](#troubleshooting)).
 
@@ -141,7 +147,7 @@ The form has no Delegated Roles field. Delegated Roles appears only as a column 
 
 ECO-COMS cancels the request's ISC review in Workday. Within a few minutes the request shows **✗ Denied** and a DENY record appears in the audit log. A withdrawn review can't be restarted; submit a new request if you still need the role. An older request that never started a review is deleted instead, with a DELETE audit record.
 
-Cancelling a review needs the **Cancel** permission on the business process. If OK fails with a permission error, ask the app admin to add requesters (or the Initiator) to Cancel on the business process policy (to confirm before go-live).
+Cancelling a review needs the **Cancel** permission on the business process; the Initiator has it, so requesters can withdraw their own requests. The withdrawal comment is copied into the request's **Denial Reason**, and the DENY audit record names you.
 
 ### After you submit: the ISC review
 
@@ -164,11 +170,17 @@ Outcomes:
 
 **View Audit Log** on the RBAC Hub opens **ECO-COMS: Audit Log Viewer**: one row per change made through ECO-COMS, newest first. A row is written only when Workday accepts the change.
 
+- **Time period** buttons: **All time**, **Last 24 hours**, **Last 7 days**, **Last 30 days**.
+- **Change type** buttons: **All types**, **Shell Org**, **Pattern**, **Org Status**, **Role Assignment**, **Assignable Role**. The two filters combine: picking a type keeps the period, and the other way round.
+- **Showing** says how many records match, out of the total, and which filters are on.
+- **Changes by action**: a donut of the matching records by action.
+- The page loads the newest 500 records. If there are more, **Showing** says so; use the **All Audit Logs** report for older history.
+
 - Columns: **Timestamp**, **Change Type**, **Action**, **Organization**, **Role**, **Position**, **Effective Date**, **Changed By**, **Details**.
 - **Change Type**: Shell Org, Shell Org Pattern, Org Status, Role Assignment, Assignable Role.
 - **Action**: ADD, INACTIVATE, REACTIVATE, ASSIGN POSITION, REMOVE POSITION, REQUEST, APPROVE, DENY, DELETE.
 - Organizations, roles and positions that exist in Workday are links: hover for related actions. A role that doesn't exist in Workday yet is plain text.
-- Use the grid's export action to download a CSV for compliance reporting.
+- Use the grid's export icon to download the rows currently shown (after filtering) to Excel.
 
 You need the **View: COMS Audit Log** domain to open this page.
 
@@ -179,7 +191,11 @@ You need the **View: COMS Audit Log** domain to open this page.
 ### Where review work appears
 
 - **Your Workday inbox.** Each step arrives as an inbox item named "Review COMS Assignable Role Request: <role name>". The step help text explains what to check.
-- **ECO-COMS → View Pending ISC Requests** (needs **Maintain: COMS Assignable Roles**). Choose **View All Pending Requests**, **Pending AAA Provisioning** or **Pending Assignable Roles**. Each row with a review shows a **Review Process: <role>** link; hover it for the event's related actions. Rows without a review event show **Maintain** (the older approve/deny page; to confirm whether it is still in use).
+- **ECO-COMS → View Pending ISC Requests** (needs **Maintain: COMS Assignable Roles**). Choose **View All Pending Requests**, **Pending AAA Provisioning** or **Pending Assignable Roles**.
+  - Three cards at the top: **Pending**, **Overdue** (pending for more than 3 business days) and **Approved this month**.
+  - **Show** buttons: **Pending** (the default), **Approved**, **Denied**, **All**. **Showing** says how many requests match.
+  - Overdue rows show "· overdue" next to their status.
+  - Each row has a **Review Process: <role>** link; hover it for the event's related actions. Every request is approved or denied through its review process; the old **Maintain** page has been retired.
 
 ### The five steps, in order
 
@@ -204,7 +220,7 @@ Each ECO-COMS step page shows a "Step N of 5" banner.
 
 - **Deny** is on the approval step (step 2) while it is awaiting action. It needs the Deny permission on the business process policy; if you don't see it, ask the app admin.
 - **Cancel** is on the event (find it with Find Events, or through the **Review Process** link → related actions). Use it when the approval has already completed or the request should be withdrawn at a later step.
-- Both have the same result in ECO-COMS: the request is marked **Denied** and inactive and a DENY audit record is written, usually within 2–3 minutes.
+- Both have the same result in ECO-COMS: the request is marked **Denied** and inactive and a DENY audit record is written, usually within 2–3 minutes. The comment you type when you deny or cancel is copied into the request's **Denial Reason** and the audit record, and the audit record names you as Changed By. Type a short reason so the requester knows why.
 
 ### Self-approval is blocked
 
