@@ -33,13 +33,6 @@
       }
     },
     {
-      "id": "landingPage",
-      "routingPattern": "/landingPage",
-      "page": {
-        "id": "landingPage"
-      }
-    },
-    {
       "id": "adminProvisioning",
       "routingPattern": "/adminProvisioning",
       "page": {
@@ -86,20 +79,6 @@
       "routingPattern": "/newShellOrgPatternSuccess",
       "page": {
         "id": "newShellOrgPatternSuccess"
-      }
-    },
-    {
-      "id": "assignableRoleManagerMaintain",
-      "routingPattern": "/assignableRoleManagerMaintain",
-      "page": {
-        "id": "assignableRoleManagerMaintain"
-      }
-    },
-    {
-      "id": "iscErrorPage",
-      "routingPattern": "/iscErrorPage",
-      "page": {
-        "id": "iscErrorPage"
       }
     },
     {

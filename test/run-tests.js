@@ -227,6 +227,53 @@ function staticSuite() {
     }
   }
 
+  // 7b. Business-object collections return 20 rows unless a limit is given (REST default).
+  for (const [f, d] of Object.entries(pmds)) {
+    for (const e of d.endPoints || []) {
+      if (e.baseUrlType === 'BUSINESS-OBJECT' && e.isCollection && !/limit=/.test(String(e.url || ''))) err('restLimit', `${path.basename(f)}: '${e.name}' reads a collection without limit= (only 20 rows come back)`);
+    }
+  }
+  // 7c. Only the first richText in a fieldSet renders; the rest are silently dropped.
+  for (const [f, d] of Object.entries(pmds)) {
+    walk(d, (node) => {
+      if (node.type === 'fieldSet' && (node.children || []).filter((c) => c && c.type === 'richText').length > 1) err('richTextPair', `${path.basename(f)}: fieldSet '${node.id || '?'}' has more than one richText; only the first renders`);
+    });
+  }
+  // 7d. Script modules: included files exist, and a page that calls a module includes it.
+  const scriptNames = listFiles('presentation/scripts').filter((x) => x.endsWith('.script')).map((x) => path.basename(x, '.script'));
+  const usedScripts = new Set();
+  for (const [f, d] of Object.entries(pmds)) {
+    const inc = (d.include || []).map((x) => x.replace(/\.script$/, ''));
+    inc.forEach((x) => usedScripts.add(x));
+    for (const x of inc) if (!scriptNames.includes(x)) err('include', `${path.basename(f)}: includes ${x}.script, which doesn't exist`);
+    const text = JSON.stringify(Object.fromEntries(Object.entries(d).filter(([k]) => k !== 'include')));
+    for (const m of scriptNames) if (new RegExp(`\\b${m}\\.`).test(text) && !inc.includes(m)) err('include', `${path.basename(f)}: calls ${m}.… but doesn't include ${m}.script`);
+  }
+  for (const m of scriptNames) if (!usedScripts.has(m)) warn('Static.orphan', `presentation/scripts/${m}.script is not included by any page`);
+  // 7e. Cards: every cardId exists, and every card is used somewhere (orphans are upload weight).
+  const cardIds = new Set(Object.values(cards).map((c) => c.id));
+  const usedCards = new Set();
+  for (const [f, d] of Object.entries(pmds)) {
+    walk(d, (node) => {
+      if (typeof node.cardId === 'string' && !node.cardId.includes('<%')) {
+        usedCards.add(node.cardId);
+        if (!cardIds.has(node.cardId)) err('cardRef', `${path.basename(f)}: cardId '${node.cardId}' has no .card file`);
+      }
+    });
+  }
+  for (const c of cardIds) if (!usedCards.has(c)) warn('Static.orphan', `card ${c} is not used by any page`);
+  // 7f. AMD tasks nothing points at (pages count toward the 75-page limit). BP step pages are
+  // reached by route, error pages through the SMD.
+  const smd = (() => { try { return JSON.parse(fs.readFileSync(path.join(ROOT, AMD_PATH.replace('.amd', '.smd')), 'utf8')); } catch (_) { return {}; } })();
+  const reached = new Set(refs.map(([, t]) => t));
+  for (const c of smd.errorPageConfigurations || []) reached.add(c.page?.id);
+  const bpRoutes = new Set();
+  for (const f of listFiles('model').filter((x) => x.endsWith('.businessprocess'))) walk(docs[f] || {}, (n) => { if (typeof n.pageRoute === 'string') bpRoutes.add(n.pageRoute); });
+  for (const [tid, t] of Object.entries(tasks)) {
+    if (tid === 'home' || reached.has(tid) || reached.has(t.page?.id) || bpRoutes.has(t.routingPattern)) continue;
+    warn('Static.orphan', `AMD task '${tid}' is not referenced by any page, card, flow or business process`);
+  }
+
   // 8. No forbidden test text in anything shipped to the tenant (CLAUDE.md "Test data in the tenant")
   const forbidden = new RegExp(['cl', 'aude'].join(''), 'i');
   for (const f of [...listFiles('presentation', true), ...listFiles('model'), ...listFiles('orchestration')]) {
@@ -385,7 +432,10 @@ async function smoke(token, me) {
       const overlap = p2.filter((a) => audits.some((b) => b.id === a.id)).length;
       page2 = `; offset=100 gave ${p2.length} rows, ${overlap} repeated from the first page`;
     }
-    const msg = `${total} audit records in total; the API returns them ${order}${page2}`;
+    // The viewer asks for offset=total when a page has nothing left to load: that must come back empty.
+    const past = ((await request('GET', `${BO}/comsAuditLogs?limit=1&offset=${total}`, token)).data || []).length;
+    if (past) throw new Error(`offset=${total} (past the end) returned ${past} row(s); the Audit Log Viewer would show a duplicate`);
+    const msg = `${total} audit records in total; the API returns them ${order}${page2}; offset past the end is empty`;
     if (total > 500) warn('Audit.volume', `${msg}. The Audit Log Viewer loads 500 rows`); else pass('Audit.volume', msg);
   });
   await test('Audit.vocabulary', async () => {

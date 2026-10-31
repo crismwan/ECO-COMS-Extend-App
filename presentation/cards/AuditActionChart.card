@@ -1,0 +1,37 @@
+{
+  "id": "AuditActionChart",
+  "parameters": [
+    "addCount",
+    "inactivateCount",
+    "reactivateCount",
+    "assignCount",
+    "removeCount",
+    "requestCount",
+    "approveCount",
+    "denyCount",
+    "deleteCount",
+    "totalText"
+  ],
+  "header": {
+    "title": "Changes by action",
+    "subtitle": "<% totalText ?? \"\" %>"
+  },
+  "body": {
+    "type": "chartCard",
+    "chart": {
+      "type": "donutChart2",
+      "data": "<% [{\"action\": \"Add\", \"count\": addCount ?? 0}, {\"action\": \"Inactivate\", \"count\": inactivateCount ?? 0}, {\"action\": \"Reactivate\", \"count\": reactivateCount ?? 0}, {\"action\": \"Assign position\", \"count\": assignCount ?? 0}, {\"action\": \"Remove position\", \"count\": removeCount ?? 0}, {\"action\": \"Request\", \"count\": requestCount ?? 0}, {\"action\": \"Approve\", \"count\": approveCount ?? 0}, {\"action\": \"Deny\", \"count\": denyCount ?? 0}, {\"action\": \"Delete\", \"count\": deleteCount ?? 0}] %>",
+      "dataVariableName": "slice",
+      "sliceSizeDataSet": {
+        "name": "Count",
+        "value": "<% slice[\"count\"] %>"
+      },
+      "sliceColorDataSet": {
+        "name": "Action",
+        "value": "<% slice[\"action\"] %>"
+      },
+      "showPercentLabels": true,
+      "animateOnLoad": true
+    }
+  }
+}

@@ -34,7 +34,7 @@
                   "enabled": false,
                   "visible": "<% queryParams.errorCode == '403' %>",
                   "label": "⚠ Error 403 — Permission Denied",
-                  "value": "You don't have permission to manage this application's shell organizations. COMS access is scoped per application. Contact your COMS Administrator to request access."
+                  "value": "You don't have permission for this page. ECO-COMS access is granted per area (shell organizations, role requests, ISC review, audit log) through Workday security groups. If you need access, raise a ticket from the ECO-COMS home page: Resources → Submit a Helpdesk Ticket, and name the page you were opening."
                 },
                 {
                   "type": "text",
@@ -42,7 +42,7 @@
                   "enabled": false,
                   "visible": "<% queryParams.errorCode == '404' %>",
                   "label": "⚠ Error 404 — Page Not Found",
-                  "value": "We couldn't find the page you're looking for. It may have been moved or the link may be incorrect."
+                  "value": "We couldn't find the page you're looking for. It may have been moved or the link may be incorrect. Try one of the pages below."
                 },
                 {
                   "type": "text",
@@ -77,6 +77,46 @@
                 "taskId": "shellOrgManager"
               },
               "action": "LINK"
+            },
+            {
+              "type": "button",
+              "id": "auditLogButton",
+              "label": "Audit Log",
+              "taskReference": {
+                "taskId": "auditLogViewer"
+              },
+              "action": "LINK",
+              "visible": "<% queryParams.errorCode == '404' %>"
+            },
+            {
+              "type": "button",
+              "id": "iscRequestsButton",
+              "label": "ISC Role Requests",
+              "taskReference": {
+                "taskId": "iscRoleRequestsHub"
+              },
+              "action": "LINK",
+              "visible": "<% queryParams.errorCode == '404' %>"
+            },
+            {
+              "type": "button",
+              "id": "roleRequestsButton",
+              "label": "My Assignable Role Requests",
+              "taskReference": {
+                "taskId": "assignableRoleManagerView"
+              },
+              "action": "LINK",
+              "visible": "<% queryParams.errorCode == '404' %>"
+            },
+            {
+              "type": "button",
+              "id": "aaaRequestsButton",
+              "label": "AAA Role Requests",
+              "taskReference": {
+                "taskId": "adminProvisioningView"
+              },
+              "action": "LINK",
+              "visible": "<% queryParams.errorCode == '404' %>"
             }
           ]
         }

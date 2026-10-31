@@ -476,26 +476,7 @@
                       "cellTemplate": {
                         "type": "section",
                         "horizontal": true,
-                        "children": [
-                          {
-                            "type": "section",
-                            "horizontal": false,
-                            "children": [
-                              {
-                                "type": "button",
-                                "action": "AUXILIARY",
-                                "label": "Maintain",
-                                "taskReference": {
-                                  "taskId": "assignableRoleManagerMaintain",
-                                  "parameterBindings": {
-                                    "roleId": "<% role.id %>",
-                                    "roleName": "<% role.roleName %>"
-                                  }
-                                }
-                              }
-                            ]
-                          }
-                        ]
+                        "children": []
                       }
                     }
                   ]

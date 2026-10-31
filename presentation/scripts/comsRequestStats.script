@@ -1,0 +1,81 @@
+/* Request queue helpers for the ISC and request pages: view and status filters, and the summary counts. */
+/* Pure functions: no widget access. Dates are compared as yyyy-MM-dd strings (UTC). */
+
+var isAaa = function(r) {
+  (r.roleName ?? '').startsWith('Organizations and Roles Assignment Administrator');
+};
+
+/* view: '' (all), 'aaa' or 'assignable' */
+var inView = function(r, view) {
+  empty(view) ? true : (view == 'aaa' ? isAaa(r) : !isAaa(r));
+};
+
+/* status: '' means the default (Pending ISC Review); 'All' matches every status */
+var statusOrDefault = function(status) {
+  empty(status) ? 'Pending ISC Review' : status;
+};
+
+var matchesStatus = function(r, status) {
+  statusOrDefault(status) == 'All' ? true : r.status == statusOrDefault(status);
+};
+
+var filterRequests = function(list, view, status) {
+  list.filter(r => { inView(r, view) && matchesStatus(r, status) });
+};
+
+var isWeekday = function(d) {
+  let day = d.format('E');
+  day != 'Sat' && day != 'Sun';
+};
+
+/* Dates (yyyy-MM-dd) from today back to the date that is `businessDays` weekdays ago, inclusive. */
+var recentDates = function(businessDays) {
+  let days = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].map(n => { date:now().minusDays(n) });
+  let weekdays = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].filter(n => { isWeekday(days[n]) });
+  days.subList(0, weekdays[businessDays - 1] + 1).map(d => { d.format('yyyy-MM-dd') });
+};
+
+/* Pending for more than `businessDays` business days. */
+var isOverdueAfter = function(r, recent) {
+  r.status == 'Pending ISC Review' && !empty(r.requestedDate) && !recent.contains(('' + r.requestedDate).substring(0, 10));
+};
+
+/* The ISC target: a pending request is overdue after 3 business days. */
+var overdueBusinessDays = function() {
+  3;
+};
+
+var isOverdue = function(r) {
+  isOverdueAfter(r, recentDates(overdueBusinessDays()));
+};
+
+var countPending = function(list) {
+  list.filter(r => { r.status == 'Pending ISC Review' }).size();
+};
+
+var countOverdue = function(list) {
+  let recent = recentDates(overdueBusinessDays());
+  list.filter(r => { isOverdueAfter(r, recent) }).size();
+};
+
+var countApprovedThisMonth = function(list) {
+  let month = date:now().format('yyyy-MM');
+  list.filter(r => { r.status == 'Approved' && ('' + (r.approvedDate ?? '')).startsWith(month) }).size();
+};
+
+var countStatus = function(list, status) {
+  list.filter(r => { r.status == status }).size();
+};
+
+{
+  "isAaa": isAaa,
+  "inView": inView,
+  "statusOrDefault": statusOrDefault,
+  "filterRequests": filterRequests,
+  "isOverdue": isOverdue,
+  "overdueBusinessDays": overdueBusinessDays,
+  "countPending": countPending,
+  "countOverdue": countOverdue,
+  "countApprovedThisMonth": countApprovedThisMonth,
+  "countStatus": countStatus
+}

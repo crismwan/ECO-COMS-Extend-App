@@ -1,5 +1,8 @@
 {
   "id": "ShellOrgCard",
+  "parameters": [
+    "countText"
+  ],
   "header": {
     "title": "Shell Org Manager",
     "subtitle": "View and manage shell org patterns for your assigned application.",
@@ -7,7 +10,7 @@
   },
   "body": {
     "type": "simpleCard",
-    "value": "SHELL ORGANIZATIONS"
+    "value": "<% countText ?? \"SHELL ORGANIZATIONS\" %>"
   },
   "footer": [
     {

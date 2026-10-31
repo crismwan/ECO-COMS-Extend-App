@@ -1,0 +1,17 @@
+{
+  "id": "CountCard",
+  "parameters": [
+    "title",
+    "countText",
+    "subtitle"
+  ],
+  "header": {
+    "title": "<% title ?? \"\" %>",
+    "subtitle": "<% subtitle ?? \"\" %>",
+    "icon": "wd-accent-clipboard-checklist"
+  },
+  "body": {
+    "type": "simpleCard",
+    "value": "<% countText ?? \"\" %>"
+  }
+}

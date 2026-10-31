@@ -1,0 +1,39 @@
+/* Audit log helpers: time-period and change-type filters, and counts per action. */
+/* Pure functions: no widget access. Timestamps are stored as yyyy-MM-ddTHH:mm:ssZ (UTC) and */
+/* compared as text against the hours or days in the period, so no date parsing is needed. */
+
+var hourKeys = function() {
+  [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24].map(h => { date:now().minusHours(h).format('yyyy-MM-dd HH') });
+};
+
+var dayKeys = function(days) {
+  [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29].subList(0, days).map(n => { date:now().minusDays(n).format('yyyy-MM-dd') });
+};
+
+var periodKeys = function(period) {
+  period == '24h' ? hourKeys() : (period == '7d' ? dayKeys(7) : (period == '30d' ? dayKeys(30) : []));
+};
+
+var inPeriod = function(e, period, keys) {
+  (empty(period) || period == 'all') ? true :
+    (period == '24h' ? keys.contains(('' + (e.timestamp ?? '')).substring(0, 13).replace('T', ' ')) : keys.contains(('' + (e.timestamp ?? '')).substring(0, 10)));
+};
+
+var filterLogs = function(logs, period, changeType) {
+  let keys = periodKeys(period ?? '');
+  logs.filter(e => { (empty(e.timestamp) ? empty(period) || period == 'all' : inPeriod(e, period, keys)) && (empty(changeType) || e.objectType == changeType) });
+};
+
+var periodLabel = function(period) {
+  period == '24h' ? 'last 24 hours' : (period == '7d' ? 'last 7 days' : (period == '30d' ? 'last 30 days' : 'all time'));
+};
+
+var countAction = function(logs, action) {
+  logs.filter(e => { e.action == action }).size();
+};
+
+{
+  "filterLogs": filterLogs,
+  "periodLabel": periodLabel,
+  "countAction": countAction
+}

@@ -1,5 +1,53 @@
 {
   "id": "newShellOrgPatternSuccess",
+  "endPoints": [
+    {
+      "name": "selectedWorker",
+      "baseUrlType": "COMMON",
+      "url": "/workers/me",
+      "authType": "sso",
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 403
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "name": "auditLogCount",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "url": "/comsAuditLogs?limit=1",
+      "authType": "sso",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 429
+        }
+      ],
+      "bestEffort": "true"
+    },
+    {
+      "name": "auditPage0",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "url": "<% let t = auditLogCount.total ?? 0; let start = (t - 100) < 0 ? 0 : (t - 100); let cnt = t - 0 - start; '/comsAuditLogs?limit=' + (cnt > 0 ? cnt : 1) + '&offset=' + (cnt > 0 ? start : t) %>",
+      "authType": "sso",
+      "isCollection": true,
+      "failOnStatusCodes": [
+        {
+          "code": 429
+        }
+      ],
+      "bestEffort": "true"
+    }
+  ],
   "presentation": {
     "headerSize": "STANDARD",
     "title": {
@@ -30,6 +78,24 @@
                   "id": "patternHint",
                   "label": " ",
                   "value": "The Shell Org Pattern has been submitted to Workday via the orchestration. Check Shell Org Manager for the new pattern."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "receiptCardSection",
+          "children": [
+            {
+              "type": "cardContainer",
+              "id": "receiptCardContainer",
+              "cards": [
+                {
+                  "type": "card",
+                  "cardId": "ShellOrgPatternReceiptCard",
+                  "render": "<% size(list:sort((auditPage0.data ?? []).filter(a => { a.objectType == 'Shell Org Pattern' && a.action == 'ADD' && (a.changedByWid ?? '') == (selectedWorker.id ?? '') }), 'timestamp', false)) > 0 %>",
+                  "parameters": "<% let mine = list:sort((auditPage0.data ?? []).filter(a => { a.objectType == 'Shell Org Pattern' && a.action == 'ADD' && (a.changedByWid ?? '') == (selectedWorker.id ?? '') }), 'timestamp', false); { 'patternName': size(mine) > 0 ? ((mine[0].coName ?? '') + ' | Effective ' + (mine[0].effectiveDate ?? '') + ' | Created ' + (mine[0].timestamp ?? '').replace('T', ' ').replace('Z', '') + ' UTC') : '' } %>"
                 }
               ]
             }

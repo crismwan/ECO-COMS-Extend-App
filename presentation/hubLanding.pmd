@@ -3,7 +3,74 @@
   "securityDomains": [
     "ManageCOMSShellOrgs"
   ],
-  "endPoints": [],
+  "include": [
+    "comsRequestStats.script",
+    "comsAuditFilters.script"
+  ],
+  "endPoints": [
+    {
+      "name": "pendingRequests",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "url": "/comsAssignableRoles?limit=100",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "name": "allShellOrgs",
+      "baseUrlType": "workday-wql",
+      "url": "data",
+      "authType": "sso",
+      "bestEffort": "true",
+      "wqlQuery": {
+        "queryId": "allShellOrgs"
+      },
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "name": "auditLogCount",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "url": "/comsAuditLogs?limit=1",
+      "authType": "sso",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 429
+        }
+      ],
+      "bestEffort": "true"
+    },
+    {
+      "name": "auditPage0",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "url": "<% let t = auditLogCount.total ?? 0; let start = (t - 100) < 0 ? 0 : (t - 100); let cnt = t - 0 - start; '/comsAuditLogs?limit=' + (cnt > 0 ? cnt : 1) + '&offset=' + (cnt > 0 ? start : t) %>",
+      "authType": "sso",
+      "isCollection": true,
+      "failOnStatusCodes": [
+        {
+          "code": 429
+        }
+      ],
+      "bestEffort": "true"
+    }
+  ],
   "presentation": {
     "headerSize": "STANDARD",
     "title": {
@@ -14,6 +81,39 @@
       "type": "basicFormLayout",
       "id": "hubLandingForm",
       "sections": [
+        {
+          "type": "layoutSection",
+          "id": "dashboardSection",
+          "children": [
+            {
+              "type": "cardContainer",
+              "id": "dashboardCardContainer",
+              "layout": "grid",
+              "cards": [
+                {
+                  "type": "card",
+                  "cardId": "PendingIscCard",
+                  "parameters": "<% { 'countText': '' + comsRequestStats.countPending(pendingRequests.data ?? []) + ' pending · ' + comsRequestStats.countOverdue(pendingRequests.data ?? []) + ' overdue' } %>"
+                },
+                {
+                  "type": "card",
+                  "cardId": "ShellOrgCard",
+                  "parameters": "<% { 'countText': '' + size((allShellOrgs.data ?? []).filter(o => { (o.code ?? '').startsWith('X:') && !(o.code ?? '').contains(':PATTERN') && o.cf_active1 == true })) + ' active shell organizations' } %>"
+                },
+                {
+                  "type": "card",
+                  "cardId": "AuditLogCard",
+                  "parameters": "<% { 'countText': '' + size(comsAuditFilters.filterLogs(auditPage0.data ?? [], '24h', '')) + ' changes in the last 24 hours' } %>"
+                },
+                {
+                  "type": "card",
+                  "cardId": "ShellOrgStatusChart",
+                  "parameters": "<% { 'activeCount': size((allShellOrgs.data ?? []).filter(o => { (o.code ?? '').startsWith('X:') && !(o.code ?? '').contains(':PATTERN') && o.cf_active1 == true })), 'inactiveCount': size((allShellOrgs.data ?? []).filter(o => { (o.code ?? '').startsWith('X:') && !(o.code ?? '').contains(':PATTERN') && o.cf_active1 != true })), 'totalPatterns': size((allShellOrgs.data ?? []).filter(o => { (o.code ?? '').contains(':PATTERN') })) } %>"
+                }
+              ]
+            }
+          ]
+        },
         {
           "type": "layoutSection",
           "id": "shellOrgSection",

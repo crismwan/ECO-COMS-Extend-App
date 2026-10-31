@@ -1,5 +1,8 @@
 {
   "id": "AuditLogCard",
+  "parameters": [
+    "countText"
+  ],
   "header": {
     "title": "Audit Log",
     "subtitle": "Review the history of all ECO-COMS changes, actions, and events.",
@@ -7,7 +10,7 @@
   },
   "body": {
     "type": "simpleCard",
-    "value": "AUDIT & HISTORY"
+    "value": "<% countText ?? \"AUDIT & HISTORY\" %>"
   },
   "footer": [
     {
