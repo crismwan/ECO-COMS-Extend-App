@@ -860,6 +860,21 @@ async function repair(token, me) {
   const who = () => ({ changedBy: me.descriptor, changedByWid: me.id, timestamp: new Date().toISOString().replace(/\.\d+Z$/, 'Z') });
   const idOf = (v) => String(v && typeof v === 'object' ? v.id : v || '');
 
+  // --probe: harmless launches that tell whether orchestration launches are allowed at all
+  // (a guard-rejected status change with validateOnly, and a review start for a request that doesn't exist).
+  if (argv.includes('--probe')) await test('Repair.probeLaunch', async () => {
+    const out = [];
+    const ts = new Date().toISOString().replace(/\.\d+Z$/, 'Z');
+    for (const [name, params] of [
+      ['ManageShellOrgStatus', { orgId: me.id, action: 'INACTIVATE', orgCode: 'X:ADM:TEST:PROBE', orgName: 'X:ADM:TEST:PROBE', includeInactive: 'true', effectiveDate: today, patternName: 'X:ADM:TEST:PROBE', orgType: 'X:ADM', comsAppId: 'X:ADM', validateOnly: 'true', changedBy: me.descriptor, changedByWid: me.id, timestamp: ts }],
+      ['StartRoleRequestReview', { ref: 'PROBE-NO-SUCH-REQUEST' }],
+      ['AssignRolePositions', { mode: 'PROBE' }],
+    ]) {
+      try { await launch(token, name, params); out.push(`${name}: launched`); } catch (e) { out.push(`${name}: ${e.message.slice(0, 40)}`); }
+    }
+    pass('Repair.probeLaunch', out.join('; '));
+  });
+
   const unassign = arg('--unassign');
   if (unassign) await test('Repair.unassign', async () => {
     const readRole = async () => {

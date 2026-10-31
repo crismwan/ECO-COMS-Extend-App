@@ -48,7 +48,7 @@ jobs:
             static|smoke|full|isu) node test/run-tests.js "${TASK}" ;;
             cleanup-dry-run) node test/run-tests.js cleanup --also "${ALSO}" ;;
             cleanup-apply)   node test/run-tests.js cleanup --apply --also "${ALSO}" ${EFFECTIVE:+--effective "$EFFECTIVE"} ${ONLY:+--only "$ONLY"} ;;
-            repair-dry-run)  node test/run-tests.js repair ${UNASSIGN:+--unassign "$UNASSIGN"} ;;
+            repair-dry-run)  node test/run-tests.js repair --probe ${UNASSIGN:+--unassign "$UNASSIGN"} ;;
             repair-apply)    node test/run-tests.js repair --apply ${UNASSIGN:+--unassign "$UNASSIGN"} ;;
           esac
 
