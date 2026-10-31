@@ -1,0 +1,25 @@
+{
+  "id": "ShellOrgQuickActionsCard",
+  "header": {
+    "title": "Quick actions",
+    "subtitle": "Create in Workday",
+    "icon": "wd-accent-worksheets"
+  },
+  "body": {
+    "type": "pillCard",
+    "pills": [
+      {
+        "label": "Add Shell Org",
+        "taskReference": {
+          "taskId": "createShellOrgWizard"
+        }
+      },
+      {
+        "label": "Add Pattern",
+        "taskReference": {
+          "taskId": "createShellOrgPatternWizard"
+        }
+      }
+    ]
+  }
+}

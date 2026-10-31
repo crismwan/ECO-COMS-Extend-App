@@ -116,3 +116,39 @@ keep.append({"type": "layoutSection", "id": "actionsSection", "children": [{"typ
 home['presentation']['body']['sections'] = keep
 save('hubLanding.pmd', home)
 print('home ok')
+
+# ── Shell Org Manager Summary tab: count cards + quick actions in one row, chart below; counts follow the selected application ──
+qa = {"id": "ShellOrgQuickActionsCard", "header": {"title": "Quick actions", "subtitle": "Create in Workday", "icon": "wd-accent-worksheets"},
+      "body": {"type": "pillCard", "pills": [{"label": "Add Shell Org", "taskReference": {"taskId": "createShellOrgWizard"}},
+                                             {"label": "Add Pattern", "taskReference": {"taskId": "createShellOrgPatternWizard"}}]}}
+open(os.path.join(ROOT, 'cards', 'ShellOrgQuickActionsCard.card'), 'w').write(json.dumps(qa, indent=2, ensure_ascii=False) + '\n')
+PFX = "(empty(queryParams.appCode) ? 'X:' : queryParams.appCode + ':')"
+ORGS = "(allShellOrgs.data ?? []).filter(o => { (o.code ?? '').startsWith(" + PFX + ") && !(o.code ?? '').contains(':PATTERN') })"
+PATS = "(allShellOrgs.data ?? []).filter(o => { (o.code ?? '').startsWith(empty(queryParams.appCode) ? 'X:' : queryParams.appCode + ':PATTERN') && (o.code ?? '').contains(':PATTERN') })"
+ACT = "size(" + ORGS + ".filter(o => { o.cf_active1 == true }))"
+INA = "size(" + ORGS + ".filter(o => { o.cf_active1 != true }))"
+SCOPE = "(empty(queryParams.appCode) ? 'All applications' : queryParams.appCode)"
+som = load('shellOrgManager.pmd')
+tab = som['presentation']['body']['tabs'][0] if 'tabs' in som['presentation']['body'] else None
+def find_tab(o):
+    if isinstance(o, dict):
+        if isinstance(o.get('children'), list) and any(isinstance(c, dict) and c.get('id') in ('summaryStatsFieldSet', 'summaryCardContainer') for c in o['children']):
+            return o
+        for v in o.values():
+            r = find_tab(v)
+            if r: return r
+    elif isinstance(o, list):
+        for v in o:
+            r = find_tab(v)
+            if r: return r
+tab = find_tab(som['presentation'])
+tab['children'] = [
+  {"type": "cardContainer", "id": "summaryCardContainer", "layout": "grid", "cards": [
+    {"type": "card", "cardId": "CountCard", "parameters": "<% { 'title': 'Active', 'subtitle': " + SCOPE + ", 'countText': '' + " + ACT + " + ' shell organizations' } %>"},
+    {"type": "card", "cardId": "CountCard", "parameters": "<% { 'title': 'Inactive', 'subtitle': " + SCOPE + ", 'countText': '' + " + INA + " + ' shell organizations' } %>"},
+    {"type": "card", "cardId": "CountCard", "parameters": "<% { 'title': 'Patterns', 'subtitle': " + SCOPE + ", 'countText': '' + size(" + PATS + ") + ' patterns' } %>"},
+    {"type": "card", "cardId": "ShellOrgQuickActionsCard"}]},
+  {"type": "cardContainer", "id": "statusChartContainer", "cards": [
+    {"type": "card", "cardId": "ShellOrgStatusChart", "parameters": "<% { 'activeCount': " + ACT + ", 'inactiveCount': " + INA + " } %>"}]}]
+save('shellOrgManager.pmd', som)
+print('summary ok')

@@ -120,27 +120,28 @@
         "label": "Summary",
         "children": [
           {
-            "type": "fieldSet",
-            "id": "summaryStatsFieldSet",
-            "title": "Shell Organization Summary",
-            "children": [
+            "type": "cardContainer",
+            "id": "summaryCardContainer",
+            "layout": "grid",
+            "cards": [
               {
-                "type": "readOnlyText",
-                "id": "summaryActiveCount",
-                "label": "Active Orgs",
-                "value": "<% size(allShellOrgs.data.filter(o => { o.code.startsWith('X:') && !o.code.contains(':PATTERN') && o.cf_active1 == true })) %>"
+                "type": "card",
+                "cardId": "CountCard",
+                "parameters": "<% { 'title': 'Active', 'subtitle': (empty(queryParams.appCode) ? 'All applications' : queryParams.appCode), 'countText': '' + size((allShellOrgs.data ?? []).filter(o => { (o.code ?? '').startsWith((empty(queryParams.appCode) ? 'X:' : queryParams.appCode + ':')) && !(o.code ?? '').contains(':PATTERN') }).filter(o => { o.cf_active1 == true })) + ' shell organizations' } %>"
               },
               {
-                "type": "readOnlyText",
-                "id": "summaryInactiveCount",
-                "label": "Inactive Orgs",
-                "value": "<% size(allShellOrgs.data.filter(o => { o.code.startsWith('X:') && !o.code.contains(':PATTERN') && o.cf_active1 != true })) %>"
+                "type": "card",
+                "cardId": "CountCard",
+                "parameters": "<% { 'title': 'Inactive', 'subtitle': (empty(queryParams.appCode) ? 'All applications' : queryParams.appCode), 'countText': '' + size((allShellOrgs.data ?? []).filter(o => { (o.code ?? '').startsWith((empty(queryParams.appCode) ? 'X:' : queryParams.appCode + ':')) && !(o.code ?? '').contains(':PATTERN') }).filter(o => { o.cf_active1 != true })) + ' shell organizations' } %>"
               },
               {
-                "type": "readOnlyText",
-                "id": "summaryPatternCount",
-                "label": "Total Patterns",
-                "value": "<% size(allShellOrgs.data.filter(o => { o.code.contains(':PATTERN') })) %>"
+                "type": "card",
+                "cardId": "CountCard",
+                "parameters": "<% { 'title': 'Patterns', 'subtitle': (empty(queryParams.appCode) ? 'All applications' : queryParams.appCode), 'countText': '' + size((allShellOrgs.data ?? []).filter(o => { (o.code ?? '').startsWith(empty(queryParams.appCode) ? 'X:' : queryParams.appCode + ':PATTERN') && (o.code ?? '').contains(':PATTERN') })) + ' patterns' } %>"
+              },
+              {
+                "type": "card",
+                "cardId": "ShellOrgQuickActionsCard"
               }
             ]
           },
@@ -151,30 +152,7 @@
               {
                 "type": "card",
                 "cardId": "ShellOrgStatusChart",
-                "parameters": "<% { 'activeCount': size(allShellOrgs.data.filter(o => { o.code.startsWith('X:') && !o.code.contains(':PATTERN') && o.cf_active1 == true })), 'inactiveCount': size(allShellOrgs.data.filter(o => { o.code.startsWith('X:') && !o.code.contains(':PATTERN') && o.cf_active1 != true })) } %>"
-              }
-            ]
-          },
-          {
-            "type": "fieldSet",
-            "id": "summaryNavFieldSet",
-            "title": "Quick Actions",
-            "children": [
-              {
-                "type": "button",
-                "label": "Add New Shell Organization",
-                "taskReference": {
-                  "taskId": "createShellOrgWizard"
-                },
-                "action": "PRIMARY"
-              },
-              {
-                "type": "button",
-                "label": "Add Shell Org Pattern",
-                "taskReference": {
-                  "taskId": "createShellOrgPatternWizard"
-                },
-                "action": "AUXILIARY"
+                "parameters": "<% { 'activeCount': size((allShellOrgs.data ?? []).filter(o => { (o.code ?? '').startsWith((empty(queryParams.appCode) ? 'X:' : queryParams.appCode + ':')) && !(o.code ?? '').contains(':PATTERN') }).filter(o => { o.cf_active1 == true })), 'inactiveCount': size((allShellOrgs.data ?? []).filter(o => { (o.code ?? '').startsWith((empty(queryParams.appCode) ? 'X:' : queryParams.appCode + ':')) && !(o.code ?? '').contains(':PATTERN') }).filter(o => { o.cf_active1 != true })) } %>"
               }
             ]
           }
