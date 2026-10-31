@@ -324,6 +324,12 @@ ACTION: run 'wdcli app deploy ...' locally, log in, update WD_DEV_TOKEN secret
 - Manage Role Assignments: OK now goes to `roleAssignmentSuccess` (flow `editRoleAssignmentFlow`), with Back to Shell Org Manager for the same application. Cancel keeps `appCode`/`appName`. Deployed; not yet seen live (needs a real change).
 - Home: **Needs my attention** card (`MyAttentionCard`), checked live: "6 pending ISC review · 3 approved this month · 30 denied or withdrawn | No bulk uploads running". No separate My Requests page: Assignable Role Manager already lists the user's own requests with Withdraw.
 - Bulk Role Changes: position lookup, Apply button, Refresh; real runs tested live (see BULK-ROLE-ASSIGNMENT-DESIGN.md).
+- Built 2026-10-31 (commit "Org detail page, request again, ..."), **not deployed yet**: the deploy failed at the token step (WD_DEV_TOKEN expired). Static checks pass.
+  - `shellOrgDetail` page + Details buttons on Shell Org Manager (`tools/build_org_detail.py`); active orgs listed first.
+  - Request again / Request similar on Assignable Role Manager → `assignableRoleManager?againRoleName=...&againFrom=...&againStatus=...&againReason=...` prefills the role name and shows a note. Only the role name is prefilled, on purpose: org, positions and date drive the onChange logic that builds the generated name.
+  - "Nothing to show" notes on empty grids (`tools/add_empty_messages.py`, re-run by `build_bulk_pages.py`).
+  - To check after deploy (read-only): open Shell Org Manager → Details on an org; open Assignable Role Manager → Request again on a denied row (check the note and prefilled name, then Cancel); filter ISC Role Requests to a status with no rows and see the note.
+  - Not built: flagging future-dated org status changes (no data source for org events in the app's WQL).
 
 ## UI phase 2 (built 2026-10-31)
 

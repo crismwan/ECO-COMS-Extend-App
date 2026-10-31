@@ -184,6 +184,14 @@ Outcomes:
 
 You need the **View: COMS Audit Log** domain to open this page.
 
+### Shell organization details
+
+In Shell Org Manager, **Details** on an organization opens one page with its status in Workday, the roles assigned on it (positions, workers, and **Manage** to change them), and its ECO-COMS change history from the newest 200 Audit Log records. **Change Status** there inactivates or reactivates it. Active organizations are listed before inactive ones.
+
+### Request again
+
+On Assignable Role Manager, each of your requests has **Request again** (denied requests) or **Request similar**. It opens a new request with the role name filled in and a note showing the earlier request and the reason given. Choose the application, organization, positions and effective date again; the Workday role name is generated when you pick the organization.
+
 ### Needs my attention (Home)
 
 The first card on Home sums up your own work: your role requests pending ISC review, approved this month, and denied or withdrawn, plus any bulk upload of yours that is still running or was rejected. **My requests** opens Assignable Role Manager (your requests, with Withdraw); **My bulk uploads** is under the card's ⋯ menu.
