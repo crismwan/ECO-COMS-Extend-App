@@ -1,0 +1,215 @@
+{
+  "id": "bulkRoleTemplate",
+  "securityDomains": [
+    "ManageCOMSShellOrgs"
+  ],
+  "endPoints": [
+    {
+      "name": "shellRoles",
+      "baseUrlType": "workday-wql",
+      "url": "data",
+      "authType": "sso",
+      "bestEffort": "true",
+      "wqlQuery": {
+        "queryId": "allShellAssignableRolesinTenant"
+      },
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 429
+        }
+      ]
+    }
+  ],
+  "presentation": {
+    "headerSize": "STANDARD",
+    "title": {
+      "type": "title",
+      "label": "ECO-COMS: Bulk Role Changes – Template"
+    },
+    "body": {
+      "type": "basicFormLayout",
+      "id": "bulkTemplateForm",
+      "sections": [
+        {
+          "type": "layoutSection",
+          "id": "navSection",
+          "children": [
+            {
+              "type": "button",
+              "id": "homeButton",
+              "label": "← Home",
+              "action": "LINK",
+              "taskReference": {
+                "taskId": "home"
+              }
+            },
+            {
+              "type": "button",
+              "id": "uploadButton",
+              "label": "Upload a file →",
+              "action": "LINK",
+              "taskReference": {
+                "taskId": "bulkRoleChanges"
+              }
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "aboutSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "aboutFieldSet",
+              "title": "How to use this template",
+              "children": [
+                {
+                  "type": "richText",
+                  "id": "aboutRichText",
+                  "enabled": false,
+                  "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">Each row is one position that currently holds a role on a shell organization. Export the grid to Excel (the export icon on the grid), then:<br/>1. In <b>Action</b>, type <b>REMOVE</b> on the rows to take a position off a role.<br/>2. To add a position, copy a row of the same role, type <b>ADD</b> in Action and put the new <b>Position ID</b> (for example P-00123) in that column. Leave Assignee WID empty on ADD rows.<br/>3. Leave Action empty on rows you don't want to change. Keep the columns in this order and don't edit the WID columns.<br/>4. Save as <b>CSV</b> (Excel: File → Save As → CSV) and upload it on the Bulk Role Changes page. At most 200 rows.</span>"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "gridSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "templateFieldSet",
+              "title": "Current role assignments",
+              "children": [
+                {
+                  "type": "grid",
+                  "id": "bulkTemplateGrid",
+                  "gridType": "LIST",
+                  "multiViewStylingEnabled": true,
+                  "autoPaging": true,
+                  "enabled": false,
+                  "excelExportEnabled": true,
+                  "rowVariableName": "tr",
+                  "rows": "<% list:flatten(list:flatten((shellRoles.data ?? []).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith(empty(queryParams.appCode) ? 'X:' : queryParams.appCode) }).map(ra => { (ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? []).map(p => { { 'role': r.role.descriptor ?? '', 'roleWid': r.role.id ?? '', 'org': ra.organization.descriptor ?? '', 'orgWid': ra.organization.id ?? '', 'position': p.descriptor ?? '', 'positionId': (p.descriptor ?? '').substringBefore(' '), 'assigneeWid': p.id ?? '' } }) }) }))) %>",
+                  "label": "<% 'Role assignments (' + size(list:flatten(list:flatten((shellRoles.data ?? []).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith(empty(queryParams.appCode) ? 'X:' : queryParams.appCode) }).map(ra => { (ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? []).map(p => { { 'role': r.role.descriptor ?? '', 'roleWid': r.role.id ?? '', 'org': ra.organization.descriptor ?? '', 'orgWid': ra.organization.id ?? '', 'position': p.descriptor ?? '', 'positionId': (p.descriptor ?? '').substringBefore(' '), 'assigneeWid': p.id ?? '' } }) }) })))) + ' positions)' %>",
+                  "columns": [
+                    {
+                      "type": "column",
+                      "columnId": "colAction",
+                      "label": "Action",
+                      "sortableAndFilterable": "true",
+                      "cellTemplate": {
+                        "type": "text",
+                        "id": "colActionText",
+                        "enabled": false,
+                        "value": ""
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colRole",
+                      "label": "Role",
+                      "sortableAndFilterable": "true",
+                      "cellTemplate": {
+                        "type": "text",
+                        "id": "colRoleText",
+                        "enabled": false,
+                        "value": "<% tr.role %>"
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colRoleWid",
+                      "label": "Role WID",
+                      "sortableAndFilterable": "true",
+                      "cellTemplate": {
+                        "type": "text",
+                        "id": "colRoleWidText",
+                        "enabled": false,
+                        "value": "<% tr.roleWid %>"
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colOrg",
+                      "label": "Organization",
+                      "sortableAndFilterable": "true",
+                      "cellTemplate": {
+                        "type": "text",
+                        "id": "colOrgText",
+                        "enabled": false,
+                        "value": "<% tr.org %>"
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colOrgWid",
+                      "label": "Organization WID",
+                      "sortableAndFilterable": "true",
+                      "cellTemplate": {
+                        "type": "text",
+                        "id": "colOrgWidText",
+                        "enabled": false,
+                        "value": "<% tr.orgWid %>"
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colPosition",
+                      "label": "Position",
+                      "sortableAndFilterable": "true",
+                      "cellTemplate": {
+                        "type": "text",
+                        "id": "colPositionText",
+                        "enabled": false,
+                        "value": "<% tr.position %>"
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colPositionId",
+                      "label": "Position ID",
+                      "sortableAndFilterable": "true",
+                      "cellTemplate": {
+                        "type": "text",
+                        "id": "colPositionIdText",
+                        "enabled": false,
+                        "value": "<% tr.positionId %>"
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colAssigneeWid",
+                      "label": "Assignee WID",
+                      "sortableAndFilterable": "true",
+                      "cellTemplate": {
+                        "type": "text",
+                        "id": "colAssigneeWidText",
+                        "enabled": false,
+                        "value": "<% tr.assigneeWid %>"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "footer": {
+      "type": "footer",
+      "children": [
+        {
+          "type": "pod",
+          "podId": "ecoComsFooter"
+        }
+      ]
+    },
+    "pageType": "VIEW"
+  }
+}

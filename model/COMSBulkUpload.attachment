@@ -1,0 +1,70 @@
+{
+  "id": 1,
+  "name": "COMSBulkUpload",
+  "label": "COMS Bulk Upload",
+  "defaultSecurityDomains": [
+    "ManageCOMSShellOrgs"
+  ],
+  "defaultCollection": {
+    "name": "comsBulkUploads",
+    "label": "All COMS Bulk Uploads"
+  },
+  "isFilePurgeable": true,
+  "fields": [
+    {
+      "id": 1,
+      "name": "batchRef",
+      "label": "Batch Reference",
+      "type": "TEXT",
+      "enableIndex": true
+    },
+    {
+      "id": 2,
+      "name": "runMode",
+      "label": "Run Mode",
+      "type": "TEXT"
+    },
+    {
+      "id": 3,
+      "name": "status",
+      "label": "Status",
+      "type": "TEXT"
+    },
+    {
+      "id": 4,
+      "name": "effectiveDate",
+      "label": "Effective Date",
+      "type": "TEXT"
+    },
+    {
+      "id": 5,
+      "name": "uploadedByName",
+      "label": "Uploaded By",
+      "type": "TEXT"
+    },
+    {
+      "id": 6,
+      "name": "uploadedByWid",
+      "label": "Uploaded By WID",
+      "type": "TEXT"
+    },
+    {
+      "id": 7,
+      "name": "uploadedAt",
+      "label": "Uploaded At",
+      "type": "TEXT"
+    },
+    {
+      "id": 8,
+      "name": "finishedAt",
+      "label": "Finished At",
+      "type": "TEXT"
+    },
+    {
+      "id": 9,
+      "name": "statusMessage",
+      "label": "Status Message",
+      "type": "TEXT"
+    }
+  ]
+}

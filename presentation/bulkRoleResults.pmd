@@ -1,0 +1,409 @@
+{
+  "id": "bulkRoleResults",
+  "securityDomains": [
+    "ManageCOMSShellOrgs"
+  ],
+  "endPoints": [
+    {
+      "name": "selectedWorker",
+      "baseUrlType": "COMMON",
+      "url": "/workers/me",
+      "authType": "sso",
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 403
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "name": "uploadCount",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "url": "/comsBulkUploads?limit=1",
+      "authType": "sso",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 403
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "name": "uploadPage0",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "authType": "sso",
+      "isCollection": true,
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 403
+        },
+        {
+          "code": 429
+        }
+      ],
+      "url": "<% let t = uploadCount.total ?? 0; let start = (t - 100) < 0 ? 0 : (t - 100); let cnt = t - start; '/comsBulkUploads?limit=' + (cnt > 0 ? cnt : 1) + '&offset=' + (cnt > 0 ? start : t) %>"
+    },
+    {
+      "name": "rowPage0",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "authType": "sso",
+      "isCollection": true,
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 403
+        },
+        {
+          "code": 429
+        }
+      ],
+      "url": "<% '/comsBulkRowResults?limit=100&offset=0&batchRef=' + (!empty(queryParams.batch) ? queryParams.batch : (size((list:sort((uploadPage0.data ?? []).filter(u => { (u.uploadedByWid ?? '') == (selectedWorker.id ?? '') }), 'uploadedAt', false))) > 0 ? (list:sort((uploadPage0.data ?? []).filter(u => { (u.uploadedByWid ?? '') == (selectedWorker.id ?? '') }), 'uploadedAt', false))[0].batchRef : '')) %>"
+    },
+    {
+      "name": "rowPage1",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "authType": "sso",
+      "isCollection": true,
+      "failOnStatusCodes": [
+        {
+          "code": 429
+        }
+      ],
+      "url": "<% '/comsBulkRowResults?limit=100&offset=100&batchRef=' + (!empty(queryParams.batch) ? queryParams.batch : (size((list:sort((uploadPage0.data ?? []).filter(u => { (u.uploadedByWid ?? '') == (selectedWorker.id ?? '') }), 'uploadedAt', false))) > 0 ? (list:sort((uploadPage0.data ?? []).filter(u => { (u.uploadedByWid ?? '') == (selectedWorker.id ?? '') }), 'uploadedAt', false))[0].batchRef : '')) %>"
+    }
+  ],
+  "presentation": {
+    "headerSize": "STANDARD",
+    "title": {
+      "type": "title",
+      "label": "ECO-COMS: Bulk Role Changes – Results"
+    },
+    "body": {
+      "type": "basicFormLayout",
+      "id": "bulkResultsForm",
+      "sections": [
+        {
+          "type": "layoutSection",
+          "id": "navSection",
+          "children": [
+            {
+              "type": "button",
+              "id": "homeButton",
+              "label": "← Home",
+              "action": "LINK",
+              "taskReference": {
+                "taskId": "home"
+              }
+            },
+            {
+              "type": "button",
+              "id": "uploadButton",
+              "label": "Upload another file",
+              "action": "LINK",
+              "taskReference": {
+                "taskId": "bulkRoleChanges"
+              }
+            },
+            {
+              "type": "button",
+              "id": "templateButton",
+              "label": "Template",
+              "action": "LINK",
+              "taskReference": {
+                "taskId": "bulkRoleTemplate"
+              }
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "aboutSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "aboutFieldSet",
+              "title": "About this page",
+              "children": [
+                {
+                  "type": "richText",
+                  "id": "aboutRichText",
+                  "enabled": false,
+                  "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">Your uploads, newest first, and the row results of the selected one (the newest unless you pick another). A run works in the background: while the status is Uploaded or Running, open this page again in a minute to see more rows. <b>VALID</b>/<b>INVALID</b>: validation run, nothing changed. <b>DONE</b>/<b>FAILED</b>: real run.</span>"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "summarySection",
+          "children": [
+            {
+              "type": "cardContainer",
+              "id": "bulkSummaryCardContainer",
+              "layout": "grid",
+              "cards": [
+                {
+                  "type": "card",
+                  "cardId": "CountCard",
+                  "parameters": "<% { 'title': 'Rows processed', 'subtitle': 'Selected upload', 'countText': '' + size((list:flatten([rowPage0.data ?? [], rowPage1.data ?? []]).filter(x => { (x.batchRef ?? '') == (!empty(queryParams.batch) ? queryParams.batch : (size((list:sort((uploadPage0.data ?? []).filter(u => { (u.uploadedByWid ?? '') == (selectedWorker.id ?? '') }), 'uploadedAt', false))) > 0 ? (list:sort((uploadPage0.data ?? []).filter(u => { (u.uploadedByWid ?? '') == (selectedWorker.id ?? '') }), 'uploadedAt', false))[0].batchRef : '')) }))) + ' rows' } %>"
+                },
+                {
+                  "type": "card",
+                  "cardId": "CountCard",
+                  "parameters": "<% { 'title': 'Succeeded', 'subtitle': 'DONE or VALID', 'countText': '' + size((list:flatten([rowPage0.data ?? [], rowPage1.data ?? []]).filter(x => { (x.batchRef ?? '') == (!empty(queryParams.batch) ? queryParams.batch : (size((list:sort((uploadPage0.data ?? []).filter(u => { (u.uploadedByWid ?? '') == (selectedWorker.id ?? '') }), 'uploadedAt', false))) > 0 ? (list:sort((uploadPage0.data ?? []).filter(u => { (u.uploadedByWid ?? '') == (selectedWorker.id ?? '') }), 'uploadedAt', false))[0].batchRef : '')) })).filter(x => { x.result == 'DONE' || x.result == 'VALID' })) + ' rows' } %>"
+                },
+                {
+                  "type": "card",
+                  "cardId": "CountCard",
+                  "parameters": "<% { 'title': 'Need attention', 'subtitle': 'FAILED or INVALID', 'countText': '' + size((list:flatten([rowPage0.data ?? [], rowPage1.data ?? []]).filter(x => { (x.batchRef ?? '') == (!empty(queryParams.batch) ? queryParams.batch : (size((list:sort((uploadPage0.data ?? []).filter(u => { (u.uploadedByWid ?? '') == (selectedWorker.id ?? '') }), 'uploadedAt', false))) > 0 ? (list:sort((uploadPage0.data ?? []).filter(u => { (u.uploadedByWid ?? '') == (selectedWorker.id ?? '') }), 'uploadedAt', false))[0].batchRef : '')) })).filter(x => { x.result == 'FAILED' || x.result == 'INVALID' })) + ' rows' } %>"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "uploadsSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "uploadsFieldSet",
+              "title": "My uploads",
+              "children": [
+                {
+                  "type": "grid",
+                  "id": "uploadsGrid",
+                  "gridType": "LIST",
+                  "multiViewStylingEnabled": true,
+                  "autoPaging": true,
+                  "enabled": false,
+                  "excelExportEnabled": true,
+                  "rowVariableName": "up",
+                  "rows": "<% (list:sort((uploadPage0.data ?? []).filter(u => { (u.uploadedByWid ?? '') == (selectedWorker.id ?? '') }), 'uploadedAt', false)) %>",
+                  "label": "<% 'My uploads (' + size((list:sort((uploadPage0.data ?? []).filter(u => { (u.uploadedByWid ?? '') == (selectedWorker.id ?? '') }), 'uploadedAt', false))) + ')' %>",
+                  "columns": [
+                    {
+                      "type": "column",
+                      "columnId": "colUploaded",
+                      "label": "Uploaded",
+                      "sortableAndFilterable": "true",
+                      "cellTemplate": {
+                        "type": "text",
+                        "id": "colUploadedText",
+                        "enabled": false,
+                        "value": "<% (up.uploadedAt ?? '').replace('T', ' ').replace('Z', ' UTC') %>"
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colFile",
+                      "label": "File",
+                      "sortableAndFilterable": "true",
+                      "cellTemplate": {
+                        "type": "text",
+                        "id": "colFileText",
+                        "enabled": false,
+                        "value": "<% up.fileName ?? up.descriptor ?? '' %>"
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colMode",
+                      "label": "Run",
+                      "sortableAndFilterable": "true",
+                      "cellTemplate": {
+                        "type": "text",
+                        "id": "colModeText",
+                        "enabled": false,
+                        "value": "<% (up.runMode ?? '') == 'APPLY' ? 'Real run' : 'Validate only' %>"
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colStatus",
+                      "label": "Status",
+                      "sortableAndFilterable": "true",
+                      "cellTemplate": {
+                        "type": "text",
+                        "id": "colStatusText",
+                        "enabled": false,
+                        "value": "<% up.status ?? '' %>"
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colEffective",
+                      "label": "Effective Date",
+                      "sortableAndFilterable": "true",
+                      "cellTemplate": {
+                        "type": "text",
+                        "id": "colEffectiveText",
+                        "enabled": false,
+                        "value": "<% up.effectiveDate ?? '' %>"
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colMessage",
+                      "label": "Message",
+                      "sortableAndFilterable": "true",
+                      "cellTemplate": {
+                        "type": "text",
+                        "id": "colMessageText",
+                        "enabled": false,
+                        "value": "<% up.statusMessage ?? '' %>"
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colOpen",
+                      "label": "Results",
+                      "cellTemplate": {
+                        "type": "button",
+                        "id": "openResultsButton",
+                        "label": "View",
+                        "action": "AUXILIARY",
+                        "taskReference": {
+                          "taskId": "bulkRoleResults",
+                          "parameterBindings": {
+                            "batch": "<% up.batchRef ?? '' %>"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "rowsSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "rowsFieldSet",
+              "title": "<% 'Row results: ' + (!empty(queryParams.batch) ? queryParams.batch : (size((list:sort((uploadPage0.data ?? []).filter(u => { (u.uploadedByWid ?? '') == (selectedWorker.id ?? '') }), 'uploadedAt', false))) > 0 ? (list:sort((uploadPage0.data ?? []).filter(u => { (u.uploadedByWid ?? '') == (selectedWorker.id ?? '') }), 'uploadedAt', false))[0].batchRef : '')) %>",
+              "children": [
+                {
+                  "type": "grid",
+                  "id": "rowResultsGrid",
+                  "gridType": "LIST",
+                  "multiViewStylingEnabled": true,
+                  "autoPaging": true,
+                  "enabled": false,
+                  "excelExportEnabled": true,
+                  "rowVariableName": "rr",
+                  "rows": "<% list:sort((list:flatten([rowPage0.data ?? [], rowPage1.data ?? []]).filter(x => { (x.batchRef ?? '') == (!empty(queryParams.batch) ? queryParams.batch : (size((list:sort((uploadPage0.data ?? []).filter(u => { (u.uploadedByWid ?? '') == (selectedWorker.id ?? '') }), 'uploadedAt', false))) > 0 ? (list:sort((uploadPage0.data ?? []).filter(u => { (u.uploadedByWid ?? '') == (selectedWorker.id ?? '') }), 'uploadedAt', false))[0].batchRef : '')) })), 'timestamp', true) %>",
+                  "label": "<% 'Rows (' + size((list:flatten([rowPage0.data ?? [], rowPage1.data ?? []]).filter(x => { (x.batchRef ?? '') == (!empty(queryParams.batch) ? queryParams.batch : (size((list:sort((uploadPage0.data ?? []).filter(u => { (u.uploadedByWid ?? '') == (selectedWorker.id ?? '') }), 'uploadedAt', false))) > 0 ? (list:sort((uploadPage0.data ?? []).filter(u => { (u.uploadedByWid ?? '') == (selectedWorker.id ?? '') }), 'uploadedAt', false))[0].batchRef : '')) }))) + ')' %>",
+                  "columns": [
+                    {
+                      "type": "column",
+                      "columnId": "colResult",
+                      "label": "Result",
+                      "sortableAndFilterable": "true",
+                      "cellTemplate": {
+                        "type": "text",
+                        "id": "colResultText",
+                        "enabled": false,
+                        "value": "<% rr.result ?? '' %>"
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colAction",
+                      "label": "Action",
+                      "sortableAndFilterable": "true",
+                      "cellTemplate": {
+                        "type": "text",
+                        "id": "colActionText",
+                        "enabled": false,
+                        "value": "<% rr.rowAction ?? '' %>"
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colRole",
+                      "label": "Role",
+                      "sortableAndFilterable": "true",
+                      "cellTemplate": {
+                        "type": "text",
+                        "id": "colRoleText",
+                        "enabled": false,
+                        "value": "<% rr.roleName ?? '' %>"
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colOrg",
+                      "label": "Organization",
+                      "sortableAndFilterable": "true",
+                      "cellTemplate": {
+                        "type": "text",
+                        "id": "colOrgText",
+                        "enabled": false,
+                        "value": "<% rr.orgName ?? '' %>"
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colPosition",
+                      "label": "Position",
+                      "sortableAndFilterable": "true",
+                      "cellTemplate": {
+                        "type": "text",
+                        "id": "colPositionText",
+                        "enabled": false,
+                        "value": "<% (rr.positionName ?? '') != '' ? rr.positionName : (rr.positionId ?? '') %>"
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colMessage",
+                      "label": "Message",
+                      "sortableAndFilterable": "true",
+                      "cellTemplate": {
+                        "type": "text",
+                        "id": "colMessageText",
+                        "enabled": false,
+                        "value": "<% rr.message ?? '' %>"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "footer": {
+      "type": "footer",
+      "children": [
+        {
+          "type": "pod",
+          "podId": "ecoComsFooter"
+        }
+      ]
+    },
+    "pageType": "VIEW"
+  }
+}

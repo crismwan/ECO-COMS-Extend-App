@@ -22,6 +22,28 @@
           "endsFlow": true
         }
       ]
+    },
+    {
+      "id": "bulkRoleChangesFlow",
+      "flowSteps": [
+        {
+          "id": "bulkRoleChangesStep",
+          "taskId": "bulkRoleChanges",
+          "startsFlow": true,
+          "transitions": [
+            {
+              "order": "a",
+              "value": "bulkRoleResultsStep",
+              "condition": "true"
+            }
+          ]
+        },
+        {
+          "id": "bulkRoleResultsStep",
+          "taskId": "bulkRoleResults",
+          "endsFlow": true
+        }
+      ]
     }
   ],
   "tasks": [
@@ -205,6 +227,27 @@
       "routingPattern": "/reviewRoleRequestAssignableRole/{eventStepId}",
       "page": {
         "id": "reviewRoleRequestAssignableRole"
+      }
+    },
+    {
+      "id": "bulkRoleTemplate",
+      "routingPattern": "/bulkRoleTemplate",
+      "page": {
+        "id": "bulkRoleTemplate"
+      }
+    },
+    {
+      "id": "bulkRoleChanges",
+      "routingPattern": "/bulkRoleChanges",
+      "page": {
+        "id": "bulkRoleChanges"
+      }
+    },
+    {
+      "id": "bulkRoleResults",
+      "routingPattern": "/bulkRoleResults",
+      "page": {
+        "id": "bulkRoleResults"
       }
     }
   ],

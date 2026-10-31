@@ -1,0 +1,93 @@
+{
+  "id": 6,
+  "name": "COMSBulkRowResult",
+  "label": "COMS Bulk Row Result",
+  "defaultSecurityDomains": [
+    "ManageCOMSShellOrgs"
+  ],
+  "defaultCollection": {
+    "name": "comsBulkRowResults",
+    "label": "All COMS Bulk Row Results"
+  },
+  "fields": [
+    {
+      "id": 1,
+      "name": "batchRef",
+      "label": "Batch Reference",
+      "type": "TEXT",
+      "enableIndex": true
+    },
+    {
+      "id": 2,
+      "name": "runMode",
+      "label": "Run Mode",
+      "type": "TEXT"
+    },
+    {
+      "id": 3,
+      "name": "rowAction",
+      "label": "Action",
+      "type": "TEXT"
+    },
+    {
+      "id": 4,
+      "name": "roleName",
+      "label": "Role",
+      "type": "TEXT"
+    },
+    {
+      "id": 5,
+      "name": "roleWid",
+      "label": "Role WID",
+      "type": "TEXT"
+    },
+    {
+      "id": 6,
+      "name": "orgName",
+      "label": "Organization",
+      "type": "TEXT"
+    },
+    {
+      "id": 7,
+      "name": "orgWid",
+      "label": "Organization WID",
+      "type": "TEXT"
+    },
+    {
+      "id": 8,
+      "name": "positionName",
+      "label": "Position",
+      "type": "TEXT"
+    },
+    {
+      "id": 9,
+      "name": "positionId",
+      "label": "Position ID",
+      "type": "TEXT"
+    },
+    {
+      "id": 10,
+      "name": "assigneeWid",
+      "label": "Assignee WID",
+      "type": "TEXT"
+    },
+    {
+      "id": 11,
+      "name": "result",
+      "label": "Result",
+      "type": "TEXT"
+    },
+    {
+      "id": 12,
+      "name": "message",
+      "label": "Message",
+      "type": "TEXT"
+    },
+    {
+      "id": 13,
+      "name": "timestamp",
+      "label": "Timestamp",
+      "type": "TEXT"
+    }
+  ]
+}

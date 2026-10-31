@@ -203,6 +203,52 @@
         },
         {
           "type": "layoutSection",
+          "id": "bulkSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "bulkFieldSet",
+              "title": "Bulk Role Changes",
+              "children": [
+                {
+                  "type": "richText",
+                  "id": "bulkDesc",
+                  "enabled": false,
+                  "value": "<% '<span style=\"color:#374151;font-size:13px\">Add or remove many positions on shell organization roles from one CSV file. Validate first, then run it for real.</span>' %>"
+                },
+                {
+                  "type": "button",
+                  "id": "bulkTemplateButton",
+                  "label": "Download Template",
+                  "action": "AUXILIARY",
+                  "taskReference": {
+                    "taskId": "bulkRoleTemplate"
+                  }
+                },
+                {
+                  "type": "button",
+                  "id": "bulkUploadButton",
+                  "label": "Upload File",
+                  "action": "PRIMARY",
+                  "taskReference": {
+                    "taskId": "bulkRoleChanges"
+                  }
+                },
+                {
+                  "type": "button",
+                  "id": "bulkResultsButton",
+                  "label": "View Results",
+                  "action": "AUXILIARY",
+                  "taskReference": {
+                    "taskId": "bulkRoleResults"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
           "id": "assignableRoleSection",
           "children": [
             {

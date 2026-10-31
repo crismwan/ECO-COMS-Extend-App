@@ -1,0 +1,226 @@
+{
+  "id": "bulkRoleChanges",
+  "securityDomains": [
+    "ManageCOMSShellOrgs"
+  ],
+  "include": [
+    "comsValidations.script"
+  ],
+  "endPoints": [
+    {
+      "name": "selectedWorker",
+      "baseUrlType": "COMMON",
+      "url": "/workers/me",
+      "authType": "sso",
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 403
+        },
+        {
+          "code": 429
+        }
+      ]
+    }
+  ],
+  "onSubmit": "<%\n  let valid = true;\n  if (empty(bulkFileUploader.children)) {\n    bulkFileUploader.setError('Choose the CSV file to upload.');\n    valid = false;\n  }\n  if (empty(effectiveDate.value)) {\n    effectiveDate.setError('Effective Date is required.');\n    valid = false;\n  } else if (!comsValidations.isWeekday(effectiveDate.value)) {\n    effectiveDate.setError(comsValidations.errorWeekday());\n    valid = false;\n  } else if (!comsValidations.isCurrentOrFutureYear(effectiveDate.value)) {\n    effectiveDate.setError(comsValidations.errorYear());\n    valid = false;\n  }\n  if (valid && realRunCheckBox.value == true && confirmRealRunCheckBox.value != true) {\n    confirmRealRunCheckBox.setError('Tick this to confirm the real run, or untick Real run to validate first.');\n    valid = false;\n  }\n  valid;\n%>",
+  "outboundData": {
+    "outboundEndPoints": [
+      {
+        "name": "uploadBulkFile",
+        "baseUrlType": "BUSINESS-OBJECT",
+        "url": "/comsBulkUploadsCollection",
+        "httpMethod": "POST",
+        "authType": "sso",
+        "onMultiPartSend": "<%\n  for (var file : self.data.metadata.comsBulkUploads) {\n    file.batchRef = batchRefHidden.value;\n    file.runMode = realRunCheckBox.value == true ? 'APPLY' : 'VALIDATE';\n    file.status = 'Uploaded';\n    file.effectiveDate = effectiveDate.value.format('yyyy-MM-dd');\n    file.uploadedByName = selectedWorker.descriptor ?? '';\n    file.uploadedByWid = selectedWorker.id ?? '';\n    file.uploadedAt = date:now().format(\"yyyy-MM-dd'T'HH:mm:ss'Z'\");\n  }\n  self.data;\n%>",
+        "failOnStatusCodes": [
+          {
+            "code": 400
+          },
+          {
+            "code": 403
+          },
+          {
+            "code": 429
+          },
+          {
+            "code": 500
+          }
+        ]
+      },
+      {
+        "name": "launchBulk",
+        "baseUrlType": "orchestration",
+        "httpMethod": "POST",
+        "authType": "sso",
+        "url": "<% '/BulkRoleApply/launch?ref=' + batchRefHidden.value + '&mode=' + (realRunCheckBox.value == true ? 'APPLY' : 'VALIDATE') + '&effectiveDate=' + effectiveDate.value.format('yyyy-MM-dd') + '&changedBy=' + (selectedWorker.descriptor ?? '').urlEncode() + '&changedByWid=' + (selectedWorker.id ?? '') %>",
+        "values": [
+          {
+            "outboundPath": "ref",
+            "value": "<% batchRefHidden.value %>"
+          }
+        ],
+        "failOnStatusCodes": [
+          {
+            "code": 400
+          },
+          {
+            "code": 403
+          },
+          {
+            "code": 429
+          }
+        ]
+      }
+    ]
+  },
+  "presentation": {
+    "headerSize": "STANDARD",
+    "title": {
+      "type": "title",
+      "label": "ECO-COMS: Bulk Role Changes"
+    },
+    "cancelOverride": {
+      "taskId": "home"
+    },
+    "body": {
+      "type": "basicFormLayout",
+      "id": "bulkUploadForm",
+      "sections": [
+        {
+          "type": "layoutSection",
+          "id": "navSection",
+          "children": [
+            {
+              "type": "button",
+              "id": "templateButton",
+              "label": "← Download the template",
+              "action": "LINK",
+              "taskReference": {
+                "taskId": "bulkRoleTemplate"
+              }
+            },
+            {
+              "type": "button",
+              "id": "resultsButton",
+              "label": "View results →",
+              "action": "LINK",
+              "taskReference": {
+                "taskId": "bulkRoleResults"
+              }
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "aboutSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "aboutFieldSet",
+              "title": "How it works",
+              "children": [
+                {
+                  "type": "richText",
+                  "id": "aboutRichText",
+                  "enabled": false,
+                  "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">Upload the CSV made from the template. Run it as <b>Validate only</b> first: every row is checked and nothing changes in Workday. Then upload the same file again with <b>Real run</b> ticked: each ADD or REMOVE row is applied in Workday's Assign Roles, one row at a time, and each change is written to the Audit Log. A row that Workday rejects is recorded as FAILED and the run carries on. Both runs work in the background; the results page shows progress. At most 200 rows per file.</span>"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "warningSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "warningFieldSet",
+              "title": "Before a real run",
+              "children": [
+                {
+                  "type": "richText",
+                  "id": "warningRichText",
+                  "enabled": false,
+                  "value": "<span style=\"color:#B45309;font-size:12px;font-weight:700\">⚠ </span><span style=\"color:#374151;font-size:12px\">A real run changes who holds security roles in Workday straight away. Changes that succeed are not undone if later rows fail. Validate first.</span>"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "formSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "uploadFieldSet",
+              "title": "Upload",
+              "children": [
+                {
+                  "type": "fileUploader",
+                  "id": "bulkFileUploader",
+                  "label": "CSV file",
+                  "fileTypes": "csv",
+                  "singular": true,
+                  "metadata": "<% { 'status': 'Uploaded' } %>",
+                  "valueOutBinding": "uploadBulkFile:comsBulkUploads"
+                },
+                {
+                  "type": "date",
+                  "id": "effectiveDate",
+                  "label": "Effective Date",
+                  "required": true,
+                  "guide": {
+                    "type": "guide",
+                    "id": "effectiveDateGuide",
+                    "title": "Effective Date",
+                    "text": "The date the role changes take effect: a weekday in this year or next. One date applies to every row in the file."
+                  },
+                  "onChange": "<%\n  if (empty(self.value)) { self.clearError(); }\n  else if (!comsValidations.isWeekday(self.value)) { self.setError(comsValidations.errorWeekday()); }\n  else if (!comsValidations.isCurrentOrFutureYear(self.value)) { self.setError(comsValidations.errorYear()); }\n  else { self.clearError(); }\n%>"
+                },
+                {
+                  "type": "checkBox",
+                  "id": "realRunCheckBox",
+                  "label": "Real run (make the changes in Workday)",
+                  "value": "<% false %>",
+                  "guide": {
+                    "type": "guide",
+                    "id": "realRunGuide",
+                    "title": "Validate only or real run",
+                    "text": "Leave this unticked to validate only: every row is checked and nothing changes. Tick it to apply the ADD and REMOVE rows in Workday."
+                  }
+                },
+                {
+                  "type": "checkBox",
+                  "id": "confirmRealRunCheckBox",
+                  "label": "I have validated this file and want to apply it",
+                  "value": "<% false %>"
+                },
+                {
+                  "type": "hidden",
+                  "id": "batchRefHidden",
+                  "value": "<% 'BULK' + date:now().format('yyyyMMddHHmmss') + (selectedWorker.id ?? '').substring(0, 6) %>"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "footer": {
+      "type": "footer",
+      "children": [
+        {
+          "type": "pod",
+          "podId": "ecoComsFooter"
+        }
+      ]
+    },
+    "pageType": "EDIT"
+  }
+}
