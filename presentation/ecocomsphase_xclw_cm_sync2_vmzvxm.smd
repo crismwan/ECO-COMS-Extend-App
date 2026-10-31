@@ -11,6 +11,11 @@
       {
         "scheme": "SSO",
         "id": "sso"
+      },
+      {
+        "id": "isuAuth",
+        "scheme": "ISU",
+        "username": "DNU_ISU_ECO_COMS_DEPLOY_CMM"
       }
     ]
   },
@@ -60,7 +65,7 @@
     }
   ],
   "cdnEnabled": true,
-  "siteProperties": [ ],
+  "siteProperties": [],
   "applicationId": "ecocomsphase_xclw_cm_sync2_vmzvxm",
   "headerBackgroundColor": "#0055B3",
   "titleAlignment": "center"
