@@ -1,4 +1,4 @@
-name: E2E tests (no deploy)
+name: Tests (no deploy)
 
 # Runs the live tests against the app already deployed in ubc_wcpdev2, without uploading or
 # deploying. Use it to rerun tests, or to clean up test data.
@@ -6,9 +6,9 @@ on:
   workflow_dispatch:
     inputs:
       task:
-        description: "smoke = read-only; full = smoke + create/inactivate a TEST org; cleanup-dry-run = list test data; cleanup-apply = inactivate test orgs, delete test requests and audit entries"
+        description: "static = repo checks; smoke = read-only; full = smoke + write tests; isu = ISU lockdown (only once ISU writes are live); cleanup-dry-run / cleanup-apply = list / remove TEST data"
         type: choice
-        options: [smoke, full, cleanup-dry-run, cleanup-apply]
+        options: [static, smoke, full, isu, cleanup-dry-run, cleanup-apply]
         default: smoke
       also:
         description: "cleanup only: extra record ids (comma-separated) to treat as test data"
@@ -40,16 +40,15 @@ jobs:
           ONLY: ${{ github.event.inputs.only }}
         run: |
           case "${TASK}" in
-            smoke)           node test/e2e.js --suite smoke ;;
-            full)            node test/e2e.js --suite full ;;
-            cleanup-dry-run) node test/e2e.js --suite cleanup --also "${ALSO}" ;;
-            cleanup-apply)   node test/e2e.js --suite cleanup --apply --also "${ALSO}" ${EFFECTIVE:+--effective "$EFFECTIVE"} ${ONLY:+--only "$ONLY"} ;;
+            static|smoke|full|isu) node test/run-tests.js "${TASK}" ;;
+            cleanup-dry-run) node test/run-tests.js cleanup --also "${ALSO}" ;;
+            cleanup-apply)   node test/run-tests.js cleanup --apply --also "${ALSO}" ${EFFECTIVE:+--effective "$EFFECTIVE"} ${ONLY:+--only "$ONLY"} ;;
           esac
 
       - name: Upload results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: e2e-results-${{ github.event.inputs.task }}
-          path: test/e2e-results.json
+          name: test-results-${{ github.event.inputs.task }}
+          path: test/results.json
           if-no-files-found: ignore

@@ -1,16 +1,22 @@
 #!/usr/bin/env node
 /**
- * ECO-COMS live end-to-end tests against the ubc_wcpdev2 tenant.
+ * ECO-COMS tests: one runner for every suite.
  *
- *   node test/e2e.js                 # smoke suite: read-only, safe on every deploy
- *   node test/e2e.js --suite full    # smoke + write tests for every orchestrated flow (TEST data; see README)
- *   node test/e2e.js --verbose
+ *   node test/run-tests.js static            repo checks, no tenant access (blocks upload; every push)
+ *   node test/run-tests.js smoke             read-only live checks (after every deploy)
+ *   node test/run-tests.js full              smoke + write tests for every flow (manual; leaves TEST data)
+ *   node test/run-tests.js cleanup [--apply] list (default) or remove TEST data
+ *   node test/run-tests.js isu               ISU lockdown checks: only once ISU writes are live (see README)
  *
- * Token (never printed): --token <t>, else WD_DEV_TOKEN, else ~/.config/@workday/wdcli/config.json
- * (wcpTenantAccessToken.ubc_wcpdev2). Same PKCE user token the deploy workflow uses.
+ * Suites can be combined: `node test/run-tests.js static,smoke`. The isu suite never runs unless named.
+ * Options: --verbose, --token <t>, --role <assignable role> (full/cleanup), --also <ids>, --effective
+ * <yyyy-MM-dd>, --only <org codes> (cleanup). `--suite <name>` also works.
  *
- * Results: console + test/e2e-results.json. Exit code 1 if any test fails.
- * Coverage map and manual checks: test/README.md.
+ * Token for live suites (never printed): --token, else WD_DEV_TOKEN, else
+ * ~/.config/@workday/wdcli/config.json (wcpTenantAccessToken.ubc_wcpdev2).
+ *
+ * Results: console, test/results.json, and the GitHub run summary. Exit 1 if any test fails.
+ * Coverage map and manual checklist: test/README.md.
  */
 
 'use strict';
@@ -19,6 +25,7 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 
+const ROOT = path.join(__dirname, '..');
 const APP_ID = 'ecocomsphase_xclw_cm_sync2_vmzvxm';
 const TENANT = 'ubc_wcpdev2';
 const API = 'https://api.workday.com';
@@ -30,7 +37,10 @@ const ORCH = `${API}/orchestrate/v1/apps/${APP_ID}/orchestrations`;
 const argv = process.argv.slice(2);
 const arg = (name) => { const i = argv.indexOf(name); return i === -1 ? null : argv[i + 1]; };
 const VERBOSE = argv.includes('--verbose');
-const SUITE = arg('--suite') || 'smoke';
+const SUITES_ALL = ['static', 'smoke', 'full', 'cleanup', 'isu'];
+const suiteArg = arg('--suite') || argv.find((a) => !a.startsWith('--') && SUITES_ALL.some((s) => a.split(',').includes(s))) || 'smoke';
+const SUITES = suiteArg.split(',').map((s) => s.trim()).filter(Boolean);
+for (const s of SUITES) if (!SUITES_ALL.includes(s)) { console.error(`Unknown suite "${s}". Use: ${SUITES_ALL.join(', ')}`); process.exit(2); }
 
 // Fixed vocabulary (CLAUDE.md "Audit log design"). A new value here means a page or
 // orchestration started writing something the viewer and reports don't expect.
@@ -39,6 +49,195 @@ const ACTIONS = ['ADD', 'INACTIVATE', 'REACTIVATE', 'ASSIGN POSITION', 'REMOVE P
 const TEST_ROLE = arg('--role') || process.env.E2E_ROLE || 'X:BPMS(ODMT):ROLE:ADVISORS';
 const BO_COLLECTIONS = ['comsApplications', 'comsAssignableRoles', 'comsAuditLogs', 'comsRoleAssignments', 'comsShellOrgRequests'];
 
+// ─── Results ──────────────────────────────────────────────────────────────────
+const results = [];
+// Everything printed is also kept for the GitHub run summary (job logs are often truncated).
+const transcript = [];
+for (const k of ['log', 'error']) {
+  const orig = console[k].bind(console);
+  console[k] = (...a) => { transcript.push(a.join(' ')); orig(...a); };
+}
+const record = (status, name, msg) => {
+  results.push({ status, name, msg });
+  (status === 'FAIL' ? console.error : console.log)(`  ${status.padEnd(4)}  ${name}: ${msg}`);
+};
+const pass = (n, m) => record('PASS', n, m);
+const fail = (n, m) => record('FAIL', n, m);
+const skip = (n, m) => record('SKIP', n, m);
+const warn = (n, m) => record('WARN', n, m);
+async function test(name, fn) {
+  try { await fn(); } catch (e) { fail(name, e.message); }
+}
+
+// ═══ Static suite: repo checks, no tenant access ═════════════════════════════
+// Each check encodes a platform pitfall that broke this app before (CLAUDE.md). Failures block upload.
+
+// Known issues: reported as WARN instead of FAIL until fixed. Each needs a reason.
+// Remove an entry as soon as the issue is fixed so the check protects it again.
+const KNOWN_ISSUES = {
+  'submitButton|deleteAssignableRole.pmd': 'no way to submit; decide delete vs cancelling the ISC review BP before re-enabling',
+  'submitButton|newShellOrgConfirm.pmd': 'page no longer used by createShellOrgWizard; candidate for removal',
+  'submitButton|newShellOrgPatternConfirm.pmd': 'page no longer used by createShellOrgPatternWizard; candidate for removal',
+};
+const AMD_PATH = 'presentation/ecocomsphase_xclw_cm_sync2_vmzvxm.amd';
+const MAX_FILE_BYTES = 100 * 1024; // platform limit for .pmd/.amd/.smd/.pod/.script
+const MAX_PAGES = 75;              // platform limit for pages per app
+const PROTECTED_KEYS = ['endPoints', 'outboundData', 'securityDomains', 'include']; // must sit at page root
+
+function listFiles(dir, recursive) {
+  const abs = path.join(ROOT, dir);
+  if (!fs.existsSync(abs)) return [];
+  const out = [];
+  for (const e of fs.readdirSync(abs, { withFileTypes: true })) {
+    const rel = path.posix.join(dir, e.name);
+    if (e.isDirectory()) { if (recursive) out.push(...listFiles(rel, true)); } else out.push(rel);
+  }
+  return out.sort();
+}
+// Call fn(node, parentKey) for every object in a JSON tree (list items inherit the list's key).
+function walk(node, fn, parentKey = null) {
+  if (Array.isArray(node)) node.forEach((v) => walk(v, fn, parentKey));
+  else if (node && typeof node === 'object') {
+    fn(node, parentKey);
+    for (const [k, v] of Object.entries(node)) walk(v, fn, k);
+  }
+}
+
+function staticSuite() {
+  console.log('\n-- Static (repo checks, no tenant access) --');
+  const errs = [];
+  const err = (check, msg, file) => {
+    const reason = KNOWN_ISSUES[`${check}|${file}`];
+    if (reason) warn(`Static.${check}`, `KNOWN ISSUE ${msg} (${reason})`); else { errs.push(msg); fail(`Static.${check}`, msg); }
+  };
+
+  // 1. Every JSON component parses
+  const jsonFiles = new Set([
+    ...listFiles('presentation').filter((f) => /\.(pmd|amd|smd|pod|card)$/.test(f)),
+    ...listFiles('presentation/pods').filter((f) => f.endsWith('.pod')),
+    ...listFiles('presentation/cards').filter((f) => f.endsWith('.card')),
+    ...listFiles('model'),
+    ...listFiles('orchestration').filter((f) => f.endsWith('.orchestration')),
+    ...listFiles('presentation', true).filter((f) => f.endsWith('.wqlquery')),
+  ]);
+  const docs = {};
+  for (const f of jsonFiles) {
+    try { docs[f] = JSON.parse(fs.readFileSync(path.join(ROOT, f), 'utf8')); } catch (e) { err('json', `${f}: ${e.message}`); }
+  }
+  const pmds = Object.fromEntries(Object.entries(docs).filter(([f]) => f.endsWith('.pmd')));
+  const cards = Object.fromEntries(Object.entries(docs).filter(([f]) => f.endsWith('.card')));
+  const amd = docs[AMD_PATH] || (err('amd', `${AMD_PATH} missing or unreadable`), {});
+
+  // 2. Size and count limits
+  for (const f of listFiles('presentation', true).filter((x) => /\.(pmd|amd|smd|pod|script)$/.test(x))) {
+    const n = fs.statSync(path.join(ROOT, f)).size;
+    if (n > MAX_FILE_BYTES) err('size', `${f}: ${n} bytes exceeds the 100 KB file limit`);
+  }
+  if (Object.keys(pmds).length > MAX_PAGES) err('size', `${Object.keys(pmds).length} pages exceeds the ${MAX_PAGES}-page app limit`);
+
+  // 3. Page rules
+  for (const [f, d] of Object.entries(pmds).concat(Object.entries(docs).filter(([x]) => x.endsWith('.pod')))) {
+    const name = path.basename(f);
+    const pres = d.presentation || {};
+    for (const k of PROTECTED_KEYS) if (k in pres) err('protectedKey', `${name}: '${k}' is inside 'presentation'; move it to the page root`);
+    if (pres.footer && pres.footer.type !== 'footer') err('footer', `${name}: footer block needs type "footer" (got ${JSON.stringify(pres.footer.type)})`);
+    if (!f.endsWith('.pmd')) continue;
+    const pageType = pres.pageType ?? d.pageType;
+    if (pageType != null && !['EDIT', 'VIEW'].includes(pageType)) err('pageType', `${name}: pageType ${JSON.stringify(pageType)} must be "EDIT" or "VIEW" (uppercase)`);
+    if ([true, 'true'].includes(pres.standardEditButtonsHidden) && !('editButtonBar' in pres)) {
+      err('submitButton', `${name}: standardEditButtonsHidden without editButtonBar leaves no way to submit`, name);
+    }
+    walk(d, (node) => {
+      for (const k of Object.keys(node)) if (k.startsWith('_')) err('underscoreAttr', `${name}: App Builder attribute '${k}' on ${node.id || node.type || '?'} is not valid PMD`);
+      if (['checkbox', 'dropDown', 'select'].includes(node.type)) err('widgetType', `${name}: widget type '${node.type}' is invalid (use checkBox / dropdown)`);
+      if (node.type === 'fieldSet' && 'label' in node && 'title' in node) err('fieldSet', `${name}: fieldSet '${node.id || '?'}' has both 'label' and 'title'; remove one`);
+      const tr = node.taskReference;
+      if (tr && typeof tr === 'object' && 'parameters' in tr && 'parameterBindings' in tr) err('taskReference', `${name}: ${node.id || '?'} has both parameters and parameterBindings (parameters are dropped)`);
+    });
+    // queryParams: a bare name in a script is a classic "1 Error"; only known param names are flagged.
+    if (/<%[^%]*(?<![\w.])errorCode\b/.test(JSON.stringify(d))) err('queryParams', `${name}: bare 'errorCode' in a script; use queryParams.errorCode`);
+  }
+
+  // 4. Task references resolve
+  const tasks = Object.fromEntries((amd.tasks || []).filter((t) => t && typeof t === 'object').map((t) => [t.id, t]));
+  const pageIds = new Set(Object.values(pmds).map((d) => d.id));
+  for (const [tid, t] of Object.entries(tasks)) {
+    const pid = (t.page || {}).id;
+    if (pid && !pageIds.has(pid)) err('amdTask', `AMD task '${tid}' points at page '${pid}', which has no .pmd file`);
+  }
+  const refs = [];
+  for (const [f, d] of [...Object.entries(pmds), ...Object.entries(cards), [AMD_PATH, amd]]) {
+    walk(d, (node, pk) => {
+      if (['taskReference', 'initialTask', 'task', 'cancelOverride', 'conclusion'].includes(pk) && typeof node.taskId === 'string') refs.push([path.basename(f), node.taskId]);
+      for (const s of node.flowSteps || []) if (s && typeof s.taskId === 'string') refs.push([path.basename(f), s.taskId]);
+    });
+  }
+  for (const [src, tid] of refs) if (!tid.includes('<%') && !(tid in tasks)) err('taskRef', `${src}: references taskId '${tid}', which is not in the AMD tasks list`);
+
+  // 5. Orchestration launches point at real orchestrations
+  const orchNames = new Set(listFiles('orchestration').filter((f) => f.endsWith('.orchestration')).map((f) => path.basename(f, '.orchestration')));
+  for (const [f, d] of Object.entries(pmds)) {
+    for (const m of JSON.stringify(d).matchAll(/\/([A-Za-z0-9_]+)\/launch/g)) {
+      if (!orchNames.has(m[1])) err('orchestration', `${path.basename(f)}: launches '${m[1]}', but orchestration/${m[1]}.orchestration does not exist`);
+    }
+  }
+
+  // 6. Business process routes have matching AMD tasks
+  const routes = new Set(Object.values(tasks).map((t) => t.routingPattern));
+  for (const f of listFiles('model').filter((x) => x.endsWith('.businessprocess'))) {
+    walk(docs[f] || {}, (node) => {
+      if (typeof node.pageRoute === 'string' && !routes.has(node.pageRoute)) err('bpRoute', `${path.basename(f)}: pageRoute '${node.pageRoute}' has no AMD task with that routingPattern`);
+    });
+  }
+
+  // 7. Card rules (both fail the upload)
+  for (const [f, d] of Object.entries(cards)) {
+    const body = JSON.stringify(Object.fromEntries(Object.entries(d).filter(([k]) => !['id', 'parameters'].includes(k))));
+    for (const prm of d.parameters || []) {
+      if (!new RegExp(`\\b${prm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`).test(body)) err('cardParams', `${path.basename(f)}: parameter '${prm}' is declared but never used`);
+    }
+    for (const m of body.matchAll(/<%(.*?)%>/g)) {
+      if (m[1].includes("'")) { err('cardQuotes', `${path.basename(f)}: single-quoted literal inside <% %> fails tokenization; pass it in as a parameter`); break; }
+    }
+  }
+
+  // 8. No forbidden test text in anything shipped to the tenant (CLAUDE.md "Test data in the tenant")
+  const forbidden = new RegExp(['cl', 'aude'].join(''), 'i');
+  for (const f of [...listFiles('presentation', true), ...listFiles('model'), ...listFiles('orchestration')]) {
+    if (forbidden.test(fs.readFileSync(path.join(ROOT, f), 'utf8'))) err('testText', `${f}: contains forbidden test text`);
+  }
+
+  // 9. Inbound endpoints should fail loudly (warning only)
+  let quiet = 0;
+  for (const d of Object.values(pmds)) {
+    walk(d, (node, pk) => { if (pk === 'endPoints' && 'baseUrlType' in node && !('failOnStatusCodes' in node) && !node.deferred) quiet++; });
+  }
+  if (quiet) warn('Static.failOnStatusCodes', `${quiet} inbound endpoint(s) have no failOnStatusCodes (errors are swallowed)`);
+
+  if (!errs.length) pass('Static', `${Object.keys(docs).length} JSON components, ${Object.keys(pmds).length} pages, ${Object.keys(tasks).length} AMD tasks, ${orchNames.size} orchestrations, ${Object.keys(cards).length} cards checked`);
+  return { pmds };
+}
+
+// ISU static check: audit and request writes go through the ISU, so users can be view-only.
+// Part of the isu suite only, because it fails until the ISU branch is merged.
+function isuStaticCheck() {
+  const pmds = Object.fromEntries(listFiles('presentation').filter((f) => f.endsWith('.pmd'))
+    .map((f) => [f, JSON.parse(fs.readFileSync(path.join(ROOT, f), 'utf8'))]));
+  const smd = listFiles('presentation').find((f) => f.endsWith('.smd'));
+  const auth = smd ? JSON.parse(fs.readFileSync(path.join(ROOT, smd), 'utf8'))?.siteAuth?.authTypes || [] : [];
+  const bad = [];
+  for (const [f, d] of Object.entries(pmds)) {
+    for (const e of (d.outboundData || {}).outboundEndPoints || []) {
+      const u = String(e.url || '');
+      if (e.baseUrlType === 'BUSINESS-OBJECT' && /comsAuditLogs|comsAssignableRoles/.test(u) && e.authType !== 'isuAuth') bad.push(`${path.basename(f)}:${e.name}`);
+    }
+  }
+  if (!auth.some((a) => a.id === 'isuAuth')) throw new Error('the SMD defines no isuAuth auth type');
+  if (bad.length) throw new Error(`${bad.length} audit/request write(s) still run as the user, e.g. ${bad[0]} (set authType "isuAuth")`);
+  pass('ISU.writesUseIsu', 'every page write to comsAuditLogs / comsAssignableRoles uses isuAuth');
+}
+
+// ═══ Live suites: shared helpers ═══════════════════════════════════════════════
 // ─── Token ────────────────────────────────────────────────────────────────────
 function resolveToken() {
   if (arg('--token')) return arg('--token');
@@ -78,26 +277,6 @@ function request(method, url, token, body) {
 }
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-// ─── Results ──────────────────────────────────────────────────────────────────
-const results = [];
-// Everything printed is also kept for the GitHub run summary (job logs are often truncated).
-const transcript = [];
-for (const k of ['log', 'error']) {
-  const orig = console[k].bind(console);
-  console[k] = (...a) => { transcript.push(a.join(' ')); orig(...a); };
-}
-const record = (status, name, msg) => {
-  results.push({ status, name, msg });
-  const icon = { PASS: 'PASS', FAIL: 'FAIL', SKIP: 'SKIP' }[status];
-  (status === 'FAIL' ? console.error : console.log)(`  ${icon}  ${name}: ${msg}`);
-};
-const pass = (n, m) => record('PASS', n, m);
-const fail = (n, m) => record('FAIL', n, m);
-const skip = (n, m) => record('SKIP', n, m);
-async function test(name, fn) {
-  try { await fn(); } catch (e) { fail(name, e.message); }
-}
-
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const wql = (token, query, limit = 100) =>
   request('GET', `${WQL}?limit=${limit}&query=${encodeURIComponent(query)}`, token);
@@ -131,7 +310,7 @@ async function expectRejected(token, name, params) {
   if (fresh.length) throw new Error(`${name} accepted a call it should reject (audit ${fresh[0].objectType}/${fresh[0].action})`);
 }
 
-// ─── Smoke suite (read-only) ──────────────────────────────────────────────────
+// ═══ Smoke suite (read-only) ═══ ──────────────────────────────────────────────────
 async function smoke(token, me) {
   console.log('\n-- Smoke (read-only) --');
 
@@ -380,12 +559,14 @@ async function full(token, me) {
     });
     expectAudit(add, 'Role Assignment', 'ASSIGN POSITION');
     let added = null;
-    for (let i = 0; i < 6 && !added; i++) {
+    // WQL can lag the change by well over 20 s: poll up to 90 s. If it never shows, say so loudly,
+    // because the position is then left on the test role and must be removed by hand.
+    for (let i = 0; i < 18 && !added; i++) {
       const after = await readRole();
       added = (after?.positions || []).find((p) => !cur.positions.some((q) => q.id === p.id));
-      if (!added) await sleep(3000);
+      if (!added) await sleep(5000);
     }
-    if (!added) throw new Error(`${pos.cf_PositionID} was audited as added to ${roleName} but is not on the role assignment`);
+    if (!added) throw new Error(`${pos.cf_PositionID} was audited as added to ${roleName} but did not appear on the role assignment within 90 s; it is probably still assigned: remove it in Manage Role Assignments`);
     const rem = await launchAndVerify(token, 'AssignRolePositions', {
       ...base, positionId: added.id, positionIdType: 'WID', positionName: added.descriptor || pos.cf_PositionID,
       mode: 'REMOVE', positionWid: added.id, ...who(),
@@ -635,38 +816,71 @@ async function cleanup(token, me) {
   pass('Cleanup.audit', `deleted ${deleted} test audit entr(ies)`);
 }
 
+// ═══ ISU suite: lockdown checks (run only by name, once ISU writes are live) ═══
+// After the ISU change, users are View/Get only on the audit log and request data, and only the app
+// (pages with isuAuth, orchestrations with the ISU credential) can write. These checks try direct
+// writes as the signed-in user and expect them to be refused. Anything that gets through is
+// deleted again and fails the test. Delete itself isn't probed: a successful probe would destroy data.
+async function isuSuite(token, me) {
+  console.log('\n-- ISU (lockdown: direct user writes must be refused) --');
+  await test('ISU.writesUseIsu', async () => isuStaticCheck());
+  const refused = async (name, fn, undo) => {
+    let created;
+    try { created = await fn(); } catch (e) {
+      if (/HTTP 40[13]/.test(e.message)) return pass(name, `refused (${e.message.slice(0, 8)})`);
+      throw new Error(`expected 401/403, got: ${e.message.slice(0, 120)}`);
+    }
+    if (created?.id) { try { await undo(created.id); } catch (_) { /* reported below */ } }
+    throw new Error(`the write went through as ${me.descriptor} (record ${created?.id || '?'} removed again)`);
+  };
+  const ts = new Date().toISOString().replace(/\.\d+Z$/, 'Z');
+  await test('ISU.userCannotWriteAudit', () => refused('ISU.userCannotWriteAudit',
+    () => request('POST', `${BO}/comsAuditLogs`, token, { timestamp: ts, objectType: 'Shell Org', action: 'ADD', coName: 'X:ADM:TEST:ISU:PROBE', details: 'ISU lockdown probe' }),
+    (id) => request('DELETE', `${BO}/comsAuditLogs/${id}`, token)));
+  await test('ISU.userCannotWriteRequest', () => refused('ISU.userCannotWriteRequest',
+    () => request('POST', `${BO}/comsAssignableRoles`, token, { referenceId: `ISU-PROBE-${Date.now()}`, roleName: 'X:ADM:ROLE:TESTROLEISUPROBE', status: 'Pending ISC Review', active: false }),
+    (id) => request('DELETE', `${BO}/comsAssignableRoles/${id}`, token)));
+  await test('ISU.userCannotEditRequest', async () => {
+    const r = ((await request('GET', `${BO}/comsAssignableRoles?limit=100`, token)).data || []).find((x) => /TEST/.test(x.roleName || ''));
+    if (!r) return skip('ISU.userCannotEditRequest', 'no TEST request to probe');
+    // PATCH a field to its current value: harmless if it goes through.
+    await refused('ISU.userCannotEditRequest', async () => { await request('PATCH', `${BO}/comsAssignableRoles/${r.id}`, token, { notes: r.notes ?? '' }); return {}; }, async () => {});
+  });
+}
+
 // ─── Main ─────────────────────────────────────────────────────────────────────
 (async () => {
-  const token = resolveToken();
-  if (!token) {
-    console.error('No Workday token: pass --token, set WD_DEV_TOKEN, or log in with wdcli.');
-    process.exit(2);
-  }
-  console.log(`ECO-COMS e2e: suite=${SUITE} tenant=${TENANT}`);
-  let me;
-  try {
-    me = await request('GET', `${API}/common/v1/workers/me`, token);
-    pass('Auth', `signed in as ${me.descriptor}`);
-  } catch (e) {
-    fail('Auth', e.message);
-  }
-  if (me) {
-    if (SUITE === 'cleanup') {
-      await cleanup(token, me);
+  console.log(`ECO-COMS tests: suite=${SUITES.join(',')} tenant=${TENANT}`);
+  if (SUITES.includes('static')) staticSuite();
+
+  const live = SUITES.filter((s) => s !== 'static');
+  if (live.length) {
+    const token = resolveToken();
+    if (!token) {
+      fail('Auth', 'no Workday token: pass --token, set WD_DEV_TOKEN, or log in with wdcli');
     } else {
-      await smoke(token, me);
-      if (SUITE === 'full') await full(token, me);
+      let me;
+      try {
+        me = await request('GET', `${API}/common/v1/workers/me`, token);
+        pass('Auth', `signed in as ${me.descriptor}`);
+      } catch (e) { fail('Auth', e.message); }
+      if (me) {
+        if (live.includes('smoke') || live.includes('full')) await smoke(token, me);
+        if (live.includes('full')) await full(token, me);
+        if (live.includes('isu')) await isuSuite(token, me);
+        if (live.includes('cleanup')) await cleanup(token, me);
+      }
     }
   }
 
   const count = (s) => results.filter((r) => r.status === s).length;
-  const summary = { passed: count('PASS'), failed: count('FAIL'), skipped: count('SKIP') };
-  console.log(`\n${summary.passed} passed, ${summary.failed} failed, ${summary.skipped} skipped`);
-  fs.writeFileSync(path.join(__dirname, 'e2e-results.json'),
-    JSON.stringify({ runAt: new Date().toISOString(), suite: SUITE, tenant: TENANT, summary, results }, null, 2));
-
+  const summary = { passed: count('PASS'), failed: count('FAIL'), skipped: count('SKIP'), warnings: count('WARN') };
+  const line = `${summary.passed} passed, ${summary.failed} failed, ${summary.skipped} skipped, ${summary.warnings} warnings`;
+  console.log(`\n${line}`);
+  fs.writeFileSync(path.join(__dirname, 'results.json'),
+    JSON.stringify({ runAt: new Date().toISOString(), suites: SUITES, tenant: TENANT, summary, results }, null, 2));
   if (process.env.GITHUB_STEP_SUMMARY) {
-    const lines = [`## ECO-COMS e2e (${SUITE})`, '', `${summary.passed} passed, ${summary.failed} failed, ${summary.skipped} skipped`, '',
+    const lines = [`## ECO-COMS tests (${SUITES.join(', ')})`, '', line, '',
       '| Result | Test | Detail |', '|---|---|---|',
       ...results.map((r) => `| ${r.status} | ${r.name} | ${String(r.msg).replace(/\|/g, '/').slice(0, 160)} |`),
       '', '<details><summary>Full output</summary>', '', '```', ...transcript, '```', '</details>'];
