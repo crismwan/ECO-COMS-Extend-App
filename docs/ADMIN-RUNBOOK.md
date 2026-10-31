@@ -269,7 +269,7 @@ From `docs/ECO-COMS-NOTES.md` (2026-10-30):
 Also outstanding:
 
 - Exclude Initiator is not yet tested live.
-- After OK, editRoleAssignment returns to the app home, not to Shell Org Manager. A flow or conclusion page would fix this.
+- Fixed 2026-10-31: after OK, Manage Role Assignments now goes to a confirmation page (`roleAssignmentSuccess`, flow `editRoleAssignmentFlow`) with a button back to Shell Org Manager for the same application.
 - Done 2026-10-31: P-00001 was removed from `X:BPMS(ODMT):ROLE:ADVISORS`.
 - The stray org "COMS Application:PATTERN:TEST:TEST:302:152:2026W1" is still active and needs someone with organization maintenance rights to inactivate it.
 - Bulk Role Changes: a successful real run (and the Apply button's OK) is not yet tested live.

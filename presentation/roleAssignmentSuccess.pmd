@@ -1,0 +1,123 @@
+{
+  "id": "roleAssignmentSuccess",
+  "securityDomains": [
+    "ManageCOMSShellOrgs"
+  ],
+  "presentation": {
+    "headerSize": "STANDARD",
+    "title": {
+      "type": "title",
+      "label": "Role Assignment Updated"
+    },
+    "body": {
+      "type": "basicFormLayout",
+      "id": "roleAssignmentSuccessForm",
+      "sections": [
+        {
+          "type": "layoutSection",
+          "id": "successSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "successFieldSet",
+              "title": "Changes applied",
+              "children": [
+                {
+                  "type": "richText",
+                  "id": "successMessage",
+                  "enabled": false,
+                  "value": "<span style=\"color:#059669;font-size:12px;font-weight:700\">✓ </span><span style=\"color:#065f46;font-size:12px\">Workday accepted the changes. Each one is in the Audit Log as ASSIGN POSITION or REMOVE POSITION.</span>"
+                },
+                {
+                  "type": "readOnlyText",
+                  "id": "roleDisplay",
+                  "label": "Role",
+                  "value": "<% flowVariables.roleName ?? '' %>"
+                },
+                {
+                  "type": "readOnlyText",
+                  "id": "orgDisplay",
+                  "label": "Organization",
+                  "value": "<% flowVariables.orgName ?? '' %>"
+                },
+                {
+                  "type": "readOnlyText",
+                  "id": "addedDisplay",
+                  "label": "Positions added",
+                  "value": "<% empty(flowVariables.added) ? 'None' : flowVariables.added %>"
+                },
+                {
+                  "type": "readOnlyText",
+                  "id": "removedDisplay",
+                  "label": "Positions removed",
+                  "value": "<% empty(flowVariables.removed) ? 'None' : flowVariables.removed %>"
+                },
+                {
+                  "type": "readOnlyText",
+                  "id": "effectiveDateDisplay",
+                  "label": "Effective Date",
+                  "value": "<% flowVariables.effectiveDate ?? '' %>"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "navSection",
+          "children": [
+            {
+              "type": "button",
+              "id": "backToManagerButton",
+              "label": "Back to Shell Org Manager",
+              "action": "PRIMARY",
+              "taskReference": {
+                "taskId": "shellOrgManager",
+                "parameterBindings": {
+                  "appCode": "<% flowVariables.appCode ?? '' %>",
+                  "appName": "<% flowVariables.appName ?? '' %>"
+                }
+              }
+            },
+            {
+              "type": "button",
+              "id": "manageAgainButton",
+              "label": "Manage this role again",
+              "action": "AUXILIARY",
+              "taskReference": {
+                "taskId": "editRoleAssignment",
+                "parameterBindings": {
+                  "roleId": "<% flowVariables.roleId ?? '' %>",
+                  "roleName": "<% flowVariables.roleName ?? '' %>",
+                  "orgId": "<% flowVariables.orgId ?? '' %>",
+                  "orgName": "<% flowVariables.orgName ?? '' %>",
+                  "appCode": "<% flowVariables.appCode ?? '' %>",
+                  "appName": "<% flowVariables.appName ?? '' %>"
+                }
+              }
+            },
+            {
+              "type": "button",
+              "id": "homeButton",
+              "label": "← Home",
+              "action": "LINK",
+              "taskReference": {
+                "taskId": "home"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "footer": {
+      "type": "footer",
+      "children": [
+        {
+          "type": "pod",
+          "podId": "ecoComsFooter"
+        }
+      ]
+    },
+    "pageType": "VIEW"
+  }
+}

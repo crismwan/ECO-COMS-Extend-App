@@ -66,6 +66,28 @@
           "endsFlow": true
         }
       ]
+    },
+    {
+      "id": "editRoleAssignmentFlow",
+      "flowSteps": [
+        {
+          "id": "editRoleAssignmentStep",
+          "taskId": "editRoleAssignment",
+          "startsFlow": true,
+          "transitions": [
+            {
+              "order": "a",
+              "value": "roleAssignmentSuccessStep",
+              "condition": "true"
+            }
+          ]
+        },
+        {
+          "id": "roleAssignmentSuccessStep",
+          "taskId": "roleAssignmentSuccess",
+          "endsFlow": true
+        }
+      ]
     }
   ],
   "tasks": [
@@ -277,6 +299,13 @@
       "routingPattern": "/bulkRoleApply",
       "page": {
         "id": "bulkRoleApply"
+      }
+    },
+    {
+      "id": "roleAssignmentSuccess",
+      "routingPattern": "/roleAssignmentSuccess",
+      "page": {
+        "id": "roleAssignmentSuccess"
       }
     }
   ],

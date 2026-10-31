@@ -241,7 +241,58 @@
     },
     "pageType": "EDIT",
     "cancelOverride": {
-      "taskId": "shellOrgManager"
+      "taskId": "shellOrgManager",
+      "parameterBindings": {
+        "appCode": "<% queryParams.appCode ?? '' %>",
+        "appName": "<% queryParams.appName ?? '' %>"
+      }
     }
+  },
+  "outboundData": {
+    "outboundEndPoints": [
+      {
+        "type": "outboundVariable",
+        "name": "roleAssignmentFlowVars",
+        "variableScope": "flow",
+        "values": [
+          {
+            "outboundPath": "roleId",
+            "value": "<% queryParams.roleId ?? '' %>"
+          },
+          {
+            "outboundPath": "roleName",
+            "value": "<% queryParams.roleName ?? '' %>"
+          },
+          {
+            "outboundPath": "orgId",
+            "value": "<% queryParams.orgId ?? '' %>"
+          },
+          {
+            "outboundPath": "orgName",
+            "value": "<% queryParams.orgName ?? '' %>"
+          },
+          {
+            "outboundPath": "appCode",
+            "value": "<% queryParams.appCode ?? '' %>"
+          },
+          {
+            "outboundPath": "appName",
+            "value": "<% queryParams.appName ?? '' %>"
+          },
+          {
+            "outboundPath": "added",
+            "value": "<% (positionsToAddInstanceList.selectedEntries ?? []).map(p => { p.descriptor ?? p.id }).join(', ') %>"
+          },
+          {
+            "outboundPath": "removed",
+            "value": "<% (positionsToRemoveInstanceList.selectedEntries ?? []).map(p => { p.descriptor ?? p.id }).join(', ') %>"
+          },
+          {
+            "outboundPath": "effectiveDate",
+            "value": "<% empty(effectiveDate.value) ? '' : effectiveDate.value.format('yyyy-MM-dd') %>"
+          }
+        ]
+      }
+    ]
   }
 }

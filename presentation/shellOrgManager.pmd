@@ -714,7 +714,9 @@
                           "roleId": "<% ra.role.id ?? '' %>",
                           "roleName": "<% ra.role.descriptor ?? '' %>",
                           "orgId": "<% ra.org.id ?? '' %>",
-                          "orgName": "<% ra.org.descriptor ?? '' %>"
+                          "orgName": "<% ra.org.descriptor ?? '' %>",
+                          "appCode": "<% queryParams.appCode ?? '' %>",
+                          "appName": "<% queryParams.appName ?? '' %>"
                         }
                       }
                     },
