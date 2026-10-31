@@ -115,7 +115,7 @@ nodes.append(continue_on('CheckUpload', [
     ('data.ExtractUpload.uploadRef.equals(data.GetInputParams.ref)', '"no upload found with batch reference " + data.GetInputParams.ref + " (found " + data.ExtractUpload.uploadRef + ")"'),
 ]))
 nodes.append(send('MarkRunning', 'PATCH', APP + 'comsBulkUploads/"}${data.ExtractUpload.uploadId}"',
-    '{\n  "status": "Running",\n  "statusMessage": "Processing started {{data.GetInputParams.timestamp}}"\n}'))
+    '{\n  "status": "Running",\n  "runMode": "{{data.GetInputParams.mode}}",\n  "statusMessage": "Processing started {{data.GetInputParams.timestamp}}"\n}'))
 nodes.append(get('GetFile', APP + 'comsBulkUploads/"}${data.ExtractUpload.uploadId}"', 'Any'))
 nodes.append(create_values('FileInfo', [
     ('tooMany', 'Boolean', 'data.GetFile.response.asCSV().countRows() > 201'),
@@ -131,13 +131,21 @@ row = create_values('Row', [
     ('isAdd', 'Boolean', 'data.Row.rowAction.equals("ADD")'),
     ('isRemove', 'Boolean', 'data.Row.rowAction.equals("REMOVE")'),
     ('isAction', 'Boolean', 'data.Row.isAdd.or(data.Row.isRemove)'),
-    ('isValid', 'Boolean', 'data.Row.roleWid.isEmpty().or(data.Row.orgWid.isEmpty()).or(if (data.Row.isAdd) data.Row.positionId.isEmpty() else data.Row.assigneeWid.isEmpty()).not()'),
-    ('doApply', 'Boolean', 'if (data.Row.isAction) (if (data.Row.isValid) data.GetInputParams.isApply else false) else false'),
-    ('doCheck', 'Boolean', 'if (data.Row.isAction) data.Row.doApply.not() else false'),
+    ('complete', 'Boolean', 'data.Row.roleWid.isEmpty().or(data.Row.orgWid.isEmpty()).or(if (data.Row.isAdd) data.Row.positionId.isEmpty() else data.Row.assigneeWid.isEmpty()).not()'),
     ('idType', 'String', 'if (data.Row.isAdd) "Position_ID" else "WID"'),
     ('idValue', 'String', '(if (data.Row.isAdd) data.Row.positionId else data.Row.assigneeWid).escapeXml()'),
-    ('checkResult', 'String', 'if (data.Row.isValid) "VALID" else "INVALID"'),
-    ('checkMessage', 'String', 'if (data.Row.isValid) "Row is complete; not applied (validation run)." else (if (data.Row.isAdd) "Missing Role WID, Organization WID or Position ID." else "Missing Role WID, Organization WID or Assignee WID.")'),
+    # same WQL the single-change page uses (posWidLookup); quotes stripped so the cell can't change the query
+    ('wql', 'String', '"SELECT workdayID, cf_PositionID, cf_PositionIsFilled FROM allPositions WHERE cf_PositionID = \'".append(data.Row.positionId.replace("\'", "")).append("\'")'),
+])
+lookup = get('LookupPosition', 's"${"/wql/v1/data?limit=1&query="}${data.Row.wql.urlEncode().replace("+", "%20")}"')
+check = create_values('Check', [
+    ('found', 'Boolean', 'data.LookupPosition.response.asJSON().stringAtJsonPathWithDefault("$.data[0].workdayID", "").isEmpty().not()'),
+    ('unfilled', 'Boolean', 'data.LookupPosition.response.toString().replace(" ", "").contains("\\"cf_PositionIsFilled\\":false")'),
+    ('isValid', 'Boolean', 'if (data.Row.complete) (if (data.Row.isAdd) data.Check.found else true) else false'),
+    ('doApply', 'Boolean', 'if (data.Check.isValid) data.GetInputParams.isApply else false'),
+    ('doCheck', 'Boolean', 'data.Check.doApply.not()'),
+    ('checkResult', 'String', 'if (data.Check.isValid) "VALID" else "INVALID"'),
+    ('checkMessage', 'String', 'if (data.Row.complete.not()) (if (data.Row.isAdd) "Missing Role WID, Organization WID or Position ID." else "Missing Role WID, Organization WID or Assignee WID.") else (if (data.Check.isValid) (if (data.Check.unfilled) "Row is complete; not applied (validation run). Note: the position is unfilled, and Workday may reject it." else "Row is complete; not applied (validation run).") else "Position ID ".append(data.Row.positionId).append(" was not found in Workday."))'),
 ])
 soap = rename(copy.deepcopy(SOAP), 'CallAssignRoles')
 tpl = soap['_value']['body']['_value']['_value']['message']['_value']
@@ -163,7 +171,7 @@ RESULT = ('{\n  "batchRef": "{{data.GetInputParams.ref}}",\n  "runMode": "{{data
 applied = send('WriteAppliedResult', 'POST', APP + 'comsBulkRowResults"}"',
     RESULT.replace('RESULT_FIELDS', '"result": "{{#if data.Outcome.ok}}DONE{{/if}}{{#if data.Outcome.failed}}FAILED{{/if}}",\n  "message": "{{#if data.Outcome.ok}}Applied in Workday.{{/if}}{{#if data.Outcome.failed}}Workday rejected the change: {{data.Outcome.fault}}{{/if}}"'))
 checked = send('WriteCheckResult', 'POST', APP + 'comsBulkRowResults"}"',
-    RESULT.replace('RESULT_FIELDS', '"result": "{{data.Row.checkResult}}",\n  "message": "{{data.Row.checkMessage}}"'))
+    RESULT.replace('RESULT_FIELDS', '"result": "{{data.Check.checkResult}}",\n  "message": "{{data.Check.checkMessage}}"'))
 audit = rename(node(deny, 'WriteAuditLog'), 'WriteAuditLog')
 audit['_value']['body']['_value']['_value']['message']['_value'] = (
     '{\n  "timestamp": "{{data.GetInputParams.timestamp}}",\n  "objectType": "Role Assignment",\n'
@@ -174,11 +182,12 @@ audit['_value']['body']['_value']['_value']['message']['_value'] = (
     '  "positionWid": "{{#if data.Row.isRemove}}{{data.Row.assigneeWid}}{{/if}}",\n  "triggeredBy": "{{data.GetInputParams.changedBy}}",\n'
     '  "details": "Bulk upload {{data.GetInputParams.ref}}: {{#if data.Row.isAdd}}assigned{{/if}}{{#if data.Row.isRemove}}removed{{/if}} position {{data.Row.positionName}} on role {{data.Row.roleName}}"\n}')
 row_branch = branch('RowBranch', [
-    ('IF_Apply', 'data.Row.doApply', [soap, outcome, applied, branch('AuditBranch', [('IF_Done', 'data.Outcome.ok', [audit])])]),
-    ('IF_Check', 'data.Row.doCheck', [checked]),
+    ('IF_Apply', 'data.Check.doApply', [soap, outcome, applied, branch('AuditBranch', [('IF_Done', 'data.Outcome.ok', [audit])])]),
+    ('IF_Check', 'data.Check.doCheck', [checked]),
 ])
+action_branch = branch('ActionBranch', [('IF_Action', 'data.Row.isAction', [lookup, check, row_branch])])
 loop = copy.deepcopy(LOOP)
-loop['_value']['group']['_value']['nodes']['_value'] = [row, row_branch]
+loop['_value']['group']['_value']['nodes']['_value'] = [row, action_branch]
 
 finish = send('MarkFinished', 'PATCH', APP + 'comsBulkUploads/"}${data.ExtractUpload.uploadId}"',
     '{\n  "status": "{{#if data.GetInputParams.isApply}}Completed{{/if}}{{#if data.FileInfo.notApply}}Validated{{/if}}",\n'

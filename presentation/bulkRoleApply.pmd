@@ -1,0 +1,241 @@
+{
+  "id": "bulkRoleApply",
+  "securityDomains": [
+    "ManageCOMSShellOrgs"
+  ],
+  "endPoints": [
+    {
+      "name": "selectedWorker",
+      "baseUrlType": "COMMON",
+      "url": "/workers/me",
+      "authType": "sso",
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 403
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "name": "storedUpload",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "authType": "sso",
+      "isCollection": true,
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 403
+        },
+        {
+          "code": 429
+        }
+      ],
+      "url": "<% '/comsBulkUploads?limit=1&batchRef=' + (queryParams.batch ?? '') %>"
+    },
+    {
+      "name": "storedRows0",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "authType": "sso",
+      "isCollection": true,
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 403
+        },
+        {
+          "code": 429
+        }
+      ],
+      "url": "<% '/comsBulkRowResults?limit=100&offset=0&batchRef=' + (queryParams.batch ?? '') %>"
+    },
+    {
+      "name": "storedRows1",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "authType": "sso",
+      "isCollection": true,
+      "failOnStatusCodes": [
+        {
+          "code": 429
+        }
+      ],
+      "url": "<% '/comsBulkRowResults?limit=100&offset=100&batchRef=' + (queryParams.batch ?? '') %>"
+    }
+  ],
+  "onSubmit": "<%\n  let up = (size(storedUpload.data ?? []) > 0 ? storedUpload.data[0] : {});\n  let valid = true;\n  if ((up.status ?? '') != 'Validated') {\n    confirmApplyCheckBox.setError('Only an upload with status Validated can be applied. This one is ' + (up.status ?? 'not found') + '.');\n    valid = false;\n  } else if (size((list:flatten([storedRows0.data ?? [], storedRows1.data ?? []]).filter(x => { (x.runMode ?? '') == 'VALIDATE' })).filter(x => { x.result == 'INVALID' })) > 0) {\n    confirmApplyCheckBox.setError('Fix the INVALID rows in the file and upload it again; a file with INVALID rows cannot be applied.');\n    valid = false;\n  } else if (size((list:flatten([storedRows0.data ?? [], storedRows1.data ?? []]).filter(x => { (x.runMode ?? '') == 'VALIDATE' })).filter(x => { x.result == 'VALID' })) == 0) {\n    confirmApplyCheckBox.setError('This upload has no VALID rows to apply.');\n    valid = false;\n  } else if (confirmApplyCheckBox.value != true) {\n    confirmApplyCheckBox.setError('Tick this to confirm the real run.');\n    valid = false;\n  }\n  valid;\n%>",
+  "outboundData": {
+    "outboundEndPoints": [
+      {
+        "name": "markQueued",
+        "baseUrlType": "BUSINESS-OBJECT",
+        "httpMethod": "PATCH",
+        "authType": "sso",
+        "failOnStatusCodes": [
+          {
+            "code": 400
+          },
+          {
+            "code": 403
+          },
+          {
+            "code": 429
+          }
+        ],
+        "url": "<% '/comsBulkUploads/' + ((size(storedUpload.data ?? []) > 0 ? storedUpload.data[0] : {}).id ?? '') %>",
+        "values": [
+          {
+            "outboundPath": "status",
+            "value": "<% 'Queued' %>"
+          },
+          {
+            "outboundPath": "runMode",
+            "value": "<% 'APPLY' %>"
+          },
+          {
+            "outboundPath": "statusMessage",
+            "value": "<% 'Real run requested by ' + (selectedWorker.descriptor ?? '') %>"
+          }
+        ]
+      },
+      {
+        "name": "launchBulk",
+        "baseUrlType": "orchestration",
+        "httpMethod": "POST",
+        "authType": "sso",
+        "failOnStatusCodes": [
+          {
+            "code": 400
+          },
+          {
+            "code": 403
+          },
+          {
+            "code": 429
+          }
+        ],
+        "url": "<% '/BulkRoleApply/launch?ref=' + (queryParams.batch ?? '') + '&mode=APPLY&effectiveDate=' + ((size(storedUpload.data ?? []) > 0 ? storedUpload.data[0] : {}).effectiveDate ?? '') + '&changedBy=' + (selectedWorker.descriptor ?? '').urlEncode() + '&changedByWid=' + (selectedWorker.id ?? '') %>",
+        "values": [
+          {
+            "outboundPath": "ref",
+            "value": "<% (queryParams.batch ?? '') %>"
+          }
+        ]
+      }
+    ]
+  },
+  "presentation": {
+    "headerSize": "STANDARD",
+    "title": {
+      "type": "title",
+      "label": "ECO-COMS: Bulk Role Changes – Apply"
+    },
+    "cancelOverride": {
+      "taskId": "bulkRoleResults"
+    },
+    "body": {
+      "type": "basicFormLayout",
+      "id": "bulkApplyForm",
+      "sections": [
+        {
+          "type": "layoutSection",
+          "id": "warningSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "warningFieldSet",
+              "title": "Real run",
+              "children": [
+                {
+                  "type": "richText",
+                  "id": "warningRichText",
+                  "enabled": false,
+                  "value": "<span style=\"color:#B45309;font-size:12px;font-weight:700\">⚠ </span><span style=\"color:#374151;font-size:12px\">OK applies every VALID row of this upload in Workday's Assign Roles, with the effective date chosen when the file was validated. Changes that succeed are not undone if later rows fail. Each change is written to the Audit Log.</span>"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "detailSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "detailFieldSet",
+              "title": "Upload",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "fileNameText",
+                  "label": "File",
+                  "enabled": false,
+                  "value": "<% (size(storedUpload.data ?? []) > 0 ? storedUpload.data[0] : {}).fileName ?? ((size(storedUpload.data ?? []) > 0 ? storedUpload.data[0] : {}).descriptor ?? '') %>"
+                },
+                {
+                  "type": "text",
+                  "id": "batchText",
+                  "label": "Batch reference",
+                  "enabled": false,
+                  "value": "<% (queryParams.batch ?? '') %>"
+                },
+                {
+                  "type": "text",
+                  "id": "statusText",
+                  "label": "Status",
+                  "enabled": false,
+                  "value": "<% (size(storedUpload.data ?? []) > 0 ? storedUpload.data[0] : {}).status ?? 'Not found' %>"
+                },
+                {
+                  "type": "text",
+                  "id": "effectiveDateText",
+                  "label": "Effective Date",
+                  "enabled": false,
+                  "value": "<% (size(storedUpload.data ?? []) > 0 ? storedUpload.data[0] : {}).effectiveDate ?? '' %>"
+                },
+                {
+                  "type": "text",
+                  "id": "validRowsText",
+                  "label": "VALID rows (will be applied)",
+                  "enabled": false,
+                  "value": "<% '' + size((list:flatten([storedRows0.data ?? [], storedRows1.data ?? []]).filter(x => { (x.runMode ?? '') == 'VALIDATE' })).filter(x => { x.result == 'VALID' })) %>"
+                },
+                {
+                  "type": "text",
+                  "id": "invalidRowsText",
+                  "label": "INVALID rows",
+                  "enabled": false,
+                  "value": "<% '' + size((list:flatten([storedRows0.data ?? [], storedRows1.data ?? []]).filter(x => { (x.runMode ?? '') == 'VALIDATE' })).filter(x => { x.result == 'INVALID' })) %>"
+                },
+                {
+                  "type": "checkBox",
+                  "id": "confirmApplyCheckBox",
+                  "label": "Apply these rows in Workday now",
+                  "value": "<% false %>"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "footer": {
+      "type": "footer",
+      "children": [
+        {
+          "type": "pod",
+          "podId": "ecoComsFooter"
+        }
+      ]
+    },
+    "pageType": "EDIT"
+  }
+}

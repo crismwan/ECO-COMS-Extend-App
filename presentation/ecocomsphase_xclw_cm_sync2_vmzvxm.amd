@@ -24,6 +24,28 @@
       ]
     },
     {
+      "id": "bulkRoleApplyFlow",
+      "flowSteps": [
+        {
+          "id": "bulkRoleApplyStep",
+          "taskId": "bulkRoleApply",
+          "startsFlow": true,
+          "transitions": [
+            {
+              "order": "a",
+              "value": "bulkRoleApplyResultsStep",
+              "condition": "true"
+            }
+          ]
+        },
+        {
+          "id": "bulkRoleApplyResultsStep",
+          "taskId": "bulkRoleResults",
+          "endsFlow": true
+        }
+      ]
+    },
+    {
       "id": "bulkRoleChangesFlow",
       "flowSteps": [
         {
@@ -248,6 +270,13 @@
       "routingPattern": "/bulkRoleResults",
       "page": {
         "id": "bulkRoleResults"
+      }
+    },
+    {
+      "id": "bulkRoleApply",
+      "routingPattern": "/bulkRoleApply",
+      "page": {
+        "id": "bulkRoleApply"
       }
     }
   ],
