@@ -2187,23 +2187,16 @@ workerDetail.visible = true;
 
 This is the idiomatic pattern in the Workday DevRel corpus. The setter methods (`setValue()`, `setVisible()`) are also available, but direct assignment works and is commonly used in script files.
 
-## Endpoints — `failOnStatusCodes` required
+## Endpoints — `failOnStatusCodes`
 
-**Always set `failOnStatusCodes`** (at minimum `[400, 403]`) on every inbound endpoint. Without it, HTTP error responses are swallowed silently — the endpoint appears to succeed with no data:
+Source: developer.workday.com "endPoints" reference (checked 2026-10-31).
 
-```json
-{
-  "name": "requests",
-  "baseUrlType": "BUSINESS-OBJECT",
-  "url": "/requests",
-  "authType": "sso",
-  "isCollection": true,
-  "bestEffort": "true",
-  "failOnStatusCodes": [400, 403, 404, 500]
-}
-```
-
-This is an enforced best-practice rule (EndpointFailOnStatusCodesRule) in the Workday DevRel Arcane Auditor.
+- **Format:** a list of objects, `"failOnStatusCodes": [{"code": 400}, {"code": 429}]` (`codeName` is optional and informational). Not a plain number list.
+- **Already errors by default:** 301, 302, 303, 307, 401, 404, 407, 408, 500, 503. **Ignored by default:** everything else, notably **400, 403 and 429**: without listing them, a bad request, a permission failure or throttling just looks like an empty result.
+- A listed code gives a page error (or the custom error page mapped in the SMD).
+- **Be deliberate with 403.** On an eager endpoint it fails the whole page. List it where a 403 means misconfigured security (the app's own business objects, `/workers/me`); leave it off side lists a user may legitimately lack access to (e.g. a Workday data source behind a search), so they see an empty list instead of a broken page.
+- `bestEffort: true` is about **widget** errors (the page renders without the failing widget); it doesn't stop a listed status code from failing the page.
+- Workday's DevRel Arcane Auditor flags inbound endpoints without it (EndpointFailOnStatusCodesRule). The static test suite warns on them.
 
 ## Endpoints — REST collections default to 20 rows
 
@@ -2238,25 +2231,16 @@ Using `isCollection: true` on inbound endpoints **can degrade the entire tenant 
 
 ## WQL — injection risk in string concatenation
 
-**Do not concatenate user input into WQL `contains(...)` expressions** in PMD script:
+**Don't put user-typed text into a WQL string raw.** A quote in the search text ends the WQL string literal and lets the user change the query:
 
 ```
-// UNSAFE — user controls the search string
-"query": "<% 'SELECT ... WHERE name contains \\'' + searchInput.value + '\\'' %>"
+// UNSAFE: the user controls the search string
+"url": "<% 'data?query=' + string:pathEncode('SELECT ... WHERE name contains \\'' + instanceListQuery + '\\'') %>"
 ```
 
-Instead, use a **WQL Query component** (`.wqlquery` file) with typed `parameters`, which passes values safely:
-
-```json
-{
-  "id": "searchOrgs",
-  "parameters": ["searchTerm"],
-  "query": "SELECT ... WHERE name contains \"<% searchTerm %>\""
-}
-```
-
-WQL Query component parameters are interpolated server-side — not string-concatenated by the PMD script — which prevents injection.
-
+- **Fix used in practice:** strip the characters that can end the literal before concatenating. In the script: `instanceListQuery.replace('\'', '').replace('\\', '')`; as written inside the .pmd JSON string: `instanceListQuery.replace('\\'', '').replace('\\\\', '')` (string `replace` replaces every occurrence; `replaceOnce` exists separately). Accented and other non-ASCII search text still works.
+- **Alternative:** a WQL Query component (`.wqlquery`) with `parameters`, interpolated server-side. But a `queryId` endpoint can't be called with `.invoke()` (see run-and-verify), so check it works with `searchEndPoint` before relying on it **(unverified)**.
+- Keep a static check that fails when `instanceListQuery` / `event.query` reaches a `data?query=` URL without the replace.
 
 ## Orchestrations — debugging and failure handling
 
@@ -2317,6 +2301,7 @@ Pattern that lets a Workday rejection block OK instead of showing a false succes
 
 ## Security and ISU writes
 
+- **Secure every orchestration a user can launch.** Without it, anyone who can reach the launch URL can run it (the page's own security doesn't cover the URL). Set `"enabledForOrchestrationSecurity": true` on the security domain (developer.workday.com "Add Security Domains"; changing it from false to true is allowed after promotion), then list the domain in the orchestration's `securityDomains`: `{"_type":["Opt",["List","String"]],"_value":{"_type":["List","String"],"_value":[{"_type":"String","_value":"ManageThings"}]}}`. Use the same domain as the page that launches it. Exactly which domain permission a launch needs, and whether several listed domains mean "any of", is **(unverified)**: test with a user who has the page but not the domain. Business-process-triggered orchestrations run as the tenant's launch user; leave them out.
 - Configure an ISU for Presentation Components (developer.workday.com "Configure ISU Authentication in Presentation Components"): SMD `"siteAuth": {"authTypes": [{"id": "isuAuth", "scheme": "ISU", "username": "<ISU username>"}]}`; on each endpoint, `"authType": "isuAuth"`.
 - Setup per tenant ("Create Integration System Users for apps"): create the ISU and its security group, assign it to the app with the **App Manager** task, and create orchestration credentials in Orchestration Builder (ISU credentials can't be used in Custom Agent Action orchestrations).
 - **An `isuAuth` endpoint fails with HTTP 500 and an empty body until the ISU is assigned to the app in App Manager** for that tenant. Naming it in the SMD isn't enough, and the assignment doesn't carry over on promotion: re-check after every move (dev → impl → sandbox → prod).
