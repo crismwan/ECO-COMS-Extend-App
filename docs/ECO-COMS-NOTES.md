@@ -315,3 +315,7 @@ ACTION: run 'wdcli app deploy ...' locally, log in, update WD_DEV_TOKEN secret
 - `DenyRoleRequest` did not run for test request `X:ADM:ROLE:TESTROLECIRUN22` after its review was cancelled (no failed runs in Orchestration Activity, simply no launch). The run-20 cancel worked. Check the event's Orchestrations tab (Find Events) and the BP's Configure Orchestrations after the deploy that changed the orchestration.
 - Two real pending requests (`X:ADM:KEYCLOAK:ANY:ROLE:COORDINATOR` and the AAA request) were saved before the Enabled For fix and hold a WID (`b40d8b01636710017a4c968020320000`) as their Enabled For text. The smoke check Requests.pendingEnabledFor fails on them until they're corrected or closed (user decision pending).
 - Branch `isu-writes` (ISU page writes) is unmerged; its static check now lives in the isu suite of `test/run-tests.js`. When merging, drop its edits to the deleted `test/static_checks.py` / `test/e2e.js`.
+
+## DENY audit names the actor (2026-10-31)
+
+DenyRoleRequest: `actorWid = bp.initiatingPerson().getIDValues("WID").get(0)` (a Person WID) → GetActor `GET /person/v4/people/{actorWid}/preferredName` → ExtractActor `$.data[0].descriptor` (fallback "Workday user") → audit `triggeredBy` = name, `changedByWid` = Person WID (the viewer's link resolves it). The full suite's Request.reviewCancelDeny asserts the name. Not yet tested with a canceller who isn't the requester.
