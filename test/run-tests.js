@@ -372,6 +372,22 @@ async function smoke(token, me) {
     audits = (await request('GET', `${BO}/comsAuditLogs?limit=100`, token)).data || [];
     pass('Audit.read', `${audits.length} recent records`);
   });
+  // Pages read business-object collections 100 rows at a time. These report the totals, the order
+  // the API returns rows in, and whether the offset pages line up, so the pages can be sized right.
+  await test('Audit.volume', async () => {
+    const one = await request('GET', `${BO}/comsAuditLogs?limit=1`, token);
+    const total = one.total ?? 0;
+    const first = audits[0]?.timestamp || '', last = audits[audits.length - 1]?.timestamp || '';
+    const order = !first || !last || first === last ? 'unknown' : (first < last ? 'oldest first' : 'newest first');
+    let page2 = '';
+    if (total > 100) {
+      const p2 = (await request('GET', `${BO}/comsAuditLogs?limit=100&offset=100`, token)).data || [];
+      const overlap = p2.filter((a) => audits.some((b) => b.id === a.id)).length;
+      page2 = `; offset=100 gave ${p2.length} rows, ${overlap} repeated from the first page`;
+    }
+    const msg = `${total} audit records in total; the API returns them ${order}${page2}`;
+    if (total > 500) warn('Audit.volume', `${msg}. The Audit Log Viewer loads 500 rows`); else pass('Audit.volume', msg);
+  });
   await test('Audit.vocabulary', async () => {
     const bad = audits.filter((a) => !OBJECT_TYPES.includes(a.objectType) || !ACTIONS.includes(a.action));
     if (bad.length) throw new Error(`${bad.length} record(s) outside the fixed vocabulary, e.g. ${JSON.stringify({ objectType: bad[0].objectType, action: bad[0].action })}`);
@@ -442,6 +458,17 @@ async function smoke(token, me) {
     pass('Requests.pendingEnabledFor', `${pending.length} pending request(s) show an Enabled For name`);
   });
 
+  await test('Requests.volume', async () => {
+    const total = (await request('GET', `${BO}/comsAssignableRoles?limit=1`, token)).total ?? 0;
+    const msg = `${total} assignable role requests in total`;
+    if (total > 100) warn('Requests.volume', `${msg}; pages load the first 100 only`); else pass('Requests.volume', msg);
+  });
+  // The legacy Maintain page is only needed for pending requests that have no review event.
+  await test('Requests.pendingHaveEvent', async () => {
+    const legacy = roles.filter((r) => r.status === 'Pending ISC Review' && !r.reviewEventWid);
+    if (legacy.length) return warn('Requests.pendingHaveEvent', `${legacy.length} pending request(s) without a review event (only the legacy Maintain page can act on them): ${legacy.map((r) => r.roleName).join(', ')}`);
+    pass('Requests.pendingHaveEvent', 'every pending request has a review event');
+  });
   await test('BP.pendingEventsOpen', async () => {
     const pending = roles.filter((r) => r.status === 'Pending ISC Review' && r.reviewEventWid).slice(0, 5);
     if (!pending.length) return skip('BP.pendingEventsOpen', 'no pending requests with a review event');
