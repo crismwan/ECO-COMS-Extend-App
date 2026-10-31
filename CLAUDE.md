@@ -1486,7 +1486,7 @@ File `simpleStatusCard.card` → `"id": "simpleStatusCard"`. Set `body.type` to 
 
   **CORRECTION:** Single-quoted string literals do NOT work inside `chartCard` `data` arrays either — this was incorrectly noted as confirmed. The tokenization restriction applies to ALL `.card` file `<% %>` expressions regardless of card type. Always use escaped double-quotes (`\"`) for string literals inside `<% %>` in any `.card` file, or pass pre-built values as parameters from the PMD.
 
-- `footer` (TaskButton array) — up to **5** links. Each: `label` (stringScript, **req**) plus **exactly one** of:
+- `footer` (TaskButton array) — up to **5** links. Only the **first** shows as a button; the rest go under the card's **More Actions** (⋯) menu (confirmed live 2026-10-31), so put the most used link first. Each: `label` (stringScript, **req**) plus **exactly one** of:
 
   - `taskReference` — `{ "taskId", "parameterBindings": { ... } }` to navigate to an app task.
 

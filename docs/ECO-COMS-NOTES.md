@@ -319,6 +319,12 @@ ACTION: run 'wdcli app deploy ...' locally, log in, update WD_DEV_TOKEN secret
 - The stray org "COMS Application:PATTERN:TEST:TEST:302:152:2026W1" is still active (hidden in the app). Logan McNeil has no inactivate action on it in Workday (related actions only offer view tasks), and ManageShellOrgStatus rightly refuses codes that don't start with X:. Someone with organization maintenance rights must inactivate it in Workday.
 - ISU lockdown (`isu-writes`): App Manager → Configure for the app shows no ISU assignment, and a search for DNU_ISU_ECO_COMS_DEPLOY_CMM finds nothing for Logan McNeil (2026-10-31). Not merged; see ADMIN-RUNBOOK section 3 for the setup steps.
 
+## After UI phase 2 (2026-10-31)
+
+- Manage Role Assignments: OK now goes to `roleAssignmentSuccess` (flow `editRoleAssignmentFlow`), with Back to Shell Org Manager for the same application. Cancel keeps `appCode`/`appName`. Deployed; not yet seen live (needs a real change).
+- Home: **Needs my attention** card (`MyAttentionCard`), checked live: "6 pending ISC review · 3 approved this month · 30 denied or withdrawn | No bulk uploads running". No separate My Requests page: Assignable Role Manager already lists the user's own requests with Withdraw.
+- Bulk Role Changes: position lookup, Apply button, Refresh; real runs tested live (see BULK-ROLE-ASSIGNMENT-DESIGN.md).
+
 ## UI phase 2 (built 2026-10-31)
 
 Design: `docs/UI-PHASE-2-DESIGN.md` (with the product owner's answers). Built and checked live in the tenant:

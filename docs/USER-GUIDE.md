@@ -184,6 +184,10 @@ Outcomes:
 
 You need the **View: COMS Audit Log** domain to open this page.
 
+### Needs my attention (Home)
+
+The first card on Home sums up your own work: your role requests pending ISC review, approved this month, and denied or withdrawn, plus any bulk upload of yours that is still running or was rejected. **My requests** opens Assignable Role Manager (your requests, with Withdraw); **My bulk uploads** is under the card's ⋯ menu.
+
 ### Bulk Role Changes (many positions from one file)
 
 Use this to add or remove many positions on shell organization roles at once. It's on Home under **Bulk Role Changes** and needs the same access as Manage Role Assignments.
