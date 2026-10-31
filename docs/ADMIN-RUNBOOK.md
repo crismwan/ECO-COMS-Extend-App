@@ -263,14 +263,16 @@ Orchestrations: `AddShellOrg`, `AddShellOrgPattern`, `ManageShellOrgStatus`, `As
 From `docs/ECO-COMS-NOTES.md` (2026-10-30):
 
 - `DenyRoleRequest` didn't run for test request `X:ADM:ROLE:TESTROLECIRUN22` after its review was cancelled: no failed runs in Orchestration Activity, simply no launch. The run-20 cancel worked. Check the event's Orchestrations tab (Find Events) and the BP's Configure Orchestrations after the deploy that changed the orchestration.
-- Two real pending requests (`X:ADM:KEYCLOAK:ANY:ROLE:COORDINATOR` and the AAA request) were saved before the Enabled For fix and hold a WID (`b40d8b01636710017a4c968020320000`) as their Enabled For text. The smoke check `Requests.pendingEnabledFor` fails on them until they're corrected or closed (user decision pending).
+- Fixed 2026-10-31: the two older pending requests (`X:ADM:KEYCLOAK:ANY:ROLE:COORDINATOR` and the AAA request) had a WID as their Enabled For text; `node test/run-tests.js repair --apply` corrected them.
 - Branch `isu-writes` (ISU page writes) is ready but unmerged: merge it after the ISU is assigned in App Manager (section 3).
 
 Also outstanding:
 
 - Exclude Initiator is not yet tested live.
 - After OK, editRoleAssignment returns to the app home, not to Shell Org Manager. A flow or conclusion page would fix this.
-- Run 22 may have left **P-00001** assigned on `X:BPMS(ODMT):ROLE:ADVISORS`. Check and remove it by hand.
+- Done 2026-10-31: P-00001 was removed from `X:BPMS(ODMT):ROLE:ADVISORS`.
+- The stray org "COMS Application:PATTERN:TEST:TEST:302:152:2026W1" is still active and needs someone with organization maintenance rights to inactivate it.
+- Bulk Role Changes: a successful real run (and the Apply button's OK) is not yet tested live.
 
 ## 7. Test data that can't be deleted
 
