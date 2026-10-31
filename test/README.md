@@ -51,6 +51,22 @@ Known issues are listed in `KNOWN_ISSUES` near the top of the static section. Th
 - as the signed-in user: creating an audit record, creating a request and editing a request are all refused (401/403)
 - Deleting isn't probed, because a probe that succeeded would destroy data. Orchestration writes through the ISU credential are covered by the full suite's audit checks.
 
+## Second-user tests
+
+`node test/run-tests.js seconduser` (or the "Tests (no deploy)" workflow with `task=seconduser`) needs a second, non-admin test account, because one token can't show what a requester may or may not do. It checks:
+
+- **withdrawOwn:** the requester starts a review and cancels it; the request becomes Denied, Denial Reason holds their comment, and the DENY audit names the requester.
+- **cancelledByOther:** the requester starts a review and the admin (main token) cancels it; the DENY audit names the admin, not the requester.
+- **cannotCancelOthers:** the requester tries to cancel the admin's review and must be refused; the admin then closes it.
+
+Setup (a person does this once per tenant):
+
+1. Pick a test worker who is not an admin. Give them **Manage: COMS Assignable Roles** (and nothing ISC-level), and make sure **Cancel** for the Initiator is on the BP policy.
+2. Sign in as them with wdcli (`wdcli app deploy <appId>` in a separate config, or log out first), and copy `wcpTenantAccessToken.ubc_wcpdev2` from `~/.config/@workday/wdcli/config.json`.
+3. Store it as the repo secret **`WD_SECOND_TOKEN`** (it expires after about 8 hours, like `WD_DEV_TOKEN`).
+
+Without the secret the suite reports SKIP. Each run leaves 3 Denied TEST requests (`TESTROLEWD/OC/XC RUN<n>`); BP-linked records can't be deleted.
+
 ## Coverage by flow
 
 | Flow | Static | Smoke (every deploy) | Full (manual run) | Manual checklist |

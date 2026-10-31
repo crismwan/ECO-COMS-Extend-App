@@ -8,6 +8,7 @@
  *   node test/run-tests.js cleanup [--apply] list (default) or remove TEST data
  *   node test/run-tests.js isu               ISU lockdown checks: only once ISU writes are live (see README)
  *   node test/run-tests.js repair [--apply] [--unassign P-id]  one-off data fixes (dry run by default)
+ *   node test/run-tests.js seconduser      requester vs admin checks (needs WD_SECOND_TOKEN; leaves 3 Denied TEST requests)
  *
  * Suites can be combined: `node test/run-tests.js static,smoke`. The isu suite never runs unless named.
  * Options: --verbose, --token <t>, --role <assignable role> (full/cleanup), --also <ids>, --effective
@@ -38,7 +39,7 @@ const ORCH = `${API}/orchestrate/v1/apps/${APP_ID}/orchestrations`;
 const argv = process.argv.slice(2);
 const arg = (name) => { const i = argv.indexOf(name); return i === -1 ? null : argv[i + 1]; };
 const VERBOSE = argv.includes('--verbose');
-const SUITES_ALL = ['static', 'smoke', 'full', 'cleanup', 'isu', 'repair'];
+const SUITES_ALL = ['static', 'smoke', 'full', 'cleanup', 'isu', 'repair', 'seconduser'];
 const suiteArg = arg('--suite') || argv.find((a) => !a.startsWith('--') && SUITES_ALL.some((s) => a.split(',').includes(s))) || 'smoke';
 const SUITES = suiteArg.split(',').map((s) => s.trim()).filter(Boolean);
 for (const s of SUITES) if (!SUITES_ALL.includes(s)) { console.error(`Unknown suite "${s}". Use: ${SUITES_ALL.join(', ')}`); process.exit(2); }
@@ -1027,6 +1028,73 @@ async function repair(token, me) {
   });
 }
 
+// ═══ Second-user suite (run only by name; needs WD_SECOND_TOKEN) ═══
+// Checks what one account can't: a requester withdrawing their own request, someone else cancelling
+// it, and a requester being refused on another person's review. WD_SECOND_TOKEN is a tenant token for a
+// non-admin test requester (Manage: COMS Assignable Roles; Cancel as Initiator on the BP policy).
+// Leaves 3 Denied TEST requests (BP-linked records can't be deleted).
+async function secondUserSuite(token, me) {
+  console.log('\n-- Second user (requester vs admin) --');
+  const token2 = process.env.WD_SECOND_TOKEN || arg('--token2');
+  if (!token2) return skip('SecondUser', 'WD_SECOND_TOKEN is not set (see test/README.md "Second-user tests")');
+  let me2;
+  try { me2 = await request('GET', `${API}/common/v1/workers/me`, token2); } catch (e) { return fail('SecondUser.auth', e.message); }
+  if (me2.id === me.id) return fail('SecondUser.auth', `WD_SECOND_TOKEN signs in as ${me.descriptor}, the same person as the main token`);
+  pass('SecondUser.auth', `second user is ${me2.descriptor}`);
+  const runNo = process.env.GITHUB_RUN_NUMBER || String(100 + Math.floor(Math.random() * 900));
+  const today = new Date().toISOString().slice(0, 10);
+  // Create a request and start its review as `tok` (that person becomes the initiator).
+  const startRequest = async (tok, who, suffix) => {
+    const roleName = `X:ADM:ROLE:TESTROLE${suffix}RUN${runNo}`;
+    const ref = `CI-RUN${runNo}-${suffix}-${Math.random().toString(36).slice(2, 6)}`;
+    const req = await request('POST', `${BO}/comsAssignableRoles`, tok, {
+      referenceId: ref, roleName, application: 'X:ADM', status: 'Pending ISC Review', requestedDate: today,
+      requestedBy: { id: who.id }, active: false, effectiveDate: today, workdayRoleId: roleName,
+    });
+    await launch(tok, 'StartRoleRequestReview', { ref });
+    let ev = null;
+    for (let i = 0; i < 10 && !ev; i++) { await sleep(3000); ev = (await request('GET', `${BO}/comsAssignableRoles/${req.id}`, tok)).reviewEventWid || null; }
+    if (!ev) throw new Error(`no review event linked to ${roleName} within 30 s`);
+    return { id: req.id, roleName, ev };
+  };
+  const waitDenied = async (r) => {
+    for (let i = 0; i < 40; i++) {
+      await sleep(15000);
+      const x = await request('GET', `${BO}/comsAssignableRoles/${r.id}`, token);
+      if (x.status === 'Denied') return x;
+    }
+    throw new Error(`${r.roleName} not Denied 10 min after its review was cancelled`);
+  };
+  const denyAudit = async (r) => (await readAll(token, 'comsAuditLogs')).find((a) => a.roleName === r.roleName && a.action === 'DENY');
+
+  await test('SecondUser.withdrawOwn', async () => {
+    const r = await startRequest(token2, me2, 'WD');
+    await request('POST', `${BP}/events/${r.ev}/cancel`, token2, { comment: 'Automated test run: requester withdraws' });
+    const x = await waitDenied(r);
+    const a = await denyAudit(r);
+    if (!a || a.triggeredBy !== me2.descriptor) throw new Error(`DENY audit for ${r.roleName} names "${a?.triggeredBy}", expected the requester ${me2.descriptor}`);
+    if (!/requester withdraws/.test(x.denialReason || '')) throw new Error(`Denial Reason is "${x.denialReason || ''}"`);
+    pass('SecondUser.withdrawOwn', `${me2.descriptor} withdrew ${r.roleName}; Denied, with their comment and a DENY audit naming them`);
+  });
+  await test('SecondUser.cancelledByOther', async () => {
+    const r = await startRequest(token2, me2, 'OC');
+    await request('POST', `${BP}/events/${r.ev}/cancel`, token, { comment: 'Automated test run: admin cancels' });
+    await waitDenied(r);
+    const a = await denyAudit(r);
+    if (!a || a.triggeredBy !== me.descriptor) throw new Error(`DENY audit for ${r.roleName} names "${a?.triggeredBy}", expected the canceller ${me.descriptor} (requester was ${me2.descriptor})`);
+    pass('SecondUser.cancelledByOther', `${me.descriptor} cancelled ${me2.descriptor}'s ${r.roleName}; the DENY audit names the canceller`);
+  });
+  await test('SecondUser.cannotCancelOthers', async () => {
+    const r = await startRequest(token, me, 'XC');
+    let refused = false;
+    try { await request('POST', `${BP}/events/${r.ev}/cancel`, token2, { comment: 'Automated test run: should be refused' }); } catch (e) { refused = /HTTP 40[0-9]/.test(e.message); }
+    // Close it either way so it doesn't stay pending.
+    if (!refused) { await waitDenied(r); throw new Error(`${me2.descriptor} could cancel ${me.descriptor}'s review of ${r.roleName}`); }
+    await request('POST', `${BP}/events/${r.ev}/cancel`, token, { comment: 'Automated test run: close test request' });
+    pass('SecondUser.cannotCancelOthers', `${me2.descriptor} was refused cancelling someone else's review (closed it as admin)`);
+  });
+}
+
 // ═══ ISU suite: lockdown checks (run only by name, once ISU writes are live) ═══
 // After the ISU change, users are View/Get only on the audit log and request data, and only the app
 // (pages with isuAuth, orchestrations with the ISU credential) can write. These checks try direct
@@ -1081,6 +1149,7 @@ async function isuSuite(token, me) {
         if (live.includes('isu')) await isuSuite(token, me);
         if (live.includes('cleanup')) await cleanup(token, me);
         if (live.includes('repair')) await repair(token, me);
+        if (live.includes('seconduser')) await secondUserSuite(token, me);
       }
     }
   }
