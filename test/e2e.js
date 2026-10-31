@@ -228,6 +228,15 @@ async function smoke(token, me) {
     pass('Requests.pendingHavePositions', `${pending.length} pending request(s) carry positions and their names`);
   });
 
+  await test('Requests.pendingEnabledFor', async () => {
+    const pending = roles.filter((r) => r.status === 'Pending ISC Review');
+    if (!pending.length) return skip('Requests.pendingEnabledFor', 'no pending requests');
+    // Enabled For is display text: a unit name, never empty and never a bare WID.
+    const bad = pending.filter((r) => !r.enabledForOrganizationTypes || /^[0-9a-f]{32}$/.test(r.enabledForOrganizationTypes));
+    if (bad.length) throw new Error(`${bad.length} pending request(s) with Enabled For "${bad[0].enabledForOrganizationTypes || ''}", e.g. ${bad[0].roleName}`);
+    pass('Requests.pendingEnabledFor', `${pending.length} pending request(s) show an Enabled For name`);
+  });
+
   await test('BP.pendingEventsOpen', async () => {
     const pending = roles.filter((r) => r.status === 'Pending ISC Review' && r.reviewEventWid).slice(0, 5);
     if (!pending.length) return skip('BP.pendingEventsOpen', 'no pending requests with a review event');
@@ -441,20 +450,32 @@ async function full(token, me) {
     testPos = { wid: p.workdayID?.id || p.workdayID, name: p.position_PositionManagement?.descriptor || p.cf_PositionText };
     return testPos;
   };
+  // One active academic unit for Enabled For, saved the way the request page saves it.
+  let testUnit = null;
+  const pickUnit = async () => {
+    if (testUnit) return testUnit;
+    const u = ((await wql(token, 'SELECT workdayID, academicUnit, academicUnitName FROM academicUnits WHERE inactive = false', 20)).data || [])
+      .find((x) => x.academicUnit?.descriptor);
+    if (!u) throw new Error('no active academic unit found for Enabled For');
+    testUnit = { wid: u.workdayID?.id || u.workdayID, name: u.academicUnit.descriptor };
+    return testUnit;
+  };
   const pendingRequest = async (name, orgCode, orgWid, appCode) => {
     const roleName = `${orgCode}:ROLE:TESTROLE`;
     const pos = await pickPosition();
+    const unit = await pickUnit();
     const ref = `CI-RUN${runNo}-${name}-${Math.random().toString(36).slice(2, 8)}`;
     const req = await request('POST', `${BO}/comsAssignableRoles`, token, {
       referenceId: ref, roleName, workdayRoleId: roleName, application: appCode, shellOrgCode: orgCode, shellOrgWid: orgWid,
       status: 'Pending ISC Review', requestedDate: today, requestedBy: { id: me.id }, active: false, effectiveDate: today,
       positions: pos.wid, positionWids: pos.wid, positionNames: pos.name,
+      enabledForOrganizationTypes: unit.name, enabledForWid: unit.wid, academicUnitWid: unit.wid, academicUnitDescription: unit.name,
     });
     if (!req.id) throw new Error('request POST returned no id');
     await request('POST', `${BO}/comsAuditLogs`, token, {
       timestamp: who().timestamp, objectType: 'Assignable Role', action: 'REQUEST', coReferenceId: roleName, coName: orgCode,
       details: `Assignable role request submitted: ${roleName} for org ${orgCode}`, triggeredBy: me.descriptor,
-      roleName, effectiveDate: today, changedByWid: me.id, positionName: pos.name,
+      roleName, effectiveDate: today, changedByWid: me.id, positionName: pos.name, positionWid: pos.wid,
     });
     await launch(token, 'StartRoleRequestReview', { ref });
     let eventWid = null;
@@ -466,19 +487,19 @@ async function full(token, me) {
     const ev = await request('GET', `${BP}/events/${eventWid}`, token);
     const st = String(ev?.status?.descriptor || ev?.overallStatus?.descriptor || '');
     if (/complete|terminat|cancel|denied/i.test(st)) throw new Error(`review event for ${roleName} is already "${st}"`);
-    return { roleName, st, pos: pos.name };
+    return { roleName, st, pos: pos.name, unit: unit.name };
   };
 
   await test('Request.pendingShellOrg', async () => {
     if (!orgWid) return skip('Request.pendingShellOrg', 'no org from ShellOrg.add');
     const r = await pendingRequest('ORG', orgName, orgWid, 'X:ADM');
-    pass('Request.pendingShellOrg', `${r.roleName} (position ${r.pos}) is pending ISC review ("${r.st || 'in progress'}")`);
+    pass('Request.pendingShellOrg', `${r.roleName} (position ${r.pos}, enabled for ${r.unit}) is pending ISC review ("${r.st || 'in progress'}")`);
   });
 
   await test('Request.pendingPattern', async () => {
     if (!pattern) return skip('Request.pendingPattern', 'no pattern from Pattern.add');
     const r = await pendingRequest('PAT', pattern.code, pattern.wid, pattern.appCode);
-    pass('Request.pendingPattern', `${r.roleName} (position ${r.pos}) is pending ISC review ("${r.st || 'in progress'}")`);
+    pass('Request.pendingPattern', `${r.roleName} (position ${r.pos}, enabled for ${r.unit}) is pending ISC review ("${r.st || 'in progress'}")`);
   });
 }
 

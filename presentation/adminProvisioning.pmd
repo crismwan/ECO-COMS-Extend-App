@@ -121,6 +121,30 @@
           {
             "outboundPath": "shellOrgWid",
             "value": "<% !empty(applicationDropdown.value) ? (applicationDropdown.value[0] ?? '') : '' %>"
+          },
+          {
+            "outboundPath": "enabledForOrganizationTypes",
+            "value": "<% !empty(fuhPicker.value) ? (fuhPicker.selectedEntries[0].descriptor ?? '') : (!empty(academicUnitPicker.value) ? (academicUnitPicker.selectedEntries[0].descriptor ?? '') : 'Academic Unit - University of British Columbia') %>"
+          },
+          {
+            "outboundPath": "enabledForWid",
+            "value": "<% !empty(fuhPicker.value) ? fuhPicker.value[0] : (!empty(academicUnitPicker.value) ? academicUnitPicker.value[0] : '') %>"
+          },
+          {
+            "outboundPath": "functionalUnitHierarchyWid",
+            "value": "<% !empty(fuhPicker.value) ? fuhPicker.value[0] : '' %>"
+          },
+          {
+            "outboundPath": "functionalUnitDescription",
+            "value": "<% !empty(fuhPicker.value) ? (fuhPicker.selectedEntries[0].descriptor ?? '') : '' %>"
+          },
+          {
+            "outboundPath": "academicUnitWid",
+            "value": "<% !empty(academicUnitPicker.value) ? academicUnitPicker.value[0] : '' %>"
+          },
+          {
+            "outboundPath": "academicUnitDescription",
+            "value": "<% !empty(academicUnitPicker.value) ? (academicUnitPicker.selectedEntries[0].descriptor ?? '') : '' %>"
           }
         ],
         "failOnStatusCodes": [
@@ -201,6 +225,10 @@
           {
             "outboundPath": "positionName",
             "value": "<% (positionsList.selectedEntries ?? []).map(p => { p.descriptor }).join(', ') %>"
+          },
+          {
+            "outboundPath": "positionWid",
+            "value": "<% (positionsList.value ?? []).join(',') %>"
           }
         ],
         "failOnStatusCodes": [
@@ -511,16 +539,6 @@
                   "searchEndPoint": "<% endpoints.fuhSearch %>",
                   "searchResultValues": "<% empty(fuhSearch.data) ? [] : fuhSearch.data.map(o => { {'id': o.workdayID, 'descriptor': o.organization1.descriptor} }) %>",
                   "onChange": "<%\n            if (!empty(self.value) && !empty(academicUnitPicker.value)) {\n              self.setError('Cannot select both Functional Unit Hierarchy and Academic Unit.');\n            } else {\n              self.clearError();\n              academicUnitPicker.clearError();\n            }\n            let appDesc = !empty(applicationDropdown.value) ? applicationDropdown.selectedEntries[0].descriptor : '';\n            enabledForWidBinding.setValue(!empty(self.value) ? self.value[0] : (!empty(academicUnitPicker.value) ? academicUnitPicker.value[0] : ''));\n            enabledForDisplay.setValue(!empty(self.value) ? self.selectedEntries[0].descriptor : (!empty(academicUnitPicker.value) ? academicUnitPicker.selectedEntries[0].descriptor : 'Academic Unit - University of British Columbia'));\n            if (!empty(appDesc)) {\n              generatedRoleName.setValue(\n                !empty(self.value) ?\n                  'Organizations and Roles Assignment Administrator (' + appDesc + ', Functional Org)' :\n                !empty(academicUnitPicker.value) ?\n                  'Organizations and Roles Assignment Administrator (' + appDesc + ', Academic Unit)' :\n                  'Organizations and Roles Assignment Administrator (' + appDesc + ')'\n              );\n            }\n          %>",
-                  "valuesOut": [
-                    {
-                      "value": "<% self.value[0] ?? '' %>",
-                      "valueOutBinding": "postAssignableRole.enabledForOrganizationTypes"
-                    },
-                    {
-                      "value": "<% self.value[0] ?? '' %>",
-                      "valueOutBinding": "postAssignableRole.enabledForWid"
-                    }
-                  ],
                   "multiSelect": false
                 },
                 {
@@ -532,16 +550,6 @@
                   "searchEndPoint": "<% endpoints.auSearch %>",
                   "searchResultValues": "<% empty(auSearch.data) ? [] : auSearch.data.map(o => { {'id': o.workdayID, 'descriptor': o.academicUnit.descriptor} }) %>",
                   "onChange": "<%\n            if (!empty(self.value) && !empty(fuhPicker.value)) {\n              self.setError('Cannot select both Academic Unit and Functional Unit Hierarchy.');\n            } else {\n              self.clearError();\n              fuhPicker.clearError();\n            }\n            let appDesc = !empty(applicationDropdown.value) ? applicationDropdown.selectedEntries[0].descriptor : '';\n            enabledForWidBinding.setValue(!empty(fuhPicker.value) ? fuhPicker.value[0] : (!empty(self.value) ? self.value[0] : ''));\n            enabledForDisplay.setValue(!empty(fuhPicker.value) ? fuhPicker.selectedEntries[0].descriptor : (!empty(self.value) ? self.selectedEntries[0].descriptor : 'Academic Unit - University of British Columbia'));\n            if (!empty(appDesc)) {\n              generatedRoleName.setValue(\n                !empty(fuhPicker.value) ?\n                  'Organizations and Roles Assignment Administrator (' + appDesc + ', Functional Org)' :\n                !empty(self.value) ?\n                  'Organizations and Roles Assignment Administrator (' + appDesc + ', Academic Unit)' :\n                  'Organizations and Roles Assignment Administrator (' + appDesc + ')'\n              );\n            }\n          %>",
-                  "valuesOut": [
-                    {
-                      "value": "<% self.value[0] ?? '' %>",
-                      "valueOutBinding": "postAssignableRole.enabledForOrganizationTypes"
-                    },
-                    {
-                      "value": "<% self.value[0] ?? '' %>",
-                      "valueOutBinding": "postAssignableRole.enabledForWid"
-                    }
-                  ],
                   "multiSelect": false
                 },
                 {
@@ -580,13 +588,7 @@
                 {
                   "type": "hidden",
                   "id": "enabledForWidBinding",
-                  "value": "<% '' %>",
-                  "valuesOut": [
-                    {
-                      "value": "<% self.value %>",
-                      "valueOutBinding": "postAssignableRole.enabledForWid"
-                    }
-                  ]
+                  "value": "<% '' %>"
                 },
                 {
                   "type": "hidden",

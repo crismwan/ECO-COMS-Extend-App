@@ -218,7 +218,7 @@
                         "view": true,
                         "relatedTask": true,
                         "enabled": false,
-                        "values": "<% (empty(role.positions) && empty(role.positionWids)) ? [] : (!empty(role.positions) ? role.positions : (role.positionWids ?? '')).splitByRegex(',').map((pid, i) => { { 'id': pid.trim(), 'descriptor': (!empty(role.positionNames) && role.positionNames.splitByRegex(', ').size() > i) ? role.positionNames.splitByRegex(', ')[i] : pid.trim() } }) %>",
+                        "values": "<% (empty(role.positions) && empty(role.positionWids)) ? [] : (!empty(role.positions) ? role.positions : (role.positionWids ?? '')).splitByRegex(',').map((pid, i) => { { 'id': pid.trim(), 'descriptor': (!empty(role.positionNames) && role.positionNames.splitByRegex(', (?=P-[0-9])').size() > i) ? role.positionNames.splitByRegex(', (?=P-[0-9])')[i] : pid.trim() } }) %>",
                         "widKey": "id"
                       }
                     },
