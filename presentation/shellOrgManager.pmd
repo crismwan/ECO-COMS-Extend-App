@@ -193,7 +193,7 @@
                 "type": "richText",
                 "id": "patternsAboutRichText",
                 "enabled": false,
-                "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">A <b>pattern</b> is a Custom Organization whose code follows <b>&lt;application&gt;:PATTERN:&lt;subject&gt;:&lt;course&gt;:&lt;section&gt;:&lt;academic period&gt;</b>, for example X:CLW:PATTERN:MATH:MATH:100:201:2026W1. Roles assigned on a pattern apply to that course section only. Pick an application on the left to see its patterns; use <b>Add Pattern</b> to create one. Patterns can be inactivated but not deleted.</span>"
+                "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">A <b>pattern</b> is a Custom Organization whose code follows <b>&lt;application&gt;:PATTERN:&lt;subject&gt;:&lt;course&gt;:&lt;section&gt;:&lt;academic period&gt;</b>, for example X:CLW:PATTERN:MATH:MATH_V:100:201:2026W1, where * means any (X:CLW:PATTERN:CPSC:CPSC_V:304:*:* covers every section and period of CPSC_V 304). Roles assigned on a pattern apply to the matching courses only. Pick an application on the left to see its patterns; use <b>Add Pattern</b> to create one. Patterns can be inactivated but not deleted.</span>"
               }
             ]
           },
