@@ -14,7 +14,7 @@
   },
   "footer": [
     {
-      "label": "View All",
+      "label": "Open Shell Org Manager",
       "taskReference": {
         "taskId": "shellOrgManager"
       }

@@ -173,7 +173,7 @@
             {
               "type": "cardContainer",
               "id": "dashboardCardContainer",
-              "layout": "grid",
+              "layout": "masonry",
               "cards": [
                 {
                   "type": "card",
@@ -198,7 +198,7 @@
                 {
                   "type": "card",
                   "cardId": "ShellOrgStatusChart",
-                  "parameters": "<% { 'activeCount': size((allShellOrgs.data ?? []).filter(o => { (o.code ?? '').startsWith('X:') && !(o.code ?? '').contains(':PATTERN') && o.cf_active1 == true })), 'inactiveCount': size((allShellOrgs.data ?? []).filter(o => { (o.code ?? '').startsWith('X:') && !(o.code ?? '').contains(':PATTERN') && o.cf_active1 != true })), 'totalPatterns': size((allShellOrgs.data ?? []).filter(o => { (o.code ?? '').contains(':PATTERN') })) } %>"
+                  "parameters": "<% { 'activeCount': size((allShellOrgs.data ?? []).filter(o => { (o.code ?? '').startsWith('X:') && !(o.code ?? '').contains(':PATTERN') && o.cf_active1 == true })), 'inactiveCount': size((allShellOrgs.data ?? []).filter(o => { (o.code ?? '').startsWith('X:') && !(o.code ?? '').contains(':PATTERN') && o.cf_active1 != true })) } %>"
                 }
               ]
             }
@@ -206,174 +206,28 @@
         },
         {
           "type": "layoutSection",
-          "id": "shellOrgSection",
+          "id": "actionsSection",
           "children": [
             {
-              "type": "fieldSet",
-              "id": "shellOrgFieldSet",
-              "title": "Shell Organizations",
-              "children": [
+              "type": "cardContainer",
+              "id": "actionsCardContainer",
+              "layout": "grid",
+              "cards": [
                 {
-                  "type": "richText",
-                  "id": "shellOrgDesc",
-                  "enabled": false,
-                  "value": "<% '<span style=\"color:#374151;font-size:12px\">Manage Custom Organizations (Shell Orgs) used for RBAC role assignments in Workday. Add new organizations, manage patterns, and view or update organization status.</span>' %>"
+                  "type": "card",
+                  "cardId": "HomeShellOrgActionsCard"
                 },
                 {
-                  "type": "button",
-                  "id": "addShellOrgButton",
-                  "label": "Add Shell Org",
-                  "action": "AUXILIARY",
-                  "taskReference": {
-                    "taskId": "createShellOrgWizard"
-                  }
+                  "type": "card",
+                  "cardId": "HomeBulkActionsCard"
                 },
                 {
-                  "type": "button",
-                  "id": "addPatternButton",
-                  "label": "Add Pattern",
-                  "action": "AUXILIARY",
-                  "taskReference": {
-                    "taskId": "createShellOrgPatternWizard"
-                  }
+                  "type": "card",
+                  "cardId": "HomeRoleRequestActionsCard"
                 },
                 {
-                  "type": "button",
-                  "id": "openShellOrgManagerButton",
-                  "label": "Open Manager",
-                  "action": "PRIMARY",
-                  "taskReference": {
-                    "taskId": "shellOrgManager"
-                  }
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "type": "layoutSection",
-          "id": "bulkSection",
-          "children": [
-            {
-              "type": "fieldSet",
-              "id": "bulkFieldSet",
-              "title": "Bulk Role Changes",
-              "children": [
-                {
-                  "type": "richText",
-                  "id": "bulkDesc",
-                  "enabled": false,
-                  "value": "<% '<span style=\"color:#374151;font-size:12px\">Add or remove many positions on shell organization roles from one CSV file. Validate first, then run it for real.</span>' %>"
-                },
-                {
-                  "type": "button",
-                  "id": "bulkTemplateButton",
-                  "label": "Download Template",
-                  "action": "AUXILIARY",
-                  "taskReference": {
-                    "taskId": "bulkRoleTemplate"
-                  }
-                },
-                {
-                  "type": "button",
-                  "id": "bulkUploadButton",
-                  "label": "Upload File",
-                  "action": "PRIMARY",
-                  "taskReference": {
-                    "taskId": "bulkRoleChanges"
-                  }
-                },
-                {
-                  "type": "button",
-                  "id": "bulkResultsButton",
-                  "label": "View Results",
-                  "action": "AUXILIARY",
-                  "taskReference": {
-                    "taskId": "bulkRoleResults"
-                  }
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "type": "layoutSection",
-          "id": "assignableRoleSection",
-          "children": [
-            {
-              "type": "fieldSet",
-              "id": "assignableRoleFieldSet",
-              "title": "Assignable Roles",
-              "children": [
-                {
-                  "type": "richText",
-                  "id": "assignableRoleDesc",
-                  "enabled": false,
-                  "value": "<% '<span style=\"color:#374151;font-size:12px\">Submit requests for new Assignable Roles or view existing role requests and their current status.</span>' %>"
-                },
-                {
-                  "type": "button",
-                  "id": "submitNewRoleButton",
-                  "label": "Submit New Request",
-                  "action": "AUXILIARY",
-                  "taskReference": {
-                    "taskId": "assignableRoleManager"
-                  }
-                },
-                {
-                  "type": "button",
-                  "id": "viewRoleRequestsButton",
-                  "label": "View Requests",
-                  "action": "PRIMARY",
-                  "taskReference": {
-                    "taskId": "assignableRoleManagerView"
-                  }
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "type": "layoutSection",
-          "id": "adminSection",
-          "children": [
-            {
-              "type": "fieldSet",
-              "id": "adminFieldSet",
-              "title": "Administration",
-              "children": [
-                {
-                  "type": "richText",
-                  "id": "adminDesc",
-                  "enabled": false,
-                  "value": "<% '<span style=\"color:#374151;font-size:12px\">Administrative tools for AAA role provisioning, ISC role request management, and audit log review.</span>' %>"
-                },
-                {
-                  "type": "button",
-                  "id": "submitAaaButton",
-                  "label": "Submit AAA Role",
-                  "action": "AUXILIARY",
-                  "taskReference": {
-                    "taskId": "adminProvisioning"
-                  }
-                },
-                {
-                  "type": "button",
-                  "id": "viewPendingIscButton",
-                  "label": "View Pending ISC Requests",
-                  "action": "PRIMARY",
-                  "taskReference": {
-                    "taskId": "iscRoleRequestsHub"
-                  }
-                },
-                {
-                  "type": "button",
-                  "id": "viewAuditLogButton",
-                  "label": "View Audit Log",
-                  "action": "PRIMARY",
-                  "taskReference": {
-                    "taskId": "auditLogViewer"
-                  }
+                  "type": "card",
+                  "cardId": "HomeAdminActionsCard"
                 }
               ]
             }

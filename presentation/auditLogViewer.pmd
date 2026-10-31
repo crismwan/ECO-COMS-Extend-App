@@ -183,13 +183,6 @@
                   "id": "pageDescriptionText",
                   "value": "<span style=\"color:#374151;font-size:12px\">Every change made through ECO-COMS: shell orgs and patterns added, org status changes, role position assignments, and assignable role requests, approvals and denials. A record is written only after Workday accepts the change. Newest first. Use the buttons below to narrow the list, and the grid's export action to download what is shown. The page loads the newest 500 records.</span>",
                   "enabled": false
-                },
-                {
-                  "type": "text",
-                  "id": "auditCountText",
-                  "label": "Showing",
-                  "enabled": false,
-                  "value": "<% '' + size(comsAuditFilters.filterLogs(list:flatten([auditPage0.data ?? [], auditPage1.data ?? [], auditPage2.data ?? [], auditPage3.data ?? [], auditPage4.data ?? []]), queryParams.period ?? '', queryParams.changeType ?? '')) + ' of ' + (auditLogCount.total ?? 0) + ' records (' + comsAuditFilters.periodLabel(queryParams.period ?? '') + (empty(queryParams.changeType) ? '' : ', ' + queryParams.changeType) + ')' + ((auditLogCount.total ?? 0) > 500 ? '. Only the newest 500 are loaded.' : '') %>"
                 }
               ],
               "title": "About this page"
@@ -200,6 +193,20 @@
           "type": "layoutSection",
           "id": "auditFilterSection",
           "children": [
+            {
+              "type": "fieldSet",
+              "id": "auditShowFieldSet",
+              "title": "Show",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "auditCountText",
+                  "label": "Showing",
+                  "enabled": false,
+                  "value": "<% '' + size(comsAuditFilters.filterLogs(list:flatten([auditPage0.data ?? [], auditPage1.data ?? [], auditPage2.data ?? [], auditPage3.data ?? [], auditPage4.data ?? []]), queryParams.period ?? '', queryParams.changeType ?? '')) + ' of ' + (auditLogCount.total ?? 0) + ' records (' + comsAuditFilters.periodLabel(queryParams.period ?? '') + (empty(queryParams.changeType) ? '' : ', ' + queryParams.changeType) + ')' + ((auditLogCount.total ?? 0) > 500 ? '. Only the newest 500 are loaded.' : '') %>"
+                }
+              ]
+            },
             {
               "type": "cardContainer",
               "id": "auditFilterCardContainer",

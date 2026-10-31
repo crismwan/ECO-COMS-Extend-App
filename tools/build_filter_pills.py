@@ -29,7 +29,23 @@ page = load('auditLogViewer.pmd')
 secs = page['presentation']['body']['sections']
 i = [s.get('id') for s in secs].index('auditFilterSection')
 P = "<% { 'period': queryParams.period ?? '', 'changeType': queryParams.changeType ?? '' } %>"
-secs[i] = {"type": "layoutSection", "id": "auditFilterSection", "children": [{"type": "cardContainer", "id": "auditFilterCardContainer", "layout": "grid", "cards": [
+# the 'Showing N of M' line sits with the filters, as on ISC Role Requests
+showing = None
+def take(o):
+    global showing
+    if isinstance(o, dict):
+        kids = o.get('children')
+        if isinstance(kids, list):
+            for k in list(kids):
+                if isinstance(k, dict) and k.get('id') == 'auditCountText': showing = k; kids.remove(k)
+        for v in o.values(): take(v)
+    elif isinstance(o, list):
+        for v in o: take(v)
+take(secs)
+show_kids = [showing] if showing else []
+secs[i] = {"type": "layoutSection", "id": "auditFilterSection", "children": [
+    {"type": "fieldSet", "id": "auditShowFieldSet", "title": "Show", "children": show_kids},
+    {"type": "cardContainer", "id": "auditFilterCardContainer", "layout": "grid", "cards": [
     {"type": "card", "cardId": "AuditPeriodPillCard", "parameters": P},
     {"type": "card", "cardId": "AuditTypePillCard", "parameters": P}]}]}
 save('auditLogViewer.pmd', page)
@@ -75,3 +91,28 @@ hs[j] = {"type": "layoutSection", "id": "iscHubLinksSection", "children": [{"typ
     {"type": "card", "cardId": "IscQueuePillCard"}]}]}
 save('iscRoleRequestsHub.pmd', hub)
 print('isc ok')
+
+# ── Home: the four stacked-button sections become one row of action cards (main action first) ──
+ACTIONS = [
+  ("HomeShellOrgActionsCard", "Shell Organizations", "Add organizations and patterns, change their status, and manage role positions.", "wd-accent-worksheets",
+   [("Open Shell Org Manager", "shellOrgManager"), ("Add Shell Org", "createShellOrgWizard"), ("Add Pattern", "createShellOrgPatternWizard")]),
+  ("HomeBulkActionsCard", "Bulk Role Changes", "Add or remove many positions from one CSV file. Validate first, then run it for real.", "wd-accent-checkmarked-page",
+   [("Upload File", "bulkRoleChanges"), ("Download Template", "bulkRoleTemplate"), ("View Results", "bulkRoleResults")]),
+  ("HomeRoleRequestActionsCard", "Assignable Roles", "Request a new assignable role, or follow and withdraw your requests.", "wd-accent-clipboard-checklist",
+   [("View My Requests", "assignableRoleManagerView"), ("Submit New Request", "assignableRoleManager")]),
+  ("HomeAdminActionsCard", "Administration", "AAA role provisioning, the ISC review queue and the audit log.", "wd-accent-award-medal",
+   [("Open ISC Queue", "iscRoleRequestsHub"), ("Open Audit Log", "auditLogViewer"), ("View AAA Requests", "adminProvisioningView"), ("Submit AAA Role Request", "adminProvisioning")]),
+]
+for cid, title, sub, icon, pills in ACTIONS:
+    card = {"id": cid, "header": {"title": title, "subtitle": sub, "icon": icon},
+            "body": {"type": "pillCard", "pills": [{"label": l, "taskReference": {"taskId": t}} for l, t in pills]}}
+    open(os.path.join(ROOT, 'cards', cid + '.card'), 'w').write(json.dumps(card, indent=2, ensure_ascii=False) + '\n')
+home = load('hubLanding.pmd')
+hsecs = home['presentation']['body']['sections']
+old_ids = ['shellOrgSection', 'bulkSection', 'assignableRoleSection', 'adminSection']
+keep = [s for s in hsecs if s.get('id') not in old_ids + ['actionsSection']]
+keep.append({"type": "layoutSection", "id": "actionsSection", "children": [{"type": "cardContainer", "id": "actionsCardContainer", "layout": "grid",
+    "cards": [{"type": "card", "cardId": a[0]} for a in ACTIONS]}]})
+home['presentation']['body']['sections'] = keep
+save('hubLanding.pmd', home)
+print('home ok')

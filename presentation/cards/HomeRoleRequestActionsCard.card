@@ -1,0 +1,25 @@
+{
+  "id": "HomeRoleRequestActionsCard",
+  "header": {
+    "title": "Assignable Roles",
+    "subtitle": "Request a new assignable role, or follow and withdraw your requests.",
+    "icon": "wd-accent-clipboard-checklist"
+  },
+  "body": {
+    "type": "pillCard",
+    "pills": [
+      {
+        "label": "View My Requests",
+        "taskReference": {
+          "taskId": "assignableRoleManagerView"
+        }
+      },
+      {
+        "label": "Submit New Request",
+        "taskReference": {
+          "taskId": "assignableRoleManager"
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "id": "HomeBulkActionsCard",
+  "header": {
+    "title": "Bulk Role Changes",
+    "subtitle": "Add or remove many positions from one CSV file. Validate first, then run it for real.",
+    "icon": "wd-accent-checkmarked-page"
+  },
+  "body": {
+    "type": "pillCard",
+    "pills": [
+      {
+        "label": "Upload File",
+        "taskReference": {
+          "taskId": "bulkRoleChanges"
+        }
+      },
+      {
+        "label": "Download Template",
+        "taskReference": {
+          "taskId": "bulkRoleTemplate"
+        }
+      },
+      {
+        "label": "View Results",
+        "taskReference": {
+          "taskId": "bulkRoleResults"
+        }
+      }
+    ]
+  }
+}

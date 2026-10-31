@@ -11,17 +11,17 @@
   },
   "body": {
     "type": "simpleCard",
-    "value": "<% (requestsText ?? \"\") + \" | \" + (bulkText ?? \"\") %>"
+    "value": "<% (requestsText ?? \"\") + \" · \" + (bulkText ?? \"\") %>"
   },
   "footer": [
     {
-      "label": "My requests",
+      "label": "Open My Requests",
       "taskReference": {
         "taskId": "assignableRoleManagerView"
       }
     },
     {
-      "label": "My bulk uploads",
+      "label": "Open My Bulk Uploads",
       "taskReference": {
         "taskId": "bulkRoleResults"
       }

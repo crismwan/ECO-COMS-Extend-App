@@ -14,7 +14,7 @@
   },
   "footer": [
     {
-      "label": "Open",
+      "label": "Open ISC Queue",
       "taskReference": {
         "taskId": "iscRoleRequestsHub"
       }

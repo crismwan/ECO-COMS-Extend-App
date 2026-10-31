@@ -1,0 +1,31 @@
+{
+  "id": "HomeShellOrgActionsCard",
+  "header": {
+    "title": "Shell Organizations",
+    "subtitle": "Add organizations and patterns, change their status, and manage role positions.",
+    "icon": "wd-accent-worksheets"
+  },
+  "body": {
+    "type": "pillCard",
+    "pills": [
+      {
+        "label": "Open Shell Org Manager",
+        "taskReference": {
+          "taskId": "shellOrgManager"
+        }
+      },
+      {
+        "label": "Add Shell Org",
+        "taskReference": {
+          "taskId": "createShellOrgWizard"
+        }
+      },
+      {
+        "label": "Add Pattern",
+        "taskReference": {
+          "taskId": "createShellOrgPatternWizard"
+        }
+      }
+    ]
+  }
+}

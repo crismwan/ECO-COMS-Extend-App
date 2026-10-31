@@ -250,17 +250,7 @@ amd['flowDefinitions'] = [f for f in amd.get('flowDefinitions', []) if f['id'] n
     {"id": "bulkRoleResultsStep", "taskId": "bulkRoleResults", "endsFlow": True}]}]
 open(amdp, 'w').write(json.dumps(amd, indent=2, ensure_ascii=False) + '\n')
 
-# ── Home: a Bulk role changes section ──
-hp = os.path.join(ROOT, 'hubLanding.pmd'); hub = json.load(open(hp))
-secs = hub['presentation']['body']['sections']
-if not any(s.get('id') == 'bulkSection' for s in secs):
-    i = [s.get('id') for s in secs].index('assignableRoleSection')
-    secs.insert(i, {"type": "layoutSection", "id": "bulkSection", "children": [{"type": "fieldSet", "id": "bulkFieldSet", "title": "Bulk Role Changes", "children": [
-        {"type": "richText", "id": "bulkDesc", "enabled": False, "value": "<% '<span style=\"color:#374151;font-size:13px\">Add or remove many positions on shell organization roles from one CSV file. Validate first, then run it for real.</span>' %>"},
-        {"type": "button", "id": "bulkTemplateButton", "label": "Download Template", "action": "AUXILIARY", "taskReference": {"taskId": "bulkRoleTemplate"}},
-        {"type": "button", "id": "bulkUploadButton", "label": "Upload File", "action": "PRIMARY", "taskReference": {"taskId": "bulkRoleChanges"}},
-        {"type": "button", "id": "bulkResultsButton", "label": "View Results", "action": "AUXILIARY", "taskReference": {"taskId": "bulkRoleResults"}}]}]})
-    open(hp, 'w').write(json.dumps(hub, indent=2, ensure_ascii=False) + '\n')
+# Home's Bulk Role Changes actions are the HomeBulkActionsCard (tools/build_filter_pills.py).
 print('ok')
 
 # keep the 'Nothing to show' messages that tools/add_empty_messages.py adds to the results page
