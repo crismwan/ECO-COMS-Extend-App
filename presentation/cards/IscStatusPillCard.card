@@ -1,0 +1,56 @@
+{
+  "id": "IscStatusPillCard",
+  "parameters": [
+    "view",
+    "status"
+  ],
+  "header": {
+    "title": "Status",
+    "icon": "wd-accent-clipboard-checklist"
+  },
+  "body": {
+    "type": "pillCard",
+    "pills": [
+      {
+        "label": "<% (empty(status) || status == \"Pending ISC Review\") ? \"✓ Pending\" : \"Pending\" %>",
+        "taskReference": {
+          "taskId": "iscRoleRequestsView",
+          "parameterBindings": {
+            "view": "<% view ?? \"\" %>",
+            "status": "Pending ISC Review"
+          }
+        }
+      },
+      {
+        "label": "<% (status == \"Approved\") ? \"✓ Approved\" : \"Approved\" %>",
+        "taskReference": {
+          "taskId": "iscRoleRequestsView",
+          "parameterBindings": {
+            "view": "<% view ?? \"\" %>",
+            "status": "Approved"
+          }
+        }
+      },
+      {
+        "label": "<% (status == \"Denied\") ? \"✓ Denied\" : \"Denied\" %>",
+        "taskReference": {
+          "taskId": "iscRoleRequestsView",
+          "parameterBindings": {
+            "view": "<% view ?? \"\" %>",
+            "status": "Denied"
+          }
+        }
+      },
+      {
+        "label": "<% (status == \"All\") ? \"✓ All\" : \"All\" %>",
+        "taskReference": {
+          "taskId": "iscRoleRequestsView",
+          "parameterBindings": {
+            "view": "<% view ?? \"\" %>",
+            "status": "All"
+          }
+        }
+      }
+    ]
+  }
+}

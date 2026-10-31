@@ -130,7 +130,7 @@
                   "type": "richText",
                   "id": "approvalHelpRichText",
                   "enabled": false,
-                  "value": "<% '<span style=\"color:#374151;font-size:13px\">ⓘ Approve sends the request to the To Dos (Add Assignable Role, Create Role-Based Security Group), then Link Workday Role. Deny ends the process and marks the request Denied.</span>' %>"
+                  "value": "<% '<span style=\"color:#374151;font-size:12px\">ⓘ Approve sends the request to the To Dos (Add Assignable Role, Create Role-Based Security Group), then Link Workday Role. Deny ends the process and marks the request Denied.</span>' %>"
                 }
               ]
             }

@@ -83,7 +83,7 @@
     "headerSize": "STANDARD",
     "title": {
       "type": "title",
-      "label": "<% 'Shell Organization: ' + (size(((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))) > 0 ? (((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))[0].organizationByName.descriptor ?? ((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))[0].code) : (queryParams.orgName ?? '')) %>"
+      "label": "<% 'ECO-COMS: Shell Organization – ' + (size(((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))) > 0 ? (((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))[0].organizationByName.descriptor ?? ((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))[0].code) : (queryParams.orgName ?? '')) %>"
     },
     "body": {
       "type": "basicFormLayout",
@@ -105,15 +105,6 @@
                   "appName": "<% queryParams.appName ?? '' %>"
                 }
               }
-            },
-            {
-              "type": "button",
-              "id": "homeButton",
-              "label": "Home",
-              "action": "LINK",
-              "taskReference": {
-                "taskId": "home"
-              }
             }
           ]
         },
@@ -130,7 +121,40 @@
                   "type": "richText",
                   "id": "aboutRichText",
                   "enabled": false,
-                  "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">One shell organization: its status in Workday, the roles assigned on it with their positions and workers, and the ECO-COMS changes made to it (from the newest 200 Audit Log records). Use <b>Change Status</b> to inactivate or reactivate it, or <b>Manage</b> on a role to add or remove positions.</span>"
+                  "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">One shell organization: its status in Workday, the roles assigned on it with their positions and workers, and the ECO-COMS changes made to it (from the newest 200 Audit Log records). Use <b>Inactivate</b> or <b>Reactivate Organization</b> to change its status, or <b>Manage</b> on a role to add or remove positions.</span>"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "cardsSection",
+          "children": [
+            {
+              "type": "cardContainer",
+              "id": "orgCardContainer",
+              "layout": "grid",
+              "cards": [
+                {
+                  "type": "card",
+                  "cardId": "CountCard",
+                  "parameters": "<% { 'title': 'Status', 'subtitle': 'In Workday', 'countText': size(((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))) == 0 ? 'Not found' : ((size(((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))) > 0 && ((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))[0].cf_active1 == true) ? '✓ Active' : '○ Inactive') } %>"
+                },
+                {
+                  "type": "card",
+                  "cardId": "CountCard",
+                  "parameters": "<% { 'title': 'Roles', 'subtitle': 'Assigned on this organization', 'countText': '' + size((list:flatten((shellRoles.data ?? []).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ra.organization.id == (queryParams.orgId ?? '') }).map(ra => { { 'role': r.role, 'org': ra.organization, 'positions': ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? [], 'workers': ra.workersAssigned ?? [] } }) })))) + ' role assignments' } %>"
+                },
+                {
+                  "type": "card",
+                  "cardId": "CountCard",
+                  "parameters": "<% { 'title': 'Positions', 'subtitle': 'Holding those roles', 'countText': '' + size(list:flatten((list:flatten((shellRoles.data ?? []).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ra.organization.id == (queryParams.orgId ?? '') }).map(ra => { { 'role': r.role, 'org': ra.organization, 'positions': ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? [], 'workers': ra.workersAssigned ?? [] } }) }))).map(ra => { ra.positions })).map(p => { p.id }).distinct()) + ' positions' } %>"
+                },
+                {
+                  "type": "card",
+                  "cardId": "CountCard",
+                  "parameters": "<% { 'title': 'Changes', 'subtitle': 'Made through ECO-COMS', 'countText': '' + size((list:sort(list:flatten([auditPage0.data ?? [], auditPage1.data ?? []]).filter(a => { (!empty(a.orgWid) && a.orgWid == (queryParams.orgId ?? '')) || (!empty(queryParams.orgCode) && (a.coReferenceId ?? '') == queryParams.orgCode) || (!empty(queryParams.orgName) && (a.coName ?? '') == queryParams.orgName) }), 'timestamp', false))) + ' recorded' } %>"
                 }
               ]
             }
@@ -163,23 +187,9 @@
                   "value": "<% (size(((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))) > 0 ? (((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))[0].code ?? '') : (queryParams.orgCode ?? '')) %>"
                 },
                 {
-                  "type": "text",
-                  "id": "orgStatusText",
-                  "label": "Status",
-                  "enabled": false,
-                  "value": "<% size(((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))) == 0 ? 'Not found in Workday' : ((size(((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))) > 0 && ((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))[0].cf_active1 == true) ? 'Active' : 'Inactive') %>"
-                },
-                {
-                  "type": "text",
-                  "id": "roleCountText",
-                  "label": "Role assignments",
-                  "enabled": false,
-                  "value": "<% '' + size((list:flatten((shellRoles.data ?? []).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ra.organization.id == (queryParams.orgId ?? '') }).map(ra => { { 'role': r.role, 'org': ra.organization, 'positions': ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? [], 'workers': ra.workersAssigned ?? [] } }) })))) %>"
-                },
-                {
                   "type": "button",
                   "id": "changeStatusButton",
-                  "label": "<% (size(((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))) > 0 && ((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))[0].cf_active1 == true) ? 'Change Status (Inactivate)' : 'Change Status (Reactivate)' %>",
+                  "label": "<% (size(((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))) > 0 && ((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))[0].cf_active1 == true) ? 'Inactivate Organization' : 'Reactivate Organization' %>",
                   "action": "AUXILIARY",
                   "taskReference": {
                     "taskId": "manageShellOrgStatus",
@@ -333,25 +343,13 @@
                     {
                       "type": "column",
                       "columnId": "colWhen",
-                      "label": "When (UTC)",
+                      "label": "When",
                       "sortableAndFilterable": "true",
                       "cellTemplate": {
                         "type": "text",
                         "id": "colWhenText",
                         "enabled": false,
-                        "value": "<% (al.timestamp ?? '').replace('T', ' ').replace('Z', '') %>"
-                      }
-                    },
-                    {
-                      "type": "column",
-                      "columnId": "colType",
-                      "label": "Change Type",
-                      "sortableAndFilterable": "true",
-                      "cellTemplate": {
-                        "type": "text",
-                        "id": "colTypeText",
-                        "enabled": false,
-                        "value": "<% al.objectType ?? '' %>"
+                        "value": "<% (al.timestamp ?? '').replace('T', ' ').replace('Z', ' UTC') %>"
                       }
                     },
                     {

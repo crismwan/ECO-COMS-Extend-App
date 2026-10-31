@@ -374,7 +374,7 @@
               "type": "richText",
               "id": "pageDesc",
               "enabled": false,
-              "value": "<span style=\"color:#374151;font-size:13px\">Submit and manage Assignable Role requests by Application. Review pending requests or submit a new role request for ISC review.</span>"
+              "value": "<span style=\"color:#374151;font-size:12px\">Submit and manage Assignable Role requests by Application. Review pending requests or submit a new role request for ISC review.</span>"
             }
           ]
         },
@@ -390,7 +390,7 @@
                   "type": "richText",
                   "id": "pendingDesc",
                   "enabled": false,
-                  "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">ℹ </span><span style=\"color:#374151;font-size:11px\">The following requests are awaiting ISC review. ISC approves or denies them in Workday; you can withdraw your own pending request.</span>"
+                  "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ℹ </span><span style=\"color:#374151;font-size:12px\">The following requests are awaiting ISC review. ISC approves or denies them in Workday; you can withdraw your own pending request.</span>"
                 },
                 {
                   "type": "grid",
@@ -445,7 +445,7 @@
                       "sortableAndFilterable": "true",
                       "cellTemplate": {
                         "type": "richText",
-                        "value": "<% role.status == 'Pending ISC Review' ? '<span style=\"color:#92400e;font-weight:600;font-size:11px\">⏳ Pending ISC Review</span>' : role.status == 'Approved' ? '<span style=\"color:#065f46;font-weight:600;font-size:11px\">✓ Approved</span>' : role.status == 'Denied' ? '<span style=\"color:#991b1b;font-weight:600;font-size:11px\">✗ Denied</span>' : role.status == 'Inactive' ? '<span style=\"color:#6b7280;font-weight:600;font-size:11px\">○ Inactive</span>' : role.status ?? '' %>"
+                        "value": "<% role.status == 'Pending ISC Review' ? '<span style=\"color:#92400e;font-weight:600;font-size:12px\">⏳ Pending ISC Review</span>' : role.status == 'Approved' ? '<span style=\"color:#065f46;font-weight:600;font-size:12px\">✓ Approved</span>' : role.status == 'Denied' ? '<span style=\"color:#991b1b;font-weight:600;font-size:12px\">✗ Denied</span>' : role.status == 'Inactive' ? '<span style=\"color:#6b7280;font-weight:600;font-size:12px\">○ Inactive</span>' : role.status ?? '' %>"
                       }
                     },
                     {
@@ -564,7 +564,7 @@
                   "type": "richText",
                   "id": "newRoleDesc",
                   "enabled": false,
-                  "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">ℹ </span><span style=\"color:#374151;font-size:11px\">Submit a new Assignable Role request using the Application below. Once submitted, status will be set to <b>Pending ISC Review</b>.</span><br/><span style=\"color:#374151;font-size:11px\"><b>Functional Unit Hierarchy</b>: Limits where the role applies to one Functional Unit Hierarchy. Pick either an FUH or an Academic Unit, not both. Leave both empty for the whole university (Academic Unit - University of British Columbia).<br/><b>Academic Unit</b>: Limits where the role applies to one Academic Unit. Pick either an Academic Unit or an FUH, not both. Leave both empty for the whole university.<br/><b>Positions</b>: The positions that will hold the role once ISC approves the request. Search by position title or ID (for example P-00010). Vacant positions can be added; the role then applies to whoever fills them.</span>"
+                  "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ℹ </span><span style=\"color:#374151;font-size:12px\">Submit a new Assignable Role request using the Application below. Once submitted, status will be set to <b>Pending ISC Review</b>.</span><br/><span style=\"color:#374151;font-size:12px\"><b>Functional Unit Hierarchy</b>: Limits where the role applies to one Functional Unit Hierarchy. Pick either an FUH or an Academic Unit, not both. Leave both empty for the whole university (Academic Unit - University of British Columbia).<br/><b>Academic Unit</b>: Limits where the role applies to one Academic Unit. Pick either an Academic Unit or an FUH, not both. Leave both empty for the whole university.<br/><b>Positions</b>: The positions that will hold the role once ISC approves the request. Search by position title or ID (for example P-00010). Vacant positions can be added; the role then applies to whoever fills them.</span>"
                 },
                 {
                   "type": "dropdown",
@@ -695,7 +695,7 @@
                   "type": "richText",
                   "id": "activeNote",
                   "enabled": false,
-                  "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:11px\">Submitting sends the request to ISC for review in Workday; nothing changes in Workday until it is approved. The role assignment's Active status is set automatically from whether the selected positions are filled. You can withdraw your own request while it is pending.</span>"
+                  "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">Submitting sends the request to ISC for review in Workday; nothing changes in Workday until it is approved. The role assignment's Active status is set automatically from whether the selected positions are filled. You can withdraw your own request while it is pending.</span>"
                 }
               ]
             }

@@ -135,12 +135,17 @@ row = create_values('Row', [
     ('idType', 'String', 'if (data.Row.isAdd) "Position_ID" else "WID"'),
     ('idValue', 'String', '(if (data.Row.isAdd) data.Row.positionId else data.Row.assigneeWid).escapeXml()'),
     # same WQL the single-change page uses (posWidLookup); quotes stripped so the cell can't change the query
-    ('wql', 'String', '"SELECT workdayID, cf_PositionID, cf_PositionIsFilled FROM allPositions WHERE cf_PositionID = \'".append(data.Row.positionId.replace("\'", "")).append("\'")'),
+    ('wql', 'String', '"SELECT workdayID, cf_PositionID, cf_PositionIsFilled, position_PositionManagement, cf_PositionText FROM allPositions WHERE cf_PositionID = \'".append(data.Row.positionId.replace("\'", "")).append("\'")'),
 ])
 lookup = get('LookupPosition', 's"${"/wql/v1/data?limit=1&query="}${data.Row.wql.urlEncode().replace("+", "%20")}"')
 check = create_values('Check', [
     ('found', 'Boolean', 'data.LookupPosition.response.asJSON().stringAtJsonPathWithDefault("$.data[0].workdayID", "").isEmpty().not()'),
     ('unfilled', 'Boolean', 'data.LookupPosition.response.toString().replace(" ", "").contains("\\"cf_PositionIsFilled\\":false")'),
+    # Workday's own name and WID for the position, so audit records match the single-change page
+    ('lookupName', 'String', clean('data.LookupPosition.response.asJSON().stringAtJsonPathWithDefault("$.data[0].position_PositionManagement.descriptor", data.LookupPosition.response.asJSON().stringAtJsonPathWithDefault("$.data[0].cf_PositionText", ""))')),
+    ('lookupWid', 'String', 'data.LookupPosition.response.asJSON().stringAtJsonPathWithDefault("$.data[0].workdayID", "")'),
+    ('displayName', 'String', 'if (data.Check.lookupName.isEmpty().not()) data.Check.lookupName else (if (data.Row.positionName.isEmpty().not()) data.Row.positionName else data.Row.positionId)'),
+    ('auditWid', 'String', 'if (data.Row.isAdd) data.Check.lookupWid else data.Row.assigneeWid'),
     ('isValid', 'Boolean', 'if (data.Row.complete) (if (data.Row.isAdd) data.Check.found else true) else false'),
     ('doApply', 'Boolean', 'if (data.Check.isValid) data.GetInputParams.isApply else false'),
     ('doCheck', 'Boolean', 'data.Check.doApply.not()'),
@@ -166,7 +171,7 @@ outcome = create_values('Outcome', [
 ])
 RESULT = ('{\n  "batchRef": "{{data.GetInputParams.ref}}",\n  "runMode": "{{data.GetInputParams.mode}}",\n  "rowAction": "{{data.Row.rowAction}}",\n'
           '  "roleName": "{{data.Row.roleName}}",\n  "roleWid": "{{data.Row.roleWid}}",\n  "orgName": "{{data.Row.orgName}}",\n  "orgWid": "{{data.Row.orgWid}}",\n'
-          '  "positionName": "{{data.Row.positionName}}",\n  "positionId": "{{data.Row.positionId}}",\n  "assigneeWid": "{{data.Row.assigneeWid}}",\n'
+          '  "positionName": "{{data.Check.displayName}}",\n  "positionId": "{{data.Row.positionId}}",\n  "assigneeWid": "{{data.Row.assigneeWid}}",\n'
           '  "timestamp": "{{data.GetInputParams.timestamp}}",\n  RESULT_FIELDS\n}')
 applied = send('WriteAppliedResult', 'POST', APP + 'comsBulkRowResults"}"',
     RESULT.replace('RESULT_FIELDS', '"result": "{{#if data.Outcome.ok}}DONE{{/if}}{{#if data.Outcome.failed}}FAILED{{/if}}",\n  "message": "{{#if data.Outcome.ok}}Applied in Workday.{{/if}}{{#if data.Outcome.failed}}Workday rejected the change: {{data.Outcome.fault}}{{/if}}"'))
@@ -177,10 +182,10 @@ audit['_value']['body']['_value']['_value']['message']['_value'] = (
     '{\n  "timestamp": "{{data.GetInputParams.timestamp}}",\n  "objectType": "Role Assignment",\n'
     '  "action": "{{#if data.Row.isAdd}}ASSIGN POSITION{{/if}}{{#if data.Row.isRemove}}REMOVE POSITION{{/if}}",\n'
     '  "coReferenceId": "{{data.Row.positionId}}",\n  "coName": "{{data.Row.orgName}}",\n  "roleName": "{{data.Row.roleName}}",\n'
-    '  "positionName": "{{data.Row.positionName}}",\n  "effectiveDate": "{{data.GetInputParams.effectiveDate}}",\n'
+    '  "positionName": "{{data.Check.displayName}}",\n  "effectiveDate": "{{data.GetInputParams.effectiveDate}}",\n'
     '  "changedByWid": "{{data.GetInputParams.changedByWid}}",\n  "orgWid": "{{data.Row.orgWid}}",\n  "roleWid": "{{data.Row.roleWid}}",\n'
-    '  "positionWid": "{{#if data.Row.isRemove}}{{data.Row.assigneeWid}}{{/if}}",\n  "triggeredBy": "{{data.GetInputParams.changedBy}}",\n'
-    '  "details": "Bulk upload {{data.GetInputParams.ref}}: {{#if data.Row.isAdd}}assigned{{/if}}{{#if data.Row.isRemove}}removed{{/if}} position {{data.Row.positionName}} on role {{data.Row.roleName}}"\n}')
+    '  "positionWid": "{{data.Check.auditWid}}",\n  "triggeredBy": "{{data.GetInputParams.changedBy}}",\n'
+    '  "details": "Bulk upload {{data.GetInputParams.ref}}: {{#if data.Row.isAdd}}assigned{{/if}}{{#if data.Row.isRemove}}removed{{/if}} position {{data.Check.displayName}} on role {{data.Row.roleName}}"\n}')
 row_branch = branch('RowBranch', [
     ('IF_Apply', 'data.Check.doApply', [soap, outcome, applied, branch('AuditBranch', [('IF_Done', 'data.Outcome.ok', [audit])])]),
     ('IF_Check', 'data.Check.doCheck', [checked]),

@@ -242,7 +242,7 @@
           "children": [
             {
               "type": "button",
-              "label": "← My Role Requests",
+              "label": "← Assignable Role Manager",
               "taskReference": {
                 "taskId": "assignableRoleManagerView"
               },
@@ -252,7 +252,7 @@
             },
             {
               "type": "button",
-              "label": "← Admin Provisioning",
+              "label": "← AAA Role Provisioning",
               "taskReference": {
                 "taskId": "adminProvisioningView"
               },
@@ -270,7 +270,7 @@
               "type": "richText",
               "id": "pageDesc",
               "enabled": false,
-              "value": "<span style=\"color:#374151;font-size:13px\">Select one of your requests that is still Pending ISC Review to withdraw it. Withdrawing cancels its ISC review in Workday; the request is then marked Denied and the change is recorded in the audit log.</span>"
+              "value": "<span style=\"color:#374151;font-size:12px\">Select one of your requests that is still Pending ISC Review to withdraw it. Withdrawing cancels its ISC review in Workday; the request is then marked Denied and the change is recorded in the audit log.</span>"
             }
           ]
         },
@@ -439,7 +439,7 @@
               "type": "richText",
               "id": "confirmDelete",
               "enabled": false,
-              "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">ℹ </span><span style=\"color:#374151;font-size:11px\">Select a request from the grid above, tick the confirmation, then click <b>OK</b> to withdraw it.</span>"
+              "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ℹ </span><span style=\"color:#374151;font-size:12px\">Select a request from the grid above, tick the confirmation, then click <b>OK</b> to withdraw it.</span>"
             },
             {
               "type": "fieldSet",
@@ -457,7 +457,7 @@
                   "type": "richText",
                   "id": "deleteWarning",
                   "enabled": false,
-                  "value": "<span style=\"color:#dc2626;font-size:11px;font-weight:700\">⚠ </span><span style=\"color:#991b1b;font-size:11px\"><b>Note:</b> The ISC review is cancelled and can't be restarted; submit a new request if you still need the role. A role already created in Workday must be removed there separately.</span>"
+                  "value": "<span style=\"color:#dc2626;font-size:12px;font-weight:700\">⚠ </span><span style=\"color:#991b1b;font-size:12px\"><b>Note:</b> The ISC review is cancelled and can't be restarted; submit a new request if you still need the role. A role already created in Workday must be removed there separately.</span>"
                 },
                 {
                   "type": "checkBox",

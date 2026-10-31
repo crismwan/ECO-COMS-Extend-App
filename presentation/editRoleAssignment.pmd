@@ -76,7 +76,7 @@
     "headerSize": "STANDARD",
     "title": {
       "type": "title",
-      "label": "<% 'Manage Role Assignment: ' + (queryParams.roleName ?? 'Role') %>",
+      "label": "<% 'ECO-COMS: Manage Role Assignment – ' + (queryParams.roleName ?? 'Role') %>",
       "enabled": true
     },
     "body": {
@@ -111,7 +111,7 @@
                   "type": "richText",
                   "id": "aboutText",
                   "enabled": false,
-                  "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">ℹ </span><span style=\"color:#374151;font-size:11px\">Current role assignment is shown below (related actions are on the Shell Org Manager grid). Use Change Positions to add or remove positions; changes run through the Workday Assign Roles business process and are not rescindable.</span>"
+                  "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ℹ </span><span style=\"color:#374151;font-size:12px\">Current role assignment is shown below (related actions are on the Shell Org Manager grid). Use Change Positions to add or remove positions; changes run through the Workday Assign Roles business process and are not rescindable.</span>"
                 }
               ]
             }

@@ -1,0 +1,40 @@
+{
+  "id": "IscQueuePillCard",
+  "header": {
+    "title": "Open the queue",
+    "subtitle": "Pending requests waiting for ISC review",
+    "icon": "wd-accent-clipboard-checklist"
+  },
+  "body": {
+    "type": "pillCard",
+    "pills": [
+      {
+        "label": "All pending requests",
+        "taskReference": {
+          "taskId": "iscRoleRequestsView",
+          "parameterBindings": {
+            "view": ""
+          }
+        }
+      },
+      {
+        "label": "Pending AAA provisioning",
+        "taskReference": {
+          "taskId": "iscRoleRequestsView",
+          "parameterBindings": {
+            "view": "aaa"
+          }
+        }
+      },
+      {
+        "label": "Pending assignable roles",
+        "taskReference": {
+          "taskId": "iscRoleRequestsView",
+          "parameterBindings": {
+            "view": "assignable"
+          }
+        }
+      }
+    ]
+  }
+}

@@ -9,7 +9,7 @@
     "headerSize": "STANDARD",
     "title": {
       "type": "title",
-      "label": "ISC Role Requests"
+      "label": "ECO-COMS: ISC Role Requests"
     },
     "body": {
       "type": "basicFormLayout",
@@ -42,7 +42,7 @@
                   "type": "richText",
                   "id": "iscHubDesc",
                   "enabled": false,
-                  "value": "<span style=\"font-size:11px\">Review and action pending ISC role requests. Use the links below to view requests by type.</span>"
+                  "value": "<span style=\"font-size:12px\">Review and action pending ISC role requests. Use the links below to view requests by type.</span>"
                 }
               ]
             }
@@ -53,34 +53,15 @@
           "id": "iscHubLinksSection",
           "children": [
             {
-              "type": "button",
-              "label": "View All Pending Requests",
-              "taskReference": {
-                "taskId": "iscRoleRequestsView"
-              },
-              "action": "PRIMARY"
-            },
-            {
-              "type": "button",
-              "label": "Pending AAA Provisioning",
-              "taskReference": {
-                "taskId": "iscRoleRequestsView",
-                "parameters": {
-                  "view": "aaa"
+              "type": "cardContainer",
+              "id": "iscQueueCardContainer",
+              "layout": "grid",
+              "cards": [
+                {
+                  "type": "card",
+                  "cardId": "IscQueuePillCard"
                 }
-              },
-              "action": "AUXILIARY"
-            },
-            {
-              "type": "button",
-              "label": "Pending Assignable Roles",
-              "taskReference": {
-                "taskId": "iscRoleRequestsView",
-                "parameters": {
-                  "view": "assignable"
-                }
-              },
-              "action": "AUXILIARY"
+              ]
             }
           ]
         }

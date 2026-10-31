@@ -201,146 +201,19 @@
           "id": "auditFilterSection",
           "children": [
             {
-              "type": "fieldSet",
-              "id": "auditPeriodFieldSet",
-              "title": "Time period",
-              "children": [
+              "type": "cardContainer",
+              "id": "auditFilterCardContainer",
+              "layout": "grid",
+              "cards": [
                 {
-                  "type": "button",
-                  "id": "periodAllButton",
-                  "label": "All time",
-                  "action": "AUXILIARY",
-                  "taskReference": {
-                    "taskId": "auditLogViewer",
-                    "parameterBindings": {
-                      "period": "all",
-                      "changeType": "<% queryParams.changeType ?? '' %>"
-                    }
-                  }
+                  "type": "card",
+                  "cardId": "AuditPeriodPillCard",
+                  "parameters": "<% { 'period': queryParams.period ?? '', 'changeType': queryParams.changeType ?? '' } %>"
                 },
                 {
-                  "type": "button",
-                  "id": "period24hButton",
-                  "label": "Last 24 hours",
-                  "action": "AUXILIARY",
-                  "taskReference": {
-                    "taskId": "auditLogViewer",
-                    "parameterBindings": {
-                      "period": "24h",
-                      "changeType": "<% queryParams.changeType ?? '' %>"
-                    }
-                  }
-                },
-                {
-                  "type": "button",
-                  "id": "period7dButton",
-                  "label": "Last 7 days",
-                  "action": "AUXILIARY",
-                  "taskReference": {
-                    "taskId": "auditLogViewer",
-                    "parameterBindings": {
-                      "period": "7d",
-                      "changeType": "<% queryParams.changeType ?? '' %>"
-                    }
-                  }
-                },
-                {
-                  "type": "button",
-                  "id": "period30dButton",
-                  "label": "Last 30 days",
-                  "action": "AUXILIARY",
-                  "taskReference": {
-                    "taskId": "auditLogViewer",
-                    "parameterBindings": {
-                      "period": "30d",
-                      "changeType": "<% queryParams.changeType ?? '' %>"
-                    }
-                  }
-                }
-              ]
-            },
-            {
-              "type": "fieldSet",
-              "id": "auditTypeFieldSet",
-              "title": "Change type",
-              "children": [
-                {
-                  "type": "button",
-                  "id": "typeAllButton",
-                  "label": "All types",
-                  "action": "AUXILIARY",
-                  "taskReference": {
-                    "taskId": "auditLogViewer",
-                    "parameterBindings": {
-                      "period": "<% queryParams.period ?? '' %>",
-                      "changeType": ""
-                    }
-                  }
-                },
-                {
-                  "type": "button",
-                  "id": "typeShellOrgButton",
-                  "label": "Shell Org",
-                  "action": "AUXILIARY",
-                  "taskReference": {
-                    "taskId": "auditLogViewer",
-                    "parameterBindings": {
-                      "period": "<% queryParams.period ?? '' %>",
-                      "changeType": "Shell Org"
-                    }
-                  }
-                },
-                {
-                  "type": "button",
-                  "id": "typePatternButton",
-                  "label": "Pattern",
-                  "action": "AUXILIARY",
-                  "taskReference": {
-                    "taskId": "auditLogViewer",
-                    "parameterBindings": {
-                      "period": "<% queryParams.period ?? '' %>",
-                      "changeType": "Shell Org Pattern"
-                    }
-                  }
-                },
-                {
-                  "type": "button",
-                  "id": "typeStatusButton",
-                  "label": "Org Status",
-                  "action": "AUXILIARY",
-                  "taskReference": {
-                    "taskId": "auditLogViewer",
-                    "parameterBindings": {
-                      "period": "<% queryParams.period ?? '' %>",
-                      "changeType": "Org Status"
-                    }
-                  }
-                },
-                {
-                  "type": "button",
-                  "id": "typeRoleAssignmentButton",
-                  "label": "Role Assignment",
-                  "action": "AUXILIARY",
-                  "taskReference": {
-                    "taskId": "auditLogViewer",
-                    "parameterBindings": {
-                      "period": "<% queryParams.period ?? '' %>",
-                      "changeType": "Role Assignment"
-                    }
-                  }
-                },
-                {
-                  "type": "button",
-                  "id": "typeAssignableRoleButton",
-                  "label": "Assignable Role",
-                  "action": "AUXILIARY",
-                  "taskReference": {
-                    "taskId": "auditLogViewer",
-                    "parameterBindings": {
-                      "period": "<% queryParams.period ?? '' %>",
-                      "changeType": "Assignable Role"
-                    }
-                  }
+                  "type": "card",
+                  "cardId": "AuditTypePillCard",
+                  "parameters": "<% { 'period': queryParams.period ?? '', 'changeType': queryParams.changeType ?? '' } %>"
                 }
               ]
             }
@@ -388,7 +261,7 @@
                 "label": "Timestamp",
                 "cellTemplate": {
                   "type": "text",
-                  "value": "<% logEntry.timestamp ?? '' %>",
+                  "value": "<% (logEntry.timestamp ?? '').replace('T', ' ').replace('Z', ' UTC') %>",
                   "enabled": false
                 },
                 "sortableAndFilterable": "true"
@@ -569,7 +442,7 @@
             "type": "richText",
             "id": "exportNote",
             "enabled": false,
-            "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">ℹ </span><span style=\"color:#374151;font-size:11px\">Use the grid’s built-in export action to download these results as CSV for compliance reporting.</span>"
+            "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ℹ </span><span style=\"color:#374151;font-size:12px\">Use the grid’s built-in export action to download these results as CSV for compliance reporting.</span>"
           }
         ]
       }

@@ -1,0 +1,46 @@
+{
+  "id": "IscViewPillCard",
+  "parameters": [
+    "view",
+    "status"
+  ],
+  "header": {
+    "title": "Request type",
+    "icon": "wd-accent-clipboard-checklist"
+  },
+  "body": {
+    "type": "pillCard",
+    "pills": [
+      {
+        "label": "<% (empty(view)) ? \"✓ All requests\" : \"All requests\" %>",
+        "taskReference": {
+          "taskId": "iscRoleRequestsView",
+          "parameterBindings": {
+            "view": "",
+            "status": "<% status ?? \"\" %>"
+          }
+        }
+      },
+      {
+        "label": "<% (view == \"aaa\") ? \"✓ AAA provisioning\" : \"AAA provisioning\" %>",
+        "taskReference": {
+          "taskId": "iscRoleRequestsView",
+          "parameterBindings": {
+            "view": "aaa",
+            "status": "<% status ?? \"\" %>"
+          }
+        }
+      },
+      {
+        "label": "<% (view == \"assignable\") ? \"✓ Assignable roles\" : \"Assignable roles\" %>",
+        "taskReference": {
+          "taskId": "iscRoleRequestsView",
+          "parameterBindings": {
+            "view": "assignable",
+            "status": "<% status ?? \"\" %>"
+          }
+        }
+      }
+    ]
+  }
+}

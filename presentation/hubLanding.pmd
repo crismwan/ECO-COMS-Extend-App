@@ -160,7 +160,7 @@
     "headerSize": "STANDARD",
     "title": {
       "type": "title",
-      "label": "RBAC Hub"
+      "label": "ECO-COMS: RBAC Hub"
     },
     "body": {
       "type": "basicFormLayout",
@@ -217,7 +217,7 @@
                   "type": "richText",
                   "id": "shellOrgDesc",
                   "enabled": false,
-                  "value": "<% '<span style=\"color:#374151;font-size:13px\">Manage Custom Organizations (Shell Orgs) used for RBAC role assignments in Workday. Add new organizations, manage patterns, and view or update organization status.</span>' %>"
+                  "value": "<% '<span style=\"color:#374151;font-size:12px\">Manage Custom Organizations (Shell Orgs) used for RBAC role assignments in Workday. Add new organizations, manage patterns, and view or update organization status.</span>' %>"
                 },
                 {
                   "type": "button",
@@ -263,7 +263,7 @@
                   "type": "richText",
                   "id": "bulkDesc",
                   "enabled": false,
-                  "value": "<% '<span style=\"color:#374151;font-size:13px\">Add or remove many positions on shell organization roles from one CSV file. Validate first, then run it for real.</span>' %>"
+                  "value": "<% '<span style=\"color:#374151;font-size:12px\">Add or remove many positions on shell organization roles from one CSV file. Validate first, then run it for real.</span>' %>"
                 },
                 {
                   "type": "button",
@@ -309,7 +309,7 @@
                   "type": "richText",
                   "id": "assignableRoleDesc",
                   "enabled": false,
-                  "value": "<% '<span style=\"color:#374151;font-size:13px\">Submit requests for new Assignable Roles or view existing role requests and their current status.</span>' %>"
+                  "value": "<% '<span style=\"color:#374151;font-size:12px\">Submit requests for new Assignable Roles or view existing role requests and their current status.</span>' %>"
                 },
                 {
                   "type": "button",
@@ -346,7 +346,7 @@
                   "type": "richText",
                   "id": "adminDesc",
                   "enabled": false,
-                  "value": "<% '<span style=\"color:#374151;font-size:13px\">Administrative tools for AAA role provisioning, ISC role request management, and audit log review.</span>' %>"
+                  "value": "<% '<span style=\"color:#374151;font-size:12px\">Administrative tools for AAA role provisioning, ISC role request management, and audit log review.</span>' %>"
                 },
                 {
                   "type": "button",

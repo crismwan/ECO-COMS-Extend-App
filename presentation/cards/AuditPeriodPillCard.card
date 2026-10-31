@@ -1,0 +1,56 @@
+{
+  "id": "AuditPeriodPillCard",
+  "parameters": [
+    "period",
+    "changeType"
+  ],
+  "header": {
+    "title": "Time period",
+    "icon": "wd-accent-clipboard-checklist"
+  },
+  "body": {
+    "type": "pillCard",
+    "pills": [
+      {
+        "label": "<% (empty(period) || period == \"all\") ? \"✓ All time\" : \"All time\" %>",
+        "taskReference": {
+          "taskId": "auditLogViewer",
+          "parameterBindings": {
+            "period": "all",
+            "changeType": "<% changeType ?? \"\" %>"
+          }
+        }
+      },
+      {
+        "label": "<% (period == \"24h\") ? \"✓ Last 24 hours\" : \"Last 24 hours\" %>",
+        "taskReference": {
+          "taskId": "auditLogViewer",
+          "parameterBindings": {
+            "period": "24h",
+            "changeType": "<% changeType ?? \"\" %>"
+          }
+        }
+      },
+      {
+        "label": "<% (period == \"7d\") ? \"✓ Last 7 days\" : \"Last 7 days\" %>",
+        "taskReference": {
+          "taskId": "auditLogViewer",
+          "parameterBindings": {
+            "period": "7d",
+            "changeType": "<% changeType ?? \"\" %>"
+          }
+        }
+      },
+      {
+        "label": "<% (period == \"30d\") ? \"✓ Last 30 days\" : \"Last 30 days\" %>",
+        "taskReference": {
+          "taskId": "auditLogViewer",
+          "parameterBindings": {
+            "period": "30d",
+            "changeType": "<% changeType ?? \"\" %>"
+          }
+        }
+      }
+    ]
+  }
+}

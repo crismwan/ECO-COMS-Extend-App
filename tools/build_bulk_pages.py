@@ -219,6 +219,9 @@ apply = {"id": "bulkRoleApply", "securityDomains": ["ManageCOMSShellOrgs"],
   "presentation": {"headerSize": "STANDARD", "title": {"type": "title", "label": "ECO-COMS: Bulk Role Changes – Apply"},
     "cancelOverride": {"taskId": "bulkRoleResults"},
     "body": {"type": "basicFormLayout", "id": "bulkApplyForm", "sections": [
+      {"type": "layoutSection", "id": "navSection", "children": [
+        {"type": "button", "id": "resultsButton", "label": "← Bulk Role Changes – Results", "action": "LINK", "suppressDiscardDialog": True,
+         "taskReference": {"taskId": "bulkRoleResults", "parameterBindings": {"batch": "<% " + B + " %>"}}}]},
       note("warningSection", "warningFieldSet", "Real run", "warningRichText",
         "OK applies every VALID row of this upload in Workday's Assign Roles, with the effective date chosen when the file was validated. "
         "Changes that succeed are not undone if later rows fail. Each change is written to the Audit Log.", '#B45309', '⚠'),

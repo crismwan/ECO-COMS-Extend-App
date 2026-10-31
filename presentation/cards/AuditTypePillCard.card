@@ -1,0 +1,76 @@
+{
+  "id": "AuditTypePillCard",
+  "parameters": [
+    "period",
+    "changeType"
+  ],
+  "header": {
+    "title": "Change type",
+    "icon": "wd-accent-clipboard-checklist"
+  },
+  "body": {
+    "type": "pillCard",
+    "pills": [
+      {
+        "label": "<% (empty(changeType)) ? \"✓ All types\" : \"All types\" %>",
+        "taskReference": {
+          "taskId": "auditLogViewer",
+          "parameterBindings": {
+            "period": "<% period ?? \"\" %>",
+            "changeType": ""
+          }
+        }
+      },
+      {
+        "label": "<% (changeType == \"Shell Org\") ? \"✓ Shell Org\" : \"Shell Org\" %>",
+        "taskReference": {
+          "taskId": "auditLogViewer",
+          "parameterBindings": {
+            "period": "<% period ?? \"\" %>",
+            "changeType": "Shell Org"
+          }
+        }
+      },
+      {
+        "label": "<% (changeType == \"Shell Org Pattern\") ? \"✓ Pattern\" : \"Pattern\" %>",
+        "taskReference": {
+          "taskId": "auditLogViewer",
+          "parameterBindings": {
+            "period": "<% period ?? \"\" %>",
+            "changeType": "Shell Org Pattern"
+          }
+        }
+      },
+      {
+        "label": "<% (changeType == \"Org Status\") ? \"✓ Org Status\" : \"Org Status\" %>",
+        "taskReference": {
+          "taskId": "auditLogViewer",
+          "parameterBindings": {
+            "period": "<% period ?? \"\" %>",
+            "changeType": "Org Status"
+          }
+        }
+      },
+      {
+        "label": "<% (changeType == \"Role Assignment\") ? \"✓ Role Assignment\" : \"Role Assignment\" %>",
+        "taskReference": {
+          "taskId": "auditLogViewer",
+          "parameterBindings": {
+            "period": "<% period ?? \"\" %>",
+            "changeType": "Role Assignment"
+          }
+        }
+      },
+      {
+        "label": "<% (changeType == \"Assignable Role\") ? \"✓ Assignable Role\" : \"Assignable Role\" %>",
+        "taskReference": {
+          "taskId": "auditLogViewer",
+          "parameterBindings": {
+            "period": "<% period ?? \"\" %>",
+            "changeType": "Assignable Role"
+          }
+        }
+      }
+    ]
+  }
+}

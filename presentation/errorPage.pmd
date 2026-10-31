@@ -5,7 +5,7 @@
     "headerSize": "STANDARD",
     "title": {
       "type": "title",
-      "label": "Something went wrong"
+      "label": "ECO-COMS: Something went wrong"
     },
     "body": {
       "type": "basicFormLayout",
@@ -62,19 +62,19 @@
           "children": [
             {
               "type": "button",
-              "id": "homeButton",
-              "label": "← Go to Home",
+              "id": "shellOrgManagerButton",
+              "label": "← Shell Org Manager",
               "taskReference": {
-                "taskId": "home"
+                "taskId": "shellOrgManager"
               },
               "action": "LINK"
             },
             {
               "type": "button",
-              "id": "shellOrgManagerButton",
-              "label": "← Shell Org Manager",
+              "id": "homeButton",
+              "label": "← Home",
               "taskReference": {
-                "taskId": "shellOrgManager"
+                "taskId": "home"
               },
               "action": "LINK"
             },

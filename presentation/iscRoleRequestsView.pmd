@@ -164,7 +164,7 @@
               "type": "richText",
               "id": "pageDesc",
               "enabled": false,
-              "value": "<% '<span style=\"color:#374151;font-size:13px\">ISC Security: requests ' + (queryParams.view == 'aaa' ? 'for AAA (Organizations and Roles Assignment Administrator) roles from Admin Provisioning' : (queryParams.view == 'assignable' ? 'for assignable roles from Assignable Role Manager' : 'from both Assignable Role Manager and Admin Provisioning')) + '. Open a request\\'s <b>Review Process</b> to act on it in your Workday inbox.</span>' %>"
+              "value": "<% '<span style=\"color:#374151;font-size:12px\">ISC Security: requests ' + (queryParams.view == 'aaa' ? 'for AAA (Organizations and Roles Assignment Administrator) roles from Admin Provisioning' : (queryParams.view == 'assignable' ? 'for assignable roles from Assignable Role Manager' : 'from both Assignable Role Manager and Admin Provisioning')) + '. Open a request\\'s <b>Review Process</b> to act on it in your Workday inbox.</span>' %>"
             }
           ]
         },
@@ -203,13 +203,13 @@
             {
               "type": "fieldSet",
               "id": "actionsInfoFieldSet",
-              "title": "About This Page",
+              "title": "About this page",
               "children": [
                 {
                   "type": "richText",
                   "id": "maintainActionInfo",
                   "enabled": false,
-                  "value": "<span style=\"color:#0055B7;font-size:11px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:11px\"><b>AAA role</b>: an Organizations and Roles Assignment Administrator request from Admin Provisioning, for someone who will manage an application's roles. <b>Assignable role</b>: a new delegated role for an application, requested from Assignable Role Manager. <b>Review</b>: opens the request's Workday review process; approve or deny it from your Workday inbox, and the request here updates automatically. A pending request is <b>overdue</b> after 3 business days.</span>"
+                  "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\"><b>AAA role</b>: an Organizations and Roles Assignment Administrator request from Admin Provisioning, for someone who will manage an application's roles. <b>Assignable role</b>: a new delegated role for an application, requested from Assignable Role Manager. <b>Review</b>: opens the request's Workday review process; approve or deny it from your Workday inbox, and the request here updates automatically. A pending request is <b>overdue</b> after 3 business days.</span>"
                 }
               ]
             }
@@ -230,58 +230,23 @@
                   "label": "Showing",
                   "enabled": false,
                   "value": "<% (comsRequestStats.statusOrDefault(queryParams.status ?? '') == 'All' ? 'All' : (comsRequestStats.statusOrDefault(queryParams.status ?? '') == 'Pending ISC Review' ? 'Pending' : comsRequestStats.statusOrDefault(queryParams.status ?? ''))) + ' requests: ' + size(comsRequestStats.filterRequests(list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? [], (queryParams.view ?? ''), (queryParams.status ?? ''))) + ' of ' + size(comsRequestStats.filterRequests(list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? [], (queryParams.view ?? ''), 'All')) %>"
+                }
+              ]
+            },
+            {
+              "type": "cardContainer",
+              "id": "iscFilterCardContainer",
+              "layout": "grid",
+              "cards": [
+                {
+                  "type": "card",
+                  "cardId": "IscViewPillCard",
+                  "parameters": "<% { 'view': queryParams.view ?? '', 'status': queryParams.status ?? '' } %>"
                 },
                 {
-                  "type": "button",
-                  "id": "pendingFilterButton",
-                  "label": "Pending",
-                  "action": "AUXILIARY",
-                  "taskReference": {
-                    "taskId": "iscRoleRequestsView",
-                    "parameterBindings": {
-                      "view": "<% queryParams.view ?? '' %>",
-                      "status": "Pending ISC Review"
-                    }
-                  }
-                },
-                {
-                  "type": "button",
-                  "id": "approvedFilterButton",
-                  "label": "Approved",
-                  "action": "AUXILIARY",
-                  "taskReference": {
-                    "taskId": "iscRoleRequestsView",
-                    "parameterBindings": {
-                      "view": "<% queryParams.view ?? '' %>",
-                      "status": "Approved"
-                    }
-                  }
-                },
-                {
-                  "type": "button",
-                  "id": "deniedFilterButton",
-                  "label": "Denied",
-                  "action": "AUXILIARY",
-                  "taskReference": {
-                    "taskId": "iscRoleRequestsView",
-                    "parameterBindings": {
-                      "view": "<% queryParams.view ?? '' %>",
-                      "status": "Denied"
-                    }
-                  }
-                },
-                {
-                  "type": "button",
-                  "id": "allFilterButton",
-                  "label": "All",
-                  "action": "AUXILIARY",
-                  "taskReference": {
-                    "taskId": "iscRoleRequestsView",
-                    "parameterBindings": {
-                      "view": "<% queryParams.view ?? '' %>",
-                      "status": "All"
-                    }
-                  }
+                  "type": "card",
+                  "cardId": "IscStatusPillCard",
+                  "parameters": "<% { 'view': queryParams.view ?? '', 'status': queryParams.status ?? '' } %>"
                 }
               ]
             }
@@ -368,7 +333,7 @@
                       "sortableAndFilterable": "true",
                       "cellTemplate": {
                         "type": "richText",
-                        "value": "<% (role.status == 'Pending ISC Review' ? '<span style=\"color:#92400e;font-weight:600;font-size:11px\">⏳ Pending ISC Review</span>' : role.status == 'Approved' ? '<span style=\"color:#065f46;font-weight:600;font-size:11px\">✓ Approved</span>' : role.status == 'Denied' ? '<span style=\"color:#991b1b;font-weight:600;font-size:11px\">✗ Denied</span>' : role.status == 'Inactive' ? '<span style=\"color:#6b7280;font-weight:600;font-size:11px\">○ Inactive</span>' : role.status ?? '') + (comsRequestStats.isOverdue(role) ? '<span style=\"color:#B45309;font-weight:700;font-size:11px\"> · overdue</span>' : '') %>"
+                        "value": "<% (role.status == 'Pending ISC Review' ? '<span style=\"color:#92400e;font-weight:600;font-size:12px\">⏳ Pending ISC Review</span>' : role.status == 'Approved' ? '<span style=\"color:#065f46;font-weight:600;font-size:12px\">✓ Approved</span>' : role.status == 'Denied' ? '<span style=\"color:#991b1b;font-weight:600;font-size:12px\">✗ Denied</span>' : role.status == 'Inactive' ? '<span style=\"color:#6b7280;font-weight:600;font-size:12px\">○ Inactive</span>' : role.status ?? '') + (comsRequestStats.isOverdue(role) ? '<span style=\"color:#B45309;font-weight:700;font-size:12px\"> · overdue</span>' : '') %>"
                       }
                     },
                     {

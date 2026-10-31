@@ -142,20 +142,20 @@
               "type": "richText",
               "id": "pageDesc",
               "enabled": false,
-              "value": "<span style=\"color:#374151;font-size:13px\">View your Assignable Role requests and their current status. Each request is reviewed by ISC before becoming active in Workday. To submit a new request, click <b>Submit New Request</b> above.</span>"
+              "value": "<span style=\"color:#374151;font-size:12px\">View your Assignable Role requests and their current status. Each request is reviewed by ISC before becoming active in Workday. To submit a new request, click <b>Submit New Request</b> above.</span>"
             },
             {
               "type": "richText",
               "id": "pendingNoticeYes",
               "enabled": false,
-              "value": "<span style=\"color:#d97706;font-size:11px;font-weight:700\">⚠ </span><span style=\"color:#92400e;font-size:11px\">You have requests currently pending ISC review. Open a row's <b>Review Process</b> to see where it is, or use <b>Withdraw Request</b> to withdraw it.</span>",
+              "value": "<span style=\"color:#d97706;font-size:12px;font-weight:700\">⚠ </span><span style=\"color:#92400e;font-size:12px\">You have requests currently pending ISC review. Open a row's <b>Review Process</b> to see where it is, or use <b>Withdraw Request</b> to withdraw it.</span>",
               "visible": "<% size(list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]).filter(r => !r.roleName.startsWith('Organizations and Roles Assignment Administrator') && r.requestedBy.id == selectedWorker.id && r.status == 'Pending ISC Review')) > 0 %>"
             },
             {
               "type": "richText",
               "id": "pendingNoticeNo",
               "enabled": false,
-              "value": "<span style=\"color:#059669;font-size:11px;font-weight:700\">✓ </span><span style=\"color:#065f46;font-size:11px\">You have no requests pending ISC review.</span>",
+              "value": "<span style=\"color:#059669;font-size:12px;font-weight:700\">✓ </span><span style=\"color:#065f46;font-size:12px\">You have no requests pending ISC review.</span>",
               "visible": "<% size(list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]).filter(r => !r.roleName.startsWith('Organizations and Roles Assignment Administrator') && r.requestedBy.id == selectedWorker.id && r.status == 'Pending ISC Review')) == 0 %>"
             }
           ]
@@ -266,7 +266,7 @@
                       "sortableAndFilterable": "true",
                       "cellTemplate": {
                         "type": "richText",
-                        "value": "<% role.status == 'Pending ISC Review' ? '<span style=\"color:#92400e;font-weight:600;font-size:11px\">⏳ Pending ISC Review</span>' : role.status == 'Approved' ? '<span style=\"color:#065f46;font-weight:600;font-size:11px\">✓ Approved</span>' : role.status == 'Denied' ? '<span style=\"color:#991b1b;font-weight:600;font-size:11px\">✗ Denied</span>' : role.status == 'Inactive' ? '<span style=\"color:#6b7280;font-weight:600;font-size:11px\">○ Inactive</span>' : role.status ?? '' %>"
+                        "value": "<% role.status == 'Pending ISC Review' ? '<span style=\"color:#92400e;font-weight:600;font-size:12px\">⏳ Pending ISC Review</span>' : role.status == 'Approved' ? '<span style=\"color:#065f46;font-weight:600;font-size:12px\">✓ Approved</span>' : role.status == 'Denied' ? '<span style=\"color:#991b1b;font-weight:600;font-size:12px\">✗ Denied</span>' : role.status == 'Inactive' ? '<span style=\"color:#6b7280;font-weight:600;font-size:12px\">○ Inactive</span>' : role.status ?? '' %>"
                       }
                     },
                     {

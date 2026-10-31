@@ -8,7 +8,7 @@
     "headerSize": "STANDARD",
     "title": {
       "type": "title",
-      "label": "Functional Unit Hierarchy Administration",
+      "label": "ECO-COMS: Functional Unit Hierarchy Administration",
       "enabled": true
     },
     "body": {
@@ -43,7 +43,7 @@
                   "type": "richText",
                   "id": "overviewDesc",
                   "enabled": false,
-                  "value": "<span style=\"color:#374151;font-size:13px\">FUH are Custom Organizations of type <b>Functional Unit Hierarchy</b> and are used specifically for UBC academic or administrative units.</span>"
+                  "value": "<span style=\"color:#374151;font-size:12px\">FUH are Custom Organizations of type <b>Functional Unit Hierarchy</b> and are used specifically for UBC academic or administrative units.</span>"
                 }
               ]
             }

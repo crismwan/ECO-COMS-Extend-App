@@ -202,7 +202,7 @@
                   "type": "richText",
                   "id": "sgHelpRichText",
                   "enabled": false,
-                  "value": "<% '<span style=\"color:#374151;font-size:13px\">ⓘ In Workday, run the Create Security Group task for this role, then enter the new group name below and click OK.</span>' %>"
+                  "value": "<% '<span style=\"color:#374151;font-size:12px\">ⓘ In Workday, run the Create Security Group task for this role, then enter the new group name below and click OK.</span>' %>"
                 }
               ]
             }

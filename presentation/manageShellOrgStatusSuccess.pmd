@@ -4,7 +4,7 @@
     "headerSize": "STANDARD",
     "title": {
       "type": "title",
-      "label": "Status Updated"
+      "label": "ECO-COMS: Status Updated"
     },
     "body": {
       "type": "basicFormLayout",
@@ -41,7 +41,7 @@
                   "type": "richText",
                   "id": "successMessage",
                   "enabled": false,
-                  "value": "<span style=\"color:#059669;font-size:11px;font-weight:700\">✓ </span><span style=\"color:#065f46;font-size:11px\">The organization status has been updated successfully.</span>"
+                  "value": "<span style=\"color:#059669;font-size:12px;font-weight:700\">✓ </span><span style=\"color:#065f46;font-size:12px\">The organization status has been updated successfully.</span>"
                 },
                 {
                   "type": "readOnlyText",

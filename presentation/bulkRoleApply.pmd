@@ -147,6 +147,25 @@
       "sections": [
         {
           "type": "layoutSection",
+          "id": "navSection",
+          "children": [
+            {
+              "type": "button",
+              "id": "resultsButton",
+              "label": "← Bulk Role Changes – Results",
+              "action": "LINK",
+              "suppressDiscardDialog": true,
+              "taskReference": {
+                "taskId": "bulkRoleResults",
+                "parameterBindings": {
+                  "batch": "<% (queryParams.batch ?? '') %>"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
           "id": "warningSection",
           "children": [
             {

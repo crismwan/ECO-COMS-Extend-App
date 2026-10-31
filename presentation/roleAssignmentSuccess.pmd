@@ -7,7 +7,7 @@
     "headerSize": "STANDARD",
     "title": {
       "type": "title",
-      "label": "Role Assignment Updated"
+      "label": "ECO-COMS: Role Assignment Updated"
     },
     "body": {
       "type": "basicFormLayout",
@@ -20,7 +20,7 @@
             {
               "type": "fieldSet",
               "id": "successFieldSet",
-              "title": "Changes applied",
+              "title": "Changes Applied Successfully",
               "children": [
                 {
                   "type": "richText",
