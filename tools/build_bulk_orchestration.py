@@ -82,7 +82,7 @@ def log(name, msg):
 
 SOAP = node(arp, 'CallOrganizationUpdate')
 LOOP = {"_type": "Loop", "_value": {"name": {"_type": "Identifier", "_value": "ProcessRows"}, "isDisabled": {"_type": "Boolean", "_value": False}, "errorHandler": {"_type": ["Opt", "ErrorHandler"], "_value": None},
-  "inputData": {"_type": ["Expr", ["Iterator", ["Opt", "Any"]]], "_value": {"type": {"_type": "Type", "_value": ["Iterator", ["Opt", "Any"]]}, "source": {"_type": "String", "_value": "data.GetFile.response.asCSV().rows()"}, "isAuto": {"_type": "Boolean", "_value": True}}},
+  "inputData": {"_type": ["Expr", ["Iterator", ["Opt", "Any"]]], "_value": {"type": {"_type": "Type", "_value": ["Iterator", ["CsvRow", {"_type": ["Opt", "CsvFormatRef"], "_value": None}]]}, "source": {"_type": "String", "_value": "data.GetFile.response.asCSV().rows()"}, "isAuto": {"_type": "Boolean", "_value": False}}},
   "filter": {"_type": ["Opt", ["Expr", "Boolean"]], "_value": None}, "aggregateNode": {"_type": ["Opt", "Aggregate"], "_value": None},
   "earlyStopCondition": {"_type": ["Opt", "EarlyStopCondition"], "_value": None}, "sorts": {"_type": ["List", "SortedBy"], "_value": []},
   "locale": {"_type": ["Opt", "Locale"], "_value": None},
@@ -160,9 +160,9 @@ RESULT = ('{\n  "batchRef": "{{data.GetInputParams.ref}}",\n  "runMode": "{{data
           '  "roleName": "{{data.Row.roleName}}",\n  "roleWid": "{{data.Row.roleWid}}",\n  "orgName": "{{data.Row.orgName}}",\n  "orgWid": "{{data.Row.orgWid}}",\n'
           '  "positionName": "{{data.Row.positionName}}",\n  "positionId": "{{data.Row.positionId}}",\n  "assigneeWid": "{{data.Row.assigneeWid}}",\n'
           '  "timestamp": "{{data.GetInputParams.timestamp}}",\n  RESULT_FIELDS\n}')
-applied = send('WriteAppliedResult', 'POST', APP + 'comsBulkRowResults"}',
+applied = send('WriteAppliedResult', 'POST', APP + 'comsBulkRowResults"}"',
     RESULT.replace('RESULT_FIELDS', '"result": "{{#if data.Outcome.ok}}DONE{{/if}}{{#if data.Outcome.failed}}FAILED{{/if}}",\n  "message": "{{#if data.Outcome.ok}}Applied in Workday.{{/if}}{{#if data.Outcome.failed}}Workday rejected the change: {{data.Outcome.fault}}{{/if}}"'))
-checked = send('WriteCheckResult', 'POST', APP + 'comsBulkRowResults"}',
+checked = send('WriteCheckResult', 'POST', APP + 'comsBulkRowResults"}"',
     RESULT.replace('RESULT_FIELDS', '"result": "{{data.Row.checkResult}}",\n  "message": "{{data.Row.checkMessage}}"'))
 audit = rename(node(deny, 'WriteAuditLog'), 'WriteAuditLog')
 audit['_value']['body']['_value']['_value']['message']['_value'] = (

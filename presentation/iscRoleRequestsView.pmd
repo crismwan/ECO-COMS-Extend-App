@@ -478,6 +478,9 @@
                             "values": "<% !empty(role.reviewEventWid) ? [{'id': role.reviewEventWid, 'descriptor': 'Review Process: ' + (role.roleName ?? '')}] : [] %>"
                           }
                         ]
+                      },
+                      "excel": {
+                        "enabled": false
                       }
                     }
                   ],

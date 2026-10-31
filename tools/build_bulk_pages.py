@@ -148,7 +148,7 @@ results = {"id": "bulkRoleResults", "securityDomains": ["ManageCOMSShellOrgs"],
                      txt("colStatus", "Status", "<% up.status ?? '' %>"),
                      txt("colEffective", "Effective Date", "<% up.effectiveDate ?? '' %>"),
                      txt("colMessage", "Message", "<% up.statusMessage ?? '' %>"),
-                     {"type": "column", "columnId": "colOpen", "label": "Results", "cellTemplate": {"type": "button", "id": "openResultsButton", "label": "View", "action": "AUXILIARY",
+                     {"type": "column", "columnId": "colOpen", "label": "Results", "excel": {"enabled": False}, "cellTemplate": {"type": "button", "id": "openResultsButton", "label": "View", "action": "AUXILIARY",
                       "taskReference": {"taskId": "bulkRoleResults", "parameterBindings": {"batch": "<% up.batchRef ?? '' %>"}}}}]}]}]},
       {"type": "layoutSection", "id": "rowsSection", "children": [{"type": "fieldSet", "id": "rowsFieldSet", "title": "<% 'Row results: ' + " + REF + " %>", "children": [
         {"type": "grid", "id": "rowResultsGrid", "gridType": "LIST", "multiViewStylingEnabled": True, "autoPaging": True, "enabled": False, "excelExportEnabled": True,

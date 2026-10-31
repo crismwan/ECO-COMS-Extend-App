@@ -275,6 +275,9 @@
                       "type": "column",
                       "columnId": "colOpen",
                       "label": "Results",
+                      "excel": {
+                        "enabled": false
+                      },
                       "cellTemplate": {
                         "type": "button",
                         "id": "openResultsButton",

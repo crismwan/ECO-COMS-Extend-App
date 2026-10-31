@@ -296,6 +296,9 @@
                             "values": "<% !empty(role.reviewEventWid) ? [{'id': role.reviewEventWid, 'descriptor': 'Review Process'}] : [] %>"
                           }
                         ]
+                      },
+                      "excel": {
+                        "enabled": false
                       }
                     }
                   ],

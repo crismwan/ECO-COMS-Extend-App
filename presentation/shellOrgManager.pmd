@@ -230,6 +230,9 @@
                           "appCode": "<% app.appCode %>"
                         }
                       }
+                    },
+                    "excel": {
+                      "enabled": false
                     }
                   },
                   {
@@ -247,6 +250,9 @@
                           "appCode": "<% app.appCode %>"
                         }
                       }
+                    },
+                    "excel": {
+                      "enabled": false
                     }
                   }
                 ],
@@ -357,6 +363,9 @@
                           "comsAppId": "<% queryParams.appCode ?? '' %>"
                         }
                       }
+                    },
+                    "excel": {
+                      "enabled": false
                     }
                   }
                 ],
@@ -487,6 +496,9 @@
                           "comsAppId": "<% queryParams.appCode ?? '' %>"
                         }
                       }
+                    },
+                    "excel": {
+                      "enabled": false
                     }
                   }
                 ],
@@ -570,6 +582,9 @@
                           "comsAppId": "<% queryParams.appCode ?? '' %>"
                         }
                       }
+                    },
+                    "excel": {
+                      "enabled": false
                     }
                   }
                 ],
@@ -702,6 +717,9 @@
                           "orgName": "<% ra.org.descriptor ?? '' %>"
                         }
                       }
+                    },
+                    "excel": {
+                      "enabled": false
                     }
                   }
                 ],
