@@ -1,0 +1,36 @@
+{
+  "id": "ErrorOtherPagesCard",
+  "header": {
+    "title": "Other pages",
+    "icon": "wd-accent-home"
+  },
+  "body": {
+    "type": "pillCard",
+    "pills": [
+      {
+        "label": "Assignable Role Manager",
+        "taskReference": {
+          "taskId": "assignableRoleManagerView"
+        }
+      },
+      {
+        "label": "AAA Role Provisioning",
+        "taskReference": {
+          "taskId": "adminProvisioningView"
+        }
+      },
+      {
+        "label": "ISC Role Requests",
+        "taskReference": {
+          "taskId": "iscRoleRequestsView"
+        }
+      },
+      {
+        "label": "Audit Log",
+        "taskReference": {
+          "taskId": "auditLogViewer"
+        }
+      }
+    ]
+  }
+}

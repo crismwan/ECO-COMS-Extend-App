@@ -184,13 +184,19 @@ Outcomes:
 
 You need the **View: COMS Audit Log** domain to open this page.
 
+### Finding your way around
+
+- **Home** shows your own work (**Needs my attention**), the ISC queue, Shell Org Manager, the Audit Log and the active/inactive split of shell organizations, then one action card per area: Shell Organizations, Bulk Role Changes and Role Requests.
+- **Filters** are pill buttons; the current choice has a ✓. On the Audit Log choose a time period and change type; on ISC Role Requests choose the request type and status.
+- Every page has one back link at the top. Actions for the page are in an **Actions** card.
+
 ### Shell organization details
 
 In Shell Org Manager, **Details** on an organization opens one page with its status in Workday, the roles assigned on it (positions, workers, and **Manage** to change them), and its ECO-COMS change history from the newest 200 Audit Log records. **Change Status** there inactivates or reactivates it. Active organizations are listed before inactive ones.
 
 ### Request again
 
-On Assignable Role Manager, each of your requests has **Request again** (denied requests) or **Request similar**. It opens a new request with the role name filled in and a note showing the earlier request and the reason given. Choose the application, organization, positions and effective date again; the Workday role name is generated when you pick the organization.
+On Assignable Role Manager, each of your requests has **Retry** (denied requests) or **Reuse** in the New Request column. It opens a new request with the role name filled in and a note showing the earlier request and the reason given. Choose the application, organization, positions and effective date again; the Workday role name is generated when you pick the organization.
 
 ### Needs my attention (Home)
 

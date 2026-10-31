@@ -1630,6 +1630,10 @@ Referenced from a PMD like any other card (`cardId` must match the card file nam
 
 Each `taskId` referenced by a pill must exist in the AMD `tasks` array.
 
+**Pills as filters and action rows (confirmed live 2026-10-31):** a pill's `taskReference` takes `parameterBindings`, so a pill card can drive a page's query-param filters (the Audit Log's `?period=7d` came through). Mark the current choice by scripting the label from card parameters, double-quoted only: `"label": "<% period == \"7d\" ? \"✓ Last 7 days\" : \"Last 7 days\" %>"`. Pills wrap side by side, so they replace a column of stacked buttons. Workday renders buttons in a section one per row; there is no row layout for plain buttons.
+
+**Card rows:** at desktop width a `grid` cardContainer fits **three** cards per row; a fourth wraps onto its own row. Keep rows to three (or use `masonry` where cards differ in height, e.g. a donut beside short cards). A card's `render` hides it conditionally (used on the error page). A `cardContainer` can follow a `fieldSet` in the same `layoutSection`, which keeps help text and its action card in one box.
+
 ## Business objects (Extend model components)
 
 Business objects define an app's data model: they extend Workday's single object model, persist app data, and can relate to each other and to Workday-delivered objects. Extend **automatically generates report data sources and REST API endpoints** for each one. Author them in App Builder as a **Business Object** component (Code mode shown below).

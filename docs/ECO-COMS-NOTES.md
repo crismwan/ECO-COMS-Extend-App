@@ -331,6 +331,21 @@ ACTION: run 'wdcli app deploy ...' locally, log in, update WD_DEV_TOKEN secret
   - To check after deploy (read-only): open Shell Org Manager → Details on an org; open Assignable Role Manager → Request again on a denied row (check the note and prefilled name, then Cancel); filter ISC Role Requests to a status with no rows and see the note.
   - Not built: flagging future-dated org status changes (no data source for org events in the app's WQL).
 
+## UI polish pass (2026-10-31, all deployed)
+
+Builders/scripts: `tools/build_filter_pills.py` (filter pill cards, Home actions, Shell Org Manager summary, error page), `tools/build_request_lists.py`, `tools/consistency.py` (titles, back links, headings, help text size, timestamps, icons, success pages), `tools/add_empty_messages.py`. Static checks added: one empty message per grid, at most three cards per grid row, titles start with "ECO-COMS: ".
+
+Fixed: Audit Log and ISC filters as pill cards; Home actions as cards; donut total showed the pattern count (392) instead of organizations (213); Shell Org Manager summary ignored the selected application; bulk ADD audit rows had no position WID and the CSV's name (now Workday's name and WID); duplicate empty messages; stale "above" help text; '1 rows'; four-card rows wrapping; mixed timestamp formats, titles, back links, headings, icons, warning headings, success page layouts.
+
+### Pending questions for the product owner
+
+1. **ISC landing page (`iscRoleRequestsHub`)**: Home and cards now open the queue directly, and the queue has its own request-type filter. Retire the landing page?
+2. **Heading case:** section headings are mostly Title Case ("Organization Details"), with sentence case for "About this page" and "Before you submit". Pick one style?
+3. **BP step pages** keep their Workday-style titles ("Review COMS Assignable Role Request") without the "ECO-COMS:" prefix, since they appear in the inbox. Keep?
+4. **One old audit record** (bulk ADD of P-00010, 2026-10-31 21:11:38Z) has no position WID and the CSV's name. Correct it? Audit records are meant to be tamper-resistant, so this needs your approval.
+5. **Retry/Reuse for AAA requests** isn't built (the AAA form is different).
+6. **Live checks that need a real change:** the Manage Role Assignments confirmation page, and the bulk position name/WID fix (next real bulk run).
+
 ## UI phase 2 (built 2026-10-31)
 
 Design: `docs/UI-PHASE-2-DESIGN.md` (with the product owner's answers). Built and checked live in the tenant:

@@ -1,0 +1,24 @@
+{
+  "id": "ErrorStartAgainCard",
+  "header": {
+    "title": "Start again",
+    "icon": "wd-accent-home"
+  },
+  "body": {
+    "type": "pillCard",
+    "pills": [
+      {
+        "label": "Home",
+        "taskReference": {
+          "taskId": "home"
+        }
+      },
+      {
+        "label": "Shell Org Manager",
+        "taskReference": {
+          "taskId": "shellOrgManager"
+        }
+      }
+    ]
+  }
+}

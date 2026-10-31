@@ -155,3 +155,18 @@ print('summary ok')
 som = load('shellOrgManager.pmd')
 som['presentation']['title']['label'] = "<% empty(queryParams.appName) ? 'ECO-COMS: Shell Org Manager' : ('ECO-COMS: Shell Org Manager – ' + queryParams.appName) %>"
 save('shellOrgManager.pmd', som)
+
+# ── Error page: links as two pill cards; 'Other pages' only for a 404 (as before) ──
+for cid, title, pills in [("ErrorStartAgainCard", "Start again", [("Home", "home"), ("Shell Org Manager", "shellOrgManager")]),
+                          ("ErrorOtherPagesCard", "Other pages", [("Assignable Role Manager", "assignableRoleManagerView"), ("AAA Role Provisioning", "adminProvisioningView"),
+                                                                  ("ISC Role Requests", "iscRoleRequestsView"), ("Audit Log", "auditLogViewer")])]:
+    open(os.path.join(ROOT, 'cards', cid + '.card'), 'w').write(json.dumps({"id": cid, "header": {"title": title, "icon": "wd-accent-home"},
+        "body": {"type": "pillCard", "pills": [{"label": l, "taskReference": {"taskId": t}} for l, t in pills]}}, indent=2, ensure_ascii=False) + '\n')
+err = load('errorPage.pmd')
+esecs = err['presentation']['body']['sections']
+k = [s.get('id') for s in esecs].index('navSection')
+esecs[k] = {"type": "layoutSection", "id": "navSection", "children": [{"type": "cardContainer", "id": "errorLinksCardContainer", "layout": "grid", "cards": [
+    {"type": "card", "cardId": "ErrorStartAgainCard"},
+    {"type": "card", "cardId": "ErrorOtherPagesCard", "render": "<% queryParams.errorCode == '404' %>"}]}]}
+save('errorPage.pmd', err)
+print('error ok')

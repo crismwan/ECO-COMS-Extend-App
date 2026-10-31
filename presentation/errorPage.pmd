@@ -61,62 +61,20 @@
           "id": "navSection",
           "children": [
             {
-              "type": "button",
-              "id": "shellOrgManagerButton",
-              "label": "← Shell Org Manager",
-              "taskReference": {
-                "taskId": "shellOrgManager"
-              },
-              "action": "LINK"
-            },
-            {
-              "type": "button",
-              "id": "homeButton",
-              "label": "← Home",
-              "taskReference": {
-                "taskId": "home"
-              },
-              "action": "LINK"
-            },
-            {
-              "type": "button",
-              "id": "auditLogButton",
-              "label": "Audit Log",
-              "taskReference": {
-                "taskId": "auditLogViewer"
-              },
-              "action": "LINK",
-              "visible": "<% queryParams.errorCode == '404' %>"
-            },
-            {
-              "type": "button",
-              "id": "iscRequestsButton",
-              "label": "ISC Role Requests",
-              "taskReference": {
-                "taskId": "iscRoleRequestsHub"
-              },
-              "action": "LINK",
-              "visible": "<% queryParams.errorCode == '404' %>"
-            },
-            {
-              "type": "button",
-              "id": "roleRequestsButton",
-              "label": "My Assignable Role Requests",
-              "taskReference": {
-                "taskId": "assignableRoleManagerView"
-              },
-              "action": "LINK",
-              "visible": "<% queryParams.errorCode == '404' %>"
-            },
-            {
-              "type": "button",
-              "id": "aaaRequestsButton",
-              "label": "AAA Role Requests",
-              "taskReference": {
-                "taskId": "adminProvisioningView"
-              },
-              "action": "LINK",
-              "visible": "<% queryParams.errorCode == '404' %>"
+              "type": "cardContainer",
+              "id": "errorLinksCardContainer",
+              "layout": "grid",
+              "cards": [
+                {
+                  "type": "card",
+                  "cardId": "ErrorStartAgainCard"
+                },
+                {
+                  "type": "card",
+                  "cardId": "ErrorOtherPagesCard",
+                  "render": "<% queryParams.errorCode == '404' %>"
+                }
+              ]
             }
           ]
         }
