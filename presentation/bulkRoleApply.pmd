@@ -171,7 +171,7 @@
             {
               "type": "fieldSet",
               "id": "warningFieldSet",
-              "title": "Real run",
+              "title": "Before you submit",
               "children": [
                 {
                   "type": "richText",

@@ -93,7 +93,7 @@
             {
               "type": "fieldSet",
               "id": "warningFieldSet",
-              "title": "Status Change Warning",
+              "title": "Before you submit",
               "children": [
                 {
                   "type": "richText",

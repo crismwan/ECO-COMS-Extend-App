@@ -12,24 +12,6 @@
       "sections": [
         {
           "type": "layoutSection",
-          "id": "receiptCardSection",
-          "children": [
-            {
-              "type": "cardContainer",
-              "id": "receiptCardContainer",
-              "layout": "grid",
-              "cards": [
-                {
-                  "type": "card",
-                  "cardId": "ShellOrgStatusReceiptCard",
-                  "parameters": "<% { 'orgCode': flowVariables.orgCode ?? '', 'newStatus': flowVariables.currentStatus == 'Active' ? 'Inactive' : 'Active' } %>"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "type": "layoutSection",
           "id": "successSection",
           "children": [
             {
@@ -61,11 +43,29 @@
         },
         {
           "type": "layoutSection",
+          "id": "receiptCardSection",
+          "children": [
+            {
+              "type": "cardContainer",
+              "id": "receiptCardContainer",
+              "layout": "grid",
+              "cards": [
+                {
+                  "type": "card",
+                  "cardId": "ShellOrgStatusReceiptCard",
+                  "parameters": "<% { 'orgCode': flowVariables.orgCode ?? '', 'newStatus': flowVariables.currentStatus == 'Active' ? 'Inactive' : 'Active' } %>"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
           "id": "navSection",
           "children": [
             {
               "type": "button",
-              "label": "Back to Shell Org Manager",
+              "label": "View in Shell Org Manager",
               "taskReference": {
                 "taskId": "shellOrgManager"
               },

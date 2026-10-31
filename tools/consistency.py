@@ -20,8 +20,8 @@ PREFIX_SCRIPTED = {  # scripted titles: swap the leading literal
   'editRoleAssignment': ("'Manage Role Assignment: '", "'ECO-COMS: Manage Role Assignment – '"),
   'manageShellOrgStatus': ("'Change Status: '", "'ECO-COMS: Change Status – '"),
 }
-NAV = {'← Go to Home': '← Home', '← My Role Requests': '← Assignable Role Manager', '← Admin Provisioning': '← AAA Role Provisioning'}
-HEADINGS = {'About This Page': 'About this page', 'Changes applied': 'Changes Applied Successfully'}
+NAV = {'Back to Shell Org Manager': 'View in Shell Org Manager', 'Manage this role again': 'Manage This Role Again', '← Go to Home': '← Home', '← My Role Requests': '← Assignable Role Manager', '← Admin Provisioning': '← AAA Role Provisioning'}
+HEADINGS = {'About This Page': 'About this page', 'Changes applied': 'Changes Applied Successfully', 'Status Change Warning': 'Before you submit'}
 WIZARD_TITLE = 'ECO-COMS: Shell Org Manager'
 TS = re.compile(r"<% (\w+)\.timestamp \?\? '' %>")
 changes = []
@@ -59,6 +59,13 @@ for f in sorted(glob.glob(os.path.join(ROOT, '*.pmd'))):
         elif isinstance(o, list):
             for v in o: walk(v)
     walk(pr)
+    # success pages: the confirmation message first, then the receipt card
+    if n.endswith('Success') and isinstance(pr.get('body'), dict):
+        secs = pr['body'].get('sections', [])
+        kinds = [('card' if any(k.get('type') == 'cardContainer' for k in s_.get('children', [])) else
+                  'msg' if any(k.get('type') == 'fieldSet' for k in s_.get('children', [])) else 'other') for s_ in secs]
+        if 'card' in kinds and 'msg' in kinds and kinds.index('card') < kinds.index('msg'):
+            i, j = kinds.index('card'), kinds.index('msg'); secs[i], secs[j] = secs[j], secs[i]
     if json.dumps(d) != before:
         open(f, 'w').write(json.dumps(d, indent=2, ensure_ascii=False) + '\n'); changes.append(n)
 print('changed:', changes)

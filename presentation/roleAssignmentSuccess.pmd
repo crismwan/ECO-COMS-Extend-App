@@ -69,7 +69,7 @@
             {
               "type": "button",
               "id": "backToManagerButton",
-              "label": "Back to Shell Org Manager",
+              "label": "View in Shell Org Manager",
               "action": "PRIMARY",
               "taskReference": {
                 "taskId": "shellOrgManager",
@@ -82,7 +82,7 @@
             {
               "type": "button",
               "id": "manageAgainButton",
-              "label": "Manage this role again",
+              "label": "Manage This Role Again",
               "action": "AUXILIARY",
               "taskReference": {
                 "taskId": "editRoleAssignment",

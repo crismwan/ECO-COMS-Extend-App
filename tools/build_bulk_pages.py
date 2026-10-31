@@ -101,7 +101,7 @@ upload = {"id": "bulkRoleChanges", "securityDomains": ["ManageCOMSShellOrgs"], "
         "Then upload the same file again with <b>Real run</b> ticked: each ADD or REMOVE row is applied in Workday's Assign Roles, "
         "one row at a time, and each change is written to the Audit Log. A row that Workday rejects is recorded as FAILED and the run carries on. "
         "Both runs work in the background; the results page shows progress. At most 200 rows per file."),
-      note("warningSection", "warningFieldSet", "Before a real run", "warningRichText",
+      note("warningSection", "warningFieldSet", "Before you submit", "warningRichText",
         "A real run changes who holds security roles in Workday straight away. Changes that succeed are not undone if later rows fail. Validate first.",
         '#B45309', '⚠'),
       {"type": "layoutSection", "id": "formSection", "children": [{"type": "fieldSet", "id": "uploadFieldSet", "title": "Upload", "children": [
@@ -227,7 +227,7 @@ apply = {"id": "bulkRoleApply", "securityDomains": ["ManageCOMSShellOrgs"],
       {"type": "layoutSection", "id": "navSection", "children": [
         {"type": "button", "id": "resultsButton", "label": "← Bulk Role Changes – Results", "action": "LINK", "suppressDiscardDialog": True,
          "taskReference": {"taskId": "bulkRoleResults", "parameterBindings": {"batch": "<% " + B + " %>"}}}]},
-      note("warningSection", "warningFieldSet", "Real run", "warningRichText",
+      note("warningSection", "warningFieldSet", "Before you submit", "warningRichText",
         "OK applies every VALID row of this upload in Workday's Assign Roles, with the effective date chosen when the file was validated. "
         "Changes that succeed are not undone if later rows fail. Each change is written to the Audit Log.", '#B45309', '⚠'),
       {"type": "layoutSection", "id": "detailSection", "children": [{"type": "fieldSet", "id": "detailFieldSet", "title": "Upload", "children": [

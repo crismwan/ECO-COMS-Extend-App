@@ -130,9 +130,9 @@ view = load('assignableRoleManagerView.pmd')
 def add_again(o):
     if isinstance(o, dict):
         if o.get('id') == 'assignableRolesGrid' and not any(c['columnId'] == 'colAgain' for c in o['columns']):
-            o['columns'].append({"type": "column", "columnId": "colAgain", "label": "Request Again", "excel": {"enabled": False}, "cellTemplate": {
+            o['columns'].append({"type": "column", "columnId": "colAgain", "label": "New Request", "excel": {"enabled": False}, "cellTemplate": {
                 "type": "button", "id": "requestAgainButton", "action": "AUXILIARY",
-                "label": "<% (role.status ?? '') == 'Denied' ? 'Request again' : 'Request similar' %>",
+                "label": "<% (role.status ?? '') == 'Denied' ? 'Retry' : 'Reuse' %>",
                 "taskReference": {"taskId": "assignableRoleManager", "parameterBindings": {
                     "againRoleName": "<% " + SHORT + " %>",
                     "againFrom": "<% role.roleName ?? '' %>",
