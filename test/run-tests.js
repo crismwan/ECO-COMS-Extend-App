@@ -7,6 +7,7 @@
  *   node test/run-tests.js full              smoke + write tests for every flow (manual; leaves TEST data)
  *   node test/run-tests.js cleanup [--apply] list (default) or remove TEST data
  *   node test/run-tests.js isu               ISU lockdown checks: only once ISU writes are live (see README)
+ *   node test/run-tests.js repair [--apply] [--unassign P-id]  one-off data fixes (dry run by default)
  *
  * Suites can be combined: `node test/run-tests.js static,smoke`. The isu suite never runs unless named.
  * Options: --verbose, --token <t>, --role <assignable role> (full/cleanup), --also <ids>, --effective
@@ -37,7 +38,7 @@ const ORCH = `${API}/orchestrate/v1/apps/${APP_ID}/orchestrations`;
 const argv = process.argv.slice(2);
 const arg = (name) => { const i = argv.indexOf(name); return i === -1 ? null : argv[i + 1]; };
 const VERBOSE = argv.includes('--verbose');
-const SUITES_ALL = ['static', 'smoke', 'full', 'cleanup', 'isu'];
+const SUITES_ALL = ['static', 'smoke', 'full', 'cleanup', 'isu', 'repair'];
 const suiteArg = arg('--suite') || argv.find((a) => !a.startsWith('--') && SUITES_ALL.some((s) => a.split(',').includes(s))) || 'smoke';
 const SUITES = suiteArg.split(',').map((s) => s.trim()).filter(Boolean);
 for (const s of SUITES) if (!SUITES_ALL.includes(s)) { console.error(`Unknown suite "${s}". Use: ${SUITES_ALL.join(', ')}`); process.exit(2); }
@@ -847,6 +848,74 @@ async function cleanup(token, me) {
   pass('Cleanup.audit', `deleted ${deleted} test audit entr(ies)`);
 }
 
+// ═══ Repair suite: one-off data corrections (dry run unless --apply) ═══
+//   --unassign <P-id>  remove that position from the test role (--role), through AssignRolePositions,
+//                      so the change gets the same REMOVE POSITION audit record as the page.
+//   always:            pending requests whose Enabled For holds a bare WID get the unit's name, looked
+//                      up in the same lists the request page's pickers search (FUH, academic units).
+async function repair(token, me) {
+  const apply = argv.includes('--apply');
+  console.log(`\n-- Repair (${apply ? 'APPLY' : 'dry run: add --apply to change data'}) --`);
+  const today = new Date().toISOString().slice(0, 10);
+  const who = () => ({ changedBy: me.descriptor, changedByWid: me.id, timestamp: new Date().toISOString().replace(/\.\d+Z$/, 'Z') });
+  const idOf = (v) => String(v && typeof v === 'object' ? v.id : v || '');
+
+  const unassign = arg('--unassign');
+  if (unassign) await test('Repair.unassign', async () => {
+    const readRole = async () => {
+      const r = await wql(token, `SELECT role, roleAssignments{organization, cf_ZCF_EE_RoleAssignedToAsPositionRestrictions} as roleAssignments FROM assignableRoles WHERE roleName = '${TEST_ROLE}'`, 5);
+      const row = (r.data || [])[0];
+      const ra = (row?.roleAssignments || []).find((x) => String(x.organization?.descriptor || '').startsWith('X:'));
+      return row && ra ? { role: row.role, org: ra.organization, positions: ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions || [] } : null;
+    };
+    const cur = await readRole();
+    if (!cur) throw new Error(`${TEST_ROLE} has no X: organization assignment`);
+    const hit = cur.positions.find((p) => String(p.descriptor || '').includes(unassign));
+    if (!hit) return pass('Repair.unassign', `${unassign} is not assigned to ${TEST_ROLE}: nothing to do`);
+    if (!apply) return pass('Repair.unassign', `would remove "${hit.descriptor}" from ${TEST_ROLE} on ${cur.org.descriptor}`);
+    const rem = await launchAndVerify(token, 'AssignRolePositions', {
+      roleId: cur.role.id, roleName: TEST_ROLE, orgId: cur.org.id, orgName: cur.org.descriptor, effectiveDate: today,
+      positionId: hit.id, positionIdType: 'WID', positionName: hit.descriptor, mode: 'REMOVE', positionWid: hit.id, ...who(),
+    });
+    if (rem.objectType !== 'Role Assignment' || rem.action !== 'REMOVE POSITION') throw new Error(`audit is ${rem.objectType}/${rem.action}`);
+    let gone = false;
+    for (let i = 0; i < 18 && !gone; i++) {
+      gone = !((await readRole())?.positions || []).some((p) => p.id === hit.id);
+      if (!gone) await sleep(5000);
+    }
+    if (!gone) throw new Error(`REMOVE POSITION audited but "${hit.descriptor}" still shows on ${TEST_ROLE} after 90 s`);
+    pass('Repair.unassign', `removed "${hit.descriptor}" from ${TEST_ROLE} (audit ${rem.id})`);
+  });
+
+  await test('Repair.enabledFor', async () => {
+    const roles = (await request('GET', `${BO}/comsAssignableRoles?limit=100`, token)).data || [];
+    const bad = roles.filter((r) => r.status === 'Pending ISC Review' && /^[0-9a-f]{32}$/.test(r.enabledForOrganizationTypes || ''));
+    if (!bad.length) return pass('Repair.enabledFor', 'no pending request holds a bare WID in Enabled For');
+    const fuh = (await wql(token, 'SELECT workdayID, organization1, code FROM customOrganizations WHERE type1 in (b40d8b016367100175b147f364840000)', 10000)).data || [];
+    const au = (await wql(token, 'SELECT workdayID, academicUnit, academicUnitName FROM academicUnits WHERE inactive = false', 10000)).data || [];
+    const left = [];
+    for (const r of bad) {
+      const w = r.enabledForOrganizationTypes;
+      const f = fuh.find((o) => idOf(o.workdayID) === w);
+      const a = f ? null : au.find((o) => idOf(o.workdayID) === w);
+      const name = f ? f.organization1?.descriptor : a ? a.academicUnit?.descriptor : null;
+      if (!name) { left.push(r.roleName); warn('Repair.enabledFor', `${r.roleName}: ${w} is in neither the FUH nor the academic unit list; left as is`); continue; }
+      const body = {
+        enabledForOrganizationTypes: name, enabledForWid: w,
+        functionalUnitHierarchyWid: f ? w : '', functionalUnitDescription: f ? name : '',
+        academicUnitWid: a ? w : '', academicUnitDescription: a ? name : '',
+      };
+      if (!apply) { console.log(`  would set ${r.roleName} Enabled For to "${name}" (${f ? 'FUH' : 'academic unit'})`); continue; }
+      await request('PATCH', `${BO}/comsAssignableRoles/${r.id}`, token, body);
+      const back = await request('GET', `${BO}/comsAssignableRoles/${r.id}`, token);
+      if (back.enabledForOrganizationTypes !== name) throw new Error(`${r.roleName}: PATCH did not stick (reads "${back.enabledForOrganizationTypes}")`);
+      console.log(`  set ${r.roleName} Enabled For to "${name}"`);
+    }
+    if (left.length) throw new Error(`${left.length} request(s) not fixed: ${left.join(', ')}`);
+    pass('Repair.enabledFor', `${bad.length} request(s) ${apply ? 'corrected' : 'would be corrected'}`);
+  });
+}
+
 // ═══ ISU suite: lockdown checks (run only by name, once ISU writes are live) ═══
 // After the ISU change, users are View/Get only on the audit log and request data, and only the app
 // (pages with isuAuth, orchestrations with the ISU credential) can write. These checks try direct
@@ -900,6 +969,7 @@ async function isuSuite(token, me) {
         if (live.includes('full')) await full(token, me);
         if (live.includes('isu')) await isuSuite(token, me);
         if (live.includes('cleanup')) await cleanup(token, me);
+        if (live.includes('repair')) await repair(token, me);
       }
     }
   }
