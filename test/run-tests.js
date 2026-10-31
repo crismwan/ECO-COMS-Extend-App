@@ -905,6 +905,10 @@ async function repair(token, me) {
         try { await launch(token, 'AssignRolePositions', p); res.push(`${k || 'all'}:ok`); } catch (e) { res.push(`${k || 'all'}:${e.message.slice(5, 8)}`); }
       }
       console.log(`  probe (value replaced by x -> result): ${res.join(' ')}`);
+      // Same call with ( ) and other reserved characters percent-encoded.
+      const enc = (v) => encodeURIComponent(v ?? '').replace(/[!'()*]/g, (c) => '%' + c.charCodeAt(0).toString(16).toUpperCase());
+      const qs = Object.entries({ ...params, mode: 'PROBE' }).map(([k, v]) => `${k}=${enc(v)}`).join('&');
+      try { await request('POST', `${ORCH}/AssignRolePositions/launch?${qs}`, token, {}); console.log('  probe with ( ) encoded: ok'); } catch (e) { console.log(`  probe with ( ) encoded: ${e.message.slice(0, 8)}`); }
       return pass('Repair.unassign', `would remove "${hit.descriptor}" from ${TEST_ROLE} on ${cur.org.descriptor}`);
     }
     const rem = await launchAndVerify(token, 'AssignRolePositions', params);
