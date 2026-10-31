@@ -869,8 +869,13 @@ async function repair(token, me) {
       ['ManageShellOrgStatus', { orgId: me.id, action: 'INACTIVATE', orgCode: 'X:ADM:TEST:PROBE', orgName: 'X:ADM:TEST:PROBE', includeInactive: 'true', effectiveDate: today, patternName: 'X:ADM:TEST:PROBE', orgType: 'X:ADM', comsAppId: 'X:ADM', validateOnly: 'true', changedBy: me.descriptor, changedByWid: me.id, timestamp: ts }],
       ['StartRoleRequestReview', { ref: 'PROBE-NO-SUCH-REQUEST' }],
       ['AssignRolePositions', { mode: 'PROBE' }],
+      // A gateway that filters request text may refuse certain words in the query string.
+      ['AssignRolePositions', { mode: 'PROBE', positionName: 'P-00001 Chief Officer - Steve Morgan' }],
+      ['AssignRolePositions', { mode: 'PROBE', positionName: 'P-00001 Chief Executive Officer - Steve Morgan' }],
+      ['AssignRolePositions', { mode: 'PROBE', positionName: 'Executive' }],
+      ['AssignRolePositions', { mode: 'PROBE', positionName: 'Exec' }],
     ]) {
-      try { await launch(token, name, params); out.push(`${name}: launched`); } catch (e) { out.push(`${name}: ${e.message.slice(0, 40)}`); }
+      try { await launch(token, name, params); out.push(`${name}${params.positionName ? ' [' + params.positionName + ']' : ''}: launched`); } catch (e) { out.push(`${name}${params.positionName ? ' [' + params.positionName + ']' : ''}: ${e.message.slice(0, 12)}`); }
     }
     pass('Repair.probeLaunch', out.join('; '));
   });
