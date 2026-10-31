@@ -26,9 +26,25 @@
       ]
     },
     {
-      "name": "comsAssignableRoles",
+      "name": "comsAssignableRolesCount",
       "baseUrlType": "BUSINESS-OBJECT",
-      "url": "/comsAssignableRoles?limit=100",
+      "url": "/comsAssignableRoles?limit=1",
+      "authType": "sso",
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 403
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "baseUrlType": "BUSINESS-OBJECT",
       "authType": "sso",
       "isCollection": true,
       "bestEffort": "true",
@@ -42,7 +58,35 @@
         {
           "code": 429
         }
-      ]
+      ],
+      "name": "comsAssignableRolesPage0",
+      "url": "/comsAssignableRoles?limit=100&offset=0"
+    },
+    {
+      "baseUrlType": "BUSINESS-OBJECT",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 429
+        }
+      ],
+      "name": "comsAssignableRolesPage1",
+      "url": "<% let t = comsAssignableRolesCount.total ?? 0; '/comsAssignableRoles?limit=100&offset=' + (t > 100 ? 100 : t) %>"
+    },
+    {
+      "baseUrlType": "BUSINESS-OBJECT",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 429
+        }
+      ],
+      "name": "comsAssignableRolesPage2",
+      "url": "<% let t = comsAssignableRolesCount.total ?? 0; '/comsAssignableRoles?limit=100&offset=' + (t > 200 ? 200 : t) %>"
     },
     {
       "name": "customOrganizations",
@@ -136,17 +180,17 @@
                 {
                   "type": "card",
                   "cardId": "CountCard",
-                  "parameters": "<% { 'title': 'Pending', 'subtitle': 'Waiting for ISC review', 'countText': '' + comsRequestStats.countPending(comsRequestStats.filterRequests(comsAssignableRoles.data ?? [], (queryParams.view ?? ''), 'All')) + ' pending' } %>"
+                  "parameters": "<% { 'title': 'Pending', 'subtitle': 'Waiting for ISC review', 'countText': '' + comsRequestStats.countPending(comsRequestStats.filterRequests(list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? [], (queryParams.view ?? ''), 'All')) + ' pending' } %>"
                 },
                 {
                   "type": "card",
                   "cardId": "CountCard",
-                  "parameters": "<% { 'title': 'Overdue', 'subtitle': 'Pending more than 3 business days', 'countText': '' + comsRequestStats.countOverdue(comsRequestStats.filterRequests(comsAssignableRoles.data ?? [], (queryParams.view ?? ''), 'All')) + ' overdue' } %>"
+                  "parameters": "<% { 'title': 'Overdue', 'subtitle': 'Pending more than 3 business days', 'countText': '' + comsRequestStats.countOverdue(comsRequestStats.filterRequests(list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? [], (queryParams.view ?? ''), 'All')) + ' overdue' } %>"
                 },
                 {
                   "type": "card",
                   "cardId": "CountCard",
-                  "parameters": "<% { 'title': 'Approved this month', 'subtitle': 'Approved since the 1st', 'countText': '' + comsRequestStats.countApprovedThisMonth(comsRequestStats.filterRequests(comsAssignableRoles.data ?? [], (queryParams.view ?? ''), 'All')) + ' approved' } %>"
+                  "parameters": "<% { 'title': 'Approved this month', 'subtitle': 'Approved since the 1st', 'countText': '' + comsRequestStats.countApprovedThisMonth(comsRequestStats.filterRequests(list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? [], (queryParams.view ?? ''), 'All')) + ' approved' } %>"
                 }
               ]
             }
@@ -185,7 +229,7 @@
                   "id": "activeStatusText",
                   "label": "Showing",
                   "enabled": false,
-                  "value": "<% (comsRequestStats.statusOrDefault(queryParams.status ?? '') == 'All' ? 'All' : (comsRequestStats.statusOrDefault(queryParams.status ?? '') == 'Pending ISC Review' ? 'Pending' : comsRequestStats.statusOrDefault(queryParams.status ?? ''))) + ' requests: ' + size(comsRequestStats.filterRequests(comsAssignableRoles.data ?? [], (queryParams.view ?? ''), (queryParams.status ?? ''))) + ' of ' + size(comsRequestStats.filterRequests(comsAssignableRoles.data ?? [], (queryParams.view ?? ''), 'All')) %>"
+                  "value": "<% (comsRequestStats.statusOrDefault(queryParams.status ?? '') == 'All' ? 'All' : (comsRequestStats.statusOrDefault(queryParams.status ?? '') == 'Pending ISC Review' ? 'Pending' : comsRequestStats.statusOrDefault(queryParams.status ?? ''))) + ' requests: ' + size(comsRequestStats.filterRequests(list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? [], (queryParams.view ?? ''), (queryParams.status ?? ''))) + ' of ' + size(comsRequestStats.filterRequests(list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? [], (queryParams.view ?? ''), 'All')) %>"
                 },
                 {
                   "type": "button",
@@ -258,7 +302,7 @@
                   "multiViewStylingEnabled": true,
                   "id": "allPendingGrid",
                   "autoPaging": true,
-                  "rows": "<% comsRequestStats.filterRequests(comsAssignableRoles.data ?? [], (queryParams.view ?? ''), (queryParams.status ?? '')) %>",
+                  "rows": "<% comsRequestStats.filterRequests(list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? [], (queryParams.view ?? ''), (queryParams.status ?? '')) %>",
                   "rowVariableName": "role",
                   "enabled": false,
                   "label": "<% (comsRequestStats.statusOrDefault(queryParams.status ?? '') == 'All' ? 'All' : (comsRequestStats.statusOrDefault(queryParams.status ?? '') == 'Pending ISC Review' ? 'Pending' : comsRequestStats.statusOrDefault(queryParams.status ?? ''))) + ' ' + (queryParams.view == 'aaa' ? 'AAA Provisioning Requests' : (queryParams.view == 'assignable' ? 'Assignable Role Requests' : 'Role Requests')) %>",

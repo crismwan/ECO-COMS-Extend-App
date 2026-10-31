@@ -44,9 +44,25 @@
       ]
     },
     {
-      "name": "comsAssignableRoles",
+      "name": "comsAssignableRolesCount",
       "baseUrlType": "BUSINESS-OBJECT",
-      "url": "/comsAssignableRoles?limit=100",
+      "url": "/comsAssignableRoles?limit=1",
+      "authType": "sso",
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 403
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "baseUrlType": "BUSINESS-OBJECT",
       "authType": "sso",
       "isCollection": true,
       "bestEffort": "true",
@@ -60,7 +76,35 @@
         {
           "code": 429
         }
-      ]
+      ],
+      "name": "comsAssignableRolesPage0",
+      "url": "/comsAssignableRoles?limit=100&offset=0"
+    },
+    {
+      "baseUrlType": "BUSINESS-OBJECT",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 429
+        }
+      ],
+      "name": "comsAssignableRolesPage1",
+      "url": "<% let t = comsAssignableRolesCount.total ?? 0; '/comsAssignableRoles?limit=100&offset=' + (t > 100 ? 100 : t) %>"
+    },
+    {
+      "baseUrlType": "BUSINESS-OBJECT",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 429
+        }
+      ],
+      "name": "comsAssignableRolesPage2",
+      "url": "<% let t = comsAssignableRolesCount.total ?? 0; '/comsAssignableRoles?limit=100&offset=' + (t > 200 ? 200 : t) %>"
     },
     {
       "name": "delSearch",
@@ -353,7 +397,7 @@
                   "gridType": "LIST",
                   "multiViewStylingEnabled": true,
                   "id": "assignableRolesGrid",
-                  "rows": "<% comsAssignableRoles.data.filter(r => { r.status == 'Pending ISC Review' && r.roleName.startsWith('Organizations and Roles Assignment Administrator') && r.requestedBy.id == selectedWorker.id }) %>",
+                  "rows": "<% list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]).filter(r => { r.status == 'Pending ISC Review' && r.roleName.startsWith('Organizations and Roles Assignment Administrator') && r.requestedBy.id == selectedWorker.id }) %>",
                   "rowVariableName": "role",
                   "enabled": false,
                   "label": "Pending Assignable Roles",

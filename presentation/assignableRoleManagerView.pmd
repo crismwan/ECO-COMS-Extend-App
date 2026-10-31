@@ -26,9 +26,25 @@
       ]
     },
     {
-      "name": "comsAssignableRoles",
+      "name": "comsAssignableRolesCount",
       "baseUrlType": "BUSINESS-OBJECT",
-      "url": "/comsAssignableRoles?limit=100",
+      "url": "/comsAssignableRoles?limit=1",
+      "authType": "sso",
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 403
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "baseUrlType": "BUSINESS-OBJECT",
       "authType": "sso",
       "isCollection": true,
       "bestEffort": "true",
@@ -42,7 +58,35 @@
         {
           "code": 429
         }
-      ]
+      ],
+      "name": "comsAssignableRolesPage0",
+      "url": "/comsAssignableRoles?limit=100&offset=0"
+    },
+    {
+      "baseUrlType": "BUSINESS-OBJECT",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 429
+        }
+      ],
+      "name": "comsAssignableRolesPage1",
+      "url": "<% let t = comsAssignableRolesCount.total ?? 0; '/comsAssignableRoles?limit=100&offset=' + (t > 100 ? 100 : t) %>"
+    },
+    {
+      "baseUrlType": "BUSINESS-OBJECT",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 429
+        }
+      ],
+      "name": "comsAssignableRolesPage2",
+      "url": "<% let t = comsAssignableRolesCount.total ?? 0; '/comsAssignableRoles?limit=100&offset=' + (t > 200 ? 200 : t) %>"
     }
   ],
   "presentation": {
@@ -105,14 +149,14 @@
               "id": "pendingNoticeYes",
               "enabled": false,
               "value": "<span style=\"color:#d97706;font-size:11px;font-weight:700\">⚠ </span><span style=\"color:#92400e;font-size:11px\">You have requests currently pending ISC review. Open a row's <b>Review Process</b> to see where it is, or use <b>Withdraw Request</b> to withdraw it.</span>",
-              "visible": "<% size(comsAssignableRoles.data.filter(r => !r.roleName.startsWith('Organizations and Roles Assignment Administrator') && r.requestedBy.id == selectedWorker.id && r.status == 'Pending ISC Review')) > 0 %>"
+              "visible": "<% size(list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]).filter(r => !r.roleName.startsWith('Organizations and Roles Assignment Administrator') && r.requestedBy.id == selectedWorker.id && r.status == 'Pending ISC Review')) > 0 %>"
             },
             {
               "type": "richText",
               "id": "pendingNoticeNo",
               "enabled": false,
               "value": "<span style=\"color:#059669;font-size:11px;font-weight:700\">✓ </span><span style=\"color:#065f46;font-size:11px\">You have no requests pending ISC review.</span>",
-              "visible": "<% size(comsAssignableRoles.data.filter(r => !r.roleName.startsWith('Organizations and Roles Assignment Administrator') && r.requestedBy.id == selectedWorker.id && r.status == 'Pending ISC Review')) == 0 %>"
+              "visible": "<% size(list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]).filter(r => !r.roleName.startsWith('Organizations and Roles Assignment Administrator') && r.requestedBy.id == selectedWorker.id && r.status == 'Pending ISC Review')) == 0 %>"
             }
           ]
         },
@@ -128,17 +172,17 @@
                 {
                   "type": "card",
                   "cardId": "CountCard",
-                  "parameters": "<% { 'title': 'Pending', 'subtitle': 'Waiting for ISC review', 'countText': '' + comsRequestStats.countStatus((comsAssignableRoles.data ?? []).filter(r => { !comsRequestStats.isAaa(r) && (!empty(r.requestedBy) ? r.requestedBy.id : '') == (selectedWorker.id ?? '') }), 'Pending ISC Review') + ' pending' } %>"
+                  "parameters": "<% { 'title': 'Pending', 'subtitle': 'Waiting for ISC review', 'countText': '' + comsRequestStats.countStatus((list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? []).filter(r => { !comsRequestStats.isAaa(r) && (!empty(r.requestedBy) ? r.requestedBy.id : '') == (selectedWorker.id ?? '') }), 'Pending ISC Review') + ' pending' } %>"
                 },
                 {
                   "type": "card",
                   "cardId": "CountCard",
-                  "parameters": "<% { 'title': 'Approved', 'subtitle': 'Created in Workday', 'countText': '' + comsRequestStats.countStatus((comsAssignableRoles.data ?? []).filter(r => { !comsRequestStats.isAaa(r) && (!empty(r.requestedBy) ? r.requestedBy.id : '') == (selectedWorker.id ?? '') }), 'Approved') + ' approved' } %>"
+                  "parameters": "<% { 'title': 'Approved', 'subtitle': 'Created in Workday', 'countText': '' + comsRequestStats.countStatus((list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? []).filter(r => { !comsRequestStats.isAaa(r) && (!empty(r.requestedBy) ? r.requestedBy.id : '') == (selectedWorker.id ?? '') }), 'Approved') + ' approved' } %>"
                 },
                 {
                   "type": "card",
                   "cardId": "CountCard",
-                  "parameters": "<% { 'title': 'Denied', 'subtitle': 'Denied or withdrawn', 'countText': '' + comsRequestStats.countStatus((comsAssignableRoles.data ?? []).filter(r => { !comsRequestStats.isAaa(r) && (!empty(r.requestedBy) ? r.requestedBy.id : '') == (selectedWorker.id ?? '') }), 'Denied') + ' denied' } %>"
+                  "parameters": "<% { 'title': 'Denied', 'subtitle': 'Denied or withdrawn', 'countText': '' + comsRequestStats.countStatus((list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? []).filter(r => { !comsRequestStats.isAaa(r) && (!empty(r.requestedBy) ? r.requestedBy.id : '') == (selectedWorker.id ?? '') }), 'Denied') + ' denied' } %>"
                 }
               ]
             }
@@ -156,7 +200,7 @@
                   "type": "richText",
                   "id": "emptyStateMsg",
                   "value": "<span style=\"color:#374151;font-size:12px\">You have no Assignable Role requests. Click Submit New Request above to get started.</span>",
-                  "visible": "<% size(comsAssignableRoles.data.filter(r => !r.roleName.startsWith('Organizations and Roles Assignment Administrator') && r.requestedBy.id == selectedWorker.id)) == 0 %>",
+                  "visible": "<% size(list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]).filter(r => !r.roleName.startsWith('Organizations and Roles Assignment Administrator') && r.requestedBy.id == selectedWorker.id)) == 0 %>",
                   "enabled": false
                 },
                 {
@@ -164,12 +208,12 @@
                   "gridType": "LIST",
                   "multiViewStylingEnabled": true,
                   "id": "assignableRolesGrid",
-                  "rows": "<% comsAssignableRoles.data.filter(r => !r.roleName.startsWith('Organizations and Roles Assignment Administrator') && r.requestedBy.id == selectedWorker.id) %>",
+                  "rows": "<% list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]).filter(r => !r.roleName.startsWith('Organizations and Roles Assignment Administrator') && r.requestedBy.id == selectedWorker.id) %>",
                   "rowVariableName": "role",
                   "enabled": false,
                   "label": "Assignable Role Requests",
                   "autoPaging": true,
-                  "visible": "<% size(comsAssignableRoles.data.filter(r => !r.roleName.startsWith('Organizations and Roles Assignment Administrator') && r.requestedBy.id == selectedWorker.id)) > 0 %>",
+                  "visible": "<% size(list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]).filter(r => !r.roleName.startsWith('Organizations and Roles Assignment Administrator') && r.requestedBy.id == selectedWorker.id)) > 0 %>",
                   "columns": [
                     {
                       "type": "column",

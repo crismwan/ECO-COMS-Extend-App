@@ -9,9 +9,22 @@
   ],
   "endPoints": [
     {
-      "name": "pendingRequests",
+      "name": "pendingRequestsCount",
       "baseUrlType": "BUSINESS-OBJECT",
-      "url": "/comsAssignableRoles?limit=100",
+      "url": "/comsAssignableRoles?limit=1",
+      "authType": "sso",
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "baseUrlType": "BUSINESS-OBJECT",
       "authType": "sso",
       "isCollection": true,
       "bestEffort": "true",
@@ -22,7 +35,35 @@
         {
           "code": 429
         }
-      ]
+      ],
+      "name": "pendingRequestsPage0",
+      "url": "/comsAssignableRoles?limit=100&offset=0"
+    },
+    {
+      "baseUrlType": "BUSINESS-OBJECT",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 429
+        }
+      ],
+      "name": "pendingRequestsPage1",
+      "url": "<% let t = pendingRequestsCount.total ?? 0; '/comsAssignableRoles?limit=100&offset=' + (t > 100 ? 100 : t) %>"
+    },
+    {
+      "baseUrlType": "BUSINESS-OBJECT",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 429
+        }
+      ],
+      "name": "pendingRequestsPage2",
+      "url": "<% let t = pendingRequestsCount.total ?? 0; '/comsAssignableRoles?limit=100&offset=' + (t > 200 ? 200 : t) %>"
     },
     {
       "name": "allShellOrgs",
@@ -93,7 +134,7 @@
                 {
                   "type": "card",
                   "cardId": "PendingIscCard",
-                  "parameters": "<% { 'countText': '' + comsRequestStats.countPending(pendingRequests.data ?? []) + ' pending · ' + comsRequestStats.countOverdue(pendingRequests.data ?? []) + ' overdue' } %>"
+                  "parameters": "<% { 'countText': '' + comsRequestStats.countPending(list:flatten([pendingRequestsPage0.data ?? [], pendingRequestsPage1.data ?? [], pendingRequestsPage2.data ?? []]) ?? []) + ' pending · ' + comsRequestStats.countOverdue(list:flatten([pendingRequestsPage0.data ?? [], pendingRequestsPage1.data ?? [], pendingRequestsPage2.data ?? []]) ?? []) + ' overdue' } %>"
                 },
                 {
                   "type": "card",

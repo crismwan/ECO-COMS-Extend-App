@@ -25,9 +25,25 @@
       ]
     },
     {
-      "name": "comsAssignableRoles",
+      "name": "comsAssignableRolesCount",
       "baseUrlType": "BUSINESS-OBJECT",
-      "url": "/comsAssignableRoles?limit=100",
+      "url": "/comsAssignableRoles?limit=1",
+      "authType": "sso",
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 403
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "baseUrlType": "BUSINESS-OBJECT",
       "authType": "sso",
       "isCollection": true,
       "bestEffort": "true",
@@ -41,7 +57,35 @@
         {
           "code": 429
         }
-      ]
+      ],
+      "name": "comsAssignableRolesPage0",
+      "url": "/comsAssignableRoles?limit=100&offset=0"
+    },
+    {
+      "baseUrlType": "BUSINESS-OBJECT",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 429
+        }
+      ],
+      "name": "comsAssignableRolesPage1",
+      "url": "<% let t = comsAssignableRolesCount.total ?? 0; '/comsAssignableRoles?limit=100&offset=' + (t > 100 ? 100 : t) %>"
+    },
+    {
+      "baseUrlType": "BUSINESS-OBJECT",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 429
+        }
+      ],
+      "name": "comsAssignableRolesPage2",
+      "url": "<% let t = comsAssignableRolesCount.total ?? 0; '/comsAssignableRoles?limit=100&offset=' + (t > 200 ? 200 : t) %>"
     },
     {
       "name": "positions",
@@ -65,7 +109,7 @@
       {
         "name": "cancelReview",
         "baseUrlType": "workday-bp",
-        "url": "<% 'events/' + (size((comsAssignableRoles.data ?? []).filter(r => { r.id == (queryParams.roleId ?? '') && r.status == 'Pending ISC Review' && !empty(r.requestedBy) && r.requestedBy.id == (selectedWorker.id ?? '') })) > 0 ? ((comsAssignableRoles.data ?? []).filter(r => { r.id == (queryParams.roleId ?? '') && r.status == 'Pending ISC Review' && !empty(r.requestedBy) && r.requestedBy.id == (selectedWorker.id ?? '') })[0].reviewEventWid ?? '') : '') + '/cancel' %>",
+        "url": "<% 'events/' + (size((list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? []).filter(r => { r.id == (queryParams.roleId ?? '') && r.status == 'Pending ISC Review' && !empty(r.requestedBy) && r.requestedBy.id == (selectedWorker.id ?? '') })) > 0 ? ((list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? []).filter(r => { r.id == (queryParams.roleId ?? '') && r.status == 'Pending ISC Review' && !empty(r.requestedBy) && r.requestedBy.id == (selectedWorker.id ?? '') })[0].reviewEventWid ?? '') : '') + '/cancel' %>",
         "httpMethod": "POST",
         "authType": "sso",
         "values": [
@@ -74,7 +118,7 @@
             "value": "<% 'Withdrawn by the requester in ECO-COMS: ' + (queryParams.roleName ?? '') %>"
           }
         ],
-        "exclude": "<% empty((size((comsAssignableRoles.data ?? []).filter(r => { r.id == (queryParams.roleId ?? '') && r.status == 'Pending ISC Review' && !empty(r.requestedBy) && r.requestedBy.id == (selectedWorker.id ?? '') })) > 0 ? ((comsAssignableRoles.data ?? []).filter(r => { r.id == (queryParams.roleId ?? '') && r.status == 'Pending ISC Review' && !empty(r.requestedBy) && r.requestedBy.id == (selectedWorker.id ?? '') })[0].reviewEventWid ?? '') : '')) %>",
+        "exclude": "<% empty((size((list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? []).filter(r => { r.id == (queryParams.roleId ?? '') && r.status == 'Pending ISC Review' && !empty(r.requestedBy) && r.requestedBy.id == (selectedWorker.id ?? '') })) > 0 ? ((list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? []).filter(r => { r.id == (queryParams.roleId ?? '') && r.status == 'Pending ISC Review' && !empty(r.requestedBy) && r.requestedBy.id == (selectedWorker.id ?? '') })[0].reviewEventWid ?? '') : '')) %>",
         "failOnStatusCodes": [
           {
             "code": 400
@@ -99,7 +143,7 @@
         "url": "<% '/comsAssignableRoles/' + queryParams.roleId %>",
         "httpMethod": "DELETE",
         "authType": "sso",
-        "exclude": "<% empty(queryParams.roleId) || !empty((size((comsAssignableRoles.data ?? []).filter(r => { r.id == (queryParams.roleId ?? '') && r.status == 'Pending ISC Review' && !empty(r.requestedBy) && r.requestedBy.id == (selectedWorker.id ?? '') })) > 0 ? ((comsAssignableRoles.data ?? []).filter(r => { r.id == (queryParams.roleId ?? '') && r.status == 'Pending ISC Review' && !empty(r.requestedBy) && r.requestedBy.id == (selectedWorker.id ?? '') })[0].reviewEventWid ?? '') : '')) %>",
+        "exclude": "<% empty(queryParams.roleId) || !empty((size((list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? []).filter(r => { r.id == (queryParams.roleId ?? '') && r.status == 'Pending ISC Review' && !empty(r.requestedBy) && r.requestedBy.id == (selectedWorker.id ?? '') })) > 0 ? ((list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? []).filter(r => { r.id == (queryParams.roleId ?? '') && r.status == 'Pending ISC Review' && !empty(r.requestedBy) && r.requestedBy.id == (selectedWorker.id ?? '') })[0].reviewEventWid ?? '') : '')) %>",
         "failOnStatusCodes": [
           {
             "code": 400
@@ -173,7 +217,7 @@
             "code": 500
           }
         ],
-        "exclude": "<% empty(queryParams.roleId) || !empty((size((comsAssignableRoles.data ?? []).filter(r => { r.id == (queryParams.roleId ?? '') && r.status == 'Pending ISC Review' && !empty(r.requestedBy) && r.requestedBy.id == (selectedWorker.id ?? '') })) > 0 ? ((comsAssignableRoles.data ?? []).filter(r => { r.id == (queryParams.roleId ?? '') && r.status == 'Pending ISC Review' && !empty(r.requestedBy) && r.requestedBy.id == (selectedWorker.id ?? '') })[0].reviewEventWid ?? '') : '')) %>"
+        "exclude": "<% empty(queryParams.roleId) || !empty((size((list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? []).filter(r => { r.id == (queryParams.roleId ?? '') && r.status == 'Pending ISC Review' && !empty(r.requestedBy) && r.requestedBy.id == (selectedWorker.id ?? '') })) > 0 ? ((list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? []).filter(r => { r.id == (queryParams.roleId ?? '') && r.status == 'Pending ISC Review' && !empty(r.requestedBy) && r.requestedBy.id == (selectedWorker.id ?? '') })[0].reviewEventWid ?? '') : '')) %>"
       }
     ],
     "responseErrorDetail": {
@@ -245,7 +289,7 @@
                   "multiViewStylingEnabled": true,
                   "id": "pendingRolesGrid",
                   "label": "My Pending Assignable Role Requests",
-                  "rows": "<% (comsAssignableRoles.data ?? []).filter(r => { r.status == 'Pending ISC Review' && !empty(r.requestedBy) && r.requestedBy.id == (selectedWorker.id ?? '') && (empty(queryParams.view) || (queryParams.view == 'aaa' ? r.roleName.startsWith('Organizations and Roles Assignment Administrator') : !r.roleName.startsWith('Organizations and Roles Assignment Administrator'))) }) %>",
+                  "rows": "<% (list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? []).filter(r => { r.status == 'Pending ISC Review' && !empty(r.requestedBy) && r.requestedBy.id == (selectedWorker.id ?? '') && (empty(queryParams.view) || (queryParams.view == 'aaa' ? r.roleName.startsWith('Organizations and Roles Assignment Administrator') : !r.roleName.startsWith('Organizations and Roles Assignment Administrator'))) }) %>",
                   "rowVariableName": "role",
                   "enabled": false,
                   "columns": [
@@ -443,5 +487,5 @@
       "taskId": "home"
     }
   },
-  "onSubmit": "<%\n  let valid = true;\n  if (empty(queryParams.roleId)) {\n    valid = false;\n  } else if (size((comsAssignableRoles.data ?? []).filter(r => { r.id == (queryParams.roleId ?? '') && r.status == 'Pending ISC Review' && !empty(r.requestedBy) && r.requestedBy.id == (selectedWorker.id ?? '') })) == 0) {\n    confirmDeleteCheckBox.setError('This request is not one of your pending requests, so it can\\'t be withdrawn here.');\n    valid = false;\n  } else if (confirmDeleteCheckBox.value != true) {\n    confirmDeleteCheckBox.setError('Tick the box to confirm the withdrawal.');\n    valid = false;\n  }\n  valid;\n%>"
+  "onSubmit": "<%\n  let valid = true;\n  if (empty(queryParams.roleId)) {\n    valid = false;\n  } else if (size((list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? []).filter(r => { r.id == (queryParams.roleId ?? '') && r.status == 'Pending ISC Review' && !empty(r.requestedBy) && r.requestedBy.id == (selectedWorker.id ?? '') })) == 0) {\n    confirmDeleteCheckBox.setError('This request is not one of your pending requests, so it can\\'t be withdrawn here.');\n    valid = false;\n  } else if (confirmDeleteCheckBox.value != true) {\n    confirmDeleteCheckBox.setError('Tick the box to confirm the withdrawal.');\n    valid = false;\n  }\n  valid;\n%>"
 }
