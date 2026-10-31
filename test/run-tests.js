@@ -642,8 +642,9 @@ async function full(token, me) {
     if (!audits.length) throw new Error(`${roleName} is Denied but has no DENY audit record`);
     // The DENY record must name the person who denied or cancelled (here: the test user), not the BP.
     const by = audits[0];
-    if (by.changedByWid !== me.id || by.triggeredBy !== me.descriptor) {
-      throw new Error(`DENY record shows Changed By "${by.triggeredBy}" (${by.changedByWid || 'no WID'}); expected ${me.descriptor} (${me.id})`);
+    // changedByWid holds the Person WID from bp.initiatingPerson(), not the Worker WID, so compare names.
+    if (by.triggeredBy !== me.descriptor || !by.changedByWid) {
+      throw new Error(`DENY record shows Changed By "${by.triggeredBy}" (${by.changedByWid || 'no WID'}); expected ${me.descriptor}`);
     }
     pass('Request.reviewCancelDeny', `${roleName}: cancelling the review marked it Denied, inactive, with a DENY audit naming ${me.descriptor}`);
   });
