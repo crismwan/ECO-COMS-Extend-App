@@ -1,6 +1,62 @@
 # Workday Extend development
 
-These preferences apply to **all** Workday Extend apps I work on (not any single project).
+These notes apply to **all** Workday Extend apps I work on. Project-specific details (an app's names, tenant setup, test data, history) live in that repo's own notes file, e.g. `docs/<PROJECT>-NOTES.md`; read it when working in that repo. This repo's is `docs/ECO-COMS-NOTES.md`.
+
+## Contents
+
+- This file is a guide, NOT the single source of truth
+- Test data in the tenant
+- Ask before guessing Workday syntax
+- ID naming convention
+- Edit pages
+- Security domain enforcement
+- Widget types
+- date widget
+- guide attribute — rendering behavior
+- richText — multiple banners in one fieldSet (silent failure)
+- Widget validation — `onChange` + `setError` / `clearError`
+- grid widget
+- AMD task registration
+- queryParams — accessing URL query parameters
+- instanceList widget
+- WQL Query components
+- PMD page naming convention
+- Flow definitions
+- editWizard widget
+- hub widget
+- Common inbound endpoint patterns
+- Submitting data (outbound endpoints)
+- Orchestrations
+- cardContainer & Page Configuration Cards
+- Business objects (Extend model components)
+- Workday Script built-in functions
+- SMD (Security Model Definition)
+- Script include files (`.script`)
+- footer / pod widget
+- Button `action` values
+- Grid display attributes
+- chartCard (the .card file side)
+- Common inbound endpoint patterns (continued)
+- Button navigation — `parameterBindings` vs `parameters` pitfall
+- Workday Script — lambda returning object literal (double-brace pattern)
+- Workday Script — direct widget state mutation
+- Endpoints — `failOnStatusCodes` required
+- Endpoints — REST collections default to 20 rows
+- Endpoints — `isCollection: true` performance warning
+- Grid — do not combine paging with `sortableAndFilterable`
+- Grid — `excelExportEnabled` row limit
+- WQL — injection risk in string concatenation
+- Orchestrations — debugging and failure handling
+- Business processes on Extend business objects
+- Security and ISU writes
+- Audit logging pattern
+- Data and binding pitfalls
+- Orchestrations — synchronous page limit is 25 seconds
+- Orchestrations — no Excel parsing node
+- Platform limits reference
+- CI/CD — deploying with GitHub Actions and wdcli
+- Testing an Extend app
+- Working in the Workday UI with browser automation
 
 ## This file is a guide, NOT the single source of truth
 
@@ -10,11 +66,11 @@ When there is any confusion about the right solution (syntax, attributes, widget
 
 1. **Check the Workday developer site first:** go to https://developer.workday.com/ and use the site's **search bar** to look up the widget, attribute, function, or error. Prefer the official docs over this file when they disagree.
 2. **If the developer site doesn't answer it:** stop and ask the user. If I have an idea that goes beyond what CLAUDE.md says, describe it briefly and ask permission to try it before doing so.
-3. **After confirming something new**, add it to the relevant section of this file and note where it came from (developer.workday.com page, live test, or user).
+3. **After confirming something new**, add it to the relevant section: a general platform lesson goes here, an app-specific detail goes in the project's notes file. Note where it came from (developer.workday.com page, live test, or user).
 
 ## Test data in the tenant
 
-Never put the text "claude" (any casing) into anything entered in the Workday tenant — test org codes, pattern values, role names, comments, audit details. Use neutral test values such as `TEST:ORG:1029`.
+Never put the text "claude" (any casing) into anything entered in a Workday tenant: test org codes, pattern values, role names, comments, audit details. Use neutral, clearly marked test values such as `TEST:ORG:1029` or `...:TEST:CI:RUN12`.
 
 ## Ask before guessing Workday syntax
 
@@ -142,7 +198,7 @@ The `guide` attribute places a **"?" tooltip icon** beside the widget label. It 
 
 **`richText` value format — two equivalent forms:**
 - **Script-wrapped:** `"value": "<% '<span style=\"...\">text</span>' %>"` — required when the string contains dynamic expressions or variable interpolation.
-- **Direct HTML:** `"value": "<span style=\"...\">text</span>"` — valid for purely static content with no PMD expressions. Both forms are used throughout this codebase and both deploy/render correctly.
+- **Direct HTML:** `"value": "<span style=\"...\">text</span>"` — valid for purely static content with no PMD expressions. Both forms deploy and render correctly.
 
 ```json
 {
@@ -180,7 +236,7 @@ The `guide` attribute places a **"?" tooltip icon** beside the widget label. It 
 }
 ```
 
-**Color conventions used in this app:**
+**Example colour conventions** (one app's palette; follow the repo's own):
 - `color:#B45309` — amber/warning tone
 - `color:#0055B7` — blue/informational tone
 - `color:#374151` — body text (dark grey)
@@ -232,17 +288,17 @@ Compare a Date against another **widget's** value, not a raw inbound string — 
 **For live preview / computed display fields:** Do NOT attempt reactive updates via `setLabel()` or `setValue()` on `text` widgets. Instead:
 - Use the `value` expression (evaluated at page load and on the wizard's Summary review step) for correct display in the summary
 - Use `setError()` to surface validation info (the only confirmed-working dynamic text display)
-- Use `setWarning()` for non-blocking inline preview text below a field (e.g. "Generated name: X:CLW:ORG"). This IS reactive in onChange — confirmed working in editWizard step context (2026-10-29). **Important caveat from Workday docs:** The editWizard section also notes "No warnings support — calling `setWarning()` on a step page causes an error at submission time." If `setWarning()` on a disabled text widget blocks submit, fall back to `setError()` on a separate helper text widget, or use a `richText` banner.
+- Use `setWarning()` for non-blocking inline preview text below a field (e.g. "Generated name: APP:ORG"). This IS reactive in onChange — confirmed working in editWizard step context (2026-10-29). **Important caveat from Workday docs:** The editWizard section also notes "No warnings support — calling `setWarning()` on a step page causes an error at submission time." If `setWarning()` on a disabled text widget blocks submit, fall back to `setError()` on a separate helper text widget, or use a `richText` banner.
 - Use `richText` banners for static explanatory text about the naming format
 
 **editWizard "Discard Changes?" dialog — ROOT CAUSE AND FIX (confirmed by live test 2026-10-29, supersedes earlier notes):**
 - Cause: the wizard step page had `"standardEditButtonsHidden": true`. The wizard's Next saves the step via the step's own OK; with OK hidden, Next is treated as navigating away from a dirty page, so Workday shows "Discard Changes?" — and clicking Discard really does drop the entered values (Review step showed empty fields).
-- Fix: do NOT set `standardEditButtonsHidden` (or a custom `editButtonBar`) on editWizard step pages. With it removed, Next goes straight to Review & Submit with all values preserved, no dialog. Confirmed on createShellOrgWizard and createShellOrgPatternWizard.
+- Fix: do NOT set `standardEditButtonsHidden` (or a custom `editButtonBar`) on editWizard step pages. With it removed, Next goes straight to Review & Submit with all values preserved, no dialog. Confirmed on two wizards.
 - Step pages may keep `cancelOverride`.
 
 **Live preview fields in editWizard steps (confirmed live 2026-10-29):**
 - `readOnlyText` + `setValue()` in `onChange` DOES update reactively in the step (e.g. Generated Organization Name, Pattern Name Preview).
-- For a `values`-scripted dropdown or `instanceListLoopTag` dropdown, read the selected label with `<dropdown>.selectedEntries[0].descriptor` (guard with `!empty(<dropdown>.value)`). `.value.descriptor` raised "Property Error found: descriptor" on newShellOrg and returned empty on newShellOrgPattern.
+- For a `values`-scripted dropdown or `instanceListLoopTag` dropdown, read the selected label with `<dropdown>.selectedEntries[0].descriptor` (guard with `!empty(<dropdown>.value)`). `.value.descriptor` raised "Property Error found: descriptor" on one page and returned empty on another.
 - The Review & Submit summary does NOT show the setValue'd preview, nor a `value` expression re-evaluated with entered data — it shows the page-load value. Other fields (dropdown, text, date) display correctly. Open question.
 - Don't use `setWarning()` on step pages (errors at submit per Workday docs).
 
@@ -773,14 +829,14 @@ An `editWizard` guides users through a series of independent edit-page tasks in 
 ```json
 {
   "type": "editWizard",
-  "title": "Create Shell Organization",
-  "subtitle": "ECO-COMS Shell Organization Manager",
+  "title": "Create Organization",
+  "subtitle": "My App: Organization Manager",
   "summarySettings": { "enabled": true, "label": "Review & Submit" },
   "editTasks": [
-    { "label": "Organization Details", "task": { "taskId": "newShellOrg" } },
-    { "label": "Confirm & Submit", "task": { "taskId": "newShellOrgConfirm" } }
+    { "label": "Organization Details", "task": { "taskId": "newOrg" } },
+    { "label": "Confirm & Submit", "task": { "taskId": "newOrgConfirm" } }
   ],
-  "conclusion": { "task": { "taskId": "newShellOrgSuccess" }, "render": true }
+  "conclusion": { "task": { "taskId": "newOrgSuccess" }, "render": true }
 }
 ```
 
@@ -932,7 +988,7 @@ Property Error found: data. Script Excerpt: myEndpoint.data
 **Fix:** Always guard deferred endpoint data with `?? []` in any PMD expression:
 
 ```json
-"rows": "<% comsApplications.data ?? [] %>"
+"rows": "<% applications.data ?? [] %>"
 ```
 
 **Pattern to apply everywhere deferred endpoints are used:**
@@ -943,7 +999,7 @@ Property Error found: data. Script Excerpt: myEndpoint.data
 
 **Non-deferred (eager) endpoints do NOT need this guard** — their data is fetched before the page renders, so `.data` is always a list.
 
-**Confirmed failure:** In `shellOrgManager.pmd`, the `comsApplications` endpoint (`deferred: true`) was referenced as bare `comsApplications.data` in the `appsGrid` rows expression. Even though `appsGrid` is on the "Application Patterns" tab (not the default Summary tab), Workday still evaluated the expression at page load — throwing the Property Error and crashing the entire page with a red "!" error indicator.
+**Confirmed failure:** a deferred endpoint was referenced as bare `applications.data` in a grid's rows expression. Even though the grid was on a second tab (not the default one), Workday still evaluated the expression at page load — throwing the Property Error and crashing the entire page with a red "!" error indicator.
 
 ### Deferred endpoints — WQL tab grids NEVER fetch (confirmed 2026-10-29)
 
@@ -960,10 +1016,10 @@ Property Error found: data. Script Excerpt: myEndpoint.data
 
 ```json
 // BROKEN — grid always shows 0 items even when data exists:
-{ "name": "shellOrgPatterns", "baseUrlType": "workday-wql", "url": "data", "deferred": true, ... }
+{ "name": "orgPatterns", "baseUrlType": "workday-wql", "url": "data", "deferred": true, ... }
 
 // FIXED — fetches eagerly on page load, grid populates correctly:
-{ "name": "shellOrgPatterns", "baseUrlType": "workday-wql", "url": "data", ... }
+{ "name": "orgPatterns", "baseUrlType": "workday-wql", "url": "data", ... }
 ```
 
 **Rule:** Only use `deferred: true` when the endpoint is explicitly invoked via `.invoke()` in a script or `onSearch` handler. Never use it for data that a grid `rows` binding reads passively.
@@ -1876,7 +1932,7 @@ The SMD file (`<appId>.smd`) lives alongside the AMD and defines site-level conf
 - `errorPageConfigurations` — maps HTTP status codes to error PMD pages: `{ "statusCode": "404", "page": { "id": "errorPage" } }`. Common codes: 400, 401, 403, 404, 408, 500, 503.
 - `cdnEnabled` — boolean, typically `true`.
 - `siteProperties` — array, usually empty `[]`.
-- `headerBackgroundColor` — hex colour for the app header bar (e.g. `"#0055B3"` for UBC blue).
+- `headerBackgroundColor` — hex colour for the app header bar (e.g. `"#0055B3"`).
 - `titleAlignment` — `"center"` or `"left"`.
 
 ```json
@@ -1900,33 +1956,6 @@ The SMD file (`<appId>.smd`) lives alongside the AMD and defines site-level conf
 }
 ```
 
-## AMD data providers — this app's full list
-
-These `dataProviders` are registered in the AMD. All use `apiGatewayEndpoint` (the Workday gateway for the tenant):
-
-| Key | URL template | Use |
-|---|---|---|
-| `BUSINESS-OBJECT` | `https://api.workday.com/apps/{{site.applicationId}}/v1` | Extend model BOs |
-| `COMMON` | `https://api.workday.com/common/v1` | Static common API (worker `/me`) |
-| `workday-app` | `{{apiGatewayEndpoint}}/apps/{{site.applicationId}}/v1/` | Gateway BO endpoint |
-| `workday-common` | `{{apiGatewayEndpoint}}/common/v1/` | Gateway common API |
-| `workday-staffing` | `{{apiGatewayEndpoint}}/staffing/v1/` | Staffing v1 |
-| `workday-staffing-v6` | `{{apiGatewayEndpoint}}/staffing/v6/` | Staffing v6 (job positions) |
-| `workday-staffing-v7` | `{{apiGatewayEndpoint}}/staffing/v7/` | Staffing v7 |
-| `workday-academic` | `{{apiGatewayEndpoint}}/studentAcademicFoundation/v1/` | Academic Foundation API |
-| `workday-wql` | `{{apiGatewayEndpoint}}/wql/v1/` | WQL query endpoint |
-| `workday-orchestrate` | `{{apiGatewayEndpoint}}/orchestrate/v1/` | Orchestrate API |
-| `orchestrate` | `{{apiGatewayEndpoint}}/orchestrate/v1/apps/{{site.applicationId}}/orchestrations/` | App orchestration base |
-| `orchestration` | `apiGatewayEndpoint + '/orchestrate/v1/apps/' + site.applicationId + '/orchestrations'` | Alt orchestration key (script form) |
-| `workday-bp` | `{{apiGatewayEndpoint}}/businessProcess/v1/` | Business Process API |
-| `wdayCom` | `{{apiGatewayEndpoint}}/staffing/v1` | Alt staffing (no trailing slash) |
-| `wdayRef` | `{{apiGatewayEndpoint}}/referenceData/v1` | Reference Data API |
-| `workday-org` | `{{apiGatewayEndpoint}}/common/v1/` | Common API aliased as org |
-
-**Endpoint for the signed-in worker:** use `baseUrlType: "COMMON"`, `url: "/workers/me"`.
-
-**Endpoint for BO collections:** use `baseUrlType: "BUSINESS-OBJECT"`, `url: "/collectionName"` with `isCollection: true`.
-
 ## Script include files (`.script`)
 
 PMD pages can reference shared Workday Script modules via the top-level `include` array:
@@ -1934,13 +1963,13 @@ PMD pages can reference shared Workday Script modules via the top-level `include
 ```json
 {
   "id": "myPage",
-  "include": ["comsValidations.script"],
+  "include": ["appValidations.script"],
   ...
 }
 ```
 
 - Script files live in `presentation/scripts/` and have the extension `.script`.
-- The module name (without `.script`) becomes a variable in PMD script expressions: `comsValidations.isValidSubject(text)`.
+- The module name (without `.script`) becomes a variable in PMD script expressions: `appValidations.isValidSubject(text)`.
 - A script file is a plain Workday Script file that exports an object map of named functions at its end: `{ "fnName": fnName, ... }`.
 - Calling convention in PMD: `<% scriptModuleName.functionName(arg1, arg2) %>`.
 
@@ -1956,7 +1985,7 @@ var myFunction = function(arg) {
 }
 ```
 
-Scripts can reference Workday built-in namespaces (`date:`, `validate:`, `regex:`, etc.) and interact with business objects (`comsAuditLogs.create()`). They do NOT have page widget access (no `self`, no widget IDs) — they are pure functions operating on passed-in values.
+Scripts can reference Workday built-in namespaces (`date:`, `validate:`, `regex:`, etc.) and interact with business objects (`auditLogs.create()`). They do NOT have page widget access (no `self`, no widget IDs) — they are pure functions operating on passed-in values.
 
 ## footer / pod widget
 
@@ -1966,7 +1995,7 @@ The page `footer` (inside `presentation`) renders a persistent footer bar below 
 "footer": {
   "type": "footer",
   "children": [
-    { "type": "pod", "podId": "ecoComsFooter" }
+    { "type": "pod", "podId": "appFooter" }
   ]
 }
 ```
@@ -1978,7 +2007,7 @@ The page `footer` (inside `presentation`) renders a persistent footer bar below 
 
 ## Button `action` values
 
-A `button` widget's `action` attribute controls its visual style and role. Confirmed values in this codebase:
+A `button` widget's `action` attribute controls its visual style and role. Confirmed values:
 
 | `action` | Visual | Use |
 |---|---|---|
@@ -1996,7 +2025,7 @@ A `button` widget's `action` attribute controls its visual style and role. Confi
   "action": "PRIMARY",
   "label": "Open",
   "taskReference": {
-    "taskId": "shellOrgManager",
+    "taskId": "orgManager",
     "parameterBindings": {
       "appCode": "<% row.code %>",
       "appName": "<% row.descriptor %>"
@@ -2056,11 +2085,11 @@ A donut/pie chart. All attributes:
 
 ```json
 {
-  "id": "ShellOrgStatusChart",
+  "id": "OrgStatusChart",
   "parameters": ["activeCount", "inactiveCount", "totalPatterns"],
   "header": {
-    "title": "Shell Org Overview",
-    "subtitle": "Active vs. Inactive shell organizations"
+    "title": "Organization Overview",
+    "subtitle": "Active vs. inactive organizations"
   },
   "body": {
     "type": "chartCard",
@@ -2100,16 +2129,16 @@ Then reference worker fields as `selectedWorker.id`, `selectedWorker.descriptor`
 
 ```json
 {
-  "name": "comsAssignableRoles",
+  "name": "requests",
   "baseUrlType": "BUSINESS-OBJECT",
-  "url": "/comsAssignableRoles",
+  "url": "/requests",
   "authType": "sso",
   "isCollection": true,
   "bestEffort": "true"
 }
 ```
 
-Returns `{ "data": [...] }` — access items via `comsAssignableRoles.data`.
+Returns `{ "data": [...] }` — access items via `requests.data`.
 
 ## Button navigation — `parameterBindings` vs `parameters` pitfall
 
@@ -2121,7 +2150,7 @@ On a `button`'s `taskReference`, both `parameters` and `parameterBindings` appea
   "action": "PRIMARY",
   "label": "Open",
   "taskReference": {
-    "taskId": "shellOrgManager",
+    "taskId": "orgManager",
     "parameterBindings": {
       "appCode": "<% row.code %>",
       "appName": "<% row.descriptor %>"
@@ -2164,9 +2193,9 @@ This is the idiomatic pattern in the Workday DevRel corpus. The setter methods (
 
 ```json
 {
-  "name": "comsAssignableRoles",
+  "name": "requests",
   "baseUrlType": "BUSINESS-OBJECT",
-  "url": "/comsAssignableRoles",
+  "url": "/requests",
   "authType": "sso",
   "isCollection": true,
   "bestEffort": "true",
@@ -2184,7 +2213,7 @@ This is an enforced best-practice rule (EndpointFailOnStatusCodesRule) in the Wo
 {
   "name": "allRoles",
   "baseUrlType": "BUSINESS-OBJECT",
-  "url": "/comsAssignableRoles?limit=100",
+  "url": "/requests?limit=100",
   "authType": "sso",
   "isCollection": true
 }
@@ -2228,163 +2257,93 @@ Instead, use a **WQL Query component** (`.wqlquery` file) with typed `parameters
 
 WQL Query component parameters are interpolated server-side — not string-concatenated by the PMD script — which prevents injection.
 
-## Orchestrations — debugging runs (confirmed 2026-10-29)
 
-- A page's "success" only means the orchestration launch returned 200. AddShellOrg / AddShellOrgPattern catch errors in a global error handler and still return 200, so **always verify the record exists** (Shell Org Manager counts) and read the run log.
-- Run logs: developer.workday.com → Apps → this app → **Logs** tab (last 15 min). Find the "Aggregated step totals" line for the run's commonId: it lists each step with success/failure counts. **Orchestration Activity** tab lists runs.
-- Root cause found this way: the PMD sent an empty `comsAppId` (`dropdown.value.id` is empty), so `GetApplication` hit `/comsApplications/` (the collection) and `ExtractOrgType` failed before the SOAP call.
-- Shell-org apps like X:ADM have no COMSApplication record. AddShellOrg now takes `orgType` (= application code) as a query param; its GetApplication node is disabled (`isDisabled: true`).
-- Organization_Code = Organization_Name = the generated name for both orchestrations (user decision).
-- The `Organization_Add_Update` SOAP body via `SendWorkdayApiRequest` POST `/soap/v42.2/Human_Resources` works (HTTP 200, org created) with Organization_Type_Name = `X:CLW` / `X:ADM` and subtype `X:Shell`.
-- Orchestration files are single-line JSON: when editing with a script, re-serialize compactly (`separators=(',',':')`) to keep diffs small.
+## Orchestrations — debugging and failure handling
 
-## Orchestrations — failure handling (confirmed live 2026-10-29)
+- **A page's "success" only means the launch returned 200.** The Orchestrate `/launch` call returns HTTP 200 (a short text/plain body) even when the orchestration later fails, so an outbound launch endpoint's `failOnStatusCodes` never fires. Always confirm the result some other way (run-and-verify, below) and read the run log.
+- **Run logs:** developer.workday.com → Apps → the app → **Logs** tab (last 15 minutes). The "Aggregated step totals" line for a run's commonId lists each step with its success/failure counts. The **Orchestration Activity** tab lists runs per orchestration.
+- **A global error handler that only logs swallows failures.** Prefer letting a failed check stop the run.
+- **Fail on a rejected Workday call with a Continue on Conditions step** right after the call (`_type` `ContinueOnConditions`, `assertions: List<Assertion{assertion: Expr Boolean, message: Expr String}>`). For a SOAP call: `data.<call>.responseStatusCode.is2xxStatusCode().not().or(data.<call>.response.isSoapFault()).not()`. Source: developer.workday.com "Concept: Orchestration Logic Components".
+- **Guard the inputs too.** An orchestration that's launched by URL can be called by anyone who can reach that URL, not only through the page. Before the Workday call, add a Continue on Conditions step that checks every parameter that decides *what* changes: allowed values, prefixes, and that a passed WID really is the kind of object you expect (look it up). Never let a free parameter pick the operation (e.g. inactivate vs reactivate) while a different parameter is written to the audit record; derive both from the same value.
+- **String member functions** (developer.workday.com "Reference: String Member Functions") include `contains`, `startsWith`, `equals`, `isEmpty`, `toString`, `append`.
+- **Logging a Workday response:** a `Log` node with `"..." + data.<call>.response.toString()` writes the full response, including SOAP fault text, to the app Logs.
+- **Text templates support `{{#if}}` but NOT `{{else}}`** (build error "illegal start of simple expression"). Use two `{{#if}}` blocks with Boolean flags created in a CreateValues node (`data.x.flag.equals("true")`, type Boolean): Handlebars treats any non-empty string as true.
+- **Reading API responses:** `data.X.response.asJSON().stringAtJsonPath(...)`. Calling `stringAtJsonPath` on the raw response can fail the build ("cannot be applied to an instance of DataType").
+- **Getting real JSON for a component the repo doesn't use yet:** add it in Orchestration Builder, then the orchestration's Settings → **Open Current Source Code** shows the JSON without saving. (Alternative: save to App Hub, then console → app → Related Actions → View Source.) The next CI upload overwrites App Hub with the repo version. A stale App Builder session: ⋮ → Revert to App Hub, or Discard Session.
+- Orchestration files are single-line JSON: when editing with a script, re-serialize compactly (`separators=(',',':')`) to keep diffs small. Clone an existing node of the same type as the prototype for a new one.
 
-- AddShellOrg / AddShellOrgPattern now have a **Continue on Conditions** step `CheckWWSAccepted` right after `CallAddUpdateOrganization`: assertion `data.CallAddUpdateOrganization.responseStatusCode.is2xxStatusCode().not().or(data.CallAddUpdateOrganization.response.isSoapFault()).not()`, message `"Workday rejected the request for " + <name>`. Node `_type` is `ContinueOnConditions` with `assertions: List<Assertion{assertion: Expr Boolean, message: Expr String}>` (JSON taken from Orchestration Builder output, source: developer.workday.com "Concept: Orchestration Logic Components").
-- The global error handler was removed (it only logged and swallowed errors).
-- **Confirmed:** a forced WWS rejection (SOAP 500) → CheckWWSAccepted fails with an ERROR log → nothing created. **But the Orchestrate `/launch` call still returns HTTP 200** (text/plain body ~107 bytes) to the PMD, so the page's `failOnStatusCodes` never fires and the success page still shows. The page cannot see failures through the outbound launch endpoint. Solved by run-and-verify, below.
-- Getting real JSON for a component the repo doesn't use yet: add it in Orchestration Builder (drag from Components; synthetic drags need HTML5 DragEvents), save that orchestration to App Hub (no deploy), then console → app → Related Actions → **View Source** → Activity build → open the `.orchestration` file. CI's next upload overwrites App Hub with the repo version.
-- Orchestration Builder may show "Updates Available in App Hub" with an old session; Discard Session loads the latest.
+### Run-and-verify from a page
 
+Pattern that lets a Workday rejection block OK instead of showing a false success:
 
-### Run-and-verify in `onSubmit` (confirmed live 2026-10-30)
+- Launch from `onSubmit` through a **deferred inbound** endpoint (orchestration base URL, `'/<Name>/launch?p=' + p + ...`, parameters bare in the URL), with `endpoint.invoke({'p': value, ...})`.
+- Then re-read something that only exists if the change worked (the new record, or an audit record the orchestration writes only after its success check) with a second deferred endpoint. If it's missing, `someField.setError('Workday rejected this request, so nothing was changed...')` and return `false`.
+- Count audit records with the BO REST collection's `.total` (`GET /collection?limit=1`), not a WQL count: WQL lagged and gave false "rejected" errors.
+- **`.invoke()` on a WQL endpoint that uses `wqlQuery` / `queryId` throws `Unknown Function call: .invoke({ })`.** Call WQL as a plain GET instead: `"baseUrlType": "<wql provider>"`, `"url": "<% 'data?limit=' + lim + '&query=<URL-encoded WQL>' %>"`, invoked with `.invoke({'lim': '10000'})`. Keep that WQL static (no user input) and filter in script.
+- **URL-encode free text in launch URLs** (`value.urlEncode()`): a space gives InvalidEndPointUrlException "Illegal character".
+- In an editWizard, Next on a step runs that step's `onSubmit` validation and the final OK runs it again; the launch fires only on OK, once validation passes.
 
-Used by newShellOrg / newShellOrgPattern so a Workday rejection blocks OK instead of showing "Created":
+### Calling Workday Web Services (SOAP) from an orchestration
 
-- Launch the orchestration from `onSubmit` through a **deferred inbound** endpoint (`baseUrlType: "orchestration"`, url `'/<Name>/launch?param=' + p + ...`, params bare in the URL) with `endpoint.invoke({'p': value, ...})`.
-- Then re-read the data with a second deferred endpoint and check the record exists. If it doesn't, call `someField.setError('Workday rejected this request, so nothing was created...')` and return `false`.
-- **`.invoke()` on a WQL endpoint that uses `wqlQuery` / `queryId` throws `Unknown Function call: .invoke({ })`.** Instead, call WQL as a plain GET: `"baseUrlType": "workday-wql"`, `"url": "<% 'data?limit=' + lim + '&query=<URL-encoded WQL>' %>"`, and invoke it with `.invoke({'lim': '10000'})`. Keep the WQL static (no user input) and filter in script.
-- In an editWizard, Next on a step runs the step's `onSubmit` validation, and the final OK runs it again. The launch only fires once all validation passes, on OK.
-- Tested: forced failure → field error, nothing created; valid submit → success page, record verified (Active Orgs 195→196, patterns 377→378).
+- `SendWorkdayApiRequest` POST `/soap/v<version>/<Service>` (e.g. `/soap/v42.2/Human_Resources`) with a SOAP body works with the default credential.
+- **Use `Validate_Only=true` to test a WWS call safely**: Workday checks the request fully and changes nothing.
+- Check the operation's real shape in the tenant WSDL (`https://<services host>/ccx/service/<tenant>/<Service>/v<version>?wsdl`); community docs pages move. Several operations are **one-way** (empty response body): they return no event or new WID.
+- Lessons from the Human_Resources and Staffing services:
+  - `Organization_Add_Update` can't change status (no Inactive element). Status changes use `Organization_Inactivate` (`Organization_Reference_Data` with `System_ID="WD-WID"` + `Organization_Inactivate_Data Effective_Date`) and `Reactivate_Organization_Request`. Neither returns an event; Reactivate returns `Organization_Reference`.
+  - **An org with a future-dated event can't take another status change** ("Organization has conflicting events (in progress or future events)"). Pick a date after the last future event, or expect the rejection. A future-dated inactivation leaves the org active until that date.
+  - `Assign_Roles_Request`: add assignees by `bsvc:type="Position_ID"`; a position's WID from `allPositions` is rejected as an Event Target Role Assignee. Remove by the current assignee's WID from the role assignment data. The response returns `Assign_Roles_Event_Reference` (linkable).
 
-## manageShellOrgStatus — working (confirmed live 2026-10-30)
+### Business-process-triggered orchestrations
 
-- **`Organization_Add_Update` cannot change status.** Its `Organization_DataType` (v42.2 WSDL) has no Inactive element. Sending `<bsvc:Inactive>` returns the SOAP fault "Invalid Subelement Inactive ... for element Organization_Data". Source: the tenant WSDL at `https://wcpdev-services1.wd101.myworkday.com/ccx/service/ubc_wcpdev2/Human_Resources/v42.2?wsdl`. The community.workday.com docs page has moved.
-- **The status change uses `Organization_Inactivate` / `Reactivate_Organization_Request`** in the same Human_Resources service:
-  ```xml
-  <bsvc:Organization_Inactivate bsvc:version="v42.2">
-    <bsvc:Validate_Only>false</bsvc:Validate_Only>
-    <bsvc:Organization_Reference_Data>
-      <bsvc:Integration_ID_Reference><bsvc:ID bsvc:System_ID="WD-WID">{{orgWID}}</bsvc:ID></bsvc:Integration_ID_Reference>
-    </bsvc:Organization_Reference_Data>
-    <bsvc:Organization_Inactivate_Data bsvc:Effective_Date="{{yyyy-MM-dd}}"/>
-  </bsvc:Organization_Inactivate>
+- Template "Workday Business Process": flow type `.maya.FlowBusinessProcessTriggered`, start `StartBusinessProcess`, end `EndEmptyMaya`, default credential `AccessTokenFromInitiatingUser`.
+- The BP's target: `bp.eventTarget().getIDValues("WID").get(0)`. (`bp.eventTarget().toString("WID")` is in the docs but fails the build.) Timestamp: `datetime.now("UTC").format("yyyy-MM-dd'T'HH:mm:ss'Z'")`. References: "Reference: Business Process Global Functions", "Reference: DateTime Global Functions".
+- Attach it: BP definition related actions → Business Process → **Configure Orchestrations** → Add → pick the action (e.g. Deny, Cancel) → create an Orchestration Launch Configuration. Saving it needs the tenant-wide **Edit Tenant Setup – Business Processes → User to perform Orchestration Launches** to be set first.
+- Launches are queued: Workday says usually within ~15 minutes; in practice 2–3 minutes. Status: Find Events → the event → Orchestrations tab. After a deploy that changes such an orchestration, confirm it still fires (one launch went missing after such a deploy, cause not yet known).
+- **Deny is offered only while an approval is awaiting action.** If the initiator is in the approval group, the approval auto-completes and only Cancel remains, so pair the same "close the request" orchestration with **Cancel** as well as Deny.
 
-  <bsvc:Reactivate_Organization_Request bsvc:version="v42.2">
-    <bsvc:Organization_Reference><bsvc:ID bsvc:type="WID">{{orgWID}}</bsvc:ID></bsvc:Organization_Reference>
-  </bsvc:Reactivate_Organization_Request>
-  ```
-  `System_ID="WD-WID"` with the org's WID is accepted. A success response is an empty SOAP Body. Reactivate is untested.
-- **Use `Validate_Only=true` to test a WWS call safely.** Workday checks the request fully and changes nothing.
-- **Orchestration text templates support `{{#if}}` but NOT `{{else}}`.** The build fails with "illegal start of simple expression". Use two `{{#if}}` blocks with Boolean flags. Handlebars treats any non-empty string as true, so the flags come from CreateValues Boolean assignments: `data.GetInputParams.includeInactive.equals("true")` (type `Boolean`, Expr `["Expr","Boolean"]`). This uploaded and ran fine.
-- **Logging the WWS response:** a `Log` node with message `"..." + data.CallOrganizationUpdate.response.toString()` writes the full SOAP response, including fault text, to developer.workday.com → app → Logs. Kept in ManageShellOrgStatus as `LogWWSResponse`.
-- **Reading CI build errors:** `gh run view --log` is blocked from the cloud container. The GitHub run page (Summary → "Upload Failure") in the browser shows the App Hub build output.
-- **Page check (run-and-verify):**
-  - The page reads `GET BUSINESS-OBJECT /comsAuditLogs?limit=1` `.total` before and after the launch. The orchestration writes an audit record only when Workday accepts the change.
-  - A WQL count of `comsAuditLogs` lagged and gave false "rejected" errors.
-  - Checking `cf_active1` can't work for future-dated changes, because the org is still active today.
-- The page has an **Effective Date** field (sent to the SOAP request) and standard OK/Cancel, with `cancelOverride` to shellOrgManager.
-- **Scope note:** a status change dated in the future leaves Shell Org Manager showing "Active" until that date.
-- Test records inactivated effective 2026-12-15:
-  - `X:ADM:TEST:ORG:1029`, `1030`, `1031`
-  - `X:CLW:PATTERN:MATH:MATH:300/301/302:951:2026W1`
-  - 1029 was confirmed in its Workday audit trail ("made inactive on 2026-12-15").
+## Business processes on Extend business objects
 
-## Role assignments (Assign_Roles) — working (confirmed live 2026-10-30)
+- Tenant setup order: BP type → **Edit Policy** (Initiate, steps, View All, Approve, Deny, Cancel) → **Activate Pending Security Policy Changes** → **Create Business Process Definition** → Edit Definition. Step groups only show in the prompt after the policy is activated. Find the definition by searching `bp: <name>`.
+- **The approval group must resolve to people.** A business object without organization context can't use constrained role-based groups: the domain's View Domain page lists **Allowed Security Group Types** (e.g. Public, Unconstrained). A constrained group shows the step as Awaiting Action with **All Persons = 0**. Use a user-based group or the **(Unconstrained)** variant.
+- An approver's group needs **three** policies: the BP security policy (Approve, Deny, View All), the domain that secures the step pages, and the domain that secures the BO data. Then Activate Pending Security Policy Changes. Edit Definition shows a page error if a step's group isn't in the BP policy. An in-flight event keeps its original routing.
+- **Block self-approval:** approval step → View Workflow Step → related actions → Business Process → **Maintain Advanced Routing** → Routing Restrictions → **Exclude Initiator**. If the restriction excludes everyone eligible, the step is marked **Not Required** and skipped, so add an Alternate Security Group when the approver pool is small. Whoever calls the API that starts the event is the initiator: start it as the requester (not an ISU) or Exclude Initiator stops working.
+- **Starting an event on a BO record:** POST `/apps/<app>/v1/<businessProcessEventCollection>` with `businessProcessTarget.id`. Step pages get context with `GET businessProcess/v1/eventSteps/<eventStepId>` → `event.id`, then `GET events/<id>` → `for.id`. Complete an action step with `POST eventSteps/<id>/submit` and `stepAction.id = d9e4223e446c11de98360015c5e6daf6` (Submitted).
+- **Cancel an event:** `POST businessProcess/v1/events/<id>/cancel` with `{ "comment": "..." }` (developer.workday.com "Events REST APIs").
+- **Event status in the API:** a denied or cancelled event reads **"Process Terminated"**, not "Denied". Match on `denied|cancel|rescind|terminat` when checking that an app record agrees with its event.
+- **A record linked to a BP event can't be deleted** (HTTP 500 "Attempt to delete instance ... with references"). Test data that starts events is permanent: close it (cancel), don't plan to delete it.
+- **Inbox titles** use the target's display value: `useForDisplay: true` on the BO's name field.
+- **Step help text:** definition related actions → Business Process → **Maintain Help Text** → step → Edit Step Help Text. The cell is a plain textarea plus a **Format Text** button that opens a rich-text editor (bold, italic, underline, colour, bulleted list, link; no numbered list). A consistent format works well: bold "Step N of M: <name>" title, one-line purpose, a bold "Check"/"How to" bulleted list, then a bold "Next:" or "Outcome:" line.
+- **Completion notification:** definition related actions → Business Process → **Add Notification** → Trigger on Status = Completed, Recipients = Initiator. Completed fires on the approve path only. Remove any empty Email Addresses row before OK.
 
-- Pages:
-  - shellOrgManager "Manage Role Assignments" grid has one row per role + org, with positions taken from `cf_ZCF_EE_RoleAssignedToAsPositionRestrictions`.
-  - Manage → `editRoleAssignment` (EDIT) directly; the separate view page was removed 2026-10-30 at the user's request (fewer clicks). Related actions stay on the shellOrgManager grid.
-  - The edit page's `onSubmit` launches `AssignRolePositions` once per change and run-and-verifies with the `/comsAuditLogs?limit=1` `.total` count.
-- WWS: Staffing v42.2 `Assign_Roles_Request` (`/soap/v42.2/Staffing`). Structure matches the user's Assign Roles EIB v35.0:
-  - Event_Target_Assignee
-  - Role_Assigner (WID)
-  - Assignable_Role (WID)
-  - Update_Later_Dated_Assignments=true
-  - Assignees_to_Add / Assignees_to_Remove
-  - Auto_Complete=true, Run_Now=true
-- **Assignee IDs:**
-  - The `allPositions` WID is rejected ("The provided Role Assignee is not valid as an Event Target Role Assignee").
-  - **Add:** use `bsvc:type="Position_ID"` with `cf_PositionID` (e.g. P-00010).
-  - **Remove:** use `type="WID"` with the current assignee id from the role-assignment data.
-  - Both were tested live: P-00010 was added to X:BPMS(ODMT):ROLE:ADVISORS and then removed. Multi-position also tested: P-00009 + P-00010 added in one submit, then both removed in one submit (2 launches each, audit-count check passed).
-- **`relatedTask` / instance links on instanceList render only on VIEW pages** (developer.workday.com instanceList reference). This is why there are separate view and edit pages.
-  - On VIEW grids: an instanceList cell with `values` + `widKey:"id"` + `view:true` + `relatedTask:true` gives related actions on hover.
-- **Read-only instanceList on an EDIT page:** `values` alone or `instanceList` showed "(empty)". Use `"values": "<% [] %>"` + `selectedValuesAndDescriptors`.
-- **URL-encode free text in launch URLs** (`name.urlEncode()`). A space in a role or org name gives InvalidEndPointUrlException "Illegal character".
-- **2026-10-30 (user request: fewer clicks):** the separate manageRoleAssignment view page was removed. Manage on the grid now opens editRoleAssignment directly. That page shows a one-row "Current Assignment" grid (role, org, current positions) above the Change Positions fields.
-- **Confirmed live:** an instanceList grid cell on an EDIT page with `view:true` + `relatedTask:true` renders plain text, with no link and no related actions.
-  - `values` alone renders blank cells on an edit page. Use `values:[]` + `multiSelect:true` + `selectedValuesAndDescriptors`.
-  - An edit-page grid needs `doNotAdd:true` / `doNotRemove:true` to hide the +/- row icons. `readOnly:true` did not hide them.
-- **More edit-page attempts at grid related actions, all failed (live 2026-10-30):**
-  - `instanceList` as a script string fails the build ("Cannot deserialize ... ArrayList<Instance> from String"). It must be a literal array. For a variable list use `instanceListLoopTag` (`type: instanceLoop`, `on`, `as`, `templateInstance`).
-  - Literal `instanceList` / `instanceLoop` with `wid` and `view:true`, plus grid `enabled:false`: the cells render blank.
-  - Adding `id` + `selectedValues` + `relatedTask:true`: the values show as removable prompt pills, with no related actions.
-  - Build warning: "If you set the relatedTask attribute ... the pmd must be a view page."
-  - Conclusion: related actions need a VIEW page. The "pending ISC requests" grid that has them (iscRoleRequestsView) is a VIEW page.
-- **Left for user testing (2026-10-30):** X:BPMS(ODMT):ROLE:ADVISORS now holds P-00009 (Pedro Santiago), P-00010 (Beth Liu) and P-00011 (Maria Cardoza). P-00009 and P-00010 were added in one submit, effective 2026-10-30.
-- Position search matches by ID too (e.g. "P-00010").
-- The Current Assignment grid's narrow positions column only shows up in a narrow (~800px) window. At desktop width it displays in full. The grid now uses `gridType: LIST`.
-- **Audit Log Viewer "Property Error found: .worker" (fixed 2026-10-30):** audit records written by the orchestrations (role assignment, status) have no `worker` / `application`. Guard SINGLE_INSTANCE sub-properties with `!empty(logEntry.worker) ? (logEntry.worker.descriptor ?? '') : ''`, and default the text fields with `?? ''`.
-- After OK, the edit page returns to the app home, not the manage page (seen on both tests). A flow or conclusion page would be needed to land back on Shell Org Manager.
+## Security and ISU writes
 
-## Audit log design (confirmed live 2026-10-30)
+- Configure an ISU for Presentation Components (developer.workday.com "Configure ISU Authentication in Presentation Components"): SMD `"siteAuth": {"authTypes": [{"id": "isuAuth", "scheme": "ISU", "username": "<ISU username>"}]}`; on each endpoint, `"authType": "isuAuth"`.
+- Setup per tenant ("Create Integration System Users for apps"): create the ISU and its security group, assign it to the app with the **App Manager** task, and create orchestration credentials in Orchestration Builder (ISU credentials can't be used in Custom Agent Action orchestrations).
+- **An `isuAuth` endpoint fails with HTTP 500 and an empty body until the ISU is assigned to the app in App Manager** for that tenant. Naming it in the SMD isn't enough, and the assignment doesn't carry over on promotion: re-check after every move (dev → impl → sandbox → prod).
+- **Pattern for tamper-resistant records** (audit logs, request status): pages write them with `isuAuth` and orchestrations with the ISU credential, users get View/Get only. Then a direct REST call by a user can't create, edit or delete them. Until the user groups are reduced, the records are editable and deletable through the REST API by anyone with Put on the domain.
+- Keep BP-starting calls and step submits as the user, so the requester stays the initiator.
 
-- **One writer per change.**
-  - Orchestrated changes (AddShellOrg, AddShellOrgPattern, ManageShellOrgStatus, AssignRolePositions): the orchestration writes the record after CheckWWSAccepted.
-  - The page-level `postAuditLog` outbound was removed from newShellOrg, newShellOrgPattern and manageShellOrgStatus.
-  - Assignable-role pages (assignableRoleManager, adminProvisioning, assignableRoleManagerMaintain, deleteAssignableRole) have no orchestration, so they still write via their own outbound.
-- **Pages pass to every launch:** `changedBy` (selectedWorker.descriptor, urlEncoded), `changedByWid` (selectedWorker.id), and `timestamp` (`date:now().format("yyyy-MM-dd'T'HH:mm:ss'Z'")`, urlEncoded). Before this, the orchestrations had no timestamp or user.
-- **Previous AddShellOrg / AddShellOrgPattern audit writes never landed.** The template sent `"worker": "<wid>"` and `"application": ""` as plain strings to SINGLE_INSTANCE fields. Don't template SINGLE_INSTANCE fields as strings. Store WIDs in TEXT fields instead (`changedByWid`, `orgWid`, `roleWid`, `positionWid`).
-- **COMSAuditLog new fields:** `effectiveDate` (DATE; the template sends "yyyy-MM-dd", which works), `roleName`, `positionName`, plus the TEXT WID fields above. `worker` and `application` stay but are unused.
-- **Fixed vocabulary:**
-  - `objectType` (Change Type): Shell Org | Shell Org Pattern | Org Status | Role Assignment | Assignable Role.
-  - `action`: ADD | INACTIVATE | REACTIVATE | ASSIGN POSITION | REMOVE POSITION | REQUEST | APPROVE | DENY | DELETE.
-  - manageShellOrgStatus now sends REACTIVATE (not ACTIVATE).
-- **Viewer** (auditLogViewer, VIEW page):
-  - Columns: Timestamp, Change Type, Action, Organization, Role, Position, Effective Date, Changed By, Details. Rows use `list:sort(auditLogs.data ?? [], 'timestamp', false)`, newest first.
-  - **Related actions from a stored WID:** the cellTemplate is a `fieldSet` with two children: an `instanceList` (`values: [{'id': wid, 'descriptor': name}]`, `widKey:"id"`, `view`/`relatedTask` true, `visible: !empty(wid)`) and a `text` fallback (`visible: empty(wid)`). Confirmed: 4 related-action icons render.
-- **Position WID for adds:** editRoleAssignment looks it up per added position with a deferred WQL GET (`posWidLookup`): `SELECT workdayID FROM allPositions WHERE cf_PositionID = '<P-id>'`. For removes, the assignee WID is `p.id`.
-- **Deleting BO records from a page:**
-  - An outbound `DELETE /collection?bulk=true` with a `values` body is **silently skipped**. Nothing is deleted and there's no error.
-  - What works: a grid with `deleteEndPoint` + DELETE `'/collection/' + idCell.value`, removing rows and then OK (one DELETE per row).
-  - Rows can be removed in bulk with JS that clicks `button[data-automation-id="removeRow"]`.
-  - Used once to purge the 30 old audit records (2026-10-30). The temporary purgeAuditLogs page was then removed.
-- **Reports consolidated 10 → 4:**
-  - AllAssignableRoles (label "All Assignable Role Requests", 21 columns, 3 domains)
-  - AllShellOrgs ("All Shell Org Requests", 11 columns, 2 domains)
-  - AcademicUnits ("All COMS Applications")
-  - AllAuditLogs (new columns)
-  - A report can take multiple `defaultSecurityDomains`.
-  - Unused WQL components were removed: academicUnits, auditLog, customOrganizationsFUH, shellOrgManager.
-- **COMSShellOrgRequest business object:** nothing writes to it. Its only reader (assignableRoleManager) is `exclude: true`. It predates creating shell orgs directly via WWS, and its report was kept.
-- **Full end-to-end test, all six flows (2026-10-30 ~17:30–17:55 UTC).** Each wrote exactly one complete audit record:
-  - Assignable role request `X:ADM:ROLE:TESTROLE1030` (now Pending ISC Review)
-  - AAA request for X:ADM
-  - Shell org `X:ADM:TEST:ORG:1032`
-  - Pattern `X:CLW:PATTERN:MATH:MATH_V:303:951:2026W1`
-  - Inactivate and **Reactivate** of 1032. This was the first live Reactivate; 1032 is Active again.
-- **Fixed during the test:**
-  - assignableRoleManager and adminProvisioning had `standardEditButtonsHidden: true` with no editButtonBar, so there was no way to submit. The flag was removed and `cancelOverride` set to home.
-  - Org names for inactive orgs carry " (inactive)". manageShellOrgStatus must `urlEncode()` the name and code (InvalidEndPointUrlException "Illegal character ' '") and strip " (inactive)". newShellOrg and newShellOrgPattern now urlEncode their names too.
-  - Request audit records now include the selected positions and, for AAA, the application as Organization. Deployed but not yet seen live.
-- **Linking to Workday events (developer.workday.com "Reference: Context Global Functions" + tenant WSDLs):**
-  - `context.orchestrateId()` returns the orchestration instance ID (X-Orchestrate-Id). It is not a tenant instance, so it can be stored as text but cannot have related actions.
-  - Staffing `Assign_Roles_Response` returns `Assign_Roles_Event_Reference`, the BP event. This is linkable.
-  - Human_Resources `Organization_Add_Update` and `Organization_Inactivate` have **no output message** (one-way, empty body). They give no event and no new-org WID.
-  - `Reactivate_Organization_Response` returns `Organization_Reference`.
-- **CI:** a run stuck at "in_progress" with every step completed (job conclusion success) had actually deployed. `gh run cancel/rerun` and force-cancel all refuse such a run. Check the job conclusion with `gh api .../runs/<id>/jobs`.
-- **CI:** a failure at "Authenticate as system user (for upload)" in about 20s was transient; a rerun passed.
+## Audit logging pattern
 
-## Orchestrations — ISU auth requires manual per-tenant setup
+- **One writer per change.** If an orchestration makes the change, it writes the audit record after its success check; don't also write one from the page.
+- Pass `changedBy`, `changedByWid` and `timestamp` into every launch; orchestrations have no other way to know who acted.
+- **Don't template SINGLE_INSTANCE fields as plain strings** in an orchestration body (`"worker": "<wid>"`): the write silently fails. Store WIDs in TEXT fields (`changedByWid`, `orgWid`, `roleWid`, `positionWid`).
+- Keep a fixed vocabulary for change type and action, and test it.
+- **Related actions from a stored WID** (VIEW page grid): the cell is a `fieldSet` with an `instanceList` (`values: [{'id': wid, 'descriptor': name}]`, `widKey: "id"`, `view`/`relatedTask: true`, `visible: !empty(wid)`) plus a `text` fallback (`visible: empty(wid)`). For several WIDs, store them comma-separated and build one entry per WID.
+- Store display names next to the WIDs at write time (e.g. position names), rather than re-looking them up when displaying: lookup lists are often capped (REST collections return 20 rows by default) and the names then silently disappear.
+- When storing several names in one text field, pick a separator that can't occur inside a name, or split with a lookahead on the next item's ID (`splitByRegex(', (?=P-[0-9])')`): position names like "Director, Field Sales" contain ", ".
+- **Grid rows that join two lists can hit the PMD script memory limit** ("Script Constraint exceeded: ... more than the allowed max memory limit"). Build each lookup list once, cut down to the keys the rows need, before mapping the rows. Don't filter a 500-row list inside every row.
+- Deleting BO records from a page: an outbound `DELETE /collection?bulk=true` with a `values` body is **silently skipped**. What works: a grid with `deleteEndPoint` + DELETE `'/collection/' + idCell.value`, removing rows and then OK.
 
-An orchestration endpoint using `isuAuth` will **fail with HTTP 500 and an empty body** until the ISU (Integration System User) is explicitly assigned to the app in **Application Manager** for that tenant. Naming the ISU in the SMD is not sufficient — it must be configured in each environment after every promotion:
+## Data and binding pitfalls
 
-1. Open Application Manager in Workday
-2. Find the deployed Extend app
-3. Assign the ISU to the app
+- **Several widgets bound to the same outbound field:** which value wins isn't defined. Bind each field from one place; when a value depends on several widgets, compute it once in the endpoint's `values` list.
+- **Don't save a picker's WID into a field that's displayed as text.** Save the selection's descriptor for display and the WID in its own field.
+- `relatedTask` / instance links on `instanceList` render **only on VIEW pages** (developer.workday.com instanceList reference). On EDIT pages they render as plain text (`values` alone even renders blank; use `values: []` + `multiSelect: true` + `selectedValuesAndDescriptors` for a read-only list). `instanceList` must be a literal array (a script string fails the build); use `instanceListLoopTag` for a variable list. An edit-page grid needs `doNotAdd`/`doNotRemove: true` to hide the +/− icons (`readOnly: true` doesn't).
+- After OK, an edit page returns to the app home unless a flow or conclusion page says otherwise.
+- `context.orchestrateId()` (developer.workday.com "Reference: Context Global Functions") gives the orchestration instance ID: storable as text, not a tenant instance.
+- Reports: one report can take several `defaultSecurityDomains`. Delete unused WQL components and reports as you go: apps have tight limits.
 
-Re-check this after every promotion (dev → impl → sandbox → prod) as it does not carry forward.
 
 ## Orchestrations — synchronous page limit is 25 seconds
 
@@ -2446,122 +2405,35 @@ Checked against developer.workday.com "Limits on Extend App Components", "Orches
 - RaaS: no pagination
 - API throttling: HTTP 429 under load — add RetryPolicy with BackOff in orchestrations
 
-## CI/CD — GitHub Actions deploy pipeline
 
-The deploy workflow (`.github/workflows/deploy.yml`) pushes to Workday on every `main` branch push. After every `git push`, check `gh run list` and confirm `conclusion: success` before declaring anything deployed.
+## CI/CD — deploying with GitHub Actions and wdcli
 
-### WD_DEV_TOKEN expiry (most common failure)
+A typical pipeline: on push to `main`, run static checks, log in, upload to App Hub, deploy to the dev tenant with `wdcli`, then run smoke tests. After every push, check the run (`gh run list`, `gh api .../runs/<id>/jobs`) and confirm `conclusion: success` before saying anything is deployed. The project's own pipeline details (secret names, app ID, tenant) are in its notes file.
 
-**Symptom:** GitHub Actions run fails in ~11–16 seconds at the step "Pre-populate wdcli config with developer token". All other steps are skipped.
+- **Put the static checks first**, before any login step, so a code error is reported even when the tokens have expired.
+- **The PKCE user token (`WD_DEV_TOKEN`-style secret) lasts about 8 hours.** A run that fails in under 20 seconds at the token step is an expiry, not a code error: don't revert or change code. The fix needs a person: run `wdcli app deploy <appId>` locally, complete the browser login, then copy the tokens from `~/.config/@workday/wdcli/config.json` (`wcpTenantAccessToken.<tenant>` and `wcpAccessToken`) into the secrets, and rerun.
+- **A 401 at the deploy step (`.../aos/v1/deploy`, "The supplied authentication is invalid") while the expiry checks pass** means a revoked or invalidated session: refresh both tokens.
+- **A token copied from an old config.json can expire mid-deploy.** wdcli then fails with "Cannot read properties of undefined (reading 'success')" instead of a 401. Rerun straight after updating the secrets.
+- A healthy upload + deploy takes about 1–3 minutes.
+- A run stuck at "in_progress" with every step completed (job conclusion success) did deploy; it can't be cancelled or rerun. A failure at the system-user login step in ~20 s can be transient; rerun once.
+- **GitHub CLI in a sandbox:** `gh workflow run` may fail when GraphQL is blocked; dispatch with REST instead: `gh api -X POST repos/<owner>/<repo>/actions/workflows/<file>.yml/dispatches -f ref=<branch> -f 'inputs[task]=<value>'`. Job logs may be blocked or truncated: write the full test output to `GITHUB_STEP_SUMMARY` and read the run's Summary page. App Hub build errors show on the run page (Summary → "Upload Failure").
 
-**Root cause:** The `WD_DEV_TOKEN` GitHub secret holds a Workday PKCE user token (JWT) scoped to `ubc_wcpdev2`. This token has an ~8-hour TTL. When it expires, the workflow decodes the JWT, compares `exp` to `now`, and exits 1 with:
-```
-WARNING: WD_DEV_TOKEN EXPIRED (exp=..., now=..., expired ...s ago)
-ACTION: run 'wdcli app deploy ...' locally, log in, update WD_DEV_TOKEN secret
-```
+## Testing an Extend app
 
-**Fix (must be done by the user — requires browser login):**
-1. On the local machine with `wdcli` installed, run:
-   ```
-   wdcli app deploy ecocomsphase_xclw_cm_sync2_vmzvxm
-   ```
-2. Complete the browser login for the `ubc_wcpdev2` tenant.
-3. Open `~/.config/@workday/wdcli/config.json` and copy the value at `wcpTenantAccessToken["ubc_wcpdev2"]`.
-4. Update the `WD_DEV_TOKEN` GitHub secret at:
-   `https://github.com/crismwan/ECO-COMS-Extend-App/settings/secrets/actions`
-5. Re-run the failed workflow with `gh run rerun <run-id>`.
+- **Layers:** static repo checks (no tenant; block the upload), a read-only smoke suite after every deploy, a write suite run by hand, a cleanup suite (dry run by default), and opt-in suites for changes that aren't live yet (e.g. ISU lockdown). Keep them in one runner so they share helpers and one results format.
+- **Static checks are cheap insurance:** encode every pitfall in this file that has bitten you (pageType case, `_` attributes, hidden OK with no editButtonBar, unresolved taskIds, missing orchestrations, BP routes without AMD tasks, card parameter/quote rules, protected keys inside `presentation`, size limits, forbidden test text). List known exceptions with a reason so they warn instead of fail.
+- **Live tests can call the same APIs the pages use** (BO REST, WQL, BP events, and orchestration `POST .../orchestrations/<Name>/launch`) with the developer's PKCE token. They exercise orchestrations, not page scripts; page behaviour still needs a manual checklist or browser tests.
+- **Verify every write through its side effect**, e.g. the audit record the orchestration writes only after success, matched by record ID (timestamps can tie). Check the record's type, action and key fields, not just that something appeared.
+- **WQL can lag a change by more than 20 seconds.** Poll for up to a minute or two before reading back, and if the readback never shows the change, say plainly what was left behind.
+- **Plan test data you can't delete:** orgs can only be inactivated, BP-linked records can't be deleted, and a role assignment test changes a real role (add then remove). Use short, readable, clearly marked names (e.g. `...:TEST:CI:RUN<n>`), document what each run leaves, and give cleanup a dry-run mode that lists what it would touch next to what it keeps.
+- Check that records agree with their BP events (status vs event outcome) as a tamper check.
+- Run the write suite before sign-offs or after risky changes, not on every push: it is slow and leaves data.
 
-**Important:** The code itself is fine when this failure occurs — do not revert commits or alter the code. The failure is purely an infrastructure/secrets rotation issue.
+## Working in the Workday UI with browser automation
 
-### Tests in the pipeline (added 2026-10-30)
-
-- `test/static_checks.py` runs before upload and blocks on known pitfalls (pageType case, `_` attributes, hidden OK with no editButtonBar, unresolved taskIds, missing orchestrations, BP routes, card params/quotes, forbidden test text, size limits). Known issues go in `KNOWN_ISSUES` with a reason and show as warnings.
-- `node test/e2e.js` runs after deploy (read-only smoke) with `WD_DEV_TOKEN`. `--suite full` (manual workflow_dispatch input `e2e_suite=full`) also creates and inactivates an `X:ADM:TEST:CI:<stamp>` org.
-- Coverage map and manual checklist: `test/README.md`.
-- Unverified until the first CI run: that the PKCE `WD_DEV_TOKEN` works for `api.workday.com` REST/WQL/BP calls, and that orchestration launch via `POST api.workday.com/orchestrate/v1/apps/<app>/orchestrations/<Name>/launch` works outside a page.
-- `ManageShellOrgStatus` writes its audit record even when `validateOnly=true`, so validate-only can't be used for safe per-deploy write tests until the audit write is made conditional.
-
-### ManageShellOrgStatus input guard (2026-10-30, built, not yet deployed)
-
-- `auditAction` (ExtractInactiveFlag) = `(if (data.ExtractInactiveFlag.isInactivate) "INACTIVATE" else "REACTIVATE")`. The audit template and logs use it, not the caller's `action`.
-- `LookupShellOrgs`: GET `/wql/v1/data?limit=10000&query=<encoded: SELECT workdayID FROM topLevelOrganizations WHERE code contains 'X:'>` with the default credential. Untested: that the orchestration's Workday API path base accepts `/wql/v1/...`.
-- `CheckInputs` (ContinueOnConditions) runs before the SOAP call. It requires:
-  - includeInactive is true or false
-  - action equals auditAction
-  - orgCode startsWith "X:"
-  - orgId is not empty
-  - LookupShellOrgs response `.toString().contains(orgId)`
-- String member functions (developer.workday.com "Reference: String Member Functions") include contains, startsWith, equals, isEmpty, toString.
-- e2e full adds Guard.actionMismatch and Guard.notShellOrg (orgId = the worker's WID, validateOnly=true) to prove rejection.
-
-### ISU authentication (developer.workday.com "Configure ISU Authentication in Presentation Components")
-
-- SMD: `"siteAuth": {"authTypes": [{"id": "isuAuth", "scheme": "ISU", "username": "<ISU username>"}]}`. On each PMD endpoint, set `"authType": "isuAuth"`.
-- Setup ("Create Integration System Users for apps"):
-  1. Create the ISU.
-  2. Assign it to the app with the **App Manager** task.
-  3. Create orchestration credentials in Orchestration Builder. ISU credentials can't be used in Custom Agent Action orchestrations.
-- Planned use: make audit records and request status writable only by the ISU, through app logic, with users on View only.
-
-### Test-only workflow and cleanup (confirmed live 2026-10-30)
-
-- `.github/workflows/e2e.yml` runs `test/e2e.js` without deploying. Tasks: smoke, full, cleanup-dry-run, cleanup-apply. Cleanup options: also, effective, only.
-- Dispatch it with `gh api -X POST repos/crismwan/ECO-COMS-Extend-App/actions/workflows/e2e.yml/dispatches -f ref=main -f 'inputs[task]=full'`. `gh workflow run` fails because GraphQL is blocked.
-- Read results on the run's Summary page in the browser. e2e.js writes its full output to `GITHUB_STEP_SUMMARY`; job logs are truncated or blocked.
-- **The PKCE `WD_DEV_TOKEN` works for api.workday.com BO REST, WQL, BP events and orchestration `POST .../orchestrations/<Name>/launch`.** The first full run passed 21 tests.
-- **ManageShellOrgStatus picks inactivate vs reactivate from `includeInactive`** ("true" = inactivate), **not from `action`**. `action` only goes into the audit record. Sending action=INACTIVATE with includeInactive=false reactivated 6 test orgs, cancelling their 2026-12-15 inactivations, and wrote INACTIVATE audit records.
-- **Future-dated events block status changes.** "Organization has conflicting events (in progress or future events) so it cannot be inactivated." Choose an effective date after the last future event. The 6 orgs were re-inactivated effective 2026-12-16.
-- **A request linked to a BP event can't be deleted:** HTTP 500 "Attempt to delete instance ... with references". TESTROLE1031-1038 remain (Approved/Denied, not pending). Audit records and unlinked requests delete fine via REST DELETE, so the audit log is not immutable.
-- Each full run leaves one `X:ADM:TEST:CI:<stamp>` org (inactive 45 days out) and 2 audit records. cleanup-apply removes the audit records.
-
-### WD_WCP_TOKEN expiry (2026-10-30)
-
-- **Symptom:** "Pre-populate" passes, then "Deploy to ubc_wcpdev2 via wdcli" fails with `[CI-401] UNAUTHORIZED URL: https://api.us.wcp.workday.com/aos/v1/deploy` and "The supplied authentication is invalid". It started about 20:00 UTC on 2026-10-30, roughly 1 h after the 19:49 success.
-- **Cause not pinned down:** the `WD_DEV_TOKEN` expiry check passed, and so did the new "Check platform token (WD_WCP_TOKEN) expiry" step (it fails early with instructions if it can decode an expired `exp`). So the 401 is a revoked or invalidated session, not a plain expiry. Refreshing both tokens is the fix to try first.
-- The 4 failed runs before the test commit were CLAUDE.md-only commits. The tenant still has the 19:49 UTC app version.
-- **Fix:** do the same interactive `wdcli app deploy`, then update BOTH secrets from config.json: `WD_DEV_TOKEN` = `wcpTenantAccessToken.ubc_wcpdev2`, `WD_WCP_TOKEN` = `wcpAccessToken`.
-
-### Run time baseline
-
-- A healthy deploy run completes in **~1m15s**.
-- A run that finishes in **<20 seconds** has almost certainly failed at the token step (not a code error).
-
-## ISC review business process (confirmed live 2026-10-30)
-
-- `model/ReviewCOMSAssignableRoleRequest.businessprocess` targets COMSAssignableRole. Steps: details (VIEW `/reviewRoleRequestDetails/{eventId}`), approval (VIEW `/reviewRoleRequestApproval/{eventId}`), action steps CreateSecurityGroup and AddWorkdayAssignableRole (EDIT `/...{eventStepId}`). AMD tasks use those routingPatterns.
-- Request pages save a fixed `referenceId` (hidden `requestRefHidden`, set at page load) and then launch `StartRoleRequestReview` (outbound POST, `orchestration` base, `?ref=`). The orchestration finds the request by `referenceId` (now indexed), POSTs `/apps/<app>/v1/reviewCOMSAssignableRoleRequestEvents` with `businessProcessTarget.id`, and PATCHes `reviewEventWid` onto the request.
-- Orchestration build error "Function stringAtJsonPath cannot be applied to an instance of DataType": read API responses as `data.X.response.asJSON().stringAtJsonPath(...)`.
-- Step pages get context with `GET workday-bp eventSteps/<eventStepId>` → `event.id`, then `GET workday-bp events/<id>` → `for.id` (the request WID). Inbound endpoints can reference earlier ones in their URL.
-- An action step is completed by outbound `POST workday-bp eventSteps/<id>/submit` with `stepAction.id = d9e4223e446c11de98360015c5e6daf6` (Submitted). Tested: the step closed and the next step arrived in the inbox.
-- Tenant setup, done by hand:
-  1. BP type page → **Edit Policy**. HR Administrator on Initiate, both action steps, View All, Approve, Cancel, Deny.
-  2. **Activate Pending Security Policy Changes**.
-  3. **Create Business Process Definition (Default Definition)** → Edit Definition: a Initiation, b Approval, c Action Create Security Group, d Action Add Workday Assignable Role, each with Group HR Administrator.
-  - Step groups only appear in the prompt AFTER the policy is activated ("No matches found" before that).
-  - The definition is found by searching `bp: <name>`. Its related actions → Business Process → Edit Definition / Configure Orchestrations.
-- When the initiator is in the approval group, Workday auto-completes the approval step. HR Admin testing goes straight to step 3.
-- **Deny handling (tested live 2026-10-30 via a Cancel pairing):** orchestration `DenyRoleRequest` (template "Workday Business Process", flow type `.maya.FlowBusinessProcessTriggered`, start `StartBusinessProcess`, end `EndEmptyMaya`, default credential `AccessTokenFromInitiatingUser` — JSON copied from Orchestration Builder → Settings → Open Current Source Code). It GETs the request, PATCHes `status: Denied, active: false`, and POSTs a DENY audit record.
-  - Denied request WID: `bp.eventTarget().getIDValues("WID").get(0)`. `bp.eventTarget().toString("WID")` is in the docs but fails the build ("Wrong number of arguments for function toString").
-  - Timestamp: `datetime.now("UTC").format("yyyy-MM-dd'T'HH:mm:ss'Z'")` (developer.workday.com "Reference: DateTime Global Functions" + LocalDateTime member `format`). `bp.*` functions: "Reference: Business Process Global Functions".
-  - Tenant: definition related actions → Business Process → **Configure Orchestrations** → Add → Action Deny → Orchestration → Create Orchestration Launch Configuration ("ECO-COMS Deny Role Request", BP type Review COMS Assignable Role Request, no parameters).
-  - The launch configuration can't be saved until the tenant-wide **Edit Tenant Setup – Business Processes → User to perform Orchestration Launches** is set. Set to lmcneil (user approved, 2026-10-30).
-  - Workday says BP-triggered orchestrations usually launch within ~15 minutes; in practice they ran in about 2–3 minutes. Status: Find Events → Orchestrations tab.
-  - **Deny is only offered while an approval is awaiting action.** When the initiator is in the approval group, approval auto-completes and only Cancel remains. So DenyRoleRequest is also paired with the **Cancel** action (Configure Orchestrations). A cancelled request is marked Denied with a DENY audit record; without this it would stay "Pending" forever.
-  - The DENY audit shows position names: request pages save `positionNames` (TEXT, from the positions widget's `selectedEntries` descriptors) and the orchestration uses it, falling back to `positionWids`.
-- **Current BP definition (user-edited 2026-10-30):** a Initiation → b Approval (Compliance Administrator) → c1 To Do "Add Assignable Role" → c2 To Do "Create Role Based Security Group" → d Action (EDIT page reviewRoleRequestAssignableRole, "Link Workday Role"). The old CreateSecurityGroup action step / reviewRoleRequestSecurityGroup page is unused.
-  - Security group: Type of Tenanted Security Group = **Role-Based Security Group**, Name = the **full role name as-is** (e.g. X:ADM:ROLE:TESTROLE1035; user decision). Step d prefills the name with `request.securityGroupName ?? request.roleName`.
-  - Compliance Administrator needs Deny / View All on the BP policy for the Deny button to appear. Saving that policy change was blocked for the agent (permission grant); the user does it, then Activate Pending Security Policy Changes.
-- **Approval group must be able to resolve people (live 2026-10-30):** with step b set to "Accounts Payable Data Entry Specialist" (a *constrained* role-based group), TESTROLE1036's approval showed Awaiting Action with **All Persons = 0**. Confirmed: the app domain "Manage: COMS Assignable Roles" lists **Allowed Security Group Types: Public Groups, Unconstrained Groups** (View Domain page), because COMSAssignableRole has no organization context. Use a user-based group or the **(Unconstrained)** variant.
-  - An approver needs the group in **three** policies: the BP security policy (Approve, Deny, View All), the domain **Maintain: COMS Assignable Roles** (secures the four step pages; on 2026-10-30 it held only HR Administrator + the deploy ISSG), and **Manage: COMS Assignable Roles** (the request data). Then Activate Pending Security Policy Changes. The agent may not edit security policies; the user does this.
-- **Fixed (live 2026-10-30):** with "Accounts Payable Data Entry Specialist (Unconstrained)" on the BP policy (View All, Approve, Deny), both domains, and step b, TESTROLE1038's approval resolved **8 persons** (incl. James Walker). Real Deny then tested end to end: James Walker (proxied by the user) denied TESTROLE1038 at 13:30:17, DenyRoleRequest completed the same second, a DENY audit record was written and the request left the pending list. An in-flight request keeps its original routing; definition changes only affect new requests. Edit Definition shows a page error if a step's group isn't in the BP policy.
-- **Self-approval blocked (2026-10-30):** step b → View Workflow Step → related actions → Business Process → **Maintain Advanced Routing** → Routing Restrictions → **Exclude Initiator** = Yes. The definition grid shows "Restriction: Initiator".
-  - The review is started by StartRoleRequestReview running as the requester (AccessTokenFromInitiatingUser), so the initiator is the requester.
-  - Per Workday docs (Business Process Step Types), if a restriction excludes everyone eligible, the step is marked **Not Required** and skipped. Consider an Alternate Security Group so a lone approver who is also the requester can't skip approval.
-  - Not yet tested live. Testing needs a requester who is in the approval group, and temporarily swapping the step group was blocked for the agent (permission change).
-- **Step help text:** definition related actions → Business Process → **Maintain Help Text** → pick the step → Edit Step Help Text → fill Help Text → OK → Done. Rewritten for all 5 steps on 2026-10-30 in one format: bold "Step N of 5: <name>" title (+ who does it), one-line purpose, bold "Check" / "How to" label with a bulleted list, then a bold "Next:" or "Outcome:" line. Step numbers match the "Step X of 5" banners on the ECO-COMS step pages. Example names use X:ADM:ROLE:EXAMPLE.
-  - The Help Text cell is a plain textarea plus a **Format Text** button that opens a ProseMirror rich-text editor (bold, italic, underline, colour, bulleted list, link, email). No numbered list. Line breaks typed in the textarea are kept.
-  - Agent technique: clear the *textarea* first (click it, ctrl+a, Delete; keys reach the textarea but not the ProseMirror editor), open Format Text, then dispatch a synthetic `paste` ClipboardEvent with `text/html` on `.ProseMirror`. Formatting is preserved. Then Done → OK.
-- **Completion notification (2026-10-30):** definition related actions → Business Process → **Add Notification** → Create Workflow Notification: Trigger on Status = **Completed**, Recipients = **Initiator**, subject "ECO-COMS role request completed", short body. Completed only fires on the approve path (a deny ends with status Denied). Remove the empty Email Addresses row before OK.
-- **Inbox titles:** `useForDisplay: true` on COMSAssignableRole `roleName` makes inbox items read "Review COMS Assignable Role Request: <role name>".
-- **Orchestration Builder "Open Current Source Code"** (orchestration Settings page) shows the JSON without saving to App Hub — easier than Save + View Source. A stale App Builder session can be reset with ⋮ → Revert to App Hub.
-- Browser pane tips: narrow window → Workday prompts open as full-screen pickers. Use resize_window 1600x1000 for BP grids. Related-action menus need hover to open sub-menus. Date fields need per-key input (`key "1 0 3 0 2 0 2 6"`).
+- A narrow window turns prompts into full-screen pickers; resize to about 1600×1000 for BP and definition grids.
+- Related-action menus open their sub-menus on hover.
+- Date fields need per-key input (e.g. key presses "1 0 3 0 2 0 2 6"), not a pasted string.
+- Rich-text editors (ProseMirror) ignore scripted selection and key events. Clear the underlying textarea first, then dispatch a synthetic `paste` ClipboardEvent with `text/html` on `.ProseMirror`; formatting is kept.
+- Find an org with the search prefix `org: <name>`, a BP definition with `bp: <name>`.
+- Changes to security policies and permission grants are for the person to make, not the assistant.
