@@ -249,7 +249,8 @@
                       }
                     }
                   }
-                ]
+                ],
+                "excelExportEnabled": true
               }
             ]
           },
@@ -358,7 +359,8 @@
                       }
                     }
                   }
-                ]
+                ],
+                "excelExportEnabled": true
               }
             ]
           },
@@ -487,7 +489,8 @@
                       }
                     }
                   }
-                ]
+                ],
+                "excelExportEnabled": true
               }
             ]
           },
@@ -569,7 +572,8 @@
                       }
                     }
                   }
-                ]
+                ],
+                "excelExportEnabled": true
               }
             ]
           },
@@ -700,7 +704,8 @@
                       }
                     }
                   }
-                ]
+                ],
+                "excelExportEnabled": true
               }
             ]
           },

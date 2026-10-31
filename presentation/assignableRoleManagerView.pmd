@@ -305,7 +305,8 @@
                         ]
                       }
                     }
-                  ]
+                  ],
+                  "excelExportEnabled": true
                 }
               ],
               "title": "My Assignable Role Requests"

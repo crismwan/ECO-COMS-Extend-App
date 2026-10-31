@@ -298,7 +298,8 @@
                         ]
                       }
                     }
-                  ]
+                  ],
+                  "excelExportEnabled": true
                 }
               ],
               "title": "AAA Role Requests"

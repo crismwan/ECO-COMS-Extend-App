@@ -234,6 +234,15 @@ function staticSuite() {
       if (e.baseUrlType === 'BUSINESS-OBJECT' && e.isCollection && !/limit=/.test(String(e.url || ''))) err('restLimit', `${path.basename(f)}: '${e.name}' reads a collection without limit= (only 20 rows come back)`);
     }
   }
+  // 7b2. Every grid on a VIEW page offers Excel export; the attribute is for view pages only (developer.workday.com "grid").
+  for (const [f, d] of Object.entries(pmds)) {
+    const view = (d.presentation?.pageType ?? 'VIEW') === 'VIEW';
+    walk(d, (node) => {
+      if (node.type !== 'grid') return;
+      if (view && !node.excelExportEnabled) err('excelExport', `${path.basename(f)}: grid '${node.id || '?'}' on a VIEW page has no excelExportEnabled`);
+      if (!view && node.excelExportEnabled) err('excelExport', `${path.basename(f)}: grid '${node.id || '?'}' sets excelExportEnabled on an EDIT page (view pages only)`);
+    });
+  }
   // 7c. Only the first richText in a fieldSet renders; the rest are silently dropped.
   for (const [f, d] of Object.entries(pmds)) {
     walk(d, (node) => {
