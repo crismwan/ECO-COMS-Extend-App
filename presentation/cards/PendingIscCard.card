@@ -16,7 +16,7 @@
     {
       "label": "Open ISC Queue",
       "taskReference": {
-        "taskId": "iscRoleRequestsHub"
+        "taskId": "iscRoleRequestsView"
       }
     }
   ]

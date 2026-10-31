@@ -7,7 +7,7 @@
   "presentation": {
     "body": {
       "type": "editWizard",
-      "title": "ECO-COMS Shell Organization Manager",
+      "title": "ECO-COMS: Shell Org Manager",
       "subtitle": "Add New Shell Org Pattern",
       "summarySettings": {
         "enabled": true,

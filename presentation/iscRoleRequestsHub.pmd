@@ -36,13 +36,13 @@
             {
               "type": "fieldSet",
               "id": "iscHubFieldSet",
-              "title": "ISC Role Request Queue",
+              "title": "About this page",
               "children": [
                 {
                   "type": "richText",
                   "id": "iscHubDesc",
                   "enabled": false,
-                  "value": "<span style=\"font-size:12px\">Review and action pending ISC role requests. Use the links below to view requests by type.</span>"
+                  "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">The ISC review queue for assignable role and AAA role requests. Open a queue below; on the queue page you can switch between request types and statuses.</span>"
                 }
               ]
             }

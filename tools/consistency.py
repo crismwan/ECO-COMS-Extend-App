@@ -22,12 +22,16 @@ PREFIX_SCRIPTED = {  # scripted titles: swap the leading literal
 }
 NAV = {'← Go to Home': '← Home', '← My Role Requests': '← Assignable Role Manager', '← Admin Provisioning': '← AAA Role Provisioning'}
 HEADINGS = {'About This Page': 'About this page', 'Changes applied': 'Changes Applied Successfully'}
+WIZARD_TITLE = 'ECO-COMS: Shell Org Manager'
 TS = re.compile(r"<% (\w+)\.timestamp \?\? '' %>")
 changes = []
 for f in sorted(glob.glob(os.path.join(ROOT, '*.pmd'))):
     n = os.path.basename(f)[:-4]; d = json.load(open(f)); before = json.dumps(d)
     pr = d.get('presentation', {})
     if n in TITLES and pr.get('title', {}).get('label') != TITLES[n]: pr['title']['label'] = TITLES[n]
+    body = pr.get('body', {})
+    if isinstance(body, dict) and body.get('type') == 'editWizard' and body.get('title') != WIZARD_TITLE:
+        body['title'] = WIZARD_TITLE
     if n in PREFIX_SCRIPTED:
         old, new = PREFIX_SCRIPTED[n]; pr['title']['label'] = pr['title']['label'].replace(old, new)
     def walk(o):
@@ -40,6 +44,12 @@ for f in sorted(glob.glob(os.path.join(ROOT, '*.pmd'))):
                 o['label'], o['taskReference'] = BACK[n][0], {"taskId": BACK[n][1]}
             if isinstance(o.get('value'), str):
                 o['value'] = TS.sub(lambda m: "<% (" + m.group(1) + ".timestamp ?? '').replace('T', ' ').replace('Z', ' UTC') %>", o['value'])
+            # edit pages: one back link (the page-specific one); the form's Cancel covers the rest
+            kids0 = o.get('children')
+            if (pr.get('pageType') == 'EDIT' and isinstance(kids0, list) and len(kids0) >= 2
+                    and all(isinstance(k, dict) and k.get('type') == 'button' and k.get('action') == 'LINK' for k in kids0)
+                    and any(k.get('label') == '← Home' for k in kids0) and any(str(k.get('label', '')).startswith('←') and k.get('label') != '← Home' for k in kids0)):
+                o['children'] = [k for k in kids0 if k.get('label') != '← Home']
             # back links: the page-specific link first, Home last
             kids = o.get('children')
             if isinstance(kids, list) and len(kids) >= 2 and all(isinstance(k, dict) and k.get('type') == 'button' and k.get('action') == 'LINK' for k in kids[:2]):

@@ -99,7 +99,7 @@ ACTIONS = [
   ("HomeBulkActionsCard", "Bulk Role Changes", "Add or remove many positions from one CSV file. Validate first, then run it for real.", "wd-accent-checkmarked-page",
    [("Upload File", "bulkRoleChanges"), ("Download Template", "bulkRoleTemplate"), ("View Results", "bulkRoleResults")]),
   ("HomeRoleRequestActionsCard", "Role Requests", "Request assignable or AAA roles, follow your requests, and review the ISC queue.", "wd-accent-clipboard-checklist",
-   [("View My Requests", "assignableRoleManagerView"), ("Submit New Request", "assignableRoleManager"), ("Open ISC Queue", "iscRoleRequestsHub"),
+   [("View My Requests", "assignableRoleManagerView"), ("Submit New Request", "assignableRoleManager"), ("Open ISC Queue", "iscRoleRequestsView"),
     ("View AAA Requests", "adminProvisioningView"), ("Submit AAA Role Request", "adminProvisioning")]),
 ]
 for cid, title, sub, icon, pills in ACTIONS:

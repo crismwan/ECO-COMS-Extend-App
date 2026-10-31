@@ -101,15 +101,6 @@
               },
               "action": "LINK",
               "suppressDiscardDialog": true
-            },
-            {
-              "type": "button",
-              "label": "← Home",
-              "taskReference": {
-                "taskId": "home"
-              },
-              "action": "LINK",
-              "suppressDiscardDialog": true
             }
           ]
         },
