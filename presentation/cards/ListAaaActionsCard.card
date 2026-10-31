@@ -1,0 +1,28 @@
+{
+  "id": "ListAaaActionsCard",
+  "header": {
+    "title": "Actions",
+    "subtitle": "AAA role requests",
+    "icon": "wd-accent-clipboard-checklist"
+  },
+  "body": {
+    "type": "pillCard",
+    "pills": [
+      {
+        "label": "Submit AAA Role Request",
+        "taskReference": {
+          "taskId": "adminProvisioning"
+        }
+      },
+      {
+        "label": "Withdraw Request",
+        "taskReference": {
+          "taskId": "deleteAssignableRole",
+          "parameterBindings": {
+            "view": "aaa"
+          }
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "id": "ListAssignableActionsCard",
+  "header": {
+    "title": "Actions",
+    "subtitle": "Assignable role requests",
+    "icon": "wd-accent-clipboard-checklist"
+  },
+  "body": {
+    "type": "pillCard",
+    "pills": [
+      {
+        "label": "Submit New Request",
+        "taskReference": {
+          "taskId": "assignableRoleManager"
+        }
+      },
+      {
+        "label": "Withdraw Request",
+        "taskReference": {
+          "taskId": "deleteAssignableRole",
+          "parameterBindings": {
+            "view": "assignable"
+          }
+        }
+      }
+    ]
+  }
+}

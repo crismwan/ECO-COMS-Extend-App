@@ -4,11 +4,10 @@ explaining why the grid is empty. Idempotent. Re-run after a page builder rewrit
 import json, os
 ROOT = os.path.join(os.path.dirname(__file__), '..', 'presentation')
 MESSAGES = {
-  'assignableRoleManagerView.pmd': {'assignableRolesGrid': "You haven't submitted any assignable role requests. Use Submit New Request to start one."},
-  'adminProvisioningView.pmd': {'aaaRolesGrid': "No AAA role requests yet. Use Submit AAA Role Request to start one."},
+  # the request list pages keep their own empty message (tools/build_request_lists.py)
   'iscRoleRequestsView.pmd': {'allPendingGrid': "No requests match this view and status. Choose All to see every request."},
   # the org and pattern grids already have their own empty messages
-  'shellOrgManager.pmd': {'roleAssignmentsGrid': "No shell roles are assigned on these organizations."},
+  # Shell Org Manager's grids all have their own empty messages
   'bulkRoleResults.pmd': {'uploadsGrid': "You haven't uploaded a file yet. Download the template, fill in the Action column, and upload it.",
                           'rowResultsGrid': "No row results for this upload yet. If its status is Uploaded, Queued or Running, click Refresh in a minute."},
   'auditLogViewer.pmd': {},

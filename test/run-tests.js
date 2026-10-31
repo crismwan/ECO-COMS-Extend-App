@@ -243,6 +243,26 @@ function staticSuite() {
       if (!view && node.excelExportEnabled) err('excelExport', `${path.basename(f)}: grid '${node.id || '?'}' sets excelExportEnabled on an EDIT page (view pages only)`);
     });
   }
+  // 7b3. UI consistency: one 'nothing to show' message per grid, at most three cards per grid-layout
+  //      row (a fourth wraps onto its own row), and every app page titled 'ECO-COMS: ...'.
+  const BP_STEP_PAGES = new Set(['reviewRoleRequestDetails', 'reviewRoleRequestApproval', 'reviewRoleRequestSecurityGroup', 'reviewRoleRequestAssignableRole']);
+  for (const [f, d] of Object.entries(pmds)) {
+    const name = path.basename(f, '.pmd');
+    walk(d, (node) => {
+      const kids = Array.isArray(node.children) ? node.children : [];
+      if (kids.some((c) => c && c.type === 'grid')) {
+        const msgs = kids.filter((c) => c && c.visible && ['text', 'richText'].includes(c.type) && /\bno\b|nothing|haven.t/i.test(JSON.stringify(c.value || '')));
+        if (msgs.length > 1) err('emptyMsg', `${name}: ${msgs.length} empty-grid messages side by side (${msgs.map((m) => m.id).join(', ')}); keep one`);
+      }
+      if (node.type === 'cardContainer' && (node.layout ?? 'grid') === 'grid' && (node.cards || []).length > 3) {
+        err('cardRow', `${name}: cardContainer '${node.id || '?'}' has ${(node.cards || []).length} cards in grid layout; the fourth wraps onto its own row`);
+      }
+    });
+    const title = d.presentation?.title?.label;
+    if (title && !BP_STEP_PAGES.has(name) && !/^(<%.*)?'?ECO-COMS: |^<% empty\(queryParams\.appName\) \? 'ECO-COMS: /.test(title) && !title.startsWith('ECO-COMS: ')) {
+      err('pageTitle', `${name}: title "${title.slice(0, 60)}" should start with 'ECO-COMS: '`);
+    }
+  }
   // 7c. Only the first richText in a fieldSet renders; the rest are silently dropped.
   for (const [f, d] of Object.entries(pmds)) {
     walk(d, (node) => {

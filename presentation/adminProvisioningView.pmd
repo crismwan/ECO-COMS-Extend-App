@@ -94,25 +94,6 @@
                 "taskId": "home"
               },
               "action": "LINK"
-            },
-            {
-              "type": "button",
-              "label": "Submit AAA Role Request",
-              "taskReference": {
-                "taskId": "adminProvisioning"
-              },
-              "action": "PRIMARY"
-            },
-            {
-              "type": "button",
-              "label": "Withdraw Request",
-              "taskReference": {
-                "taskId": "deleteAssignableRole",
-                "parameterBindings": {
-                  "view": "aaa"
-                }
-              },
-              "action": "AUXILIARY"
             }
           ]
         },
@@ -121,10 +102,17 @@
           "id": "descSection",
           "children": [
             {
-              "type": "richText",
-              "id": "pageDesc",
-              "enabled": false,
-              "value": "<span style=\"color:#374151;font-size:12px\">Admin Provisioning controls who can manage shell orgs and submit role requests in ECO-COMS for each application. These are <b>AAA (Organizations and Roles Assignment Administrator)</b> roles. To submit a new AAA role request for ISC review, click <b>Submit AAA Role Request</b> above.</span>"
+              "type": "fieldSet",
+              "id": "aboutFieldSet",
+              "title": "About this page",
+              "children": [
+                {
+                  "type": "richText",
+                  "id": "pageDesc",
+                  "enabled": false,
+                  "value": "<span style=\"color:#374151;font-size:12px\">Admin Provisioning controls who can manage shell orgs and submit role requests in ECO-COMS for each application. These are <b>AAA (Organizations and Roles Assignment Administrator)</b> roles. To submit a new AAA role request for ISC review, click <b>Submit AAA Role Request</b> above.</span>"
+                }
+              ]
             },
             {
               "type": "richText",
@@ -159,12 +147,11 @@
                 {
                   "type": "card",
                   "cardId": "CountCard",
-                  "parameters": "<% { 'title': 'Approved', 'subtitle': 'Created in Workday', 'countText': '' + comsRequestStats.countStatus((list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? []).filter(r => { comsRequestStats.isAaa(r) }), 'Approved') + ' approved' } %>"
+                  "parameters": "<% { 'title': 'Decided', 'subtitle': 'Approved, denied or withdrawn', 'countText': '' + comsRequestStats.countStatus((list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? []).filter(r => { comsRequestStats.isAaa(r) }), 'Approved') + ' approved' + ' · ' + '' + comsRequestStats.countStatus((list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? []).filter(r => { comsRequestStats.isAaa(r) }), 'Denied') + ' denied' } %>"
                 },
                 {
                   "type": "card",
-                  "cardId": "CountCard",
-                  "parameters": "<% { 'title': 'Denied', 'subtitle': 'Denied or withdrawn', 'countText': '' + comsRequestStats.countStatus((list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? []).filter(r => { comsRequestStats.isAaa(r) }), 'Denied') + ' denied' } %>"
+                  "cardId": "ListAaaActionsCard"
                 }
               ]
             }
@@ -179,19 +166,12 @@
               "id": "aaaRolesSection",
               "children": [
                 {
-                  "type": "richText",
-                  "id": "emptyStateMsg",
-                  "value": "<span style=\"color:#374151;font-size:12px\">There are no AAA role requests to display. Click Submit AAA Role Request above to create one.</span>",
-                  "visible": "<% size(list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]).filter(r => r.roleName.startsWith('Organizations and Roles Assignment Administrator'))) == 0 %>",
-                  "enabled": false
-                },
-                {
                   "type": "text",
-                  "id": "aaaRolesEmptyText",
+                  "id": "emptyStateMsg",
                   "enabled": false,
                   "label": "ⓘ Nothing to show",
                   "visible": "<% size(list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]).filter(r => r.roleName.startsWith('Organizations and Roles Assignment Administrator'))) == 0 %>",
-                  "value": "No AAA role requests yet. Use Submit AAA Role Request to start one."
+                  "value": "There are no AAA role requests to display. Use Submit AAA Role Request above to create one."
                 },
                 {
                   "type": "grid",

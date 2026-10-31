@@ -112,25 +112,6 @@
                 "taskId": "home"
               },
               "action": "LINK"
-            },
-            {
-              "type": "button",
-              "label": "Submit New Request",
-              "taskReference": {
-                "taskId": "assignableRoleManager"
-              },
-              "action": "PRIMARY"
-            },
-            {
-              "type": "button",
-              "label": "Withdraw Request",
-              "taskReference": {
-                "taskId": "deleteAssignableRole",
-                "parameterBindings": {
-                  "view": "assignable"
-                }
-              },
-              "action": "AUXILIARY"
             }
           ]
         },
@@ -139,10 +120,17 @@
           "id": "descSection",
           "children": [
             {
-              "type": "richText",
-              "id": "pageDesc",
-              "enabled": false,
-              "value": "<span style=\"color:#374151;font-size:12px\">View your Assignable Role requests and their current status. Each request is reviewed by ISC before becoming active in Workday. To submit a new request, click <b>Submit New Request</b> above.</span>"
+              "type": "fieldSet",
+              "id": "aboutFieldSet",
+              "title": "About this page",
+              "children": [
+                {
+                  "type": "richText",
+                  "id": "pageDesc",
+                  "enabled": false,
+                  "value": "<span style=\"color:#374151;font-size:12px\">View your Assignable Role requests and their current status. Each request is reviewed by ISC before becoming active in Workday. To submit a new request, click <b>Submit New Request</b> above.</span>"
+                }
+              ]
             },
             {
               "type": "richText",
@@ -177,12 +165,11 @@
                 {
                   "type": "card",
                   "cardId": "CountCard",
-                  "parameters": "<% { 'title': 'Approved', 'subtitle': 'Created in Workday', 'countText': '' + comsRequestStats.countStatus((list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? []).filter(r => { !comsRequestStats.isAaa(r) && (!empty(r.requestedBy) ? r.requestedBy.id : '') == (selectedWorker.id ?? '') }), 'Approved') + ' approved' } %>"
+                  "parameters": "<% { 'title': 'Decided', 'subtitle': 'Approved, denied or withdrawn', 'countText': '' + comsRequestStats.countStatus((list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? []).filter(r => { !comsRequestStats.isAaa(r) && (!empty(r.requestedBy) ? r.requestedBy.id : '') == (selectedWorker.id ?? '') }), 'Approved') + ' approved' + ' · ' + '' + comsRequestStats.countStatus((list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? []).filter(r => { !comsRequestStats.isAaa(r) && (!empty(r.requestedBy) ? r.requestedBy.id : '') == (selectedWorker.id ?? '') }), 'Denied') + ' denied' } %>"
                 },
                 {
                   "type": "card",
-                  "cardId": "CountCard",
-                  "parameters": "<% { 'title': 'Denied', 'subtitle': 'Denied or withdrawn', 'countText': '' + comsRequestStats.countStatus((list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? []).filter(r => { !comsRequestStats.isAaa(r) && (!empty(r.requestedBy) ? r.requestedBy.id : '') == (selectedWorker.id ?? '') }), 'Denied') + ' denied' } %>"
+                  "cardId": "ListAssignableActionsCard"
                 }
               ]
             }
@@ -197,19 +184,12 @@
               "id": "pendingRolesSection",
               "children": [
                 {
-                  "type": "richText",
-                  "id": "emptyStateMsg",
-                  "value": "<span style=\"color:#374151;font-size:12px\">You have no Assignable Role requests. Click Submit New Request above to get started.</span>",
-                  "visible": "<% size(list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]).filter(r => !r.roleName.startsWith('Organizations and Roles Assignment Administrator') && r.requestedBy.id == selectedWorker.id)) == 0 %>",
-                  "enabled": false
-                },
-                {
                   "type": "text",
-                  "id": "assignableRolesEmptyText",
+                  "id": "emptyStateMsg",
                   "enabled": false,
                   "label": "ⓘ Nothing to show",
                   "visible": "<% size(list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]).filter(r => !r.roleName.startsWith('Organizations and Roles Assignment Administrator') && r.requestedBy.id == selectedWorker.id)) == 0 %>",
-                  "value": "You haven't submitted any assignable role requests. Use Submit New Request to start one."
+                  "value": "You have no Assignable Role requests. Use Submit New Request above to get started."
                 },
                 {
                   "type": "grid",

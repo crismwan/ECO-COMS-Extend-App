@@ -655,16 +655,9 @@
                 "type": "text",
                 "id": "rolesEmptyText",
                 "enabled": false,
-                "visible": "<% size(list:flatten((shellRoles.data ?? []).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith((empty(queryParams.appCode) ? 'X:' : queryParams.appCode)) }).map(ra => { { 'role': r.role, 'org': ra.organization, 'positions': ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? [], 'workers': ra.workersAssigned ?? [] } }) }))) == 0 %>",
-                "value": "<% 'No shell role assignments found' + (!empty(queryParams.appCode) ? ' for ' + (queryParams.appName ?? queryParams.appCode) : '') + '.' %>"
-              },
-              {
-                "type": "text",
-                "id": "roleAssignmentsEmptyText",
-                "enabled": false,
                 "label": "ⓘ Nothing to show",
                 "visible": "<% size(list:flatten((shellRoles.data ?? []).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith((empty(queryParams.appCode) ? 'X:' : queryParams.appCode)) }).map(ra => { { 'role': r.role, 'org': ra.organization, 'positions': ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? [], 'workers': ra.workersAssigned ?? [] } }) }))) == 0 %>",
-                "value": "No shell roles are assigned on these organizations."
+                "value": ""
               },
               {
                 "type": "grid",
