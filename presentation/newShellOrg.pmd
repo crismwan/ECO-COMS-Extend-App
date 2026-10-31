@@ -125,7 +125,7 @@
                   "type": "richText",
                   "id": "pageDescription",
                   "enabled": false,
-                  "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ℹ </span><span style=\"color:#374151;font-size:12px\">Add a new Shell Organization to Workday. Select the application and enter the Organization Code. The Organization Name will be auto-generated as <b>ApplicationCode:OrganizationCode</b> (e.g. X:CLW:ORG:ANY).</span>"
+                  "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">Add a new Shell Organization to Workday. Select the application and enter the Organization Code. The Organization Name will be auto-generated as <b>ApplicationCode:OrganizationCode</b> (e.g. X:CLW:ORG:ANY).</span>"
                 }
               ],
               "title": "About this page"

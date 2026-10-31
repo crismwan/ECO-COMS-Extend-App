@@ -1,0 +1,37 @@
+{
+  "id": "BulkActionsPillCard",
+  "parameters": [
+    "batch"
+  ],
+  "header": {
+    "title": "Actions",
+    "subtitle": "Refresh while a run is in progress",
+    "icon": "wd-accent-checkmarked-page"
+  },
+  "body": {
+    "type": "pillCard",
+    "pills": [
+      {
+        "label": "↻ Refresh",
+        "taskReference": {
+          "taskId": "bulkRoleResults",
+          "parameterBindings": {
+            "batch": "<% batch ?? \"\" %>"
+          }
+        }
+      },
+      {
+        "label": "Upload another file",
+        "taskReference": {
+          "taskId": "bulkRoleChanges"
+        }
+      },
+      {
+        "label": "Download template",
+        "taskReference": {
+          "taskId": "bulkRoleTemplate"
+        }
+      }
+    ]
+  }
+}

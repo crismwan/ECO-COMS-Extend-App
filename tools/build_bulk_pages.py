@@ -125,6 +125,7 @@ SEL = "((uploadPage0.data ?? []).filter(u => { (u.batchRef ?? '') == " + REF + "
 MODE = "(size(" + SEL + ") > 0 ? (" + SEL + "[0].runMode ?? '') : '')"
 # a validated file that is later applied keeps its VALID rows; show the rows of its latest run only
 RES = "(list:flatten([rowPage0.data ?? [], rowPage1.data ?? []]).filter(x => { (x.batchRef ?? '') == " + REF + " && (" + MODE + " == '' || (x.runMode ?? '') == " + MODE + ") }))"
+rows_text = lambda e: "'' + " + e + " + (" + e + " == 1 ? ' row' : ' rows')"
 cnt = lambda cond: "size(" + RES + ".filter(x => { " + cond + " }))"
 results = {"id": "bulkRoleResults", "securityDomains": ["ManageCOMSShellOrgs"],
   "endPoints": [WORKER,
@@ -138,20 +139,17 @@ results = {"id": "bulkRoleResults", "securityDomains": ["ManageCOMSShellOrgs"],
   "presentation": {"headerSize": "STANDARD", "title": {"type": "title", "label": "ECO-COMS: Bulk Role Changes – Results"},
     "body": {"type": "basicFormLayout", "id": "bulkResultsForm", "sections": [
       {"type": "layoutSection", "id": "navSection", "children": [
-        {"type": "button", "id": "homeButton", "label": "← Home", "action": "LINK", "taskReference": {"taskId": "home"}},
-        {"type": "button", "id": "refreshButton", "label": "↻ Refresh", "action": "LINK",
-         "taskReference": {"taskId": "bulkRoleResults", "parameterBindings": {"batch": "<% " + REF + " %>"}}},
-        {"type": "button", "id": "uploadButton", "label": "Upload another file", "action": "LINK", "taskReference": {"taskId": "bulkRoleChanges"}},
-        {"type": "button", "id": "templateButton", "label": "Template", "action": "LINK", "taskReference": {"taskId": "bulkRoleTemplate"}}]},
+        {"type": "button", "id": "homeButton", "label": "← Home", "action": "LINK", "taskReference": {"taskId": "home"}}]},
       note("aboutSection", "aboutFieldSet", "About this page", "aboutRichText",
         "Your uploads, newest first, and the row results of the selected one (the newest unless you pick another). "
         "A run works in the background: while the status is Uploaded, Queued or Running, click <b>Refresh</b> in a minute to see more rows. "
         "When a validation run shows no INVALID rows, click <b>Apply</b> on that upload to run the same file for real. "
         "<b>VALID</b>/<b>INVALID</b>: validation run, nothing changed. <b>DONE</b>/<b>FAILED</b>: real run."),
       {"type": "layoutSection", "id": "summarySection", "children": [{"type": "cardContainer", "id": "bulkSummaryCardContainer", "layout": "grid", "cards": [
-        {"type": "card", "cardId": "CountCard", "parameters": "<% { 'title': 'Rows processed', 'subtitle': 'Selected upload', 'countText': '' + size(" + RES + ") + ' rows' } %>"},
-        {"type": "card", "cardId": "CountCard", "parameters": "<% { 'title': 'Succeeded', 'subtitle': 'DONE or VALID', 'countText': '' + " + cnt("x.result == 'DONE' || x.result == 'VALID'") + " + ' rows' } %>"},
-        {"type": "card", "cardId": "CountCard", "parameters": "<% { 'title': 'Need attention', 'subtitle': 'FAILED or INVALID', 'countText': '' + " + cnt("x.result == 'FAILED' || x.result == 'INVALID'") + " + ' rows' } %>"}]}]},
+        {"type": "card", "cardId": "CountCard", "parameters": "<% { 'title': 'Rows processed', 'subtitle': 'Selected upload', 'countText': " + rows_text("size(" + RES + ")") + " } %>"},
+        {"type": "card", "cardId": "CountCard", "parameters": "<% { 'title': 'Succeeded', 'subtitle': 'DONE or VALID', 'countText': " + rows_text(cnt("x.result == 'DONE' || x.result == 'VALID'")) + " } %>"},
+        {"type": "card", "cardId": "CountCard", "parameters": "<% { 'title': 'Need attention', 'subtitle': 'FAILED or INVALID', 'countText': " + rows_text(cnt("x.result == 'FAILED' || x.result == 'INVALID'")) + " } %>"},
+        {"type": "card", "cardId": "BulkActionsPillCard", "parameters": "<% { 'batch': " + REF + " } %>"}]}]},
       {"type": "layoutSection", "id": "uploadsSection", "children": [{"type": "fieldSet", "id": "uploadsFieldSet", "title": "My uploads", "children": [
         {"type": "grid", "id": "uploadsGrid", "gridType": "LIST", "multiViewStylingEnabled": True, "autoPaging": True, "enabled": False, "excelExportEnabled": True,
          "rowVariableName": "up", "rows": "<% " + UPL + " %>", "label": "<% 'My uploads (' + size(" + UPL + ") + ')' %>",
@@ -163,8 +161,9 @@ results = {"id": "bulkRoleResults", "securityDomains": ["ManageCOMSShellOrgs"],
                      txt("colMessage", "Message", "<% up.statusMessage ?? '' %>"),
                      {"type": "column", "columnId": "colOpen", "label": "Results", "excel": {"enabled": False}, "cellTemplate": {"type": "button", "id": "openResultsButton", "label": "View", "action": "AUXILIARY",
                       "taskReference": {"taskId": "bulkRoleResults", "parameterBindings": {"batch": "<% up.batchRef ?? '' %>"}}}},
-                     {"type": "column", "columnId": "colApply", "label": "Apply", "excel": {"enabled": False}, "cellTemplate": {"type": "button", "id": "applyStoredButton", "label": "Apply", "action": "AUXILIARY",
-                      "taskReference": {"taskId": "bulkRoleApply", "parameterBindings": {"batch": "<% up.batchRef ?? '' %>"}}}}]}]}]},
+                     {"type": "column", "columnId": "colApply", "label": "Apply", "excel": {"enabled": False}, "cellTemplate": {"type": "fieldSet", "id": "applyFieldSet", "children": [
+                        {"type": "button", "id": "applyStoredButton", "label": "Apply", "action": "AUXILIARY", "visible": "<% (up.status ?? '') == 'Validated' %>",
+                         "taskReference": {"taskId": "bulkRoleApply", "parameterBindings": {"batch": "<% up.batchRef ?? '' %>"}}}]}}]}]}]},
       {"type": "layoutSection", "id": "rowsSection", "children": [{"type": "fieldSet", "id": "rowsFieldSet", "title": "<% 'Row results: ' + " + REF + " %>", "children": [
         {"type": "grid", "id": "rowResultsGrid", "gridType": "LIST", "multiViewStylingEnabled": True, "autoPaging": True, "enabled": False, "excelExportEnabled": True,
          "rowVariableName": "rr", "rows": "<% list:sort(" + RES + ", 'timestamp', true) %>", "label": "<% 'Rows (' + size(" + RES + ") + ')' %>",
@@ -174,6 +173,13 @@ results = {"id": "bulkRoleResults", "securityDomains": ["ManageCOMSShellOrgs"],
                      txt("colMessage", "Message", "<% rr.message ?? '' %>")]}]}]}]},
     "footer": FOOT, "pageType": "VIEW"}}
 save('bulkRoleResults', results)
+actions_card = {"id": "BulkActionsPillCard", "parameters": ["batch"],
+  "header": {"title": "Actions", "subtitle": "Refresh while a run is in progress", "icon": "wd-accent-checkmarked-page"},
+  "body": {"type": "pillCard", "pills": [
+    {"label": "↻ Refresh", "taskReference": {"taskId": "bulkRoleResults", "parameterBindings": {"batch": '<% batch ?? "" %>'}}},
+    {"label": "Upload another file", "taskReference": {"taskId": "bulkRoleChanges"}},
+    {"label": "Download template", "taskReference": {"taskId": "bulkRoleTemplate"}}]}}
+open(os.path.join(ROOT, 'cards', 'BulkActionsPillCard.card'), 'w').write(json.dumps(actions_card, indent=2, ensure_ascii=False) + '\n')
 
 # ── 4. Apply a validated upload without uploading it again ──
 B = "(queryParams.batch ?? '')"

@@ -127,17 +127,17 @@
               {
                 "type": "card",
                 "cardId": "CountCard",
-                "parameters": "<% { 'title': 'Active', 'subtitle': (empty(queryParams.appCode) ? 'All applications' : queryParams.appCode), 'countText': '' + size((allShellOrgs.data ?? []).filter(o => { (o.code ?? '').startsWith((empty(queryParams.appCode) ? 'X:' : queryParams.appCode + ':')) && !(o.code ?? '').contains(':PATTERN') }).filter(o => { o.cf_active1 == true })) + ' shell organizations' } %>"
+                "parameters": "<% { 'title': 'Active', 'subtitle': (empty(queryParams.appCode) ? 'All applications' : queryParams.appCode), 'countText': '' + size((allShellOrgs.data ?? []).filter(o => { (o.code ?? '').startsWith((empty(queryParams.appCode) ? 'X:' : queryParams.appCode + ':')) && !(o.code ?? '').contains(':PATTERN') }).filter(o => { o.cf_active1 == true })) + (size((allShellOrgs.data ?? []).filter(o => { (o.code ?? '').startsWith((empty(queryParams.appCode) ? 'X:' : queryParams.appCode + ':')) && !(o.code ?? '').contains(':PATTERN') }).filter(o => { o.cf_active1 == true })) == 1 ? ' shell organization' : ' shell organizations') } %>"
               },
               {
                 "type": "card",
                 "cardId": "CountCard",
-                "parameters": "<% { 'title': 'Inactive', 'subtitle': (empty(queryParams.appCode) ? 'All applications' : queryParams.appCode), 'countText': '' + size((allShellOrgs.data ?? []).filter(o => { (o.code ?? '').startsWith((empty(queryParams.appCode) ? 'X:' : queryParams.appCode + ':')) && !(o.code ?? '').contains(':PATTERN') }).filter(o => { o.cf_active1 != true })) + ' shell organizations' } %>"
+                "parameters": "<% { 'title': 'Inactive', 'subtitle': (empty(queryParams.appCode) ? 'All applications' : queryParams.appCode), 'countText': '' + size((allShellOrgs.data ?? []).filter(o => { (o.code ?? '').startsWith((empty(queryParams.appCode) ? 'X:' : queryParams.appCode + ':')) && !(o.code ?? '').contains(':PATTERN') }).filter(o => { o.cf_active1 != true })) + (size((allShellOrgs.data ?? []).filter(o => { (o.code ?? '').startsWith((empty(queryParams.appCode) ? 'X:' : queryParams.appCode + ':')) && !(o.code ?? '').contains(':PATTERN') }).filter(o => { o.cf_active1 != true })) == 1 ? ' shell organization' : ' shell organizations') } %>"
               },
               {
                 "type": "card",
                 "cardId": "CountCard",
-                "parameters": "<% { 'title': 'Patterns', 'subtitle': (empty(queryParams.appCode) ? 'All applications' : queryParams.appCode), 'countText': '' + size((allShellOrgs.data ?? []).filter(o => { (o.code ?? '').startsWith(empty(queryParams.appCode) ? 'X:' : queryParams.appCode + ':PATTERN') && (o.code ?? '').contains(':PATTERN') })) + ' patterns' } %>"
+                "parameters": "<% { 'title': 'Patterns', 'subtitle': (empty(queryParams.appCode) ? 'All applications' : queryParams.appCode), 'countText': '' + size((allShellOrgs.data ?? []).filter(o => { (o.code ?? '').startsWith(empty(queryParams.appCode) ? 'X:' : queryParams.appCode + ':PATTERN') && (o.code ?? '').contains(':PATTERN') })) + (size((allShellOrgs.data ?? []).filter(o => { (o.code ?? '').startsWith(empty(queryParams.appCode) ? 'X:' : queryParams.appCode + ':PATTERN') && (o.code ?? '').contains(':PATTERN') })) == 1 ? ' pattern' : ' patterns') } %>"
               },
               {
                 "type": "card",

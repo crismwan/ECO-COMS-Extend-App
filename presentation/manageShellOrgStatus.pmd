@@ -99,7 +99,7 @@
                   "type": "richText",
                   "id": "warningMsg",
                   "enabled": false,
-                  "value": "<% queryParams.currentStatus == 'Active' ? '<span style=\"color:#d97706;font-size:12px;font-weight:700\">⚠ </span><span style=\"color:#92400e;font-size:12px\"><b>Warning:</b> Setting this organization to Inactive does not automatically remove any Workday role assignments referencing it. Verify in Workday that no active role assignments use this Custom Organization before proceeding.</span>' : '<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ℹ </span><span style=\"color:#374151;font-size:12px\">This will reactivate the organization and make it available for role assignments again.</span>' %>"
+                  "value": "<% queryParams.currentStatus == 'Active' ? '<span style=\"color:#d97706;font-size:12px;font-weight:700\">⚠ </span><span style=\"color:#92400e;font-size:12px\"><b>Warning:</b> Setting this organization to Inactive does not automatically remove any Workday role assignments referencing it. Verify in Workday that no active role assignments use this Custom Organization before proceeding.</span>' : '<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">This will reactivate the organization and make it available for role assignments again.</span>' %>"
                 }
               ]
             }

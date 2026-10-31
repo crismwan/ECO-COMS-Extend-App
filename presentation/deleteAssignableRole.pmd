@@ -439,7 +439,7 @@
               "type": "richText",
               "id": "confirmDelete",
               "enabled": false,
-              "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ℹ </span><span style=\"color:#374151;font-size:12px\">Select a request from the grid above, tick the confirmation, then click <b>OK</b> to withdraw it.</span>"
+              "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">Select a request from the grid above, tick the confirmation, then click <b>OK</b> to withdraw it.</span>"
             },
             {
               "type": "fieldSet",

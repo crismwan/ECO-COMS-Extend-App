@@ -449,7 +449,7 @@
             "type": "richText",
             "id": "exportNote",
             "enabled": false,
-            "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ℹ </span><span style=\"color:#374151;font-size:12px\">Use the grid’s built-in export action to download these results as CSV for compliance reporting.</span>"
+            "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">Use the grid’s built-in export action to download these results as CSV for compliance reporting.</span>"
           }
         ]
       }

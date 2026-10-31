@@ -361,7 +361,7 @@
     "headerSize": "STANDARD",
     "title": {
       "type": "title",
-      "label": "ECO-COMS: Assignable Role Manager"
+      "label": "ECO-COMS: Submit Assignable Role Request"
     },
     "body": {
       "type": "basicFormLayout",
@@ -373,9 +373,9 @@
           "children": [
             {
               "type": "button",
-              "label": "← Home",
+              "label": "← Assignable Role Manager",
               "taskReference": {
-                "taskId": "home"
+                "taskId": "assignableRoleManagerView"
               },
               "action": "LINK"
             }
@@ -419,7 +419,7 @@
                   "type": "richText",
                   "id": "pendingDesc",
                   "enabled": false,
-                  "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ℹ </span><span style=\"color:#374151;font-size:12px\">The following requests are awaiting ISC review. ISC approves or denies them in Workday; you can withdraw your own pending request.</span>"
+                  "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">The following requests are awaiting ISC review. ISC approves or denies them in Workday; you can withdraw your own pending request.</span>"
                 },
                 {
                   "type": "grid",
@@ -545,7 +545,7 @@
                   "type": "richText",
                   "id": "addNewDesc",
                   "enabled": false,
-                  "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ℹ </span><span style=\"color:#374151;font-size:12px\">Submit a new Assignable Role request. Select the Custom Organization, provide role details and select positions. Once submitted, status will be set to <b>Pending ISC Review</b>.</span><br/><span style=\"color:#374151;font-size:12px\"><b>Shell organization</b>: The shell organization the new role is scoped to. The role name is built from this organization's code, so pick the one for the application the role belongs to.<br/><b>Delegated roles</b>: Existing roles in the same application that holders of the new role will be allowed to assign. Only roles under the same application code are valid.<br/><b>Positions</b>: The positions that will hold the role once ISC approves the request. Search by position title or ID (for example P-00010). Vacant positions can be added; the role then applies to whoever fills them.<br/><b>Functional Unit Hierarchy</b>: Limits where the role applies to one Functional Unit Hierarchy. Pick either an FUH or an Academic Unit, not both. Leave both empty for the whole university (Academic Unit - University of British Columbia).<br/><b>Academic Unit</b>: Limits where the role applies to one Academic Unit. Pick either an Academic Unit or an FUH, not both. Leave both empty for the whole university.</span>"
+                  "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">Submit a new Assignable Role request. Select the Custom Organization, provide role details and select positions. Once submitted, status will be set to <b>Pending ISC Review</b>.</span><br/><span style=\"color:#374151;font-size:12px\"><b>Shell organization</b>: The shell organization the new role is scoped to. The role name is built from this organization's code, so pick the one for the application the role belongs to.<br/><b>Delegated roles</b>: Existing roles in the same application that holders of the new role will be allowed to assign. Only roles under the same application code are valid.<br/><b>Positions</b>: The positions that will hold the role once ISC approves the request. Search by position title or ID (for example P-00010). Vacant positions can be added; the role then applies to whoever fills them.<br/><b>Functional Unit Hierarchy</b>: Limits where the role applies to one Functional Unit Hierarchy. Pick either an FUH or an Academic Unit, not both. Leave both empty for the whole university (Academic Unit - University of British Columbia).<br/><b>Academic Unit</b>: Limits where the role applies to one Academic Unit. Pick either an Academic Unit or an FUH, not both. Leave both empty for the whole university.</span>"
                 },
                 {
                   "type": "instanceList",

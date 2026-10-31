@@ -144,9 +144,9 @@ def find_tab(o):
 tab = find_tab(som['presentation'])
 tab['children'] = [
   {"type": "cardContainer", "id": "summaryCardContainer", "layout": "grid", "cards": [
-    {"type": "card", "cardId": "CountCard", "parameters": "<% { 'title': 'Active', 'subtitle': " + SCOPE + ", 'countText': '' + " + ACT + " + ' shell organizations' } %>"},
-    {"type": "card", "cardId": "CountCard", "parameters": "<% { 'title': 'Inactive', 'subtitle': " + SCOPE + ", 'countText': '' + " + INA + " + ' shell organizations' } %>"},
-    {"type": "card", "cardId": "CountCard", "parameters": "<% { 'title': 'Patterns', 'subtitle': " + SCOPE + ", 'countText': '' + size(" + PATS + ") + ' patterns' } %>"},
+    {"type": "card", "cardId": "CountCard", "parameters": "<% { 'title': 'Active', 'subtitle': " + SCOPE + ", 'countText': '' + " + ACT + " + (" + ACT + " == 1 ? ' shell organization' : ' shell organizations') } %>"},
+    {"type": "card", "cardId": "CountCard", "parameters": "<% { 'title': 'Inactive', 'subtitle': " + SCOPE + ", 'countText': '' + " + INA + " + (" + INA + " == 1 ? ' shell organization' : ' shell organizations') } %>"},
+    {"type": "card", "cardId": "CountCard", "parameters": "<% { 'title': 'Patterns', 'subtitle': " + SCOPE + ", 'countText': '' + size(" + PATS + ") + (size(" + PATS + ") == 1 ? ' pattern' : ' patterns') } %>"},
     {"type": "card", "cardId": "ShellOrgQuickActionsCard"}]},
   {"type": "cardContainer", "id": "statusChartContainer", "cards": [
     {"type": "card", "cardId": "ShellOrgStatusChart", "parameters": "<% { 'activeCount': " + ACT + ", 'inactiveCount': " + INA + " } %>"}]}]

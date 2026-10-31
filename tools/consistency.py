@@ -10,7 +10,12 @@ TITLES = {
   'manageShellOrgStatusSuccess': 'ECO-COMS: Status Updated', 'newShellOrgPatternSuccess': 'ECO-COMS: Pattern Created',
   'newShellOrgSuccess': 'ECO-COMS: Shell Organization Created', 'roleAssignmentSuccess': 'ECO-COMS: Role Assignment Updated',
   'errorPage': 'ECO-COMS: Something went wrong',
+  'assignableRoleManager': 'ECO-COMS: Submit Assignable Role Request',
+  'adminProvisioning': 'ECO-COMS: Submit AAA Role Request',
 }
+# request forms go back to their list page, not Home
+BACK = {'assignableRoleManager': ('← Assignable Role Manager', 'assignableRoleManagerView'),
+        'adminProvisioning': ('← AAA Role Provisioning', 'adminProvisioningView')}
 PREFIX_SCRIPTED = {  # scripted titles: swap the leading literal
   'editRoleAssignment': ("'Manage Role Assignment: '", "'ECO-COMS: Manage Role Assignment – '"),
   'manageShellOrgStatus': ("'Change Status: '", "'ECO-COMS: Change Status – '"),
@@ -30,7 +35,9 @@ for f in sorted(glob.glob(os.path.join(ROOT, '*.pmd'))):
             if o.get('type') == 'button' and o.get('label') in NAV: o['label'] = NAV[o['label']]
             if o.get('type') == 'fieldSet' and o.get('title') in HEADINGS: o['title'] = HEADINGS[o['title']]
             if o.get('type') == 'richText' and isinstance(o.get('value'), str):
-                o['value'] = re.sub(r'font-size:1[13]px', 'font-size:12px', o['value'])
+                o['value'] = re.sub(r'font-size:1[13]px', 'font-size:12px', o['value']).replace('ℹ', 'ⓘ')
+            if n in BACK and o.get('type') == 'button' and o.get('label') == '← Home':
+                o['label'], o['taskReference'] = BACK[n][0], {"taskId": BACK[n][1]}
             if isinstance(o.get('value'), str):
                 o['value'] = TS.sub(lambda m: "<% (" + m.group(1) + ".timestamp ?? '').replace('T', ' ').replace('Z', ' UTC') %>", o['value'])
             # back links: the page-specific link first, Home last
