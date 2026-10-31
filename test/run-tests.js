@@ -640,7 +640,12 @@ async function full(token, me) {
     if (r.active !== false) throw new Error(`${roleName} is Denied but active=${r.active}`);
     const audits = ((await request('GET', `${BO}/comsAuditLogs?limit=100`, token)).data || []).filter((a) => a.roleName === roleName && a.action === 'DENY');
     if (!audits.length) throw new Error(`${roleName} is Denied but has no DENY audit record`);
-    pass('Request.reviewCancelDeny', `${roleName}: cancelling the review marked it Denied, inactive, with a DENY audit`);
+    // The DENY record must name the person who denied or cancelled (here: the test user), not the BP.
+    const by = audits[0];
+    if (by.changedByWid !== me.id || by.triggeredBy !== me.descriptor) {
+      throw new Error(`DENY record shows Changed By "${by.triggeredBy}" (${by.changedByWid || 'no WID'}); expected ${me.descriptor} (${me.id})`);
+    }
+    pass('Request.reviewCancelDeny', `${roleName}: cancelling the review marked it Denied, inactive, with a DENY audit naming ${me.descriptor}`);
   });
 
   // ── Two pending ISC requests, left open for review: one on the new shell org, one on the new pattern ──
