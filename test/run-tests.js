@@ -617,6 +617,17 @@ async function smoke(token, me) {
     }
     pass('BP.pendingEventsOpen', `${pending.length} pending request(s) have an open review event`);
   });
+  // The step pages (Link Workday Role) open from an inbox item with an event step id. Print one for a
+  // pending TEST request so the page can be loaded in-platform without a real request (read-only:
+  // developer.workday.com "Event Steps REST APIs", GET /events/{id}/inProgressSteps).
+  await test('BP.inProgressStep', async () => {
+    const r = roles.filter((x) => x.status === 'Pending ISC Review' && x.reviewEventWid && /TEST/.test(x.roleName || '')).slice(-1)[0];
+    if (!r) return skip('BP.inProgressStep', 'no pending TEST request with a review event');
+    const s = await request('GET', `${BP}/events/${r.reviewEventWid}/inProgressSteps`, token);
+    const step = (s.data || [])[0];
+    if (!step?.id) throw new Error(`no in-progress step on ${r.roleName}'s review event`);
+    pass('BP.inProgressStep', `${r.roleName}: step "${step.descriptor || step.stepType?.descriptor || '?'}" id ${step.id} (open reviewRoleRequestAssignableRole/${step.id} to test the step page)`);
+  });
 }
 
 // ─── Full suite (writes to the tenant) ────────────────────────────────────────
