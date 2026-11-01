@@ -48,7 +48,7 @@ function pacificNow() {
   if (!token) { console.error('WD_DEV_TOKEN is not set'); process.exit(2); }
 
   // 1. current assignments (same flattening as the Download Template grid)
-  const q = JSON.parse(fs.readFileSync(path.join(ROOT, 'wqlQueries', 'allShellAssignableRolesinTenant.wqlquery'), 'utf8')).query;
+  const q = JSON.parse(fs.readFileSync(path.join(ROOT, 'presentation', 'wqlQueries', 'allShellAssignableRolesinTenant.wqlquery'), 'utf8')).query;
   const res = await call('GET', `${API}/wql/v1/data?limit=10000&query=${encodeURIComponent(q)}`, { headers: { Accept: 'application/json' } });
   const rows = [];
   for (const r of res.data || []) {
