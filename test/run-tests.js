@@ -1262,6 +1262,104 @@ async function isuSuite(token, me) {
   });
 }
 
+// ═══ Purge: empty the audit log and the bulk-run data before a demo (dry run unless --apply) ═══
+// Deletes EVERY record in these collections, not only test ones. Role requests linked to a review
+// event can't be deleted (Workday keeps the event), so they stay; test orgs are inactivated by cleanup.
+const PURGE_COLLECTIONS = ['comsBulkRowResults', 'comsBulkRuns', 'comsBulkUploads', 'comsAuditLogs'];
+async function purge(token) {
+  const APPLY = argv.includes('--apply');
+  console.log(`\n-- Purge (${APPLY ? 'APPLY' : 'DRY RUN: nothing will change'}) --`);
+  for (const c of PURGE_COLLECTIONS) {
+    let rows = [];
+    try { rows = await readAll(token, c); } catch (e) { warn(`Purge.read ${c}`, e.message.slice(0, 200)); continue; }
+    console.log(`${c}: ${rows.length} record(s)`);
+    if (!APPLY) continue;
+    let ok = 0, bad = 0;
+    for (const r of rows) {
+      try { await request('DELETE', `${BO}/${c}/${r.id}`, token); ok++; } catch (e) { bad++; if (bad <= 3) console.log(`   could not delete ${r.id}: ${e.message.slice(0, 160)}`); }
+    }
+    (bad ? fail : pass)(`Purge.${c}`, `deleted ${ok}, failed ${bad}`);
+  }
+  if (!APPLY) pass('Purge.dryRun', `would delete every record in ${PURGE_COLLECTIONS.join(', ')}`);
+}
+
+// ═══ Demo seed: the three demo test cases, run through the same orchestrations as the pages ═══
+//   1. Clockwork creates a course-section shell org (pattern)        → Shell Org Pattern / ADD
+//   2. A position is given a shell role on its application's org     → Role Assignment / ASSIGN POSITION
+//   3. A new shell role is requested for the new org and sent to ISC → Assignable Role / REQUEST (stays pending)
+// Values avoid the live finale (P-00009 → STAFF) so that still validates during the demo.
+async function demoSeed(token, me) {
+  console.log('\n-- Demo seed (writes real data: 1 org, 1 role assignment, 1 pending request) --');
+  const EFF = arg('--effective') || '2026-11-02';
+  const who = () => ({ changedBy: me.descriptor, changedByWid: me.id, timestamp: new Date().toISOString().replace(/\.\d+Z$/, 'Z') });
+  const findOrg = async (c) => {
+    const r = await wql(token, `SELECT workdayID, code FROM topLevelOrganizations WHERE code = '${c}'`, 1);
+    return r.data?.[0]?.workdayID?.id || r.data?.[0]?.workdayID || null;
+  };
+  const PATTERN = 'X:CLW:PATTERN:CPSC:CPSC_V:110:101:2026W2';
+  let patternWid = null;
+
+  await test('Demo.1 pattern', async () => {
+    const apps = (await request('GET', `${BO}/comsApplications?limit=100`, token)).data || [];
+    const app = apps.find((a) => a.appId === 'X:CLW');
+    if (!app) throw new Error('no COMS application with appId X:CLW');
+    if (await findOrg(PATTERN)) return pass('Demo.1 pattern', `${PATTERN} already exists`);
+    const a = await launchAndVerify(token, 'AddShellOrgPattern', {
+      comsAppId: app.id, patternName: PATTERN, workerId: me.id, attribute1: 'CPSC', attribute2: 'CPSC_V:110',
+      attribute3: '101', attribute5: '2026W2', effectiveDate: EFF, ...who(),
+    });
+    if (a.objectType !== 'Shell Org Pattern' || a.action !== 'ADD') throw new Error(`audit is ${a.objectType}/${a.action}`);
+    for (let i = 0; i < 12 && !patternWid; i++) { patternWid = await findOrg(PATTERN); if (!patternWid) await sleep(5000); }
+    pass('Demo.1 pattern', `${PATTERN} created effective ${EFF}${patternWid ? '' : ' (not yet visible in WQL)'}`);
+  });
+
+  await test('Demo.2 assign', async () => {
+    const roleName = 'X:BPMS(ODMT):ROLE:DEPTSTAFF';
+    const r = await wql(token, `SELECT role, roleAssignments{organization, cf_ZCF_EE_RoleAssignedToAsPositionRestrictions} as roleAssignments FROM assignableRoles WHERE roleName = '${roleName}'`, 5);
+    const row = (r.data || [])[0];
+    const ra = (row?.roleAssignments || []).find((x) => String(x.organization?.descriptor || '').startsWith('X:'));
+    if (!row || !ra) throw new Error(`${roleName} has no X: organization assignment`);
+    const assigned = (ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions || []).map((p) => String(p.descriptor || ''));
+    const pos = ((await wql(token, 'SELECT cf_PositionID, workdayID, position_PositionManagement, cf_PositionText, cf_PositionIsFilled FROM allPositions WHERE supervisoryOrganization is not empty', 300)).data || [])
+      .filter((p) => p.cf_PositionID && p.cf_PositionID !== 'P-00009' && p.cf_PositionIsFilled !== false && !assigned.some((d) => d.includes(p.cf_PositionID)))[0];
+    if (!pos) throw new Error(`no unassigned filled position for ${roleName}`);
+    const a = await launchAndVerify(token, 'AssignRolePositions', {
+      roleId: row.role.id, roleName, orgId: ra.organization.id, orgName: ra.organization.descriptor, effectiveDate: EFF,
+      positionId: pos.cf_PositionID, positionIdType: 'Position_ID', mode: 'ADD', positionWid: pos.workdayID?.id || pos.workdayID,
+      positionName: pos.position_PositionManagement?.descriptor || pos.cf_PositionText || pos.cf_PositionID, ...who(),
+    });
+    if (a.action !== 'ASSIGN POSITION') throw new Error(`audit is ${a.objectType}/${a.action}`);
+    pass('Demo.2 assign', `${pos.cf_PositionID} (${a.positionName}) added to ${roleName} on ${ra.organization.descriptor}, effective ${EFF}`);
+  });
+
+  await test('Demo.3 request', async () => {
+    const roleName = `${PATTERN}:ROLE:TEACHINGASSISTANT`;
+    const roles = await readAll(token, 'comsAssignableRoles');
+    if (roles.some((x) => x.roleName === roleName)) return pass('Demo.3 request', `${roleName} already requested`);
+    const ref = `REQ-${Date.now().toString(36).toUpperCase()}`;
+    const req = await request('POST', `${BO}/comsAssignableRoles`, token, {
+      referenceId: ref, roleName, workdayRoleId: roleName, application: 'X:CLW', status: 'Pending ISC Review',
+      requestedDate: tenantDate(), requestedBy: { id: me.id }, active: false, effectiveDate: EFF,
+      shellOrgCode: PATTERN, shellOrgWid: patternWid || '',
+    });
+    if (!req.id) throw new Error('request POST returned no id');
+    await request('POST', `${BO}/comsAuditLogs`, token, {
+      timestamp: who().timestamp, objectType: 'Assignable Role', action: 'REQUEST', coReferenceId: roleName, coName: PATTERN,
+      details: `Assignable role request submitted: ${roleName} for org ${PATTERN}`, triggeredBy: me.descriptor,
+      roleName, effectiveDate: EFF, changedByWid: me.id,
+    });
+    await launch(token, 'StartRoleRequestReview', { ref });
+    let ev = null;
+    for (let i = 0; i < 10 && !ev; i++) { await sleep(3000); ev = (await request('GET', `${BO}/comsAssignableRoles/${req.id}`, token)).reviewEventWid || null; }
+    if (!ev) throw new Error(`request ${ref} saved but no review event within 30 s`);
+    pass('Demo.3 request', `${roleName} requested (${ref}), ISC review started`);
+  });
+
+  const audits = await readAll(token, 'comsAuditLogs');
+  console.log(`\nAudit log now has ${audits.length} record(s):`);
+  audits.forEach((a) => console.log(`   ${a.timestamp}  ${a.objectType}/${a.action}  ${a.coName || ''} ${a.roleName || ''} ${a.positionName || ''}`.trimEnd()));
+}
+
 // ─── Main ─────────────────────────────────────────────────────────────────────
 (async () => {
   console.log(`ECO-COMS tests: suite=${SUITES.join(',')} tenant=${TENANT}`);
@@ -1285,6 +1383,8 @@ async function isuSuite(token, me) {
         if (live.includes('cleanup')) await cleanup(token, me);
         if (live.includes('repair')) await repair(token, me);
         if (live.includes('seconduser')) await secondUserSuite(token, me);
+        if (live.includes('purge')) await purge(token);
+        if (live.includes('demoseed')) await demoSeed(token, me);
       }
     }
   }
