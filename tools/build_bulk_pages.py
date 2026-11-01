@@ -82,7 +82,7 @@ SUBMIT = """<%
   confirmRealRunCheckBox.clearError();
   let valid = true;
   if (empty(bulkFileUploader.children)) {
-    bulkFileUploader.setError('Choose the CSV file to upload.');
+    bulkFileUploader.setError('Choose the CSV file to upload. Using the Excel template? Open its Role Changes sheet and save it as CSV (File → Save As → CSV) first.');
     valid = false;
   }
   if (empty(effectiveDate.value)) {
@@ -135,7 +135,8 @@ upload = {"id": "bulkRoleChanges", "securityDomains": ["ManageCOMSShellOrgs"], "
         "A real run changes who holds security roles in Workday straight away. Changes that succeed are not undone if later rows fail. Validate first.",
         '#B45309', '⚠'),
       {"type": "layoutSection", "id": "formSection", "children": [{"type": "fieldSet", "id": "uploadFieldSet", "title": "Upload", "children": [
-        {"type": "fileUploader", "id": "bulkFileUploader", "label": "CSV file", "fileTypes": "csv", "singular": True,
+        {"type": "fileUploader", "id": "bulkFileUploader", "label": "CSV file (from the Excel template: File → Save As → CSV, with the Role Changes sheet open)", "fileTypes": "csv", "singular": True,
+         "fileTypesErrorMessage": "Upload a .csv file. In the Excel template, open the Role Changes sheet, then File → Save As → CSV (Comma delimited), and upload that file.",
          "metadata": "<% { 'status': 'Uploaded' } %>", "valueOutBinding": "uploadBulkFile:comsBulkUploads"},
         {"type": "date", "id": "effectiveDate", "label": "Effective Date", "required": True,
          "guide": {"type": "guide", "id": "effectiveDateGuide", "title": "Effective Date", "text": "The date the role changes take effect: a weekday in this year or next. One date applies to every row in the file."},

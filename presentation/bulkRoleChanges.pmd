@@ -26,7 +26,7 @@
       ]
     }
   ],
-  "onSubmit": "<%\n  bulkFileUploader.clearError();\n  effectiveDate.clearError();\n  confirmRealRunCheckBox.clearError();\n  let valid = true;\n  if (empty(bulkFileUploader.children)) {\n    bulkFileUploader.setError('Choose the CSV file to upload.');\n    valid = false;\n  }\n  if (empty(effectiveDate.value)) {\n    effectiveDate.setError('Effective Date is required.');\n    valid = false;\n  } else if (!comsValidations.isWeekday(effectiveDate.value)) {\n    effectiveDate.setError(comsValidations.errorWeekday());\n    valid = false;\n  } else if (!comsValidations.isCurrentOrFutureYear(effectiveDate.value)) {\n    effectiveDate.setError(comsValidations.errorYear());\n    valid = false;\n  }\n  if (valid && realRunCheckBox.value == true && confirmRealRunCheckBox.value != true) {\n    confirmRealRunCheckBox.setError('Tick this to confirm the real run, or untick Real run to validate first.');\n    valid = false;\n  }\n  valid;\n%>",
+  "onSubmit": "<%\n  bulkFileUploader.clearError();\n  effectiveDate.clearError();\n  confirmRealRunCheckBox.clearError();\n  let valid = true;\n  if (empty(bulkFileUploader.children)) {\n    bulkFileUploader.setError('Choose the CSV file to upload. Using the Excel template? Open its Role Changes sheet and save it as CSV (File → Save As → CSV) first.');\n    valid = false;\n  }\n  if (empty(effectiveDate.value)) {\n    effectiveDate.setError('Effective Date is required.');\n    valid = false;\n  } else if (!comsValidations.isWeekday(effectiveDate.value)) {\n    effectiveDate.setError(comsValidations.errorWeekday());\n    valid = false;\n  } else if (!comsValidations.isCurrentOrFutureYear(effectiveDate.value)) {\n    effectiveDate.setError(comsValidations.errorYear());\n    valid = false;\n  }\n  if (valid && realRunCheckBox.value == true && confirmRealRunCheckBox.value != true) {\n    confirmRealRunCheckBox.setError('Tick this to confirm the real run, or untick Real run to validate first.');\n    valid = false;\n  }\n  valid;\n%>",
   "outboundData": {
     "outboundEndPoints": [
       {
@@ -166,9 +166,10 @@
                 {
                   "type": "fileUploader",
                   "id": "bulkFileUploader",
-                  "label": "CSV file",
+                  "label": "CSV file (from the Excel template: File → Save As → CSV, with the Role Changes sheet open)",
                   "fileTypes": "csv",
                   "singular": true,
+                  "fileTypesErrorMessage": "Upload a .csv file. In the Excel template, open the Role Changes sheet, then File → Save As → CSV (Comma delimited), and upload that file.",
                   "metadata": "<% { 'status': 'Uploaded' } %>",
                   "valueOutBinding": "uploadBulkFile:comsBulkUploads"
                 },
