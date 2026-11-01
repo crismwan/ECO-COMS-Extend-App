@@ -19,9 +19,9 @@ Part 1 is for requesters. Part 2 is for ISC reviewers and approvers.
 Open the app from Workday. The **ECO-COMS** hub opens on the **RBAC Hub** page. The left pane has:
 
 - **RBAC Hub**: the main page. At the top, five cards: **Needs My Attention** (your own requests and bulk uploads), **Shell Org Manager** (active shell organizations), **Pending ISC Requests** (pending and overdue), **Audit Log** (changes in the last 24 hours) and the **Shell Org Overview** donut (active vs inactive). Each card's link opens that area. Below them are three action cards: **Shell Organizations**, **Bulk Role Changes** and **Role Requests**.
-  - **Shell Organizations**: **Add Shell Org**, **Add Pattern**, **Open Manager** (Shell Org Manager)
-  - **Assignable Roles**: **Submit New Request**, **View Requests**
-  - **Administration**: **Submit AAA Role**, **View Pending ISC Requests**, **View Audit Log**
+  - **Shell Organizations**: **Open Shell Org Manager**, **Add Shell Org**, **Add Pattern**
+  - **Bulk Role Changes**: **Upload File**, **Download Template**, **View Results**
+  - **Role Requests**: **View My Requests**, **Submit New Request**, **Open ISC Queue**, **View AAA Requests**, **Submit AAA Role Request**
 - **FUH Administration**: information about Functional Unit Hierarchy organizations (no actions yet).
 - **Resources**: **Submit a Helpdesk Ticket** and **RBAC Rolename by Application** (external links).
 
