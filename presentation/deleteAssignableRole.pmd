@@ -142,7 +142,7 @@
         "baseUrlType": "BUSINESS-OBJECT",
         "url": "<% '/comsAssignableRoles/' + queryParams.roleId %>",
         "httpMethod": "DELETE",
-        "authType": "sso",
+        "authType": "isuAuth",
         "exclude": "<% empty(queryParams.roleId) || !empty((size((list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? []).filter(r => { r.id == (queryParams.roleId ?? '') && r.status == 'Pending ISC Review' && !empty(r.requestedBy) && r.requestedBy.id == (selectedWorker.id ?? '') })) > 0 ? ((list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? []).filter(r => { r.id == (queryParams.roleId ?? '') && r.status == 'Pending ISC Review' && !empty(r.requestedBy) && r.requestedBy.id == (selectedWorker.id ?? '') })[0].reviewEventWid ?? '') : '')) %>",
         "failOnStatusCodes": [
           {
@@ -164,7 +164,7 @@
         "baseUrlType": "BUSINESS-OBJECT",
         "url": "/comsAuditLogs",
         "httpMethod": "POST",
-        "authType": "sso",
+        "authType": "isuAuth",
         "values": [
           {
             "outboundPath": "timestamp",

@@ -138,7 +138,7 @@
         "name": "approveRequest",
         "baseUrlType": "BUSINESS-OBJECT",
         "url": "<% '/comsAssignableRoles/' + request.id %>",
-        "authType": "sso",
+        "authType": "isuAuth",
         "failOnStatusCodes": [
           {
             "code": 400
@@ -177,7 +177,7 @@
         "name": "postAuditLog",
         "baseUrlType": "BUSINESS-OBJECT",
         "url": "/comsAuditLogs",
-        "authType": "sso",
+        "authType": "isuAuth",
         "failOnStatusCodes": [
           {
             "code": 400
