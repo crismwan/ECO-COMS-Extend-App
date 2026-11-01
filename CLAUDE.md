@@ -2350,6 +2350,7 @@ Pattern that lets a Workday rejection block OK instead of showing a false succes
 
 - **Several widgets bound to the same outbound field:** which value wins isn't defined. Bind each field from one place; when a value depends on several widgets, compute it once in the endpoint's `values` list.
 - **Don't save a picker's WID into a field that's displayed as text.** Save the selection's descriptor for display and the WID in its own field.
+- **A grid cell `instanceList` filled with a literal `instanceList` whose entries are scripts renders blank on an EDIT page** (confirmed live 2026-10-31: every such column on a withdraw page was empty). A `values`-scripted one shows as plain text. On edit pages use `text` cells for display.
 - `relatedTask` / instance links on `instanceList` render **only on VIEW pages** (developer.workday.com instanceList reference). On EDIT pages they render as plain text (`values` alone even renders blank; use `values: []` + `multiSelect: true` + `selectedValuesAndDescriptors` for a read-only list). `instanceList` must be a literal array (a script string fails the build); use `instanceListLoopTag` for a variable list. An edit-page grid needs `doNotAdd`/`doNotRemove: true` to hide the +/− icons (`readOnly: true` doesn't).
 - After OK, an edit page returns to the app home unless a flow or conclusion page says otherwise.
 - `context.orchestrateId()` (developer.workday.com "Reference: Context Global Functions") gives the orchestration instance ID: storable as text, not a tenant instance.

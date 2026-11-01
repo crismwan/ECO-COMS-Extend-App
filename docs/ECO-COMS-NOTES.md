@@ -337,14 +337,27 @@ Builders/scripts: `tools/build_filter_pills.py` (filter pill cards, Home actions
 
 Fixed: Audit Log and ISC filters as pill cards; Home actions as cards; donut total showed the pattern count (392) instead of organizations (213); Shell Org Manager summary ignored the selected application; bulk ADD audit rows had no position WID and the CSV's name (now Workday's name and WID); duplicate empty messages; stale "above" help text; '1 rows'; four-card rows wrapping; mixed timestamp formats, titles, back links, headings, icons, warning headings, success page layouts.
 
-### Pending questions for the product owner
+### Decisions (product owner, 2026-10-31 evening)
 
-1. **ISC landing page (`iscRoleRequestsHub`)**: Home and cards now open the queue directly, and the queue has its own request-type filter. Retire the landing page?
-2. **Heading case:** section headings are mostly Title Case ("Organization Details"), with sentence case for "About this page" and "Before you submit". Pick one style?
-3. **BP step pages** keep their Workday-style titles ("Review COMS Assignable Role Request") without the "ECO-COMS:" prefix, since they appear in the inbox. Keep?
-4. **One old audit record** (bulk ADD of P-00010, 2026-10-31 21:11:38Z) has no position WID and the CSV's name. Correct it? Audit records are meant to be tamper-resistant, so this needs your approval.
-5. **Retry/Reuse for AAA requests** isn't built (the AAA form is different).
-6. **Live checks that need a real change:** the Manage Role Assignments confirmation page, and the bulk position name/WID fix (next real bulk run).
+1. **ISC landing page retired.** `iscRoleRequestsHub` and its card are gone; Home, cards and the queue's back link go to `iscRoleRequestsView` / Home. The Workday menu task (`model/ISCRoleRequestsView.task`) already opened the queue.
+2. **Headings in Title Case** (my choice, as asked): it was the majority style and matches Workday's own pages. `tools/title_case.py` applies it to pages, cards and builders; static check `headingCase`.
+3. **BP step pages keep their Workday-style titles** (no "ECO-COMS:" prefix).
+4. **Old bulk audit records to be corrected**: `node test/run-tests.js repair` step `Repair.bulkAuditPosition` (Workday position name and WID). **Not applied yet**: the CI token was rejected (401) at 01:27 UTC, so the repair-dry-run and repair-apply runs must wait for a token refresh.
+5. **No Retry/Reuse for AAA requests** (my choice, as asked): every AAA form field is driven by the Application dropdown's onChange, so a prefilled form would submit without a generated role name; the button could only show a note. AAA requests are rare (one so far).
+
+### Live tests (2026-11-01 01:29–01:31 UTC, approved)
+
+- Manage Role Assignments: removed P-00010 from X:BPMS(ODMT):ROLE:ADVISORS (effective 2026-10-30). OK led to the new confirmation page with role, organization, "Positions removed: P-00010 …", date; Manage This Role Again reopened the role.
+- Bulk real run added P-00010 back with an **empty** Position name cell: the audit record has Workday's name and is a link (position WID filled). The role is back to P-00009, P-00010, P-00011, P-00139, P-00759.
+
+### Found in the page review (committed, waiting for deploy)
+
+- Withdraw page: five request columns were blank for every row (literal instanceList on an EDIT page); now text. Static check `editInstanceList`.
+- Shell Org Manager: Applications list now includes applications that have shell orgs but no patterns (X:BPMS(ODMT) couldn't be opened before); banner wording; one warning glyph.
+
+### Waiting on a token refresh
+
+The deploy and CI test runs failed at the token step (401 "The supplied authentication is invalid") from 01:27 UTC. After refreshing `WD_DEV_TOKEN` / `WD_WCP_TOKEN`: rerun the latest deploy, then `e2e` with `repair-dry-run`, check it lists the two bulk records, then `repair-apply`.
 
 ## UI phase 2 (built 2026-10-31)
 

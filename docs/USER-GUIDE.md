@@ -18,7 +18,7 @@ Part 1 is for requesters. Part 2 is for ISC reviewers and approvers.
 
 Open the app from Workday. The **ECO-COMS** hub opens on the **RBAC Hub** page. The left pane has:
 
-- **RBAC Hub**: the main page. At the top, four cards: **Pending ISC Requests** (how many are pending and how many are overdue), **Shell Org Manager** (active shell organizations), **Audit Log** (changes in the last 24 hours) and the **Shell Org Overview** donut (active vs inactive). Each card's link opens that area. Below the cards are three sections:
+- **RBAC Hub**: the main page. At the top, five cards: **Needs My Attention** (your own requests and bulk uploads), **Shell Org Manager** (active shell organizations), **Pending ISC Requests** (pending and overdue), **Audit Log** (changes in the last 24 hours) and the **Shell Org Overview** donut (active vs inactive). Each card's link opens that area. Below them are three action cards: **Shell Organizations**, **Bulk Role Changes** and **Role Requests**.
   - **Shell Organizations**: **Add Shell Org**, **Add Pattern**, **Open Manager** (Shell Org Manager)
   - **Assignable Roles**: **Submit New Request**, **View Requests**
   - **Administration**: **Submit AAA Role**, **View Pending ISC Requests**, **View Audit Log**
@@ -110,7 +110,7 @@ If any change fails, the page shows "Workday rejected N of M changes...". The ch
 
 ### Request an assignable role
 
-1. On the RBAC Hub, click **Submit New Request**. The **ECO-COMS: Assignable Role Manager** page opens. Section **1. Pending ISC Review** lists requests still waiting.
+1. On the RBAC Hub, click **Submit New Request** in the Role Requests card. The **ECO-COMS: Submit Assignable Role Request** page opens. Section **1. Pending ISC Review** lists requests still waiting.
 2. In **2. Submit New Assignable Role Request**:
    1. **Custom Organization**: the shell org the role applies to.
    2. The role: either pick an existing role in **Delegated Roles**, or type a new one in **New Delegated Role** in ALL CAPS (for example `COORDINATOR`, 100 characters at most). If the new name already exists, pick it from Delegated Roles instead.
@@ -120,13 +120,13 @@ If any change fails, the page shows "Workday rejected N of M changes...". The ch
    6. **Enabled For**: pick a **Functional Unit Hierarchy** *or* an **Academic Unit**, not both. If you pick neither, Enabled For is "Academic Unit - University of British Columbia".
 3. Click **OK**. The request is saved with status **⏳ Pending ISC Review** and the ISC review starts in Workday (see [After you submit](#after-you-submit-the-isc-review)).
 
-To see your requests, use **View Requests** on the RBAC Hub (**My Assignable Role Requests**).
+To see your requests, use **View My Requests** on the RBAC Hub (**ECO-COMS: Assignable Role Manager**).
 
 ### Request an AAA role (Admin Provisioning)
 
 An AAA role (Organizations and Roles Assignment Administrator) decides who can manage shell orgs and submit role requests in ECO-COMS for an application.
 
-1. On the RBAC Hub, click **Submit AAA Role**. **ECO-COMS: Admin Provisioning (AAA)** opens.
+1. On the RBAC Hub, click **Submit AAA Role Request** in the Role Requests card. **ECO-COMS: Submit AAA Role Request** opens.
 2. In **2. Submit New Assignable Role Request**:
    1. **Application**: required.
    2. **Enabled For**: pick a **Functional Unit Hierarchy** *or* an **Academic Unit**, not both, or leave both empty (Enabled For is then "Academic Unit - University of British Columbia").
@@ -168,7 +168,7 @@ Outcomes:
 
 ### Audit Log Viewer
 
-**View Audit Log** on the RBAC Hub opens **ECO-COMS: Audit Log Viewer**: one row per change made through ECO-COMS, newest first. A row is written only when Workday accepts the change.
+**Open Audit Log** on the RBAC Hub opens **ECO-COMS: Audit Log Viewer**: one row per change made through ECO-COMS, newest first. A row is written only when Workday accepts the change.
 
 - **Time period** buttons: **All time**, **Last 24 hours**, **Last 7 days**, **Last 30 days**.
 - **Change type** buttons: **All types**, **Shell Org**, **Pattern**, **Org Status**, **Role Assignment**, **Assignable Role**. The two filters combine: picking a type keeps the period, and the other way round.
@@ -186,7 +186,7 @@ You need the **View: COMS Audit Log** domain to open this page.
 
 ### Finding your way around
 
-- **Home** shows your own work (**Needs my attention**), the ISC queue, Shell Org Manager, the Audit Log and the active/inactive split of shell organizations, then one action card per area: Shell Organizations, Bulk Role Changes and Role Requests.
+- **Home** shows your own work (**Needs My Attention**), the ISC queue, Shell Org Manager, the Audit Log and the active/inactive split of shell organizations, then one action card per area: Shell Organizations, Bulk Role Changes and Role Requests.
 - **Filters** are pill buttons; the current choice has a ✓. On the Audit Log choose a time period and change type; on ISC Role Requests choose the request type and status.
 - Every page has one back link at the top. Actions for the page are in an **Actions** card.
 
@@ -198,9 +198,9 @@ In Shell Org Manager, **Details** on an organization opens one page with its sta
 
 On Assignable Role Manager, each of your requests has **Retry** (denied requests) or **Reuse** in the New Request column. It opens a new request with the role name filled in and a note showing the earlier request and the reason given. Choose the application, organization, positions and effective date again; the Workday role name is generated when you pick the organization.
 
-### Needs my attention (Home)
+### Needs My Attention (Home)
 
-The first card on Home sums up your own work: your role requests pending ISC review, approved this month, and denied or withdrawn, plus any bulk upload of yours that is still running or was rejected. **My requests** opens Assignable Role Manager (your requests, with Withdraw); **My bulk uploads** is under the card's ⋯ menu.
+The **Needs My Attention** card on Home sums up your own work: your role requests pending ISC review, approved this month, and denied or withdrawn, plus any bulk upload of yours that is still running or was rejected. **My requests** opens Assignable Role Manager (your requests, with Withdraw); **My bulk uploads** is under the card's ⋯ menu.
 
 ### Bulk Role Changes (many positions from one file)
 
@@ -221,7 +221,7 @@ You can also tick **Real run** on the upload page to validate and apply in one g
 ### Where review work appears
 
 - **Your Workday inbox.** Each step arrives as an inbox item named "Review COMS Assignable Role Request: <role name>". The step help text explains what to check.
-- **ECO-COMS → View Pending ISC Requests** (needs **Maintain: COMS Assignable Roles**). Choose **View All Pending Requests**, **Pending AAA Provisioning** or **Pending Assignable Roles**.
+- **ECO-COMS → Open ISC Queue** (needs **Maintain: COMS Assignable Roles**). The queue opens on pending requests; use the **Request Type** (All, AAA provisioning, Assignable roles) and **Status** pills to change the view.
   - Three cards at the top: **Pending**, **Overdue** (pending for more than 3 business days) and **Approved this month**.
   - **Show** buttons: **Pending** (the default), **Approved**, **Denied**, **All**. **Showing** says how many requests match.
   - Overdue rows show "· overdue" next to their status.
