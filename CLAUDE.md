@@ -241,7 +241,7 @@ The `guide` attribute adds a "?" beside a widget on an **edit page**. It's a sib
 
 **Do NOT** place two `richText` nodes in the same `fieldSet` expecting both to render — only the first will appear.
 
-**Conditional visibility with `visible`:** For conditionally shown error/info messages, use `text` widgets (not `richText`) with the `visible` attribute. `richText` + `visible` inside a `fieldSet` may cause page-level errors. The safe confirmed pattern is `text` widgets with `visible` inside a single `fieldSet`:
+**Conditional visibility with `visible`:** For conditionally shown error/info messages, use `text` widgets (not `richText`) with the `visible` attribute. **Put such a text in a box that always shows** (e.g. the About fieldSet): a `layoutSection` whose only content is hidden still draws its box, an empty gap on the page (confirmed live 2026-11-01). The static check `Static.hiddenSection` warns about it. `richText` + `visible` inside a `fieldSet` may cause page-level errors. The safe confirmed pattern is `text` widgets with `visible` inside a single `fieldSet`:
 
 ## Widget validation — `onChange` + `setError` / `clearError`
 

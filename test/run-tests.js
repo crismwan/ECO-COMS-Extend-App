@@ -274,6 +274,16 @@ function staticSuite() {
         const bad = words.find((w, i) => { const c = w.replace(/^[("']+|[)"']+$/g, ''); return /^[a-z]+$/.test(c) && !(i > 0 && i < words.length - 1 && SMALL.has(c) && !words[i - 1].endsWith(':')); });
         if (bad) err('headingCase', `${name}: heading "${node.title}" isn't Title Case ("${bad}"); run tools/title_case.py`);
       }
+      // A section whose only content can be hidden still draws its box: an empty gap on the page
+      // (the 'Requesting again' note, in-platform test 2026-11-01). Put such fields in a box that always shows.
+      if (node.type === 'layoutSection' && (node.children || []).length) {
+        const leaves = [];
+        const collect = (c) => { if (c && c.type === 'fieldSet' && !c.title) (c.children || []).forEach(collect); else leaves.push(c); };
+        node.children.forEach(collect);
+        if (leaves.length === 1 && typeof leaves[0]?.visible === 'string' && leaves[0].visible.includes('<%')) {
+          warn('Static.hiddenSection', `${name}: section '${node.id || '?'}' holds only fields that can be hidden; when they are, an empty box shows`);
+        }
+      }
       // Workday prints 'n items' next to every grid label, so a count in the label says it twice.
       if (node.type === 'grid' && /\(' \+ size\(|' \(' \+/.test(String(node.label || ''))) {
         err('gridCount', `${name}: grid '${node.id}' puts a count in its label; Workday already shows 'n items' (run tools/polish.py)`);

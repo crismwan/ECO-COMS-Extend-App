@@ -157,6 +157,18 @@ for f in sorted(os.listdir(ROOT)):
                         kids[i] = {"type": "fieldSet", "id": "aboutFieldSet", "title": "About This Page", "children": [k]}
         walk(pr, wrap)
         walk(pr, fix)  # adds the ⓘ to the new About box
+    # the hidden "Requesting again" note left an empty box in its own section (in-platform test 2026-11-01):
+    # move its fields into the About box, where a hidden text takes no space
+    if n == 'assignableRoleManager':
+        secs = pr['body']['sections']
+        ids = [s.get('id') for s in secs]
+        if 'againSection' in ids:
+            again = secs.pop(ids.index('againSection'))
+            kids = [k for fs in again.get('children', []) for k in (fs.get('children', []) if fs.get('type') == 'fieldSet' else [fs])]
+            about = find(pr, 'aboutFieldSet')
+            have = {c.get('id') for c in about['children']}
+            kids = [k for k in kids if k.get('id') not in have]
+            about['children'] = about['children'][:1] + kids + about['children'][1:]
     # the AAA form was copied from the assignable one; its wording still said "Assignable Role"
     if n == 'adminProvisioning':
         AAA = [('Submit and manage Assignable Role requests by Application. Review pending requests or submit a new role request for ISC review.',

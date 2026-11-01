@@ -383,26 +383,6 @@
         },
         {
           "type": "layoutSection",
-          "id": "againSection",
-          "children": [
-            {
-              "type": "fieldSet",
-              "id": "againFieldSet",
-              "children": [
-                {
-                  "type": "text",
-                  "id": "againNoteText",
-                  "enabled": false,
-                  "label": "ⓘ Requesting again",
-                  "visible": "<% !empty(queryParams.againFrom) %>",
-                  "value": "<% 'Based on ' + (queryParams.againFrom ?? '') + ' (' + (queryParams.againStatus ?? '') + ')' + (empty(queryParams.againReason) ? '' : ('. Reason given: ' + queryParams.againReason)) + '. The role name is filled in; choose the application, organization, positions and effective date again.' %>"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "type": "layoutSection",
           "id": "contentSection",
           "children": [
             {
@@ -415,6 +395,14 @@
                   "id": "pageDesc",
                   "enabled": false,
                   "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">Manage Assignable Roles for Custom Organizations. Review pending role requests or submit a new role request for ISC review.</span>"
+                },
+                {
+                  "type": "text",
+                  "id": "againNoteText",
+                  "enabled": false,
+                  "label": "ⓘ Requesting again",
+                  "visible": "<% !empty(queryParams.againFrom) %>",
+                  "value": "<% 'Based on ' + (queryParams.againFrom ?? '') + ' (' + (queryParams.againStatus ?? '') + ')' + (empty(queryParams.againReason) ? '' : ('. Reason given: ' + queryParams.againReason)) + '. The role name is filled in; choose the application, organization, positions and effective date again.' %>"
                 }
               ]
             },
