@@ -83,10 +83,12 @@ function pacificNow() {
   // The JSON "data" part goes first: Workday treats the first part as the root body
   // ("Multipart Attachment requests must contain exactly one root body" otherwise).
   const form = new FormData();
-  form.append('data', new Blob([JSON.stringify({ comsBulkTemplates: [{
+  // A plain string field (no filename), as curl --form 'data="{...}"' sends it: the root body is the
+  // one part that isn't a file.
+  form.append('data', JSON.stringify({ comsBulkTemplates: [{
     file: 'cid:comsBulkTemplates0', version, asOf, rowCount: String(rows.length),
     notes: 'Pre-filled with every current role assignment on shell organizations', uploadedByName: 'Template publisher', uploadedAt: new Date().toISOString(),
-  }] })], { type: 'application/json' }));
+  }] }));
   form.append('comsBulkTemplates0', new Blob([bytes], { type: XLSX }), FILE_NAME);
   const created = await call('POST', `${BO}/comsBulkTemplatesCollection`, { body: form, headers: { Accept: 'application/json' } });
   const rec = (created.comsBulkTemplates || [])[0];
