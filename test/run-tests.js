@@ -1028,6 +1028,31 @@ async function repair(token, me) {
     pass('Repair.auditNoAction', `deleted ${junk.length} Role Assignment audit record(s) with no action`);
   });
 
+  // Bulk audit records written before the bulk run looked positions up (2026-10-31): the position
+  // name came from the CSV and ADD rows had no position WID. Use Workday's name and WID, as single
+  // changes do. Approved by the product owner 2026-10-31.
+  await test('Repair.bulkAuditPosition', async () => {
+    const all = await readAll(token, 'comsAuditLogs');
+    const bulk = all.filter((a) => a.objectType === 'Role Assignment' && /^Bulk upload /.test(a.details || ''));
+    const fixes = [];
+    for (const a of bulk) {
+      const pid = (String(a.positionName || '').match(/^P-\d+/) || [])[0];
+      if (!pid) continue;
+      const r = await wql(token, `SELECT workdayID, cf_PositionID, position_PositionManagement, cf_PositionText FROM allPositions WHERE cf_PositionID = '${pid}'`, 1);
+      const pos = (r.data || [])[0];
+      if (!pos) { warn('Repair.bulkAuditPosition', `${a.id}: ${pid} not found in allPositions; left as is`); continue; }
+      const name = pos.position_PositionManagement?.descriptor || pos.cf_PositionText || a.positionName;
+      const wid = a.positionWid || idOf(pos.workdayID);
+      if (name === a.positionName && wid === a.positionWid) continue;
+      fixes.push({ a, body: { positionName: name, positionWid: wid, details: String(a.details).split(a.positionName).join(name) } });
+    }
+    if (!fixes.length) return pass('Repair.bulkAuditPosition', `${bulk.length} bulk audit record(s) already use Workday's position name and WID`);
+    const list = fixes.map((f) => `${f.a.action} ${f.a.timestamp}: name "${f.a.positionName}" → "${f.body.positionName}", WID "${f.a.positionWid || ''}" → "${f.body.positionWid}"`).join('; ');
+    if (!apply) return pass('Repair.bulkAuditPosition', `would update ${fixes.length}: ${list}`);
+    for (const f of fixes) await request('PATCH', `${BO}/comsAuditLogs/${f.a.id}`, token, f.body);
+    pass('Repair.bulkAuditPosition', `updated ${fixes.length}: ${list}`);
+  });
+
   await test('Repair.enabledFor', async () => {
     const roles = await readAll(token, 'comsAssignableRoles');
     const bad = roles.filter((r) => r.status === 'Pending ISC Review' && /^[0-9a-f]{32}$/.test(r.enabledForOrganizationTypes || ''));
