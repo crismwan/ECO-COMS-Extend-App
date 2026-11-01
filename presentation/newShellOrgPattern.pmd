@@ -140,7 +140,7 @@
                   "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">Add a new Shell Org Pattern for your application. Patterns define the CO naming structure used to create Custom Organizations in Workday. The pattern name is auto-generated from the fields below. A duplicate check is performed before submission.</span>"
                 }
               ],
-              "title": "About this page"
+              "title": "About This Page"
             }
           ]
         },
@@ -151,7 +151,7 @@
             {
               "type": "fieldSet",
               "id": "livePatternNoticeFieldSet",
-              "title": "Before you submit",
+              "title": "Before You Submit",
               "children": [
                 {
                   "type": "richText",

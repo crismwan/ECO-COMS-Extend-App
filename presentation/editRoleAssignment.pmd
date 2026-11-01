@@ -105,7 +105,7 @@
             {
               "type": "fieldSet",
               "id": "aboutFieldSet",
-              "title": "About this page",
+              "title": "About This Page",
               "children": [
                 {
                   "type": "richText",

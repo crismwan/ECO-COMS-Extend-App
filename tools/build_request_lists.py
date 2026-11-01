@@ -23,7 +23,7 @@ for page, (card_id, sub, pills, my_empty) in PAGES.items():
             kids = s['children']
             if not any(k.get('type') == 'fieldSet' for k in kids):
                 desc = next(k for k in kids if k.get('id') == 'pageDesc')
-                kids[kids.index(desc)] = {"type": "fieldSet", "id": "aboutFieldSet", "title": "About this page", "children": [desc]}
+                kids[kids.index(desc)] = {"type": "fieldSet", "id": "aboutFieldSet", "title": "About This Page", "children": [desc]}
         for k in s.get('children', []):
             if k.get('type') == 'cardContainer' and len(k.get('cards', [])) >= 3 and k['cards'][0]['cardId'] == 'CountCard':
                 cards = [c for c in k['cards'] if c['cardId'] == 'CountCard']

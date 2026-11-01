@@ -689,7 +689,7 @@
             {
               "type": "fieldSet",
               "id": "activeNoteFieldSet",
-              "title": "Before you submit",
+              "title": "Before You Submit",
               "children": [
                 {
                   "type": "richText",

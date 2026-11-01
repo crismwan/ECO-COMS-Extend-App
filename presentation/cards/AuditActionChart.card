@@ -13,7 +13,7 @@
     "totalText"
   ],
   "header": {
-    "title": "Changes by action",
+    "title": "Changes by Action",
     "subtitle": "<% totalText ?? \"\" %>"
   },
   "body": {

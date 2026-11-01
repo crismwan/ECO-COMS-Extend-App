@@ -148,9 +148,9 @@
           "children": [
             {
               "type": "button",
-              "label": "← ISC Role Requests",
+              "label": "← Home",
               "taskReference": {
-                "taskId": "iscRoleRequestsHub"
+                "taskId": "home"
               },
               "action": "LINK"
             }
@@ -203,7 +203,7 @@
             {
               "type": "fieldSet",
               "id": "actionsInfoFieldSet",
-              "title": "About this page",
+              "title": "About This Page",
               "children": [
                 {
                   "type": "richText",

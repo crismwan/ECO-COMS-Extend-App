@@ -1,7 +1,7 @@
 {
   "id": "BulkNextStepCard",
   "header": {
-    "title": "Next step",
+    "title": "Next Step",
     "icon": "wd-accent-checkmarked-page"
   },
   "body": {

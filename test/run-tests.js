@@ -254,6 +254,12 @@ function staticSuite() {
         const msgs = kids.filter((c) => c && c.visible && ['text', 'richText'].includes(c.type) && /\bno\b|nothing|haven.t/i.test(JSON.stringify(c.value || '')));
         if (msgs.length > 1) err('emptyMsg', `${name}: ${msgs.length} empty-grid messages side by side (${msgs.map((m) => m.id).join(', ')}); keep one`);
       }
+      if (node.type === 'fieldSet' && typeof node.title === 'string' && !node.title.includes('<%')) {
+        const SMALL = new Set(['a', 'an', 'the', 'and', 'or', 'but', 'of', 'to', 'in', 'on', 'at', 'for', 'by', 'with', 'as', 'vs']);
+        const words = node.title.split(' ');
+        const bad = words.find((w, i) => { const c = w.replace(/^[("']+|[)"']+$/g, ''); return /^[a-z]+$/.test(c) && !(i > 0 && i < words.length - 1 && SMALL.has(c) && !words[i - 1].endsWith(':')); });
+        if (bad) err('headingCase', `${name}: heading "${node.title}" isn't Title Case ("${bad}"); run tools/title_case.py`);
+      }
       if (node.type === 'cardContainer' && (node.layout ?? 'grid') === 'grid' && (node.cards || []).length > 3) {
         err('cardRow', `${name}: cardContainer '${node.id || '?'}' has ${(node.cards || []).length} cards in grid layout; the fourth wraps onto its own row`);
       }

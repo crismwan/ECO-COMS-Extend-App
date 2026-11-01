@@ -55,7 +55,7 @@
             {
               "type": "fieldSet",
               "id": "aboutFieldSet",
-              "title": "How to use this template",
+              "title": "How to Use This Template",
               "children": [
                 {
                   "type": "richText",
@@ -85,7 +85,7 @@
             {
               "type": "fieldSet",
               "id": "templateFieldSet",
-              "title": "Current role assignments",
+              "title": "Current Role Assignments",
               "children": [
                 {
                   "type": "grid",

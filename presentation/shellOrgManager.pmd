@@ -166,7 +166,7 @@
           {
             "type": "fieldSet",
             "id": "patternsAboutFieldSet",
-            "title": "About this tab",
+            "title": "About This Tab",
             "children": [
               {
                 "type": "richText",
@@ -374,7 +374,7 @@
           {
             "type": "fieldSet",
             "id": "shellOrgsAboutFieldSet",
-            "title": "About this tab",
+            "title": "About This Tab",
             "children": [
               {
                 "type": "richText",

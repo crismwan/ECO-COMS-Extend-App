@@ -1,7 +1,7 @@
 {
   "id": "ShellOrgQuickActionsCard",
   "header": {
-    "title": "Quick actions",
+    "title": "Quick Actions",
     "subtitle": "Create in Workday",
     "icon": "wd-accent-worksheets"
   },

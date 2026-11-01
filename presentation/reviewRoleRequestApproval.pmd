@@ -124,7 +124,7 @@
             {
               "type": "fieldSet",
               "id": "approvalHelpFieldSet",
-              "title": "What happens next",
+              "title": "What Happens Next",
               "children": [
                 {
                   "type": "richText",

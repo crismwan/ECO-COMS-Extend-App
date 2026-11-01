@@ -11,14 +11,14 @@ def pill(label, cond, task, bindings):
 
 PERIODS = [("All time", "all"), ("Last 24 hours", "24h"), ("Last 7 days", "7d"), ("Last 30 days", "30d")]
 period_card = {"id": "AuditPeriodPillCard", "parameters": ["period", "changeType"],
-  "header": {"title": "Time period", "icon": "wd-accent-clipboard-checklist"},
+  "header": {"title": "Time Period", "icon": "wd-accent-clipboard-checklist"},
   "body": {"type": "pillCard", "pills": [
     pill(lbl, ('empty(period) || period == "all"' if key == "all" else 'period == "' + key + '"'), "auditLogViewer",
          {"period": key, "changeType": '<% changeType ?? "" %>'}) for lbl, key in PERIODS]}}
 TYPES = [("All types", ""), ("Shell Org", "Shell Org"), ("Pattern", "Shell Org Pattern"), ("Org Status", "Org Status"),
          ("Role Assignment", "Role Assignment"), ("Assignable Role", "Assignable Role")]
 type_card = {"id": "AuditTypePillCard", "parameters": ["period", "changeType"],
-  "header": {"title": "Change type", "icon": "wd-accent-clipboard-checklist"},
+  "header": {"title": "Change Type", "icon": "wd-accent-clipboard-checklist"},
   "body": {"type": "pillCard", "pills": [
     pill(lbl, ('empty(changeType)' if key == "" else 'changeType == "' + key + '"'), "auditLogViewer",
          {"period": '<% period ?? "" %>', "changeType": key}) for lbl, key in TYPES]}}
@@ -55,7 +55,7 @@ print('ok')
 VIEWS = [("All requests", ""), ("AAA provisioning", "aaa"), ("Assignable roles", "assignable")]
 STATUSES = [("Pending", "Pending ISC Review"), ("Approved", "Approved"), ("Denied", "Denied"), ("All", "All")]
 isc_view_card = {"id": "IscViewPillCard", "parameters": ["view", "status"],
-  "header": {"title": "Request type", "icon": "wd-accent-clipboard-checklist"},
+  "header": {"title": "Request Type", "icon": "wd-accent-clipboard-checklist"},
   "body": {"type": "pillCard", "pills": [
     pill(lbl, ('empty(view)' if key == "" else 'view == "' + key + '"'), "iscRoleRequestsView",
          {"view": key, "status": '<% status ?? "" %>'}) for lbl, key in VIEWS]}}
@@ -64,12 +64,7 @@ isc_status_card = {"id": "IscStatusPillCard", "parameters": ["view", "status"],
   "body": {"type": "pillCard", "pills": [
     pill(lbl, ('empty(status) || status == "Pending ISC Review"' if key == "Pending ISC Review" else 'status == "' + key + '"'), "iscRoleRequestsView",
          {"view": '<% view ?? "" %>', "status": key}) for lbl, key in STATUSES]}}
-isc_queue_card = {"id": "IscQueuePillCard",
-  "header": {"title": "Open the queue", "subtitle": "Pending requests waiting for ISC review", "icon": "wd-accent-clipboard-checklist"},
-  "body": {"type": "pillCard", "pills": [
-    {"label": lbl, "taskReference": {"taskId": "iscRoleRequestsView", "parameterBindings": {"view": key}}} for lbl, key in
-    [("All pending requests", ""), ("Pending AAA provisioning", "aaa"), ("Pending assignable roles", "assignable")]]}}
-for c in (isc_view_card, isc_status_card, isc_queue_card):
+for c in (isc_view_card, isc_status_card):
     open(os.path.join(ROOT, 'cards', c['id'] + '.card'), 'w').write(json.dumps(c, indent=2, ensure_ascii=False) + '\n')
 
 isc = load('iscRoleRequestsView.pmd')
@@ -84,12 +79,7 @@ secs[i]['children'] = [fs, {"type": "cardContainer", "id": "iscFilterCardContain
     {"type": "card", "cardId": "IscStatusPillCard", "parameters": IP}]}]
 save('iscRoleRequestsView.pmd', isc)
 
-hub = load('iscRoleRequestsHub.pmd')
-hs = hub['presentation']['body']['sections']
-j = [s.get('id') for s in hs].index('iscHubLinksSection')
-hs[j] = {"type": "layoutSection", "id": "iscHubLinksSection", "children": [{"type": "cardContainer", "id": "iscQueueCardContainer", "layout": "grid", "cards": [
-    {"type": "card", "cardId": "IscQueuePillCard"}]}]}
-save('iscRoleRequestsHub.pmd', hub)
+# The ISC landing page (iscRoleRequestsHub) was retired 2026-10-31; links open iscRoleRequestsView directly.
 print('isc ok')
 
 # ── Home: the four stacked-button sections become one row of action cards (main action first) ──
@@ -117,7 +107,7 @@ save('hubLanding.pmd', home)
 print('home ok')
 
 # ── Shell Org Manager Summary tab: count cards + quick actions in one row, chart below; counts follow the selected application ──
-qa = {"id": "ShellOrgQuickActionsCard", "header": {"title": "Quick actions", "subtitle": "Create in Workday", "icon": "wd-accent-worksheets"},
+qa = {"id": "ShellOrgQuickActionsCard", "header": {"title": "Quick Actions", "subtitle": "Create in Workday", "icon": "wd-accent-worksheets"},
       "body": {"type": "pillCard", "pills": [{"label": "Add Shell Org", "taskReference": {"taskId": "createShellOrgWizard"}},
                                              {"label": "Add Pattern", "taskReference": {"taskId": "createShellOrgPatternWizard"}}]}}
 open(os.path.join(ROOT, 'cards', 'ShellOrgQuickActionsCard.card'), 'w').write(json.dumps(qa, indent=2, ensure_ascii=False) + '\n')
@@ -157,8 +147,8 @@ som['presentation']['title']['label'] = "<% empty(queryParams.appName) ? 'ECO-CO
 save('shellOrgManager.pmd', som)
 
 # ── Error page: links as two pill cards; 'Other pages' only for a 404 (as before) ──
-for cid, title, pills in [("ErrorStartAgainCard", "Start again", [("Home", "home"), ("Shell Org Manager", "shellOrgManager")]),
-                          ("ErrorOtherPagesCard", "Other pages", [("Assignable Role Manager", "assignableRoleManagerView"), ("AAA Role Provisioning", "adminProvisioningView"),
+for cid, title, pills in [("ErrorStartAgainCard", "Start Again", [("Home", "home"), ("Shell Org Manager", "shellOrgManager")]),
+                          ("ErrorOtherPagesCard", "Other Pages", [("Assignable Role Manager", "assignableRoleManagerView"), ("AAA Role Provisioning", "adminProvisioningView"),
                                                                   ("ISC Role Requests", "iscRoleRequestsView"), ("Audit Log", "auditLogViewer")])]:
     open(os.path.join(ROOT, 'cards', cid + '.card'), 'w').write(json.dumps({"id": cid, "header": {"title": title, "icon": "wd-accent-home"},
         "body": {"type": "pillCard", "pills": [{"label": l, "taskReference": {"taskId": t}} for l, t in pills]}}, indent=2, ensure_ascii=False) + '\n')

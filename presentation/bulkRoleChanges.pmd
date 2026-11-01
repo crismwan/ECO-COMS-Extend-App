@@ -112,7 +112,7 @@
             {
               "type": "fieldSet",
               "id": "aboutFieldSet",
-              "title": "How it works",
+              "title": "How It Works",
               "children": [
                 {
                   "type": "richText",
@@ -142,7 +142,7 @@
             {
               "type": "fieldSet",
               "id": "warningFieldSet",
-              "title": "Before you submit",
+              "title": "Before You Submit",
               "children": [
                 {
                   "type": "richText",

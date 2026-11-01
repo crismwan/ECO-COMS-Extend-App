@@ -120,7 +120,7 @@
             {
               "type": "fieldSet",
               "id": "aboutFieldSet",
-              "title": "About this page",
+              "title": "About This Page",
               "children": [
                 {
                   "type": "richText",
@@ -167,7 +167,7 @@
             {
               "type": "fieldSet",
               "id": "uploadsFieldSet",
-              "title": "My uploads",
+              "title": "My Uploads",
               "children": [
                 {
                   "type": "text",

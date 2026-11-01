@@ -218,13 +218,6 @@
       }
     },
     {
-      "id": "iscRoleRequestsHub",
-      "routingPattern": "/iscRoleRequestsHub",
-      "page": {
-        "id": "iscRoleRequestsHub"
-      }
-    },
-    {
       "id": "createShellOrgPatternWizard",
       "routingPattern": "/createShellOrgPatternWizard",
       "page": {

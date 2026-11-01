@@ -33,13 +33,13 @@ template = {"id": "bulkRoleTemplate", "securityDomains": ["ManageCOMSShellOrgs"]
   "presentation": {"headerSize": "STANDARD", "title": {"type": "title", "label": "ECO-COMS: Bulk Role Changes – Template"},
     "body": {"type": "basicFormLayout", "id": "bulkTemplateForm", "sections": [
       nav(("homeButton", "← Home", "home")),
-      with_card(note("aboutSection", "aboutFieldSet", "How to use this template", "aboutRichText",
+      with_card(note("aboutSection", "aboutFieldSet", "How to Use This Template", "aboutRichText",
         "Each row is one position that currently holds a role on a shell organization. Export the grid to Excel (the export icon on the grid), then:<br/>"
         "1. In <b>Action</b>, type <b>REMOVE</b> on the rows to take a position off a role.<br/>"
         "2. To add a position, copy a row of the same role, type <b>ADD</b> in Action and put the new <b>Position ID</b> (for example P-00123) in that column. Leave Assignee WID empty on ADD rows.<br/>"
         "3. Leave Action empty on rows you don't want to change. Keep the columns in this order and don't edit the WID columns.<br/>"
         "4. Save as <b>CSV</b> (Excel: File → Save As → CSV) and upload it on the Bulk Role Changes page. At most 200 rows."), "BulkNextStepCard"),
-      {"type": "layoutSection", "id": "gridSection", "children": [{"type": "fieldSet", "id": "templateFieldSet", "title": "Current role assignments", "children": [
+      {"type": "layoutSection", "id": "gridSection", "children": [{"type": "fieldSet", "id": "templateFieldSet", "title": "Current Role Assignments", "children": [
         {"type": "grid", "id": "bulkTemplateGrid", "gridType": "LIST", "multiViewStylingEnabled": True, "autoPaging": True, "enabled": False,
          "excelExportEnabled": True, "rowVariableName": "tr", "rows": ROWS,
          "label": "<% 'Role assignments (' + size(" + ROWS[3:-3] + ") + ' positions)' %>",
@@ -101,12 +101,12 @@ upload = {"id": "bulkRoleChanges", "securityDomains": ["ManageCOMSShellOrgs"], "
     "cancelOverride": {"taskId": "home"},
     "body": {"type": "basicFormLayout", "id": "bulkUploadForm", "sections": [
       nav(("homeButton", "← Home", "home")),
-      with_card(note("aboutSection", "aboutFieldSet", "How it works", "aboutRichText",
+      with_card(note("aboutSection", "aboutFieldSet", "How It Works", "aboutRichText",
         "Upload the CSV made from the template. Run it as <b>Validate only</b> first: every row is checked and nothing changes in Workday. "
         "Then upload the same file again with <b>Real run</b> ticked: each ADD or REMOVE row is applied in Workday's Assign Roles, "
         "one row at a time, and each change is written to the Audit Log. A row that Workday rejects is recorded as FAILED and the run carries on. "
         "Both runs work in the background; the results page shows progress. At most 200 rows per file."), "BulkRelatedCard"),
-      note("warningSection", "warningFieldSet", "Before you submit", "warningRichText",
+      note("warningSection", "warningFieldSet", "Before You Submit", "warningRichText",
         "A real run changes who holds security roles in Workday straight away. Changes that succeed are not undone if later rows fail. Validate first.",
         '#B45309', '⚠'),
       {"type": "layoutSection", "id": "formSection", "children": [{"type": "fieldSet", "id": "uploadFieldSet", "title": "Upload", "children": [
@@ -145,7 +145,7 @@ results = {"id": "bulkRoleResults", "securityDomains": ["ManageCOMSShellOrgs"],
     "body": {"type": "basicFormLayout", "id": "bulkResultsForm", "sections": [
       {"type": "layoutSection", "id": "navSection", "children": [
         {"type": "button", "id": "homeButton", "label": "← Home", "action": "LINK", "taskReference": {"taskId": "home"}}]},
-      note("aboutSection", "aboutFieldSet", "About this page", "aboutRichText",
+      note("aboutSection", "aboutFieldSet", "About This Page", "aboutRichText",
         "Your uploads, newest first, and the row results of the selected one (the newest unless you pick another). "
         "A run works in the background: while the status is Uploaded, Queued or Running, click <b>Refresh</b> in a minute to see more rows. "
         "When a validation run shows no INVALID rows, click <b>Apply</b> on that upload to run the same file for real. "
@@ -154,7 +154,7 @@ results = {"id": "bulkRoleResults", "securityDomains": ["ManageCOMSShellOrgs"],
         {"type": "card", "cardId": "CountCard", "parameters": "<% { 'title': 'Succeeded', 'subtitle': 'DONE or VALID', 'countText': '' + " + cnt("x.result == 'DONE' || x.result == 'VALID'") + " + ' of ' + " + rows_text("size(" + RES + ")") + " } %>"},
         {"type": "card", "cardId": "CountCard", "parameters": "<% { 'title': 'Need attention', 'subtitle': 'FAILED or INVALID', 'countText': '' + " + cnt("x.result == 'FAILED' || x.result == 'INVALID'") + " + ' of ' + " + rows_text("size(" + RES + ")") + " } %>"},
         {"type": "card", "cardId": "BulkActionsPillCard", "parameters": "<% { 'batch': " + REF + " } %>"}]}]},
-      {"type": "layoutSection", "id": "uploadsSection", "children": [{"type": "fieldSet", "id": "uploadsFieldSet", "title": "My uploads", "children": [
+      {"type": "layoutSection", "id": "uploadsSection", "children": [{"type": "fieldSet", "id": "uploadsFieldSet", "title": "My Uploads", "children": [
         {"type": "grid", "id": "uploadsGrid", "gridType": "LIST", "multiViewStylingEnabled": True, "autoPaging": True, "enabled": False, "excelExportEnabled": True,
          "rowVariableName": "up", "rows": "<% " + UPL + " %>", "label": "<% 'My uploads (' + size(" + UPL + ") + ')' %>",
          "columns": [txt("colUploaded", "Uploaded", "<% (up.uploadedAt ?? '').replace('T', ' ').replace('Z', ' UTC') %>"),
@@ -177,7 +177,7 @@ results = {"id": "bulkRoleResults", "securityDomains": ["ManageCOMSShellOrgs"],
                      txt("colMessage", "Message", "<% rr.message ?? '' %>")]}]}]}]},
     "footer": FOOT, "pageType": "VIEW"}}
 save('bulkRoleResults', results)
-for cid, title, pills in [("BulkNextStepCard", "Next step", [("Upload a file", "bulkRoleChanges"), ("View results", "bulkRoleResults")]),
+for cid, title, pills in [("BulkNextStepCard", "Next Step", [("Upload a file", "bulkRoleChanges"), ("View results", "bulkRoleResults")]),
                           ("BulkRelatedCard", "Related", [("Download template", "bulkRoleTemplate"), ("View results", "bulkRoleResults")])]:
     open(os.path.join(ROOT, 'cards', cid + '.card'), 'w').write(json.dumps({"id": cid, "header": {"title": title, "icon": "wd-accent-checkmarked-page"},
         "body": {"type": "pillCard", "pills": [{"label": l, "taskReference": {"taskId": t}} for l, t in pills]}}, indent=2, ensure_ascii=False) + '\n')
@@ -236,7 +236,7 @@ apply = {"id": "bulkRoleApply", "securityDomains": ["ManageCOMSShellOrgs"],
       {"type": "layoutSection", "id": "navSection", "children": [
         {"type": "button", "id": "resultsButton", "label": "← Bulk Role Changes – Results", "action": "LINK", "suppressDiscardDialog": True,
          "taskReference": {"taskId": "bulkRoleResults", "parameterBindings": {"batch": "<% " + B + " %>"}}}]},
-      note("warningSection", "warningFieldSet", "Before you submit", "warningRichText",
+      note("warningSection", "warningFieldSet", "Before You Submit", "warningRichText",
         "OK applies every VALID row of this upload in Workday's Assign Roles, with the effective date chosen when the file was validated. "
         "Changes that succeed are not undone if later rows fail. Each change is written to the Audit Log.", '#B45309', '⚠'),
       {"type": "layoutSection", "id": "detailSection", "children": [{"type": "fieldSet", "id": "detailFieldSet", "title": "Upload", "children": [

@@ -21,7 +21,7 @@ PREFIX_SCRIPTED = {  # scripted titles: swap the leading literal
   'manageShellOrgStatus': ("'Change Status: '", "'ECO-COMS: Change Status – '"),
 }
 NAV = {'Back to Shell Org Manager': 'View in Shell Org Manager', 'Manage this role again': 'Manage This Role Again', '← Go to Home': '← Home', '← My Role Requests': '← Assignable Role Manager', '← Admin Provisioning': '← AAA Role Provisioning'}
-HEADINGS = {'About This Page': 'About this page', 'Changes applied': 'Changes Applied Successfully', 'Status Change Warning': 'Before you submit'}
+HEADINGS = {'About this page': 'About This Page', 'Changes applied': 'Changes Applied Successfully', 'Status Change Warning': 'Before You Submit'}  # Title Case: tools/title_case.py
 WIZARD_TITLE = 'ECO-COMS: Shell Org Manager'
 TS = re.compile(r"<% (\w+)\.timestamp \?\? '' %>")
 changes = []

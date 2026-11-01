@@ -115,7 +115,7 @@
             {
               "type": "fieldSet",
               "id": "aboutFieldSet",
-              "title": "About this page",
+              "title": "About This Page",
               "children": [
                 {
                   "type": "richText",
@@ -211,7 +211,7 @@
             {
               "type": "fieldSet",
               "id": "rolesFieldSet",
-              "title": "Roles on this organization",
+              "title": "Roles on This Organization",
               "children": [
                 {
                   "type": "text",
@@ -313,7 +313,7 @@
             {
               "type": "fieldSet",
               "id": "historyFieldSet",
-              "title": "Change history",
+              "title": "Change History",
               "children": [
                 {
                   "type": "text",

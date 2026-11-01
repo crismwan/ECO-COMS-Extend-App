@@ -46,7 +46,7 @@ page = {"id": "shellOrgDetail", "securityDomains": ["ManageCOMSShellOrgs"],
       {"type": "layoutSection", "id": "navSection", "children": [
         {"type": "button", "id": "backButton", "label": "← Shell Org Manager", "action": "LINK",
          "taskReference": {"taskId": "shellOrgManager", "parameterBindings": {"appCode": "<% queryParams.appCode ?? '' %>", "appName": "<% queryParams.appName ?? '' %>"}}}]},
-      note("aboutSection", "aboutFieldSet", "About this page", "aboutRichText",
+      note("aboutSection", "aboutFieldSet", "About This Page", "aboutRichText",
         "One shell organization: its status in Workday, the roles assigned on it with their positions and workers, and the ECO-COMS changes made to it "
         "(from the newest 200 Audit Log records). Use <b>Inactivate</b> or <b>Reactivate Organization</b> to change its status, or <b>Manage</b> on a role to add or remove positions."),
       {"type": "layoutSection", "id": "cardsSection", "children": [{"type": "cardContainer", "id": "orgCardContainer", "layout": "grid", "cards": [
@@ -62,7 +62,7 @@ page = {"id": "shellOrgDetail", "securityDomains": ["ManageCOMSShellOrgs"],
            "orgId": "<% queryParams.orgId ?? '' %>", "orgCode": "<% " + CODE + " %>", "orgName": "<% " + NAME + " %>",
            "currentStatus": "<% " + ACTIVE + " ? 'Active' : 'Inactive' %>", "effectiveDate": "<% date:now().format('yyyy-MM-dd') %>",
            "patternName": "<% " + CODE + " %>", "orgType": "<% queryParams.orgType ?? '' %>", "comsAppId": "<% queryParams.appCode ?? '' %>"}}}]}]},
-      {"type": "layoutSection", "id": "rolesSection", "children": [{"type": "fieldSet", "id": "rolesFieldSet", "title": "Roles on this organization", "children": [
+      {"type": "layoutSection", "id": "rolesSection", "children": [{"type": "fieldSet", "id": "rolesFieldSet", "title": "Roles on This Organization", "children": [
         empty_msg("noRolesText", "size(" + ROLES + ") == 0", "No shell roles are assigned on this organization."),
         {"type": "grid", "id": "orgRolesGrid", "gridType": "LIST", "multiViewStylingEnabled": True, "autoPaging": True, "enabled": False, "excelExportEnabled": True,
          "rowVariableName": "ra", "rows": "<% " + ROLES + " %>", "label": "<% 'Role assignments (' + size(" + ROLES + ") + ')' %>",
@@ -75,7 +75,7 @@ page = {"id": "shellOrgDetail", "securityDomains": ["ManageCOMSShellOrgs"],
                          "roleId": "<% ra.role.id ?? '' %>", "roleName": "<% ra.role.descriptor ?? '' %>",
                          "orgId": "<% ra.org.id ?? '' %>", "orgName": "<% ra.org.descriptor ?? '' %>",
                          "appCode": "<% queryParams.appCode ?? '' %>", "appName": "<% queryParams.appName ?? '' %>"}}}}]}]}]},
-      {"type": "layoutSection", "id": "historySection", "children": [{"type": "fieldSet", "id": "historyFieldSet", "title": "Change history", "children": [
+      {"type": "layoutSection", "id": "historySection", "children": [{"type": "fieldSet", "id": "historyFieldSet", "title": "Change History", "children": [
         empty_msg("noHistoryText", "size(" + AUD + ") == 0", "No ECO-COMS changes to this organization in the newest 200 Audit Log records. Older changes are in the Audit Log Viewer."),
         {"type": "grid", "id": "orgHistoryGrid", "gridType": "LIST", "multiViewStylingEnabled": True, "autoPaging": True, "enabled": False, "excelExportEnabled": True,
          "rowVariableName": "al", "rows": "<% " + AUD + " %>", "label": "<% 'Changes (' + size(" + AUD + ") + ')' %>",
