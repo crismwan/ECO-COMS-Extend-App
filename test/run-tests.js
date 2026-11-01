@@ -1130,25 +1130,28 @@ async function repair(token, me) {
     pass('Repair.enabledFor', `${bad.length} request(s) ${apply ? 'corrected' : 'would be corrected'}`);
   });
 
-  // Requests whose Position Names hold a bare position WID instead of the name (seen on TESTROLE1031,
-  // 2026-11-01). Look the WID up in allPositions and store the same full name the page sends.
+  // Requests whose positions show as a bare WID: Position Names empty (saved before names were stored,
+  // TESTROLE1031 on 2026-10-30) or holding a WID. Look each WID up in allPositions and store the same
+  // full name the page sends.
   await test('Repair.positionNames', async () => {
     const roles = await readAll(token, 'comsAssignableRoles');
     const isWid = (s) => /^[0-9a-f]{32}$/.test(String(s).trim());
-    const bad = roles.filter((r) => String(r.positionNames || '').split(/,\s*(?=[0-9a-f]{32}$|[0-9a-f]{32},|P-\d)/).some(isWid));
-    if (!bad.length) return pass('Repair.positionNames', 'no request holds a bare WID in Position Names');
+    const SPLIT = /,\s*(?=[0-9a-f]{32}(?:,|$)|P-\d)/;
+    const source = (r) => String(r.positionNames || '').trim() || String(r.positionWids || r.positions || '').trim();
+    const bad = roles.filter((r) => source(r) && source(r).split(SPLIT).some(isWid));
+    if (!bad.length) return pass('Repair.positionNames', 'every request with positions has their names stored');
     const all = (await wql(token, 'SELECT cf_PositionID, workdayID, position_PositionManagement, cf_PositionText FROM allPositions WHERE supervisoryOrganization is not empty', 10000)).data || [];
     const left = [];
     for (const r of bad) {
-      const parts = String(r.positionNames).split(/,\s*(?=[0-9a-f]{32}$|[0-9a-f]{32},|P-\d)/);
+      const parts = source(r).split(SPLIT);
       const fixed = parts.map((p) => {
         if (!isWid(p)) return p;
         const pos = all.find((x) => idOf(x.workdayID) === p.trim());
         return pos ? (pos.position_PositionManagement?.descriptor || pos.cf_PositionText || pos.cf_PositionID) : null;
       });
-      if (fixed.includes(null)) { left.push(r.roleName); warn('Repair.positionNames', `${r.roleName}: a WID in "${r.positionNames}" is not in allPositions; left as is`); continue; }
+      if (fixed.includes(null)) { left.push(r.roleName); warn('Repair.positionNames', `${r.roleName}: a WID in "${source(r)}" is not in allPositions; left as is`); continue; }
       const name = fixed.join(', ');
-      if (!apply) { console.log(`  would set ${r.roleName} Position Names "${r.positionNames}" → "${name}"`); continue; }
+      if (!apply) { console.log(`  would set ${r.roleName} (${r.status}) Position Names "${r.positionNames || ''}" → "${name}"`); continue; }
       await request('PATCH', `${BO}/comsAssignableRoles/${r.id}`, token, { positionNames: name });
       const back = await request('GET', `${BO}/comsAssignableRoles/${r.id}`, token);
       if (back.positionNames !== name) throw new Error(`${r.roleName}: PATCH did not stick (reads "${back.positionNames}")`);
