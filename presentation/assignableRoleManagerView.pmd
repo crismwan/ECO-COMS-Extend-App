@@ -94,7 +94,7 @@
     "headerSize": "STANDARD",
     "title": {
       "type": "title",
-      "label": "ECO-COMS: Assignable Role Manager",
+      "label": "ECO-COMS: My Assignable Role Requests",
       "enabled": true
     },
     "body": {

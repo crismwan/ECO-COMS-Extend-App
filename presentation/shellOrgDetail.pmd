@@ -344,7 +344,7 @@
                         "type": "text",
                         "id": "colWhenText",
                         "enabled": false,
-                        "value": "<% (al.timestamp ?? '').replace('T', ' ').replace('Z', ' UTC') %>"
+                        "value": "<% (empty(al.timestamp) ? '' : date:formatDateWithTimeZones(al.timestamp.substring(0, 19).replace('T', ' '), 'UTC', 'yyyy-MM-dd HH:mm:ss', 'America/Los_Angeles', 'yyyy-MM-dd HH:mm z')) %>"
                       }
                     },
                     {

@@ -92,7 +92,7 @@ Use neutral test values (`TEST:ORG:<n>`, `TESTROLE<n>`). Proxy as the approver w
 2. **Add Shell Org Pattern** wizard: create a TEST pattern. Success page shows; audit `Shell Org Pattern / ADD`.
 3. **Manage status**: inactivate the step-1 org, then reactivate it. Audit `INACTIVATE` and `REACTIVATE`.
 4. **Manage Role Assignments**: add one position to a test role, then remove it. Audit `ASSIGN POSITION` and `REMOVE POSITION`.
-5. **Assignable Role Manager**: submit `X:ADM:ROLE:TESTROLE<n>`. It appears in Pending ISC Requests with a Review Process link; the approval step lists the approver group's members.
+5. **My Assignable Role Requests**: submit `X:ADM:ROLE:TESTROLE<n>`. It appears in Pending ISC Requests with a Review Process link; the approval step lists the approver group's members.
 6. **Deny**: as the approver, deny it. Within a minute it's Denied, gone from Pending, audit `DENY`.
 7. **Approve**: submit another, approve as the approver, complete To Dos 3 and 4 as HR Administrator, finish step 5. Request is Approved, audit `APPROVE`, requester gets the "ECO-COMS role request completed" notification.
 8. Check each step's help text reads correctly in the inbox.

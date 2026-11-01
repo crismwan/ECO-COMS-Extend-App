@@ -1,8 +1,10 @@
 {
   "id": 7,
   "name": "AssignableRoleManager",
-  "label": "Assignable Role Manager",
-  "securityDomains": ["ManageCOMSAssignableRoles"],
+  "label": "Submit Assignable Role Request",
+  "securityDomains": [
+    "ManageCOMSAssignableRoles"
+  ],
   "routePath": "/assignableRoleManager",
   "businessObject": "COMSAssignableRole"
 }

@@ -22,7 +22,7 @@
         }
       },
       {
-        "label": "<% (view == \"aaa\") ? \"✓ AAA provisioning\" : \"AAA provisioning\" %>",
+        "label": "<% (view == \"aaa\") ? \"✓ AAA roles\" : \"AAA roles\" %>",
         "taskReference": {
           "taskId": "iscRoleRequestsView",
           "parameterBindings": {

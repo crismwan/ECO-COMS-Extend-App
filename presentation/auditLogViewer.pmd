@@ -256,7 +256,7 @@
                 "label": "Timestamp",
                 "cellTemplate": {
                   "type": "text",
-                  "value": "<% (logEntry.timestamp ?? '').replace('T', ' ').replace('Z', ' UTC') %>",
+                  "value": "<% (empty(logEntry.timestamp) ? '' : date:formatDateWithTimeZones(logEntry.timestamp.substring(0, 19).replace('T', ' '), 'UTC', 'yyyy-MM-dd HH:mm:ss', 'America/Los_Angeles', 'yyyy-MM-dd HH:mm z')) %>",
                   "enabled": false
                 },
                 "sortableAndFilterable": "true"

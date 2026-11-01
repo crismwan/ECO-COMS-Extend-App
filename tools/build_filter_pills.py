@@ -62,7 +62,7 @@ save('auditLogViewer.pmd', page)
 print('ok')
 
 # ── ISC Role Requests: request type + status pills; the landing page's queue links as one pill card ──
-VIEWS = [("All requests", ""), ("AAA provisioning", "aaa"), ("Assignable roles", "assignable")]
+VIEWS = [("All requests", ""), ("AAA roles", "aaa"), ("Assignable roles", "assignable")]
 STATUSES = [("Pending", "Pending ISC Review"), ("Approved", "Approved"), ("Denied", "Denied"), ("All", "All")]
 isc_view_card = {"id": "IscViewPillCard", "parameters": ["view", "status"],
   "header": {"title": "Request Type", "icon": "wd-accent-clipboard-checklist"},
@@ -157,8 +157,8 @@ save('shellOrgManager.pmd', som)
 
 # ── Error page: links as two pill cards; 'Other pages' only for a 404 (as before) ──
 for cid, title, pills in [("ErrorStartAgainCard", "Start Again", [("Home", "home"), ("Shell Org Manager", "shellOrgManager")]),
-                          ("ErrorOtherPagesCard", "Other Pages", [("Assignable Role Manager", "assignableRoleManagerView"), ("AAA Role Provisioning", "adminProvisioningView"),
-                                                                  ("ISC Role Requests", "iscRoleRequestsView"), ("Audit Log", "auditLogViewer")])]:
+                          ("ErrorOtherPagesCard", "Other Pages", [("My Assignable Role Requests", "assignableRoleManagerView"), ("AAA Role Requests", "adminProvisioningView"),
+                                                                  ("ISC Queue", "iscRoleRequestsView"), ("Audit Log", "auditLogViewer")])]:
     open(os.path.join(ROOT, 'cards', cid + '.card'), 'w').write(json.dumps({"id": cid, "header": {"title": title, "icon": "wd-accent-home"},
         "body": {"type": "pillCard", "pills": [{"label": l, "taskReference": {"taskId": t}} for l, t in pills]}}, indent=2, ensure_ascii=False) + '\n')
 err = load('errorPage.pmd')

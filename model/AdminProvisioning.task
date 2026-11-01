@@ -1,7 +1,7 @@
 {
   "id": 2,
   "name": "AdminProvisioning",
-  "label": "Admin Provisioning",
+  "label": "Submit AAA Role Request",
   "securityDomains": [
     "ManageCOMSAdminProvisioning"
   ],

@@ -198,7 +198,7 @@
                         "type": "text",
                         "id": "colUploadedText",
                         "enabled": false,
-                        "value": "<% (up.uploadedAt ?? '').replace('T', ' ').replace('Z', ' UTC') %>"
+                        "value": "<% (empty(up.uploadedAt) ? '' : date:formatDateWithTimeZones(up.uploadedAt.substring(0, 19).replace('T', ' '), 'UTC', 'yyyy-MM-dd HH:mm:ss', 'America/Los_Angeles', 'yyyy-MM-dd HH:mm z')) %>"
                       }
                     },
                     {

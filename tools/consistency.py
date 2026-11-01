@@ -12,15 +12,17 @@ TITLES = {
   'errorPage': 'ECO-COMS: Something went wrong',
   'assignableRoleManager': 'ECO-COMS: Submit Assignable Role Request',
   'adminProvisioning': 'ECO-COMS: Submit AAA Role Request',
+  'assignableRoleManagerView': 'ECO-COMS: My Assignable Role Requests',
+  'adminProvisioningView': 'ECO-COMS: AAA Role Requests',
 }
 # request forms go back to their list page, not Home
-BACK = {'assignableRoleManager': ('← Assignable Role Manager', 'assignableRoleManagerView'),
-        'adminProvisioning': ('← AAA Role Provisioning', 'adminProvisioningView')}
+BACK = {'assignableRoleManager': ('← My Assignable Role Requests', 'assignableRoleManagerView'),
+        'adminProvisioning': ('← AAA Role Requests', 'adminProvisioningView')}
 PREFIX_SCRIPTED = {  # scripted titles: swap the leading literal
   'editRoleAssignment': ("'Manage Role Assignment: '", "'ECO-COMS: Manage Role Assignment – '"),
   'manageShellOrgStatus': ("'Change Status: '", "'ECO-COMS: Change Status – '"),
 }
-NAV = {'Back to Shell Org Manager': 'View in Shell Org Manager', 'Manage this role again': 'Manage This Role Again', '← Go to Home': '← Home', '← My Role Requests': '← Assignable Role Manager', '← Admin Provisioning': '← AAA Role Provisioning'}
+NAV = {'Back to Shell Org Manager': 'View in Shell Org Manager', 'Manage this role again': 'Manage This Role Again', '← Go to Home': '← Home', '← My Role Requests': '← My Assignable Role Requests', '← Admin Provisioning': '← AAA Role Requests', '← Assignable Role Manager': '← My Assignable Role Requests', '← AAA Role Provisioning': '← AAA Role Requests'}
 HEADINGS = {'About this page': 'About This Page', 'Changes applied': 'Changes Applied Successfully', 'Status Change Warning': 'Before You Submit'}  # Title Case: tools/title_case.py
 WIZARD_TITLE = 'ECO-COMS: Shell Org Manager'
 TS = re.compile(r"<% (\w+)\.timestamp \?\? '' %>")
@@ -69,3 +71,7 @@ for f in sorted(glob.glob(os.path.join(ROOT, '*.pmd'))):
     if json.dumps(d) != before:
         open(f, 'w').write(json.dumps(d, indent=2, ensure_ascii=False) + '\n'); changes.append(n)
 print('changed:', changes)
+
+# final UI polish pass; see tools/polish.py
+import subprocess, sys
+subprocess.run([sys.executable, os.path.join(os.path.dirname(__file__), 'polish.py')], check=True)

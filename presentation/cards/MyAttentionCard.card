@@ -21,7 +21,7 @@
       }
     },
     {
-      "label": "Open My AAA Requests",
+      "label": "Open AAA Requests",
       "taskReference": {
         "taskId": "adminProvisioningView"
       }

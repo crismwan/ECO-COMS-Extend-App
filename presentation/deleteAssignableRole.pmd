@@ -242,7 +242,7 @@
           "children": [
             {
               "type": "button",
-              "label": "← Assignable Role Manager",
+              "label": "← My Assignable Role Requests",
               "taskReference": {
                 "taskId": "assignableRoleManagerView"
               },
@@ -252,7 +252,7 @@
             },
             {
               "type": "button",
-              "label": "← AAA Role Provisioning",
+              "label": "← AAA Role Requests",
               "taskReference": {
                 "taskId": "adminProvisioningView"
               },

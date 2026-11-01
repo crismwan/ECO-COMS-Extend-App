@@ -7,7 +7,8 @@
 - ISC queue: one About box first (intro merged in), then the cards, as on the other list pages.
 - Audit Log: the Changes by Action chart sits with the filters it reflects.
 - Shell Org Manager, Manage Role Assignments tab: About This Tab box like the other tabs.
-- 'Admin Provisioning' in page text is the AAA Role Provisioning page.
+- Page names match the buttons that open them (2026-11-01): My Assignable Role Requests, AAA Role Requests,
+  ISC Queue. Timestamps in Pacific time.
 """
 import json, os, re
 
@@ -28,6 +29,15 @@ GRID_LABELS = {
     ('shellOrgManager', 'filteredShellOrgsGrid'): "<% 'Shell Organizations for ' + (queryParams.appName ?? queryParams.appCode ?? '') %>",
 }
 ACTION = re.compile(r"^<% (\w+)\.action \?\? '' %>$")
+# Timestamps are stored in UTC ('2026-11-01T01:31:03Z'); show them in Pacific time, to the minute, with the
+# zone name from the date ('PDT' / 'PST'). developer.workday.com formatDateWithTimeZones (SimpleDateFormat).
+UTC_TS = [re.compile(r"\(([\w.\[\]]+) \?\? ''\)\.replace\('T', ' '\)\.replace\('Z', ' UTC'\)"),
+          re.compile(r"\(([\w.\[\]]+) \?\? ''\)\.replace\('T', ' '\)\.replace\('Z', ''\) \+ ' UTC'")]
+
+
+def pacific(v):
+    return ("(empty(" + v + ") ? '' : date:formatDateWithTimeZones(" + v + ".substring(0, 19).replace('T', ' '), "
+            "'UTC', 'yyyy-MM-dd HH:mm:ss', 'America/Los_Angeles', 'yyyy-MM-dd HH:mm z'))")
 
 
 def load(n):
@@ -81,9 +91,13 @@ for f in sorted(os.listdir(ROOT)):
             if m:
                 a = m.group(1) + '.action'
                 o['value'] = "<% empty(" + a + ") ? '' : (" + a + ".substring(0, 1) + " + a + ".substring(1).lowerCase()) %>"
+        for key in ('value', 'parameters'):
+            if isinstance(o.get(key), str):
+                for rx in UTC_TS:
+                    o[key] = rx.sub(lambda m: pacific(m.group(1)), o[key])
         v = o.get('value')
         if o.get('type') == 'richText' and isinstance(v, str) and 'Admin Provisioning' in v:
-            o['value'] = v.replace('Admin Provisioning', 'AAA Role Provisioning')
+            o['value'] = v.replace('Admin Provisioning', 'AAA Role Requests')
     walk(d, fix)
 
     pr = d.get('presentation', {})
@@ -119,6 +133,20 @@ for f in sorted(os.listdir(ROOT)):
             if note['value'].startswith(BODY):
                 note['value'] = INFO + note['value']
             kids.insert(kids.index(ra), {"type": "fieldSet", "id": "rolesAboutFieldSet", "title": "About This Tab", "children": [note]})
+    # page names match the buttons that open them (product owner, 2026-11-01)
+    RENAME = [('Assignable Role Manager', 'My Assignable Role Requests'), ('AAA Role Provisioning', 'AAA Role Requests'),
+              ('AAA Provisioning Requests', 'AAA Role Requests')]
+    def rename(o):
+        for key in ('label', 'title', 'value'):
+            v = o.get(key)
+            if isinstance(v, str) and o.get('type') in ('button', 'richText', 'text', 'fieldSet', 'grid', 'title', None):
+                for a, b in RENAME:
+                    v = v.replace(a, b)
+                o[key] = v
+    walk(pr, rename)
+    if n == 'iscRoleRequestsView':
+        t = pr['title']['label']
+        pr['title']['label'] = t.replace("'ECO-COMS: ' + (", "'ECO-COMS: ISC Queue – ' + (", 1).replace(" + ' (ISC)' %>", " %>")
     # request forms: the intro text goes in an About This Page box, as on every other page
     if n in ('adminProvisioning', 'assignableRoleManager'):
         def wrap(o):

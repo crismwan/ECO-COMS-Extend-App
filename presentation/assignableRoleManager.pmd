@@ -373,7 +373,7 @@
           "children": [
             {
               "type": "button",
-              "label": "← Assignable Role Manager",
+              "label": "← My Assignable Role Requests",
               "taskReference": {
                 "taskId": "assignableRoleManagerView"
               },

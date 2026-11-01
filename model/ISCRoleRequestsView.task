@@ -1,7 +1,7 @@
 {
   "id": 12,
   "name": "ISCRoleRequestsView",
-  "label": "All Pending Role Requests ISC",
+  "label": "ISC Queue",
   "securityDomains": [
     "MaintainCOMSAssignableRoles"
   ],

@@ -369,6 +369,7 @@ Script: `tools/polish.py`, idempotent; every builder now runs it last. Static ch
 - Needs My Attention splits pending requests into assignable and AAA when there are AAA ones ("Open My Requests" shows assignable only); its ⋯ menu gained Open My AAA Requests.
 - AAA request form: it was copied from the assignable form and still said "Submit New Assignable Role Request", "Pending Assignable Roles" and "Submit and manage Assignable Role requests"; now AAA wording. Both forms' intro text is in an About This Page box.
 - Headings: FUH page "About FUH Administration", bulk "How It Works" / "How to Use This Template" → About This Page, like every other page. Org detail help text names the real button (Inactivate Organization).
+- **Product owner, 2026-11-01:** timestamps shown in Pacific time to the minute ("2026-10-31 18:31 PDT"; `formatDateWithTimeZones` with pattern `z`, so PST after the change back), and page names match the buttons that open them: Assignable Role Manager → **My Assignable Role Requests**, AAA Role Provisioning → **AAA Role Requests** (it lists everyone's AAA requests), Pending Role Requests (ISC) → **ISC Queue – Pending Role Requests**. Workday menu tasks renamed too: Submit Assignable Role Request, Submit AAA Role Request, ISC Queue (search for the new names).
 - The Home hub's own address is the app root (`…/ecocomsphase_xclw_cm_sync2_vmzvxm.htmld`); `…/home.htmld` gives "Route not matched".
 
 ## UI phase 2 (built 2026-10-31)

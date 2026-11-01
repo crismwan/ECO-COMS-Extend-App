@@ -136,7 +136,7 @@
     "headerSize": "STANDARD",
     "title": {
       "type": "title",
-      "label": "<% 'ECO-COMS: ' + (comsRequestStats.statusOrDefault(queryParams.status ?? '') == 'All' ? 'All' : (comsRequestStats.statusOrDefault(queryParams.status ?? '') == 'Pending ISC Review' ? 'Pending' : comsRequestStats.statusOrDefault(queryParams.status ?? ''))) + ' ' + (queryParams.view == 'aaa' ? 'AAA Provisioning Requests' : (queryParams.view == 'assignable' ? 'Assignable Role Requests' : 'Role Requests')) + ' (ISC)' %>"
+      "label": "<% 'ECO-COMS: ISC Queue – ' + (comsRequestStats.statusOrDefault(queryParams.status ?? '') == 'All' ? 'All' : (comsRequestStats.statusOrDefault(queryParams.status ?? '') == 'Pending ISC Review' ? 'Pending' : comsRequestStats.statusOrDefault(queryParams.status ?? ''))) + ' ' + (queryParams.view == 'aaa' ? 'AAA Role Requests' : (queryParams.view == 'assignable' ? 'Assignable Role Requests' : 'Role Requests')) %>"
     },
     "body": {
       "type": "basicFormLayout",
@@ -169,7 +169,7 @@
                   "type": "richText",
                   "id": "maintainActionInfo",
                   "enabled": false,
-                  "value": "<% '<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">ISC Security: requests ' + (queryParams.view == 'aaa' ? 'for AAA (Organizations and Roles Assignment Administrator) roles from AAA Role Provisioning' : (queryParams.view == 'assignable' ? 'for assignable roles from Assignable Role Manager' : 'from both Assignable Role Manager and AAA Role Provisioning')) + '. Open a request\\'s <b>Review Process</b> to act on it in your Workday inbox.</span>' + '<br><br>' + '<span style=\"color:#374151;font-size:12px\"><b>AAA role</b>: an Organizations and Roles Assignment Administrator request from AAA Role Provisioning, for someone who will manage an application\\'s roles. <b>Assignable role</b>: a new delegated role for an application, requested from Assignable Role Manager. <b>Review</b>: opens the request\\'s Workday review process; approve or deny it from your Workday inbox, and the request here updates automatically. A pending request is <b>overdue</b> after 3 business days.</span>' %>"
+                  "value": "<% '<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">ISC Security: requests ' + (queryParams.view == 'aaa' ? 'for AAA (Organizations and Roles Assignment Administrator) roles from AAA Role Requests' : (queryParams.view == 'assignable' ? 'for assignable roles from My Assignable Role Requests' : 'from both My Assignable Role Requests and AAA Role Requests')) + '. Open a request\\'s <b>Review Process</b> to act on it in your Workday inbox.</span>' + '<br><br>' + '<span style=\"color:#374151;font-size:12px\"><b>AAA role</b>: an Organizations and Roles Assignment Administrator request from AAA Role Requests, for someone who will manage an application\\'s roles. <b>Assignable role</b>: a new delegated role for an application, requested from My Assignable Role Requests. <b>Review</b>: opens the request\\'s Workday review process; approve or deny it from your Workday inbox, and the request here updates automatically. A pending request is <b>overdue</b> after 3 business days.</span>' %>"
                 }
               ]
             }
@@ -247,7 +247,7 @@
             {
               "type": "fieldSet",
               "id": "pendingGridFieldSet",
-              "title": "<% (comsRequestStats.statusOrDefault(queryParams.status ?? '') == 'All' ? 'All' : (comsRequestStats.statusOrDefault(queryParams.status ?? '') == 'Pending ISC Review' ? 'Pending' : comsRequestStats.statusOrDefault(queryParams.status ?? ''))) + ' ' + (queryParams.view == 'aaa' ? 'AAA Provisioning Requests' : (queryParams.view == 'assignable' ? 'Assignable Role Requests' : 'Role Requests')) %>",
+              "title": "<% (comsRequestStats.statusOrDefault(queryParams.status ?? '') == 'All' ? 'All' : (comsRequestStats.statusOrDefault(queryParams.status ?? '') == 'Pending ISC Review' ? 'Pending' : comsRequestStats.statusOrDefault(queryParams.status ?? ''))) + ' ' + (queryParams.view == 'aaa' ? 'AAA Role Requests' : (queryParams.view == 'assignable' ? 'Assignable Role Requests' : 'Role Requests')) %>",
               "children": [
                 {
                   "type": "text",
@@ -266,7 +266,7 @@
                   "rows": "<% comsRequestStats.filterRequests(list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? [], (queryParams.view ?? ''), (queryParams.status ?? '')) %>",
                   "rowVariableName": "role",
                   "enabled": false,
-                  "label": "<% (comsRequestStats.statusOrDefault(queryParams.status ?? '') == 'All' ? 'All' : (comsRequestStats.statusOrDefault(queryParams.status ?? '') == 'Pending ISC Review' ? 'Pending' : comsRequestStats.statusOrDefault(queryParams.status ?? ''))) + ' ' + (queryParams.view == 'aaa' ? 'AAA Provisioning Requests' : (queryParams.view == 'assignable' ? 'Assignable Role Requests' : 'Role Requests')) %>",
+                  "label": "<% (comsRequestStats.statusOrDefault(queryParams.status ?? '') == 'All' ? 'All' : (comsRequestStats.statusOrDefault(queryParams.status ?? '') == 'Pending ISC Review' ? 'Pending' : comsRequestStats.statusOrDefault(queryParams.status ?? ''))) + ' ' + (queryParams.view == 'aaa' ? 'AAA Role Requests' : (queryParams.view == 'assignable' ? 'Assignable Role Requests' : 'Role Requests')) %>",
                   "columns": [
                     {
                       "type": "column",

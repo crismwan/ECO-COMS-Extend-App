@@ -95,7 +95,7 @@
                   "type": "card",
                   "cardId": "ShellOrgReceiptCard",
                   "render": "<% size(list:sort((auditPage0.data ?? []).filter(a => { a.objectType == 'Shell Org' && a.action == 'ADD' && (a.changedByWid ?? '') == (selectedWorker.id ?? '') }), 'timestamp', false)) > 0 %>",
-                  "parameters": "<% let mine = list:sort((auditPage0.data ?? []).filter(a => { a.objectType == 'Shell Org' && a.action == 'ADD' && (a.changedByWid ?? '') == (selectedWorker.id ?? '') }), 'timestamp', false); { 'organizationName': size(mine) > 0 ? ((mine[0].coName ?? '') + ' | Effective ' + (mine[0].effectiveDate ?? '') + ' | Created ' + (mine[0].timestamp ?? '').replace('T', ' ').replace('Z', '') + ' UTC') : '' } %>"
+                  "parameters": "<% let mine = list:sort((auditPage0.data ?? []).filter(a => { a.objectType == 'Shell Org' && a.action == 'ADD' && (a.changedByWid ?? '') == (selectedWorker.id ?? '') }), 'timestamp', false); { 'organizationName': size(mine) > 0 ? ((mine[0].coName ?? '') + ' | Effective ' + (mine[0].effectiveDate ?? '') + ' | Created ' + (empty(mine[0].timestamp) ? '' : date:formatDateWithTimeZones(mine[0].timestamp.substring(0, 19).replace('T', ' '), 'UTC', 'yyyy-MM-dd HH:mm:ss', 'America/Los_Angeles', 'yyyy-MM-dd HH:mm z'))) : '' } %>"
                 }
               ]
             }

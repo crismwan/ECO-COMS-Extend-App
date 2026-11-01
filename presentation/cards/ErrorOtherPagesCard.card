@@ -8,19 +8,19 @@
     "type": "pillCard",
     "pills": [
       {
-        "label": "Assignable Role Manager",
+        "label": "My Assignable Role Requests",
         "taskReference": {
           "taskId": "assignableRoleManagerView"
         }
       },
       {
-        "label": "AAA Role Provisioning",
+        "label": "AAA Role Requests",
         "taskReference": {
           "taskId": "adminProvisioningView"
         }
       },
       {
-        "label": "ISC Role Requests",
+        "label": "ISC Queue",
         "taskReference": {
           "taskId": "iscRoleRequestsView"
         }

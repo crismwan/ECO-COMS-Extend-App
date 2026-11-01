@@ -120,7 +120,7 @@ If any change fails, the page shows "Workday rejected N of M changes...". The ch
    6. **Enabled For**: pick a **Functional Unit Hierarchy** *or* an **Academic Unit**, not both. If you pick neither, Enabled For is "Academic Unit - University of British Columbia".
 3. Click **OK**. The request is saved with status **⏳ Pending ISC Review** and the ISC review starts in Workday (see [After you submit](#after-you-submit-the-isc-review)).
 
-To see your requests, use **View My Requests** on the RBAC Hub (**ECO-COMS: Assignable Role Manager**).
+To see your requests, use **View My Requests** on the RBAC Hub (**ECO-COMS: My Assignable Role Requests**).
 
 ### Request an AAA role (Admin Provisioning)
 
@@ -187,7 +187,7 @@ You need the **View: COMS Audit Log** domain to open this page.
 ### Finding your way around
 
 - **Home** shows your own work (**Needs My Attention**), the ISC queue, Shell Org Manager, the Audit Log and the active/inactive split of shell organizations, then one action card per area: Shell Organizations, Bulk Role Changes and Role Requests.
-- **Filters** are pill buttons; the current choice has a ✓. On the Audit Log choose a time period and change type; on ISC Role Requests choose the request type and status.
+- **Filters** are pill buttons; the current choice has a ✓. On the Audit Log choose a time period and change type; on ISC Queue choose the request type and status.
 - Every page has one back link at the top. Actions for the page are in an **Actions** card.
 
 ### Shell organization details
@@ -196,11 +196,11 @@ In Shell Org Manager, **Details** on an organization opens one page with its sta
 
 ### Request again
 
-On Assignable Role Manager, each of your requests has **Retry** (denied requests) or **Reuse** in the New Request column. It opens a new request with the role name filled in and a note showing the earlier request and the reason given. Choose the application, organization, positions and effective date again; the Workday role name is generated when you pick the organization.
+On My Assignable Role Requests, each of your requests has **Retry** (denied requests) or **Reuse** in the New Request column. It opens a new request with the role name filled in and a note showing the earlier request and the reason given. Choose the application, organization, positions and effective date again; the Workday role name is generated when you pick the organization.
 
 ### Needs My Attention (Home)
 
-The **Needs My Attention** card on Home sums up your own work: your role requests pending ISC review (split into assignable and AAA when you have AAA requests), approved this month, and denied or withdrawn, plus any bulk upload of yours that is still running or was rejected. **My requests** opens Assignable Role Manager (your requests, with Withdraw); **My AAA requests** and **My bulk uploads** are under the card's ⋯ menu.
+The **Needs My Attention** card on Home sums up your own work: your role requests pending ISC review (split into assignable and AAA when you have AAA requests), approved this month, and denied or withdrawn, plus any bulk upload of yours that is still running or was rejected. **My requests** opens My Assignable Role Requests (your requests, with Withdraw); **AAA requests** and **My bulk uploads** are under the card's ⋯ menu.
 
 ### Bulk Role Changes (many positions from one file)
 
