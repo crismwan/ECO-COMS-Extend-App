@@ -45,7 +45,7 @@ APPS = ("list:flatten((shellRoles.data ?? []).map(r => { (r.roleAssignments ?? [
 
 REMOVES = "currentGrid.rows.filter(gr => { gr.childrenMap.colRemove.value == true })"
 ADDS = "addGrid.rows.filter(ar => { !empty(ar.childrenMap.colPositionAdd.value) })"
-ADD_KEY = "(ar.childrenMap.colRoleOrg.value.id + '|' + ar.childrenMap.colPositionAdd.value[0])"
+ADD_KEY = "(ar.childrenMap.colRoleOrg.selectedEntries[0].id + '|' + ar.childrenMap.colPositionAdd.value[0])"
 SUBMIT = """<%
   effectiveDate.clearError();
   changesText.clearError();
@@ -91,12 +91,12 @@ SUBMIT = """<%
 # the position picker checks itself as soon as both cells of its row are filled
 POS_CHECK = """<%
   if (empty(self.value) || empty(roleOrgDropdown.value)) { self.clearError(); }
-  else if (""" + KEYS + """.contains(roleOrgDropdown.value.id + '|' + self.value[0])) {
+  else if (""" + KEYS + """.contains(roleOrgDropdown.selectedEntries[0].id + '|' + self.value[0])) {
     self.setError('This position already holds this role on this organization.');
   } else { self.clearError(); }
 %>"""
 PAIR_CHECK = """<%
-  if (!empty(positionAddList.value) && !empty(self.value) && """ + KEYS + """.contains(self.value.id + '|' + positionAddList.value[0])) {
+  if (!empty(positionAddList.value) && !empty(self.value) && """ + KEYS + """.contains(self.selectedEntries[0].id + '|' + positionAddList.value[0])) {
     positionAddList.setError('This position already holds this role on this organization.');
   } else { positionAddList.clearError(); }
 %>"""
@@ -198,8 +198,8 @@ page = {"id": "bulkRoleGrid", "securityDomains": ["ManageCOMSShellOrgs"], "inclu
              {"type": "column", "columnId": "colRoleOrg", "label": "Role and Organization", "required": True,
               "cellTemplate": {"type": "dropdown", "id": "roleOrgDropdown", "values": "<% " + PAIRS + " %>", "onChange": PAIR_CHECK,
                                "valuesOut": [
-                                 {"value": "<% empty(self.value) ? '' : self.value.id.substringBefore('|') %>", "valueOutBinding": "addDraft.roleWid"},
-                                 {"value": "<% empty(self.value) ? '' : self.value.id.substringAfter('|') %>", "valueOutBinding": "addDraft.orgWid"},
+                                 {"value": "<% empty(self.value) ? '' : self.selectedEntries[0].id.substringBefore('|') %>", "valueOutBinding": "addDraft.roleWid"},
+                                 {"value": "<% empty(self.value) ? '' : self.selectedEntries[0].id.substringAfter('|') %>", "valueOutBinding": "addDraft.orgWid"},
                                  {"value": "<% empty(self.value) ? '' : self.selectedEntries[0].descriptor.substringBefore(' — ') %>", "valueOutBinding": "addDraft.roleName"},
                                  {"value": "<% empty(self.value) ? '' : self.selectedEntries[0].descriptor.substringAfter(' — ') %>", "valueOutBinding": "addDraft.orgName"}]}},
              {"type": "column", "columnId": "colPositionAdd", "label": "Position", "required": True,
