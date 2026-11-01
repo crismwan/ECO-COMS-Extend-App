@@ -1315,6 +1315,8 @@ async function demoSeed(token, me) {
 
   await test('Demo.2 assign', async () => {
     const roleName = 'X:BPMS(ODMT):ROLE:DEPTSTAFF';
+    const done = (await readAll(token, 'comsAuditLogs')).find((x) => x.action === 'ASSIGN POSITION' && x.roleName === roleName);
+    if (done) return pass('Demo.2 assign', `already done: ${done.positionName} on ${roleName}`);
     const r = await wql(token, `SELECT role, roleAssignments{organization, cf_ZCF_EE_RoleAssignedToAsPositionRestrictions} as roleAssignments FROM assignableRoles WHERE roleName = '${roleName}'`, 5);
     const row = (r.data || [])[0];
     const ra = (row?.roleAssignments || []).find((x) => String(x.organization?.descriptor || '').startsWith('X:'));
@@ -1334,25 +1336,62 @@ async function demoSeed(token, me) {
 
   await test('Demo.3 request', async () => {
     const roleName = `${PATTERN}:ROLE:TEACHINGASSISTANT`;
-    const roles = await readAll(token, 'comsAssignableRoles');
-    if (roles.some((x) => x.roleName === roleName)) return pass('Demo.3 request', `${roleName} already requested`);
+    if (!patternWid) patternWid = await findOrg(PATTERN);
+    // Enabled For: an academic unit, as the form's Academic Unit picker stores it.
+    const aus = (await wql(token, "SELECT workdayID, academicUnit, academicUnitName FROM academicUnits WHERE inactive = false AND academicUnitName contains 'Computer Science'", 20)).data || [];
+    const au = aus[0] || ((await wql(token, 'SELECT workdayID, academicUnit, academicUnitName FROM academicUnits WHERE inactive = false', 1)).data || [])[0];
+    if (!au) throw new Error('no academic unit found for Enabled For');
+    const auWid = au.workdayID?.id || au.workdayID;
+    const auName = au.academicUnit?.descriptor || au.academicUnitName;
+    // Positions: two filled positions, as the form's Positions picker stores them (WIDs + full names).
+    const allPos = ((await wql(token, 'SELECT cf_PositionID, workdayID, position_PositionManagement, cf_PositionText, cf_PositionIsFilled FROM allPositions WHERE supervisoryOrganization is not empty', 1000)).data || [])
+      .filter((p) => p.cf_PositionID && p.cf_PositionID !== 'P-00009' && p.cf_PositionIsFilled !== false);
+    const pref = allPos.filter((p) => /instructor|lecturer|teaching|professor|academic/i.test(`${p.position_PositionManagement?.descriptor || ''} ${p.cf_PositionText || ''}`));
+    const picks = [...pref, ...allPos.filter((p) => !pref.includes(p))].slice(0, 2);
+    if (!picks.length) throw new Error('no filled positions found');
+    const wids = picks.map((p) => p.workdayID?.id || p.workdayID);
+    const names = picks.map((p) => p.position_PositionManagement?.descriptor || p.cf_PositionText || p.cf_PositionID);
+    const fields = {
+      shellOrgCode: PATTERN, shellOrgWid: patternWid || '',
+      positions: wids.join(','), positionWids: wids.join(','), positionNames: names.join(', '),
+      enabledForOrganizationTypes: auName, enabledForWid: auWid, academicUnitWid: auWid, academicUnitDescription: auName,
+      functionalUnitHierarchyWid: '', functionalUnitDescription: '',
+    };
+    const existing = (await readAll(token, 'comsAssignableRoles')).find((x) => x.roleName === roleName && x.status === 'Pending ISC Review');
+    if (existing) {
+      // Fill in what the first seed left empty; the review event and its REQUEST audit stay as they are.
+      await request('PATCH', `${BO}/comsAssignableRoles/${existing.id}`, token, fields);
+      const reqAudit = (await readAll(token, 'comsAuditLogs')).find((x) => x.action === 'REQUEST' && x.roleName === roleName);
+      if (reqAudit) await request('PATCH', `${BO}/comsAuditLogs/${reqAudit.id}`, token, { positionName: names.join(', '), positionWid: wids.join(',') });
+      const after = await request('GET', `${BO}/comsAssignableRoles/${existing.id}`, token);
+      if (after.positionNames !== fields.positionNames || after.enabledForOrganizationTypes !== auName) throw new Error('PATCH did not stick');
+      return pass('Demo.3 request', `${roleName} updated: Enabled For "${auName}", positions ${names.join(' | ')}`);
+    }
     const ref = `REQ-${Date.now().toString(36).toUpperCase()}`;
     const req = await request('POST', `${BO}/comsAssignableRoles`, token, {
       referenceId: ref, roleName, workdayRoleId: roleName, application: 'X:CLW', status: 'Pending ISC Review',
-      requestedDate: tenantDate(), requestedBy: { id: me.id }, active: false, effectiveDate: EFF,
-      shellOrgCode: PATTERN, shellOrgWid: patternWid || '',
+      requestedDate: tenantDate(), requestedBy: { id: me.id }, active: false, effectiveDate: EFF, ...fields,
     });
     if (!req.id) throw new Error('request POST returned no id');
     await request('POST', `${BO}/comsAuditLogs`, token, {
       timestamp: who().timestamp, objectType: 'Assignable Role', action: 'REQUEST', coReferenceId: roleName, coName: PATTERN,
       details: `Assignable role request submitted: ${roleName} for org ${PATTERN}`, triggeredBy: me.descriptor,
-      roleName, effectiveDate: EFF, changedByWid: me.id,
+      roleName, effectiveDate: EFF, changedByWid: me.id, positionName: names.join(', '), positionWid: wids.join(','),
     });
     await launch(token, 'StartRoleRequestReview', { ref });
     let ev = null;
     for (let i = 0; i < 10 && !ev; i++) { await sleep(3000); ev = (await request('GET', `${BO}/comsAssignableRoles/${req.id}`, token)).reviewEventWid || null; }
     if (!ev) throw new Error(`request ${ref} saved but no review event within 30 s`);
-    pass('Demo.3 request', `${roleName} requested (${ref}), ISC review started`);
+    pass('Demo.3 request', `${roleName} requested (${ref}), Enabled For "${auName}", positions ${names.join(' | ')}, ISC review started`);
+  });
+
+  // Every pending request must show Enabled For and positions on the review pages.
+  await test('Demo.pendingComplete', async () => {
+    const pend = (await readAll(token, 'comsAssignableRoles')).filter((r) => r.status === 'Pending ISC Review');
+    pend.forEach((r) => console.log(`   pending  ${r.roleName}  | Enabled For: ${r.enabledForOrganizationTypes || '(empty)'}  | Positions: ${r.positionNames || '(empty)'}`));
+    const bad = pend.filter((r) => !r.enabledForOrganizationTypes || !r.positionNames);
+    if (bad.length) throw new Error(`${bad.length} pending request(s) still missing Enabled For or position names: ${bad.map((r) => r.roleName).join(', ')}`);
+    pass('Demo.pendingComplete', `${pend.length} pending request(s) all have Enabled For and position names`);
   });
 
   const audits = await readAll(token, 'comsAuditLogs');

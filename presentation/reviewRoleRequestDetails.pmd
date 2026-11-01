@@ -152,7 +152,7 @@
                   "id": "positionsText",
                   "label": "Positions",
                   "enabled": false,
-                  "value": "<% empty(request.positionWids) ? (request.positions ?? '') : (positions.data ?? []).filter(p => { request.positionWids.contains(p.id) }).map(p => { p.descriptor }).join(', ') %>"
+                  "value": "<% !empty(request.positionNames) ? request.positionNames : (empty(request.positionWids) ? (request.positions ?? '') : (positions.data ?? []).filter(p => { request.positionWids.contains(p.id) }).map(p => { p.descriptor }).join(', ')) %>"
                 },
                 {
                   "type": "text",
