@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import subprocess, sys
 """Replaces stacked filter buttons with pill cards (pillCard: buttons that wrap side by side; the current
 choice is marked with a check). Audit Log Viewer: time period + change type. Re-run: python3 tools/build_filter_pills.py"""
 import json, os
@@ -43,11 +44,20 @@ def take(o):
         for v in o: take(v)
 take(secs)
 show_kids = [showing] if showing else []
+# keep the Changes by Action chart that tools/polish.py moved in beside the filters
+chart = []
+def keep_chart(o):
+    if isinstance(o, dict):
+        if o.get('type') == 'card' and o.get('cardId') == 'AuditActionChart': chart.append(o)
+        for v in o.values(): keep_chart(v)
+    elif isinstance(o, list):
+        for v in o: keep_chart(v)
+keep_chart(secs[i])
 secs[i] = {"type": "layoutSection", "id": "auditFilterSection", "children": [
     {"type": "fieldSet", "id": "auditShowFieldSet", "title": "Show", "children": show_kids},
-    {"type": "cardContainer", "id": "auditFilterCardContainer", "layout": "grid", "cards": [
+    {"type": "cardContainer", "id": "auditFilterCardContainer", "layout": "masonry" if chart else "grid", "cards": [
     {"type": "card", "cardId": "AuditPeriodPillCard", "parameters": P},
-    {"type": "card", "cardId": "AuditTypePillCard", "parameters": P}]}]}
+    {"type": "card", "cardId": "AuditTypePillCard", "parameters": P}] + chart}]}
 save('auditLogViewer.pmd', page)
 print('ok')
 
@@ -84,12 +94,12 @@ print('isc ok')
 
 # ── Home: the four stacked-button sections become one row of action cards (main action first) ──
 ACTIONS = [
-  ("HomeShellOrgActionsCard", "Shell Organizations", "Add organizations and patterns, change their status, and manage role positions.", "wd-accent-worksheets",
+  ("HomeShellOrgActionsCard", "Shell Organizations", "Add orgs and patterns, manage status.", "wd-accent-worksheets",
    [("Open Shell Org Manager", "shellOrgManager"), ("Add Shell Org", "createShellOrgWizard"), ("Add Pattern", "createShellOrgPatternWizard")]),
-  ("HomeBulkActionsCard", "Bulk Role Changes", "Add or remove many positions from one CSV file. Validate first, then run it for real.", "wd-accent-checkmarked-page",
+  ("HomeBulkActionsCard", "Bulk Role Changes", "Add or remove positions from a CSV file.", "wd-accent-checkmarked-page",
    [("Upload File", "bulkRoleChanges"), ("Download Template", "bulkRoleTemplate"), ("View Results", "bulkRoleResults")]),
-  ("HomeRoleRequestActionsCard", "Role Requests", "Request assignable or AAA roles, follow your requests, and review the ISC queue.", "wd-accent-clipboard-checklist",
-   [("View My Requests", "assignableRoleManagerView"), ("Submit New Request", "assignableRoleManager"), ("Open ISC Queue", "iscRoleRequestsView"),
+  ("HomeRoleRequestActionsCard", "Role Requests", "Request roles and follow their review.", "wd-accent-clipboard-checklist",
+   [("View My Requests", "assignableRoleManagerView"), ("Submit New Request", "assignableRoleManager"),
     ("View AAA Requests", "adminProvisioningView"), ("Submit AAA Role Request", "adminProvisioning")]),
 ]
 for cid, title, sub, icon, pills in ACTIONS:
@@ -132,11 +142,10 @@ def find_tab(o):
             if r: return r
 tab = find_tab(som['presentation'])
 tab['children'] = [
-  {"type": "cardContainer", "id": "summaryCardContainer", "layout": "grid", "cards": [
+  {"type": "cardContainer", "id": "summaryCardContainer", "layout": "masonry", "cards": [
     {"type": "card", "cardId": "CountCard", "parameters": "<% { 'title': 'Active', 'subtitle': " + SCOPE + ", 'countText': '' + " + ACT + " + (" + ACT + " == 1 ? ' shell organization' : ' shell organizations') } %>"},
     {"type": "card", "cardId": "CountCard", "parameters": "<% { 'title': 'Inactive', 'subtitle': " + SCOPE + ", 'countText': '' + " + INA + " + (" + INA + " == 1 ? ' shell organization' : ' shell organizations') } %>"},
-    {"type": "card", "cardId": "CountCard", "parameters": "<% { 'title': 'Patterns', 'subtitle': " + SCOPE + ", 'countText': '' + size(" + PATS + ") + (size(" + PATS + ") == 1 ? ' pattern' : ' patterns') } %>"}]},
-  {"type": "cardContainer", "id": "statusChartContainer", "layout": "masonry", "cards": [
+    {"type": "card", "cardId": "CountCard", "parameters": "<% { 'title': 'Patterns', 'subtitle': " + SCOPE + ", 'countText': '' + size(" + PATS + ") + (size(" + PATS + ") == 1 ? ' pattern' : ' patterns') } %>"},
     {"type": "card", "cardId": "ShellOrgQuickActionsCard"},
     {"type": "card", "cardId": "ShellOrgStatusChart", "parameters": "<% { 'activeCount': " + ACT + ", 'inactiveCount': " + INA + " } %>"}]}]
 save('shellOrgManager.pmd', som)
@@ -160,3 +169,6 @@ esecs[k] = {"type": "layoutSection", "id": "navSection", "children": [{"type": "
     {"type": "card", "cardId": "ErrorOtherPagesCard", "render": "<% queryParams.errorCode == '404' %>"}]}]}
 save('errorPage.pmd', err)
 print('error ok')
+
+# final UI polish pass (grid labels, About ⓘ, ...); see tools/polish.py
+subprocess.run([sys.executable, os.path.join(os.path.dirname(__file__), 'polish.py')], check=True)

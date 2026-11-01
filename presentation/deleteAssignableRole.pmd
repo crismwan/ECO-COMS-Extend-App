@@ -275,7 +275,7 @@
                   "type": "richText",
                   "id": "pageDesc",
                   "enabled": false,
-                  "value": "<span style=\"color:#374151;font-size:12px\">Select one of your requests that is still Pending ISC Review to withdraw it. Withdrawing cancels its ISC review in Workday; the request is then marked Denied and the change is recorded in the audit log.</span>"
+                  "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">Select one of your requests that is still Pending ISC Review to withdraw it. Withdrawing cancels its ISC review in Workday; the request is then marked Denied and the change is recorded in the audit log.</span>"
                 }
               ]
             }

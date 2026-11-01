@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import subprocess, sys
 """Writes the shellOrgDetail page (one shell organization: status, role assignments, audit history),
 registers its task in the AMD, and adds Details buttons + active-first ordering to Shell Org Manager.
 Re-run after editing: python3 tools/build_org_detail.py"""
@@ -65,7 +66,7 @@ page = {"id": "shellOrgDetail", "securityDomains": ["ManageCOMSShellOrgs"],
       {"type": "layoutSection", "id": "rolesSection", "children": [{"type": "fieldSet", "id": "rolesFieldSet", "title": "Roles on This Organization", "children": [
         empty_msg("noRolesText", "size(" + ROLES + ") == 0", "No shell roles are assigned on this organization."),
         {"type": "grid", "id": "orgRolesGrid", "gridType": "LIST", "multiViewStylingEnabled": True, "autoPaging": True, "enabled": False, "excelExportEnabled": True,
-         "rowVariableName": "ra", "rows": "<% " + ROLES + " %>", "label": "<% 'Role assignments (' + size(" + ROLES + ") + ')' %>",
+         "rowVariableName": "ra", "rows": "<% " + ROLES + " %>", "label": "Role Assignments",
          "columns": [inst("colRole", "Role", "<% ra.role != null ? [ra.role] : [] %>"),
                      inst("colPositions", "Positions", "<% ra.positions %>"),
                      inst("colWorkers", "Workers", "<% ra.workers %>"),
@@ -78,7 +79,7 @@ page = {"id": "shellOrgDetail", "securityDomains": ["ManageCOMSShellOrgs"],
       {"type": "layoutSection", "id": "historySection", "children": [{"type": "fieldSet", "id": "historyFieldSet", "title": "Change History", "children": [
         empty_msg("noHistoryText", "size(" + AUD + ") == 0", "No ECO-COMS changes to this organization in the newest 200 Audit Log records. Older changes are in the Audit Log Viewer."),
         {"type": "grid", "id": "orgHistoryGrid", "gridType": "LIST", "multiViewStylingEnabled": True, "autoPaging": True, "enabled": False, "excelExportEnabled": True,
-         "rowVariableName": "al", "rows": "<% " + AUD + " %>", "label": "<% 'Changes (' + size(" + AUD + ") + ')' %>",
+         "rowVariableName": "al", "rows": "<% " + AUD + " %>", "label": "Changes",
          "columns": [txt("colWhen", "When", "<% (al.timestamp ?? '').replace('T', ' ').replace('Z', ' UTC') %>"),
                      txt("colAction", "Action", "<% al.action ?? '' %>"),
                      txt("colRoleName", "Role", "<% al.roleName ?? '' %>"),
@@ -163,3 +164,6 @@ if not any(s.get('id') == 'againSection' for s in secs):
                   "'. The role name is filled in; choose the application, organization, positions and effective date again.' %>"}]}]})
 save('assignableRoleManager.pmd', req)
 print('again ok')
+
+# final UI polish pass (grid labels, About ⓘ, ...); see tools/polish.py
+subprocess.run([sys.executable, os.path.join(os.path.dirname(__file__), 'polish.py')], check=True)

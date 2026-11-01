@@ -97,7 +97,7 @@
                   "excelExportEnabled": true,
                   "rowVariableName": "tr",
                   "rows": "<% list:flatten(list:flatten((shellRoles.data ?? []).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith(empty(queryParams.appCode) ? 'X:' : queryParams.appCode) }).map(ra => { (ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? []).map(p => { { 'role': r.role.descriptor ?? '', 'roleWid': r.role.id ?? '', 'org': ra.organization.descriptor ?? '', 'orgWid': ra.organization.id ?? '', 'position': p.descriptor ?? '', 'positionId': (p.descriptor ?? '').substringBefore(' '), 'assigneeWid': p.id ?? '' } }) }) }))) %>",
-                  "label": "<% 'Role assignments (' + size(list:flatten(list:flatten((shellRoles.data ?? []).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith(empty(queryParams.appCode) ? 'X:' : queryParams.appCode) }).map(ra => { (ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? []).map(p => { { 'role': r.role.descriptor ?? '', 'roleWid': r.role.id ?? '', 'org': ra.organization.descriptor ?? '', 'orgWid': ra.organization.id ?? '', 'position': p.descriptor ?? '', 'positionId': (p.descriptor ?? '').substringBefore(' '), 'assigneeWid': p.id ?? '' } }) }) })))) + ' positions)' %>",
+                  "label": "Role Assignments",
                   "columns": [
                     {
                       "type": "column",

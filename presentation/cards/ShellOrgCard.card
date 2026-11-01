@@ -5,7 +5,7 @@
   ],
   "header": {
     "title": "Shell Org Manager",
-    "subtitle": "View and manage shell org patterns for your assigned application.",
+    "subtitle": "Shell orgs and patterns by application.",
     "icon": "wd-accent-worksheets"
   },
   "body": {

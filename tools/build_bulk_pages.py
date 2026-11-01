@@ -42,7 +42,7 @@ template = {"id": "bulkRoleTemplate", "securityDomains": ["ManageCOMSShellOrgs"]
       {"type": "layoutSection", "id": "gridSection", "children": [{"type": "fieldSet", "id": "templateFieldSet", "title": "Current Role Assignments", "children": [
         {"type": "grid", "id": "bulkTemplateGrid", "gridType": "LIST", "multiViewStylingEnabled": True, "autoPaging": True, "enabled": False,
          "excelExportEnabled": True, "rowVariableName": "tr", "rows": ROWS,
-         "label": "<% 'Role assignments (' + size(" + ROWS[3:-3] + ") + ' positions)' %>",
+         "label": "Role Assignments",
          "columns": [txt("colAction", "Action", ""), txt("colRole", "Role", "<% tr.role %>"), txt("colRoleWid", "Role WID", "<% tr.roleWid %>"),
                      txt("colOrg", "Organization", "<% tr.org %>"), txt("colOrgWid", "Organization WID", "<% tr.orgWid %>"),
                      txt("colPosition", "Position", "<% tr.position %>"), txt("colPositionId", "Position ID", "<% tr.positionId %>"),
@@ -152,11 +152,11 @@ results = {"id": "bulkRoleResults", "securityDomains": ["ManageCOMSShellOrgs"],
         "<b>VALID</b>/<b>INVALID</b>: validation run, nothing changed. <b>DONE</b>/<b>FAILED</b>: real run."),
       {"type": "layoutSection", "id": "summarySection", "children": [{"type": "cardContainer", "id": "bulkSummaryCardContainer", "layout": "grid", "cards": [
         {"type": "card", "cardId": "CountCard", "parameters": "<% { 'title': 'Succeeded', 'subtitle': 'DONE or VALID', 'countText': '' + " + cnt("x.result == 'DONE' || x.result == 'VALID'") + " + ' of ' + " + rows_text("size(" + RES + ")") + " } %>"},
-        {"type": "card", "cardId": "CountCard", "parameters": "<% { 'title': 'Need attention', 'subtitle': 'FAILED or INVALID', 'countText': '' + " + cnt("x.result == 'FAILED' || x.result == 'INVALID'") + " + ' of ' + " + rows_text("size(" + RES + ")") + " } %>"},
+        {"type": "card", "cardId": "CountCard", "parameters": "<% { 'title': 'Need Attention', 'subtitle': 'FAILED or INVALID', 'countText': '' + " + cnt("x.result == 'FAILED' || x.result == 'INVALID'") + " + ' of ' + " + rows_text("size(" + RES + ")") + " } %>"},
         {"type": "card", "cardId": "BulkActionsPillCard", "parameters": "<% { 'batch': " + REF + " } %>"}]}]},
       {"type": "layoutSection", "id": "uploadsSection", "children": [{"type": "fieldSet", "id": "uploadsFieldSet", "title": "My Uploads", "children": [
         {"type": "grid", "id": "uploadsGrid", "gridType": "LIST", "multiViewStylingEnabled": True, "autoPaging": True, "enabled": False, "excelExportEnabled": True,
-         "rowVariableName": "up", "rows": "<% " + UPL + " %>", "label": "<% 'My uploads (' + size(" + UPL + ") + ')' %>",
+         "rowVariableName": "up", "rows": "<% " + UPL + " %>", "label": "My Uploads",
          "columns": [txt("colUploaded", "Uploaded", "<% (up.uploadedAt ?? '').replace('T', ' ').replace('Z', ' UTC') %>"),
                      txt("colFile", "File", "<% up.fileName ?? up.descriptor ?? '' %>"),
                      txt("colMode", "Run", "<% (up.runMode ?? '') == 'APPLY' ? 'Real run' : 'Validate only' %>"),
@@ -170,7 +170,7 @@ results = {"id": "bulkRoleResults", "securityDomains": ["ManageCOMSShellOrgs"],
                          "taskReference": {"taskId": "bulkRoleApply", "parameterBindings": {"batch": "<% up.batchRef ?? '' %>"}}}]}}]}]}]},
       {"type": "layoutSection", "id": "rowsSection", "children": [{"type": "fieldSet", "id": "rowsFieldSet", "title": "<% 'Row results: ' + " + REF + " %>", "children": [
         {"type": "grid", "id": "rowResultsGrid", "gridType": "LIST", "multiViewStylingEnabled": True, "autoPaging": True, "enabled": False, "excelExportEnabled": True,
-         "rowVariableName": "rr", "rows": "<% list:sort(" + RES + ", 'timestamp', true) %>", "label": "<% 'Rows (' + size(" + RES + ") + ')' %>",
+         "rowVariableName": "rr", "rows": "<% list:sort(" + RES + ", 'timestamp', true) %>", "label": "Rows",
          "columns": [txt("colResult", "Result", "<% rr.result ?? '' %>"), txt("colAction", "Action", "<% rr.rowAction ?? '' %>"),
                      txt("colRole", "Role", "<% rr.roleName ?? '' %>"), txt("colOrg", "Organization", "<% rr.orgName ?? '' %>"),
                      txt("colPosition", "Position", "<% (rr.positionName ?? '') != '' ? rr.positionName : (rr.positionId ?? '') %>"),
@@ -270,3 +270,6 @@ print('ok')
 # keep the 'Nothing to show' messages that tools/add_empty_messages.py adds to the results page
 import subprocess, sys
 subprocess.run([sys.executable, os.path.join(os.path.dirname(__file__), 'add_empty_messages.py')], check=True)
+
+# final UI polish pass (grid labels, About ⓘ, ...); see tools/polish.py
+subprocess.run([sys.executable, os.path.join(os.path.dirname(__file__), 'polish.py')], check=True)

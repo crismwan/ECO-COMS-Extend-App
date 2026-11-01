@@ -158,13 +158,20 @@
         },
         {
           "type": "layoutSection",
-          "id": "descSection",
+          "id": "actionsInfoSection",
           "children": [
             {
-              "type": "richText",
-              "id": "pageDesc",
-              "enabled": false,
-              "value": "<% '<span style=\"color:#374151;font-size:12px\">ISC Security: requests ' + (queryParams.view == 'aaa' ? 'for AAA (Organizations and Roles Assignment Administrator) roles from Admin Provisioning' : (queryParams.view == 'assignable' ? 'for assignable roles from Assignable Role Manager' : 'from both Assignable Role Manager and Admin Provisioning')) + '. Open a request\\'s <b>Review Process</b> to act on it in your Workday inbox.</span>' %>"
+              "type": "fieldSet",
+              "id": "actionsInfoFieldSet",
+              "title": "About This Page",
+              "children": [
+                {
+                  "type": "richText",
+                  "id": "maintainActionInfo",
+                  "enabled": false,
+                  "value": "<% '<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">ISC Security: requests ' + (queryParams.view == 'aaa' ? 'for AAA (Organizations and Roles Assignment Administrator) roles from AAA Role Provisioning' : (queryParams.view == 'assignable' ? 'for assignable roles from Assignable Role Manager' : 'from both Assignable Role Manager and AAA Role Provisioning')) + '. Open a request\\'s <b>Review Process</b> to act on it in your Workday inbox.</span>' + '<br><br>' + '<span style=\"color:#374151;font-size:12px\"><b>AAA role</b>: an Organizations and Roles Assignment Administrator request from AAA Role Provisioning, for someone who will manage an application\\'s roles. <b>Assignable role</b>: a new delegated role for an application, requested from Assignable Role Manager. <b>Review</b>: opens the request\\'s Workday review process; approve or deny it from your Workday inbox, and the request here updates automatically. A pending request is <b>overdue</b> after 3 business days.</span>' %>"
+                }
+              ]
             }
           ]
         },
@@ -191,25 +198,6 @@
                   "type": "card",
                   "cardId": "CountCard",
                   "parameters": "<% { 'title': 'Approved this month', 'subtitle': 'Approved since the 1st', 'countText': '' + comsRequestStats.countApprovedThisMonth(comsRequestStats.filterRequests(list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? [], (queryParams.view ?? ''), 'All')) + ' approved' } %>"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "type": "layoutSection",
-          "id": "actionsInfoSection",
-          "children": [
-            {
-              "type": "fieldSet",
-              "id": "actionsInfoFieldSet",
-              "title": "About This Page",
-              "children": [
-                {
-                  "type": "richText",
-                  "id": "maintainActionInfo",
-                  "enabled": false,
-                  "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\"><b>AAA role</b>: an Organizations and Roles Assignment Administrator request from Admin Provisioning, for someone who will manage an application's roles. <b>Assignable role</b>: a new delegated role for an application, requested from Assignable Role Manager. <b>Review</b>: opens the request's Workday review process; approve or deny it from your Workday inbox, and the request here updates automatically. A pending request is <b>overdue</b> after 3 business days.</span>"
                 }
               ]
             }

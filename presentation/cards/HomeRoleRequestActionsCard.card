@@ -2,7 +2,7 @@
   "id": "HomeRoleRequestActionsCard",
   "header": {
     "title": "Role Requests",
-    "subtitle": "Request assignable or AAA roles, follow your requests, and review the ISC queue.",
+    "subtitle": "Request roles and follow their review.",
     "icon": "wd-accent-clipboard-checklist"
   },
   "body": {
@@ -18,12 +18,6 @@
         "label": "Submit New Request",
         "taskReference": {
           "taskId": "assignableRoleManager"
-        }
-      },
-      {
-        "label": "Open ISC Queue",
-        "taskReference": {
-          "taskId": "iscRoleRequestsView"
         }
       },
       {

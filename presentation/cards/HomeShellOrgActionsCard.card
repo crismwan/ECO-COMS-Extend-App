@@ -2,7 +2,7 @@
   "id": "HomeShellOrgActionsCard",
   "header": {
     "title": "Shell Organizations",
-    "subtitle": "Add organizations and patterns, change their status, and manage role positions.",
+    "subtitle": "Add orgs and patterns, manage status.",
     "icon": "wd-accent-worksheets"
   },
   "body": {

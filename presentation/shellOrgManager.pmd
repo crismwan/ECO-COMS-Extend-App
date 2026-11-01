@@ -122,7 +122,7 @@
           {
             "type": "cardContainer",
             "id": "summaryCardContainer",
-            "layout": "grid",
+            "layout": "masonry",
             "cards": [
               {
                 "type": "card",
@@ -138,14 +138,7 @@
                 "type": "card",
                 "cardId": "CountCard",
                 "parameters": "<% { 'title': 'Patterns', 'subtitle': (empty(queryParams.appCode) ? 'All applications' : queryParams.appCode), 'countText': '' + size((allShellOrgs.data ?? []).filter(o => { (o.code ?? '').startsWith(empty(queryParams.appCode) ? 'X:' : queryParams.appCode + ':PATTERN') && (o.code ?? '').contains(':PATTERN') })) + (size((allShellOrgs.data ?? []).filter(o => { (o.code ?? '').startsWith(empty(queryParams.appCode) ? 'X:' : queryParams.appCode + ':PATTERN') && (o.code ?? '').contains(':PATTERN') })) == 1 ? ' pattern' : ' patterns') } %>"
-              }
-            ]
-          },
-          {
-            "type": "cardContainer",
-            "id": "statusChartContainer",
-            "layout": "masonry",
-            "cards": [
+              },
               {
                 "type": "card",
                 "cardId": "ShellOrgQuickActionsCard"
@@ -190,7 +183,7 @@
                 "rows": "<% list:flatten([(shellOrgPatterns.data ?? []).filter(p => { (p.code ?? '').startsWith('X:') && (p.code ?? '').contains(':PATTERN:') }).map(p => { p.code.substringBefore(':PATTERN').substringBefore(':') + ':' + p.code.substringBefore(':PATTERN').substringAfter(':').substringBefore(':') }), (allShellOrgs.data ?? []).filter(o => { (o.code ?? '').startsWith('X:') && !(o.code ?? '').contains(':PATTERN') }).map(o => { 'X:' + o.code.substringAfter(':').substringBefore(':') })]).distinct().sort().map(appCode => { {'appCode': appCode} }) %>",
                 "rowVariableName": "app",
                 "enabled": false,
-                "label": "<% 'Applications (' + size(list:flatten([(shellOrgPatterns.data ?? []).filter(p => { (p.code ?? '').startsWith('X:') && (p.code ?? '').contains(':PATTERN:') }).map(p => { p.code.substringBefore(':PATTERN').substringBefore(':') + ':' + p.code.substringBefore(':PATTERN').substringAfter(':').substringBefore(':') }), (allShellOrgs.data ?? []).filter(o => { (o.code ?? '').startsWith('X:') && !(o.code ?? '').contains(':PATTERN') }).map(o => { 'X:' + o.code.substringAfter(':').substringBefore(':') })]).distinct().sort()) + ')' %>",
+                "label": "Applications",
                 "autoPaging": true,
                 "columns": [
                   {
@@ -278,7 +271,7 @@
                 "rows": "<% empty(queryParams.appCode) ? [] : (shellOrgPatterns.data ?? []).filter(p => { (p.code ?? '').startsWith('X:') && (p.code ?? '').contains(':PATTERN:') }).filter(p => { p.code.startsWith(queryParams.appCode + ':PATTERN') }) %>",
                 "rowVariableName": "pattern",
                 "enabled": false,
-                "label": "<% 'Patterns for ' + (queryParams.appName ?? queryParams.appCode ?? '') + ' (' + size(empty(queryParams.appCode) ? [] : (shellOrgPatterns.data ?? []).filter(p => { (p.code ?? '').startsWith('X:') && (p.code ?? '').contains(':PATTERN:') }).filter(p => { p.code.startsWith(queryParams.appCode + ':PATTERN') })) + ')' %>",
+                "label": "<% 'Patterns for ' + (queryParams.appName ?? queryParams.appCode ?? '') %>",
                 "autoPaging": true,
                 "visible": "<% !empty(queryParams.appCode) && size((shellOrgPatterns.data ?? []).filter(p => { (p.code ?? '').startsWith('X:') && (p.code ?? '').contains(':PATTERN:') }).filter(p => { p.code.startsWith((queryParams.appCode ?? '') + ':PATTERN') })) > 0 %>",
                 "columns": [
@@ -424,7 +417,7 @@
                 "rows": "<% list:flatten([(allShellOrgs.data.filter(o => { o.code.startsWith('X:') && !o.code.contains(':PATTERN') })).filter(o => { o.cf_active1 == true }), (allShellOrgs.data.filter(o => { o.code.startsWith('X:') && !o.code.contains(':PATTERN') })).filter(o => { o.cf_active1 != true })]) %>",
                 "rowVariableName": "org",
                 "enabled": false,
-                "label": "<% 'Shell Organizations' + ' (' + size(allShellOrgs.data.filter(o => { o.code.startsWith('X:') && !o.code.contains(':PATTERN') })) + ')' %>",
+                "label": "Shell Organizations",
                 "autoPaging": true,
                 "visible": "<% empty(queryParams.appCode) && size(allShellOrgs.data.filter(o => { o.code.startsWith('X:') && !o.code.contains(':PATTERN') })) > 0 %>",
                 "columns": [
@@ -535,7 +528,7 @@
                 "rows": "<% list:flatten([(empty(queryParams.appCode) ? [] : allShellOrgs.data.filter(o => { o.code.startsWith(queryParams.appCode + ':') && !o.code.contains(':PATTERN') })).filter(o => { o.cf_active1 == true }), (empty(queryParams.appCode) ? [] : allShellOrgs.data.filter(o => { o.code.startsWith(queryParams.appCode + ':') && !o.code.contains(':PATTERN') })).filter(o => { o.cf_active1 != true })]) %>",
                 "rowVariableName": "org",
                 "enabled": false,
-                "label": "<% 'Shell Organizations for ' + (queryParams.appName ?? queryParams.appCode ?? '') + ' (' + size(empty(queryParams.appCode) ? [] : allShellOrgs.data.filter(o => { o.code.startsWith(queryParams.appCode + ':') && !o.code.contains(':PATTERN') })) + ')' %>",
+                "label": "<% 'Shell Organizations for ' + (queryParams.appName ?? queryParams.appCode ?? '') %>",
                 "autoPaging": true,
                 "visible": "<% !empty(queryParams.appCode) && size(allShellOrgs.data.filter(o => { o.code.startsWith((queryParams.appCode ?? '') + ':') && !o.code.contains(':PATTERN') })) > 0 %>",
                 "columns": [
@@ -644,15 +637,22 @@
         "children": [
           {
             "type": "fieldSet",
-            "id": "roleAssignmentsFieldSet",
-            "title": "Shell Role Assignments",
+            "id": "rolesAboutFieldSet",
+            "title": "About This Tab",
             "children": [
               {
                 "type": "richText",
                 "id": "roleAssignmentsNote",
                 "enabled": false,
-                "value": "<span style=\"color:#374151;font-size:12px\">Each row is one <b>role</b> assigned on one <b>shell organization</b>. <b>Positions</b> are the positions that hold the role; <b>Workers</b> are the people currently in those positions, so a vacant position shows no worker. Use the row's action to add or remove positions; every change is written to the Audit Log<% !empty(queryParams.appCode) ? '. Showing the selected application only' : '' %>.</span>"
-              },
+                "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">Each row is one <b>role</b> assigned on one <b>shell organization</b>. <b>Positions</b> are the positions that hold the role; <b>Workers</b> are the people currently in those positions, so a vacant position shows no worker. Use the row's action to add or remove positions; every change is written to the Audit Log<% !empty(queryParams.appCode) ? '. Showing the selected application only' : '' %>.</span>"
+              }
+            ]
+          },
+          {
+            "type": "fieldSet",
+            "id": "roleAssignmentsFieldSet",
+            "title": "Shell Role Assignments",
+            "children": [
               {
                 "type": "text",
                 "id": "rolesEmptyText",

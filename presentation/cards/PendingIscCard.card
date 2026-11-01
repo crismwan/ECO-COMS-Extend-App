@@ -4,8 +4,8 @@
     "countText"
   ],
   "header": {
-    "title": "Pending ISC Requests",
-    "subtitle": "Review and process pending assignable role requests across ECO-COMS.",
+    "title": "ISC Queue",
+    "subtitle": "Role requests waiting for ISC review.",
     "icon": "wd-accent-clipboard-checklist"
   },
   "body": {

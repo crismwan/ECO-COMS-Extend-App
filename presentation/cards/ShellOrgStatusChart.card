@@ -14,7 +14,7 @@
       "type": "donutChart2",
       "data": "<% [{\"status\": \"Active\", \"count\": activeCount ?? 0}, {\"status\": \"Inactive\", \"count\": inactiveCount ?? 0}] %>",
       "dataVariableName": "slice",
-      "title": "<% \"\" + ((activeCount ?? 0) + (inactiveCount ?? 0)) + \" organizations\" %>",
+      "title": "<% \"\" + ((activeCount ?? 0) + (inactiveCount ?? 0)) %>",
       "sliceSizeDataSet": {
         "name": "Count",
         "value": "<% slice[\"count\"] %>"
@@ -23,7 +23,7 @@
         "name": "Status",
         "value": "<% slice[\"status\"] %>"
       },
-      "showPercentLabels": true,
+      "showPercentLabels": false,
       "animateOnLoad": true
     }
   }

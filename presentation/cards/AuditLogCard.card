@@ -5,7 +5,7 @@
   ],
   "header": {
     "title": "Audit Log",
-    "subtitle": "Review the history of all ECO-COMS changes, actions, and events.",
+    "subtitle": "Every ECO-COMS change, newest first.",
     "icon": "wd-accent-checkmarked-page"
   },
   "body": {

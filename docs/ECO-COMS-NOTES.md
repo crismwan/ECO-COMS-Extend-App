@@ -342,7 +342,7 @@ Fixed: Audit Log and ISC filters as pill cards; Home actions as cards; donut tot
 1. **ISC landing page retired.** `iscRoleRequestsHub` and its card are gone; Home, cards and the queue's back link go to `iscRoleRequestsView` / Home. The Workday menu task (`model/ISCRoleRequestsView.task`) already opened the queue.
 2. **Headings in Title Case** (my choice, as asked): it was the majority style and matches Workday's own pages. `tools/title_case.py` applies it to pages, cards and builders; static check `headingCase`.
 3. **BP step pages keep their Workday-style titles** (no "ECO-COMS:" prefix).
-4. **Old bulk audit records to be corrected**: `node test/run-tests.js repair` step `Repair.bulkAuditPosition` (Workday position name and WID). **Not applied yet**: the CI token was rejected (401) at 01:27 UTC, so the repair-dry-run and repair-apply runs must wait for a token refresh.
+4. **Old bulk audit records corrected** (`Repair.bulkAuditPosition`, e2e repair-apply run 41267556360, 2026-11-01 ~03:05 UTC): the REMOVE record (21:09:07) got Workday's name "P-00010 Director, Payroll Operations - Beth Liu"; the ASSIGN record (21:11:38) got WID aa1562e7…, now a link. The two WIDs differ on purpose: ADD stores the `allPositions` workdayID, REMOVE the role assignee's WID, exactly as the single-change page does.
 5. **No Retry/Reuse for AAA requests** (my choice, as asked): every AAA form field is driven by the Application dropdown's onChange, so a prefilled form would submit without a generated role name; the button could only show a note. AAA requests are rare (one so far).
 
 ### Live tests (2026-11-01 01:29–01:31 UTC, approved)
@@ -350,14 +350,23 @@ Fixed: Audit Log and ISC filters as pill cards; Home actions as cards; donut tot
 - Manage Role Assignments: removed P-00010 from X:BPMS(ODMT):ROLE:ADVISORS (effective 2026-10-30). OK led to the new confirmation page with role, organization, "Positions removed: P-00010 …", date; Manage This Role Again reopened the role.
 - Bulk real run added P-00010 back with an **empty** Position name cell: the audit record has Workday's name and is a link (position WID filled). The role is back to P-00009, P-00010, P-00011, P-00139, P-00759.
 
-### Found in the page review (committed, waiting for deploy)
+### Found in the page review (deployed 2026-11-01 ~03:00 UTC)
 
 - Withdraw page: five request columns were blank for every row (literal instanceList on an EDIT page); now text. Static check `editInstanceList`.
 - Shell Org Manager: Applications list now includes applications that have shell orgs but no patterns (X:BPMS(ODMT) couldn't be opened before); banner wording; one warning glyph.
 
-### Waiting on a token refresh
+### Live review 2 (2026-11-01 ~03:10 UTC, after the token refresh)
 
-The deploy and CI test runs failed at the token step (401 "The supplied authentication is invalid") from 01:27 UTC. After refreshing `WD_DEV_TOKEN` / `WD_WCP_TOKEN`: rerun the latest deploy, then `e2e` with `repair-dry-run`, check it lists the two bulk records, then `repair-apply`.
+Script: `tools/polish.py`, idempotent; every builder now runs it last. Static checks `gridCount`, `aboutInfo`.
+
+- Home: card subtitles were cut off with "…" (two lines fit about 40 characters); all shortened. "Pending ISC Requests" wrapped; now "ISC Queue". The Role Requests action card dropped its "Open ISC Queue" pill (the ISC Queue card has it).
+- Donuts: centre read "213 orga…" (now just the number); slice labels read "2 (0.939%)" (`showPercentLabels: false` now shows counts only).
+- Shell Org Manager Summary: the count cards and the Quick Actions/chart row are one masonry container, so no half-empty rows at any width. Manage Role Assignments tab got an "About This Tab" box like the other tabs.
+- Grid labels no longer repeat the count ("Applications (31) 31 items").
+- Audit Log: actions in sentence case ("Assign position"), matching the chart legend; the Changes by Action chart moved in beside the filters it reflects.
+- ISC queue: its unlabelled intro box merged into About This Page, which now comes first, as on the other list pages.
+- "Admin Provisioning" in page text renamed to the page's own name, AAA Role Provisioning. Bulk results card "Need attention" → "Need Attention". ⓘ on every About text.
+- The Home hub's own address is the app root (`…/ecocomsphase_xclw_cm_sync2_vmzvxm.htmld`); `…/home.htmld` gives "Route not matched".
 
 ## UI phase 2 (built 2026-10-31)
 

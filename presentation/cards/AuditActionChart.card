@@ -30,7 +30,7 @@
         "name": "Action",
         "value": "<% slice[\"action\"] %>"
       },
-      "showPercentLabels": true,
+      "showPercentLabels": false,
       "animateOnLoad": true
     }
   }

@@ -181,7 +181,7 @@
                 {
                   "type": "richText",
                   "id": "pageDescriptionText",
-                  "value": "<span style=\"color:#374151;font-size:12px\">Every change made through ECO-COMS: shell orgs and patterns added, org status changes, role position assignments, and assignable role requests, approvals and denials. A record is written only after Workday accepts the change. Newest first. Use the buttons below to narrow the list, and the grid's export action to download what is shown. The page loads the newest 500 records.</span>",
+                  "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">Every change made through ECO-COMS: shell orgs and patterns added, org status changes, role position assignments, and assignable role requests, approvals and denials. A record is written only after Workday accepts the change. Newest first. Use the buttons below to narrow the list, and the grid's export action to download what is shown. The page loads the newest 500 records.</span>",
                   "enabled": false
                 }
               ],
@@ -210,7 +210,7 @@
             {
               "type": "cardContainer",
               "id": "auditFilterCardContainer",
-              "layout": "grid",
+              "layout": "masonry",
               "cards": [
                 {
                   "type": "card",
@@ -221,19 +221,7 @@
                   "type": "card",
                   "cardId": "AuditTypePillCard",
                   "parameters": "<% { 'period': queryParams.period ?? '', 'changeType': queryParams.changeType ?? '' } %>"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "type": "layoutSection",
-          "id": "auditChartSection",
-          "children": [
-            {
-              "type": "cardContainer",
-              "id": "auditChartCardContainer",
-              "cards": [
+                },
                 {
                   "type": "card",
                   "cardId": "AuditActionChart",
@@ -259,7 +247,7 @@
             "rows": "<% let logs = comsAuditFilters.filterLogs(list:flatten([auditPage0.data ?? [], auditPage1.data ?? [], auditPage2.data ?? [], auditPage3.data ?? [], auditPage4.data ?? []]), queryParams.period ?? '', queryParams.changeType ?? ''); let codes = logs.filter(e => { empty(e.orgWid) && !empty(e.coName) }).map(e => { e.coName }); let names = logs.filter(e => { empty(e.roleWid) && !empty(e.roleName) }).map(e => { e.roleName }); let orgs = size(codes) == 0 ? [] : (allShellOrgs.data ?? []).filter(o => { !empty(o.organizationByName) && codes.contains(o.code) }).map(o => { { 'code': o.code, 'id': o.organizationByName.id } }); let roles = size(names) == 0 ? [] : list:flatten([shellRoles.data ?? [], aaaRoles.data ?? []]).filter(r => { !empty(r.role) && names.contains(r.role.descriptor) }).map(r => { { 'name': r.role.descriptor, 'id': r.role.id } }); list:sort(logs, 'timestamp', false).map(e => { let om = empty(e.orgWid) ? orgs.filter(o => { o.code == (e.coName ?? '') }) : []; let rm = empty(e.roleWid) ? roles.filter(r => { r.name == (e.roleName ?? '') }) : []; { 'timestamp': e.timestamp ?? '', 'objectType': e.objectType ?? '', 'action': e.action ?? '', 'coName': e.coName ?? '', 'roleName': e.roleName ?? '', 'positionName': e.positionName ?? '', 'effectiveDate': e.effectiveDate ?? '', 'triggeredBy': e.triggeredBy ?? '', 'details': e.details ?? '', 'changedByWid': e.changedByWid ?? '', 'positionWid': e.positionWid ?? '', 'orgWid': !empty(e.orgWid) ? e.orgWid : (size(om) > 0 ? om[0].id : ''), 'roleWid': !empty(e.roleWid) ? e.roleWid : (size(rm) > 0 ? rm[0].id : '') } }) %>",
             "rowVariableName": "logEntry",
             "enabled": false,
-            "label": "<% 'Audit Log (' + size(comsAuditFilters.filterLogs(list:flatten([auditPage0.data ?? [], auditPage1.data ?? [], auditPage2.data ?? [], auditPage3.data ?? [], auditPage4.data ?? []]), queryParams.period ?? '', queryParams.changeType ?? '')) + ')' %>",
+            "label": "Audit Log",
             "columns": [
               {
                 "type": "column",
@@ -292,7 +280,7 @@
                 "label": "Action",
                 "cellTemplate": {
                   "type": "text",
-                  "value": "<% logEntry.action ?? '' %>",
+                  "value": "<% empty(logEntry.action) ? '' : (logEntry.action.substring(0, 1) + logEntry.action.substring(1).lowerCase()) %>",
                   "enabled": false
                 },
                 "sortableAndFilterable": "true"

@@ -231,7 +231,7 @@
                   "excelExportEnabled": true,
                   "rowVariableName": "ra",
                   "rows": "<% (list:flatten((shellRoles.data ?? []).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ra.organization.id == (queryParams.orgId ?? '') }).map(ra => { { 'role': r.role, 'org': ra.organization, 'positions': ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? [], 'workers': ra.workersAssigned ?? [] } }) }))) %>",
-                  "label": "<% 'Role assignments (' + size((list:flatten((shellRoles.data ?? []).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ra.organization.id == (queryParams.orgId ?? '') }).map(ra => { { 'role': r.role, 'org': ra.organization, 'positions': ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? [], 'workers': ra.workersAssigned ?? [] } }) })))) + ')' %>",
+                  "label": "Role Assignments",
                   "columns": [
                     {
                       "type": "column",
@@ -333,7 +333,7 @@
                   "excelExportEnabled": true,
                   "rowVariableName": "al",
                   "rows": "<% (list:sort(list:flatten([auditPage0.data ?? [], auditPage1.data ?? []]).filter(a => { (!empty(a.orgWid) && a.orgWid == (queryParams.orgId ?? '')) || (!empty(queryParams.orgCode) && (a.coReferenceId ?? '') == queryParams.orgCode) || (!empty(queryParams.orgName) && (a.coName ?? '') == queryParams.orgName) }), 'timestamp', false)) %>",
-                  "label": "<% 'Changes (' + size((list:sort(list:flatten([auditPage0.data ?? [], auditPage1.data ?? []]).filter(a => { (!empty(a.orgWid) && a.orgWid == (queryParams.orgId ?? '')) || (!empty(queryParams.orgCode) && (a.coReferenceId ?? '') == queryParams.orgCode) || (!empty(queryParams.orgName) && (a.coName ?? '') == queryParams.orgName) }), 'timestamp', false))) + ')' %>",
+                  "label": "Changes",
                   "columns": [
                     {
                       "type": "column",
@@ -356,7 +356,7 @@
                         "type": "text",
                         "id": "colActionText",
                         "enabled": false,
-                        "value": "<% al.action ?? '' %>"
+                        "value": "<% empty(al.action) ? '' : (al.action.substring(0, 1) + al.action.substring(1).lowerCase()) %>"
                       }
                     },
                     {

@@ -2,7 +2,7 @@
   "id": "HomeBulkActionsCard",
   "header": {
     "title": "Bulk Role Changes",
-    "subtitle": "Add or remove many positions from one CSV file. Validate first, then run it for real.",
+    "subtitle": "Add or remove positions from a CSV file.",
     "icon": "wd-accent-checkmarked-page"
   },
   "body": {

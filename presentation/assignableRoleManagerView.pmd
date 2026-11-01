@@ -128,7 +128,7 @@
                   "type": "richText",
                   "id": "pageDesc",
                   "enabled": false,
-                  "value": "<span style=\"color:#374151;font-size:12px\">View your Assignable Role requests and their current status. Each request is reviewed by ISC before becoming active in Workday. To submit a new request, use <b>Submit New Request</b> in Actions.</span>"
+                  "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">View your Assignable Role requests and their current status. Each request is reviewed by ISC before becoming active in Workday. To submit a new request, use <b>Submit New Request</b> in Actions.</span>"
                 }
               ]
             },

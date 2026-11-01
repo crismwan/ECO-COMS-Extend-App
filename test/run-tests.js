@@ -267,6 +267,14 @@ function staticSuite() {
         const bad = words.find((w, i) => { const c = w.replace(/^[("']+|[)"']+$/g, ''); return /^[a-z]+$/.test(c) && !(i > 0 && i < words.length - 1 && SMALL.has(c) && !words[i - 1].endsWith(':')); });
         if (bad) err('headingCase', `${name}: heading "${node.title}" isn't Title Case ("${bad}"); run tools/title_case.py`);
       }
+      // Workday prints 'n items' next to every grid label, so a count in the label says it twice.
+      if (node.type === 'grid' && /\(' \+ size\(|' \(' \+/.test(String(node.label || ''))) {
+        err('gridCount', `${name}: grid '${node.id}' puts a count in its label; Workday already shows 'n items' (run tools/polish.py)`);
+      }
+      if (node.type === 'fieldSet' && String(node.title || '').startsWith('About This')) {
+        const first = (node.children || [])[0];
+        if (first?.type === 'richText' && typeof first.value === 'string' && !first.value.includes('ⓘ')) err('aboutInfo', `${name}: '${node.title}' text doesn't start with the ⓘ glyph (run tools/polish.py)`);
+      }
       if (node.type === 'cardContainer' && (node.layout ?? 'grid') === 'grid' && (node.cards || []).length > 3) {
         err('cardRow', `${name}: cardContainer '${node.id || '?'}' has ${(node.cards || []).length} cards in grid layout; the fourth wraps onto its own row`);
       }

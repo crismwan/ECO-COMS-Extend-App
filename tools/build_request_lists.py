@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import subprocess, sys
 """Same layout on both request list pages (Assignable Role Manager, AAA Role Provisioning):
 back link only in the nav, 'About this page' heading, cards Pending / Decided / Actions (three per row),
 one empty message in the shared style. Idempotent."""
@@ -42,3 +43,6 @@ for page, (card_id, sub, pills, my_empty) in PAGES.items():
                 k['children'] = [c for c in k['children'] if c.get('id') != my_empty]
     save(page, d)
 print('ok')
+
+# final UI polish pass (grid labels, About ⓘ, ...); see tools/polish.py
+subprocess.run([sys.executable, os.path.join(os.path.dirname(__file__), 'polish.py')], check=True)

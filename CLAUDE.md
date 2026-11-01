@@ -1632,7 +1632,7 @@ Each `taskId` referenced by a pill must exist in the AMD `tasks` array.
 
 **Pills as filters and action rows (confirmed live 2026-10-31):** a pill's `taskReference` takes `parameterBindings`, so a pill card can drive a page's query-param filters (the Audit Log's `?period=7d` came through). Mark the current choice by scripting the label from card parameters, double-quoted only: `"label": "<% period == \"7d\" ? \"✓ Last 7 days\" : \"Last 7 days\" %>"`. Pills wrap side by side, so they replace a column of stacked buttons. Workday renders buttons in a section one per row; there is no row layout for plain buttons.
 
-**Card rows:** at desktop width a `grid` cardContainer fits **three** cards per row; a fourth wraps onto its own row. Keep rows to three (or use `masonry` where cards differ in height, e.g. a donut beside short cards). A card's `render` hides it conditionally (used on the error page). A `cardContainer` can follow a `fieldSet` in the same `layoutSection`, which keeps help text and its action card in one box.
+**Card rows:** the number of cards per row follows the page width (three in a ~1440px window, four at 1600px, confirmed live 2026-11-01), so a fixed 'three per row' plan leaves gaps on wider screens. Put related cards in **one** `masonry` container rather than two half-full rows. Card subtitles show two lines (about 40 characters) and are then cut off with "…"; keep them short. A card's `render` hides it conditionally (used on the error page). A `cardContainer` can follow a `fieldSet` in the same `layoutSection`, which keeps help text and its action card in one box.
 
 ## Business objects (Extend model components)
 
@@ -2053,6 +2053,11 @@ A `button` widget's `action` attribute controls its visual style and role. Confi
 
 `"autoPaging": true` on a read-only grid automatically paginates large result sets without requiring the user to click a "load more" button. Use on view pages that may show many rows.
 
+### Column widths and labels
+
+- Column widths **can't be configured** (developer.workday.com "column": users can resize them in the UI only). Long values wrap into tall rows; shorten the values instead.
+- Workday prints "n items" beside every grid label, so don't put a count in the label itself.
+
 ### `sortableAndFilterable`
 
 `"sortableAndFilterable": "true"` (string, not boolean) on a `column` makes that column sortable and filterable by the user in the rendered grid. Apply to columns where user sorting is desired (e.g. status, date, name columns).
@@ -2085,7 +2090,8 @@ A donut/pie chart. All attributes:
 - `title` (stringScript) — centre label inside the donut (e.g. total count).
 - `sliceSizeDataSet` (**req**) — `{ "name": "Label", "value": "<% slice['fieldName'] %>" }` — which field drives the slice size.
 - `sliceColorDataSet` (**req**) — `{ "name": "Label", "value": "<% slice['fieldName'] %>" }` — which field determines colour/legend label.
-- `showPercentLabels` (boolean) — show percentage on each slice.
+- `showPercentLabels` (boolean) — adds a percentage next to each slice's count (developer.workday.com donutChart2). It prints up to four decimals ("2 (0.939%)"); `false` shows the count only.
+- `title` sits in the donut's centre, which is narrow: "213 organizations" was cut to "213 orga…". Use the bare number.
 - `animateOnLoad` (boolean) — animate the chart when the card loads.
 
 ```json
