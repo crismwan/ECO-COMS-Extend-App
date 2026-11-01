@@ -210,17 +210,28 @@ On My Assignable Role Requests, each of your requests has **Retry** (denied requ
 
 The **Needs My Attention** card on Home sums up your own work: your role requests pending ISC review (split into assignable and AAA when you have AAA requests), approved this month, and denied or withdrawn, plus any bulk upload of yours that is still running or was rejected. **My requests** opens My Assignable Role Requests (your requests, with Withdraw); **AAA requests** and **My bulk uploads** are under the card's ⋯ menu.
 
-### Bulk Role Changes (many positions from one file)
+### Bulk Role Changes (many positions at once)
 
-Use this to add or remove many positions on shell organization roles at once. It's on Home under **Bulk Role Changes** and needs the same access as Manage Role Assignments.
+Use this to add or remove many positions on shell organization roles at once. It's on Home under **Bulk Role Changes** and needs the same access as Manage Role Assignments. There are two ways in; both run through the same checks and show their results on the same page.
 
-1. **Download Template.** The grid lists every position that holds a role on a shell organization. Export it to Excel with the grid's export icon.
-2. **Edit the file.** Type **REMOVE** in the Action column on rows to take off. To add a position, copy a row of the same role, type **ADD** and put the new **Position ID** (for example P-00123) in that column, with Assignee WID empty. Leave Action empty on everything else and keep the columns in order. Save as **CSV**. At most 200 rows.
+**In the app (Edit in the App)**, like a Get/Put EIB without leaving Workday. Up to 50 changes per submit.
+
+1. Click **Edit in the App** and then **Edit** on an application. **Current Assignments** lists every position that holds a role on that application's shell organizations.
+2. Tick **Remove** on the rows to take off.
+3. To add, click **+** under **Positions to Add**, pick the **Role and Organization**, then type part of a position's name in **Position** and pick it. A position that already holds that role there is flagged straight away.
+4. Pick an **Effective Date** and click OK. Leave **Real run** unticked to validate first. Results opens; when the run shows **Validated** with no INVALID rows, click **Apply**.
+
+**From a file (Excel template)**. Up to 1,000 ADD or REMOVE rows per file; unchanged rows don't count.
+
+1. **Download Template** and click the Excel file under **Excel Template**. It already lists every current role assignment (the "as of" time is on the page and on the sheet) and checks each row as you type: a drop-down for Action, format checks, duplicates, and a **Summary** box that says **Ready** when the file is clean. Its **How to use** sheet has the steps. (You can still export the grid on that page instead; then follow steps 2–3 of the template's How to use sheet by hand.)
+2. **Edit the file.** Type **REMOVE** in Action on rows to take off. To add, copy a row of the same role and organization to an empty row, type **ADD**, put the new **Position ID** (for example P-00123) and clear Assignee WID. Leave Action empty on everything else. With the **Role Changes** sheet selected, save as **CSV**.
 3. **Upload File** and pick an effective date. Leave **Real run** unticked to **validate only**: every row is checked (including that each ADD Position ID exists in Workday) and nothing changes.
-4. On the results page, click **Refresh** until the status is **Validated**. Each row is **VALID** or **INVALID** with a reason. Fix INVALID rows in the file and upload it again.
-5. When there are no INVALID rows, click **Apply** on that upload, tick the confirmation and click OK. Each row is applied in Workday's Assign Roles. Rows show **DONE** or **FAILED** with Workday's message; a failed row doesn't stop the others, and changes that succeed aren't undone. Each DONE row writes an ASSIGN POSITION or REMOVE POSITION record to the Audit Log.
+4. On the results page, click **Refresh** until the status is **Validated**. Each row is **VALID** or **INVALID** with a reason. Fix INVALID rows and upload again.
+5. When there are no INVALID rows, click **Apply**, tick the confirmation and click OK. Each row is applied in Workday's Assign Roles. Rows show **DONE** or **FAILED** with Workday's message; a failed row doesn't stop the others, and changes that succeed aren't undone. Each DONE row writes an ASSIGN POSITION or REMOVE POSITION record to the Audit Log.
 
-You can also tick **Real run** on the upload page to validate and apply in one go, but validating first is safer. Runs work in the background, so the results page fills in over a minute or two.
+You can also tick **Real run** to validate and apply in one go, but validating first is safer. Runs work in the background, so the results page fills in over a minute or two. **My Uploads** on the results page lists both your file uploads and your grid edits.
+
+**Keeping the template current (administrators).** The Excel template is rebuilt from Workday after every deploy. To publish one by hand (for example in a tenant without the deploy pipeline), use **Upload New Template Version** on the Download Template page; the newest version is the one people get.
 
 ---
 
