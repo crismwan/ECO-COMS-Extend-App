@@ -50,6 +50,7 @@ These notes apply to **all** Workday Extend apps I work on. Project-specific det
 - Business processes on Extend business objects
 - Security and ISU writes
 - Audit logging pattern
+- Files: offering a stored file for download
 - Data and binding pitfalls
 - Orchestrations — synchronous page limit is 25 seconds
 - Orchestrations — no Excel parsing node
@@ -2351,6 +2352,16 @@ Pattern that lets a Workday rejection block OK instead of showing a false succes
 - When storing several names in one text field, pick a separator that can't occur inside a name, or split with a lookahead on the next item's ID (`splitByRegex(', (?=P-[0-9])')`): position names like "Director, Field Sales" contain ", ".
 - **Grid rows that join two lists can hit the PMD script memory limit** ("Script Constraint exceeded: ... more than the allowed max memory limit"). Build each lookup list once, cut down to the keys the rows need, before mapping the rows. Don't filter a 500-row list inside every row.
 - Deleting BO records from a page: an outbound `DELETE /collection?bulk=true` with a `values` body is **silently skipped**. What works: a grid with `deleteEndPoint` + DELETE `'/collection/' + idCell.value`, removing rows and then OK.
+
+## Files: offering a stored file for download
+
+Source: developer.workday.com "Concept: fileUploader", "fileUploaderRow", "attachmentList"; live test 2026-11-01.
+
+- Store the file as a record of an **attachment object** (model `.attachment`), then show it on a VIEW page with a read-only `fileUploader` whose child `loop` (`on` the collection's `.data`, `as` the item) renders a `fileUploaderRow` with `allowRemove: false`, `fileName`, `fileType` (`fileType:getFileType(...)`), a `contentArea` for details, and an `attachment` `attachmentList` (`attachmentURL` = full `https://api.workday.com/apps/<appId>/v1/<collection>/<id>`, `attachmentAuth: "sso"`, `attachmentName` = the record's `fileName`, `attachmentUriTemplate: "[Target]"`, one `instanceList` item with `action: "attachment"`, `mimeType`, `iconId` e.g. `mime_msexcel`). Workday rewrites the link to its own `/w/download/assets/...` address and serves the file as an attachment (checked: same bytes, xlsx content type).
+- Uploading from a page: `fileUploader` with `metadata` and `valueOutBinding: "<endpoint>:<defaultCollectionName>"`, endpoint `url: "/<defaultCollectionName>Collection"` (POST), fields set in `onMultiPartSend`.
+- Uploading from a script (REST): multipart POST to `/<collection>Collection`. The JSON part must be a **plain form field without a filename** (`form.append('data', JSON.stringify({ <collection>: [{ file: 'cid:<collection>0', ...fields }] }))`), and the file part named `<collection>0`. Sending the JSON as a Blob/file part fails with HTTP 400 "Multipart Attachment requests must contain exactly one root body". Reading back: `GET /<collection>/<id>` with Accept JSON gives metadata, without Accept the file.
+- Workday Extend can't build an .xlsx itself (no Excel node in orchestrations). Generate files outside (a CI step) and publish them as above.
+- Orchestration strings have `length()` (developer.workday.com "Reference: String Member Functions"; deployed 2026-11-01). Counting a substring: `(text.length() - text.replace("\\nADD,", "").length())` = 5 × occurrences.
 
 ## Data and binding pitfalls
 
