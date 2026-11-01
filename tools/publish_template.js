@@ -80,12 +80,14 @@ function pacificNow() {
 
   // 3. publish (multipart: the file part plus a "data" part listing it under the collection name)
   const version = `v2 · ${asOf}`;
+  // The JSON "data" part goes first: Workday treats the first part as the root body
+  // ("Multipart Attachment requests must contain exactly one root body" otherwise).
   const form = new FormData();
-  form.append('comsBulkTemplates0', new Blob([bytes], { type: XLSX }), FILE_NAME);
   form.append('data', new Blob([JSON.stringify({ comsBulkTemplates: [{
     file: 'cid:comsBulkTemplates0', version, asOf, rowCount: String(rows.length),
     notes: 'Pre-filled with every current role assignment on shell organizations', uploadedByName: 'Template publisher', uploadedAt: new Date().toISOString(),
   }] })], { type: 'application/json' }));
+  form.append('comsBulkTemplates0', new Blob([bytes], { type: XLSX }), FILE_NAME);
   const created = await call('POST', `${BO}/comsBulkTemplatesCollection`, { body: form, headers: { Accept: 'application/json' } });
   const rec = (created.comsBulkTemplates || [])[0];
   if (!rec || !rec.id) throw new Error(`unexpected response: ${JSON.stringify(created).slice(0, 300)}`);
