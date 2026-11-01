@@ -230,7 +230,7 @@
     "headerSize": "STANDARD",
     "title": {
       "type": "title",
-      "label": "<% 'ECO-COMS: Withdraw ' + (queryParams.view == 'aaa' ? 'AAA' : 'Assignable') + ' Role Request' %>"
+      "label": "<% 'ECO-COMS: Withdraw ' + (queryParams.view == 'aaa' ? 'AAA ' : (queryParams.view == 'assignable' ? 'Assignable ' : '')) + 'Role Request' %>"
     },
     "body": {
       "type": "basicFormLayout",
@@ -288,14 +288,14 @@
             {
               "type": "fieldSet",
               "id": "pendingRolesFieldSet",
-              "title": "<% 'My Pending ' + (queryParams.view == 'aaa' ? 'AAA' : 'Assignable') + ' Role Requests' %>",
+              "title": "<% 'My Pending ' + (queryParams.view == 'aaa' ? 'AAA ' : (queryParams.view == 'assignable' ? 'Assignable ' : '')) + 'Role Requests' %>",
               "children": [
                 {
                   "type": "grid",
                   "gridType": "LIST",
                   "multiViewStylingEnabled": true,
                   "id": "pendingRolesGrid",
-                  "label": "<% 'My Pending ' + (queryParams.view == 'aaa' ? 'AAA' : 'Assignable') + ' Role Requests' %>",
+                  "label": "<% 'My Pending ' + (queryParams.view == 'aaa' ? 'AAA ' : (queryParams.view == 'assignable' ? 'Assignable ' : '')) + 'Role Requests' %>",
                   "rows": "<% (list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? []).filter(r => { r.status == 'Pending ISC Review' && !empty(r.requestedBy) && r.requestedBy.id == (selectedWorker.id ?? '') && (empty(queryParams.view) || (queryParams.view == 'aaa' ? r.roleName.startsWith('Organizations and Roles Assignment Administrator') : !r.roleName.startsWith('Organizations and Roles Assignment Administrator'))) }) %>",
                   "rowVariableName": "role",
                   "enabled": false,

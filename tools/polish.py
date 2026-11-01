@@ -185,6 +185,11 @@ for f in sorted(os.listdir(ROOT)):
         'bulkRoleApply': [('Batch reference', 'Batch Reference'), ('VALID rows (will be applied)', 'VALID Rows (Will Be Applied)'),
                           ('INVALID rows', 'INVALID Rows')],
         'reviewRoleRequestAssignableRole': [('removes it from Pending ISC Requests', 'removes it from the ISC Queue')],
+        # after the page renames these sentences named list pages as where requests come from
+        'iscRoleRequestsView': [("roles from AAA Role Requests'", "roles'"), ("for assignable roles from My Assignable Role Requests'", "for assignable roles'"),
+                                ("'from both My Assignable Role Requests and AAA Role Requests'", "'for both assignable and AAA roles'"),
+                                ("Administrator request from AAA Role Requests, for someone", "Administrator request (Submit AAA Role Request), for someone"),
+                                ("requested from My Assignable Role Requests", "requested with Submit Assignable Role Request")],
     }
     if n in TEXT:
         def text(o):
@@ -203,13 +208,17 @@ for f in sorted(os.listdir(ROOT)):
                              [k for k in fs['children'] if k not in loose]
     # Withdraw: opened with view=aaa from the AAA pages; name the request type it lists
     if n == 'deleteAssignableRole':
-        KIND = "(queryParams.view == 'aaa' ? 'AAA' : 'Assignable')"
-        if not pr['title']['label'].startswith('<%'):
-            pr['title']['label'] = "<% 'ECO-COMS: Withdraw ' + " + KIND + " + ' Role Request' %>"
+        # opened from Workday search there's no view: it then lists both kinds, so name neither (2026-11-01 test)
+        KIND = "(queryParams.view == 'aaa' ? 'AAA ' : (queryParams.view == 'assignable' ? 'Assignable ' : ''))"
+        OLD_KIND = "(queryParams.view == 'aaa' ? 'AAA' : 'Assignable')"
         def kind(o):
             for key in ('title', 'label'):
-                if o.get(key) == 'My Pending Assignable Role Requests':
-                    o[key] = "<% 'My Pending ' + " + KIND + " + ' Role Requests' %>"
+                v = o.get(key)
+                if v == 'My Pending Assignable Role Requests' or (isinstance(v, str) and OLD_KIND in v and 'My Pending' in v):
+                    o[key] = "<% 'My Pending ' + " + KIND + " + 'Role Requests' %>"
+        t = pr['title']['label']
+        if not t.startswith('<%') or OLD_KIND in t:
+            pr['title']['label'] = "<% 'ECO-COMS: Withdraw ' + " + KIND + " + 'Role Request' %>"
         walk(pr, kind)
     if save(n, d, before):
         changed.append(n)

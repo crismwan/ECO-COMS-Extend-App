@@ -27,7 +27,7 @@ Open the app from Workday. The **ECO-COMS** hub opens on the **RBAC Hub** page. 
 
 Every page has one back link at the top (for example **← Home** or **← Shell Org Manager**). What you see depends on your security domains (see [Troubleshooting](#troubleshooting)).
 
-In Workday's own search the app's tasks are **Shell Org Manager**, **Audit Log Viewer**, **ISC Queue**, **Submit Assignable Role Request**, **Submit AAA Role Request** and **Withdraw Assignable Role Request** (renamed 2026-11-01; the old names Assignable Role Manager, Admin Provisioning and All Pending Role Requests ISC no longer match).
+In Workday's own search the app's tasks are **Shell Org Manager**, **Audit Log Viewer**, **ISC Queue**, **Submit Assignable Role Request**, **Submit AAA Role Request** and **Withdraw Role Request** (renamed 2026-11-01; the old names Assignable Role Manager, Admin Provisioning and All Pending Role Requests ISC no longer match).
 
 All times in the app are **Pacific time**, to the minute, with the zone shown (for example `2026-10-31 18:31 PDT`; `PST` in winter).
 
@@ -146,7 +146,7 @@ The form has no Delegated Roles field. Delegated Roles appears only as a column 
 
 ### Withdraw a pending request
 
-**Withdraw Request** (on the request pages) opens **ECO-COMS: Withdraw Assignable Role Request**, or **Withdraw AAA Role Request** when you come from the AAA pages. It lists only **your own** requests that are still **Pending ISC Review**.
+**Withdraw Request** (on the request pages) opens **ECO-COMS: Withdraw Assignable Role Request**, or **Withdraw AAA Role Request** when you come from the AAA pages. Opened from Workday search it's **Withdraw Role Request** and lists both kinds. It lists only **your own** requests that are still **Pending ISC Review**.
 
 1. Click **Select** on the request.
 2. Tick **I confirm I want to withdraw this request.**

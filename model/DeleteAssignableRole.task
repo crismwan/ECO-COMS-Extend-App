@@ -1,7 +1,7 @@
 {
   "id": 10,
   "name": "DeleteAssignableRole",
-  "label": "Withdraw Assignable Role Request",
+  "label": "Withdraw Role Request",
   "securityDomains": [
     "ManageCOMSAssignableRoles"
   ],
