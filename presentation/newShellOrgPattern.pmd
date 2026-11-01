@@ -103,7 +103,7 @@
     "headerSize": "STANDARD",
     "title": {
       "type": "title",
-      "label": "ECO-COMS: New Shell Org Pattern",
+      "label": "ECO-COMS: Add New Shell Org Pattern",
       "enabled": true
     },
     "body": {
@@ -137,7 +137,7 @@
                   "type": "richText",
                   "id": "pageDescription",
                   "enabled": false,
-                  "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">Add a new Shell Org Pattern for your application. Patterns define the CO naming structure used to create Custom Organizations in Workday. The pattern name is auto-generated from the fields below. A duplicate check is performed before submission.</span>"
+                  "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">Add a new Shell Org Pattern for your application. A pattern defines how Custom Organization names are built for course-based roles. The pattern name is auto-generated from the fields below. A duplicate check is performed before submission.</span>"
                 }
               ],
               "title": "About This Page"
@@ -168,28 +168,35 @@
           "id": "formSection",
           "children": [
             {
-              "type": "dropdown",
-              "id": "selectedApplicationId",
-              "label": "Application",
-              "required": true,
-              "instanceListLoopTag": {
-                "id": "selectedApplicationIdList",
-                "type": "instanceLoop",
-                "templateInstance": {
-                  "id": "<% app.id %>",
-                  "descriptor": "<% app.appId %>"
+              "type": "fieldSet",
+              "id": "patternDetailsFieldSet",
+              "title": "Pattern Details",
+              "children": [
+                {
+                  "type": "dropdown",
+                  "id": "selectedApplicationId",
+                  "label": "Application",
+                  "required": true,
+                  "instanceListLoopTag": {
+                    "id": "selectedApplicationIdList",
+                    "type": "instanceLoop",
+                    "templateInstance": {
+                      "id": "<% app.id %>",
+                      "descriptor": "<% app.appId %>"
+                    },
+                    "on": "<% comsApplications.data %>",
+                    "as": "app"
+                  },
+                  "helpText": "Select the application this pattern belongs to.",
+                  "onChange": "<%\n            attribute1.clearError();\n            attribute2.clearError();\n            attribute3.clearError();\n            attribute4.clearError();\n            attribute5.clearError();\n            effectiveDate.clearError();\n            let ac = !empty(self.value) ? self.selectedEntries[0].descriptor : '';\n            let p1 = attribute1.value ?? '*';\n            let p2 = attribute2.value ?? '*';\n            let p3 = attribute3.value ?? '*';\n            let p5 = attribute5.value ?? '*';\n            if (!empty(ac)) {\n              patternPreview.setValue(ac + ':PATTERN:' + p1 + ':' + p2 + ':' + p3 + ':' + p5);\n            } else {\n              patternPreview.setValue('Select an application above');\n            }\n          %>"
                 },
-                "on": "<% comsApplications.data %>",
-                "as": "app"
-              },
-              "helpText": "Select the application this pattern belongs to.",
-              "onChange": "<%\n            attribute1.clearError();\n            attribute2.clearError();\n            attribute3.clearError();\n            attribute4.clearError();\n            attribute5.clearError();\n            effectiveDate.clearError();\n            let ac = !empty(self.value) ? self.selectedEntries[0].descriptor : '';\n            let p1 = attribute1.value ?? '*';\n            let p2 = attribute2.value ?? '*';\n            let p3 = attribute3.value ?? '*';\n            let p5 = attribute5.value ?? '*';\n            if (!empty(ac)) {\n              patternPreview.setValue(ac + ':PATTERN:' + p1 + ':' + p2 + ':' + p3 + ':' + p5);\n            } else {\n              patternPreview.setValue('Select an application above');\n            }\n          %>"
-            },
-            {
-              "type": "readOnlyText",
-              "id": "patternPreview",
-              "label": "Pattern Name Preview",
-              "value": "<% !empty(selectedApplicationId.value) ? ((selectedApplicationId.selectedEntries[0].descriptor ?? '') + ':PATTERN:' + (attribute1.value ?? '*') + ':' + (attribute2.value ?? '*') + ':' + (attribute3.value ?? '*') + ':' + (attribute5.value ?? '*')) : 'Select an application above' %>"
+                {
+                  "type": "readOnlyText",
+                  "id": "patternPreview",
+                  "label": "Pattern Name Preview",
+                  "value": "<% !empty(selectedApplicationId.value) ? ((selectedApplicationId.selectedEntries[0].descriptor ?? '') + ':PATTERN:' + (attribute1.value ?? '*') + ':' + (attribute2.value ?? '*') + ':' + (attribute3.value ?? '*') + ':' + (attribute5.value ?? '*')) : 'Select an application above' %>"
+                }
+              ]
             },
             {
               "type": "fieldSet",

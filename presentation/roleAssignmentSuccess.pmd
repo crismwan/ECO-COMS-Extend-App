@@ -26,7 +26,7 @@
                   "type": "richText",
                   "id": "successMessage",
                   "enabled": false,
-                  "value": "<span style=\"color:#059669;font-size:12px;font-weight:700\">✓ </span><span style=\"color:#065f46;font-size:12px\">Workday accepted the changes. Each one is in the Audit Log as ASSIGN POSITION or REMOVE POSITION.</span>"
+                  "value": "<span style=\"color:#059669;font-size:12px;font-weight:700\">✓ </span><span style=\"color:#065f46;font-size:12px\">Workday accepted the changes. Each one is in the Audit Log as Assign position or Remove position.</span>"
                 },
                 {
                   "type": "readOnlyText",
@@ -43,13 +43,13 @@
                 {
                   "type": "readOnlyText",
                   "id": "addedDisplay",
-                  "label": "Positions added",
+                  "label": "Positions Added",
                   "value": "<% empty(flowVariables.added) ? 'None' : flowVariables.added %>"
                 },
                 {
                   "type": "readOnlyText",
                   "id": "removedDisplay",
-                  "label": "Positions removed",
+                  "label": "Positions Removed",
                   "value": "<% empty(flowVariables.removed) ? 'None' : flowVariables.removed %>"
                 },
                 {

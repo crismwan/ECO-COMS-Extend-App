@@ -202,7 +202,7 @@
                 {
                   "type": "text",
                   "id": "batchText",
-                  "label": "Batch reference",
+                  "label": "Batch Reference",
                   "enabled": false,
                   "value": "<% (queryParams.batch ?? '') %>"
                 },
@@ -223,14 +223,14 @@
                 {
                   "type": "text",
                   "id": "validRowsText",
-                  "label": "VALID rows (will be applied)",
+                  "label": "VALID Rows (Will Be Applied)",
                   "enabled": false,
                   "value": "<% '' + size((list:flatten([storedRows0.data ?? [], storedRows1.data ?? []]).filter(x => { (x.runMode ?? '') == 'VALIDATE' })).filter(x => { x.result == 'VALID' })) %>"
                 },
                 {
                   "type": "text",
                   "id": "invalidRowsText",
-                  "label": "INVALID rows",
+                  "label": "INVALID Rows",
                   "enabled": false,
                   "value": "<% '' + size((list:flatten([storedRows0.data ?? [], storedRows1.data ?? []]).filter(x => { (x.runMode ?? '') == 'VALIDATE' })).filter(x => { x.result == 'INVALID' })) %>"
                 },

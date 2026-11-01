@@ -171,6 +171,46 @@ for f in sorted(os.listdir(ROOT)):
                 for a, b in AAA:
                     o['value'] = o['value'].replace(a, b)
         walk(pr, aaa)
+    # review 3 (2026-11-01): wording on forms, wizards and confirmation pages
+    TEXT = {
+        'createShellOrgWizard': [('Create New Shell Organization', 'Add New Shell Organization')],
+        'newShellOrgPattern': [('ECO-COMS: New Shell Org Pattern', 'ECO-COMS: Add New Shell Org Pattern'),
+                               ('Patterns define the CO naming structure used to create Custom Organizations in Workday.',
+                                'A pattern defines how Custom Organization names are built for course-based roles.')],
+        'manageShellOrgStatus': [('⚠ Warning: ', '⚠ '), ('Impact of Activating', 'Impact of Reactivating')],
+        'deleteAssignableRole': [('recorded in the audit log', 'recorded in the Audit Log')],
+        'newShellOrgPatternSuccess': [('The Custom Organization has been created in Workday.', 'The pattern has been created in Workday.')],
+        'roleAssignmentSuccess': [('as ASSIGN POSITION or REMOVE POSITION', 'as Assign position or Remove position'),
+                                  ('Positions added', 'Positions Added'), ('Positions removed', 'Positions Removed')],
+        'bulkRoleApply': [('Batch reference', 'Batch Reference'), ('VALID rows (will be applied)', 'VALID Rows (Will Be Applied)'),
+                          ('INVALID rows', 'INVALID Rows')],
+        'reviewRoleRequestAssignableRole': [('removes it from Pending ISC Requests', 'removes it from the ISC Queue')],
+    }
+    if n in TEXT:
+        def text(o):
+            for key in ('label', 'title', 'subtitle', 'value'):
+                if isinstance(o.get(key), str):
+                    for a, b in TEXT[n]:
+                        o[key] = o[key].replace(a, b)
+        walk(pr, text)
+    # the pattern form's Application field and preview had no heading of their own
+    if n == 'newShellOrgPattern':
+        secs = pr['body']['sections']
+        fs = [s for s in secs if s.get('id') == 'formSection'][0]
+        loose = [k for k in fs['children'] if k.get('id') in ('selectedApplicationId', 'patternPreview')]
+        if loose:
+            fs['children'] = [{"type": "fieldSet", "id": "patternDetailsFieldSet", "title": "Pattern Details", "children": loose}] + \
+                             [k for k in fs['children'] if k not in loose]
+    # Withdraw: opened with view=aaa from the AAA pages; name the request type it lists
+    if n == 'deleteAssignableRole':
+        KIND = "(queryParams.view == 'aaa' ? 'AAA' : 'Assignable')"
+        if not pr['title']['label'].startswith('<%'):
+            pr['title']['label'] = "<% 'ECO-COMS: Withdraw ' + " + KIND + " + ' Role Request' %>"
+        def kind(o):
+            for key in ('title', 'label'):
+                if o.get(key) == 'My Pending Assignable Role Requests':
+                    o[key] = "<% 'My Pending ' + " + KIND + " + ' Role Requests' %>"
+        walk(pr, kind)
     if save(n, d, before):
         changed.append(n)
 print('polish changed:', changed)

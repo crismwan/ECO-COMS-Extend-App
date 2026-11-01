@@ -176,7 +176,7 @@
                   "type": "richText",
                   "id": "statusImpactNote",
                   "enabled": false,
-                  "value": "<% queryParams.currentStatus == 'Active' ? '<span style=\"color:#92400e;font-size:12px\"><b>Impact of Inactivating:</b> The organization will no longer appear in Workday selection lists. Existing role assignments will NOT be removed automatically — you must remove them manually in Workday if needed.</span>' : '<span style=\"color:#065f46;font-size:12px\"><b>Impact of Activating:</b> The organization will become available again for new role assignments in Workday. No existing data will be changed.</span>' %>"
+                  "value": "<% queryParams.currentStatus == 'Active' ? '<span style=\"color:#92400e;font-size:12px\"><b>Impact of Inactivating:</b> The organization will no longer appear in Workday selection lists. Existing role assignments will NOT be removed automatically — you must remove them manually in Workday if needed.</span>' : '<span style=\"color:#065f46;font-size:12px\"><b>Impact of Reactivating:</b> The organization will become available again for new role assignments in Workday. No existing data will be changed.</span>' %>"
                 }
               ]
             }

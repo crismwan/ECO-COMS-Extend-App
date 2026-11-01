@@ -34,7 +34,7 @@
                   "enabled": false,
                   "visible": "<% queryParams.errorCode == '403' %>",
                   "label": "⚠ Error 403 — Permission Denied",
-                  "value": "You don't have permission for this page. ECO-COMS access is granted per area (shell organizations, role requests, ISC review, audit log) through Workday security groups. If you need access, raise a ticket from the ECO-COMS home page: Resources → Submit a Helpdesk Ticket, and name the page you were opening."
+                  "value": "You don't have permission for this page. ECO-COMS access is granted per area (shell organizations, role requests, ISC review, Audit Log) through Workday security groups. If you need access, raise a ticket from the ECO-COMS home page: Resources → Submit a Helpdesk Ticket, and name the page you were opening."
                 },
                 {
                   "type": "text",

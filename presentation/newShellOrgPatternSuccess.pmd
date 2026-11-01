@@ -71,7 +71,7 @@
                   "type": "richText",
                   "id": "successMessage",
                   "enabled": false,
-                  "value": "<span style=\"color:#059669;font-size:12px;font-weight:700\">✓ </span><span style=\"color:#065f46;font-size:12px\">The Custom Organization has been created in Workday.</span>"
+                  "value": "<span style=\"color:#059669;font-size:12px;font-weight:700\">✓ </span><span style=\"color:#065f46;font-size:12px\">The pattern has been created in Workday.</span>"
                 },
                 {
                   "type": "readOnlyText",

@@ -230,7 +230,7 @@
     "headerSize": "STANDARD",
     "title": {
       "type": "title",
-      "label": "ECO-COMS: Withdraw Assignable Role Request"
+      "label": "<% 'ECO-COMS: Withdraw ' + (queryParams.view == 'aaa' ? 'AAA' : 'Assignable') + ' Role Request' %>"
     },
     "body": {
       "type": "basicFormLayout",
@@ -275,7 +275,7 @@
                   "type": "richText",
                   "id": "pageDesc",
                   "enabled": false,
-                  "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">Select one of your requests that is still Pending ISC Review to withdraw it. Withdrawing cancels its ISC review in Workday; the request is then marked Denied and the change is recorded in the audit log.</span>"
+                  "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">Select one of your requests that is still Pending ISC Review to withdraw it. Withdrawing cancels its ISC review in Workday; the request is then marked Denied and the change is recorded in the Audit Log.</span>"
                 }
               ]
             }
@@ -288,14 +288,14 @@
             {
               "type": "fieldSet",
               "id": "pendingRolesFieldSet",
-              "title": "My Pending Assignable Role Requests",
+              "title": "<% 'My Pending ' + (queryParams.view == 'aaa' ? 'AAA' : 'Assignable') + ' Role Requests' %>",
               "children": [
                 {
                   "type": "grid",
                   "gridType": "LIST",
                   "multiViewStylingEnabled": true,
                   "id": "pendingRolesGrid",
-                  "label": "My Pending Assignable Role Requests",
+                  "label": "<% 'My Pending ' + (queryParams.view == 'aaa' ? 'AAA' : 'Assignable') + ' Role Requests' %>",
                   "rows": "<% (list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? []).filter(r => { r.status == 'Pending ISC Review' && !empty(r.requestedBy) && r.requestedBy.id == (selectedWorker.id ?? '') && (empty(queryParams.view) || (queryParams.view == 'aaa' ? r.roleName.startsWith('Organizations and Roles Assignment Administrator') : !r.roleName.startsWith('Organizations and Roles Assignment Administrator'))) }) %>",
                   "rowVariableName": "role",
                   "enabled": false,
