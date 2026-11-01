@@ -175,8 +175,8 @@ page = {"id": "bulkRoleGrid", "securityDomains": ["ManageCOMSShellOrgs"], "inclu
            "value": "<% 'Tick Remove or add rows below. Up to " + str(MAX) + " changes per submit.' %>"},
           {"type": "date", "id": "effectiveDate", "label": "Effective Date", "required": True,
            "onChange": "<%\n  if (empty(self.value)) { self.clearError(); }\n  else if (!comsValidations.isWeekday(self.value)) { self.setError(comsValidations.errorWeekday()); }\n  else if (!comsValidations.isCurrentOrFutureYear(self.value)) { self.setError(comsValidations.errorYear()); }\n  else { self.clearError(); }\n%>"},
-          {"type": "checkBox", "id": "realRunCheckBox", "label": "Real run (skip validation and make the changes in Workday now)", "value": "<% false %>"},
-          {"type": "checkBox", "id": "confirmRealRunCheckBox", "label": "I want to apply these changes without validating first", "value": "<% false %>",
+          {"type": "checkBox", "id": "realRunCheckBox", "label": "Real run (skip validation and make the changes in Workday now)", "value": "<% false %>", "onChange": "<% confirmRealRunCheckBox.setVisible(self.value == true); confirmRealRunCheckBox.clearError(); %>"},
+          {"type": "checkBox", "id": "confirmRealRunCheckBox", "visible": False, "label": "I want to apply these changes without validating first", "value": "<% false %>",
            "onChange": "<% self.clearError() %>"}]}]},
       {"type": "layoutSection", "id": "currentSection", "render": "<% !empty(queryParams.appCode) %>", "children": [
         {"type": "fieldSet", "id": "currentFieldSet", "title": "Current Assignments", "children": [

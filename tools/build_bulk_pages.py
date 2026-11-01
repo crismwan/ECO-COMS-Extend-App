@@ -141,9 +141,9 @@ upload = {"id": "bulkRoleChanges", "securityDomains": ["ManageCOMSShellOrgs"], "
         {"type": "date", "id": "effectiveDate", "label": "Effective Date", "required": True,
          "guide": {"type": "guide", "id": "effectiveDateGuide", "title": "Effective Date", "text": "The date the role changes take effect: a weekday in this year or next. One date applies to every row in the file."},
          "onChange": "<%\n  if (empty(self.value)) { self.clearError(); }\n  else if (!comsValidations.isWeekday(self.value)) { self.setError(comsValidations.errorWeekday()); }\n  else if (!comsValidations.isCurrentOrFutureYear(self.value)) { self.setError(comsValidations.errorYear()); }\n  else { self.clearError(); }\n%>"},
-        {"type": "checkBox", "id": "realRunCheckBox", "label": "Real run (make the changes in Workday)", "value": "<% false %>",
+        {"type": "checkBox", "id": "realRunCheckBox", "label": "Real run (make the changes in Workday)", "value": "<% false %>", "onChange": "<% confirmRealRunCheckBox.setVisible(self.value == true); confirmRealRunCheckBox.clearError(); %>",
          "guide": {"type": "guide", "id": "realRunGuide", "title": "Validate only or real run", "text": "Leave this unticked to validate only: every row is checked and nothing changes. Tick it to apply the ADD and REMOVE rows in Workday."}},
-        {"type": "checkBox", "id": "confirmRealRunCheckBox", "label": "I have validated this file and want to apply it", "value": "<% false %>", "onChange": "<% self.clearError() %>"},
+        {"type": "checkBox", "id": "confirmRealRunCheckBox", "visible": False, "label": "I have validated this file and want to apply it", "value": "<% false %>", "onChange": "<% self.clearError() %>"},
         {"type": "hidden", "id": "batchRefHidden", "value": "<% 'BULK' + date:now().format('yyyyMMddHHmmss') + (selectedWorker.id ?? '').substring(0, 6) %>"}]}]}]},
     "footer": FOOT, "pageType": "EDIT"}}
 save('bulkRoleChanges', upload)

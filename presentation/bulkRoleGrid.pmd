@@ -336,11 +336,13 @@
                   "type": "checkBox",
                   "id": "realRunCheckBox",
                   "label": "Real run (skip validation and make the changes in Workday now)",
-                  "value": "<% false %>"
+                  "value": "<% false %>",
+                  "onChange": "<% confirmRealRunCheckBox.setVisible(self.value == true); confirmRealRunCheckBox.clearError(); %>"
                 },
                 {
                   "type": "checkBox",
                   "id": "confirmRealRunCheckBox",
+                  "visible": false,
                   "label": "I want to apply these changes without validating first",
                   "value": "<% false %>",
                   "onChange": "<% self.clearError() %>"

@@ -191,6 +191,7 @@
                   "id": "realRunCheckBox",
                   "label": "Real run (make the changes in Workday)",
                   "value": "<% false %>",
+                  "onChange": "<% confirmRealRunCheckBox.setVisible(self.value == true); confirmRealRunCheckBox.clearError(); %>",
                   "guide": {
                     "type": "guide",
                     "id": "realRunGuide",
@@ -201,6 +202,7 @@
                 {
                   "type": "checkBox",
                   "id": "confirmRealRunCheckBox",
+                  "visible": false,
                   "label": "I have validated this file and want to apply it",
                   "value": "<% false %>",
                   "onChange": "<% self.clearError() %>"
