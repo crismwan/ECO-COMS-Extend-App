@@ -76,9 +76,15 @@ var myRequestsText = function(list, meId) {
   let mine = list.filter(r => { isMine(r, meId) });
   let month = date:now().format('yyyy-MM');
   let approved = mine.filter(r => { r.status == 'Approved' && ('' + (r.approvedDate ?? '')).startsWith(month) }).size();
+  /* split by request type when there are AAA requests: Open My Requests shows assignable ones only */
+  let pendingAaa = countPending(mine.filter(r => { isAaa(r) }));
+  let pendingAssignable = countPending(mine.filter(r => { !isAaa(r) }));
+  let pendingText = pendingAaa == 0
+    ? ('' + pendingAssignable + ' pending ISC review')
+    : ('' + pendingAssignable + ' assignable · ' + pendingAaa + ' AAA pending ISC review');
   size(mine) == 0
     ? 'You have no role requests.'
-    : ('' + countPending(mine) + ' pending ISC review · ' + approved + ' approved this month · ' + countStatus(mine, 'Denied') + ' denied or withdrawn');
+    : (pendingText + ' · ' + approved + ' approved this month · ' + countStatus(mine, 'Denied') + ' denied or withdrawn');
 };
 
 {

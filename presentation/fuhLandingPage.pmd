@@ -37,13 +37,13 @@
             {
               "type": "fieldSet",
               "id": "overviewFieldSet",
-              "title": "About FUH Administration",
+              "title": "About This Page",
               "children": [
                 {
                   "type": "richText",
                   "id": "overviewDesc",
                   "enabled": false,
-                  "value": "<span style=\"color:#374151;font-size:12px\">FUH are Custom Organizations of type <b>Functional Unit Hierarchy</b> and are used specifically for UBC academic or administrative units.</span>"
+                  "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">FUH are Custom Organizations of type <b>Functional Unit Hierarchy</b> and are used specifically for UBC academic or administrative units.</span>"
                 }
               ]
             }

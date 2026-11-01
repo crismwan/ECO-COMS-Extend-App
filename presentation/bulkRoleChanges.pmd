@@ -112,7 +112,7 @@
             {
               "type": "fieldSet",
               "id": "aboutFieldSet",
-              "title": "How It Works",
+              "title": "About This Page",
               "children": [
                 {
                   "type": "richText",

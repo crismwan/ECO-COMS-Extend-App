@@ -366,6 +366,9 @@ Script: `tools/polish.py`, idempotent; every builder now runs it last. Static ch
 - Audit Log: actions in sentence case ("Assign position"), matching the chart legend; the Changes by Action chart moved in beside the filters it reflects.
 - ISC queue: its unlabelled intro box merged into About This Page, which now comes first, as on the other list pages.
 - "Admin Provisioning" in page text renamed to the page's own name, AAA Role Provisioning. Bulk results card "Need attention" → "Need Attention". ⓘ on every About text.
+- Needs My Attention splits pending requests into assignable and AAA when there are AAA ones ("Open My Requests" shows assignable only); its ⋯ menu gained Open My AAA Requests.
+- AAA request form: it was copied from the assignable form and still said "Submit New Assignable Role Request", "Pending Assignable Roles" and "Submit and manage Assignable Role requests"; now AAA wording. Both forms' intro text is in an About This Page box.
+- Headings: FUH page "About FUH Administration", bulk "How It Works" / "How to Use This Template" → About This Page, like every other page. Org detail help text names the real button (Inactivate Organization).
 - The Home hub's own address is the app root (`…/ecocomsphase_xclw_cm_sync2_vmzvxm.htmld`); `…/home.htmld` gives "Route not matched".
 
 ## UI phase 2 (built 2026-10-31)

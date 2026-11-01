@@ -68,6 +68,8 @@ for f in sorted(os.listdir(ROOT)):
     def fix(o):
         if o.get('type') == 'grid' and (n, o.get('id')) in GRID_LABELS:
             o['label'] = GRID_LABELS[(n, o['id'])]
+        if o.get('type') == 'fieldSet' and o.get('title') in ('About FUH Administration', 'How It Works', 'How to Use This Template'):
+            o['title'] = 'About This Page'
         if o.get('type') == 'fieldSet' and str(o.get('title', '')).startswith('About This'):
             for k in o.get('children', []):
                 v = k.get('value')
@@ -117,6 +119,30 @@ for f in sorted(os.listdir(ROOT)):
             if note['value'].startswith(BODY):
                 note['value'] = INFO + note['value']
             kids.insert(kids.index(ra), {"type": "fieldSet", "id": "rolesAboutFieldSet", "title": "About This Tab", "children": [note]})
+    # request forms: the intro text goes in an About This Page box, as on every other page
+    if n in ('adminProvisioning', 'assignableRoleManager'):
+        def wrap(o):
+            kids = o.get('children')
+            if o.get('type') == 'layoutSection' and isinstance(kids, list):
+                for i, k in enumerate(kids):
+                    if isinstance(k, dict) and k.get('id') == 'pageDesc' and k.get('type') == 'richText':
+                        kids[i] = {"type": "fieldSet", "id": "aboutFieldSet", "title": "About This Page", "children": [k]}
+        walk(pr, wrap)
+        walk(pr, fix)  # adds the ⓘ to the new About box
+    # the AAA form was copied from the assignable one; its wording still said "Assignable Role"
+    if n == 'adminProvisioning':
+        AAA = [('Submit and manage Assignable Role requests by Application. Review pending requests or submit a new role request for ISC review.',
+                'Submit and manage your AAA (Organizations and Roles Assignment Administrator) role requests by Application. Review your pending requests or submit a new one for ISC review.'),
+               ('Submit a new Assignable Role request using the Application below.', 'Submit a new AAA role request using the Application below.')]
+        def aaa(o):
+            if o.get('id') == 'assignableRolesGrid':
+                o['label'] = 'Pending AAA Role Requests'
+            if o.get('type') == 'fieldSet' and o.get('title') == '2. Submit New Assignable Role Request':
+                o['title'] = '2. Submit New AAA Role Request'
+            if o.get('type') == 'richText' and isinstance(o.get('value'), str):
+                for a, b in AAA:
+                    o['value'] = o['value'].replace(a, b)
+        walk(pr, aaa)
     if save(n, d, before):
         changed.append(n)
 print('polish changed:', changed)

@@ -55,7 +55,7 @@
             {
               "type": "fieldSet",
               "id": "aboutFieldSet",
-              "title": "How to Use This Template",
+              "title": "About This Page",
               "children": [
                 {
                   "type": "richText",

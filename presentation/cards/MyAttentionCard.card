@@ -21,6 +21,12 @@
       }
     },
     {
+      "label": "Open My AAA Requests",
+      "taskReference": {
+        "taskId": "adminProvisioningView"
+      }
+    },
+    {
       "label": "Open My Bulk Uploads",
       "taskReference": {
         "taskId": "bulkRoleResults"

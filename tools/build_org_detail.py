@@ -49,7 +49,7 @@ page = {"id": "shellOrgDetail", "securityDomains": ["ManageCOMSShellOrgs"],
          "taskReference": {"taskId": "shellOrgManager", "parameterBindings": {"appCode": "<% queryParams.appCode ?? '' %>", "appName": "<% queryParams.appName ?? '' %>"}}}]},
       note("aboutSection", "aboutFieldSet", "About This Page", "aboutRichText",
         "One shell organization: its status in Workday, the roles assigned on it with their positions and workers, and the ECO-COMS changes made to it "
-        "(from the newest 200 Audit Log records). Use <b>Inactivate</b> or <b>Reactivate Organization</b> to change its status, or <b>Manage</b> on a role to add or remove positions."),
+        "(from the newest 200 Audit Log records). Use <b>Inactivate Organization</b> or <b>Reactivate Organization</b> to change its status, or <b>Manage</b> on a role to add or remove positions."),
       {"type": "layoutSection", "id": "cardsSection", "children": [{"type": "cardContainer", "id": "orgCardContainer", "layout": "grid", "cards": [
         {"type": "card", "cardId": "CountCard", "parameters": "<% { 'title': 'Status', 'subtitle': 'In Workday', 'countText': size(" + ORG + ") == 0 ? 'Not found' : (" + ACTIVE + " ? '✓ Active' : '○ Inactive') } %>"},
         {"type": "card", "cardId": "CountCard", "parameters": "<% { 'title': 'Roles', 'subtitle': 'Assigned on this organization', 'countText': '' + size(" + ROLES + ") + (size(" + ROLES + ") == 1 ? ' role assignment' : ' role assignments') + ' · ' + '' + size(list:flatten(" + ROLES + ".map(ra => { ra.positions })).map(p => { p.id }).distinct()) + (size(list:flatten(" + ROLES + ".map(ra => { ra.positions })).map(p => { p.id }).distinct()) == 1 ? ' position' : ' positions') } %>"},

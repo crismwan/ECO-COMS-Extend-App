@@ -406,10 +406,17 @@
           "id": "contentSection",
           "children": [
             {
-              "type": "richText",
-              "id": "pageDesc",
-              "enabled": false,
-              "value": "<span style=\"color:#374151;font-size:12px\">Manage Assignable Roles for Custom Organizations. Review pending role requests or submit a new role request for ISC review.</span>"
+              "type": "fieldSet",
+              "id": "aboutFieldSet",
+              "title": "About This Page",
+              "children": [
+                {
+                  "type": "richText",
+                  "id": "pageDesc",
+                  "enabled": false,
+                  "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">Manage Assignable Roles for Custom Organizations. Review pending role requests or submit a new role request for ISC review.</span>"
+                }
+              ]
             },
             {
               "type": "fieldSet",

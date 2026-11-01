@@ -200,7 +200,7 @@ On Assignable Role Manager, each of your requests has **Retry** (denied requests
 
 ### Needs My Attention (Home)
 
-The **Needs My Attention** card on Home sums up your own work: your role requests pending ISC review, approved this month, and denied or withdrawn, plus any bulk upload of yours that is still running or was rejected. **My requests** opens Assignable Role Manager (your requests, with Withdraw); **My bulk uploads** is under the card's ⋯ menu.
+The **Needs My Attention** card on Home sums up your own work: your role requests pending ISC review (split into assignable and AAA when you have AAA requests), approved this month, and denied or withdrawn, plus any bulk upload of yours that is still running or was rejected. **My requests** opens Assignable Role Manager (your requests, with Withdraw); **My AAA requests** and **My bulk uploads** are under the card's ⋯ menu.
 
 ### Bulk Role Changes (many positions from one file)
 
