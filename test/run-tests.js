@@ -27,6 +27,13 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 
+// Effective dates in the tenant's own time zone (Vancouver). A UTC date is already tomorrow after 5 pm
+// Pacific, and Workday then schedules the change for tomorrow (seen 2026-10-31: an ADD dated 2026-11-01
+// didn't show on the role, so the test never removed it).
+const TENANT_TZ = 'America/Los_Angeles';
+const tenantDate = (offsetDays = 0, from = Date.now()) =>
+  new Intl.DateTimeFormat('en-CA', { timeZone: TENANT_TZ, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(from + offsetDays * 86400000));
+
 const ROOT = path.join(__dirname, '..');
 const APP_ID = 'ecocomsphase_xclw_cm_sync2_vmzvxm';
 const TENANT = 'ubc_wcpdev2';
@@ -610,8 +617,8 @@ async function full(token, me) {
   const run3 = String(runNo).slice(-3).padStart(3, '0');
   const orgName = `X:ADM:TEST:CI:RUN${runNo}`;
   const now = new Date();
-  const today = now.toISOString().slice(0, 10);
-  const later = new Date(now.getTime() + 45 * 86400000).toISOString().slice(0, 10);
+  const today = tenantDate(0, now.getTime());
+  const later = tenantDate(45, now.getTime());
   // Fresh timestamp per call so each audit record shows when its own change happened.
   const who = () => ({ changedBy: me.descriptor, changedByWid: me.id, timestamp: new Date().toISOString().replace(/\.\d+Z$/, 'Z') });
   const expectAudit = (a, type, action) => {
@@ -887,7 +894,7 @@ const code = (o) => o.code?.descriptor || o.code || o.organizationByName?.descri
 async function cleanup(token, me) {
   const APPLY = argv.includes('--apply');
   console.log(`\n-- Cleanup (${APPLY ? 'APPLY' : 'DRY RUN: nothing will change'}) --`);
-  const today = new Date().toISOString().slice(0, 10);
+  const today = tenantDate();
   const ts = new Date().toISOString().replace(/\.\d+Z$/, 'Z');
 
   // 1. Active test orgs and patterns -> inactivate effective today (Workday orgs can't be deleted).
@@ -933,7 +940,7 @@ async function cleanup(token, me) {
     return;
   }
 
-  const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+  const tomorrow = tenantDate(1);
   // --effective yyyy-MM-dd: use this date only (e.g. after future-dated events that block earlier dates).
   // --only CODE1,CODE2: limit inactivation to these org codes.
   const FIXED = arg('--effective');
@@ -1006,7 +1013,7 @@ async function cleanup(token, me) {
 async function repair(token, me) {
   const apply = argv.includes('--apply');
   console.log(`\n-- Repair (${apply ? 'APPLY' : 'dry run: add --apply to change data'}) --`);
-  const today = new Date().toISOString().slice(0, 10);
+  const today = tenantDate();
   const who = () => ({ changedBy: me.descriptor, changedByWid: me.id, timestamp: new Date().toISOString().replace(/\.\d+Z$/, 'Z') });
   const idOf = (v) => String(v && typeof v === 'object' ? v.id : v || '');
 
@@ -1117,7 +1124,7 @@ async function secondUserSuite(token, me) {
   if (me2.id === me.id) return fail('SecondUser.auth', `WD_SECOND_TOKEN signs in as ${me.descriptor}, the same person as the main token`);
   pass('SecondUser.auth', `second user is ${me2.descriptor}`);
   const runNo = process.env.GITHUB_RUN_NUMBER || String(100 + Math.floor(Math.random() * 900));
-  const today = new Date().toISOString().slice(0, 10);
+  const today = tenantDate();
   // Create a request and start its review as `tok` (that person becomes the initiator).
   const startRequest = async (tok, who, suffix) => {
     const roleName = `X:ADM:ROLE:TESTROLE${suffix}RUN${runNo}`;

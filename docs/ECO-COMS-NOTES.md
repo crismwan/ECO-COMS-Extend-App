@@ -312,6 +312,8 @@ ACTION: run 'wdcli app deploy ...' locally, log in, update WD_DEV_TOKEN secret
 
 ## Open items (updated 2026-10-31)
 
+- **P-00001 on X:BPMS(ODMT):ROLE:ADVISORS from 2026-11-01** (full test run 41270107832, 2026-10-31 20:42 PDT): the run used the UTC date, which was already 2026-11-01, so Workday scheduled the ADD for tomorrow; it didn't show within 90 s and the test never removed it. Remove it once it's effective with e2e `repair-apply` + `unassign=P-00001` (scheduled for 2026-11-01 09:15 PT). Tests now use Pacific dates (`tenantDate` in test/run-tests.js). The rest of the run passed (40 of 41).
+
 - `DenyRoleRequest` did not run once (TESTROLECIRUN22, 2026-10-30); it has run every time since. Keep an eye on it after deploys that change it.
 - The two older pending requests (KEYCLOAK COORDINATOR and the AAA request) were corrected on 2026-10-31 with `node test/run-tests.js repair --apply`: Enabled For now reads "Faculty of Medicine" (FUH), with the WID in `enabledForWid` / `functionalUnitHierarchyWid`.
 - P-00001 was removed from X:BPMS(ODMT):ROLE:ADVISORS on 2026-10-31 through the Manage Role Assignments page (REMOVE POSITION audit at 18:58:57Z). The same removal sent by the test runner was refused by the API gateway (HTML 403); the page's request went through.
