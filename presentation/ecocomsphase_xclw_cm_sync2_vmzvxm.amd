@@ -46,6 +46,28 @@
       ]
     },
     {
+      "id": "bulkTemplateUploadFlow",
+      "flowSteps": [
+        {
+          "id": "bulkTemplateUploadStep",
+          "taskId": "bulkTemplateUpload",
+          "startsFlow": true,
+          "transitions": [
+            {
+              "order": "a",
+              "value": "bulkTemplateDownloadStep",
+              "condition": "true"
+            }
+          ]
+        },
+        {
+          "id": "bulkTemplateDownloadStep",
+          "taskId": "bulkRoleTemplate",
+          "endsFlow": true
+        }
+      ]
+    },
+    {
       "id": "bulkRoleApplyFlow",
       "flowSteps": [
         {
@@ -306,6 +328,13 @@
       "routingPattern": "/shellOrgDetail",
       "page": {
         "id": "shellOrgDetail"
+      }
+    },
+    {
+      "id": "bulkTemplateUpload",
+      "routingPattern": "/bulkTemplateUpload",
+      "page": {
+        "id": "bulkTemplateUpload"
       }
     }
   ],

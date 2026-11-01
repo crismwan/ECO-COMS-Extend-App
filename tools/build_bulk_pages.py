@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Writes the three bulk role change pages and registers them in the AMD."""
+"""Writes the bulk role change pages (template, template upload, upload, results, apply) and registers them in the AMD."""
 import json, os
 ROOT = os.path.join(os.path.dirname(__file__), '..', 'presentation')
 FOS = lambda codes: [{"code": c} for c in codes]
@@ -29,16 +29,41 @@ ROWS = ("<% list:flatten(list:flatten((shellRoles.data ?? []).map(r => { (r.role
         "'positionId': (p.descriptor ?? '').substringBefore(' '), 'assigneeWid': p.id ?? '' } }) }) }))) %>")
 template = {"id": "bulkRoleTemplate", "securityDomains": ["ManageCOMSShellOrgs"],
   "endPoints": [{"name": "shellRoles", "baseUrlType": "workday-wql", "url": "data", "authType": "sso", "bestEffort": "true",
-                 "wqlQuery": {"queryId": "allShellAssignableRolesinTenant"}, "failOnStatusCodes": FOS([400, 429])}],
+                 "wqlQuery": {"queryId": "allShellAssignableRolesinTenant"}, "failOnStatusCodes": FOS([400, 429])},
+                # newest published Excel template (COMSBulkTemplate); the collection is oldest first
+                {"name": "templateCount", "baseUrlType": "BUSINESS-OBJECT", "url": "/comsBulkTemplates?limit=1", "authType": "sso",
+                 "bestEffort": "true", "failOnStatusCodes": FOS([429])},
+                {"name": "latestTemplate", "baseUrlType": "BUSINESS-OBJECT", "authType": "sso", "isCollection": True, "bestEffort": "true",
+                 "failOnStatusCodes": FOS([429]),
+                 "url": "<% let t = templateCount.total ?? 0; '/comsBulkTemplates?limit=1&offset=' + (t > 0 ? t - 1 : 0) %>"}],
   "presentation": {"headerSize": "STANDARD", "title": {"type": "title", "label": "ECO-COMS: Bulk Role Changes – Template"},
     "body": {"type": "basicFormLayout", "id": "bulkTemplateForm", "sections": [
       nav(("homeButton", "← Home", "home")),
       with_card(note("aboutSection", "aboutFieldSet", "How to Use This Template", "aboutRichText",
-        "Each row is one position that currently holds a role on a shell organization. Export the grid to Excel (the export icon on the grid), then:<br/>"
+        "<b>Easiest:</b> download the <b>Excel template</b> below. It already lists every current role assignment, checks each row as you type "
+        "and tells you when the file is ready to save as CSV. Its <b>How to use</b> sheet has the steps.<br/>"
+        "<b>Or</b> export the grid below to Excel (the export icon on the grid); each row is one position that holds a role on a shell organization. Then:<br/>"
         "1. In <b>Action</b>, type <b>REMOVE</b> on the rows to take a position off a role.<br/>"
         "2. To add a position, copy a row of the same role, type <b>ADD</b> in Action and put the new <b>Position ID</b> (for example P-00123) in that column. Leave Assignee WID empty on ADD rows.<br/>"
         "3. Leave Action empty on rows you don't want to change. Keep the columns in this order and don't edit the WID columns.<br/>"
-        "4. Save as <b>CSV</b> (Excel: File → Save As → CSV) and upload it on the Bulk Role Changes page. At most 200 rows."), "BulkNextStepCard"),
+        "4. Save as <b>CSV</b> (Excel: File → Save As → CSV) and upload it on the Bulk Role Changes page. Up to 1,000 ADD or REMOVE rows per file."), "BulkNextStepCard"),
+      {"type": "layoutSection", "id": "excelSection", "children": [
+        {"type": "fieldSet", "id": "excelFieldSet", "title": "Excel Template", "children": [
+          {"type": "fileUploader", "id": "templateFileUploader", "label": "Validated Excel template", "enabled": False, "children": [
+            {"type": "loop", "on": "<% latestTemplate.data ?? [] %>", "as": "tf", "children": [
+              {"type": "fileUploaderRow", "id": "templateFileRow", "allowRemove": False,
+               "fileName": "<% tf.fileName %>", "fileType": "<% fileType:getFileType(tf.fileName) %>",
+               "contentArea": [{"type": "text", "id": "templateInfoText", "label": "Version", "enabled": False,
+                                "value": "<% (tf.version ?? '') + (empty(tf.asOf) ? '' : ' · assignments as of ' + tf.asOf) + (empty(tf.rowCount) ? '' : ' · ' + tf.rowCount + ' rows') %>"}],
+               "attachment": {"type": "attachmentList", "attachmentAuth": "sso", "attachmentUriTemplate": "[Target]",
+                              "attachmentURL": "<% 'https://api.workday.com/apps/ecocomsphase_xclw_cm_sync2_vmzvxm/v1/comsBulkTemplates/' + tf.id %>",
+                              "attachmentName": "<% tf.fileName %>",
+                              "instanceList": [{"action": "attachment", "descriptor": "<% tf.fileName %>",
+                                                "mimeType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "iconId": "mime_msexcel"}]}}]}]},
+          {"type": "text", "id": "noTemplateText", "enabled": False, "visible": "<% size(latestTemplate.data ?? []) == 0 %>",
+           "value": "No Excel template has been published in this tenant yet. Use Upload New Template Version, or export the grid below."}]},
+        {"type": "button", "id": "uploadTemplateButton", "label": "Upload New Template Version", "action": "AUXILIARY",
+         "taskReference": {"taskId": "bulkTemplateUpload"}}]},
       {"type": "layoutSection", "id": "gridSection", "children": [{"type": "fieldSet", "id": "templateFieldSet", "title": "Current Role Assignments", "children": [
         {"type": "grid", "id": "bulkTemplateGrid", "gridType": "LIST", "multiViewStylingEnabled": True, "autoPaging": True, "enabled": False,
          "excelExportEnabled": True, "rowVariableName": "tr", "rows": ROWS,
@@ -105,7 +130,7 @@ upload = {"id": "bulkRoleChanges", "securityDomains": ["ManageCOMSShellOrgs"], "
         "Upload the CSV made from the template. Run it as <b>Validate only</b> first: every row is checked and nothing changes in Workday. "
         "Then upload the same file again with <b>Real run</b> ticked: each ADD or REMOVE row is applied in Workday's Assign Roles, "
         "one row at a time, and each change is written to the Audit Log. A row that Workday rejects is recorded as FAILED and the run carries on. "
-        "Both runs work in the background; the results page shows progress. At most 200 rows per file."), "BulkRelatedCard"),
+        "Both runs work in the background; the results page shows progress. Up to 1,000 ADD or REMOVE rows per file; unchanged rows don't count."), "BulkRelatedCard"),
       note("warningSection", "warningFieldSet", "Before You Submit", "warningRichText",
         "A real run changes who holds security roles in Workday straight away. Changes that succeed are not undone if later rows fail. Validate first.",
         '#B45309', '⚠'),
@@ -121,6 +146,37 @@ upload = {"id": "bulkRoleChanges", "securityDomains": ["ManageCOMSShellOrgs"], "
         {"type": "hidden", "id": "batchRefHidden", "value": "<% 'BULK' + date:now().format('yyyyMMddHHmmss') + (selectedWorker.id ?? '').substring(0, 6) %>"}]}]}]},
     "footer": FOOT, "pageType": "EDIT"}}
 save('bulkRoleChanges', upload)
+
+# ── 2b. Upload a new version of the Excel template (COMSBulkTemplate) ──
+TEMPLATE_MULTI = """<%
+  for (var file : self.data.metadata.comsBulkTemplates) {
+    file.version = versionText.value;
+    file.notes = notesText.value ?? '';
+    file.uploadedByName = selectedWorker.descriptor ?? '';
+    file.uploadedAt = date:now().format("yyyy-MM-dd'T'HH:mm:ss'Z'");
+  }
+  self.data;
+%>"""
+template_upload = {"id": "bulkTemplateUpload", "securityDomains": ["ManageCOMSShellOrgs"],
+  "endPoints": [WORKER],
+  "outboundData": {"outboundEndPoints": [
+    {"name": "uploadTemplateFile", "baseUrlType": "BUSINESS-OBJECT", "url": "/comsBulkTemplatesCollection", "httpMethod": "POST", "authType": "sso",
+     "onMultiPartSend": TEMPLATE_MULTI, "failOnStatusCodes": FOS([400, 403, 429, 500])}]},
+  "presentation": {"headerSize": "STANDARD", "title": {"type": "title", "label": "ECO-COMS: Upload Bulk Template Version"},
+    "cancelOverride": {"taskId": "bulkRoleTemplate"},
+    "body": {"type": "basicFormLayout", "id": "templateUploadForm", "sections": [
+      nav(("backButton", "← Download Template", "bulkRoleTemplate")),
+      note("aboutSection", "aboutFieldSet", "About This Page", "aboutRichText",
+        "Publish a new version of the validated Excel template. Everyone who opens Download Template gets the newest version. "
+        "Build it with <b>tools/publish_template.js</b> (pre-filled with every current role assignment) or <b>tools/build_bulk_xlsx.py</b> (blank). "
+        "Older versions stay stored."),
+      {"type": "layoutSection", "id": "formSection", "children": [{"type": "fieldSet", "id": "templateUploadFieldSet", "title": "Template", "children": [
+        {"type": "fileUploader", "id": "templateUploader", "label": "Excel file", "fileTypes": "xlsx", "singular": True, "required": True,
+         "metadata": "<% { 'version': '' } %>", "valueOutBinding": "uploadTemplateFile:comsBulkTemplates"},
+        {"type": "text", "id": "versionText", "label": "Version", "required": True, "value": "<% 'v' + date:now().format('yyyy-MM-dd') %>"},
+        {"type": "text", "id": "notesText", "label": "Notes"}]}]}]},
+    "footer": FOOT, "pageType": "EDIT"}}
+save('bulkTemplateUpload', template_upload)
 
 # ── 3. Results: my uploads and the row results of one of them ──
 UPL = "(list:sort((uploadPage0.data ?? []).filter(u => { (u.uploadedByWid ?? '') == (selectedWorker.id ?? '') }), 'uploadedAt', false))"
@@ -253,10 +309,13 @@ save('bulkRoleApply', apply)
 # ── AMD: tasks and the upload → results flow ──
 amdp = os.path.join(ROOT, 'ecocomsphase_xclw_cm_sync2_vmzvxm.amd')
 amd = json.load(open(amdp))
-for t in ('bulkRoleTemplate', 'bulkRoleChanges', 'bulkRoleResults', 'bulkRoleApply'):
+for t in ('bulkRoleTemplate', 'bulkRoleChanges', 'bulkRoleResults', 'bulkRoleApply', 'bulkTemplateUpload'):
     if not any(x['id'] == t for x in amd['tasks']):
         amd['tasks'].append({"id": t, "routingPattern": "/" + t, "page": {"id": t}})
-amd['flowDefinitions'] = [f for f in amd.get('flowDefinitions', []) if f['id'] not in ('bulkRoleChangesFlow', 'bulkRoleApplyFlow')] + [
+amd['flowDefinitions'] = [f for f in amd.get('flowDefinitions', []) if f['id'] not in ('bulkRoleChangesFlow', 'bulkRoleApplyFlow', 'bulkTemplateUploadFlow')] + [
+    {"id": "bulkTemplateUploadFlow", "flowSteps": [
+    {"id": "bulkTemplateUploadStep", "taskId": "bulkTemplateUpload", "startsFlow": True, "transitions": [{"order": "a", "value": "bulkTemplateDownloadStep", "condition": "true"}]},
+    {"id": "bulkTemplateDownloadStep", "taskId": "bulkRoleTemplate", "endsFlow": True}]},
   {"id": "bulkRoleApplyFlow", "flowSteps": [
     {"id": "bulkRoleApplyStep", "taskId": "bulkRoleApply", "startsFlow": True, "transitions": [{"order": "a", "value": "bulkRoleApplyResultsStep", "condition": "true"}]},
     {"id": "bulkRoleApplyResultsStep", "taskId": "bulkRoleResults", "endsFlow": True}]},{"id": "bulkRoleChangesFlow", "flowSteps": [

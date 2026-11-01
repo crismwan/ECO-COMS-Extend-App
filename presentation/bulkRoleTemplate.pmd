@@ -21,6 +21,31 @@
           "code": 429
         }
       ]
+    },
+    {
+      "name": "templateCount",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "url": "/comsBulkTemplates?limit=1",
+      "authType": "sso",
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "name": "latestTemplate",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 429
+        }
+      ],
+      "url": "<% let t = templateCount.total ?? 0; '/comsBulkTemplates?limit=1&offset=' + (t > 0 ? t - 1 : 0) %>"
     }
   ],
   "presentation": {
@@ -61,7 +86,7 @@
                   "type": "richText",
                   "id": "aboutRichText",
                   "enabled": false,
-                  "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">Each row is one position that currently holds a role on a shell organization. Export the grid to Excel (the export icon on the grid), then:<br/>1. In <b>Action</b>, type <b>REMOVE</b> on the rows to take a position off a role.<br/>2. To add a position, copy a row of the same role, type <b>ADD</b> in Action and put the new <b>Position ID</b> (for example P-00123) in that column. Leave Assignee WID empty on ADD rows.<br/>3. Leave Action empty on rows you don't want to change. Keep the columns in this order and don't edit the WID columns.<br/>4. Save as <b>CSV</b> (Excel: File → Save As → CSV) and upload it on the Bulk Role Changes page. At most 200 rows.</span>"
+                  "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\"><b>Easiest:</b> download the <b>Excel template</b> below. It already lists every current role assignment, checks each row as you type and tells you when the file is ready to save as CSV. Its <b>How to use</b> sheet has the steps.<br/><b>Or</b> export the grid below to Excel (the export icon on the grid); each row is one position that holds a role on a shell organization. Then:<br/>1. In <b>Action</b>, type <b>REMOVE</b> on the rows to take a position off a role.<br/>2. To add a position, copy a row of the same role, type <b>ADD</b> in Action and put the new <b>Position ID</b> (for example P-00123) in that column. Leave Assignee WID empty on ADD rows.<br/>3. Leave Action empty on rows you don't want to change. Keep the columns in this order and don't edit the WID columns.<br/>4. Save as <b>CSV</b> (Excel: File → Save As → CSV) and upload it on the Bulk Role Changes page. Up to 1,000 ADD or REMOVE rows per file.</span>"
                 }
               ]
             },
@@ -75,6 +100,81 @@
                   "cardId": "BulkNextStepCard"
                 }
               ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "excelSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "excelFieldSet",
+              "title": "Excel Template",
+              "children": [
+                {
+                  "type": "fileUploader",
+                  "id": "templateFileUploader",
+                  "label": "Validated Excel template",
+                  "enabled": false,
+                  "children": [
+                    {
+                      "type": "loop",
+                      "on": "<% latestTemplate.data ?? [] %>",
+                      "as": "tf",
+                      "children": [
+                        {
+                          "type": "fileUploaderRow",
+                          "id": "templateFileRow",
+                          "allowRemove": false,
+                          "fileName": "<% tf.fileName %>",
+                          "fileType": "<% fileType:getFileType(tf.fileName) %>",
+                          "contentArea": [
+                            {
+                              "type": "text",
+                              "id": "templateInfoText",
+                              "label": "Version",
+                              "enabled": false,
+                              "value": "<% (tf.version ?? '') + (empty(tf.asOf) ? '' : ' · assignments as of ' + tf.asOf) + (empty(tf.rowCount) ? '' : ' · ' + tf.rowCount + ' rows') %>"
+                            }
+                          ],
+                          "attachment": {
+                            "type": "attachmentList",
+                            "attachmentAuth": "sso",
+                            "attachmentUriTemplate": "[Target]",
+                            "attachmentURL": "<% 'https://api.workday.com/apps/ecocomsphase_xclw_cm_sync2_vmzvxm/v1/comsBulkTemplates/' + tf.id %>",
+                            "attachmentName": "<% tf.fileName %>",
+                            "instanceList": [
+                              {
+                                "action": "attachment",
+                                "descriptor": "<% tf.fileName %>",
+                                "mimeType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                                "iconId": "mime_msexcel"
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "noTemplateText",
+                  "enabled": false,
+                  "visible": "<% size(latestTemplate.data ?? []) == 0 %>",
+                  "value": "No Excel template has been published in this tenant yet. Use Upload New Template Version, or export the grid below."
+                }
+              ]
+            },
+            {
+              "type": "button",
+              "id": "uploadTemplateButton",
+              "label": "Upload New Template Version",
+              "action": "AUXILIARY",
+              "taskReference": {
+                "taskId": "bulkTemplateUpload"
+              }
             }
           ]
         },

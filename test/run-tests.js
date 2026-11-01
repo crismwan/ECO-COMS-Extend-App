@@ -978,13 +978,14 @@ async function cleanup(token, me) {
       let eff = FIXED || today;
       try {
         if (FIXED) await launchAndVerify(token, 'ManageShellOrgStatus', params(FIXED));
-        else try { await launchAndVerify(token, 'ManageShellOrgStatus', params(today)); } catch (_) {
+        else try { await launchAndVerify(token, 'ManageShellOrgStatus', params(today)); } catch (e1) {
           eff = tomorrow;
-          await launchAndVerify(token, 'ManageShellOrgStatus', params(tomorrow));
+          try { await launchAndVerify(token, 'ManageShellOrgStatus', params(tomorrow)); } catch (e2) { throw new Error(`${today}: ${e1.message.slice(0, 160)} | ${tomorrow}: ${e2.message.slice(0, 160)}`); }
         }
-      } catch (_) {
+      } catch (e) {
         // Workday allows one pending status change: an org whose inactivation is already scheduled is rejected.
-        return skip(`Cleanup.inactivate ${code(o)}`, 'not changed: it most likely already has an inactivation scheduled');
+        // An HTML 403 is the API gateway refusing the launch before it runs (see CLAUDE.md).
+        return skip(`Cleanup.inactivate ${code(o)}`, `not changed (${e.message.slice(0, 340)})`);
       }
       pass(`Cleanup.inactivate ${code(o)}`, `inactivated effective ${eff}`);
     });

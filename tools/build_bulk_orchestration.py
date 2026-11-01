@@ -118,7 +118,13 @@ nodes.append(send('MarkRunning', 'PATCH', APP + 'comsBulkUploads/"}${data.Extrac
     '{\n  "status": "Running",\n  "runMode": "{{data.GetInputParams.mode}}",\n  "statusMessage": "Processing started {{data.GetInputParams.timestamp}}"\n}'))
 nodes.append(get('GetFile', APP + 'comsBulkUploads/"}${data.ExtractUpload.uploadId}"', 'Any'))
 nodes.append(create_values('FileInfo', [
-    ('tooMany', 'Boolean', 'data.GetFile.response.asCSV().countRows() > 201'),
+    # Safety limit, not a business cap (product owner 2026-11-01: no 200 cap for files): at most 1,000
+    # ADD/REMOVE rows, so a run finishes well inside Workday's 60-minute orchestration process limit.
+    # Unchanged rows don't count (a pre-filled template lists every current assignment).
+    # Removing "\nADD," from the text shortens it by 5 per ADD row (8 per REMOVE row), so
+    # 8*addChars + 5*removeChars = 40 * changes.
+    ('fileText', 'String', 'data.GetFile.response.toString().upperCase().replace("\\r", "").replace("\\n ", "\\n").replace("\\n\\"", "\\n")'),
+    ('tooMany', 'Boolean', '(((data.FileInfo.fileText.length() - data.FileInfo.fileText.replace("\\nADD,", "").replace("\\nADD\\",", "").length()) * 8) + ((data.FileInfo.fileText.length() - data.FileInfo.fileText.replace("\\nREMOVE,", "").replace("\\nREMOVE\\",", "").length()) * 5)) > 40000'),
 ]))
 
 # ── per-row work ──
@@ -198,7 +204,7 @@ finish = send('MarkFinished', 'PATCH', APP + 'comsBulkUploads/"}${data.ExtractUp
     '{\n  "status": "{{#if data.GetInputParams.isApply}}Completed{{/if}}{{#if data.FileInfo.notApply}}Validated{{/if}}",\n'
     '  "finishedAt": "{{data.GetInputParams.timestamp}}",\n  "statusMessage": "Finished. See the row results."\n}')
 reject = send('MarkTooMany', 'PATCH', APP + 'comsBulkUploads/"}${data.ExtractUpload.uploadId}"',
-    '{\n  "status": "Rejected",\n  "statusMessage": "The file has more than 200 rows. Split it and upload again."\n}')
+    '{\n  "status": "Rejected",\n  "statusMessage": "The file has more than 1,000 ADD or REMOVE rows, more than one run can finish within the Workday time limit. Split the changes over several files and upload again."\n}')
 nodes[-1]['_value']['values']['_value'].append(create_values('tmp', [('notApply', 'Boolean', 'data.GetInputParams.isApply.not()')])['_value']['values']['_value'][0])
 nodes.append(branch('SizeBranch', [('IF_TooMany', 'data.FileInfo.tooMany', [reject])], [loop, finish]))
 nodes.append(log('LogDone', '"Bulk upload " + data.GetInputParams.ref + " (" + data.GetInputParams.mode + ") finished"'))

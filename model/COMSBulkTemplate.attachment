@@ -1,0 +1,51 @@
+{
+  "id": 2,
+  "name": "COMSBulkTemplate",
+  "label": "COMS Bulk Template",
+  "defaultSecurityDomains": [
+    "ManageCOMSShellOrgs"
+  ],
+  "defaultCollection": {
+    "name": "comsBulkTemplates",
+    "label": "All COMS Bulk Templates"
+  },
+  "isFilePurgeable": true,
+  "fields": [
+    {
+      "id": 1,
+      "name": "version",
+      "label": "Version",
+      "type": "TEXT"
+    },
+    {
+      "id": 2,
+      "name": "asOf",
+      "label": "Assignments As Of",
+      "type": "TEXT"
+    },
+    {
+      "id": 3,
+      "name": "rowCount",
+      "label": "Rows",
+      "type": "TEXT"
+    },
+    {
+      "id": 4,
+      "name": "notes",
+      "label": "Notes",
+      "type": "TEXT"
+    },
+    {
+      "id": 5,
+      "name": "uploadedByName",
+      "label": "Uploaded By",
+      "type": "TEXT"
+    },
+    {
+      "id": 6,
+      "name": "uploadedAt",
+      "label": "Uploaded At",
+      "type": "TEXT"
+    }
+  ]
+}

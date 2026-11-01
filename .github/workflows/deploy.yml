@@ -433,6 +433,14 @@ jobs:
           sleep 30
           node test/run-tests.js "${E2E_SUITE}"
 
+      - name: Refresh the pre-filled Excel template (warning only)
+        continue-on-error: true
+        env:
+          WD_DEV_TOKEN: ${{ secrets.WD_DEV_TOKEN }}
+        run: |
+          pip install --quiet openpyxl
+          node tools/publish_template.js
+
       - name: Upload e2e results
         if: always()
         uses: actions/upload-artifact@v4

@@ -1,0 +1,147 @@
+{
+  "id": "bulkTemplateUpload",
+  "securityDomains": [
+    "ManageCOMSShellOrgs"
+  ],
+  "endPoints": [
+    {
+      "name": "selectedWorker",
+      "baseUrlType": "COMMON",
+      "url": "/workers/me",
+      "authType": "sso",
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 403
+        },
+        {
+          "code": 429
+        }
+      ]
+    }
+  ],
+  "outboundData": {
+    "outboundEndPoints": [
+      {
+        "name": "uploadTemplateFile",
+        "baseUrlType": "BUSINESS-OBJECT",
+        "url": "/comsBulkTemplatesCollection",
+        "httpMethod": "POST",
+        "authType": "sso",
+        "onMultiPartSend": "<%\n  for (var file : self.data.metadata.comsBulkTemplates) {\n    file.version = versionText.value;\n    file.notes = notesText.value ?? '';\n    file.uploadedByName = selectedWorker.descriptor ?? '';\n    file.uploadedAt = date:now().format(\"yyyy-MM-dd'T'HH:mm:ss'Z'\");\n  }\n  self.data;\n%>",
+        "failOnStatusCodes": [
+          {
+            "code": 400
+          },
+          {
+            "code": 403
+          },
+          {
+            "code": 429
+          },
+          {
+            "code": 500
+          }
+        ]
+      }
+    ]
+  },
+  "presentation": {
+    "headerSize": "STANDARD",
+    "title": {
+      "type": "title",
+      "label": "ECO-COMS: Upload Bulk Template Version"
+    },
+    "cancelOverride": {
+      "taskId": "bulkRoleTemplate"
+    },
+    "body": {
+      "type": "basicFormLayout",
+      "id": "templateUploadForm",
+      "sections": [
+        {
+          "type": "layoutSection",
+          "id": "navSection",
+          "children": [
+            {
+              "type": "button",
+              "id": "backButton",
+              "label": "← Download Template",
+              "action": "LINK",
+              "taskReference": {
+                "taskId": "bulkRoleTemplate"
+              }
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "aboutSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "aboutFieldSet",
+              "title": "About This Page",
+              "children": [
+                {
+                  "type": "richText",
+                  "id": "aboutRichText",
+                  "enabled": false,
+                  "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">Publish a new version of the validated Excel template. Everyone who opens Download Template gets the newest version. Build it with <b>tools/publish_template.js</b> (pre-filled with every current role assignment) or <b>tools/build_bulk_xlsx.py</b> (blank). Older versions stay stored.</span>"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "formSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "templateUploadFieldSet",
+              "title": "Template",
+              "children": [
+                {
+                  "type": "fileUploader",
+                  "id": "templateUploader",
+                  "label": "Excel file",
+                  "fileTypes": "xlsx",
+                  "singular": true,
+                  "required": true,
+                  "metadata": "<% { 'version': '' } %>",
+                  "valueOutBinding": "uploadTemplateFile:comsBulkTemplates"
+                },
+                {
+                  "type": "text",
+                  "id": "versionText",
+                  "label": "Version",
+                  "required": true,
+                  "value": "<% 'v' + date:now().format('yyyy-MM-dd') %>"
+                },
+                {
+                  "type": "text",
+                  "id": "notesText",
+                  "label": "Notes"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "footer": {
+      "type": "footer",
+      "children": [
+        {
+          "type": "pod",
+          "podId": "ecoComsFooter"
+        }
+      ]
+    },
+    "pageType": "EDIT"
+  }
+}
