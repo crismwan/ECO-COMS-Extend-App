@@ -30,14 +30,14 @@ txt = lambda cid, label, value: {"type": "column", "columnId": cid, "label": lab
 APP = "(queryParams.appCode ?? '')"
 # every position holding a role on the chosen application's shell orgs (same data as Download Template)
 ROWS = ("list:flatten(list:flatten((shellRoles.data ?? []).map(r => { (r.roleAssignments ?? [])"
-        ".filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith(" + APP + " + ':') })"
+        ".filter(ra => { ra.organization != null && (ra.organization.descriptor + ':').startsWith(" + APP + " + ':') })"
         ".map(ra => { (ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? []).map(p => { { 'role': r.role.descriptor ?? '', 'roleWid': r.role.id ?? '', "
         "'org': ra.organization.descriptor ?? '', 'orgWid': ra.organization.id ?? '', 'position': p.descriptor ?? '', "
         "'positionId': (p.descriptor ?? '').substringBefore(' '), 'assigneeWid': p.id ?? '' } }) }) })))")
 KEYS = "(" + ROWS + ".map(x => { x.roleWid + '|' + x.orgWid + '|' + x.positionId }))"
 # every role/organization pair on the application, including pairs with no position yet
 PAIRS = ("list:flatten((shellRoles.data ?? []).map(r => { (r.roleAssignments ?? [])"
-         ".filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith(" + APP + " + ':') })"
+         ".filter(ra => { ra.organization != null && (ra.organization.descriptor + ':').startsWith(" + APP + " + ':') })"
          ".map(ra => { { 'id': (r.role.id ?? '') + '|' + (ra.organization.id ?? ''), 'descriptor': (r.role.descriptor ?? '') + ' — ' + (ra.organization.descriptor ?? '') } }) }))")
 # applications that have role assignments: X:<APP> from the organization names
 APPS = ("list:flatten((shellRoles.data ?? []).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith('X:') })"
