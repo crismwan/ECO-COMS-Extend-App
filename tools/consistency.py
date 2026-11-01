@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """One-pass UI consistency fixes across hand-written pages (idempotent):
 'ECO-COMS: ' title prefix, back-link wording and order, 'About this page' casing,
-help text at 12px, timestamps shown as 'yyyy-MM-dd HH:mm:ss UTC'. Builders produce the same style."""
+help text at 12px, timestamps (tools/polish.py then shows them in Pacific time). Builders produce the same style."""
 import json, os, re, glob
 ROOT = os.path.join(os.path.dirname(__file__), '..', 'presentation')
 TITLES = {

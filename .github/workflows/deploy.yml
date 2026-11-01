@@ -25,6 +25,12 @@ jobs:
       - name: Static checks (block upload on known platform pitfalls; no tenant access)
         run: node test/run-tests.js static
 
+      # Warns (doesn't block) when a generated page no longer matches its builder in tools/:
+      # a hand edit there is lost the next time someone runs tools/rebuild_all.sh.
+      - name: Builders reproduce the committed pages (warning only)
+        continue-on-error: true
+        run: tools/rebuild_all.sh --check && git checkout -- presentation orchestration model
+
       - name: Install WDCLI from GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

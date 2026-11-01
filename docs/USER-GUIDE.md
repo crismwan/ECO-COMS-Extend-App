@@ -5,7 +5,7 @@ ECO-COMS (Custom Organization Management System) is a Workday Extend app for rol
 - create **shell organizations** (Custom Organizations such as `X:CLW:ORG:ANY`) and **shell org patterns** (such as `X:CLW:PATTERN:MATH:MATH_V:303:951:2026W1`) in Workday
 - inactivate or reactivate those organizations
 - add or remove the positions assigned to a role on a shell organization, one at a time or many at once from a CSV file
-- request new **assignable roles** and **AAA (Admin Provisioning)** roles, which ISC reviews in a Workday business process
+- request new **assignable roles** and **AAA** (Organizations and Roles Assignment Administrator) roles, which ISC reviews in a Workday business process
 - see every change in the **Audit Log Viewer**
 
 Part 1 is for requesters. Part 2 is for ISC reviewers and approvers.
@@ -18,21 +18,26 @@ Part 1 is for requesters. Part 2 is for ISC reviewers and approvers.
 
 Open the app from Workday. The **ECO-COMS** hub opens on the **RBAC Hub** page. The left pane has:
 
-- **RBAC Hub**: the main page. At the top, five cards: **Needs My Attention** (your own requests and bulk uploads), **Shell Org Manager** (active shell organizations), **Pending ISC Requests** (pending and overdue), **Audit Log** (changes in the last 24 hours) and the **Shell Org Overview** donut (active vs inactive). Each card's link opens that area. Below them are three action cards: **Shell Organizations**, **Bulk Role Changes** and **Role Requests**.
+- **RBAC Hub**: the main page. At the top, five cards: **Needs My Attention** (your own requests and bulk uploads), **Shell Org Manager** (active shell organizations), **ISC Queue** (pending and overdue), **Audit Log** (changes in the last 24 hours) and the **Shell Org Overview** donut (active vs inactive). Each card's link opens that area. Below them are three action cards: **Shell Organizations**, **Bulk Role Changes** and **Role Requests**.
   - **Shell Organizations**: **Open Shell Org Manager**, **Add Shell Org**, **Add Pattern**
   - **Bulk Role Changes**: **Upload File**, **Download Template**, **View Results**
-  - **Role Requests**: **View My Requests**, **Submit New Request**, **Open ISC Queue**, **View AAA Requests**, **Submit AAA Role Request**
+  - **Role Requests**: **View My Requests**, **Submit New Request**, **View AAA Requests**, **Submit AAA Role Request** (the ISC Queue has its own card above)
 - **FUH Administration**: information about Functional Unit Hierarchy organizations (no actions yet).
 - **Resources**: **Submit a Helpdesk Ticket** and **RBAC Rolename by Application** (external links).
 
-Most pages have a **← Home** link at the top. What you see depends on your security domains (see [Troubleshooting](#troubleshooting)).
+Every page has one back link at the top (for example **← Home** or **← Shell Org Manager**). What you see depends on your security domains (see [Troubleshooting](#troubleshooting)).
+
+In Workday's own search the app's tasks are **Shell Org Manager**, **Audit Log Viewer**, **ISC Queue**, **Submit Assignable Role Request**, **Submit AAA Role Request** and **Withdraw Assignable Role Request** (renamed 2026-11-01; the old names Assignable Role Manager, Admin Provisioning and All Pending Role Requests ISC no longer match).
+
+All times in the app are **Pacific time**, to the minute, with the zone shown (for example `2026-10-31 18:31 PDT`; `PST` in winter).
 
 ### Shell Org Manager
 
-**Open Manager** opens **ECO-COMS: Shell Org Manager**. Its sections:
+**Open Shell Org Manager** opens **ECO-COMS: Shell Org Manager**. Its sections:
 
-- **Summary**: counts of **Active Orgs**, **Inactive Orgs** and **Total Patterns**, plus **Quick Actions** to add an org or a pattern.
-Each tab after Summary starts with an **About this tab** note, and each grid's title shows how many rows it has.
+- **Summary**: **Active**, **Inactive** and **Patterns** counts (for the application you picked with **Manage**, or all applications), **Quick Actions** to add an org or a pattern, and the **Shell Org Overview** donut.
+
+Each tab after Summary starts with an **About This Tab** note. Workday shows the number of rows ("n items") next to each grid's title.
 
 - **Application Patterns**: the **Applications** grid. Click **Manage** on an application to see only its patterns and orgs; **← Back to Applications** returns to the full view. The **Shell Org Patterns** grid shows each pattern's name, code and status, with an **Inactivate** / **Activate** button.
 - **Application Shell Organizations**: every shell org with its status and a **Manage** button.
@@ -42,7 +47,7 @@ Only pattern codes that start with `X:` and contain `:PATTERN:` are listed.
 
 ### Create a shell organization
 
-1. On the RBAC Hub, click **Add Shell Org**. The **Create New Shell Organization** wizard opens.
+1. On the RBAC Hub, click **Add Shell Org**. The **Add New Shell Organization** wizard opens.
 2. On **Organization Details**:
    1. **Application**: pick the application the org belongs to.
    2. **Organization Code**: enter the suffix only, without spaces or special characters. **Generated Organization Name** shows the full name, `ApplicationCode:OrganizationCode` (for example `X:CLW:ORG:ANY`).
@@ -50,7 +55,7 @@ Only pattern codes that start with `X:` and contain `:PATTERN:` are listed.
 3. Click **Next**, check the **Review & Submit** summary, then click **OK**.
 4. ECO-COMS creates the org in Workday and checks that it now exists. If it does, **Shell Organization Created** opens with a receipt card (organization name, effective date, and when it was created) plus **Add Another Organization** and **View in Shell Org Manager**. The receipt shows the newest organization *you* created.
 
-The **Before you submit** note on the form is a reminder that the organization is live straight away and can only be inactivated afterwards, not deleted.
+The **Before You Submit** note on the form is a reminder that the organization is live straight away and can only be inactivated afterwards, not deleted.
 
 **Field help:** click the **?** in the page banner ("Start guided tours") to show a **?** beside the fields that have help, then click a field's **?** to read it.
 
@@ -85,7 +90,7 @@ The page stops you if the code already exists ("An organization with this code a
 2. Find the org:
    - a shell org: **Application Shell Organizations** → **Manage** on its row
    - a pattern: **Application Patterns** → **Manage** on the application → **Inactivate** or **Activate** on the pattern
-3. The **Change Status: <code>** page shows **Current Status** and **New Status**.
+3. The **ECO-COMS: Change Status – <code>** page shows **Current Status** and **New Status**.
 4. Read the warning. **Inactivating does not remove role assignments that use this org.** Check in Workday that no active role assignment depends on it before you continue.
 5. Enter the **Effective Date**.
 6. Tick the confirmation box, then click **OK**.
@@ -98,13 +103,13 @@ The page stops you if the code already exists ("An organization with this code a
 ### Add or remove positions on a role
 
 1. In **Shell Org Manager**, open **Manage Role Assignments** and click **Manage** on the role and org row.
-2. **Manage Role Assignment: <role>** shows the **Current Assignment** (role, org, current positions).
+2. **ECO-COMS: Manage Role Assignment – <role>** shows the **Current Assignment** (role, org, current positions).
 3. Under **Change Positions**:
    - **Positions to Add**: search by position name or ID (for example `P-00010`). You can pick more than one.
    - **Positions to Remove**: pick from the positions currently assigned.
    - **Effective Date**: required.
 4. Click **OK**. Each add and each remove runs through the Workday Assign Roles business process. **These changes can't be rescinded.** To undo one, make the opposite change.
-5. After OK you return to the app home page, not to Shell Org Manager.
+5. After OK, **Role Assignment Updated** shows the role, the organization, the positions added and removed, and the effective date, with **View in Shell Org Manager** and **Manage This Role Again**. Each change is in the Audit Log as **Assign position** or **Remove position**.
 
 If any change fails, the page shows "Workday rejected N of M changes...". The changes that succeeded stay in place, so check the role in Workday before you try again.
 
@@ -122,12 +127,12 @@ If any change fails, the page shows "Workday rejected N of M changes...". The ch
 
 To see your requests, use **View My Requests** on the RBAC Hub (**ECO-COMS: My Assignable Role Requests**).
 
-### Request an AAA role (Admin Provisioning)
+### Request an AAA role
 
 An AAA role (Organizations and Roles Assignment Administrator) decides who can manage shell orgs and submit role requests in ECO-COMS for an application.
 
 1. On the RBAC Hub, click **Submit AAA Role Request** in the Role Requests card. **ECO-COMS: Submit AAA Role Request** opens.
-2. In **2. Submit New Assignable Role Request**:
+2. In **2. Submit New AAA Role Request**:
    1. **Application**: required.
    2. **Enabled For**: pick a **Functional Unit Hierarchy** *or* an **Academic Unit**, not both, or leave both empty (Enabled For is then "Academic Unit - University of British Columbia").
    3. **Requested AAA Role** is generated for you: `Organizations and Roles Assignment Administrator (<Application>)`, with `, Functional Org` or `, Academic Unit` added when you pick one.
@@ -135,17 +140,19 @@ An AAA role (Organizations and Roles Assignment Administrator) decides who can m
    5. **Positions**.
 3. Click **OK**. If that AAA role already exists in Workday, the page says so and stops you from submitting a duplicate.
 
+**View AAA Requests** on the RBAC Hub opens **ECO-COMS: AAA Role Requests**, which lists everyone's AAA requests.
+
 The form has no Delegated Roles field. Delegated Roles appears only as a column in the requests grid (to confirm whether AAA requests should capture it).
 
 ### Withdraw a pending request
 
-**Withdraw Request** (on the request list pages) opens **ECO-COMS: Withdraw Assignable Role Request**. It lists only **your own** requests that are still **Pending ISC Review**.
+**Withdraw Request** (on the request pages) opens **ECO-COMS: Withdraw Assignable Role Request**, or **Withdraw AAA Role Request** when you come from the AAA pages. It lists only **your own** requests that are still **Pending ISC Review**.
 
 1. Click **Select** on the request.
 2. Tick **I confirm I want to withdraw this request.**
 3. Click **OK**.
 
-ECO-COMS cancels the request's ISC review in Workday. Within a few minutes the request shows **✗ Denied** and a DENY record appears in the audit log. A withdrawn review can't be restarted; submit a new request if you still need the role. An older request that never started a review is deleted instead, with a DELETE audit record.
+ECO-COMS cancels the request's ISC review in Workday. Within a few minutes the request shows **✗ Denied** and a DENY record appears in the Audit Log. A withdrawn review can't be restarted; submit a new request if you still need the role. An older request that never started a review is deleted instead, with a DELETE audit record.
 
 Cancelling a review needs the **Cancel** permission on the business process; the Initiator has it, so requesters can withdraw their own requests. The withdrawal comment is copied into the request's **Denial Reason**, and the DENY audit record names you.
 
@@ -170,15 +177,16 @@ Outcomes:
 
 **Open Audit Log** on the RBAC Hub opens **ECO-COMS: Audit Log Viewer**: one row per change made through ECO-COMS, newest first. A row is written only when Workday accepts the change.
 
-- **Time period** buttons: **All time**, **Last 24 hours**, **Last 7 days**, **Last 30 days**.
-- **Change type** buttons: **All types**, **Shell Org**, **Pattern**, **Org Status**, **Role Assignment**, **Assignable Role**. The two filters combine: picking a type keeps the period, and the other way round.
+- **Time Period** pills: **All time**, **Last 24 hours**, **Last 7 days**, **Last 30 days**.
+- **Change Type** pills: **All types**, **Shell Org**, **Pattern**, **Org Status**, **Role Assignment**, **Assignable Role**. The two filters combine: picking a type keeps the period, and the other way round.
 - **Showing** says how many records match, out of the total, and which filters are on.
-- **Changes by action**: a donut of the matching records by action.
+- **Changes by Action**: a donut of the matching records by action, next to the filters.
 - The page loads the newest 500 records. If there are more, **Showing** says so; use the **All Audit Logs** report for older history.
 
 - Columns: **Timestamp**, **Change Type**, **Action**, **Organization**, **Role**, **Position**, **Effective Date**, **Changed By**, **Details**.
 - **Change Type**: Shell Org, Shell Org Pattern, Org Status, Role Assignment, Assignable Role.
-- **Action**: ADD, INACTIVATE, REACTIVATE, ASSIGN POSITION, REMOVE POSITION, REQUEST, APPROVE, DENY, DELETE.
+- **Timestamp**: Pacific time, to the minute.
+- **Action**: Add, Inactivate, Reactivate, Assign position, Remove position, Request, Approve, Deny, Delete (the same names as the donut's legend).
 - Organizations, roles and positions that exist in Workday are links: hover for related actions. A role that doesn't exist in Workday yet is plain text.
 - Use the grid's export icon to download the rows currently shown (after filtering) to Excel.
 
@@ -221,9 +229,9 @@ You can also tick **Real run** on the upload page to validate and apply in one g
 ### Where review work appears
 
 - **Your Workday inbox.** Each step arrives as an inbox item named "Review COMS Assignable Role Request: <role name>". The step help text explains what to check.
-- **ECO-COMS → Open ISC Queue** (needs **Maintain: COMS Assignable Roles**). The queue opens on pending requests; use the **Request Type** (All, AAA provisioning, Assignable roles) and **Status** pills to change the view.
+- **ECO-COMS → ISC Queue** card → **Open ISC Queue** (needs **Maintain: COMS Assignable Roles**). The page, **ECO-COMS: ISC Queue – Pending Role Requests**, opens on pending requests; use the **Request Type** (All requests, AAA roles, Assignable roles) and **Status** pills to change the view, and the title follows your choice.
   - Three cards at the top: **Pending**, **Overdue** (pending for more than 3 business days) and **Approved this month**.
-  - **Show** buttons: **Pending** (the default), **Approved**, **Denied**, **All**. **Showing** says how many requests match.
+  - **Status** pills: **Pending** (the default), **Approved**, **Denied**, **All**. **Showing** says how many requests match.
   - Overdue rows show "· overdue" next to their status.
   - Each row has a **Review Process: <role>** link; hover it for the event's related actions. Every request is approved or denied through its review process; the old **Maintain** page has been retired.
 
@@ -244,7 +252,7 @@ Each ECO-COMS step page shows a "Step N of 5" banner.
 5. **Link Workday Role** (Step 5 of 5, action step, ECO-COMS page **Add Workday Assignable Role**):
    1. **Workday Assignable Role**: select the role created in step 3.
    2. **Role-Based Security Group**: check the prefilled name matches the group from step 4.
-   3. Click **OK**. The request becomes **Approved**, an APPROVE audit record is written, it leaves Pending ISC Requests, and the requester is notified.
+   3. Click **OK**. The request becomes **Approved**, an APPROVE audit record is written, it leaves the ISC Queue's pending list, and the requester is notified.
 
 ### Denying or cancelling
 

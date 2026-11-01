@@ -61,6 +61,15 @@ This needs a browser login, so a person has to do it.
 
 ---
 
+## 1b. How the pages are built
+
+Most pages and cards are generated or post-processed by the scripts in `tools/`. Change the script, not the page, or the next rebuild undoes your edit.
+
+- `tools/rebuild_all.sh` runs them all in order: bulk orchestration and pages, org detail, request lists, filter pills and Home cards, Title Case, consistency, empty messages, and `polish.py` last.
+- `tools/rebuild_all.sh --check` fails if the result differs from what's committed. The deploy workflow runs it as a warning-only step, "Builders reproduce the committed pages".
+- `tools/polish.py` holds the 2026-10-31/11-01 review decisions: grid labels without counts, About boxes, page names, Pacific timestamps, AAA wording. Every builder runs it at the end.
+- A hand edit to a page none of the scripts touches is fine. If the check flags your page, move the change into the script that writes it.
+
 ## 2. Running tests
 
 All suites are in `test/run-tests.js`.
@@ -147,7 +156,7 @@ Every orchestration a user can launch is secured by the same domain as the page 
 |---|---|
 | AddShellOrg, AddShellOrgPattern, ManageShellOrgStatus, AssignRolePositions | Manage: COMS Shell Organizations |
 | StartRoleRequestReview (My Assignable Role Requests) | Manage: COMS Assignable Roles |
-| StartAAARequestReview (Admin Provisioning; same steps) | Manage: COMS Admin Provisioning |
+| StartAAARequestReview (Submit AAA Role Request; same steps) | Manage: COMS Admin Provisioning |
 | DenyRoleRequest | none (launched by the business process as the tenant's launch user) |
 
 Those three domains have `enabledForOrchestrationSecurity: true`. After deploying:
