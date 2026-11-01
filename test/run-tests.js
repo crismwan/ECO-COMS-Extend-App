@@ -1129,6 +1129,34 @@ async function repair(token, me) {
     if (left.length) throw new Error(`${left.length} request(s) not fixed: ${left.join(', ')}`);
     pass('Repair.enabledFor', `${bad.length} request(s) ${apply ? 'corrected' : 'would be corrected'}`);
   });
+
+  // Requests whose Position Names hold a bare position WID instead of the name (seen on TESTROLE1031,
+  // 2026-11-01). Look the WID up in allPositions and store the same full name the page sends.
+  await test('Repair.positionNames', async () => {
+    const roles = await readAll(token, 'comsAssignableRoles');
+    const isWid = (s) => /^[0-9a-f]{32}$/.test(String(s).trim());
+    const bad = roles.filter((r) => String(r.positionNames || '').split(/,\s*(?=[0-9a-f]{32}$|[0-9a-f]{32},|P-\d)/).some(isWid));
+    if (!bad.length) return pass('Repair.positionNames', 'no request holds a bare WID in Position Names');
+    const all = (await wql(token, 'SELECT cf_PositionID, workdayID, position_PositionManagement, cf_PositionText FROM allPositions WHERE supervisoryOrganization is not empty', 10000)).data || [];
+    const left = [];
+    for (const r of bad) {
+      const parts = String(r.positionNames).split(/,\s*(?=[0-9a-f]{32}$|[0-9a-f]{32},|P-\d)/);
+      const fixed = parts.map((p) => {
+        if (!isWid(p)) return p;
+        const pos = all.find((x) => idOf(x.workdayID) === p.trim());
+        return pos ? (pos.position_PositionManagement?.descriptor || pos.cf_PositionText || pos.cf_PositionID) : null;
+      });
+      if (fixed.includes(null)) { left.push(r.roleName); warn('Repair.positionNames', `${r.roleName}: a WID in "${r.positionNames}" is not in allPositions; left as is`); continue; }
+      const name = fixed.join(', ');
+      if (!apply) { console.log(`  would set ${r.roleName} Position Names "${r.positionNames}" → "${name}"`); continue; }
+      await request('PATCH', `${BO}/comsAssignableRoles/${r.id}`, token, { positionNames: name });
+      const back = await request('GET', `${BO}/comsAssignableRoles/${r.id}`, token);
+      if (back.positionNames !== name) throw new Error(`${r.roleName}: PATCH did not stick (reads "${back.positionNames}")`);
+      console.log(`  set ${r.roleName} Position Names to "${name}"`);
+    }
+    if (left.length) throw new Error(`${left.length} request(s) not fixed: ${left.join(', ')}`);
+    pass('Repair.positionNames', `${bad.length} request(s) ${apply ? 'corrected' : 'would be corrected'}`);
+  });
 }
 
 // ═══ Second-user suite (run only by name; needs WD_SECOND_TOKEN) ═══
