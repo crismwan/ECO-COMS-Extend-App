@@ -267,10 +267,17 @@
           "id": "descSection",
           "children": [
             {
-              "type": "richText",
-              "id": "pageDesc",
-              "enabled": false,
-              "value": "<span style=\"color:#374151;font-size:12px\">Select one of your requests that is still Pending ISC Review to withdraw it. Withdrawing cancels its ISC review in Workday; the request is then marked Denied and the change is recorded in the audit log.</span>"
+              "type": "fieldSet",
+              "id": "aboutFieldSet",
+              "title": "About This Page",
+              "children": [
+                {
+                  "type": "richText",
+                  "id": "pageDesc",
+                  "enabled": false,
+                  "value": "<span style=\"color:#374151;font-size:12px\">Select one of your requests that is still Pending ISC Review to withdraw it. Withdrawing cancels its ISC review in Workday; the request is then marked Denied and the change is recorded in the audit log.</span>"
+                }
+              ]
             }
           ]
         },
@@ -319,14 +326,10 @@
                       "label": "Organization / Application",
                       "sortableAndFilterable": "true",
                       "cellTemplate": {
-                        "type": "instanceList",
-                        "view": true,
-                        "instanceList": [
-                          {
-                            "descriptor": "<% role.shellOrgCode ?? role.application ?? '' %>",
-                            "wid": "<% role.shellOrgWid ?? '' %>"
-                          }
-                        ]
+                        "type": "text",
+                        "id": "colOrgAppText",
+                        "enabled": false,
+                        "value": "<% role.shellOrgCode ?? role.application ?? '' %>"
                       }
                     },
                     {
@@ -347,14 +350,10 @@
                       "columnId": "colWdRoleName",
                       "label": "Workday Assignable Role",
                       "cellTemplate": {
-                        "type": "instanceList",
-                        "view": true,
-                        "instanceList": [
-                          {
-                            "descriptor": "<% role.workdayRoleId ?? '' %>",
-                            "wid": "<% role.workdayAssignableRole ?? '' %>"
-                          }
-                        ]
+                        "type": "text",
+                        "id": "colWdRoleNameText",
+                        "enabled": false,
+                        "value": "<% role.workdayRoleId ?? '' %>"
                       }
                     },
                     {
@@ -363,14 +362,10 @@
                       "columnId": "colEnabledFor",
                       "label": "Enabled For",
                       "cellTemplate": {
-                        "type": "instanceList",
-                        "view": true,
-                        "instanceList": [
-                          {
-                            "descriptor": "<% role.enabledForOrganizationTypes ?? 'Academic Unit - University of British Columbia' %>",
-                            "wid": "<% role.enabledForWid ?? '' %>"
-                          }
-                        ]
+                        "type": "text",
+                        "id": "colEnabledForText",
+                        "enabled": false,
+                        "value": "<% role.enabledForOrganizationTypes ?? 'Academic Unit - University of British Columbia' %>"
                       }
                     },
                     {
@@ -390,12 +385,10 @@
                       "columnId": "colPositions",
                       "label": "Positions / Delegated Roles",
                       "cellTemplate": {
-                        "type": "instanceList",
-                        "id": "colPositionsList",
-                        "view": true,
+                        "type": "text",
+                        "id": "colPositionsText",
                         "enabled": false,
-                        "values": "<% (empty(role.positions) && empty(role.positionWids)) ? [] : (!empty(role.positions) ? role.positions : (role.positionWids ?? '')).splitByRegex(',').map((pid, i) => { { 'id': pid.trim(), 'descriptor': (!empty(role.positionNames) && role.positionNames.splitByRegex(', (?=P-[0-9])').size() > i) ? role.positionNames.splitByRegex(', (?=P-[0-9])')[i] : pid.trim() } }) %>",
-                        "widKey": "id"
+                        "value": "<% role.positionNames ?? role.positions ?? '' %>"
                       }
                     },
                     {
@@ -404,14 +397,10 @@
                       "columnId": "colRequestedBy",
                       "label": "Requested By",
                       "cellTemplate": {
-                        "type": "instanceList",
-                        "view": true,
-                        "instanceList": [
-                          {
-                            "descriptor": "<% role.requestedBy.descriptor ?? '' %>",
-                            "wid": "<% role.requestedBy.id ?? '' %>"
-                          }
-                        ]
+                        "type": "text",
+                        "id": "colRequestedByText",
+                        "enabled": false,
+                        "value": "<% !empty(role.requestedBy) ? (role.requestedBy.descriptor ?? '') : '' %>"
                       }
                     },
                     {

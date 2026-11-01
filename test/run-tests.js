@@ -254,6 +254,13 @@ function staticSuite() {
         const msgs = kids.filter((c) => c && c.visible && ['text', 'richText'].includes(c.type) && /\bno\b|nothing|haven.t/i.test(JSON.stringify(c.value || '')));
         if (msgs.length > 1) err('emptyMsg', `${name}: ${msgs.length} empty-grid messages side by side (${msgs.map((m) => m.id).join(', ')}); keep one`);
       }
+      // A grid cell instanceList filled with a literal 'instanceList' renders blank on an EDIT page
+      // (seen live on deleteAssignableRole, 2026-10-31); use a text cell or 'values'.
+      if (node.type === 'grid' && d.presentation?.pageType === 'EDIT') {
+        for (const c of node.columns || []) {
+          if (c.cellTemplate?.type === 'instanceList' && c.cellTemplate.instanceList) err('editInstanceList', `${name}: grid '${node.id}' column '${c.columnId}' uses a literal instanceList on an EDIT page; it renders blank`);
+        }
+      }
       if (node.type === 'fieldSet' && typeof node.title === 'string' && !node.title.includes('<%')) {
         const SMALL = new Set(['a', 'an', 'the', 'and', 'or', 'but', 'of', 'to', 'in', 'on', 'at', 'for', 'by', 'with', 'as', 'vs']);
         const words = node.title.split(' ');
