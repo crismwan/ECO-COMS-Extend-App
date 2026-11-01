@@ -2457,3 +2457,4 @@ A typical pipeline: on push to `main`, run static checks, log in, upload to App 
 - Changes to security policies and permission grants are for the person to make, not the assistant.
 - An Extend app page opens at `https://<tenant host>/<tenant>/d/wday/app/<appId>/<appId>/<taskId>.htmld?param=value`, e.g. `.../errorPage.htmld?errorCode=404`. A `#/task` hash on the app root doesn't navigate.
 - A page's text is readable with `document.body.innerText` after ~10 s; cards render lazily, so scroll a card into view before reading it.
+- **Timing a page:** in a hidden or background browser pane, cards can take 45 s or more to draw, which isn't the app. Time the server instead: `GET /wday/app/<appId>/<tenant>/<appId>/<taskId>` with `Accept: application/json` returns the page, and each card's `contentUri` returns its content (confirmed 2026-11-01: page 0.9 s, cards 0.1–0.2 s).
