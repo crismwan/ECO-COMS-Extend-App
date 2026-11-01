@@ -106,7 +106,7 @@
                   "type": "richText",
                   "id": "scopeWarning",
                   "enabled": false,
-                  "value": "<% empty(queryParams.appCode) ? '<span style=\"display:inline-flex;align-items:center;gap:6px;background:#fef9c3;border:1px solid #fbbf24;border-radius:6px;padding:8px 12px;font-size:12px;color:#92400e\">⚠️ No application selected — data below reflects all applications. Click Manage on an application to view its shell orgs and URL patterns.</span>' : '<span style=\"display:inline-flex;align-items:center;gap:6px;background:#fef9c3;border:1px solid #fbbf24;border-radius:6px;padding:8px 12px;font-size:12px;color:#92400e\">⚠️ Showing shell orgs and URL patterns for <strong>' + (queryParams.appName ?? queryParams.appCode) + '</strong> only. Go back to view all applications.</span>' %>"
+                  "value": "<% empty(queryParams.appCode) ? '<span style=\"display:inline-flex;align-items:center;gap:6px;background:#fef9c3;border:1px solid #fbbf24;border-radius:6px;padding:8px 12px;font-size:12px;color:#92400e\">⚠ No application selected — data below reflects all applications. Use Manage on an application on the Application Patterns tab to view its shell organizations and patterns.</span>' : '<span style=\"display:inline-flex;align-items:center;gap:6px;background:#fef9c3;border:1px solid #fbbf24;border-radius:6px;padding:8px 12px;font-size:12px;color:#92400e\">⚠ Showing shell organizations and patterns for <strong>' + (queryParams.appName ?? queryParams.appCode) + '</strong> only. Go back to view all applications.</span>' %>"
                 }
               ]
             }
@@ -172,7 +172,7 @@
                 "type": "richText",
                 "id": "patternsAboutRichText",
                 "enabled": false,
-                "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">A <b>pattern</b> is a Custom Organization whose code follows <b>&lt;application&gt;:PATTERN:&lt;subject&gt;:&lt;course&gt;:&lt;section&gt;:&lt;academic period&gt;</b>, for example X:CLW:PATTERN:MATH:MATH_V:100:201:2026W1, where * means any (X:CLW:PATTERN:CPSC:CPSC_V:304:*:* covers every section and period of CPSC_V 304). Roles assigned on a pattern apply to the matching courses only. Pick an application on the left to see its patterns; use <b>Add Pattern</b> to create one. Patterns can be inactivated but not deleted.</span>"
+                "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">A <b>pattern</b> is a Custom Organization whose code follows <b>&lt;application&gt;:PATTERN:&lt;subject&gt;:&lt;course&gt;:&lt;section&gt;:&lt;academic period&gt;</b>, for example X:CLW:PATTERN:MATH:MATH_V:100:201:2026W1, where * means any (X:CLW:PATTERN:CPSC:CPSC_V:304:*:* covers every section and period of CPSC_V 304). Roles assigned on a pattern apply to the matching courses only. Use <b>Manage</b> on an application below to see its patterns; use <b>Add Pattern</b> to create one. Patterns can be inactivated but not deleted.</span>"
               }
             ]
           },
@@ -187,10 +187,10 @@
                 "gridType": "LIST",
                 "multiViewStylingEnabled": true,
                 "id": "appsGrid",
-                "rows": "<% (shellOrgPatterns.data ?? []).filter(p => { (p.code ?? '').startsWith('X:') && (p.code ?? '').contains(':PATTERN:') }).map(p => { p.code.substringBefore(':PATTERN').substringBefore(':') + ':' + p.code.substringBefore(':PATTERN').substringAfter(':').substringBefore(':') }).distinct().map(appCode => { {'appCode': appCode} }) %>",
+                "rows": "<% list:flatten([(shellOrgPatterns.data ?? []).filter(p => { (p.code ?? '').startsWith('X:') && (p.code ?? '').contains(':PATTERN:') }).map(p => { p.code.substringBefore(':PATTERN').substringBefore(':') + ':' + p.code.substringBefore(':PATTERN').substringAfter(':').substringBefore(':') }), (allShellOrgs.data ?? []).filter(o => { (o.code ?? '').startsWith('X:') && !(o.code ?? '').contains(':PATTERN') }).map(o => { 'X:' + o.code.substringAfter(':').substringBefore(':') })]).distinct().sort().map(appCode => { {'appCode': appCode} }) %>",
                 "rowVariableName": "app",
                 "enabled": false,
-                "label": "<% 'Applications' + ' (' + size((shellOrgPatterns.data ?? []).filter(p => { (p.code ?? '').startsWith('X:') && (p.code ?? '').contains(':PATTERN:') }).map(p => { p.code.substringBefore(':PATTERN').substringBefore(':') + ':' + p.code.substringBefore(':PATTERN').substringAfter(':').substringBefore(':') }).distinct().map(appCode => { {'appCode': appCode} })) + ')' %>",
+                "label": "<% 'Applications (' + size(list:flatten([(shellOrgPatterns.data ?? []).filter(p => { (p.code ?? '').startsWith('X:') && (p.code ?? '').contains(':PATTERN:') }).map(p => { p.code.substringBefore(':PATTERN').substringBefore(':') + ':' + p.code.substringBefore(':PATTERN').substringAfter(':').substringBefore(':') }), (allShellOrgs.data ?? []).filter(o => { (o.code ?? '').startsWith('X:') && !(o.code ?? '').contains(':PATTERN') }).map(o => { 'X:' + o.code.substringAfter(':').substringBefore(':') })]).distinct().sort()) + ')' %>",
                 "autoPaging": true,
                 "columns": [
                   {
@@ -206,7 +206,8 @@
                       "taskReference": {
                         "taskId": "shellOrgManager",
                         "parameterBindings": {
-                          "appCode": "<% app.appCode %>"
+                          "appCode": "<% app.appCode %>",
+                          "appName": "<% app.appCode %>"
                         }
                       }
                     },
@@ -226,7 +227,8 @@
                       "taskReference": {
                         "taskId": "shellOrgManager",
                         "parameterBindings": {
-                          "appCode": "<% app.appCode %>"
+                          "appCode": "<% app.appCode %>",
+                          "appName": "<% app.appCode %>"
                         }
                       }
                     },

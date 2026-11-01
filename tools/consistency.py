@@ -39,7 +39,7 @@ for f in sorted(glob.glob(os.path.join(ROOT, '*.pmd'))):
             if o.get('type') == 'button' and o.get('label') in NAV: o['label'] = NAV[o['label']]
             if o.get('type') == 'fieldSet' and o.get('title') in HEADINGS: o['title'] = HEADINGS[o['title']]
             if o.get('type') == 'richText' and isinstance(o.get('value'), str):
-                o['value'] = re.sub(r'font-size:1[13]px', 'font-size:12px', o['value']).replace('ℹ', 'ⓘ')
+                o['value'] = re.sub(r'font-size:1[13]px', 'font-size:12px', o['value']).replace('ℹ', 'ⓘ').replace('⚠️', '⚠')
             if n in BACK and o.get('type') == 'button' and o.get('label') == '← Home':
                 o['label'], o['taskReference'] = BACK[n][0], {"taskId": BACK[n][1]}
             if isinstance(o.get('value'), str):
