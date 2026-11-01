@@ -96,8 +96,8 @@ print('isc ok')
 ACTIONS = [
   ("HomeShellOrgActionsCard", "Shell Organizations", "Add orgs and patterns, manage status.", "wd-accent-worksheets",
    [("Open Shell Org Manager", "shellOrgManager"), ("Add Shell Org", "createShellOrgWizard"), ("Add Pattern", "createShellOrgPatternWizard")]),
-  ("HomeBulkActionsCard", "Bulk Role Changes", "Add or remove positions from a CSV file.", "wd-accent-checkmarked-page",
-   [("Upload File", "bulkRoleChanges"), ("Download Template", "bulkRoleTemplate"), ("View Results", "bulkRoleResults")]),
+  ("HomeBulkActionsCard", "Bulk Role Changes", "Add or remove positions in bulk.", "wd-accent-checkmarked-page",
+   [("Edit in the App", "bulkRoleGrid"), ("Upload File", "bulkRoleChanges"), ("Download Template", "bulkRoleTemplate"), ("View Results", "bulkRoleResults")]),
   ("HomeRoleRequestActionsCard", "Role Requests", "Request roles and follow their review.", "wd-accent-clipboard-checklist",
    [("View My Requests", "assignableRoleManagerView"), ("Submit New Request", "assignableRoleManager"),
     ("View AAA Requests", "adminProvisioningView"), ("Submit AAA Role Request", "adminProvisioning")]),

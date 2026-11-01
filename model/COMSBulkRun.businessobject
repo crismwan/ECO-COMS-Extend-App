@@ -1,0 +1,87 @@
+{
+  "id": 7,
+  "name": "COMSBulkRun",
+  "label": "COMS Bulk Run",
+  "defaultSecurityDomains": [
+    "ManageCOMSShellOrgs"
+  ],
+  "defaultCollection": {
+    "name": "comsBulkRuns",
+    "label": "All COMS Bulk Runs"
+  },
+  "fields": [
+    {
+      "id": 1,
+      "name": "batchRef",
+      "label": "Batch Reference",
+      "type": "TEXT",
+      "enableIndex": true
+    },
+    {
+      "id": 2,
+      "name": "source",
+      "label": "Source",
+      "type": "TEXT"
+    },
+    {
+      "id": 3,
+      "name": "runMode",
+      "label": "Run Mode",
+      "type": "TEXT"
+    },
+    {
+      "id": 4,
+      "name": "status",
+      "label": "Status",
+      "type": "TEXT"
+    },
+    {
+      "id": 5,
+      "name": "effectiveDate",
+      "label": "Effective Date",
+      "type": "TEXT"
+    },
+    {
+      "id": 6,
+      "name": "uploadedByName",
+      "label": "Submitted By",
+      "type": "TEXT"
+    },
+    {
+      "id": 7,
+      "name": "uploadedByWid",
+      "label": "Submitted By WID",
+      "type": "TEXT"
+    },
+    {
+      "id": 8,
+      "name": "uploadedAt",
+      "label": "Submitted At",
+      "type": "TEXT"
+    },
+    {
+      "id": 9,
+      "name": "finishedAt",
+      "label": "Finished At",
+      "type": "TEXT"
+    },
+    {
+      "id": 10,
+      "name": "statusMessage",
+      "label": "Status Message",
+      "type": "TEXT"
+    },
+    {
+      "id": 11,
+      "name": "changeCount",
+      "label": "Changes",
+      "type": "TEXT"
+    },
+    {
+      "id": 12,
+      "name": "summary",
+      "label": "Summary",
+      "type": "TEXT"
+    }
+  ]
+}

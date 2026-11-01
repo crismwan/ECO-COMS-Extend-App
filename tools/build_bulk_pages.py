@@ -179,10 +179,10 @@ template_upload = {"id": "bulkTemplateUpload", "securityDomains": ["ManageCOMSSh
 save('bulkTemplateUpload', template_upload)
 
 # ── 3. Results: my uploads and the row results of one of them ──
-UPL = "(list:sort((uploadPage0.data ?? []).filter(u => { (u.uploadedByWid ?? '') == (selectedWorker.id ?? '') }), 'uploadedAt', false))"
+UPL = "(list:sort(list:flatten([uploadPage0.data ?? [], runPage0.data ?? []]).filter(u => { (u.uploadedByWid ?? '') == (selectedWorker.id ?? '') }), 'uploadedAt', false))"
 ACTIVE = "(" + UPL + ".filter(u => { ['Uploaded', 'Queued', 'Running'].contains(u.status ?? '') }))"
 REF = "(!empty(queryParams.batch) ? queryParams.batch : (size(" + ACTIVE + ") > 0 ? " + ACTIVE + "[0].batchRef : (size(" + UPL + ") > 0 ? " + UPL + "[0].batchRef : '')))"
-SEL = "((uploadPage0.data ?? []).filter(u => { (u.batchRef ?? '') == " + REF + " }))"
+SEL = "(list:flatten([uploadPage0.data ?? [], runPage0.data ?? []]).filter(u => { (u.batchRef ?? '') == " + REF + " }))"
 MODE = "(size(" + SEL + ") > 0 ? (" + SEL + "[0].runMode ?? '') : '')"
 # a validated file that is later applied keeps its VALID rows; show the rows of its latest run only
 RES = "(list:flatten([rowPage0.data ?? [], rowPage1.data ?? []]).filter(x => { (x.batchRef ?? '') == " + REF + " && (" + MODE + " == '' || (x.runMode ?? '') == " + MODE + ") }))"
@@ -193,6 +193,10 @@ results = {"id": "bulkRoleResults", "securityDomains": ["ManageCOMSShellOrgs"],
     {"name": "uploadCount", "baseUrlType": "BUSINESS-OBJECT", "url": "/comsBulkUploads?limit=1", "authType": "sso", "failOnStatusCodes": FOS([400, 403, 429])},
     {"name": "uploadPage0", "baseUrlType": "BUSINESS-OBJECT", "authType": "sso", "isCollection": True, "failOnStatusCodes": FOS([400, 403, 429]),
      "url": "<% let t = uploadCount.total ?? 0; let start = (t - 100) < 0 ? 0 : (t - 100); let cnt = t - start; '/comsBulkUploads?limit=' + (cnt > 0 ? cnt : 1) + '&offset=' + (cnt > 0 ? start : t) %>"},
+    # grid edits (COMSBulkRun, from Bulk Edit Role Assignments), newest 100
+    {"name": "runCount", "baseUrlType": "BUSINESS-OBJECT", "url": "/comsBulkRuns?limit=1", "authType": "sso", "failOnStatusCodes": FOS([403, 429])},
+    {"name": "runPage0", "baseUrlType": "BUSINESS-OBJECT", "authType": "sso", "isCollection": True, "failOnStatusCodes": FOS([403, 429]),
+     "url": "<% let t = runCount.total ?? 0; let start = (t - 100) < 0 ? 0 : (t - 100); let cnt = t - start; '/comsBulkRuns?limit=' + (cnt > 0 ? cnt : 1) + '&offset=' + (cnt > 0 ? start : t) %>"},
     {"name": "rowPage0", "baseUrlType": "BUSINESS-OBJECT", "authType": "sso", "isCollection": True, "failOnStatusCodes": FOS([400, 403, 429]),
      "url": "<% '/comsBulkRowResults?limit=100&offset=0&batchRef=' + " + REF + " %>"},
     {"name": "rowPage1", "baseUrlType": "BUSINESS-OBJECT", "authType": "sso", "isCollection": True, "failOnStatusCodes": FOS([429]),
@@ -202,7 +206,7 @@ results = {"id": "bulkRoleResults", "securityDomains": ["ManageCOMSShellOrgs"],
       {"type": "layoutSection", "id": "navSection", "children": [
         {"type": "button", "id": "homeButton", "label": "← Home", "action": "LINK", "taskReference": {"taskId": "home"}}]},
       note("aboutSection", "aboutFieldSet", "About This Page", "aboutRichText",
-        "Your uploads, newest first, and the row results of the selected one (the newest unless you pick another). "
+        "Your uploads and grid edits, newest first, and the row results of the selected one (the newest unless you pick another). "
         "A run works in the background: while the status is Uploaded, Queued or Running, click <b>Refresh</b> in a minute to see more rows. "
         "When a validation run shows no INVALID rows, click <b>Apply</b> on that upload to run the same file for real. "
         "<b>VALID</b>/<b>INVALID</b>: validation run, nothing changed. <b>DONE</b>/<b>FAILED</b>: real run."),
@@ -214,7 +218,7 @@ results = {"id": "bulkRoleResults", "securityDomains": ["ManageCOMSShellOrgs"],
         {"type": "grid", "id": "uploadsGrid", "gridType": "LIST", "multiViewStylingEnabled": True, "autoPaging": True, "enabled": False, "excelExportEnabled": True,
          "rowVariableName": "up", "rows": "<% " + UPL + " %>", "label": "My Uploads",
          "columns": [txt("colUploaded", "Uploaded", "<% (up.uploadedAt ?? '').replace('T', ' ').replace('Z', ' UTC') %>"),
-                     txt("colFile", "File", "<% up.fileName ?? up.descriptor ?? '' %>"),
+                     txt("colFile", "File or Edit", "<% up.fileName ?? (up.summary ?? (up.descriptor ?? '')) %>"),
                      txt("colMode", "Run", "<% (up.runMode ?? '') == 'APPLY' ? 'Real run' : 'Validate only' %>"),
                      txt("colStatus", "Status", "<% up.status ?? '' %>"),
                      txt("colEffective", "Effective Date", "<% up.effectiveDate ?? '' %>"),
@@ -233,8 +237,8 @@ results = {"id": "bulkRoleResults", "securityDomains": ["ManageCOMSShellOrgs"],
                      txt("colMessage", "Message", "<% rr.message ?? '' %>")]}]}]}]},
     "footer": FOOT, "pageType": "VIEW"}}
 save('bulkRoleResults', results)
-for cid, title, pills in [("BulkNextStepCard", "Next Step", [("Upload a file", "bulkRoleChanges"), ("View results", "bulkRoleResults")]),
-                          ("BulkRelatedCard", "Related", [("Download template", "bulkRoleTemplate"), ("View results", "bulkRoleResults")])]:
+for cid, title, pills in [("BulkNextStepCard", "Next Step", [("Upload a file", "bulkRoleChanges"), ("Edit in the app", "bulkRoleGrid"), ("View results", "bulkRoleResults")]),
+                          ("BulkRelatedCard", "Related", [("Edit in the app", "bulkRoleGrid"), ("Download template", "bulkRoleTemplate"), ("View results", "bulkRoleResults")])]:
     open(os.path.join(ROOT, 'cards', cid + '.card'), 'w').write(json.dumps({"id": cid, "header": {"title": title, "icon": "wd-accent-checkmarked-page"},
         "body": {"type": "pillCard", "pills": [{"label": l, "taskReference": {"taskId": t}} for l, t in pills]}}, indent=2, ensure_ascii=False) + '\n')
 actions_card = {"id": "BulkActionsPillCard", "parameters": ["batch"],
@@ -242,12 +246,14 @@ actions_card = {"id": "BulkActionsPillCard", "parameters": ["batch"],
   "body": {"type": "pillCard", "pills": [
     {"label": "↻ Refresh", "taskReference": {"taskId": "bulkRoleResults", "parameterBindings": {"batch": '<% batch ?? "" %>'}}},
     {"label": "Upload another file", "taskReference": {"taskId": "bulkRoleChanges"}},
+    {"label": "Edit in the app", "taskReference": {"taskId": "bulkRoleGrid"}},
     {"label": "Download template", "taskReference": {"taskId": "bulkRoleTemplate"}}]}}
 open(os.path.join(ROOT, 'cards', 'BulkActionsPillCard.card'), 'w').write(json.dumps(actions_card, indent=2, ensure_ascii=False) + '\n')
 
 # ── 4. Apply a validated upload without uploading it again ──
 B = "(queryParams.batch ?? '')"
-UP = "(size(storedUpload.data ?? []) > 0 ? storedUpload.data[0] : {})"
+UP = "(size(storedUpload.data ?? []) > 0 ? storedUpload.data[0] : (size(storedRun.data ?? []) > 0 ? storedRun.data[0] : {}))"
+GRIDRUN = "(size(storedUpload.data ?? []) == 0 && size(storedRun.data ?? []) > 0)"
 ROWS4 = "(list:flatten([storedRows0.data ?? [], storedRows1.data ?? []]).filter(x => { (x.runMode ?? '') == 'VALIDATE' }))"
 n4 = lambda r: "size(" + ROWS4 + ".filter(x => { x.result == '" + r + "' }))"
 APPLY_SUBMIT = """<%
@@ -273,6 +279,8 @@ apply = {"id": "bulkRoleApply", "securityDomains": ["ManageCOMSShellOrgs"],
   "endPoints": [WORKER,
     {"name": "storedUpload", "baseUrlType": "BUSINESS-OBJECT", "authType": "sso", "isCollection": True, "failOnStatusCodes": FOS([400, 403, 429]),
      "url": "<% '/comsBulkUploads?limit=1&batchRef=' + " + B + " %>"},
+    {"name": "storedRun", "baseUrlType": "BUSINESS-OBJECT", "authType": "sso", "isCollection": True, "failOnStatusCodes": FOS([400, 403, 429]),
+     "url": "<% '/comsBulkRuns?limit=1&batchRef=' + " + B + " %>"},
     {"name": "storedRows0", "baseUrlType": "BUSINESS-OBJECT", "authType": "sso", "isCollection": True, "failOnStatusCodes": FOS([400, 403, 429]),
      "url": "<% '/comsBulkRowResults?limit=100&offset=0&batchRef=' + " + B + " %>"},
     {"name": "storedRows1", "baseUrlType": "BUSINESS-OBJECT", "authType": "sso", "isCollection": True, "failOnStatusCodes": FOS([429]),
@@ -280,11 +288,11 @@ apply = {"id": "bulkRoleApply", "securityDomains": ["ManageCOMSShellOrgs"],
   "onSubmit": APPLY_SUBMIT,
   "outboundData": {"outboundEndPoints": [
     {"name": "markQueued", "baseUrlType": "BUSINESS-OBJECT", "httpMethod": "PATCH", "authType": "sso", "failOnStatusCodes": FOS([400, 403, 429]),
-     "url": "<% '/comsBulkUploads/' + (" + UP + ".id ?? '') %>",
+     "url": "<% (" + GRIDRUN + " ? '/comsBulkRuns/' : '/comsBulkUploads/') + (" + UP + ".id ?? '') %>",
      "values": [{"outboundPath": "status", "value": "<% 'Queued' %>"}, {"outboundPath": "runMode", "value": "<% 'APPLY' %>"},
                 {"outboundPath": "statusMessage", "value": "<% 'Real run requested by ' + (selectedWorker.descriptor ?? '') %>"}]},
     {"name": "launchBulk", "baseUrlType": "orchestration", "httpMethod": "POST", "authType": "sso", "failOnStatusCodes": FOS([400, 403, 429]),
-     "url": "<% '/BulkRoleApply/launch?ref=' + " + B + " + '&mode=APPLY&effectiveDate=' + (" + UP + ".effectiveDate ?? '') + '&changedBy=' + (selectedWorker.descriptor ?? '').urlEncode() + '&changedByWid=' + (selectedWorker.id ?? '') %>",
+     "url": "<% (" + GRIDRUN + " ? '/BulkRoleGridApply' : '/BulkRoleApply') + '/launch?ref=' + " + B + " + '&mode=APPLY&effectiveDate=' + (" + UP + ".effectiveDate ?? '') + '&changedBy=' + (selectedWorker.descriptor ?? '').urlEncode() + '&changedByWid=' + (selectedWorker.id ?? '') %>",
      "values": [{"outboundPath": "ref", "value": "<% " + B + " %>"}]}]},
   "presentation": {"headerSize": "STANDARD", "title": {"type": "title", "label": "ECO-COMS: Bulk Role Changes – Apply"},
     "cancelOverride": {"taskId": "bulkRoleResults"},
@@ -296,7 +304,7 @@ apply = {"id": "bulkRoleApply", "securityDomains": ["ManageCOMSShellOrgs"],
         "OK applies every VALID row of this upload in Workday's Assign Roles, with the effective date chosen when the file was validated. "
         "Changes that succeed are not undone if later rows fail. Each change is written to the Audit Log.", '#B45309', '⚠'),
       {"type": "layoutSection", "id": "detailSection", "children": [{"type": "fieldSet", "id": "detailFieldSet", "title": "Upload", "children": [
-        {"type": "text", "id": "fileNameText", "label": "File", "enabled": False, "value": "<% " + UP + ".fileName ?? (" + UP + ".descriptor ?? '') %>"},
+        {"type": "text", "id": "fileNameText", "label": "File or Edit", "enabled": False, "value": "<% " + UP + ".fileName ?? (" + UP + ".summary ?? (" + UP + ".descriptor ?? '')) %>"},
         {"type": "text", "id": "batchText", "label": "Batch reference", "enabled": False, "value": "<% " + B + " %>"},
         {"type": "text", "id": "statusText", "label": "Status", "enabled": False, "value": "<% " + UP + ".status ?? 'Not found' %>"},
         {"type": "text", "id": "effectiveDateText", "label": "Effective Date", "enabled": False, "value": "<% " + UP + ".effectiveDate ?? '' %>"},

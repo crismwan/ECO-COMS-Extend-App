@@ -18,6 +18,7 @@ run() { echo "== $*"; python3 "$@" | sed 's/^/   /'; }
 
 run tools/build_bulk_orchestration.py   # orchestration/BulkRoleApply.orchestration
 run tools/build_bulk_pages.py           # bulk template / upload / results / apply pages (+ empty messages)
+run tools/build_bulk_grid.py            # Bulk Edit Role Assignments (in-app grid)
 run tools/build_org_detail.py           # shellOrgDetail + Details buttons in Shell Org Manager
 run tools/build_request_lists.py        # My Assignable Role Requests, AAA Role Requests
 run tools/build_filter_pills.py         # pill filters, Home action cards, SOM summary, error page

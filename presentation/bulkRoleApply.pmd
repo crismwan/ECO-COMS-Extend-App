@@ -41,6 +41,24 @@
       "url": "<% '/comsBulkUploads?limit=1&batchRef=' + (queryParams.batch ?? '') %>"
     },
     {
+      "name": "storedRun",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "authType": "sso",
+      "isCollection": true,
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 403
+        },
+        {
+          "code": 429
+        }
+      ],
+      "url": "<% '/comsBulkRuns?limit=1&batchRef=' + (queryParams.batch ?? '') %>"
+    },
+    {
       "name": "storedRows0",
       "baseUrlType": "BUSINESS-OBJECT",
       "authType": "sso",
@@ -71,7 +89,7 @@
       "url": "<% '/comsBulkRowResults?limit=100&offset=100&batchRef=' + (queryParams.batch ?? '') %>"
     }
   ],
-  "onSubmit": "<%\n  let up = (size(storedUpload.data ?? []) > 0 ? storedUpload.data[0] : {});\n  confirmApplyCheckBox.clearError();\n  let valid = true;\n  if ((up.status ?? '') != 'Validated') {\n    confirmApplyCheckBox.setError('Only an upload with status Validated can be applied. This one is ' + (up.status ?? 'not found') + '.');\n    valid = false;\n  } else if (size((list:flatten([storedRows0.data ?? [], storedRows1.data ?? []]).filter(x => { (x.runMode ?? '') == 'VALIDATE' })).filter(x => { x.result == 'INVALID' })) > 0) {\n    confirmApplyCheckBox.setError('Fix the INVALID rows in the file and upload it again; a file with INVALID rows cannot be applied.');\n    valid = false;\n  } else if (size((list:flatten([storedRows0.data ?? [], storedRows1.data ?? []]).filter(x => { (x.runMode ?? '') == 'VALIDATE' })).filter(x => { x.result == 'VALID' })) == 0) {\n    confirmApplyCheckBox.setError('This upload has no VALID rows to apply.');\n    valid = false;\n  } else if (confirmApplyCheckBox.value != true) {\n    confirmApplyCheckBox.setError('Tick this to confirm the real run.');\n    valid = false;\n  }\n  valid;\n%>",
+  "onSubmit": "<%\n  let up = (size(storedUpload.data ?? []) > 0 ? storedUpload.data[0] : (size(storedRun.data ?? []) > 0 ? storedRun.data[0] : {}));\n  confirmApplyCheckBox.clearError();\n  let valid = true;\n  if ((up.status ?? '') != 'Validated') {\n    confirmApplyCheckBox.setError('Only an upload with status Validated can be applied. This one is ' + (up.status ?? 'not found') + '.');\n    valid = false;\n  } else if (size((list:flatten([storedRows0.data ?? [], storedRows1.data ?? []]).filter(x => { (x.runMode ?? '') == 'VALIDATE' })).filter(x => { x.result == 'INVALID' })) > 0) {\n    confirmApplyCheckBox.setError('Fix the INVALID rows in the file and upload it again; a file with INVALID rows cannot be applied.');\n    valid = false;\n  } else if (size((list:flatten([storedRows0.data ?? [], storedRows1.data ?? []]).filter(x => { (x.runMode ?? '') == 'VALIDATE' })).filter(x => { x.result == 'VALID' })) == 0) {\n    confirmApplyCheckBox.setError('This upload has no VALID rows to apply.');\n    valid = false;\n  } else if (confirmApplyCheckBox.value != true) {\n    confirmApplyCheckBox.setError('Tick this to confirm the real run.');\n    valid = false;\n  }\n  valid;\n%>",
   "outboundData": {
     "outboundEndPoints": [
       {
@@ -90,7 +108,7 @@
             "code": 429
           }
         ],
-        "url": "<% '/comsBulkUploads/' + ((size(storedUpload.data ?? []) > 0 ? storedUpload.data[0] : {}).id ?? '') %>",
+        "url": "<% ((size(storedUpload.data ?? []) == 0 && size(storedRun.data ?? []) > 0) ? '/comsBulkRuns/' : '/comsBulkUploads/') + ((size(storedUpload.data ?? []) > 0 ? storedUpload.data[0] : (size(storedRun.data ?? []) > 0 ? storedRun.data[0] : {})).id ?? '') %>",
         "values": [
           {
             "outboundPath": "status",
@@ -122,7 +140,7 @@
             "code": 429
           }
         ],
-        "url": "<% '/BulkRoleApply/launch?ref=' + (queryParams.batch ?? '') + '&mode=APPLY&effectiveDate=' + ((size(storedUpload.data ?? []) > 0 ? storedUpload.data[0] : {}).effectiveDate ?? '') + '&changedBy=' + (selectedWorker.descriptor ?? '').urlEncode() + '&changedByWid=' + (selectedWorker.id ?? '') %>",
+        "url": "<% ((size(storedUpload.data ?? []) == 0 && size(storedRun.data ?? []) > 0) ? '/BulkRoleGridApply' : '/BulkRoleApply') + '/launch?ref=' + (queryParams.batch ?? '') + '&mode=APPLY&effectiveDate=' + ((size(storedUpload.data ?? []) > 0 ? storedUpload.data[0] : (size(storedRun.data ?? []) > 0 ? storedRun.data[0] : {})).effectiveDate ?? '') + '&changedBy=' + (selectedWorker.descriptor ?? '').urlEncode() + '&changedByWid=' + (selectedWorker.id ?? '') %>",
         "values": [
           {
             "outboundPath": "ref",
@@ -195,9 +213,9 @@
                 {
                   "type": "text",
                   "id": "fileNameText",
-                  "label": "File",
+                  "label": "File or Edit",
                   "enabled": false,
-                  "value": "<% (size(storedUpload.data ?? []) > 0 ? storedUpload.data[0] : {}).fileName ?? ((size(storedUpload.data ?? []) > 0 ? storedUpload.data[0] : {}).descriptor ?? '') %>"
+                  "value": "<% (size(storedUpload.data ?? []) > 0 ? storedUpload.data[0] : (size(storedRun.data ?? []) > 0 ? storedRun.data[0] : {})).fileName ?? ((size(storedUpload.data ?? []) > 0 ? storedUpload.data[0] : (size(storedRun.data ?? []) > 0 ? storedRun.data[0] : {})).summary ?? ((size(storedUpload.data ?? []) > 0 ? storedUpload.data[0] : (size(storedRun.data ?? []) > 0 ? storedRun.data[0] : {})).descriptor ?? '')) %>"
                 },
                 {
                   "type": "text",
@@ -211,14 +229,14 @@
                   "id": "statusText",
                   "label": "Status",
                   "enabled": false,
-                  "value": "<% (size(storedUpload.data ?? []) > 0 ? storedUpload.data[0] : {}).status ?? 'Not found' %>"
+                  "value": "<% (size(storedUpload.data ?? []) > 0 ? storedUpload.data[0] : (size(storedRun.data ?? []) > 0 ? storedRun.data[0] : {})).status ?? 'Not found' %>"
                 },
                 {
                   "type": "text",
                   "id": "effectiveDateText",
                   "label": "Effective Date",
                   "enabled": false,
-                  "value": "<% (size(storedUpload.data ?? []) > 0 ? storedUpload.data[0] : {}).effectiveDate ?? '' %>"
+                  "value": "<% (size(storedUpload.data ?? []) > 0 ? storedUpload.data[0] : (size(storedRun.data ?? []) > 0 ? storedRun.data[0] : {})).effectiveDate ?? '' %>"
                 },
                 {
                   "type": "text",

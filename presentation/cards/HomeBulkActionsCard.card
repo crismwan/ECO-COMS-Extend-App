@@ -2,12 +2,18 @@
   "id": "HomeBulkActionsCard",
   "header": {
     "title": "Bulk Role Changes",
-    "subtitle": "Add or remove positions from a CSV file.",
+    "subtitle": "Add or remove positions in bulk.",
     "icon": "wd-accent-checkmarked-page"
   },
   "body": {
     "type": "pillCard",
     "pills": [
+      {
+        "label": "Edit in the App",
+        "taskReference": {
+          "taskId": "bulkRoleGrid"
+        }
+      },
       {
         "label": "Upload File",
         "taskReference": {

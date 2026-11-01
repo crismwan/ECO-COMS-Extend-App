@@ -110,6 +110,28 @@
           "endsFlow": true
         }
       ]
+    },
+    {
+      "id": "bulkRoleGridFlow",
+      "flowSteps": [
+        {
+          "id": "bulkRoleGridStep",
+          "taskId": "bulkRoleGrid",
+          "startsFlow": true,
+          "transitions": [
+            {
+              "order": "a",
+              "value": "bulkRoleGridResultsStep",
+              "condition": "true"
+            }
+          ]
+        },
+        {
+          "id": "bulkRoleGridResultsStep",
+          "taskId": "bulkRoleResults",
+          "endsFlow": true
+        }
+      ]
     }
   ],
   "tasks": [
@@ -335,6 +357,13 @@
       "routingPattern": "/bulkTemplateUpload",
       "page": {
         "id": "bulkTemplateUpload"
+      }
+    },
+    {
+      "id": "bulkRoleGrid",
+      "routingPattern": "/bulkRoleGrid",
+      "page": {
+        "id": "bulkRoleGrid"
       }
     }
   ],

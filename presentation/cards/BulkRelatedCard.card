@@ -8,6 +8,12 @@
     "type": "pillCard",
     "pills": [
       {
+        "label": "Edit in the app",
+        "taskReference": {
+          "taskId": "bulkRoleGrid"
+        }
+      },
+      {
         "label": "Download template",
         "taskReference": {
           "taskId": "bulkRoleTemplate"
