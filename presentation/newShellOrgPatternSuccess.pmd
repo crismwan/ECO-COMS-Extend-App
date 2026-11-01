@@ -77,7 +77,7 @@
                   "type": "readOnlyText",
                   "id": "patternHint",
                   "label": " ",
-                  "value": "The Shell Org Pattern has been submitted to Workday via the orchestration. Check Shell Org Manager for the new pattern."
+                  "value": "A record of this change is in the Audit Log. The card below shows your most recent pattern created through ECO-COMS."
                 }
               ]
             }
