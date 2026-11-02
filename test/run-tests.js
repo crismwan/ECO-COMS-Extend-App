@@ -46,7 +46,7 @@ const ORCH = `${API}/orchestrate/v1/apps/${APP_ID}/orchestrations`;
 const argv = process.argv.slice(2);
 const arg = (name) => { const i = argv.indexOf(name); return i === -1 ? null : argv[i + 1]; };
 const VERBOSE = argv.includes('--verbose');
-const SUITES_ALL = ['static', 'smoke', 'full', 'cleanup', 'isu', 'repair', 'seconduser', 'purge', 'demoseed', 'datacheck'];
+const SUITES_ALL = ['static', 'smoke', 'full', 'cleanup', 'isu', 'repair', 'seconduser', 'purge', 'demoseed', 'datacheck', 'probe'];
 const suiteArg = arg('--suite') || argv.find((a) => !a.startsWith('--') && SUITES_ALL.some((s) => a.split(',').includes(s))) || 'smoke';
 const SUITES = suiteArg.split(',').map((s) => s.trim()).filter(Boolean);
 for (const s of SUITES) if (!SUITES_ALL.includes(s)) { console.error(`Unknown suite "${s}". Use: ${SUITES_ALL.join(', ')}`); process.exit(2); }
@@ -1314,6 +1314,30 @@ async function purge(token) {
   if (!APPLY) pass('Purge.dryRun', `would delete every record in ${PURGE_COLLECTIONS.join(', ')}`);
 }
 
+// ═══ Probe: read-only facts for building application pattern schemas ═══
+async function probe(token) {
+  console.log('\n-- Probe (read-only) --');
+  const apps = (await request('GET', `${BO}/comsApplications?limit=100`, token)).data || [];
+  console.log(`comsApplications: ${apps.length}`);
+  apps.forEach((a) => console.log('   APP ' + JSON.stringify(a)));
+  const orgs = (await wql(token, "SELECT code, cf_active1 FROM topLevelOrganizations WHERE code contains 'X:'", 10000)).data || [];
+  const byApp = {};
+  for (const o of orgs) {
+    const c = String(o.code || ''); const parts = c.split(':');
+    if (parts.length < 2) continue;
+    const app = parts[0] + ':' + parts[1]; const pre = parts[2] || '(none)';
+    byApp[app] = byApp[app] || {}; byApp[app][pre] = (byApp[app][pre] || 0) + 1;
+  }
+  Object.keys(byApp).sort().forEach((a) => console.log(`   CODE ${a}  prefixes: ${Object.entries(byApp[a]).map(([k, v]) => k + '=' + v).join(', ')}`));
+  for (const q of ['Subject', 'Course Subject', 'Course']) {
+    try {
+      const r = await request('GET', `${API}/wql/v1/dataSources?search=${encodeURIComponent(q)}&limit=20`, token);
+      (r.data || []).forEach((d) => console.log(`   DS[${q}] ${d.alias || ''} | ${d.descriptor || d.name || ''}`));
+    } catch (e) { console.log(`   DS[${q}] error ${e.message.slice(0, 120)}`); }
+  }
+  pass('Probe', `${apps.length} application record(s), ${Object.keys(byApp).length} application codes in Workday`);
+}
+
 // ═══ Data check: every record has the fields its pages display (read-only) ═══
 async function dataCheck(token) {
   console.log('\n-- Data check (read-only) --');
@@ -1488,6 +1512,7 @@ async function demoSeed(token, me) {
         if (live.includes('purge')) await purge(token);
         if (live.includes('demoseed')) await demoSeed(token, me);
         if (live.includes('datacheck')) await dataCheck(token);
+        if (live.includes('probe')) await probe(token);
       }
     }
   }
