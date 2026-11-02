@@ -88,7 +88,8 @@ def end_with(ref):
     e = copy.deepcopy(base['_value']['end'])
     e['_value']['body'] = {"_type": ["Opt", "DataRefBody"], "_value": {"_type": "DataRefBody", "_value": {
         "dataRef": {"_type": ["Expr", "Data"], "_value": {"type": {"_type": "Type", "_value": "Data"}, "source": {"_type": "String", "_value": ref}, "isAuto": {"_type": "Boolean", "_value": False}}},
-        "contentType": {"_type": ["Opt", "String"], "_value": {"_type": "String", "_value": "application/json"}}}}}
+        # compiler 3.406 (App Hub build 2026-11-02): contentType must be an expression, not a plain String
+        "contentType": {"_type": ["Opt", ["Expr", "String"]], "_value": S('"application/json"')}}}}
     return e
 
 
