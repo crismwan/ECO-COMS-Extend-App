@@ -377,7 +377,7 @@
         },
         {
           "type": "layoutSection",
-          "id": "navSection",
+          "id": "contentSection",
           "children": [
             {
               "type": "button",
@@ -386,13 +386,7 @@
                 "taskId": "assignableRoleManagerView"
               },
               "action": "LINK"
-            }
-          ]
-        },
-        {
-          "type": "layoutSection",
-          "id": "contentSection",
-          "children": [
+            },
             {
               "type": "fieldSet",
               "id": "aboutFieldSet",

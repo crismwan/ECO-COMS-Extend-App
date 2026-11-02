@@ -1,0 +1,19 @@
+{
+  "adminProvisioning": "descSection",
+  "adminProvisioningView": "descSection",
+  "assignableRoleManager": "contentSection",
+  "assignableRoleManagerView": "descSection",
+  "auditLogViewer": "aboutSection",
+  "bulkRoleChanges": "aboutSection",
+  "bulkRoleGrid": "aboutSection",
+  "bulkRoleResults": "aboutSection",
+  "bulkRoleTemplate": "aboutSection",
+  "bulkTemplateUpload": "aboutSection",
+  "deleteAssignableRole": "descSection",
+  "editRoleAssignment": "aboutSection",
+  "fuhLandingPage": "overviewSection",
+  "iscRoleRequestsView": "actionsInfoSection",
+  "newSchemaPattern": "aboutSection",
+  "newShellOrg": "aboutSection",
+  "shellOrgDetail": "aboutSection"
+}

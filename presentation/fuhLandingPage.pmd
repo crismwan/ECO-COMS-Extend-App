@@ -24,7 +24,7 @@
         },
         {
           "type": "layoutSection",
-          "id": "navSection",
+          "id": "overviewSection",
           "children": [
             {
               "type": "button",
@@ -34,13 +34,7 @@
               },
               "action": "LINK",
               "suppressDiscardDialog": true
-            }
-          ]
-        },
-        {
-          "type": "layoutSection",
-          "id": "overviewSection",
-          "children": [
+            },
             {
               "type": "fieldSet",
               "id": "overviewFieldSet",

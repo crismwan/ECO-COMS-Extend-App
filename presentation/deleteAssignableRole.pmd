@@ -230,7 +230,7 @@
         },
         {
           "type": "layoutSection",
-          "id": "navSection",
+          "id": "descSection",
           "children": [
             {
               "type": "button",
@@ -251,13 +251,7 @@
               "action": "LINK",
               "suppressDiscardDialog": true,
               "visible": "<% queryParams.view == 'aaa' %>"
-            }
-          ]
-        },
-        {
-          "type": "layoutSection",
-          "id": "descSection",
-          "children": [
+            },
             {
               "type": "fieldSet",
               "id": "aboutFieldSet",

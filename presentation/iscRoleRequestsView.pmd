@@ -136,7 +136,7 @@
         },
         {
           "type": "layoutSection",
-          "id": "navSection",
+          "id": "actionsInfoSection",
           "children": [
             {
               "type": "button",
@@ -145,13 +145,7 @@
                 "taskId": "home"
               },
               "action": "LINK"
-            }
-          ]
-        },
-        {
-          "type": "layoutSection",
-          "id": "actionsInfoSection",
-          "children": [
+            },
             {
               "type": "fieldSet",
               "id": "actionsInfoFieldSet",

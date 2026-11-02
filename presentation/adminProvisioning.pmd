@@ -350,7 +350,7 @@
         },
         {
           "type": "layoutSection",
-          "id": "navSection",
+          "id": "descSection",
           "children": [
             {
               "type": "button",
@@ -370,13 +370,7 @@
                 }
               },
               "action": "AUXILIARY"
-            }
-          ]
-        },
-        {
-          "type": "layoutSection",
-          "id": "descSection",
-          "children": [
+            },
             {
               "type": "fieldSet",
               "id": "aboutFieldSet",

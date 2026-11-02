@@ -72,7 +72,7 @@
         },
         {
           "type": "layoutSection",
-          "id": "navSection",
+          "id": "aboutSection",
           "children": [
             {
               "type": "button",
@@ -82,13 +82,7 @@
               "taskReference": {
                 "taskId": "bulkRoleTemplate"
               }
-            }
-          ]
-        },
-        {
-          "type": "layoutSection",
-          "id": "aboutSection",
-          "children": [
+            },
             {
               "type": "fieldSet",
               "id": "aboutFieldSet",

@@ -99,7 +99,7 @@
         },
         {
           "type": "layoutSection",
-          "id": "navSection",
+          "id": "aboutSection",
           "children": [
             {
               "type": "button",
@@ -113,13 +113,7 @@
                   "appName": "<% queryParams.appName ?? '' %>"
                 }
               }
-            }
-          ]
-        },
-        {
-          "type": "layoutSection",
-          "id": "aboutSection",
-          "children": [
+            },
             {
               "type": "fieldSet",
               "id": "aboutFieldSet",

@@ -100,7 +100,7 @@
         },
         {
           "type": "layoutSection",
-          "id": "navSection",
+          "id": "aboutSection",
           "children": [
             {
               "type": "button",
@@ -110,13 +110,7 @@
               "taskReference": {
                 "taskId": "home"
               }
-            }
-          ]
-        },
-        {
-          "type": "layoutSection",
-          "id": "aboutSection",
-          "children": [
+            },
             {
               "type": "fieldSet",
               "id": "aboutFieldSet",

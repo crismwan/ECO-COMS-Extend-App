@@ -92,7 +92,7 @@
         },
         {
           "type": "layoutSection",
-          "id": "navSection",
+          "id": "descSection",
           "children": [
             {
               "type": "button",
@@ -101,13 +101,7 @@
                 "taskId": "home"
               },
               "action": "LINK"
-            }
-          ]
-        },
-        {
-          "type": "layoutSection",
-          "id": "descSection",
-          "children": [
+            },
             {
               "type": "fieldSet",
               "id": "aboutFieldSet",

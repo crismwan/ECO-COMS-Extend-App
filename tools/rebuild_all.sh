@@ -17,6 +17,7 @@ fi
 run() { echo "== $*"; python3 "$@" | sed 's/^/   /'; }
 
 run tools/title_banner.py --restore    # put Workday titles back so every builder sees ordinary pages
+run tools/merge_nav_about.py --restore  # back links in their own navSection again
 run tools/build_bulk_orchestration.py   # orchestration/BulkRoleApply.orchestration
 run tools/build_bulk_pages.py           # bulk template / upload / results / apply pages (+ empty messages)
 run tools/build_bulk_grid.py            # Bulk Edit Role Assignments (in-app grid)
@@ -29,6 +30,7 @@ run tools/title_case.py                 # headings and card titles in Title Case
 run tools/consistency.py                # titles, back links, help text size, success pages
 run tools/add_empty_messages.py         # "Nothing to show" texts
 run tools/polish.py                     # final pass: labels, About boxes, names, Pacific times
+run tools/merge_nav_about.py           # back links at the top of the About box
 run tools/title_banner.py              # white title tile instead of Workday's square page banner
 
 if [[ "${1:-}" == "--check" ]]; then
