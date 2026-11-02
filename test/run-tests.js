@@ -494,6 +494,18 @@ async function smoke(token, me) {
     pass('WQL.shellOrgsExist', `shell orgs found (total ${r.total ?? '>0'})`);
   });
 
+  // Pages call WQL without a limit. If Workday's default page is smaller than the data, lists and
+  // lookups are cut off silently: compare rows returned with no limit against the total.
+  await test('WQL.noLimitReturnsAll', async () => {
+    const q = "SELECT workdayID, code FROM topLevelOrganizations WHERE code contains 'X:'";
+    const r = await request('GET', `${WQL}?query=${encodeURIComponent(q)}`, token);
+    const n = (r.data || []).length;
+    const p = await request('GET', `${WQL}?query=${encodeURIComponent('SELECT cf_PositionID FROM allPositions WHERE supervisoryOrganization is not empty')}`, token);
+    const msg = `no limit: shell orgs ${n} of ${r.total}, positions ${(p.data || []).length} of ${p.total}`;
+    if (n < (r.total ?? n) || (p.data || []).length < (p.total ?? 0)) throw new Error(`${msg}: pages that omit limit see only part of the data`);
+    pass('WQL.noLimitReturnsAll', msg);
+  });
+
   let audits = [];
   await test('Audit.read', async () => {
     audits = await readAll(token, 'comsAuditLogs');
