@@ -1347,7 +1347,7 @@ async function probe(token) {
     console.log(`   FIELDS total ${all.length}`);
     all.filter((x) => /subtype|organization type|^type/i.test(`${x.alias} ${x.descriptor}`)).forEach((x) => console.log(`   FIELD ${x.alias} | ${x.descriptor} | ${x.type || ''}`));
   } catch (e) { console.log('   FIELDS error ' + e.message.slice(0, 200)); }
-  for (const f of ['organizationSubtype', 'subtype', 'organizationSubtype1']) {
+  for (const f of ['subtype']) {
     try {
       const r = await wql(token, `SELECT code, ${f} FROM topLevelOrganizations WHERE code contains 'X:'`, 10000);
       const cnt = {};
