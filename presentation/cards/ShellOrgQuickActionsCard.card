@@ -15,7 +15,7 @@
         }
       },
       {
-        "label": "Add Pattern",
+        "label": "Add Pattern (Clockwork)",
         "taskReference": {
           "taskId": "createShellOrgPatternWizard"
         }

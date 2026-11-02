@@ -87,7 +87,7 @@ X:SET and X:PHA have no organization type in Workday yet, so Workday refuses the
 
 ### Create a Clockwork shell org pattern
 
-1. On the RBAC Hub, click **Add Pattern**. The **Add New Shell Org Pattern** wizard opens. (From the other applications' page, choose X:CLW and click **Open the Clockwork Pattern Form**.)
+1. On the RBAC Hub, click **Add Pattern (Clockwork)**. The **Add New Shell Org Pattern** wizard opens. (From the other applications' page, choose X:CLW and click **Open the Clockwork Pattern Form**.)
 2. On **Pattern Details**, pick the **Application** first. Fields you fill before choosing an application show "Please select an Application before entering pattern attributes."
 3. Fill the pattern attributes. **Pattern Name Preview** updates as you type, and each field is checked as you go.
 

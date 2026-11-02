@@ -95,7 +95,7 @@ print('isc ok')
 # ── Home: the four stacked-button sections become one row of action cards (main action first) ──
 ACTIONS = [
   ("HomeShellOrgActionsCard", "Shell Organizations", "Add orgs and patterns, manage status.", "wd-accent-worksheets",
-   [("Open Shell Org Manager", "shellOrgManager"), ("Add Shell Org", "createShellOrgWizard"), ("Add Pattern", "createShellOrgPatternWizard")]),
+   [("Open Shell Org Manager", "shellOrgManager"), ("Add Shell Org", "createShellOrgWizard"), ("Add Pattern (Clockwork)", "createShellOrgPatternWizard")]),
   ("HomeBulkActionsCard", "Bulk Role Changes", "Add or remove positions in bulk.", "wd-accent-checkmarked-page",
    [("Edit in the App", "bulkRoleGrid"), ("Upload File", "bulkRoleChanges"), ("Download Template", "bulkRoleTemplate"), ("View Results", "bulkRoleResults")]),
   ("HomeRoleRequestActionsCard", "Role Requests", "Request roles and follow their review.", "wd-accent-clipboard-checklist",
@@ -119,7 +119,7 @@ print('home ok')
 # ── Shell Org Manager Summary tab: count cards + quick actions in one row, chart below; counts follow the selected application ──
 qa = {"id": "ShellOrgQuickActionsCard", "header": {"title": "Quick Actions", "subtitle": "Create in Workday", "icon": "wd-accent-worksheets"},
       "body": {"type": "pillCard", "pills": [{"label": "Add Shell Org", "taskReference": {"taskId": "createShellOrgWizard"}},
-                                             {"label": "Add Pattern", "taskReference": {"taskId": "createShellOrgPatternWizard"}}]}}
+                                             {"label": "Add Pattern (Clockwork)", "taskReference": {"taskId": "createShellOrgPatternWizard"}}]}}
 open(os.path.join(ROOT, 'cards', 'ShellOrgQuickActionsCard.card'), 'w').write(json.dumps(qa, indent=2, ensure_ascii=False) + '\n')
 PFX = "(empty(queryParams.appCode) ? 'X:' : queryParams.appCode + ':')"
 ORGS = "(allShellOrgs.data ?? []).filter(o => { (o.code ?? '').startsWith(" + PFX + ") && !(o.code ?? '').contains(':PATTERN') })"
