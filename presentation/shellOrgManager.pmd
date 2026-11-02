@@ -228,7 +228,8 @@
                           "appName": "<% app.appCode %>"
                         }
                       }
-                    }
+                    },
+                    "sortableAndFilterable": "true"
                   },
                   {
                     "type": "column",
@@ -271,7 +272,8 @@
                           "appName": "<% app.appCode %>"
                         }
                       }
-                    }
+                    },
+                    "sortableAndFilterable": "true"
                   }
                 ],
                 "excelExportEnabled": true
@@ -388,7 +390,8 @@
                     },
                     "excel": {
                       "enabled": false
-                    }
+                    },
+                    "sortableAndFilterable": "true"
                   }
                 ],
                 "excelExportEnabled": true
@@ -519,7 +522,8 @@
                           "appName": "<% queryParams.appName ?? '' %>"
                         }
                       }
-                    }
+                    },
+                    "sortableAndFilterable": "true"
                   },
                   {
                     "type": "column",
@@ -546,7 +550,8 @@
                     },
                     "excel": {
                       "enabled": false
-                    }
+                    },
+                    "sortableAndFilterable": "true"
                   }
                 ],
                 "excelExportEnabled": true
@@ -630,7 +635,8 @@
                           "appName": "<% queryParams.appName ?? '' %>"
                         }
                       }
-                    }
+                    },
+                    "sortableAndFilterable": "true"
                   },
                   {
                     "type": "column",
@@ -657,7 +663,8 @@
                     },
                     "excel": {
                       "enabled": false
-                    }
+                    },
+                    "sortableAndFilterable": "true"
                   }
                 ],
                 "excelExportEnabled": true
@@ -806,7 +813,8 @@
                     },
                     "excel": {
                       "enabled": false
-                    }
+                    },
+                    "sortableAndFilterable": "true"
                   }
                 ],
                 "excelExportEnabled": true

@@ -338,7 +338,8 @@
                             "batch": "<% up.batchRef ?? '' %>"
                           }
                         }
-                      }
+                      },
+                      "sortableAndFilterable": "true"
                     }
                   ]
                 }

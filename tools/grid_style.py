@@ -3,7 +3,7 @@
 
 Every read-only grid gets the same presentation:
   - gridType LIST + multiViewStylingEnabled (the list look used on most pages)
-  - every column sortable and filterable, except button columns (nothing to sort)
+  - every column sortable and filterable, buttons included (an unsortable header sits lower and looks misaligned)
   - button columns last, in their own order (Withdraw's Select column was first)
   - VIEW pages: autoPaging and Excel export (export is view-page only, developer.workday.com "grid")
   - EDIT pages: doNotAdd / doNotRemove, so a display grid shows no +/- icons (readOnly doesn't hide them)
@@ -22,10 +22,8 @@ def style(g, page, edit):
     g['gridType'] = 'LIST'
     g['multiViewStylingEnabled'] = True
     for c in g.get('columns', []):
-        if (c.get('cellTemplate') or {}).get('type') == 'button':
-            c.pop('sortableAndFilterable', None)
-        else:
-            c['sortableAndFilterable'] = 'true'
+        # every column, buttons too: Workday draws headers of unsortable columns lower, so mixed grids look ragged (live 2026-11-02)
+        c['sortableAndFilterable'] = 'true'
     cols = g.get('columns', [])
     is_btn = lambda c: (c.get('cellTemplate') or {}).get('type') == 'button' and (c.get('cellTemplate') or {}).get('action') != 'LINK'   # a link is the row's name
     g['columns'] = [c for c in cols if not is_btn(c)] + [c for c in cols if is_btn(c)]

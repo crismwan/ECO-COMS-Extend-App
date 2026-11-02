@@ -321,7 +321,8 @@
                             "againReason": "<% role.denialReason ?? '' %>"
                           }
                         }
-                      }
+                      },
+                      "sortableAndFilterable": "true"
                     }
                   ],
                   "excelExportEnabled": true

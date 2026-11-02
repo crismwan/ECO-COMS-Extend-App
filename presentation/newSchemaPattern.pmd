@@ -177,7 +177,8 @@
                             "appCode": "<% pa.appCode %>"
                           }
                         }
-                      }
+                      },
+                      "sortableAndFilterable": "true"
                     },
                     {
                       "type": "column",
@@ -219,7 +220,8 @@
                             "appCode": "<% pa.appCode %>"
                           }
                         }
-                      }
+                      },
+                      "sortableAndFilterable": "true"
                     }
                   ],
                   "gridType": "LIST",
