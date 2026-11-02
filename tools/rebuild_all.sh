@@ -16,6 +16,7 @@ fi
 
 run() { echo "== $*"; python3 "$@" | sed 's/^/   /'; }
 
+run tools/title_banner.py --restore    # put Workday titles back so every builder sees ordinary pages
 run tools/build_bulk_orchestration.py   # orchestration/BulkRoleApply.orchestration
 run tools/build_bulk_pages.py           # bulk template / upload / results / apply pages (+ empty messages)
 run tools/build_bulk_grid.py            # Bulk Edit Role Assignments (in-app grid)

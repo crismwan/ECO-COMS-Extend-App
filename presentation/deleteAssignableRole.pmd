@@ -211,15 +211,23 @@
   },
   "presentation": {
     "pageType": "EDIT",
-    "headerSize": "STANDARD",
-    "title": {
-      "type": "title",
-      "label": "<% 'ECO-COMS: Withdraw ' + (queryParams.view == 'aaa' ? 'AAA ' : (queryParams.view == 'assignable' ? 'Assignable ' : '')) + 'Role Request' %>"
-    },
+    "headerSize": "HIDDEN",
     "body": {
       "type": "basicFormLayout",
       "id": "deleteForm",
       "sections": [
+        {
+          "type": "layoutSection",
+          "id": "titleBannerSection",
+          "children": [
+            {
+              "type": "richText",
+              "id": "titleBannerRichText",
+              "enabled": false,
+              "value": "<% '<span style=\"color:#0055B3;font-size:24px\"><b>' + ('ECO-COMS: Withdraw ' + (queryParams.view == 'aaa' ? 'AAA ' : (queryParams.view == 'assignable' ? 'Assignable ' : '')) + 'Role Request') + '</b></span>' %>"
+            }
+          ]
+        },
         {
           "type": "layoutSection",
           "id": "navSection",

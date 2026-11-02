@@ -50,11 +50,7 @@
     ]
   },
   "presentation": {
-    "headerSize": "STANDARD",
-    "title": {
-      "type": "title",
-      "label": "ECO-COMS: Upload Bulk Template Version"
-    },
+    "headerSize": "HIDDEN",
     "cancelOverride": {
       "taskId": "bulkRoleTemplate"
     },
@@ -62,6 +58,18 @@
       "type": "basicFormLayout",
       "id": "templateUploadForm",
       "sections": [
+        {
+          "type": "layoutSection",
+          "id": "titleBannerSection",
+          "children": [
+            {
+              "type": "richText",
+              "id": "titleBannerRichText",
+              "enabled": false,
+              "value": "<span style=\"color:#0055B3;font-size:24px\"><b>ECO-COMS: Upload Bulk Template Version</b></span>"
+            }
+          ]
+        },
         {
           "type": "layoutSection",
           "id": "navSection",

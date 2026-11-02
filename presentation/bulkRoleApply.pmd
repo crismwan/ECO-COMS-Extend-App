@@ -151,11 +151,7 @@
     ]
   },
   "presentation": {
-    "headerSize": "STANDARD",
-    "title": {
-      "type": "title",
-      "label": "ECO-COMS: Bulk Role Changes – Apply"
-    },
+    "headerSize": "HIDDEN",
     "cancelOverride": {
       "taskId": "bulkRoleResults"
     },
@@ -163,6 +159,18 @@
       "type": "basicFormLayout",
       "id": "bulkApplyForm",
       "sections": [
+        {
+          "type": "layoutSection",
+          "id": "titleBannerSection",
+          "children": [
+            {
+              "type": "richText",
+              "id": "titleBannerRichText",
+              "enabled": false,
+              "value": "<span style=\"color:#0055B3;font-size:24px\"><b>ECO-COMS: Bulk Role Changes – Apply</b></span>"
+            }
+          ]
+        },
         {
           "type": "layoutSection",
           "id": "navSection",

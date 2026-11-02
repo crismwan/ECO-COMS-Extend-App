@@ -78,17 +78,24 @@
     }
   ],
   "presentation": {
-    "headerSize": "STANDARD",
+    "headerSize": "HIDDEN",
     "pageType": "VIEW",
-    "title": {
-      "type": "title",
-      "label": "<% empty(queryParams.appName) ? 'ECO-COMS: Shell Org Manager' : ('ECO-COMS: Shell Org Manager – ' + queryParams.appName) %>",
-      "enabled": true
-    },
     "body": {
       "type": "basicFormLayout",
       "id": "shellOrgManagerForm",
       "sections": [
+        {
+          "type": "layoutSection",
+          "id": "titleBannerSection",
+          "children": [
+            {
+              "type": "richText",
+              "id": "titleBannerRichText",
+              "enabled": false,
+              "value": "<% '<span style=\"color:#0055B3;font-size:24px\"><b>' + (empty(queryParams.appName) ? 'ECO-COMS: Shell Org Manager' : ('ECO-COMS: Shell Org Manager – ' + queryParams.appName)) + '</b></span>' %>"
+            }
+          ]
+        },
         {
           "type": "layoutSection",
           "id": "navSection",

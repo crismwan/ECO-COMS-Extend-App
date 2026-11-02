@@ -117,15 +117,23 @@
   },
   "presentation": {
     "pageType": "VIEW",
-    "headerSize": "STANDARD",
-    "title": {
-      "type": "title",
-      "label": "<% 'ECO-COMS: ISC Queue – ' + (comsRequestStats.statusOrDefault(queryParams.status ?? '') == 'All' ? 'All' : (comsRequestStats.statusOrDefault(queryParams.status ?? '') == 'Pending ISC Review' ? 'Pending' : comsRequestStats.statusOrDefault(queryParams.status ?? ''))) + ' ' + (queryParams.view == 'aaa' ? 'AAA Role Requests' : (queryParams.view == 'assignable' ? 'Assignable Role Requests' : 'Role Requests')) %>"
-    },
+    "headerSize": "HIDDEN",
     "body": {
       "type": "basicFormLayout",
       "id": "iscRoleRequestsViewForm",
       "sections": [
+        {
+          "type": "layoutSection",
+          "id": "titleBannerSection",
+          "children": [
+            {
+              "type": "richText",
+              "id": "titleBannerRichText",
+              "enabled": false,
+              "value": "<% '<span style=\"color:#0055B3;font-size:24px\"><b>' + ('ECO-COMS: ISC Queue – ' + (comsRequestStats.statusOrDefault(queryParams.status ?? '') == 'All' ? 'All' : (comsRequestStats.statusOrDefault(queryParams.status ?? '') == 'Pending ISC Review' ? 'Pending' : comsRequestStats.statusOrDefault(queryParams.status ?? ''))) + ' ' + (queryParams.view == 'aaa' ? 'AAA Role Requests' : (queryParams.view == 'assignable' ? 'Assignable Role Requests' : 'Role Requests'))) + '</b></span>' %>"
+            }
+          ]
+        },
         {
           "type": "layoutSection",
           "id": "navSection",

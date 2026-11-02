@@ -80,15 +80,23 @@
     }
   ],
   "presentation": {
-    "headerSize": "STANDARD",
-    "title": {
-      "type": "title",
-      "label": "<% 'ECO-COMS: Shell Organization – ' + (size(((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))) > 0 ? (((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))[0].organizationByName.descriptor ?? ((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))[0].code) : (queryParams.orgName ?? '')) %>"
-    },
+    "headerSize": "HIDDEN",
     "body": {
       "type": "basicFormLayout",
       "id": "orgDetailForm",
       "sections": [
+        {
+          "type": "layoutSection",
+          "id": "titleBannerSection",
+          "children": [
+            {
+              "type": "richText",
+              "id": "titleBannerRichText",
+              "enabled": false,
+              "value": "<% '<span style=\"color:#0055B3;font-size:24px\"><b>' + ('ECO-COMS: Shell Organization – ' + (size(((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))) > 0 ? (((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))[0].organizationByName.descriptor ?? ((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))[0].code) : (queryParams.orgName ?? ''))) + '</b></span>' %>"
+            }
+          ]
+        },
         {
           "type": "layoutSection",
           "id": "navSection",

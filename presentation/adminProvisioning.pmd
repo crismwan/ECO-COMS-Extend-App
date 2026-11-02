@@ -331,16 +331,23 @@
     ]
   },
   "presentation": {
-    "headerSize": "STANDARD",
-    "title": {
-      "type": "title",
-      "label": "ECO-COMS: Submit AAA Role Request",
-      "enabled": true
-    },
+    "headerSize": "HIDDEN",
     "body": {
       "type": "basicFormLayout",
       "id": "adminProvisioningForm",
       "sections": [
+        {
+          "type": "layoutSection",
+          "id": "titleBannerSection",
+          "children": [
+            {
+              "type": "richText",
+              "id": "titleBannerRichText",
+              "enabled": false,
+              "value": "<span style=\"color:#0055B3;font-size:24px\"><b>ECO-COMS: Submit AAA Role Request</b></span>"
+            }
+          ]
+        },
         {
           "type": "layoutSection",
           "id": "navSection",

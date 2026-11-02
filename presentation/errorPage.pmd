@@ -2,15 +2,23 @@
   "id": "errorPage",
   "endPoints": [],
   "presentation": {
-    "headerSize": "STANDARD",
-    "title": {
-      "type": "title",
-      "label": "ECO-COMS: Something went wrong"
-    },
+    "headerSize": "HIDDEN",
     "body": {
       "type": "basicFormLayout",
       "id": "errorPageForm",
       "sections": [
+        {
+          "type": "layoutSection",
+          "id": "titleBannerSection",
+          "children": [
+            {
+              "type": "richText",
+              "id": "titleBannerRichText",
+              "enabled": false,
+              "value": "<span style=\"color:#0055B3;font-size:24px\"><b>ECO-COMS: Something went wrong</b></span>"
+            }
+          ]
+        },
         {
           "type": "layoutSection",
           "id": "errorSection",

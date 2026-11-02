@@ -190,11 +190,7 @@
     ]
   },
   "presentation": {
-    "headerSize": "STANDARD",
-    "title": {
-      "type": "title",
-      "label": "ECO-COMS: Bulk Edit Role Assignments"
-    },
+    "headerSize": "HIDDEN",
     "cancelOverride": {
       "taskId": "home"
     },
@@ -203,6 +199,18 @@
       "type": "basicFormLayout",
       "id": "bulkGridForm",
       "sections": [
+        {
+          "type": "layoutSection",
+          "id": "titleBannerSection",
+          "children": [
+            {
+              "type": "richText",
+              "id": "titleBannerRichText",
+              "enabled": false,
+              "value": "<span style=\"color:#0055B3;font-size:24px\"><b>ECO-COMS: Bulk Edit Role Assignments</b></span>"
+            }
+          ]
+        },
         {
           "type": "layoutSection",
           "id": "navSection",

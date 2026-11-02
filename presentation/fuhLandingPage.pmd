@@ -5,16 +5,23 @@
   ],
   "endPoints": [],
   "presentation": {
-    "headerSize": "STANDARD",
-    "title": {
-      "type": "title",
-      "label": "ECO-COMS: Functional Unit Hierarchy Administration",
-      "enabled": true
-    },
+    "headerSize": "HIDDEN",
     "body": {
       "type": "basicFormLayout",
       "id": "fuhLandingPageForm",
       "sections": [
+        {
+          "type": "layoutSection",
+          "id": "titleBannerSection",
+          "children": [
+            {
+              "type": "richText",
+              "id": "titleBannerRichText",
+              "enabled": false,
+              "value": "<span style=\"color:#0055B3;font-size:24px\"><b>ECO-COMS: Functional Unit Hierarchy Administration</b></span>"
+            }
+          ]
+        },
         {
           "type": "layoutSection",
           "id": "navSection",
