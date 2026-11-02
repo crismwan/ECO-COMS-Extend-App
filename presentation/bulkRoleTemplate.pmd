@@ -45,7 +45,7 @@
           "code": 429
         }
       ],
-      "url": "<% let t = templateCount.total ?? 0; '/comsBulkTemplates?limit=1&offset=' + (t > 0 ? t - 1 : 0) %>"
+      "url": "<% let t = templateCount.total ?? 0; '/comsBulkTemplates?limit=100&offset=' + ((t - 100) > 0 ? (t - 100) : 0) %>"
     }
   ],
   "presentation": {
@@ -122,7 +122,7 @@
                   "children": [
                     {
                       "type": "loop",
-                      "on": "<% latestTemplate.data ?? [] %>",
+                      "on": "<% (size(latestTemplate.data ?? []) == 0 ? [] : list:sort(latestTemplate.data ?? [], 'asOf', false).subList(0, 1)) %>",
                       "as": "tf",
                       "children": [
                         {

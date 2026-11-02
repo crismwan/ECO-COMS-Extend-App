@@ -35,7 +35,9 @@ template = {"id": "bulkRoleTemplate", "securityDomains": ["ManageCOMSShellOrgs"]
                  "bestEffort": "true", "failOnStatusCodes": FOS([429])},
                 {"name": "latestTemplate", "baseUrlType": "BUSINESS-OBJECT", "authType": "sso", "isCollection": True, "bestEffort": "true",
                  "failOnStatusCodes": FOS([429]),
-                 "url": "<% let t = templateCount.total ?? 0; '/comsBulkTemplates?limit=1&offset=' + (t > 0 ? t - 1 : 0) %>"}],
+                 # the newest 100 versions (collection is oldest first); the page shows only the newest by asOf (product owner 2026-11-02:
+                 # the attachment collection returned every version despite limit=1, live 2026-11-02)
+                 "url": "<% let t = templateCount.total ?? 0; '/comsBulkTemplates?limit=100&offset=' + ((t - 100) > 0 ? (t - 100) : 0) %>"}],
   "presentation": {"headerSize": "STANDARD", "title": {"type": "title", "label": "ECO-COMS: Bulk Role Changes – Template"},
     "body": {"type": "basicFormLayout", "id": "bulkTemplateForm", "sections": [
       nav(("homeButton", "← Home", "home")),
@@ -50,7 +52,7 @@ template = {"id": "bulkRoleTemplate", "securityDomains": ["ManageCOMSShellOrgs"]
       {"type": "layoutSection", "id": "excelSection", "children": [
         {"type": "fieldSet", "id": "excelFieldSet", "title": "Excel Template", "children": [
           {"type": "fileUploader", "id": "templateFileUploader", "label": "Validated Excel template", "enabled": False, "children": [
-            {"type": "loop", "on": "<% latestTemplate.data ?? [] %>", "as": "tf", "children": [
+            {"type": "loop", "on": "<% (size(latestTemplate.data ?? []) == 0 ? [] : list:sort(latestTemplate.data ?? [], 'asOf', false).subList(0, 1)) %>", "as": "tf", "children": [
               {"type": "fileUploaderRow", "id": "templateFileRow", "allowRemove": False,
                "fileName": "<% tf.fileName %>", "fileType": "<% fileType:getFileType(tf.fileName) %>",
                "contentArea": [{"type": "text", "id": "templateInfoText", "label": "Version", "enabled": False,
