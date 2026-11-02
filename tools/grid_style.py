@@ -9,7 +9,7 @@ Every read-only grid gets the same presentation:
   - VIEW pages: autoPaging and Excel export (export is view-page only, developer.workday.com "grid")
   - EDIT pages: doNotAdd / doNotRemove, so a display grid shows no +/- icons (readOnly doesn't hide them)
   - `enabled` is left as each page has it (related-action links on instanceList cells must keep working)
-Editable grids (EDITABLE below) keep Workday's spreadsheet look. Idempotent; runs after polish.py.
+Editable grids (EDITABLE below) get the list look too, but no sorting and their own +/- settings. Idempotent; runs after polish.py.
 """
 import glob, json, os
 ROOT = os.path.join(os.path.dirname(__file__), '..', 'presentation')
@@ -20,7 +20,11 @@ changed = []
 
 
 def style(g, page, edit):
-    if (page, g.get('id')) in EDITABLE: return
+    if (page, g.get('id')) in EDITABLE:
+        # same list look as every other grid (product owner 2026-11-02); no sorting, and the +/- settings stay as built
+        g['gridType'] = 'LIST'
+        g['multiViewStylingEnabled'] = True
+        return
     before = json.dumps(g, sort_keys=True)
     g['gridType'] = 'LIST'
     g['multiViewStylingEnabled'] = True

@@ -487,7 +487,9 @@
                         ]
                       }
                     }
-                  ]
+                  ],
+                  "gridType": "LIST",
+                  "multiViewStylingEnabled": true
                 }
               ]
             }
@@ -617,7 +619,9 @@
                         ]
                       }
                     }
-                  ]
+                  ],
+                  "gridType": "LIST",
+                  "multiViewStylingEnabled": true
                 }
               ]
             }
