@@ -15,6 +15,7 @@ How it works (product owner 2026-11-01: grid and Excel side by side; validate fi
   within the 60-second page limit.
 """
 import json, os
+from app_grid import app_columns
 ROOT = os.path.join(os.path.dirname(__file__), '..', 'presentation')
 MAX = 50
 FOS = lambda codes: [{"code": c} for c in codes]
@@ -124,10 +125,13 @@ REF = "batchRefHidden.value"
 MODE = "(realRunCheckBox.value == true ? 'APPLY' : 'VALIDATE')"
 COUNT = "(" + REMOVES + ".size() + " + ADDS + ".size())"
 
-page = {"id": "bulkRoleGrid", "securityDomains": ["ManageCOMSShellOrgs"], "include": ["comsValidations.script"],
+page = {"id": "bulkRoleGrid", "securityDomains": ["ManageCOMSShellOrgs"], "include": ["comsValidations.script", "comsPatterns.script"],
   "endPoints": [WORKER,
     {"name": "shellRoles", "baseUrlType": "workday-wql", "url": "data", "authType": "sso", "bestEffort": "true",
      "wqlQuery": {"queryId": "allShellAssignableRolesinTenant"}, "failOnStatusCodes": FOS([400, 429])},
+    # application names for the picker (same columns as Add Pattern and Shell Org Manager)
+    {"name": "comsApplications", "baseUrlType": "BUSINESS-OBJECT", "url": "/comsApplications?limit=100", "authType": "sso",
+     "isCollection": True, "bestEffort": "true", "failOnStatusCodes": FOS([400, 429])},
     POS_SEARCH],
   "onSubmit": SUBMIT,
   "outboundData": {"outboundEndPoints": [
@@ -164,10 +168,7 @@ page = {"id": "bulkRoleGrid", "securityDomains": ["ManageCOMSShellOrgs"], "inclu
         {"type": "fieldSet", "id": "pickFieldSet", "title": "Choose an Application", "children": [
           {"type": "grid", "id": "appPickGrid", "rowVariableName": "pa", "doNotAdd": True, "doNotRemove": True, "label": "Applications",
            "rows": "<% " + APPS + ".map(a => { {'appCode': a} }) %>",
-           "columns": [txt("colApp", "Application", "<% pa.appCode %>"),
-                       {"type": "column", "columnId": "colEdit", "label": "Edit", "cellTemplate": {"type": "button", "id": "editAppButton", "label": "Edit",
-                        "action": "AUXILIARY", "suppressDiscardDialog": True,
-                        "taskReference": {"taskId": "bulkRoleGrid", "parameterBindings": {"appCode": "<% pa.appCode %>"}}}}]}]}]},
+           "columns": app_columns("pa", "bulkRoleGrid", {"appCode": "<% pa.appCode %>"}, "Edit", show_format=False)}]}]},
       {"type": "layoutSection", "id": "runSection", "render": "<% !empty(queryParams.appCode) %>", "children": [
         {"type": "fieldSet", "id": "runFieldSet", "title": "Run", "children": [
           {"type": "hidden", "id": "batchRefHidden", "value": "<% 'GRID' + date:now().format('yyyyMMddHHmmss') + (selectedWorker.id ?? '').substring(0, 6) %>"},

@@ -294,26 +294,6 @@
                     },
                     {
                       "type": "column",
-                      "columnId": "colOpen",
-                      "label": "Results",
-                      "excel": {
-                        "enabled": false
-                      },
-                      "cellTemplate": {
-                        "type": "button",
-                        "id": "openResultsButton",
-                        "label": "View",
-                        "action": "AUXILIARY",
-                        "taskReference": {
-                          "taskId": "bulkRoleResults",
-                          "parameterBindings": {
-                            "batch": "<% up.batchRef ?? '' %>"
-                          }
-                        }
-                      }
-                    },
-                    {
-                      "type": "column",
                       "columnId": "colApply",
                       "label": "Apply",
                       "excel": {
@@ -339,6 +319,26 @@
                         ]
                       },
                       "sortableAndFilterable": "true"
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colOpen",
+                      "label": "Results",
+                      "excel": {
+                        "enabled": false
+                      },
+                      "cellTemplate": {
+                        "type": "button",
+                        "id": "openResultsButton",
+                        "label": "View",
+                        "action": "AUXILIARY",
+                        "taskReference": {
+                          "taskId": "bulkRoleResults",
+                          "parameterBindings": {
+                            "batch": "<% up.batchRef ?? '' %>"
+                          }
+                        }
+                      }
                     }
                   ]
                 }

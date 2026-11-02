@@ -16,6 +16,7 @@ Server side, AddShellOrgPattern re-checks prefix, field count, upper case and sp
 (tools/patch_pattern_orchestrations.py).
 """
 import json, os
+from app_grid import app_columns
 ROOT = os.path.join(os.path.dirname(__file__), '..', 'presentation')
 MAX_FIELDS = 7
 FOS = lambda codes: [{"code": c} for c in codes]
@@ -89,20 +90,6 @@ for i in range(MAX_FIELDS):
                    "visible": f"<% comsPatterns.fieldCount({SCH}) > {i} %>",
                    "placeholder": f"<% comsPatterns.fieldCount({SCH}) > {i} ? ('e.g. ' + {SCH}.fields[{i}].example) : '' %>",
                    "onChange": field_on_change(i)})
-
-def app_columns(var, link_task, link_params, button_label):
-    """Application grid columns shared by this page's picker and Shell Org Manager's Application Patterns tab
-    (product owner 2026-11-02: the two should match): Application ID as a link, Name, Pattern Format, then the action."""
-    ref = {"taskId": link_task, "parameterBindings": link_params}
-    return [{"type": "column", "columnId": "colAppId", "label": "Application ID",
-             "cellTemplate": {"type": "button", "id": "appIdLinkButton", "action": "LINK", "label": f"<% {var}.appCode ?? '' %>", "suppressDiscardDialog": True, "taskReference": ref}},
-            {"type": "column", "columnId": "colAppTitle", "label": "Name", "cellTemplate": {"type": "text", "id": "appTitleText", "enabled": False,
-             "value": f"<% (comsPatterns.recordFor(comsApplications.data, {var}.appCode) ?? {{'name': ''}}).name ?? '' %>"}},
-            {"type": "column", "columnId": "colAppFormat", "label": "Pattern Format", "cellTemplate": {"type": "text", "id": "appFormatText", "enabled": False,
-             "value": f"<% comsPatterns.summary(comsApplications.data, {var}.appCode) %>"}},
-            {"type": "column", "columnId": "colAppAction", "label": button_label, "cellTemplate": {"type": "button", "id": "appActionButton", "label": button_label,
-             "action": "AUXILIARY", "suppressDiscardDialog": True, "taskReference": dict(ref)}}]
-
 
 PICK_ROWS = "(comsApplications.data ?? []).filter(x => { !empty(x.patternSchema) }).map(x => { x.appId }).distinct().sort().map(a => { {'appCode': a} })"
 txt = lambda cid, label, value: {"type": "column", "columnId": cid, "label": label,

@@ -4,7 +4,8 @@
     "ManageCOMSShellOrgs"
   ],
   "include": [
-    "comsValidations.script"
+    "comsValidations.script",
+    "comsPatterns.script"
   ],
   "endPoints": [
     {
@@ -34,6 +35,22 @@
       "wqlQuery": {
         "queryId": "allShellAssignableRolesinTenant"
       },
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "name": "comsApplications",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "url": "/comsApplications?limit=100",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
       "failOnStatusCodes": [
         {
           "code": 400
@@ -272,23 +289,41 @@
                   "columns": [
                     {
                       "type": "column",
-                      "columnId": "colApp",
-                      "label": "Application",
+                      "columnId": "colAppId",
+                      "label": "Application ID",
+                      "cellTemplate": {
+                        "type": "button",
+                        "id": "appIdLinkButton",
+                        "action": "LINK",
+                        "label": "<% pa.appCode ?? '' %>",
+                        "suppressDiscardDialog": true,
+                        "taskReference": {
+                          "taskId": "bulkRoleGrid",
+                          "parameterBindings": {
+                            "appCode": "<% pa.appCode %>"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colAppTitle",
+                      "label": "Name",
                       "cellTemplate": {
                         "type": "text",
-                        "id": "colAppText",
+                        "id": "appTitleText",
                         "enabled": false,
-                        "value": "<% pa.appCode %>"
+                        "value": "<% (comsPatterns.recordFor(comsApplications.data, pa.appCode) ?? {'name': ''}).name ?? '' %>"
                       },
                       "sortableAndFilterable": "true"
                     },
                     {
                       "type": "column",
-                      "columnId": "colEdit",
+                      "columnId": "colAppAction",
                       "label": "Edit",
                       "cellTemplate": {
                         "type": "button",
-                        "id": "editAppButton",
+                        "id": "appActionButton",
                         "label": "Edit",
                         "action": "AUXILIARY",
                         "suppressDiscardDialog": true,

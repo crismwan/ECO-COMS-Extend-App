@@ -4,6 +4,7 @@
 Every read-only grid gets the same presentation:
   - gridType LIST + multiViewStylingEnabled (the list look used on most pages)
   - every column sortable and filterable, except button columns (nothing to sort)
+  - button columns last, in their own order (Withdraw's Select column was first)
   - VIEW pages: autoPaging and Excel export (export is view-page only, developer.workday.com "grid")
   - EDIT pages: doNotAdd / doNotRemove, so a display grid shows no +/- icons (readOnly doesn't hide them)
   - `enabled` is left as each page has it (related-action links on instanceList cells must keep working)
@@ -25,6 +26,9 @@ def style(g, page, edit):
             c.pop('sortableAndFilterable', None)
         else:
             c['sortableAndFilterable'] = 'true'
+    cols = g.get('columns', [])
+    is_btn = lambda c: (c.get('cellTemplate') or {}).get('type') == 'button' and (c.get('cellTemplate') or {}).get('action') != 'LINK'   # a link is the row's name
+    g['columns'] = [c for c in cols if not is_btn(c)] + [c for c in cols if is_btn(c)]
     if edit:
         g['doNotAdd'] = True
         g['doNotRemove'] = True

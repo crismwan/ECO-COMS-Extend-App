@@ -288,25 +288,6 @@
                   "columns": [
                     {
                       "type": "column",
-                      "id": "colSelect",
-                      "columnId": "colSelect",
-                      "label": "Withdraw",
-                      "cellTemplate": {
-                        "type": "button",
-                        "action": "AUXILIARY",
-                        "label": "Select",
-                        "taskReference": {
-                          "taskId": "deleteAssignableRole",
-                          "parameterBindings": {
-                            "roleId": "<% role.id %>",
-                            "roleName": "<% role.roleName %>",
-                            "view": "<% queryParams.view ?? '' %>"
-                          }
-                        }
-                      }
-                    },
-                    {
-                      "type": "column",
                       "id": "colOrgApp",
                       "columnId": "colOrgApp",
                       "label": "Organization / Application",
@@ -405,6 +386,25 @@
                         "enabled": false
                       },
                       "sortableAndFilterable": "true"
+                    },
+                    {
+                      "type": "column",
+                      "id": "colSelect",
+                      "columnId": "colSelect",
+                      "label": "Withdraw",
+                      "cellTemplate": {
+                        "type": "button",
+                        "action": "AUXILIARY",
+                        "label": "Select",
+                        "taskReference": {
+                          "taskId": "deleteAssignableRole",
+                          "parameterBindings": {
+                            "roleId": "<% role.id %>",
+                            "roleName": "<% role.roleName %>",
+                            "view": "<% queryParams.view ?? '' %>"
+                          }
+                        }
+                      }
                     }
                   ],
                   "doNotAdd": true,
