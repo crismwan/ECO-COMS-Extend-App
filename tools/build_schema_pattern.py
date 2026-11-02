@@ -90,7 +90,21 @@ for i in range(MAX_FIELDS):
                    "placeholder": f"<% comsPatterns.fieldCount({SCH}) > {i} ? ('e.g. ' + {SCH}.fields[{i}].example) : '' %>",
                    "onChange": field_on_change(i)})
 
-PICK_ROWS = "(comsApplications.data ?? []).filter(x => { !empty(x.patternSchema) }).map(x => { x.appId }).distinct().sort().map(a => { {'appCode': a, 'name': (comsPatterns.recordFor(comsApplications.data, a) ?? {'name': ''}).name ?? '', 'format': comsPatterns.summary(comsApplications.data, a)} })"
+def app_columns(var, link_task, link_params, button_label):
+    """Application grid columns shared by this page's picker and Shell Org Manager's Application Patterns tab
+    (product owner 2026-11-02: the two should match): Application ID as a link, Name, Pattern Format, then the action."""
+    ref = {"taskId": link_task, "parameterBindings": link_params}
+    return [{"type": "column", "columnId": "colAppId", "label": "Application ID",
+             "cellTemplate": {"type": "button", "id": "appIdLinkButton", "action": "LINK", "label": f"<% {var}.appCode ?? '' %>", "suppressDiscardDialog": True, "taskReference": ref}},
+            {"type": "column", "columnId": "colAppTitle", "label": "Name", "cellTemplate": {"type": "text", "id": "appTitleText", "enabled": False,
+             "value": f"<% (comsPatterns.recordFor(comsApplications.data, {var}.appCode) ?? {{'name': ''}}).name ?? '' %>"}},
+            {"type": "column", "columnId": "colAppFormat", "label": "Pattern Format", "cellTemplate": {"type": "text", "id": "appFormatText", "enabled": False,
+             "value": f"<% comsPatterns.summary(comsApplications.data, {var}.appCode) %>"}},
+            {"type": "column", "columnId": "colAppAction", "label": button_label, "cellTemplate": {"type": "button", "id": "appActionButton", "label": button_label,
+             "action": "AUXILIARY", "suppressDiscardDialog": True, "taskReference": dict(ref)}}]
+
+
+PICK_ROWS = "(comsApplications.data ?? []).filter(x => { !empty(x.patternSchema) }).map(x => { x.appId }).distinct().sort().map(a => { {'appCode': a} })"
 txt = lambda cid, label, value: {"type": "column", "columnId": cid, "label": label,
                                  "cellTemplate": {"type": "text", "id": cid + "Text", "enabled": False, "value": value}}
 
@@ -126,12 +140,7 @@ page = {"id": "newSchemaPattern", "securityDomains": ["ManageCOMSShellOrgs"], "i
         {"type": "fieldSet", "id": "pickFieldSet", "title": "Choose an Application", "children": [
           {"type": "grid", "id": "appPickGrid", "rowVariableName": "pa", "doNotAdd": True, "doNotRemove": True, "label": "Applications",
            "rows": "<% " + PICK_ROWS + " %>",
-           "columns": [txt("colApp", "Application", "<% pa.appCode %>"),
-                       txt("colName", "Name", "<% pa.name ?? '' %>"),
-                       txt("colFormat", "Pattern Format", "<% pa.format %>"),
-                       {"type": "column", "columnId": "colAdd", "label": "Add Pattern", "cellTemplate": {"type": "button", "id": "addAppButton", "label": "Add Pattern",
-                        "action": "AUXILIARY", "suppressDiscardDialog": True,
-                        "taskReference": {"taskId": "newSchemaPattern", "parameterBindings": {"appCode": "<% pa.appCode %>"}}}}]}]}]},
+           "columns": app_columns("pa", "newSchemaPattern", {"appCode": "<% pa.appCode %>"}, "Add Pattern")}]}]},
       {"type": "layoutSection", "id": "noSchemaSection", "render": f"<% !empty(queryParams.appCode) && empty({SCH}) %>", "children": [
         {"type": "fieldSet", "id": "noSchemaFieldSet", "title": "No Pattern Format", "children": [
           {"type": "text", "id": "noSchemaText", "label": "Pattern Format", "enabled": False,
@@ -231,7 +240,7 @@ d = json.load(open(p))
 if not any(e['name'] == 'comsApplications' for e in d['endPoints']):
     d['endPoints'].append({"name": "comsApplications", "baseUrlType": "BUSINESS-OBJECT", "url": "/comsApplications?limit=100", "authType": "sso",
                            "isCollection": True, "failOnStatusCodes": FOS([400, 403, 429])})
-APPS_WITH_FORM = "(comsApplications.data ?? []).filter(a => { !empty(a.patternSchema) || a.appId == 'X:CLW' })"
+APPS_WITH_FORM = "(comsApplications.data ?? []).filter(a => { !empty(a.patternSchema) })"
 CLW_PATTERNS = ("(shellOrgPatterns.data ?? []).filter(p => { (p.code ?? '').startsWith('X:') && (p.code ?? '').contains(':PATTERN:') })"
                 ".filter(p => { p.code.startsWith((queryParams.appCode ?? '') + ':PATTERN') })")
 PREFS = ("((comsApplications.data ?? []).filter(a => { a.appId == (queryParams.appCode ?? '') }).map(a => { a.namePrefix ?? '' }).join(',')).split(',')")
@@ -249,6 +258,7 @@ def tab(n):
             n['value'] = ABOUT
         elif i == 'appsGrid':
             n['rows'] = "<% " + APPS_WITH_FORM + ".map(a => { a.appId }).distinct().sort().map(appCode => { {'appCode': appCode} }) %>"
+            n['columns'] = app_columns('app', 'shellOrgManager', {"appCode": "<% app.appCode %>", "appName": "<% app.appCode %>"}, 'Manage')
         elif i == 'patternsGrid':
             n['rows'] = "<% " + PATTERNS + " %>"
             n['visible'] = "<% !empty(queryParams.appCode) && size(" + PATTERNS + ") > 0 %>"
@@ -258,5 +268,7 @@ def tab(n):
     elif isinstance(n, list):
         for v in n: tab(v)
 tab(d['presentation'])
+if 'comsPatterns.script' not in d.get('include', []):
+    d['include'] = d.get('include', []) + ['comsPatterns.script']
 open(p, 'w').write(json.dumps(d, indent=2, ensure_ascii=False) + '\n')
 print('shellOrgManager: patterns tab lists applications with a pattern format')

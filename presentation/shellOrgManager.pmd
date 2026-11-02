@@ -205,7 +205,7 @@
                 "gridType": "LIST",
                 "multiViewStylingEnabled": true,
                 "id": "appsGrid",
-                "rows": "<% (comsApplications.data ?? []).filter(a => { !empty(a.patternSchema) || a.appId == 'X:CLW' }).map(a => { a.appId }).distinct().sort().map(appCode => { {'appCode': appCode} }) %>",
+                "rows": "<% (comsApplications.data ?? []).filter(a => { !empty(a.patternSchema) }).map(a => { a.appId }).distinct().sort().map(appCode => { {'appCode': appCode} }) %>",
                 "rowVariableName": "app",
                 "enabled": false,
                 "label": "Applications",
@@ -213,13 +213,14 @@
                 "columns": [
                   {
                     "type": "column",
-                    "id": "colAppName",
-                    "columnId": "colAppName",
+                    "columnId": "colAppId",
                     "label": "Application ID",
                     "cellTemplate": {
                       "type": "button",
+                      "id": "appIdLinkButton",
                       "action": "LINK",
                       "label": "<% app.appCode ?? '' %>",
+                      "suppressDiscardDialog": true,
                       "taskReference": {
                         "taskId": "shellOrgManager",
                         "parameterBindings": {
@@ -227,20 +228,42 @@
                           "appName": "<% app.appCode %>"
                         }
                       }
-                    },
-                    "excel": {
-                      "enabled": false
                     }
                   },
                   {
                     "type": "column",
-                    "id": "colAppActions",
-                    "columnId": "colAppActions",
+                    "columnId": "colAppTitle",
+                    "label": "Name",
+                    "cellTemplate": {
+                      "type": "text",
+                      "id": "appTitleText",
+                      "enabled": false,
+                      "value": "<% (comsPatterns.recordFor(comsApplications.data, app.appCode) ?? {'name': ''}).name ?? '' %>"
+                    },
+                    "sortableAndFilterable": "true"
+                  },
+                  {
+                    "type": "column",
+                    "columnId": "colAppFormat",
+                    "label": "Pattern Format",
+                    "cellTemplate": {
+                      "type": "text",
+                      "id": "appFormatText",
+                      "enabled": false,
+                      "value": "<% comsPatterns.summary(comsApplications.data, app.appCode) %>"
+                    },
+                    "sortableAndFilterable": "true"
+                  },
+                  {
+                    "type": "column",
+                    "columnId": "colAppAction",
                     "label": "Manage",
                     "cellTemplate": {
                       "type": "button",
-                      "action": "AUXILIARY",
+                      "id": "appActionButton",
                       "label": "Manage",
+                      "action": "AUXILIARY",
+                      "suppressDiscardDialog": true,
                       "taskReference": {
                         "taskId": "shellOrgManager",
                         "parameterBindings": {
@@ -248,9 +271,6 @@
                           "appName": "<% app.appCode %>"
                         }
                       }
-                    },
-                    "excel": {
-                      "enabled": false
                     }
                   }
                 ],
@@ -808,5 +828,8 @@
         ]
       }
     ]
-  }
+  },
+  "include": [
+    "comsPatterns.script"
+  ]
 }
