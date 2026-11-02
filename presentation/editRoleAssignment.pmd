@@ -86,7 +86,7 @@
               "type": "richText",
               "id": "titleBannerRichText",
               "enabled": false,
-              "value": "<% '<span style=\"color:#0055B3;font-size:24px\"><b>' + ('ECO-COMS: Manage Role Assignment – ' + (queryParams.roleName ?? 'Role')) + '</b></span>' %>"
+              "value": "<% '<span style=\"color:#0055B3;font-size:24px\"><b>' + ('ECO-COMS: Manage Role Assignment – ' + (queryParams.roleName ?? 'Role')).replace('<', '&lt;') + '</b></span>' %>"
             }
           ]
         },

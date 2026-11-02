@@ -29,7 +29,7 @@ def tile_value(label):
     label = label.strip()
     if label.startswith('<%'):
         expr = label[2:-2].strip()
-        return f"<% '<span style=\"{STYLE}\"><b>' + ({expr}) + '</b></span>' %>"
+        return f"<% '<span style=\"{STYLE}\"><b>' + ({expr}).replace('<', '&lt;') + '</b></span>' %>"
     return f'<span style="{STYLE}"><b>{html.escape(label)}</b></span>'
 
 

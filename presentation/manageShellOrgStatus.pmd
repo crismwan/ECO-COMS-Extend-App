@@ -74,7 +74,7 @@
               "type": "richText",
               "id": "titleBannerRichText",
               "enabled": false,
-              "value": "<% '<span style=\"color:#0055B3;font-size:24px\"><b>' + ('ECO-COMS: Change Status – ' + (queryParams.orgCode ?? 'Organization')) + '</b></span>' %>"
+              "value": "<% '<span style=\"color:#0055B3;font-size:24px\"><b>' + ('ECO-COMS: Change Status – ' + (queryParams.orgCode ?? 'Organization')).replace('<', '&lt;') + '</b></span>' %>"
             }
           ]
         },
