@@ -169,6 +169,23 @@ Those three domains have `enabledForOrchestrationSecurity: true`. After deployin
 
 ---
 
+## 3c. Worker Profile section and Home cards (since 2026-11-02)
+
+These are in the app but stay hidden until an administrator turns them on in each tenant. Security changes are yours to make.
+
+**COMS section on the Worker Profile** (profile group `COMSWorkerProfile`, tasks My Role Requests and Submit Role Request):
+1. Grant the domain **View: COMS Profile Section** (`ViewCOMSProfileGroup`) to the groups that should see it: AAA holders, security administrators, and whichever group you use for shell assignable-role holders (shell roles have no security group of their own, so a user-based or role-based group is needed). Then Activate Pending Security Policy Changes.
+2. **App Manager** → the app → Configure → Profile Groups grid → "COMS for Worker Profile" → tick **Display in Profile**, set the order.
+3. **Configure Profile Group** → COMS → Display in Profile → add My Role Requests and Submit Role Request.
+4. Check: open your own worker profile and look for **COMS** in the left pane.
+
+The section is context-free: on someone else's profile it still opens *your* requests.
+
+**Home cards** (`cards/*.cardtenantsetting`):
+- **ECO-COMS: My Role Requests**: pending and approved-this-month counts for the signed-in user; buttons Open My Requests and Submit a Request. Domain: ManageCOMSAssignableRoles.
+- **ECO-COMS: ISC Queue**: number waiting for review and the oldest request date; button Open ISC Queue. Domain: MaintainCOMSAssignableRoles.
+- Add them where Workday lets you place Extend cards (e.g. the Home page card configuration), and pick these by label. My Role Requests reads up to 100 of your own requests; ISC Queue reads the newest 100 requests (Workday allows two data calls per card).
+
 ## 4. ISC review business process from scratch
 
 Business process type: **Review COMS Assignable Role Request** (`model/ReviewCOMSAssignableRoleRequest.businessprocess`, target COMSAssignableRole, secured by **Maintain: COMS Assignable Roles**, cancel allowed).

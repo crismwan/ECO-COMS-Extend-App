@@ -27,6 +27,12 @@ Open the app from Workday. The **ECO-COMS** hub opens on the **RBAC Hub** page. 
 
 Every page has one back link at the top (for example **← Home** or **← Shell Org Manager**). What you see depends on your security domains (see [Troubleshooting](#troubleshooting)).
 
+**Outside the app** (once your administrator turns them on):
+- **COMS** on your worker profile: **My Role Requests** and **Submit Role Request**.
+- **ECO-COMS: My Role Requests** card on Workday Home: how many of your requests are pending ISC review and how many were approved this month, with **Open My Requests** and **Submit a Request**.
+
+Long About boxes (Bulk Role Changes, the Template page and Add Pattern) start closed; click the heading to open them.
+
 In Workday's own search the app's tasks are **Shell Org Manager**, **Audit Log Viewer**, **ISC Queue**, **Submit Assignable Role Request**, **Submit AAA Role Request** and **Withdraw Role Request** (renamed 2026-11-01; the old names Assignable Role Manager, Admin Provisioning and All Pending Role Requests ISC no longer match).
 
 All times in the app are **Pacific time**, to the minute, with the zone shown (for example `2026-10-31 18:31 PDT`; `PST` in winter).
@@ -242,6 +248,7 @@ You can also tick **Real run** to validate and apply in one go, but validating f
 ### Where review work appears
 
 - **Your Workday inbox.** Each step arrives as an inbox item named "Review COMS Assignable Role Request: <role name>". The step help text explains what to check.
+- **ECO-COMS: ISC Queue** card on Workday Home (if your administrator added it): how many requests are waiting and the oldest request date, with **Open ISC Queue**.
 - **ECO-COMS → ISC Queue** card → **Open ISC Queue** (needs **Maintain: COMS Assignable Roles**). The page, **ECO-COMS: ISC Queue – Pending Role Requests**, opens on pending requests; use the **Request Type** (All requests, AAA roles, Assignable roles) and **Status** pills to change the view, and the title follows your choice.
   - Three cards at the top: **Pending**, **Overdue** (pending for more than 3 business days) and **Approved this month**.
   - **Status** pills: **Pending** (the default), **Approved**, **Denied**, **All**. **Showing** says how many requests match.

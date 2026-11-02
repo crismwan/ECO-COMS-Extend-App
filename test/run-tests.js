@@ -338,6 +338,11 @@ function staticSuite() {
   const reached = new Set(refs.map(([, t]) => t));
   for (const c of smd.errorPageConfigurations || []) reached.add(c.page?.id);
   const bpRoutes = new Set();
+  // App Hub build: a card definition may have at most 2 inbound endpoints (build error 2026-11-02)
+  for (const f of listFiles('presentation/cards').filter((x) => x.endsWith('.carddefinition'))) {
+    const n = (docs[f]?.endPoints || JSON.parse(fs.readFileSync(path.join(ROOT, f), 'utf8')).endPoints || []).length;
+    if (n > 2) err('cardEndpoints', `${f} has ${n} inbound endpoints; Workday allows 2 per card`);
+  }
   // card tenant settings (cards/*.cardtenantsetting) reach their card task by routePath
   for (const f of listFiles('cards').filter((x) => x.endsWith('.cardtenantsetting'))) { try { bpRoutes.add(JSON.parse(fs.readFileSync(path.join(ROOT, f), 'utf8')).routePath); } catch (_) {} }
   for (const f of listFiles('model').filter((x) => x.endsWith('.businessprocess'))) walk(docs[f] || {}, (n) => { if (typeof n.pageRoute === 'string') bpRoutes.add(n.pageRoute); });

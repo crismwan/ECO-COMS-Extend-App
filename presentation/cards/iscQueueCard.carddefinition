@@ -5,12 +5,12 @@
     "header": {
       "type": "cardHeader",
       "title": "ISC Queue",
-      "subtitle": "ECO-COMS · role requests to review",
+      "subtitle": "ECO-COMS · latest 100 role requests",
       "icon": "wd-accent-worksheets"
     },
     "body": {
       "type": "simpleCard",
-      "value": "<% let pending = list:flatten([requestPage0.data ?? [], requestPage1.data ?? [], requestPage2.data ?? []]).filter(r => { r.status == \"Pending ISC Review\" }); let dated = list:sort(pending.filter(r => { !empty(r.requestedDate) }), \"requestedDate\", true); size(pending) == 0 ? \"Nothing waiting for review.\" : (\"\" + size(pending) + \" waiting for review\" + (size(dated) == 0 ? \"\" : (\" · oldest requested \" + (\"\" + dated[0].requestedDate).substring(0, 10)))) %>"
+      "value": "<% let pending = (latestRequests.data ?? []).filter(r => { r.status == \"Pending ISC Review\" }); let dated = list:sort(pending.filter(r => { !empty(r.requestedDate) }), \"requestedDate\", true); size(pending) == 0 ? \"Nothing waiting for review.\" : (\"\" + size(pending) + \" waiting for review\" + (size(dated) == 0 ? \"\" : (\" · oldest requested \" + (\"\" + dated[0].requestedDate).substring(0, 10)))) %>"
     },
     "footer": [
       {
@@ -35,7 +35,7 @@
       ]
     },
     {
-      "name": "requestPage0",
+      "name": "latestRequests",
       "baseUrlType": "BUSINESS-OBJECT",
       "authType": "sso",
       "isCollection": true,
@@ -45,33 +45,7 @@
           "code": 429
         }
       ],
-      "url": "<% let t = requestCount.total ?? 0; \"/comsAssignableRoles?limit=100&offset=\" + (t > 0 ? 0 : t) %>"
-    },
-    {
-      "name": "requestPage1",
-      "baseUrlType": "BUSINESS-OBJECT",
-      "authType": "sso",
-      "isCollection": true,
-      "bestEffort": "true",
-      "failOnStatusCodes": [
-        {
-          "code": 429
-        }
-      ],
-      "url": "<% let t = requestCount.total ?? 0; \"/comsAssignableRoles?limit=100&offset=\" + (t > 100 ? 100 : t) %>"
-    },
-    {
-      "name": "requestPage2",
-      "baseUrlType": "BUSINESS-OBJECT",
-      "authType": "sso",
-      "isCollection": true,
-      "bestEffort": "true",
-      "failOnStatusCodes": [
-        {
-          "code": 429
-        }
-      ],
-      "url": "<% let t = requestCount.total ?? 0; \"/comsAssignableRoles?limit=100&offset=\" + (t > 200 ? 200 : t) %>"
+      "url": "<% let t = requestCount.total ?? 0; \"/comsAssignableRoles?limit=100&offset=\" + ((t - 100) < 0 ? 0 : (t - 100)) %>"
     }
   ]
 }

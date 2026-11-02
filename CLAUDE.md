@@ -2506,7 +2506,9 @@ Different from the Page Configuration Cards in `presentation/cards/*.card`. They
 
 - `presentation/cards/<id>.carddefinition`: `{ "id", "presentation": { "type": "inlineCard", "header": { "type": "cardHeader", "title", "subtitle", "indicator": {"label", "color": "GREEN"}, "icon" }, "body": { "type": "simpleCard" | "listCard", ... }, "footer": [ { "label", "taskReference": {"taskId"} } ] }, "endPoints": [ ... ] }`. A card has its own inbound endpoints. Indicator colours are UPPERCASE here (`GREEN`, `BLUE`).
 - `listCard` body: `{ "type": "listCard", "title", "subtitle", "on": "<% list %>", "as": "row", "template": { "label", "value", "secondaryValue", "secondaryValueWidth": "MEDIUM" } }`.
-- Register the card as an AMD task: `{ "id": "createRequestCard", "routingPattern": "/createRequestCard", "page": { "id": "createRequestCard" } }`.
+- Register the card as an AMD task: `{ "id": "createRequestCard", "routingPattern": "/createRequestCard", "page": { "id": "createRequestCard" } }`. The task's `page.id` is the `.carddefinition` id (there's no .pmd), so static checks that resolve pages must accept card definitions.
+- **A card definition may have at most 2 inbound endpoints** (App Hub build error "has exceeded the maximum of 2 inbound endpoints", 2026-11-02). Filter on the server instead of paging (e.g. a SINGLE_INSTANCE query param such as `?requestedBy=<wid>`), or use one count + one page.
+- Card body scripts follow the `.card` rule: double-quoted string literals only. A card can't `include` page scripts, so repeat any helper logic inline.
 - `cards/<Name>.cardtenantsetting` at the app root: `{ "id": 1, "name", "label", "securityDomains": [...], "routePath": "/createRequestCard" }`. This is what an administrator picks when adding the card in Workday.
 - None of the samples uses **Profile Groups**; see the next section.
 
@@ -2520,7 +2522,7 @@ Source: developer.workday.com "Profile Group", "Add Profile Groups", "Profile Gr
 - **Context-free only:** a context-free task is one with no business object on it, so the page it opens is **not told which worker or organization the profile belongs to**. A group on the Organization profile shows the same page whichever organization you're on. Whether a model report can be filtered by the profile's subject isn't documented for Extend (the admin guide requires a prompt for the object on custom reports) **(unverified)**.
 - **Tenant setup after deploy (administrator, Set Up: System domain):** App Manager → Configure on the app → Profile Groups grid → Configure → pick the profile, tick **Display in Profile**, set the order. Then **Configure Profile Group** → pick the group → Display in Profile → + → add the allowed tasks and reports in order. Check by opening a profile (e.g. a worker's) and looking for the group in the left pane.
 - **Limits:** users need the domain permission for each task and report. Long Name/Label values can be cut off and can stop tasks rendering. Pages with nested tabs may not render inside a profile group.
-- The repo file name and folder App Builder uses for a profile group aren't known yet: add the first one in App Builder and copy its source into the repo **(unverified)**.
+- **Repo file:** `model/<Name>.profilegroup` with `{ "id", "name", "label", "profile", "tasks": [<model task names>] }` (`reports` optional). Deployed 2026-11-02; App Manager → Configure then lists it as "<label> for Worker Profile". The tasks are `model/<Name>.task` files with no `businessObject` (context-free), a `routePath` to an app page and `securityDomains`.
 
 ### Widgets and attributes ECO-COMS doesn't use yet
 
