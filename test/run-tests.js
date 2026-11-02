@@ -736,7 +736,8 @@ async function smoke(token, me) {
   // card's title, subtitle and link. Compare their counts with the same counts worked out here.
   const card = async (name) => {
     const r = await launch(token, name, {});
-    const c = typeof r === 'string' ? JSON.parse(r) : r;
+    let c = r;
+    if (typeof r === 'string') { try { c = JSON.parse(r); } catch (_) { throw new Error(`${name}: launch returned text, not the card JSON: ${r.slice(0, 300)}`); } }
     for (const k of ['title', 'subtitle', 'linkText', 'linkPath']) if (typeof c?.[k] !== 'string' || !c[k]) throw new Error(`${name}: no ${k} in ${JSON.stringify(r).slice(0, 300)}`);
     if (!/^\/[^/]+\/d\/wday\/app\/[^/]+\/[^/]+\/[A-Za-z]+\.htmld$/.test(c.linkPath)) throw new Error(`${name}: odd linkPath ${c.linkPath}`);
     return c;
