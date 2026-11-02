@@ -183,7 +183,7 @@
                 "type": "richText",
                 "id": "patternsAboutRichText",
                 "enabled": false,
-                "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">A <b>pattern</b> is a Custom Organization (subtype X:SHELL) whose code follows its application's own format: <b>&lt;application&gt;:&lt;prefix&gt;:&lt;field&gt;:…</b>. Clockwork uses <b>X:CLW:PATTERN:&lt;subject&gt;:&lt;course&gt;:&lt;section&gt;:&lt;academic period&gt;</b> (e.g. X:CLW:PATTERN:MATH:MATH_V:100:201:2026W1); Assessment Outcomes uses <b>X:BPMS(AOC):CP:&lt;subject&gt;:&lt;course&gt;</b> (e.g. X:BPMS(AOC):CP:MECH_V:1*); most other tools use one Role Name (e.g. X:ADM:KEYCLOAK:ANY). <b>*</b> means any. Roles assigned on a pattern apply to whatever matches it. Only applications with a pattern format appear below: use <b>Manage</b> to see an application's patterns and <b>Add Pattern</b> to create one. Patterns can be inactivated but not deleted.</span>"
+                "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">A <b>pattern</b> is a Custom Organization (subtype X:SHELL) whose code follows its application's own format: <b>&lt;application&gt;:&lt;prefix&gt;:&lt;field&gt;:&lt;field&gt;…</b>. Each application sets its prefixes and fields; <b>*</b> means any. Roles assigned on a pattern apply to everything it matches. Only applications with a pattern format appear below: use <b>Manage</b> to see an application's patterns and <b>Add Pattern</b> to create one. Patterns can be inactivated but not deleted.</span>"
               }
             ]
           },
