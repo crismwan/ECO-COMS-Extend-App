@@ -138,7 +138,9 @@
                   "enabled": false,
                   "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">Create a shell org pattern for any application. Each application has its own pattern format: a prefix and its own fields (e.g. Subject and Course for Assessment Outcomes, one Role Name for most tools). The form below shows that application's fields, checks each value as you type, and builds the name as <b>APPLICATION:PREFIX:field:field</b>. A blank field becomes * (any). Submitting creates a live organization (subtype X:SHELL) in Workday; it can be inactivated later but not deleted.</span>"
                 }
-              ]
+              ],
+              "collapsible": true,
+              "initializeCollapsed": true
             }
           ]
         },

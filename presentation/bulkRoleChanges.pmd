@@ -122,7 +122,9 @@
                   "enabled": false,
                   "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">Upload the CSV made from the template. Run it as <b>Validate only</b> first: every row is checked and nothing changes in Workday. Then upload the same file again with <b>Real run</b> ticked: each ADD or REMOVE row is applied in Workday's Assign Roles, one row at a time, and each change is written to the Audit Log. A row that Workday rejects is recorded as FAILED and the run carries on. Both runs work in the background; the results page shows progress. Up to 1,000 ADD or REMOVE rows per file; unchanged rows don't count.</span>"
                 }
-              ]
+              ],
+              "collapsible": true,
+              "initializeCollapsed": true
             },
             {
               "type": "cardContainer",
