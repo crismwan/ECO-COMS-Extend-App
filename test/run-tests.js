@@ -1339,10 +1339,13 @@ async function probe(token) {
     const ds = await request('GET', `${API}/wql/v1/dataSources?alias=topLevelOrganizations`, token);
     const id = (ds.data || [])[0]?.id;
     console.log(`   DS topLevelOrganizations id=${id}`);
-    const fl = await request('GET', `${API}/wql/v1/dataSources/${id}/fields?limit=100&search=type`, token);
-    (fl.data || []).forEach((x) => console.log(`   FIELD ${x.alias} | ${x.descriptor} | ${x.type || ''}`));
-    const fl2 = await request('GET', `${API}/wql/v1/dataSources/${id}/fields?limit=100&search=subtype`, token);
-    (fl2.data || []).forEach((x) => console.log(`   FIELD2 ${x.alias} | ${x.descriptor} | ${x.type || ''}`));
+    let all = [];
+    for (let off = 0; off < 5000; off += 1000) {
+      const page = (await request('GET', `${API}/wql/v1/dataSources/${id}/fields?limit=1000&offset=${off}`, token)).data || [];
+      all = all.concat(page); if (page.length < 1000) break;
+    }
+    console.log(`   FIELDS total ${all.length}`);
+    all.filter((x) => /subtype|organization type|^type/i.test(`${x.alias} ${x.descriptor}`)).forEach((x) => console.log(`   FIELD ${x.alias} | ${x.descriptor} | ${x.type || ''}`));
   } catch (e) { console.log('   FIELDS error ' + e.message.slice(0, 200)); }
   for (const f of ['organizationSubtype', 'subtype', 'organizationSubtype1']) {
     try {
