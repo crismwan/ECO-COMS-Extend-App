@@ -30,10 +30,16 @@ var inDays = function(text, keys) {
   empty(text) ? false : keys.contains(('' + text).substring(0, 10));
 };
 
+/* How often c occurs in a sorted list of strings (no per-code filtering: the page script has a memory limit). */
+var countIn = function(sorted, c) {
+  let i = sorted.indexOf(c);
+  i < 0 ? 0 : sorted.lastIndexOf(c) - i + 1;
+};
+
 /* [{label, count}] for a donut, biggest first, at most `top` slices (the rest as "Other"). */
 var slices = function(labels, top) {
-  let distinct = labels.distinct();
-  let all = list:sort(distinct.map(l => { { 'label': l, 'count': labels.filter(x => { x == l }).size() } }), 'count', false);
+  let sorted = labels.sort();
+  let all = list:sort(sorted.distinct().map(l => { { 'label': l, 'count': countIn(sorted, l) } }), 'count', false);
   size(all) <= top ? all : list:flatten([all.subList(0, top - 1), [{ 'label': 'Other', 'count': all.subList(top - 1, size(all)).map(s => { s.count }).reduce((a, b) => { a + b }) }]]);
 };
 
@@ -49,27 +55,32 @@ var bulkSlices = function(runs) {
   slices(runs.map(r => { empty(r.status) ? 'No status' : r.status }), 6);
 };
 
-/* One row per application code: shell orgs, patterns and role requests. */
+/* One row per application code: shell orgs, patterns and role requests.
+   Every list below is a sorted list of application codes, built once (memory limit hit 2026-11-02 with per-org maps). */
 var appRows = function(requests, orgs, apps) {
-  let shell = orgs.filter(o => { isShellOrg(o) }).map(o => { { 'app': orgAppCode(o.code), 'active': o.cf_active1 == true } });
-  let pats = orgs.filter(o => { isPattern(o) }).map(o => { orgAppCode(o.code) });
-  let reqs = requests.map(r => { { 'app': appCodeOf(r.application), 'status': r.status ?? '', 'date': ('' + (r.requestedDate ?? '')) } });
-  let names = apps.map(a => { { 'app': a.appId ?? '', 'name': a.name ?? '' } });
-  let codes = list:flatten([shell.map(s => { s.app }), reqs.filter(r => { !empty(r.app) }).map(r => { r.app })]).distinct().sort();
+  let active = orgs.filter(o => { isShellOrg(o) && o.cf_active1 == true }).map(o => { orgAppCode(o.code) }).sort();
+  let inactive = orgs.filter(o => { isShellOrg(o) && o.cf_active1 != true }).map(o => { orgAppCode(o.code) }).sort();
+  let pats = orgs.filter(o => { isPattern(o) }).map(o => { orgAppCode(o.code) }).sort();
+  let pend = requests.filter(r => { r.status == 'Pending ISC Review' }).map(r => { appCodeOf(r.application) }).sort();
+  let appr = requests.filter(r => { r.status == 'Approved' }).map(r => { appCodeOf(r.application) }).sort();
+  let den = requests.filter(r => { r.status == 'Denied' }).map(r => { appCodeOf(r.application) }).sort();
+  let newest = list:sort(requests.filter(r => { !empty(r.requestedDate) }), 'requestedDate', false);
+  let newestCodes = newest.map(r => { appCodeOf(r.application) });
+  let appIds = apps.map(a => { a.appId ?? '' });
+  let codes = list:flatten([active, inactive, newestCodes]).filter(c => { !empty(c) }).distinct().sort();
   codes.map(c => {
-    let mine = reqs.filter(r => { r.app == c });
-    let dated = list:sort(mine.filter(r => { !empty(r.date) }), 'date', false);
-    let named = names.filter(n => { n.app == c });
+    let n = appIds.indexOf(c);
+    let last = newestCodes.indexOf(c);
     let row = {
       'code': c,
-      'name': size(named) == 0 ? '' : named[0].name,
-      'shellActive': shell.filter(s => { s.app == c && s.active }).size(),
-      'shellInactive': shell.filter(s => { s.app == c && !s.active }).size(),
-      'patterns': pats.filter(p => { p == c }).size(),
-      'pending': mine.filter(r => { r.status == 'Pending ISC Review' }).size(),
-      'approved': mine.filter(r => { r.status == 'Approved' }).size(),
-      'denied': mine.filter(r => { r.status == 'Denied' }).size(),
-      'lastRequest': size(dated) == 0 ? '' : dated[0].date.substring(0, 10)
+      'name': n < 0 ? '' : (apps[n].name ?? ''),
+      'shellActive': countIn(active, c),
+      'shellInactive': countIn(inactive, c),
+      'patterns': countIn(pats, c),
+      'pending': countIn(pend, c),
+      'approved': countIn(appr, c),
+      'denied': countIn(den, c),
+      'lastRequest': last < 0 ? '' : ('' + newest[last].requestedDate).substring(0, 10)
     };
     row;
   });
