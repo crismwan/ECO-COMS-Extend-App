@@ -340,7 +340,8 @@
                         "id": "colWdRoleNameText",
                         "enabled": false,
                         "value": "<% role.workdayRoleId ?? '' %>"
-                      }
+                      },
+                      "sortableAndFilterable": "true"
                     },
                     {
                       "type": "column",
@@ -352,7 +353,8 @@
                         "id": "colEnabledForText",
                         "enabled": false,
                         "value": "<% role.enabledForOrganizationTypes ?? 'Academic Unit - University of British Columbia' %>"
-                      }
+                      },
+                      "sortableAndFilterable": "true"
                     },
                     {
                       "type": "column",
@@ -363,7 +365,8 @@
                         "type": "text",
                         "value": "<% role.effectiveDate ?? '' %>",
                         "enabled": false
-                      }
+                      },
+                      "sortableAndFilterable": "true"
                     },
                     {
                       "type": "column",
@@ -375,7 +378,8 @@
                         "id": "colPositionsText",
                         "enabled": false,
                         "value": "<% role.positionNames ?? role.positions ?? '' %>"
-                      }
+                      },
+                      "sortableAndFilterable": "true"
                     },
                     {
                       "type": "column",
@@ -387,7 +391,8 @@
                         "id": "colRequestedByText",
                         "enabled": false,
                         "value": "<% !empty(role.requestedBy) ? (role.requestedBy.descriptor ?? '') : '' %>"
-                      }
+                      },
+                      "sortableAndFilterable": "true"
                     },
                     {
                       "type": "column",
@@ -398,9 +403,12 @@
                         "type": "text",
                         "value": "<% role.requestedDate ?? '' %>",
                         "enabled": false
-                      }
+                      },
+                      "sortableAndFilterable": "true"
                     }
-                  ]
+                  ],
+                  "doNotAdd": true,
+                  "doNotRemove": true
                 }
               ]
             }

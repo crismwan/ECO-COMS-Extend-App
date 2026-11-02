@@ -144,7 +144,8 @@
                     "values": "<% [] %>",
                     "multiSelect": true,
                     "selectedValuesAndDescriptors": "<% (ra.role != null ? [ra.role] : []).map(i => { {'id': i.id, 'descriptor': i.descriptor} }) %>"
-                  }
+                  },
+                  "sortableAndFilterable": "true"
                 },
                 {
                   "type": "column",
@@ -161,7 +162,8 @@
                     "values": "<% [] %>",
                     "multiSelect": true,
                     "selectedValuesAndDescriptors": "<% (ra.org != null ? [ra.org] : []).map(i => { {'id': i.id, 'descriptor': i.descriptor} }) %>"
-                  }
+                  },
+                  "sortableAndFilterable": "true"
                 },
                 {
                   "type": "column",
@@ -178,7 +180,8 @@
                     "values": "<% [] %>",
                     "multiSelect": true,
                     "selectedValuesAndDescriptors": "<% (ra.positions).map(i => { {'id': i.id, 'descriptor': i.descriptor} }) %>"
-                  }
+                  },
+                  "sortableAndFilterable": "true"
                 }
               ],
               "doNotAdd": true,

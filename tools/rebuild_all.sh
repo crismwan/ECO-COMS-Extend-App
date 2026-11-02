@@ -30,6 +30,7 @@ run tools/title_case.py                 # headings and card titles in Title Case
 run tools/consistency.py                # titles, back links, help text size, success pages
 run tools/add_empty_messages.py         # "Nothing to show" texts
 run tools/polish.py                     # final pass: labels, About boxes, names, Pacific times
+run tools/grid_style.py                # one grid format: list look, sortable columns, no +/- on display grids
 run tools/merge_nav_about.py           # back links at the top of the About box
 run tools/title_banner.py              # white title tile instead of Workday's square page banner
 

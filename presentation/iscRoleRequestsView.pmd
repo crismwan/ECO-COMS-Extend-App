@@ -297,7 +297,8 @@
                             "wid": "<% role.workdayAssignableRole ?? '' %>"
                           }
                         ]
-                      }
+                      },
+                      "sortableAndFilterable": "true"
                     },
                     {
                       "type": "column",
@@ -324,7 +325,8 @@
                             "wid": "<% role.enabledForWid ?? '' %>"
                           }
                         ]
-                      }
+                      },
+                      "sortableAndFilterable": "true"
                     },
                     {
                       "type": "column",
@@ -335,7 +337,8 @@
                         "type": "text",
                         "value": "<% role.effectiveDate ?? '' %>",
                         "enabled": false
-                      }
+                      },
+                      "sortableAndFilterable": "true"
                     },
                     {
                       "type": "column",
@@ -350,7 +353,8 @@
                         "enabled": false,
                         "values": "<% (empty(role.positions) && empty(role.positionWids)) ? [] : (!empty(role.positions) ? role.positions : (role.positionWids ?? '')).splitByRegex(',').map((pid, i) => { { 'id': pid.trim(), 'descriptor': (!empty(role.positionNames) && role.positionNames.splitByRegex(', (?=P-[0-9])').size() > i) ? role.positionNames.splitByRegex(', (?=P-[0-9])')[i] : pid.trim() } }) %>",
                         "widKey": "id"
-                      }
+                      },
+                      "sortableAndFilterable": "true"
                     },
                     {
                       "type": "column",
@@ -366,7 +370,8 @@
                             "wid": "<% role.requestedBy.id ?? '' %>"
                           }
                         ]
-                      }
+                      },
+                      "sortableAndFilterable": "true"
                     },
                     {
                       "type": "column",
@@ -377,7 +382,8 @@
                         "type": "text",
                         "value": "<% role.requestedDate ?? '' %>",
                         "enabled": false
-                      }
+                      },
+                      "sortableAndFilterable": "true"
                     },
                     {
                       "type": "column",
@@ -393,7 +399,8 @@
                             "wid": "<% role.approvedBy.id ?? '' %>"
                           }
                         ]
-                      }
+                      },
+                      "sortableAndFilterable": "true"
                     },
                     {
                       "type": "column",
@@ -404,7 +411,8 @@
                         "type": "text",
                         "value": "<% role.approvedDate ?? '' %>",
                         "enabled": false
-                      }
+                      },
+                      "sortableAndFilterable": "true"
                     },
                     {
                       "type": "column",
@@ -428,7 +436,8 @@
                       },
                       "excel": {
                         "enabled": false
-                      }
+                      },
+                      "sortableAndFilterable": "true"
                     }
                   ],
                   "excelExportEnabled": true

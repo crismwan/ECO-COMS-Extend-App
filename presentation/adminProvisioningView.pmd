@@ -230,7 +230,8 @@
                         "type": "text",
                         "value": "<% role.enabledForOrganizationTypes ?? '' %>",
                         "enabled": false
-                      }
+                      },
+                      "sortableAndFilterable": "true"
                     },
                     {
                       "type": "column",
@@ -241,7 +242,8 @@
                         "type": "text",
                         "value": "<% role.effectiveDate ?? '' %>",
                         "enabled": false
-                      }
+                      },
+                      "sortableAndFilterable": "true"
                     },
                     {
                       "type": "column",
@@ -252,7 +254,8 @@
                         "type": "text",
                         "value": "<% role.requestedBy.descriptor ?? '' %>",
                         "enabled": false
-                      }
+                      },
+                      "sortableAndFilterable": "true"
                     },
                     {
                       "type": "column",
@@ -288,7 +291,8 @@
                       },
                       "excel": {
                         "enabled": false
-                      }
+                      },
+                      "sortableAndFilterable": "true"
                     }
                   ],
                   "excelExportEnabled": true

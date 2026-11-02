@@ -279,7 +279,8 @@
                         "id": "colAppText",
                         "enabled": false,
                         "value": "<% pa.appCode %>"
-                      }
+                      },
+                      "sortableAndFilterable": "true"
                     },
                     {
                       "type": "column",
@@ -299,7 +300,9 @@
                         }
                       }
                     }
-                  ]
+                  ],
+                  "gridType": "LIST",
+                  "multiViewStylingEnabled": true
                 }
               ]
             }

@@ -170,7 +170,8 @@
                         "id": "colAppText",
                         "enabled": false,
                         "value": "<% pa.appCode %>"
-                      }
+                      },
+                      "sortableAndFilterable": "true"
                     },
                     {
                       "type": "column",
@@ -181,7 +182,8 @@
                         "id": "colNameText",
                         "enabled": false,
                         "value": "<% pa.name ?? '' %>"
-                      }
+                      },
+                      "sortableAndFilterable": "true"
                     },
                     {
                       "type": "column",
@@ -192,7 +194,8 @@
                         "id": "colFormatText",
                         "enabled": false,
                         "value": "<% pa.format %>"
-                      }
+                      },
+                      "sortableAndFilterable": "true"
                     },
                     {
                       "type": "column",
@@ -212,7 +215,9 @@
                         }
                       }
                     }
-                  ]
+                  ],
+                  "gridType": "LIST",
+                  "multiViewStylingEnabled": true
                 }
               ]
             }

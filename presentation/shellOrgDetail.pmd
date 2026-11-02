@@ -247,7 +247,8 @@
                         "enabled": false,
                         "values": "<% ra.role != null ? [ra.role] : [] %>",
                         "widKey": "id"
-                      }
+                      },
+                      "sortableAndFilterable": "true"
                     },
                     {
                       "type": "column",
@@ -261,7 +262,8 @@
                         "enabled": false,
                         "values": "<% ra.positions %>",
                         "widKey": "id"
-                      }
+                      },
+                      "sortableAndFilterable": "true"
                     },
                     {
                       "type": "column",
@@ -275,7 +277,8 @@
                         "enabled": false,
                         "values": "<% ra.workers %>",
                         "widKey": "id"
-                      }
+                      },
+                      "sortableAndFilterable": "true"
                     },
                     {
                       "type": "column",

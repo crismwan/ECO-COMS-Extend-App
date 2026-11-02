@@ -237,7 +237,8 @@
                         "type": "text",
                         "value": "<% role.workdayRoleId ?? '' %>",
                         "enabled": false
-                      }
+                      },
+                      "sortableAndFilterable": "true"
                     },
                     {
                       "type": "column",
@@ -259,7 +260,8 @@
                         "type": "text",
                         "value": "<% role.effectiveDate ?? '' %>",
                         "enabled": false
-                      }
+                      },
+                      "sortableAndFilterable": "true"
                     },
                     {
                       "type": "column",
@@ -295,7 +297,8 @@
                       },
                       "excel": {
                         "enabled": false
-                      }
+                      },
+                      "sortableAndFilterable": "true"
                     },
                     {
                       "type": "column",

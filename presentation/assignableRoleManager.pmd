@@ -461,7 +461,8 @@
                         "type": "text",
                         "value": "<% role.workdayRoleId ?? '' %>",
                         "enabled": false
-                      }
+                      },
+                      "sortableAndFilterable": "true"
                     },
                     {
                       "type": "column",
@@ -483,7 +484,8 @@
                         "type": "text",
                         "value": "<% role.enabledForOrganizationTypes ?? 'Academic Unit - University of British Columbia' %>",
                         "enabled": false
-                      }
+                      },
+                      "sortableAndFilterable": "true"
                     },
                     {
                       "type": "column",
@@ -494,7 +496,8 @@
                         "type": "text",
                         "value": "<% role.effectiveDate ?? '' %>",
                         "enabled": false
-                      }
+                      },
+                      "sortableAndFilterable": "true"
                     },
                     {
                       "type": "column",
@@ -505,7 +508,8 @@
                         "type": "text",
                         "value": "<% !empty(role.positionNames) ? role.positionNames : (empty(role.positions) || empty(positions.data) ? '' : positions.data.filter(p => { role.positions.contains(p.id) }).map(p => { p.descriptor }).join(', ')) %>",
                         "enabled": false
-                      }
+                      },
+                      "sortableAndFilterable": "true"
                     },
                     {
                       "type": "column",
@@ -516,7 +520,8 @@
                         "type": "text",
                         "value": "<% role.requestedBy.descriptor ?? '' %>",
                         "enabled": false
-                      }
+                      },
+                      "sortableAndFilterable": "true"
                     },
                     {
                       "type": "column",
@@ -527,9 +532,12 @@
                         "type": "text",
                         "value": "<% role.requestedDate ?? '' %>",
                         "enabled": false
-                      }
+                      },
+                      "sortableAndFilterable": "true"
                     }
-                  ]
+                  ],
+                  "doNotAdd": true,
+                  "doNotRemove": true
                 }
               ],
               "title": "1. Pending ISC Review"

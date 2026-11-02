@@ -337,7 +337,8 @@
                             }
                           }
                         ]
-                      }
+                      },
+                      "sortableAndFilterable": "true"
                     }
                   ]
                 }
