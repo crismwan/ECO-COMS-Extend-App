@@ -175,6 +175,16 @@
                   "value": "There are no AAA role requests to display. Use Submit AAA Role Request above to create one."
                 },
                 {
+                  "type": "button",
+                  "id": "emptyActionButton",
+                  "action": "PRIMARY",
+                  "label": "Submit AAA Role Request",
+                  "visible": "<% size(list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]).filter(r => r.roleName.startsWith('Organizations and Roles Assignment Administrator'))) == 0 %>",
+                  "taskReference": {
+                    "taskId": "adminProvisioning"
+                  }
+                },
+                {
                   "type": "grid",
                   "gridType": "LIST",
                   "multiViewStylingEnabled": true,

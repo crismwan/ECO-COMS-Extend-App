@@ -98,7 +98,7 @@
               "type": "richText",
               "id": "titleBannerRichText",
               "enabled": false,
-              "value": "<% '<span style=\"color:#0055B3;font-size:24px\"><b>' + (empty(queryParams.appCode) ? 'ECO-COMS: Add Shell Org Pattern' : ('ECO-COMS: Add Shell Org Pattern · ' + queryParams.appCode)).replace('<', '&lt;') + '</b></span>' %>"
+              "value": "<% '<span style=\"color:#0055B3;font-size:24px\"><b>' + (empty(queryParams.appCode) ? 'ECO-COMS: Add Shell Org Pattern' : ('ECO-COMS: Add Shell Org Pattern · ' + queryParams.appCode)).replace('<', '&lt;') + '</b></span>' + '<br><span style=\"color:#374151;font-size:13px\">Add a shell org pattern in the format the application uses.</span>' %>"
             }
           ]
         },

@@ -193,6 +193,16 @@
                   "value": "You have no Assignable Role requests. Use Submit New Request above to get started."
                 },
                 {
+                  "type": "button",
+                  "id": "emptyActionButton",
+                  "action": "PRIMARY",
+                  "label": "Submit a Request",
+                  "visible": "<% size(list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]).filter(r => !r.roleName.startsWith('Organizations and Roles Assignment Administrator') && r.requestedBy.id == selectedWorker.id)) == 0 %>",
+                  "taskReference": {
+                    "taskId": "assignableRoleManager"
+                  }
+                },
+                {
                   "type": "grid",
                   "gridType": "LIST",
                   "multiViewStylingEnabled": true,

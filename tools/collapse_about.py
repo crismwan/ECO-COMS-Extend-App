@@ -5,16 +5,26 @@ they stay visible. fieldSet attributes from Workday's sample apps: collapsible +
 """
 import json, os
 ROOT = os.path.join(os.path.dirname(__file__), '..', 'presentation')
-PAGES = ['bulkRoleChanges', 'bulkRoleTemplate', 'newSchemaPattern']
+# 2026-11-02 (UI recommendations, item 4): also the daily-use list pages with long About text; a one-line summary
+# under each page's title tile stays visible (ux_improvements.py --tiles)
+PAGES = ['bulkRoleChanges', 'bulkRoleTemplate', 'newSchemaPattern', 'iscRoleRequestsView', 'auditLogViewer', 'shellOrgManager']
 done = []
+
+
+def walk(n, page):
+    if isinstance(n, dict):
+        if n.get('type') == 'fieldSet' and str(n.get('title', '')).startswith('About This'):
+            n['collapsible'] = True
+            n['initializeCollapsed'] = True
+            done.append(f"{page}.{n.get('id')}")
+        for v in n.values(): walk(v, page)
+    elif isinstance(n, list):
+        for v in n: walk(v, page)
+
+
 for page in PAGES:
     f = os.path.join(ROOT, page + '.pmd')
     d = json.load(open(f))
-    for sec in d['presentation']['body']['sections']:
-        for k in sec.get('children', []):
-            if k.get('type') == 'fieldSet' and k.get('id') == 'aboutFieldSet':
-                k['collapsible'] = True
-                k['initializeCollapsed'] = True
-                done.append(page)
+    walk(d['presentation'], page)
     open(f, 'w').write(json.dumps(d, indent=2, ensure_ascii=False) + '\n')
 print('collapsible About boxes:', ', '.join(done))

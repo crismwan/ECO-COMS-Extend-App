@@ -94,7 +94,7 @@
               "type": "richText",
               "id": "titleBannerRichText",
               "enabled": false,
-              "value": "<span style=\"color:#0055B3;font-size:24px\"><b>ECO-COMS: Bulk Role Changes</b></span>"
+              "value": "<span style=\"color:#0055B3;font-size:24px\"><b>ECO-COMS: Bulk Role Changes</b></span><br><span style=\"color:#374151;font-size:13px\">Upload a file of role changes, validate it, then apply it.</span>"
             }
           ]
         },
@@ -188,7 +188,8 @@
                     "title": "Effective Date",
                     "text": "The date the role changes take effect: a weekday in this year or next. One date applies to every row in the file."
                   },
-                  "onChange": "<%\n  if (empty(self.value)) { self.clearError(); }\n  else if (!comsValidations.isWeekday(self.value)) { self.setError(comsValidations.errorWeekday()); }\n  else if (!comsValidations.isCurrentOrFutureYear(self.value)) { self.setError(comsValidations.errorYear()); }\n  else { self.clearError(); }\n%>"
+                  "onChange": "<%\n  if (empty(self.value)) { self.clearError(); }\n  else if (!comsValidations.isWeekday(self.value)) { self.setError(comsValidations.errorWeekday()); }\n  else if (!comsValidations.isCurrentOrFutureYear(self.value)) { self.setError(comsValidations.errorYear()); }\n  else { self.clearError(); }\n%>",
+                  "helpText": "A weekday this year or next. One date applies to every row."
                 },
                 {
                   "type": "checkBox",
@@ -201,7 +202,8 @@
                     "id": "realRunGuide",
                     "title": "Validate only or real run",
                     "text": "Leave this unticked to validate only: every row is checked and nothing changes. Tick it to apply the ADD and REMOVE rows in Workday."
-                  }
+                  },
+                  "helpText": "Leave unticked to validate only: nothing changes in Workday."
                 },
                 {
                   "type": "checkBox",

@@ -315,11 +315,10 @@
                   "value": "<% 'GRID' + date:now().format('yyyyMMddHHmmss') + (selectedWorker.id ?? '').substring(0, 6) %>"
                 },
                 {
-                  "type": "text",
-                  "id": "changesText",
+                  "type": "readOnlyText",
+                  "id": "changesReadOnlyText",
                   "label": "Changes",
-                  "enabled": false,
-                  "value": "<% 'Tick Remove or add rows below. Up to 50 changes per submit.' %>"
+                  "value": "No changes yet. Up to 50 per submit."
                 },
                 {
                   "type": "date",
@@ -373,7 +372,8 @@
                       "cellTemplate": {
                         "type": "checkBox",
                         "id": "removeCheckBox",
-                        "value": "<% false %>"
+                        "value": "<% false %>",
+                        "onChange": "<% /* change counter */ let removals = currentGrid.rows.filter(r => { r.childrenMap.colRemove.value == true }).size(); let additions = addGrid.rows.filter(r => { !empty(r.childrenMap.colPositionAdd.value) }).size(); changesReadOnlyText.setValue((removals + additions == 0) ? 'No changes yet. Up to 50 per submit.' : ('' + removals + ' removal' + (removals == 1 ? '' : 's') + ' and ' + additions + ' addition' + (additions == 1 ? '' : 's') + ' ready' + ((removals + additions) > 50 ? ': over the limit of 50 per submit' : ' (up to 50 per submit)'))); %>"
                       }
                     },
                     {
@@ -553,7 +553,7 @@
                         "multiSelect": false,
                         "values": "<% [] %>",
                         "onSearch": "<% empty(event.query) ? [] : (gridPosSearch.invoke({ 'q': event.query }).data ?? []).filter(o => { !empty(o.cf_PositionID) }).map(o => { {'id': o.cf_PositionID, 'descriptor': !empty(o.position_PositionManagement.descriptor) ? o.position_PositionManagement.descriptor : (!empty(o.cf_PositionText) ? o.cf_PositionText : o.cf_PositionID)} }) %>",
-                        "onChange": "<%\n  if (empty(self.value) || empty(roleOrgDropdown.value)) { self.clearError(); }\n  else if ((list:flatten(list:flatten((shellRoles.data ?? []).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ((ra.organization.descriptor + ':').startsWith((queryParams.appCode ?? '') + ':') || ra.organization.descriptor.startsWith((queryParams.appCode ?? '') + ' ')) }).map(ra => { (ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? []).map(p => { { 'role': r.role.descriptor ?? '', 'roleWid': r.role.id ?? '', 'org': ra.organization.descriptor ?? '', 'orgWid': ra.organization.id ?? '', 'position': p.descriptor ?? '', 'positionId': (p.descriptor ?? '').substringBefore(' '), 'assigneeWid': p.id ?? '' } }) }) }))).map(x => { x.roleWid + '|' + x.orgWid + '|' + x.positionId })).contains(roleOrgDropdown.selectedEntries[0].id + '|' + self.value[0])) {\n    self.setError('This position already holds this role on this organization.');\n  } else { self.clearError(); }\n%>",
+                        "onChange": "<% if (empty(self.value) || empty(roleOrgDropdown.value)) { self.clearError(); }\n  else if ((list:flatten(list:flatten((shellRoles.data ?? []).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ((ra.organization.descriptor + ':').startsWith((queryParams.appCode ?? '') + ':') || ra.organization.descriptor.startsWith((queryParams.appCode ?? '') + ' ')) }).map(ra => { (ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? []).map(p => { { 'role': r.role.descriptor ?? '', 'roleWid': r.role.id ?? '', 'org': ra.organization.descriptor ?? '', 'orgWid': ra.organization.id ?? '', 'position': p.descriptor ?? '', 'positionId': (p.descriptor ?? '').substringBefore(' '), 'assigneeWid': p.id ?? '' } }) }) }))).map(x => { x.roleWid + '|' + x.orgWid + '|' + x.positionId })).contains(roleOrgDropdown.selectedEntries[0].id + '|' + self.value[0])) {\n    self.setError('This position already holds this role on this organization.');\n  } else { self.clearError(); }; /* change counter */ let removals = currentGrid.rows.filter(r => { r.childrenMap.colRemove.value == true }).size(); let additions = addGrid.rows.filter(r => { !empty(r.childrenMap.colPositionAdd.value) }).size(); changesReadOnlyText.setValue((removals + additions == 0) ? 'No changes yet. Up to 50 per submit.' : ('' + removals + ' removal' + (removals == 1 ? '' : 's') + ' and ' + additions + ' addition' + (additions == 1 ? '' : 's') + ' ready' + ((removals + additions) > 50 ? ': over the limit of 50 per submit' : ' (up to 50 per submit)'))); %>",
                         "valuesOut": [
                           {
                             "value": "<% empty(self.value) ? '' : self.value[0] %>",
@@ -620,6 +620,7 @@
                       }
                     }
                   ],
+                  "onRowRemove": "<% /* change counter */ let removals = currentGrid.rows.filter(r => { r.childrenMap.colRemove.value == true }).size(); let additions = addGrid.rows.filter(r => { !empty(r.childrenMap.colPositionAdd.value) }).size(); changesReadOnlyText.setValue((removals + additions == 0) ? 'No changes yet. Up to 50 per submit.' : ('' + removals + ' removal' + (removals == 1 ? '' : 's') + ' and ' + additions + ' addition' + (additions == 1 ? '' : 's') + ' ready' + ((removals + additions) > 50 ? ': over the limit of 50 per submit' : ' (up to 50 per submit)'))); %>",
                   "gridType": "LIST",
                   "multiViewStylingEnabled": true
                 }

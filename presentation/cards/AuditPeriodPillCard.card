@@ -50,6 +50,16 @@
             "changeType": "<% changeType ?? \"\" %>"
           }
         }
+      },
+      {
+        "label": "<% (period == \"90d\") ? \"✓ Last 90 days\" : \"Last 90 days\" %>",
+        "taskReference": {
+          "taskId": "auditLogViewer",
+          "parameterBindings": {
+            "period": "90d",
+            "changeType": "<% changeType ?? \"\" %>"
+          }
+        }
       }
     ]
   }

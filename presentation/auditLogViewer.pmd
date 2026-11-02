@@ -159,7 +159,7 @@
               "type": "richText",
               "id": "titleBannerRichText",
               "enabled": false,
-              "value": "<span style=\"color:#0055B3;font-size:24px\"><b>ECO-COMS: Audit Log Viewer</b></span>"
+              "value": "<span style=\"color:#0055B3;font-size:24px\"><b>ECO-COMS: Audit Log Viewer</b></span><br><span style=\"color:#374151;font-size:13px\">Every change ECO-COMS made in Workday. Filter by time period and change type.</span>"
             }
           ]
         },
@@ -186,7 +186,9 @@
                   "enabled": false
                 }
               ],
-              "title": "About This Page"
+              "title": "About This Page",
+              "collapsible": true,
+              "initializeCollapsed": true
             }
           ]
         },
@@ -283,6 +285,18 @@
                   "type": "text",
                   "value": "<% empty(logEntry.action) ? '' : (logEntry.action.substring(0, 1) + logEntry.action.substring(1).lowerCase()) %>",
                   "enabled": false
+                },
+                "sortableAndFilterable": "true"
+              },
+              {
+                "type": "column",
+                "columnId": "columnApplication",
+                "label": "Application",
+                "cellTemplate": {
+                  "type": "text",
+                  "id": "applicationText",
+                  "enabled": false,
+                  "value": "<% let n = (logEntry.coName ?? '').startsWith('X:') ? logEntry.coName : (logEntry.roleName ?? ''); n.startsWith('X:') ? (n.substringBefore(':') + ':' + n.substringAfter(':').substringBefore(':')) : '' %>"
                 },
                 "sortableAndFilterable": "true"
               },

@@ -86,6 +86,16 @@ var appRows = function(requests, orgs, apps) {
   });
 };
 
+/* ISC turnaround: median calendar days from request to approval, approvals in the last 90 days.
+   Day differences come from positions in lastDays(90), so no date arithmetic is needed. */
+var turnaroundText = function(requests) {
+  let keys = lastDays(90);
+  let d = requests.filter(r => { r.status == 'Approved' && inDays(r.approvedDate, keys) && inDays(r.requestedDate, keys) })
+    .map(r => { keys.indexOf(('' + r.requestedDate).substring(0, 10)) - keys.indexOf(('' + r.approvedDate).substring(0, 10)) }).sort();
+  let m = size(d) == 0 ? 0 : ('' + ((size(d) - 1) / 2)).substringBefore('.').toInt();
+  size(d) == 0 ? 'No approvals in the last 90 days' : ('Median ' + d[m] + ' day' + (d[m] == 1 ? '' : 's') + ' · ' + size(d) + ' approval' + (size(d) == 1 ? '' : 's'));
+};
+
 /* Pending requests, oldest first, at most `top`. */
 var oldestPending = function(requests, top) {
   let p = list:sort(requests.filter(r => { r.status == 'Pending ISC Review' && !empty(r.requestedDate) }), 'requestedDate', true);
@@ -104,6 +114,7 @@ var countInDays = function(list, field, keys) {
   "appSlices": appSlices,
   "bulkSlices": bulkSlices,
   "appRows": appRows,
+  "turnaroundText": turnaroundText,
   "oldestPending": oldestPending,
   "countInDays": countInDays
 }

@@ -70,12 +70,13 @@ def chart(title, slices, subtitle):
 
 
 kpis = [
+    count_card("ISC Turnaround", f"comsInsights.turnaroundText({REQ})", "Request to approval, last 90 days"),
     count_card("Pending ISC Review", f"'' + comsRequestStats.countPending({REQ}) + ' pending · ' + comsRequestStats.countOverdue({REQ}) + ' overdue'", "Overdue after 3 business days"),
     count_card("Approved, Last 30 Days", f"'' + {REQ}.filter(r => {{ r.status == 'Approved' && comsInsights.inDays(r.approvedDate, comsInsights.lastDays(30)) }}).size() + ' role requests'", "By approval date"),
     count_card("Changes, Last 30 Days", f"'' + comsInsights.countInDays({AUD}, 'timestamp', comsInsights.lastDays(30)) + ' audit records'", "Newest 300 audit records"),
     None,   # set below (needs a let)
 ]
-kpis[3] = {"type": "card", "cardId": "CountCard", "parameters": (f"<% let runs = {RUNS}.filter(r => {{ comsInsights.inDays(r.uploadedAt, comsInsights.lastDays(30)) }}); "
+kpis[4] = {"type": "card", "cardId": "CountCard", "parameters": (f"<% let runs = {RUNS}.filter(r => {{ comsInsights.inDays(r.uploadedAt, comsInsights.lastDays(30)) }}); "
                          f"{{ 'title': 'Bulk Runs, Last 30 Days', 'countText': '' + size(runs) + ' runs · ' + runs.filter(r => {{ ('' + (r.status ?? '')).upperCase().contains('FAIL') }}).size() + ' failed', 'subtitle': 'Uploads and grid edits' }} %>")}
 
 charts = [

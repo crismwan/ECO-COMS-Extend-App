@@ -578,7 +578,8 @@
                     "id": "applicationDropdownGuide",
                     "title": "Application",
                     "text": "The application the new assignable role belongs to. The generated role name starts with this application code."
-                  }
+                  },
+                  "helpText": "The generated role name starts with this application code."
                 },
                 {
                   "type": "instanceList",

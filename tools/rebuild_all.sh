@@ -31,10 +31,13 @@ run tools/title_case.py                 # headings and card titles in Title Case
 run tools/consistency.py                # titles, back links, help text size, success pages
 run tools/add_empty_messages.py         # "Nothing to show" texts
 run tools/polish.py                     # final pass: labels, About boxes, names, Pacific times
+run tools/ux_improvements.py          # UI recommendations 2026-11-02: help text, Waiting column, counters, links
 run tools/grid_style.py                # one grid format: list look, sortable columns, no +/- on display grids
 run tools/collapse_about.py            # About boxes start closed on the long pages
 run tools/merge_nav_about.py           # back links at the top of the About box
 run tools/title_banner.py              # white title tile instead of Workday's square page banner
+
+run tools/ux_improvements.py --tiles  # one-line summary under the title tile where the About box starts closed
 
 if [[ "${1:-}" == "--check" ]]; then
   changed="$(git status --porcelain -- presentation orchestration model)"

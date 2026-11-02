@@ -27,6 +27,16 @@
       "taskReference": {
         "taskId": "schemaPatternApps"
       }
+    },
+    {
+      "label": "View in Audit Log",
+      "taskReference": {
+        "taskId": "auditLogViewer",
+        "parameterBindings": {
+          "period": "24h",
+          "changeType": "Shell Org Pattern"
+        }
+      }
     }
   ]
 }

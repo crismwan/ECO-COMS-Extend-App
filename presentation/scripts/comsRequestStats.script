@@ -49,6 +49,18 @@ var isOverdue = function(r) {
   isOverdueAfter(r, recentDates(overdueBusinessDays()));
 };
 
+/* ISC Queue Waiting column: business days a pending request has waited (0 = requested today). */
+var waitingText = function(r) {
+  (r.status != 'Pending ISC Review' || empty(r.requestedDate)) ? '' : waitingFor(('' + r.requestedDate).substring(0, 10));
+};
+
+var waitingFor = function(day) {
+  let days = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59].map(n => { date:now().minusDays(n) });
+  let i = days.map(d => { d.format('yyyy-MM-dd') }).indexOf(day);
+  let n = i < 0 ? -1 : days.subList(0, i).filter(d => { isWeekday(d) }).size();
+  i < 0 ? 'Over 60 days' : (n == 0 ? 'Today' : ('' + n + ' business day' + (n == 1 ? '' : 's')));
+};
+
 var countPending = function(list) {
   list.filter(r => { r.status == 'Pending ISC Review' }).size();
 };
@@ -96,6 +108,7 @@ var myRequestsText = function(list, meId) {
   "filterRequests": filterRequests,
   "isOverdue": isOverdue,
   "overdueBusinessDays": overdueBusinessDays,
+  "waitingText": waitingText,
   "countPending": countPending,
   "countOverdue": countOverdue,
   "countApprovedThisMonth": countApprovedThisMonth,

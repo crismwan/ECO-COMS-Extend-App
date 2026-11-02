@@ -92,7 +92,7 @@
               "type": "richText",
               "id": "titleBannerRichText",
               "enabled": false,
-              "value": "<% '<span style=\"color:#0055B3;font-size:24px\"><b>' + (empty(queryParams.appName) ? 'ECO-COMS: Shell Org Manager' : ('ECO-COMS: Shell Org Manager – ' + queryParams.appName)).replace('<', '&lt;') + '</b></span>' %>"
+              "value": "<% '<span style=\"color:#0055B3;font-size:24px\"><b>' + (empty(queryParams.appName) ? 'ECO-COMS: Shell Org Manager' : ('ECO-COMS: Shell Org Manager – ' + queryParams.appName)).replace('<', '&lt;') + '</b></span>' + '<br><span style=\"color:#374151;font-size:13px\">Shell organizations, patterns and role assignments for one application.</span>' %>"
             }
           ]
         },
@@ -192,7 +192,9 @@
                 "enabled": false,
                 "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">A <b>pattern</b> is a Custom Organization (subtype X:SHELL) whose code follows its application's own format: <b>&lt;application&gt;:&lt;prefix&gt;:&lt;field&gt;:&lt;field&gt;…</b>. Each application sets its prefixes and fields; <b>*</b> means any. Roles assigned on a pattern apply to everything it matches. Only applications with a pattern format appear below: use <b>Manage</b> to see an application's patterns and <b>Add Pattern</b> to create one. Patterns can be inactivated but not deleted.</span>"
               }
-            ]
+            ],
+            "collapsible": true,
+            "initializeCollapsed": true
           },
           {
             "type": "fieldSet",
@@ -428,7 +430,9 @@
                 "enabled": false,
                 "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">A <b>shell organization</b> is a Custom Organization (type = the application code, for example X:CLW) that exists only so roles can be assigned on it. It holds no workers. <b>Status</b> shows whether it can still be used: inactivating one stops new assignments but does <b>not</b> remove existing role assignments, so check the Manage Role Assignments tab first.</span>"
               }
-            ]
+            ],
+            "collapsible": true,
+            "initializeCollapsed": true
           },
           {
             "type": "richText",
@@ -697,7 +701,9 @@
                 "enabled": false,
                 "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">Each row is one <b>role</b> assigned on one <b>shell organization</b>. <b>Positions</b> are the positions that hold the role; <b>Workers</b> are the people currently in those positions, so a vacant position shows no worker. Use the row's action to add or remove positions; every change is written to the Audit Log<% !empty(queryParams.appCode) ? '. Showing the selected application only' : '' %>.</span>"
               }
-            ]
+            ],
+            "collapsible": true,
+            "initializeCollapsed": true
           },
           {
             "type": "fieldSet",

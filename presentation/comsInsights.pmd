@@ -235,6 +235,11 @@
                 {
                   "type": "card",
                   "cardId": "CountCard",
+                  "parameters": "<% { 'title': 'ISC Turnaround', 'countText': comsInsights.turnaroundText(list:flatten([requestPage0.data ?? [], requestPage1.data ?? [], requestPage2.data ?? []])), 'subtitle': 'Request to approval, last 90 days' } %>"
+                },
+                {
+                  "type": "card",
+                  "cardId": "CountCard",
                   "parameters": "<% { 'title': 'Pending ISC Review', 'countText': '' + comsRequestStats.countPending(list:flatten([requestPage0.data ?? [], requestPage1.data ?? [], requestPage2.data ?? []])) + ' pending · ' + comsRequestStats.countOverdue(list:flatten([requestPage0.data ?? [], requestPage1.data ?? [], requestPage2.data ?? []])) + ' overdue', 'subtitle': 'Overdue after 3 business days' } %>"
                 },
                 {

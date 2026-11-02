@@ -130,7 +130,7 @@
               "type": "richText",
               "id": "titleBannerRichText",
               "enabled": false,
-              "value": "<% '<span style=\"color:#0055B3;font-size:24px\"><b>' + ('ECO-COMS: ISC Queue – ' + (comsRequestStats.statusOrDefault(queryParams.status ?? '') == 'All' ? 'All' : (comsRequestStats.statusOrDefault(queryParams.status ?? '') == 'Pending ISC Review' ? 'Pending' : comsRequestStats.statusOrDefault(queryParams.status ?? ''))) + ' ' + (queryParams.view == 'aaa' ? 'AAA Role Requests' : (queryParams.view == 'assignable' ? 'Assignable Role Requests' : 'Role Requests'))).replace('<', '&lt;') + '</b></span>' %>"
+              "value": "<% '<span style=\"color:#0055B3;font-size:24px\"><b>' + ('ECO-COMS: ISC Queue – ' + (comsRequestStats.statusOrDefault(queryParams.status ?? '') == 'All' ? 'All' : (comsRequestStats.statusOrDefault(queryParams.status ?? '') == 'Pending ISC Review' ? 'Pending' : comsRequestStats.statusOrDefault(queryParams.status ?? ''))) + ' ' + (queryParams.view == 'aaa' ? 'AAA Role Requests' : (queryParams.view == 'assignable' ? 'Assignable Role Requests' : 'Role Requests'))).replace('<', '&lt;') + '</b></span>' + '<br><span style=\"color:#374151;font-size:13px\">Role requests waiting for ISC review. Open a row&#39;s Review Process link to approve or deny it.</span>' %>"
             }
           ]
         },
@@ -157,7 +157,9 @@
                   "enabled": false,
                   "value": "<% '<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">ISC Security: requests ' + (queryParams.view == 'aaa' ? 'for AAA (Organizations and Roles Assignment Administrator) roles' : (queryParams.view == 'assignable' ? 'for assignable roles' : 'for both assignable and AAA roles')) + '. Open a request\\'s <b>Review Process</b> to act on it in your Workday inbox.</span>' + '<br><br>' + '<span style=\"color:#374151;font-size:12px\"><b>AAA role</b>: an Organizations and Roles Assignment Administrator request (Submit AAA Role Request), for someone who will manage an application\\'s roles. <b>Assignable role</b>: a new delegated role for an application, requested with Submit Assignable Role Request. <b>Review</b>: opens the request\\'s Workday review process; approve or deny it from your Workday inbox, and the request here updates automatically. A pending request is <b>overdue</b> after 3 business days.</span>' %>"
                 }
-              ]
+              ],
+              "collapsible": true,
+              "initializeCollapsed": true
             }
           ]
         },
@@ -249,7 +251,7 @@
                   "multiViewStylingEnabled": true,
                   "id": "allPendingGrid",
                   "autoPaging": true,
-                  "rows": "<% comsRequestStats.filterRequests(list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? [], (queryParams.view ?? ''), (queryParams.status ?? '')) %>",
+                  "rows": "<% let f = comsRequestStats.filterRequests(list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? [], (queryParams.view ?? ''), (queryParams.status ?? '')); /* oldest first */ comsRequestStats.statusOrDefault(queryParams.status ?? '') == 'Pending ISC Review' ? list:flatten([list:sort(f.filter(r => { !empty(r.requestedDate) }), 'requestedDate', true), f.filter(r => { empty(r.requestedDate) })]) : f %>",
                   "rowVariableName": "role",
                   "enabled": false,
                   "label": "<% (comsRequestStats.statusOrDefault(queryParams.status ?? '') == 'All' ? 'All' : (comsRequestStats.statusOrDefault(queryParams.status ?? '') == 'Pending ISC Review' ? 'Pending' : comsRequestStats.statusOrDefault(queryParams.status ?? ''))) + ' ' + (queryParams.view == 'aaa' ? 'AAA Role Requests' : (queryParams.view == 'assignable' ? 'Assignable Role Requests' : 'Role Requests')) %>",
@@ -382,6 +384,18 @@
                         "type": "text",
                         "value": "<% role.requestedDate ?? '' %>",
                         "enabled": false
+                      },
+                      "sortableAndFilterable": "true"
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colWaiting",
+                      "label": "Waiting",
+                      "cellTemplate": {
+                        "type": "text",
+                        "id": "waitingText",
+                        "enabled": false,
+                        "value": "<% comsRequestStats.waitingText(role) %>"
                       },
                       "sortableAndFilterable": "true"
                     },

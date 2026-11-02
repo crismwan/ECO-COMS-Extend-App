@@ -202,7 +202,8 @@
                     "title": "Effective Date Rules",
                     "text": "Must be a weekday (Monday to Friday) in this year or next year. Weekends and other years are rejected when you click Next. The organization is available in Workday from this date."
                   },
-                  "onChange": "<%\n            if (empty(self.value)) {\n              self.clearError();\n            } else if (!comsValidations.isWeekday(self.value)) {\n              self.setError(comsValidations.errorWeekday());\n            } else if (!comsValidations.isCurrentOrFutureYear(self.value)) {\n              self.setError(comsValidations.errorYear());\n            } else {\n              self.clearError();\n            }\n          %>"
+                  "onChange": "<%\n            if (empty(self.value)) {\n              self.clearError();\n            } else if (!comsValidations.isWeekday(self.value)) {\n              self.setError(comsValidations.errorWeekday());\n            } else if (!comsValidations.isCurrentOrFutureYear(self.value)) {\n              self.setError(comsValidations.errorYear());\n            } else {\n              self.clearError();\n            }\n          %>",
+                  "helpText": "A weekday (Monday to Friday) this year or next."
                 }
               ],
               "title": "Organization Details"

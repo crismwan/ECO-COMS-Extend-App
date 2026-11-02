@@ -21,6 +21,16 @@
       "taskReference": {
         "taskId": "shellOrgManager"
       }
+    },
+    {
+      "label": "View in Audit Log",
+      "taskReference": {
+        "taskId": "auditLogViewer",
+        "parameterBindings": {
+          "period": "24h",
+          "changeType": "Org Status"
+        }
+      }
     }
   ]
 }
