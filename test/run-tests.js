@@ -391,6 +391,28 @@ function staticSuite() {
     pass('Static.schemas', `${f.applications.length} application schemas, ${n} examples checked`);
   } catch (e) { err('schema', `tools/pattern_schemas.json: ${e.message}`); }
 
+  // 7i. Load-time scripts (value, label, visible, rows, ...) can't use a widget declared later on the
+  // page: "Unknown Variable found: x.value" (newSchemaPattern preview, 2026-11-02). Event handlers
+  // (onChange, onSubmit, onSearch, ...) run after the page is built, so they may.
+  for (const [f, d] of Object.entries(pmds)) {
+    const ids = []; const allIds = new Set();
+    walk(d.presentation || {}, (n) => { if (n && typeof n.id === 'string') allIds.add(n.id); });
+    const visit = (n) => {
+      if (Array.isArray(n)) return n.forEach(visit);
+      if (!n || typeof n !== 'object') return;
+      if (typeof n.id === 'string') ids.push(n.id);
+      for (const [k, v] of Object.entries(n)) {
+        if (/^on[A-Z]/.test(k)) continue;
+        if (typeof v === 'string' && v.includes('<%')) {
+          for (const m of v.matchAll(/\b([a-z][A-Za-z0-9]*)\.(value|selectedEntries|rows|childrenMap)\b/g)) {
+            if (allIds.has(m[1]) && !ids.includes(m[1]) && m[1] !== n.id) warn('Static.forwardRef', `${f}: ${n.id || n.type} ${k} uses ${m[1]}, declared later on the page: fails if evaluated at page load (guard it so it isn't)`);
+          }
+        } else visit(v);
+      }
+    };
+    visit(d.presentation || {});
+  }
+
   // 8. No forbidden test text in anything shipped to the tenant (CLAUDE.md "Test data in the tenant")
   const forbidden = new RegExp(['cl', 'aude'].join(''), 'i');
   for (const f of [...listFiles('presentation', true), ...listFiles('model'), ...listFiles('orchestration')]) {

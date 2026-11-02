@@ -146,7 +146,9 @@ page = {"id": "newSchemaPattern", "securityDomains": ["ManageCOMSShellOrgs"], "i
           {"type": "dropdown", "id": "prefixDropdown", "label": "Pattern Prefix", "values": f"<% comsPatterns.prefixOptions({SCH}) %>",
            "visible": f"<% comsPatterns.prefixCount({SCH}) > 1 %>",
            "onChange": f"<%\n  self.clearError();\n  patternPreviewText.setValue({NAME});\n%>"},
-          {"type": "readOnlyText", "id": "patternPreviewText", "label": "Pattern Name Preview", "value": f"<% {NAME} %>"}]},
+          {"type": "readOnlyText", "id": "patternPreviewText", "label": "Pattern Name Preview",
+           # page-load value: the fields are declared further down, so they can't be referenced here yet
+           "value": f"<% comsPatterns.buildName({APPC}, comsPatterns.prefixCount({SCH}) > 1 ? '' : comsPatterns.firstPrefix({SCH}), {SCH}, ['', '', '', '', '', '', '']) %>"}]},
         {"type": "fieldSet", "id": "patternFieldsFieldSet", "title": "Pattern Fields", "children": fields + [
           {"type": "date", "id": "effectiveDate", "label": "Effective Date", "required": True,
            "onChange": "<%\n  if (empty(self.value)) { self.clearError(); }\n  else if (!comsValidations.isWeekday(self.value)) { self.setError(comsValidations.errorWeekday()); }\n  else if (!comsValidations.isCurrentOrFutureYear(self.value)) { self.setError(comsValidations.errorYear()); }\n  else { self.clearError(); }\n%>"}]}]}]},

@@ -285,7 +285,7 @@
                   "type": "readOnlyText",
                   "id": "patternPreviewText",
                   "label": "Pattern Name Preview",
-                  "value": "<% comsPatterns.buildName((queryParams.appCode ?? ''), (comsPatterns.prefixCount(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode)) > 1 ? (empty(prefixDropdown.value) ? '' : prefixDropdown.selectedEntries[0].id) : comsPatterns.firstPrefix(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode))), comsPatterns.schemaFor(comsApplications.data, queryParams.appCode), [patternField1Text.value, patternField2Text.value, patternField3Text.value, patternField4Text.value, patternField5Text.value, patternField6Text.value, patternField7Text.value]) %>"
+                  "value": "<% comsPatterns.buildName((queryParams.appCode ?? ''), comsPatterns.prefixCount(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode)) > 1 ? '' : comsPatterns.firstPrefix(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode)), comsPatterns.schemaFor(comsApplications.data, queryParams.appCode), ['', '', '', '', '', '', '']) %>"
                 }
               ]
             },
