@@ -241,3 +241,42 @@ def add_subtype(n):
 add_subtype(d['presentation'])
 open(p, 'w').write(json.dumps(d, indent=2, ensure_ascii=False) + '\n')
 print('newShellOrg: Organization Subtype pick-list')
+
+# Shell Org Manager, Application Patterns tab (product owner 2026-11-02): only applications with pattern-form
+# fields declared (a patternSchema record, plus Clockwork's own form); each one's patterns use its own prefixes.
+p = os.path.join(ROOT, 'shellOrgManager.pmd')
+d = json.load(open(p))
+if not any(e['name'] == 'comsApplications' for e in d['endPoints']):
+    d['endPoints'].append({"name": "comsApplications", "baseUrlType": "BUSINESS-OBJECT", "url": "/comsApplications?limit=100", "authType": "sso",
+                           "isCollection": True, "failOnStatusCodes": FOS([400, 403, 429])})
+APPS_WITH_FORM = "(comsApplications.data ?? []).filter(a => { !empty(a.patternSchema) || a.appId == 'X:CLW' })"
+CLW_PATTERNS = ("(shellOrgPatterns.data ?? []).filter(p => { (p.code ?? '').startsWith('X:') && (p.code ?? '').contains(':PATTERN:') })"
+                ".filter(p => { p.code.startsWith((queryParams.appCode ?? '') + ':PATTERN') })")
+PREFS = ("((comsApplications.data ?? []).filter(a => { a.appId == (queryParams.appCode ?? '') }).map(a => { a.namePrefix ?? '' }).join(',')).split(',')")
+SCHEMA_PATTERNS = ("(allShellOrgs.data ?? []).filter(o => { " + PREFS + ".filter(pf => { !empty(pf) && (o.code ?? '').startsWith((queryParams.appCode ?? '') + ':' + pf + ':') }).size() > 0 })")
+PATTERNS = "(empty(queryParams.appCode) ? [] : ((queryParams.appCode == 'X:CLW') ? " + CLW_PATTERNS + " : " + SCHEMA_PATTERNS + "))"
+ABOUT = ('<span style="color:#0055B7;font-size:12px;font-weight:700">ⓘ </span><span style="color:#374151;font-size:12px">'
+         'A <b>pattern</b> is a Custom Organization (subtype X:SHELL) whose code follows its application\'s own format: '
+         '<b>&lt;application&gt;:&lt;prefix&gt;:&lt;field&gt;:…</b>. Clockwork uses <b>X:CLW:PATTERN:&lt;subject&gt;:&lt;course&gt;:&lt;section&gt;:&lt;academic period&gt;</b> '
+         '(e.g. X:CLW:PATTERN:MATH:MATH_V:100:201:2026W1); Assessment Outcomes uses <b>X:BPMS(AOC):CP:&lt;subject&gt;:&lt;course&gt;</b> (e.g. X:BPMS(AOC):CP:MECH_V:1*); '
+         'most other tools use one Role Name (e.g. X:ADM:KEYCLOAK:ANY). <b>*</b> means any. Roles assigned on a pattern apply to whatever matches it. '
+         'Only applications with a pattern format appear below: use <b>Manage</b> to see an application\'s patterns and <b>Add Pattern</b> to create one. '
+         'Patterns can be inactivated but not deleted.</span>')
+def tab(n):
+    if isinstance(n, dict):
+        i = n.get('id')
+        if i == 'patternsAboutRichText':
+            n['value'] = ABOUT
+        elif i == 'appsGrid':
+            n['rows'] = "<% " + APPS_WITH_FORM + ".map(a => { a.appId }).distinct().sort().map(appCode => { {'appCode': appCode} }) %>"
+        elif i == 'patternsGrid':
+            n['rows'] = "<% " + PATTERNS + " %>"
+            n['visible'] = "<% !empty(queryParams.appCode) && size(" + PATTERNS + ") > 0 %>"
+        elif i == 'patternsEmptyText':
+            n['visible'] = "<% !empty(queryParams.appCode) && size(" + PATTERNS + ") == 0 %>"
+        for v in n.values(): tab(v)
+    elif isinstance(n, list):
+        for v in n: tab(v)
+tab(d['presentation'])
+open(p, 'w').write(json.dumps(d, indent=2, ensure_ascii=False) + '\n')
+print('shellOrgManager: patterns tab lists applications with a pattern format')

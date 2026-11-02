@@ -57,6 +57,24 @@
           "code": 429
         }
       ]
+    },
+    {
+      "name": "comsApplications",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "url": "/comsApplications?limit=100",
+      "authType": "sso",
+      "isCollection": true,
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 403
+        },
+        {
+          "code": 429
+        }
+      ]
     }
   ],
   "presentation": {
@@ -165,7 +183,7 @@
                 "type": "richText",
                 "id": "patternsAboutRichText",
                 "enabled": false,
-                "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">A <b>pattern</b> is a Custom Organization whose code follows <b>&lt;application&gt;:PATTERN:&lt;subject&gt;:&lt;course&gt;:&lt;section&gt;:&lt;academic period&gt;</b>, for example X:CLW:PATTERN:MATH:MATH_V:100:201:2026W1, where * means any (X:CLW:PATTERN:CPSC:CPSC_V:304:*:* covers every section and period of CPSC_V 304). Roles assigned on a pattern apply to the matching courses only. Use <b>Manage</b> on an application below to see its patterns; use <b>Add Pattern</b> to create one. Patterns can be inactivated but not deleted.</span>"
+                "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">A <b>pattern</b> is a Custom Organization (subtype X:SHELL) whose code follows its application's own format: <b>&lt;application&gt;:&lt;prefix&gt;:&lt;field&gt;:…</b>. Clockwork uses <b>X:CLW:PATTERN:&lt;subject&gt;:&lt;course&gt;:&lt;section&gt;:&lt;academic period&gt;</b> (e.g. X:CLW:PATTERN:MATH:MATH_V:100:201:2026W1); Assessment Outcomes uses <b>X:BPMS(AOC):CP:&lt;subject&gt;:&lt;course&gt;</b> (e.g. X:BPMS(AOC):CP:MECH_V:1*); most other tools use one Role Name (e.g. X:ADM:KEYCLOAK:ANY). <b>*</b> means any. Roles assigned on a pattern apply to whatever matches it. Only applications with a pattern format appear below: use <b>Manage</b> to see an application's patterns and <b>Add Pattern</b> to create one. Patterns can be inactivated but not deleted.</span>"
               }
             ]
           },
@@ -180,7 +198,7 @@
                 "gridType": "LIST",
                 "multiViewStylingEnabled": true,
                 "id": "appsGrid",
-                "rows": "<% list:flatten([(shellOrgPatterns.data ?? []).filter(p => { (p.code ?? '').startsWith('X:') && (p.code ?? '').contains(':PATTERN:') }).map(p => { p.code.substringBefore(':PATTERN').substringBefore(':') + ':' + p.code.substringBefore(':PATTERN').substringAfter(':').substringBefore(':') }), (allShellOrgs.data ?? []).filter(o => { (o.code ?? '').startsWith('X:') && !(o.code ?? '').contains(':PATTERN') }).map(o => { 'X:' + o.code.substringAfter(':').substringBefore(':') })]).distinct().sort().map(appCode => { {'appCode': appCode} }) %>",
+                "rows": "<% (comsApplications.data ?? []).filter(a => { !empty(a.patternSchema) || a.appId == 'X:CLW' }).map(a => { a.appId }).distinct().sort().map(appCode => { {'appCode': appCode} }) %>",
                 "rowVariableName": "app",
                 "enabled": false,
                 "label": "Applications",
@@ -274,7 +292,7 @@
                 "id": "patternsEmptyText",
                 "enabled": false,
                 "label": "ⓘ Nothing to show",
-                "visible": "<% !empty(queryParams.appCode) && size((shellOrgPatterns.data ?? []).filter(p => { (p.code ?? '').startsWith('X:') && (p.code ?? '').contains(':PATTERN:') }).filter(p => { p.code.startsWith((queryParams.appCode ?? '') + ':PATTERN') })) == 0 %>",
+                "visible": "<% !empty(queryParams.appCode) && size((empty(queryParams.appCode) ? [] : ((queryParams.appCode == 'X:CLW') ? (shellOrgPatterns.data ?? []).filter(p => { (p.code ?? '').startsWith('X:') && (p.code ?? '').contains(':PATTERN:') }).filter(p => { p.code.startsWith((queryParams.appCode ?? '') + ':PATTERN') }) : (allShellOrgs.data ?? []).filter(o => { ((comsApplications.data ?? []).filter(a => { a.appId == (queryParams.appCode ?? '') }).map(a => { a.namePrefix ?? '' }).join(',')).split(',').filter(pf => { !empty(pf) && (o.code ?? '').startsWith((queryParams.appCode ?? '') + ':' + pf + ':') }).size() > 0 })))) == 0 %>",
                 "value": "No shell org patterns found for this application. Use the Add Pattern button above to create one."
               },
               {
@@ -282,12 +300,12 @@
                 "gridType": "LIST",
                 "multiViewStylingEnabled": true,
                 "id": "patternsGrid",
-                "rows": "<% empty(queryParams.appCode) ? [] : (shellOrgPatterns.data ?? []).filter(p => { (p.code ?? '').startsWith('X:') && (p.code ?? '').contains(':PATTERN:') }).filter(p => { p.code.startsWith(queryParams.appCode + ':PATTERN') }) %>",
+                "rows": "<% (empty(queryParams.appCode) ? [] : ((queryParams.appCode == 'X:CLW') ? (shellOrgPatterns.data ?? []).filter(p => { (p.code ?? '').startsWith('X:') && (p.code ?? '').contains(':PATTERN:') }).filter(p => { p.code.startsWith((queryParams.appCode ?? '') + ':PATTERN') }) : (allShellOrgs.data ?? []).filter(o => { ((comsApplications.data ?? []).filter(a => { a.appId == (queryParams.appCode ?? '') }).map(a => { a.namePrefix ?? '' }).join(',')).split(',').filter(pf => { !empty(pf) && (o.code ?? '').startsWith((queryParams.appCode ?? '') + ':' + pf + ':') }).size() > 0 }))) %>",
                 "rowVariableName": "pattern",
                 "enabled": false,
                 "label": "<% 'Patterns for ' + (queryParams.appName ?? queryParams.appCode ?? '') %>",
                 "autoPaging": true,
-                "visible": "<% !empty(queryParams.appCode) && size((shellOrgPatterns.data ?? []).filter(p => { (p.code ?? '').startsWith('X:') && (p.code ?? '').contains(':PATTERN:') }).filter(p => { p.code.startsWith((queryParams.appCode ?? '') + ':PATTERN') })) > 0 %>",
+                "visible": "<% !empty(queryParams.appCode) && size((empty(queryParams.appCode) ? [] : ((queryParams.appCode == 'X:CLW') ? (shellOrgPatterns.data ?? []).filter(p => { (p.code ?? '').startsWith('X:') && (p.code ?? '').contains(':PATTERN:') }).filter(p => { p.code.startsWith((queryParams.appCode ?? '') + ':PATTERN') }) : (allShellOrgs.data ?? []).filter(o => { ((comsApplications.data ?? []).filter(a => { a.appId == (queryParams.appCode ?? '') }).map(a => { a.namePrefix ?? '' }).join(',')).split(',').filter(pf => { !empty(pf) && (o.code ?? '').startsWith((queryParams.appCode ?? '') + ':' + pf + ':') }).size() > 0 })))) > 0 %>",
                 "columns": [
                   {
                     "type": "column",
