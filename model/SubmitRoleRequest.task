@@ -1,0 +1,9 @@
+{
+  "id": 14,
+  "name": "SubmitRoleRequest",
+  "label": "Submit Role Request",
+  "securityDomains": [
+    "ViewCOMSProfileGroup"
+  ],
+  "routePath": "/assignableRoleManager"
+}
