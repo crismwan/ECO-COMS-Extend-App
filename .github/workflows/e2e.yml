@@ -49,6 +49,8 @@ jobs:
           ONLY: ${{ github.event.inputs.only }}
           UNASSIGN: ${{ github.event.inputs.unassign }}
         run: |
+          # Secrets pasted from config.json can carry the JSON quotes or a newline; a JWT has neither, so drop them.
+          for v in WD_DEV_TOKEN WD_WCP_TOKEN WDCLI_TENANT_TOKEN; do if [ -n "${!v:-}" ]; then export "$v=$(printf '%s' "${!v}" | tr -d '[:space:]\"')"; fi; done
           case "${TASK}" in
             static|smoke|full|isu|seconduser|datacheck|probe) node test/run-tests.js "${TASK}" ;;
             cleanup-dry-run) node test/run-tests.js cleanup --also "${ALSO}" ;;

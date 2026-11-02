@@ -62,6 +62,8 @@ jobs:
           WD_DEV_TOKEN: ${{ secrets.WD_DEV_TOKEN }}
           WD_ORG_UUID: ${{ secrets.WD_ORG_UUID }}
         run: |
+          # Secrets pasted from config.json can carry the JSON quotes or a newline; a JWT has neither, so drop them.
+          for v in WD_DEV_TOKEN WD_WCP_TOKEN WDCLI_TENANT_TOKEN; do if [ -n "${!v:-}" ]; then export "$v=$(printf '%s' "${!v}" | tr -d '[:space:]\"')"; fi; done
           set -euo pipefail
           # WD_DEV_TOKEN = wcpTenantAccessToken["ubc_wcpdev2"] from interactive `wdcli app deploy`
           # This is the PKCE user token scoped to ubc_wcpdev2 (aud: wd, tenant: ubc_wcpdev2).
@@ -115,6 +117,8 @@ jobs:
         env:
           WD_WCP_TOKEN: ${{ secrets.WD_WCP_TOKEN }}
         run: |
+          # Secrets pasted from config.json can carry the JSON quotes or a newline; a JWT has neither, so drop them.
+          for v in WD_DEV_TOKEN WD_WCP_TOKEN WDCLI_TENANT_TOKEN; do if [ -n "${!v:-}" ]; then export "$v=$(printf '%s' "${!v}" | tr -d '[:space:]\"')"; fi; done
           # The AOS deploy also needs WD_WCP_TOKEN (config.json wcpAccessToken from an interactive
           # wdcli login). When only this one has expired, deploy fails late with a 401
           # "The supplied authentication is invalid". Fail early with a clear message instead.
@@ -233,6 +237,8 @@ jobs:
           WD_WCP_TOKEN: ${{ secrets.WD_WCP_TOKEN }}
           WD_ORG_UUID: ${{ secrets.WD_ORG_UUID }}
         run: |
+          # Secrets pasted from config.json can carry the JSON quotes or a newline; a JWT has neither, so drop them.
+          for v in WD_DEV_TOKEN WD_WCP_TOKEN WDCLI_TENANT_TOKEN; do if [ -n "${!v:-}" ]; then export "$v=$(printf '%s' "${!v}" | tr -d '[:space:]\"')"; fi; done
           set -euo pipefail
           # WD_DEV_TOKEN = wcpTenantAccessToken["ubc_wcpdev2"]  (aud: wd,  tenant: ubc_wcpdev2)
           # WD_WCP_TOKEN = wcpAccessToken                       (aud: wcp, tenant: _octopaaas)
@@ -391,6 +397,8 @@ jobs:
           WDCLI_CLIENT_SECRET: ${{ secrets.WD_CLIENT_SECRET }}
           WD_WCP_TOKEN: ${{ secrets.WD_WCP_TOKEN }}
         run: |
+          # Secrets pasted from config.json can carry the JSON quotes or a newline; a JWT has neither, so drop them.
+          for v in WD_DEV_TOKEN WD_WCP_TOKEN WDCLI_TENANT_TOKEN; do if [ -n "${!v:-}" ]; then export "$v=$(printf '%s' "${!v}" | tr -d '[:space:]\"')"; fi; done
           set -euo pipefail
           APP_REF_ID=ecocomsphase_xclw_cm_sync2_vmzvxm
           echo "=== Deploy debug info ==="
@@ -429,6 +437,8 @@ jobs:
           WD_DEV_TOKEN: ${{ secrets.WD_DEV_TOKEN }}
           E2E_SUITE: ${{ github.event.inputs.e2e_suite || 'smoke' }}
         run: |
+          # Secrets pasted from config.json can carry the JSON quotes or a newline; a JWT has neither, so drop them.
+          for v in WD_DEV_TOKEN WD_WCP_TOKEN WDCLI_TENANT_TOKEN; do if [ -n "${!v:-}" ]; then export "$v=$(printf '%s' "${!v}" | tr -d '[:space:]\"')"; fi; done
           # Give the new version a moment to go live before testing it.
           sleep 30
           node test/run-tests.js "${E2E_SUITE}"
@@ -438,6 +448,8 @@ jobs:
         env:
           WD_DEV_TOKEN: ${{ secrets.WD_DEV_TOKEN }}
         run: |
+          # Secrets pasted from config.json can carry the JSON quotes or a newline; a JWT has neither, so drop them.
+          for v in WD_DEV_TOKEN WD_WCP_TOKEN WDCLI_TENANT_TOKEN; do if [ -n "${!v:-}" ]; then export "$v=$(printf '%s' "${!v}" | tr -d '[:space:]\"')"; fi; done
           pip install --quiet openpyxl
           node tools/publish_template.js
 
