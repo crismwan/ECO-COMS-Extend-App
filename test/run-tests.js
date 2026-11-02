@@ -1373,6 +1373,11 @@ async function seedApps(token) {
   const after = (await request('GET', `${BO}/comsApplications?limit=100`, token)).data || [];
   const clw = after.find((r) => r.appId === 'X:CLW');
   if (clw && clw.patternSchema) fail('Seed.clockworkUntouched', 'X:CLW has a patternSchema: its own form would stop listing it');
+  for (const a of loadSchemas()) {
+    const r = after.find((x) => x.appId === a.appId);
+    const want = JSON.stringify(a.schema);
+    if (r && r.patternSchema !== want) fail(`Seed.stored ${a.appId}`, `patternSchema stored ${String(r.patternSchema || '').length} of ${want.length} characters`);
+  }
   pass('Seed.apps', `${after.length} application records (${after.filter((r) => r.patternSchema).length} with a pattern schema)`);
 }
 
