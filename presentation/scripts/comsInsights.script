@@ -20,6 +20,15 @@ var appOf = function(r) {
   t.startsWith('X:') ? orgAppCode(t) : (empty(a) ? '' : a);
 };
 
+/* appOf, then requests that carry a short code ("AOC Final Grades Submission (Assessment Outcomes)", AAA requests)
+   are matched to the COMS application whose name appears in the request's application text. */
+var appOfIn = function(r, apps) {
+  let a = appOf(r);
+  let text = '' + (r.application ?? '');
+  let hit = (a.startsWith('X:') || empty(text)) ? [] : apps.filter(x => { !empty(x.name) && ('' + (x.appId ?? '')).startsWith('X:') && text.contains(x.name) });
+  size(hit) == 0 ? a : ('' + hit[0].appId);
+};
+
 var isShellOrg = function(o) {
   ('' + (o.code ?? '')).startsWith('X:') && !('' + (o.code ?? '')).contains(':PATTERN');
 };
@@ -55,12 +64,17 @@ var statusSlices = function(requests) {
   slices(requests.map(r => { empty(r.status) ? 'No status' : r.status }), 6);
 };
 
-var appSlices = function(requests) {
-  slices(requests.map(r => { empty(appOf(r)) ? 'No application' : appOf(r) }), 8);
+var appSlices = function(requests, apps) {
+  slices(requests.map(r => { appOfIn(r, apps) }).map(c => { empty(c) ? 'No application' : c }), 8);
 };
 
 var bulkSlices = function(runs) {
   slices(runs.map(r => { empty(r.status) ? 'No status' : r.status }), 6);
+};
+
+/* The name of orgs[i] ('' when i < 0 or the org has no name reference). */
+var orgName = function(orgs, i) {
+  i < 0 ? '' : (empty(orgs[i].organizationByName) ? '' : ('' + (orgs[i].organizationByName.descriptor ?? '')));
 };
 
 /* One row per application code: shell orgs, patterns and role requests.
@@ -69,19 +83,21 @@ var appRows = function(requests, orgs, apps) {
   let active = orgs.filter(o => { isShellOrg(o) && o.cf_active1 == true }).map(o => { orgAppCode(o.code) }).sort();
   let inactive = orgs.filter(o => { isShellOrg(o) && o.cf_active1 != true }).map(o => { orgAppCode(o.code) }).sort();
   let pats = orgs.filter(o => { isPattern(o) }).map(o => { orgAppCode(o.code) }).sort();
-  let pend = requests.filter(r => { r.status == 'Pending ISC Review' }).map(r => { appOf(r) }).sort();
-  let appr = requests.filter(r => { r.status == 'Approved' }).map(r => { appOf(r) }).sort();
-  let den = requests.filter(r => { r.status == 'Denied' }).map(r => { appOf(r) }).sort();
+  let pend = requests.filter(r => { r.status == 'Pending ISC Review' }).map(r => { appOfIn(r, apps) }).sort();
+  let appr = requests.filter(r => { r.status == 'Approved' }).map(r => { appOfIn(r, apps) }).sort();
+  let den = requests.filter(r => { r.status == 'Denied' }).map(r => { appOfIn(r, apps) }).sort();
   let newest = list:sort(requests.filter(r => { !empty(r.requestedDate) }), 'requestedDate', false);
-  let newestCodes = newest.map(r => { appOf(r) });
+  let newestCodes = newest.map(r => { appOfIn(r, apps) });
   let appIds = apps.map(a => { a.appId ?? '' });
+  /* fallback name: the application's own organization (code == application code) */
+  let orgCodes = orgs.map(o => { '' + (o.code ?? '') });
   let codes = list:flatten([active, inactive, newestCodes]).filter(c => { !empty(c) }).distinct().sort();
   codes.map(c => {
     let n = appIds.indexOf(c);
     let last = newestCodes.indexOf(c);
     let row = {
       'code': c,
-      'name': n < 0 ? '' : (apps[n].name ?? ''),
+      'name': (n >= 0 ? ('' + (apps[n].name ?? '')) : '') != '' ? ('' + apps[n].name) : orgName(orgs, orgCodes.indexOf(c)),
       'shellActive': countIn(active, c),
       'shellInactive': countIn(inactive, c),
       'patterns': countIn(pats, c),
@@ -117,6 +133,7 @@ var countInDays = function(list, field, keys) {
 {
   "appCodeOf": appCodeOf,
   "appOf": appOf,
+  "appOfIn": appOfIn,
   "lastDays": lastDays,
   "inDays": inDays,
   "statusSlices": statusSlices,

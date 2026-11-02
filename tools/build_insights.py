@@ -72,7 +72,7 @@ def chart(title, slices, subtitle):
 kpis = [
     count_card("ISC Turnaround", f"comsInsights.turnaroundText({REQ})", "Request to approval, last 90 days"),
     count_card("Pending ISC Review", f"'' + comsRequestStats.countPending({REQ}) + ' pending · ' + comsRequestStats.countOverdue({REQ}) + ' overdue'", "Overdue after 3 business days"),
-    count_card("Approved, Last 30 Days", f"'' + {REQ}.filter(r => {{ r.status == 'Approved' && comsInsights.inDays(r.approvedDate, comsInsights.lastDays(30)) }}).size() + ' role requests'", "By approval date"),
+    count_card("Approved, Last 30 Days", f"'' + {REQ}.filter(r => {{ r.status == 'Approved' && comsInsights.inDays(r.approvedDate, comsInsights.lastDays(30)) }}).size() + ' approved'", "Role requests, by approval date"),
     count_card("Changes, Last 30 Days", f"'' + comsInsights.countInDays({AUD}, 'timestamp', comsInsights.lastDays(30)) + ' audit records'", "Newest 300 audit records"),
     None,   # set below (needs a let)
 ]
@@ -81,7 +81,7 @@ kpis[4] = {"type": "card", "cardId": "CountCard", "parameters": (f"<% let runs =
 
 charts = [
     chart("Role Requests by Status", f"comsInsights.statusSlices({REQ})", f"'' + size({REQ}) + ' requests'"),
-    chart("Role Requests by Application", f"comsInsights.appSlices({REQ})", "'Top applications'"),
+    chart("Role Requests by Application", f"comsInsights.appSlices({REQ}, comsApplications.data ?? [])", "'Top applications'"),
     {"type": "card", "cardId": "ShellOrgStatusChart", "parameters": "<% { 'activeCount': size((allShellOrgs.data ?? []).filter(o => { (o.code ?? '').startsWith('X:') && !(o.code ?? '').contains(':PATTERN') && o.cf_active1 == true })), 'inactiveCount': size((allShellOrgs.data ?? []).filter(o => { (o.code ?? '').startsWith('X:') && !(o.code ?? '').contains(':PATTERN') && o.cf_active1 != true })) } %>"},
     {"type": "card", "cardId": "AuditActionChart", "parameters": f"<% let f = comsAuditFilters.filterLogs({AUD}, '30d', ''); {{ 'addCount': comsAuditFilters.countAction(f, 'ADD'), 'inactivateCount': comsAuditFilters.countAction(f, 'INACTIVATE'), 'reactivateCount': comsAuditFilters.countAction(f, 'REACTIVATE'), 'assignCount': comsAuditFilters.countAction(f, 'ASSIGN POSITION'), 'removeCount': comsAuditFilters.countAction(f, 'REMOVE POSITION'), 'requestCount': comsAuditFilters.countAction(f, 'REQUEST'), 'approveCount': comsAuditFilters.countAction(f, 'APPROVE'), 'denyCount': comsAuditFilters.countAction(f, 'DENY'), 'deleteCount': comsAuditFilters.countAction(f, 'DELETE'), 'totalText': '' + size(f) + ' records, last 30 days' }} %>"},
     chart("Bulk Runs by Status", f"comsInsights.bulkSlices({RUNS})", f"'' + size({RUNS}) + ' runs'"),
@@ -115,7 +115,7 @@ pending_grid = {
     "columns": [
         text_col("requestedColumn", "Requested", "<% ('' + (pendingRow.requestedDate ?? '')).substring(0, 10) %>"),
         text_col("roleColumn", "Role", "<% pendingRow.roleName ?? '' %>"),
-        text_col("applicationColumn", "Application", "<% comsInsights.appOf(pendingRow) %>"),
+        text_col("applicationColumn", "Application", "<% comsInsights.appOfIn(pendingRow, comsApplications.data ?? []) %>"),
         text_col("requestedByColumn", "Requested By", "<% !empty(pendingRow.requestedBy) ? (pendingRow.requestedBy.descriptor ?? '') : '' %>"),
         text_col("referenceColumn", "Reference", "<% pendingRow.referenceId ?? '' %>"),
         {"type": "column", "columnId": "openColumn", "label": "Open", "cellTemplate": {

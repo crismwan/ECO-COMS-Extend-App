@@ -245,7 +245,7 @@
                 {
                   "type": "card",
                   "cardId": "CountCard",
-                  "parameters": "<% { 'title': 'Approved, Last 30 Days', 'countText': '' + list:flatten([requestPage0.data ?? [], requestPage1.data ?? [], requestPage2.data ?? []]).filter(r => { r.status == 'Approved' && comsInsights.inDays(r.approvedDate, comsInsights.lastDays(30)) }).size() + ' role requests', 'subtitle': 'By approval date' } %>"
+                  "parameters": "<% { 'title': 'Approved, Last 30 Days', 'countText': '' + list:flatten([requestPage0.data ?? [], requestPage1.data ?? [], requestPage2.data ?? []]).filter(r => { r.status == 'Approved' && comsInsights.inDays(r.approvedDate, comsInsights.lastDays(30)) }).size() + ' approved', 'subtitle': 'Role requests, by approval date' } %>"
                 },
                 {
                   "type": "card",
@@ -278,7 +278,7 @@
                 {
                   "type": "card",
                   "cardId": "BreakdownChart",
-                  "parameters": "<% { 'title': 'Role Requests by Application', 'subtitle': 'Top applications', 'slices': comsInsights.appSlices(list:flatten([requestPage0.data ?? [], requestPage1.data ?? [], requestPage2.data ?? []])) } %>"
+                  "parameters": "<% { 'title': 'Role Requests by Application', 'subtitle': 'Top applications', 'slices': comsInsights.appSlices(list:flatten([requestPage0.data ?? [], requestPage1.data ?? [], requestPage2.data ?? []]), comsApplications.data ?? []) } %>"
                 },
                 {
                   "type": "card",
@@ -479,7 +479,7 @@
                   "cellTemplate": {
                     "type": "text",
                     "id": "applicationText",
-                    "value": "<% comsInsights.appOf(pendingRow) %>",
+                    "value": "<% comsInsights.appOfIn(pendingRow, comsApplications.data ?? []) %>",
                     "enabled": false
                   },
                   "sortableAndFilterable": "true"
