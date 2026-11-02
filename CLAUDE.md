@@ -2294,6 +2294,8 @@ Pattern that lets a Workday rejection block OK instead of showing a false succes
 
 ### Calling Workday Web Services (SOAP) from an orchestration
 
+- **`Organization_Add_Update` takes the subtype by name only:** `Organization_Subtype_Reference` holds just `Organization_Subtype_Name` (v47.0 Human_Resources XSD, checked 2026-11-02); a reference ID (`Organization_Subtype_ID`) can't be sent there.
+
 - `SendWorkdayApiRequest` POST `/soap/v<version>/<Service>` (e.g. `/soap/v42.2/Human_Resources`) with a SOAP body works with the default credential.
 - **Use `Validate_Only=true` to test a WWS call safely**: Workday checks the request fully and changes nothing.
 - Check the operation's real shape in the tenant WSDL (`https://<services host>/ccx/service/<tenant>/<Service>/v<version>?wsdl`); community docs pages move. Several operations are **one-way** (empty response body): they return no event or new WID.

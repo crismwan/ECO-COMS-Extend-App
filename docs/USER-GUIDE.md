@@ -50,8 +50,9 @@ Only pattern codes that start with `X:` and contain `:PATTERN:` are listed.
 1. On the RBAC Hub, click **Add Shell Org**. The **Add New Shell Organization** wizard opens.
 2. On **Organization Details**:
    1. **Application**: pick the application the org belongs to.
-   2. **Organization Code**: enter the suffix only, without spaces or special characters. **Generated Organization Name** shows the full name, `ApplicationCode:OrganizationCode` (for example `X:CLW:ORG:ANY`).
-   3. **Effective Date**: the date the org becomes available: a weekday (Monday to Friday) in this year or next year. A weekend or another year shows an error as soon as you leave the field, and again on **Next**.
+   2. **Organization Subtype**: **X:META** for an application's meta organization, **X:SHELL** for a shell organization that roles are assigned on.
+   3. **Organization Code**: enter the suffix only, without spaces or special characters. **Generated Organization Name** shows the full name, `ApplicationCode:OrganizationCode` (for example `X:CLW:ORG:ANY`).
+   4. **Effective Date**: the date the org becomes available: a weekday (Monday to Friday) in this year or next year. A weekend or another year shows an error as soon as you leave the field, and again on **Next**.
 3. Click **Next**, check the **Review & Submit** summary, then click **OK**.
 4. ECO-COMS creates the org in Workday and checks that it now exists. If it does, **Shell Organization Created** opens with a receipt card (organization name, effective date, and when it was created) plus **Add Another Organization** and **View in Shell Org Manager**. The receipt shows the newest organization *you* created.
 
@@ -61,9 +62,32 @@ The **Before You Submit** note on the form is a reminder that the organization i
 
 The page stops you if the code already exists ("An organization with this code already exists: ...") or if Workday refused the request (see [Troubleshooting](#troubleshooting)).
 
-### Create a shell org pattern
+### Create a shell org pattern (any application except Clockwork)
 
-1. On the RBAC Hub, click **Add Pattern**. The **Add New Shell Org Pattern** wizard opens.
+Every application has its own pattern format: a prefix and its own fields. The format lives on the application's record, so a new application needs a new record, not a new page.
+
+1. Open **Add Pattern (Other Apps)** in Shell Org Manager's **Quick Actions**, or select an application in Shell Org Manager and click **Add Pattern**.
+2. Without an application selected, the page lists every application code in Workday with its **Pattern Format**. Click **Add Pattern** on a row.
+3. The form shows that application's fields, with their names and examples. Some applications have more than one prefix (for example X:ADM: AAP, BBAE, BBAREADER, KEYCLOAK): pick it under **Pattern Prefix**.
+4. Fill the fields. Each one is checked as you type, and **Pattern Name Preview** shows the name: `APPLICATION:PREFIX:field:field`. A blank field becomes `*` (any), except fields marked required (e.g. Subject for Assessment Outcomes).
+
+   | Application | Prefix | Fields | Example |
+   |---|---|---|---|
+   | X:BPMS(AOC) Final Grades Submission | CP | Subject (required, e.g. `MECH_V`), Course (`100`, `100A`, or a start plus `*`, e.g. `1*`) | `X:BPMS(AOC):CP:MECH_V:1*` |
+   | X:OAM Online Advising Management | ORG | Organization | `X:OAM:ORG:AA` |
+   | X:ADM Admissions | AAP, BBAE, BBAREADER, KEYCLOAK | Role Name | `X:ADM:BBAE:SAUDER` |
+   | X:BPMS(ADHC) Ad-Hoc Communication | COMM, PRIV | Role Name | `X:BPMS(ADHC):PRIV:DRC` |
+   | X:BALT, X:BPMS(ASMT), X:BPMS(LFSM), X:LLIS(CPE), X:LLIS(EXL), X:SET, X:PHA | ORG | Role Name | `X:BPMS(ASMT):ORG:REGENT` |
+   | X:BPMS(CRSS) / X:BPMS(DOCV) / X:BPMS(SDS) | CFG / DOCUMENT / APPLICATION | Role Name | `X:BPMS(CRSS):CFG:MGMNT` |
+
+   Role Name and Organization: capital letters, digits, `_` or `-`, up to 30, optionally ending in `*`.
+5. Pick the **Effective Date** (a weekday, this year or next) and click **OK**. The pattern is created in Workday with subtype **X:SHELL**, and **Pattern Created** opens.
+
+X:SET and X:PHA have no organization type in Workday yet, so Workday refuses their patterns until those types exist.
+
+### Create a Clockwork shell org pattern
+
+1. On the RBAC Hub, click **Add Pattern**. The **Add New Shell Org Pattern** wizard opens. (From the other applications' page, choose X:CLW and click **Open the Clockwork Pattern Form**.)
 2. On **Pattern Details**, pick the **Application** first. Fields you fill before choosing an application show "Please select an Application before entering pattern attributes."
 3. Fill the pattern attributes. **Pattern Name Preview** updates as you type, and each field is checked as you go.
 
