@@ -183,7 +183,7 @@
     }
   ],
   "presentation": {
-    "headerSize": "HIDDEN",
+    "headerSize": "STANDARD",
     "title": {
       "type": "title",
       "label": "ECO-COMS: RBAC Hub"
@@ -192,18 +192,6 @@
       "type": "basicFormLayout",
       "id": "hubLandingForm",
       "sections": [
-        {
-          "type": "layoutSection",
-          "id": "titleBannerSection",
-          "children": [
-            {
-              "type": "richText",
-              "id": "titleBannerRichText",
-              "enabled": false,
-              "value": "<span style=\"display:block;background:#0055B3;color:#ffffff;border-radius:16px;padding:18px 24px;font-size:24px;font-weight:700;line-height:1.3\">ECO-COMS: RBAC Hub</span>"
-            }
-          ]
-        },
         {
           "type": "layoutSection",
           "id": "dashboardSection",

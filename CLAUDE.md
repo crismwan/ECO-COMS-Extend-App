@@ -207,6 +207,11 @@ The `guide` attribute adds a "?" beside a widget on an **edit page**. It's a sib
 }
 ```
 
+## Page banner and richText styling (live test 2026-11-02)
+
+- **The Workday page banner can't be styled.** The `title` tag has only `id`, `label`, `render`; `presentation.headerSize` is `STANDARD` or `HIDDEN` (developer.workday.com "title", "presentation"). On a VIEW page with a `basicFormLayout` body, `headerSize: HIDDEN` did **not** remove the banner (the `pageHeader` element still rendered).
+- **`richText` keeps only `color` and `font-size` from inline styles.** `background`, `border-radius`, `padding` and `display` are stripped (seen in the rendered ProseMirror HTML), so a coloured, rounded banner can't be drawn with richText. Rounded shapes come only from cards (`cardContainer`) and section boxes, which are white.
+
 ## richText — multiple banners in one fieldSet (silent failure)
 
 **Confirmed failure pattern:** Placing two or more `richText` widgets as siblings inside the **same `fieldSet`** causes all but the first to be silently dropped — they do not appear in the DOM, no error is thrown, and the deploy succeeds.
