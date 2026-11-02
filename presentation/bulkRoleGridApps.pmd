@@ -102,7 +102,7 @@
                   "id": "appPickGrid",
                   "rowVariableName": "pa",
                   "label": "Applications",
-                  "rows": "<% list:flatten((shellRoles.data ?? []).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith('X:') }).map(ra => { 'X:' + ra.organization.descriptor.substringAfter(':').substringBefore(':') }) })).distinct().sort().map(a => { {'appCode': a} }) %>",
+                  "rows": "<% list:flatten((shellRoles.data ?? []).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith('X:') }).map(ra => { 'X:' + ra.organization.descriptor.substringAfter(':').substringBefore(':').substringBefore(' ') }) })).distinct().sort().map(a => { {'appCode': a} }) %>",
                   "columns": [
                     {
                       "type": "column",
