@@ -1335,6 +1335,15 @@ async function probe(token) {
       (r.data || []).forEach((d) => console.log(`   DS[${q}] ${d.alias || ''} | ${d.descriptor || d.name || ''}`));
     } catch (e) { console.log(`   DS[${q}] error ${e.message.slice(0, 120)}`); }
   }
+  try {
+    const ds = await request('GET', `${API}/wql/v1/dataSources?alias=topLevelOrganizations`, token);
+    const id = (ds.data || [])[0]?.id;
+    console.log(`   DS topLevelOrganizations id=${id}`);
+    const fl = await request('GET', `${API}/wql/v1/dataSources/${id}/fields?limit=100&search=type`, token);
+    (fl.data || []).forEach((x) => console.log(`   FIELD ${x.alias} | ${x.descriptor} | ${x.type || ''}`));
+    const fl2 = await request('GET', `${API}/wql/v1/dataSources/${id}/fields?limit=100&search=subtype`, token);
+    (fl2.data || []).forEach((x) => console.log(`   FIELD2 ${x.alias} | ${x.descriptor} | ${x.type || ''}`));
+  } catch (e) { console.log('   FIELDS error ' + e.message.slice(0, 200)); }
   for (const f of ['organizationSubtype', 'subtype', 'organizationSubtype1']) {
     try {
       const r = await wql(token, `SELECT code, ${f} FROM topLevelOrganizations WHERE code contains 'X:'`, 10000);
