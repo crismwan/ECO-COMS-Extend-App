@@ -1340,9 +1340,9 @@ async function probe(token) {
     const id = (ds.data || [])[0]?.id;
     console.log(`   DS topLevelOrganizations id=${id}`);
     let all = [];
-    for (let off = 0; off < 5000; off += 1000) {
-      const page = (await request('GET', `${API}/wql/v1/dataSources/${id}/fields?limit=1000&offset=${off}`, token)).data || [];
-      all = all.concat(page); if (page.length < 1000) break;
+    for (let off = 0; off < 5000; off += 100) {
+      const page = (await request('GET', `${API}/wql/v1/dataSources/${id}/fields?limit=100&offset=${off}`, token)).data || [];
+      all = all.concat(page); if (page.length < 100) break;
     }
     console.log(`   FIELDS total ${all.length}`);
     all.filter((x) => /subtype|organization type|^type/i.test(`${x.alias} ${x.descriptor}`)).forEach((x) => console.log(`   FIELD ${x.alias} | ${x.descriptor} | ${x.type || ''}`));
