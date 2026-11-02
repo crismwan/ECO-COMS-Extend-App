@@ -22,7 +22,7 @@ Open the app from Workday. The **ECO-COMS** hub opens on the **RBAC Hub** page. 
   - **Shell Organizations**: **Open Shell Org Manager**, **Add Shell Org**, **Add Pattern**
   - **Bulk Role Changes**: **Upload File**, **Download Template**, **View Results**
   - **Role Requests**: **View My Requests**, **Submit New Request**, **View AAA Requests**, **Submit AAA Role Request** (the ISC Queue has its own card above)
-- **Insights**: one view across ECO-COMS. Four count cards (pending ISC review, approved and changes in the last 30 days, bulk runs), five charts (requests by status and by application, shell orgs, changes by action, bulk runs), **Applications at a Glance** (shell orgs, patterns and requests per application; select an Application ID to open it in Shell Org Manager) and **Oldest Pending Requests**. For Workday custom reports use the data sources **ECO-COMS Role Requests**, **ECO-COMS Audit Trail**, **ECO-COMS Bulk Runs** and **ECO-COMS Applications**.
+- **Insights** (the **Insights** card on the RBAC Hub → **Open Insights**): one view across ECO-COMS. Five count cards (ISC turnaround, pending ISC review, approved and changes in the last 30 days, bulk runs), five charts (requests by status and by application, shell orgs, changes by action, bulk runs), **Applications at a Glance** (shell orgs, patterns and requests per application; select an Application ID to open it in Shell Org Manager) and **Oldest Pending Requests**. For Workday custom reports use the data sources **ECO-COMS Role Requests**, **ECO-COMS Audit Trail**, **ECO-COMS Bulk Runs** and **ECO-COMS Applications**.
 - **FUH Administration**: information about Functional Unit Hierarchy organizations (no actions yet).
 - **Resources**: **Submit a Helpdesk Ticket** and **RBAC Rolename by Application** (external links).
 
@@ -32,7 +32,7 @@ Every page has one back link at the top (for example **← Home** or **← Shell
 - **COMS** on your worker profile: **My Role Requests** and **Submit Role Request**.
 - **ECO-COMS: My Role Requests** card on Workday Home: how many of your requests are pending ISC review and how many were approved this month, with **Open My Requests** and **Submit a Request**.
 
-Long About boxes (Bulk Role Changes, the Template page and Add Pattern) start closed; click the heading to open them.
+Long About boxes (Bulk Role Changes, Template, Add Pattern, ISC Queue, Audit Log and the Shell Org Manager tabs) start closed; a one-line summary under the page title says what the page is for, and clicking the heading opens the box.
 
 In Workday's own search the app's tasks are **Shell Org Manager**, **Audit Log Viewer**, **ISC Queue**, **Submit Assignable Role Request**, **Submit AAA Role Request** and **Withdraw Role Request** (renamed 2026-11-01; the old names Assignable Role Manager, Admin Provisioning and All Pending Role Requests ISC no longer match).
 
@@ -253,7 +253,7 @@ You can also tick **Real run** to validate and apply in one go, but validating f
 - **ECO-COMS → ISC Queue** card → **Open ISC Queue** (needs **Maintain: COMS Assignable Roles**). The page, **ECO-COMS: ISC Queue – Pending Role Requests**, opens on pending requests; use the **Request Type** (All requests, AAA roles, Assignable roles) and **Status** pills to change the view, and the title follows your choice.
   - Three cards at the top: **Pending**, **Overdue** (pending for more than 3 business days) and **Approved this month**.
   - **Status** pills: **Pending** (the default), **Approved**, **Denied**, **All**. **Showing** says how many requests match.
-  - Overdue rows show "· overdue" next to their status.
+  - Overdue rows show "· overdue" next to their status. The **Waiting** column shows how many business days a pending request has waited, and the Pending view lists the oldest first.
   - Each row has a **Review Process: <role>** link; hover it for the event's related actions. Every request is approved or denied through its review process; the old **Maintain** page has been retired.
 
 ### The five steps, in order

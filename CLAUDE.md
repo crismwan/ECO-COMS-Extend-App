@@ -1939,6 +1939,14 @@ The leading `'' +` is what makes the quotient a string — without it, neither `
 When comparing an average against exact boundaries (0 or 100), skip rounding entirely and compare the raw quotient — those cases are exact.
 
 Keep percentages stored as **bare numbers** (`"progress": 85`) and append the `%` only at render time (`value.toString() + '%'`). Storing `"85%"` makes the value a display string and forces a `substringBefore('%')` + `toInt()` round-trip before any arithmetic.
+### Workday Script — define helpers before use; counting without memory blow-ups (live 2026-11-02)
+
+- **A `.script` helper that calls one defined further down the file is dropped**: the page fails with "Unknown Function call: .waitingText(row)" even though the function is exported. Define every helper before its first caller. (Static check `scriptOrder`.)
+- **Grouping counts hit the PMD script memory limit** ("Script Constraint exceeded: ... max memory limit") when a row expression builds a map per record (~1,000 orgs) and filters it per group. Instead build sorted lists of plain strings once and count with `i = list.indexOf(c); i < 0 ? 0 : list.lastIndexOf(c) - i + 1`.
+- Day differences without date functions: positions in a list of `date:now().minusDays(n).format('yyyy-MM-dd')` keys (`keys.indexOf(a) - keys.indexOf(b)`).
+- `readOnlyText.setValue()` also updates live on a plain EDIT page (not just wizard steps), called from a grid cell's `onChange`; `currentGrid.rows.filter(r => { r.childrenMap.<columnId>.value == true }).size()` reads a checkbox column (Bulk Edit change counter).
+- `richText` keeps `<br>`: a title tile can carry a second, smaller line (`<br><span style="color:#374151;font-size:13px">…</span>`).
+
 ## SMD (Security Model Definition)
 
 The SMD file (`<appId>.smd`) lives alongside the AMD and defines site-level configuration. Key attributes:
