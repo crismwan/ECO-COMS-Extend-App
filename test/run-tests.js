@@ -793,11 +793,12 @@ async function full(token, me) {
     if (!app) return skip('Pattern.add', 'no COMS application to create a pattern for');
     const appCode = app.appId; // same value the New Pattern page uses (e.g. X:CLW)
     if (!/^X:/.test(appCode || '')) throw new Error(`COMS application appId "${appCode}" is not an X: code`);
-    const [a1, a2, a3, a5] = ['TEST', `TEST:${run3}`, '900', `${now.getUTCFullYear()}W1`];
-    const pname = `${appCode}:PATTERN:${a1}:${a2}:${a3}:${a5}`;
+    // Clockwork's five fields: Academic Unit, Subject, Course, Section, Academic Period
+    const [a1, a2, a3, a4, a5] = ['TEST', 'TEST', run3, '900', `${now.getUTCFullYear()}W1`];
+    const pname = `${appCode}:PATTERN:${a1}:${a2}:${a3}:${a4}:${a5}`;
     const a = await launchAndVerify(token, 'AddShellOrgPattern', {
       comsAppId: app.id, patternName: pname, workerId: me.id, attribute1: a1, attribute2: a2, attribute3: a3,
-      attribute5: a5, effectiveDate: today, ...who(),
+      attribute4: a4, attribute5: a5, effectiveDate: today, ...who(),
     });
     expectAudit(a, 'Shell Org Pattern', 'ADD');
     const pwid = await findOrg(pname);
@@ -1383,18 +1384,17 @@ async function seedApps(token) {
     const body = { name: a.name, appId: a.appId, orgType: a.appId, orgSubtype: 'X:SHELL', namePrefix: a.prefixes.join(','),
       patternSchema: JSON.stringify(a.schema), active: true, description: `Pattern format from Application Patterns.xlsx: ${a.prefixes.join('/')} + ${a.fields.map((x) => x.fieldLabel).join(', ')}` };
     const cur = have.find((r) => r.appId === a.appId);
-    const same = cur && cur.namePrefix === body.namePrefix && cur.patternSchema === body.patternSchema && cur.name === body.name;
+    // An existing record keeps its name, org type and subtype (X:CLW was set up by hand); only the pattern format changes.
+    const same = cur && cur.namePrefix === body.namePrefix && cur.patternSchema === body.patternSchema;
     console.log(`   ${cur ? (same ? 'unchanged' : 'update') : 'create'}  ${a.appId}  ${body.namePrefix}  [${a.fields.map((x) => x.fieldLabel).join(', ')}]`);
     if (!APPLY || same) continue;
     await test(`Seed.${a.appId}`, async () => {
-      if (cur) await request('PATCH', `${BO}/comsApplications/${cur.id}`, token, body);
+      if (cur) await request('PATCH', `${BO}/comsApplications/${cur.id}`, token, { namePrefix: body.namePrefix, patternSchema: body.patternSchema });
       else await request('POST', `${BO}/comsApplications`, token, body);
       pass(`Seed.${a.appId}`, cur ? 'updated' : 'created');
     });
   }
   const after = (await request('GET', `${BO}/comsApplications?limit=100`, token)).data || [];
-  const clw = after.find((r) => r.appId === 'X:CLW');
-  if (clw && clw.patternSchema) fail('Seed.clockworkUntouched', 'X:CLW has a patternSchema: its own form would stop listing it');
   for (const a of loadSchemas()) {
     const r = after.find((x) => x.appId === a.appId);
     const want = JSON.stringify(a.schema);
@@ -1534,8 +1534,8 @@ async function demoSeed(token, me) {
     if (!app) throw new Error('no COMS application with appId X:CLW');
     if (await findOrg(PATTERN)) return pass('Demo.1 pattern', `${PATTERN} already exists`);
     const a = await launchAndVerify(token, 'AddShellOrgPattern', {
-      comsAppId: app.id, patternName: PATTERN, workerId: me.id, attribute1: 'CPSC', attribute2: 'CPSC_V:110',
-      attribute3: '101', attribute5: '2026W2', effectiveDate: EFF, ...who(),
+      comsAppId: app.id, patternName: PATTERN, workerId: me.id, attribute1: 'CPSC', attribute2: 'CPSC_V',
+      attribute3: '110', attribute4: '101', attribute5: '2026W2', effectiveDate: EFF, ...who(),
     });
     if (a.objectType !== 'Shell Org Pattern' || a.action !== 'ADD') throw new Error(`audit is ${a.objectType}/${a.action}`);
     for (let i = 0; i < 12 && !patternWid; i++) { patternWid = await findOrg(PATTERN); if (!patternWid) await sleep(5000); }

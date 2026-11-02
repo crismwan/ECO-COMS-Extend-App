@@ -95,7 +95,7 @@ print('isc ok')
 # ── Home: the four stacked-button sections become one row of action cards (main action first) ──
 ACTIONS = [
   ("HomeShellOrgActionsCard", "Shell Organizations", "Add orgs and patterns, manage status.", "wd-accent-worksheets",
-   [("Open Shell Org Manager", "shellOrgManager"), ("Add Shell Org", "createShellOrgWizard"), ("Add Pattern (Clockwork)", "createShellOrgPatternWizard")]),
+   [("Open Shell Org Manager", "shellOrgManager"), ("Add Shell Org", "createShellOrgWizard"), ("Add Pattern (Clockwork)", {"taskId": "newSchemaPattern", "parameterBindings": {"appCode": "X:CLW"}})]),
   ("HomeBulkActionsCard", "Bulk Role Changes", "Add or remove positions in bulk.", "wd-accent-checkmarked-page",
    [("Edit in the App", "bulkRoleGrid"), ("Upload File", "bulkRoleChanges"), ("Download Template", "bulkRoleTemplate"), ("View Results", "bulkRoleResults")]),
   ("HomeRoleRequestActionsCard", "Role Requests", "Request roles and follow their review.", "wd-accent-clipboard-checklist",
@@ -104,7 +104,7 @@ ACTIONS = [
 ]
 for cid, title, sub, icon, pills in ACTIONS:
     card = {"id": cid, "header": {"title": title, "subtitle": sub, "icon": icon},
-            "body": {"type": "pillCard", "pills": [{"label": l, "taskReference": {"taskId": t}} for l, t in pills]}}
+            "body": {"type": "pillCard", "pills": [{"label": l, "taskReference": t if isinstance(t, dict) else {"taskId": t}} for l, t in pills]}}
     open(os.path.join(ROOT, 'cards', cid + '.card'), 'w').write(json.dumps(card, indent=2, ensure_ascii=False) + '\n')
 home = load('hubLanding.pmd')
 hsecs = home['presentation']['body']['sections']
@@ -119,7 +119,7 @@ print('home ok')
 # ── Shell Org Manager Summary tab: count cards + quick actions in one row, chart below; counts follow the selected application ──
 qa = {"id": "ShellOrgQuickActionsCard", "header": {"title": "Quick Actions", "subtitle": "Create in Workday", "icon": "wd-accent-worksheets"},
       "body": {"type": "pillCard", "pills": [{"label": "Add Shell Org", "taskReference": {"taskId": "createShellOrgWizard"}},
-                                             {"label": "Add Pattern (Clockwork)", "taskReference": {"taskId": "createShellOrgPatternWizard"}}]}}
+                                             {"label": "Add Pattern (Clockwork)", "taskReference": {"taskId": "newSchemaPattern", "parameterBindings": {"appCode": "X:CLW"}}}]}}
 open(os.path.join(ROOT, 'cards', 'ShellOrgQuickActionsCard.card'), 'w').write(json.dumps(qa, indent=2, ensure_ascii=False) + '\n')
 PFX = "(empty(queryParams.appCode) ? 'X:' : queryParams.appCode + ':')"
 ORGS = "(allShellOrgs.data ?? []).filter(o => { (o.code ?? '').startsWith(" + PFX + ") && !(o.code ?? '').contains(':PATTERN') })"
@@ -160,7 +160,7 @@ for cid, title, pills in [("ErrorStartAgainCard", "Start Again", [("Home", "home
                           ("ErrorOtherPagesCard", "Other Pages", [("My Assignable Role Requests", "assignableRoleManagerView"), ("AAA Role Requests", "adminProvisioningView"),
                                                                   ("ISC Queue", "iscRoleRequestsView"), ("Audit Log", "auditLogViewer")])]:
     open(os.path.join(ROOT, 'cards', cid + '.card'), 'w').write(json.dumps({"id": cid, "header": {"title": title, "icon": "wd-accent-home"},
-        "body": {"type": "pillCard", "pills": [{"label": l, "taskReference": {"taskId": t}} for l, t in pills]}}, indent=2, ensure_ascii=False) + '\n')
+        "body": {"type": "pillCard", "pills": [{"label": l, "taskReference": t if isinstance(t, dict) else {"taskId": t}} for l, t in pills]}}, indent=2, ensure_ascii=False) + '\n')
 err = load('errorPage.pmd')
 esecs = err['presentation']['body']['sections']
 k = [s.get('id') for s in esecs].index('navSection')

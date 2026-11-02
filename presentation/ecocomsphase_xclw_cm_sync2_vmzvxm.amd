@@ -200,13 +200,6 @@
       }
     },
     {
-      "id": "newShellOrgPattern",
-      "routingPattern": "/newShellOrgPattern",
-      "page": {
-        "id": "newShellOrgPattern"
-      }
-    },
-    {
       "id": "newShellOrgPatternSuccess",
       "routingPattern": "/newShellOrgPatternSuccess",
       "page": {
@@ -281,13 +274,6 @@
       "routingPattern": "/createShellOrgWizard",
       "page": {
         "id": "createShellOrgWizard"
-      }
-    },
-    {
-      "id": "createShellOrgPatternWizard",
-      "routingPattern": "/createShellOrgPatternWizard",
-      "page": {
-        "id": "createShellOrgPatternWizard"
       }
     },
     {

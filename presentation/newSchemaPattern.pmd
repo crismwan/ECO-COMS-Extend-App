@@ -165,7 +165,7 @@
                   "doNotAdd": true,
                   "doNotRemove": true,
                   "label": "Applications",
-                  "rows": "<% (comsApplications.data ?? []).filter(x => { !empty(x.patternSchema) || x.appId == 'X:CLW' }).map(x => { x.appId }).distinct().sort().map(a => { {'appCode': a, 'name': (comsPatterns.recordFor(comsApplications.data, a) ?? {'name': ''}).name ?? '', 'format': comsPatterns.summary(comsApplications.data, a)} }) %>",
+                  "rows": "<% (comsApplications.data ?? []).filter(x => { !empty(x.patternSchema) }).map(x => { x.appId }).distinct().sort().map(a => { {'appCode': a, 'name': (comsPatterns.recordFor(comsApplications.data, a) ?? {'name': ''}).name ?? '', 'format': comsPatterns.summary(comsApplications.data, a)} }) %>",
                   "columns": [
                     {
                       "type": "column",
@@ -239,18 +239,7 @@
                   "id": "noSchemaText",
                   "label": "Pattern Format",
                   "enabled": false,
-                  "value": "<% (queryParams.appCode ?? '') == 'X:CLW' ? 'Clockwork has its own pattern form: use the button below.' : ('No pattern format is set up for ' + (queryParams.appCode ?? '') + ' yet. Add it to the application record (patternSchema), then come back.') %>"
-                },
-                {
-                  "type": "button",
-                  "id": "clockworkFormButton",
-                  "label": "Open the Clockwork Pattern Form",
-                  "action": "PRIMARY",
-                  "suppressDiscardDialog": true,
-                  "render": "<% (queryParams.appCode ?? '') == 'X:CLW' %>",
-                  "taskReference": {
-                    "taskId": "createShellOrgPatternWizard"
-                  }
+                  "value": "<% 'No pattern format is set up for ' + (queryParams.appCode ?? '') + ' yet. Add it to the application record (patternSchema), then come back.' %>"
                 }
               ]
             }

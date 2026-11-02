@@ -62,17 +62,18 @@ The **Before You Submit** note on the form is a reminder that the organization i
 
 The page stops you if the code already exists ("An organization with this code already exists: ...") or if Workday refused the request (see [Troubleshooting](#troubleshooting)).
 
-### Create a shell org pattern (any application except Clockwork)
+### Create a shell org pattern (every application, Clockwork included)
 
 Every application has its own pattern format: a prefix and its own fields. The format lives on the application's record, so a new application needs a new record, not a new page.
 
-1. Open **Add Pattern (Other Apps)** in Shell Org Manager's **Quick Actions**, or select an application in Shell Org Manager and click **Add Pattern**.
-2. Without an application selected, the page lists the applications that have a pattern format (the same 15 as Shell Org Manager's Application Patterns tab). Click **Add Pattern** on a row.
+1. Click **Add Pattern (Clockwork)** (RBAC Hub, or Shell Org Manager's **Quick Actions**) to go straight to Clockwork's form, **Add Pattern (Other Apps)** to choose an application, or select an application in Shell Org Manager and click **Add Pattern**. There is no Application drop-down: the application is the one you chose.
+2. Without an application selected, the page lists the applications that have a pattern format (the same ones as Shell Org Manager's Application Patterns tab, Clockwork included). Click **Add Pattern** on a row.
 3. The form shows that application's fields, with their names and examples. Some applications have more than one prefix (for example X:ADM: AAP, BBAE, BBAREADER, KEYCLOAK): pick it under **Pattern Prefix**.
 4. Fill the fields. Each one is checked as you type, and **Pattern Name Preview** shows the name: `APPLICATION:PREFIX:field:field`. A blank field becomes `*` (any), except fields marked required (e.g. Subject for Assessment Outcomes).
 
    | Application | Prefix | Fields | Example |
    |---|---|---|---|
+   | X:CLW Clockwork | PATTERN | Academic Unit (`PHAS`), Subject (`PHYS_V`), Course (`100`, `1*`), Section (`101`, `A_900`), Academic Period (`2024`, `2024W`, `2024W1`, `*W1`) | `X:CLW:PATTERN:*:PHYS_V:100:101:2024W1` |
    | X:BPMS(AOC) Final Grades Submission | CP | Subject (required, e.g. `MECH_V`), Course (`100`, `100A`, or a start plus `*`, e.g. `1*`) | `X:BPMS(AOC):CP:MECH_V:1*` |
    | X:OAM Online Advising Management | ORG | Organization | `X:OAM:ORG:AA` |
    | X:ADM Admissions | AAP, BBAE, BBAREADER, KEYCLOAK | Role Name | `X:ADM:BBAE:SAUDER` |
@@ -84,29 +85,6 @@ Every application has its own pattern format: a prefix and its own fields. The f
 5. Pick the **Effective Date** (a weekday, this year or next) and click **OK**. The pattern is created in Workday with subtype **X:SHELL**, and **Pattern Created** opens.
 
 X:SET and X:PHA have no organization type in Workday yet, so Workday refuses their patterns until those types exist.
-
-### Create a Clockwork shell org pattern
-
-1. On the RBAC Hub, click **Add Pattern (Clockwork)**. The **Add New Shell Org Pattern** wizard opens. (From the other applications' page, choose X:CLW and click **Open the Clockwork Pattern Form**.)
-2. On **Pattern Details**, pick the **Application** first. Fields you fill before choosing an application show "Please select an Application before entering pattern attributes."
-3. Fill the pattern attributes. **Pattern Name Preview** updates as you type, and each field is checked as you go.
-
-   | Field | Rule | Examples |
-   |---|---|---|
-   | **Subject** | Exactly 4 uppercase letters | `MATH`, `CPSC`, `COMM` |
-   | **Course** | 4 uppercase letters, optional `_` + letter, a colon, 3 digits, optional letter suffix | `COMM:300`, `COMM:300A`, `COMM_V:300`, `COMM_V:300A` |
-   | **Section** | 3 digits. If **Course** ends with a letter: an uppercase letter, `_`, and 3 digits | `201`, `951`; `A_900` |
-   | **Course Reference** | No rule. Not part of the generated name | `MATH_V` |
-   | **Academic Period** | Current or next year, then `S`, `W1` or `W2` (Summer, Winter Session 1, Winter Session 2) | `2026S`, `2026W1`, `2027W2` |
-   | **Effective Date** | A weekday, in the current or next year | |
-
-   The Section tooltip says a `_V` course takes 3 digits and a letter (for example `951L`). The page enforces the rule in the table instead (to confirm which is intended).
-
-   The page says a blank field becomes a wildcard (`*`). The OK check validates every field, so a blank field may be rejected (to confirm).
-
-4. The generated name is `<ApplicationCode>:PATTERN:<Subject>:<Course>:<Section>:<Academic Period>`, for example `X:CLW:PATTERN:MATH:MATH_V:303:951:2026W1`. If that pattern already exists, you see "A Shell Org Pattern with this name already exists: ...".
-5. Click **Next**, check **Review & Submit**, then click **OK**. The summary may show the pattern preview as it was when the page loaded. The name that is saved is built from the fields you entered.
-6. ECO-COMS creates the pattern in Workday and checks that it exists. If it does, **Pattern Created** opens.
 
 ### Inactivate or reactivate an organization
 

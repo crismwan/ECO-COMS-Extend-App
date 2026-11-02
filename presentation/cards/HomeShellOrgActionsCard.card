@@ -23,7 +23,10 @@
       {
         "label": "Add Pattern (Clockwork)",
         "taskReference": {
-          "taskId": "createShellOrgPatternWizard"
+          "taskId": "newSchemaPattern",
+          "parameterBindings": {
+            "appCode": "X:CLW"
+          }
         }
       }
     ]

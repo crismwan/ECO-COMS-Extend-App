@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Schema-driven Add Pattern page (newSchemaPattern) for every application except Clockwork.
+"""Schema-driven Add Pattern page (newSchemaPattern) for every application, Clockwork included.
 
 Architect's brief: the Appian COMS was built for one shape of pattern; the rebuild is schema-driven, so a
 new tool is a new application record, not a new page. Each COMSApplication record (seeded from
@@ -10,8 +10,8 @@ The page has up to MAX_FIELDS generic fields; labels, examples, visibility and c
 selected application's schema at page load (?appCode=...). Without ?appCode it lists every application
 code in Workday plus every configured record, with its pattern format.
 
-Clockwork (record without patternSchema) keeps its own form (createShellOrgPatternWizard); this page links
-to it. That form's application list is limited to records without a patternSchema.
+Clockwork moved onto this page on 2026-11-02 (product owner: "match all applications"); its old wizard
+(createShellOrgPatternWizard / newShellOrgPattern) was retired.
 Server side, AddShellOrgPattern re-checks prefix, field count, upper case and spaces
 (tools/patch_pattern_orchestrations.py).
 """
@@ -90,7 +90,7 @@ for i in range(MAX_FIELDS):
                    "placeholder": f"<% comsPatterns.fieldCount({SCH}) > {i} ? ('e.g. ' + {SCH}.fields[{i}].example) : '' %>",
                    "onChange": field_on_change(i)})
 
-PICK_ROWS = "(comsApplications.data ?? []).filter(x => { !empty(x.patternSchema) || x.appId == 'X:CLW' }).map(x => { x.appId }).distinct().sort().map(a => { {'appCode': a, 'name': (comsPatterns.recordFor(comsApplications.data, a) ?? {'name': ''}).name ?? '', 'format': comsPatterns.summary(comsApplications.data, a)} })"
+PICK_ROWS = "(comsApplications.data ?? []).filter(x => { !empty(x.patternSchema) }).map(x => { x.appId }).distinct().sort().map(a => { {'appCode': a, 'name': (comsPatterns.recordFor(comsApplications.data, a) ?? {'name': ''}).name ?? '', 'format': comsPatterns.summary(comsApplications.data, a)} })"
 txt = lambda cid, label, value: {"type": "column", "columnId": cid, "label": label,
                                  "cellTemplate": {"type": "text", "id": cid + "Text", "enabled": False, "value": value}}
 
@@ -135,9 +135,7 @@ page = {"id": "newSchemaPattern", "securityDomains": ["ManageCOMSShellOrgs"], "i
       {"type": "layoutSection", "id": "noSchemaSection", "render": f"<% !empty(queryParams.appCode) && empty({SCH}) %>", "children": [
         {"type": "fieldSet", "id": "noSchemaFieldSet", "title": "No Pattern Format", "children": [
           {"type": "text", "id": "noSchemaText", "label": "Pattern Format", "enabled": False,
-           "value": f"<% (queryParams.appCode ?? '') == 'X:CLW' ? 'Clockwork has its own pattern form: use the button below.' : ('No pattern format is set up for ' + (queryParams.appCode ?? '') + ' yet. Add it to the application record (patternSchema), then come back.') %>"},
-          {"type": "button", "id": "clockworkFormButton", "label": "Open the Clockwork Pattern Form", "action": "PRIMARY", "suppressDiscardDialog": True,
-           "render": "<% (queryParams.appCode ?? '') == 'X:CLW' %>", "taskReference": {"taskId": "createShellOrgPatternWizard"}}]}]},
+           "value": f"<% 'No pattern format is set up for ' + (queryParams.appCode ?? '') + ' yet. Add it to the application record (patternSchema), then come back.' %>"}]}]},
       {"type": "layoutSection", "id": "formSection", "render": f"<% !empty(queryParams.appCode) && !empty({SCH}) %>", "children": [
         {"type": "fieldSet", "id": "patternDetailsFieldSet", "title": "Pattern Details", "children": [
           {"type": "text", "id": "applicationText", "label": "Application", "enabled": False,
@@ -166,20 +164,7 @@ amd['flowDefinitions'] = [f for f in amd.get('flowDefinitions', []) if f['id'] !
         {"id": "newSchemaPatternDoneStep", "taskId": "newShellOrgPatternSuccess", "endsFlow": True}]}]
 open(amdp, 'w').write(json.dumps(amd, indent=2, ensure_ascii=False) + '\n')
 
-# Clockwork form: list only applications without a pattern schema (the schema apps use this page)
-p = os.path.join(ROOT, 'newShellOrgPattern.pmd')
-d = json.load(open(p))
-def walk(n):
-    if isinstance(n, dict):
-        if n.get('id') == 'selectedApplicationIdList':
-            n['on'] = "<% (comsApplications.data ?? []).filter(x => { empty(x.patternSchema) }) %>"
-        for v in n.values(): walk(v)
-    elif isinstance(n, list):
-        for v in n: walk(v)
-walk(d)
-open(p, 'w').write(json.dumps(d, indent=2, ensure_ascii=False) + '\n')
-
-# Shell Org Manager (one application selected): Clockwork keeps its wizard, every other application gets this page
+# Shell Org Manager (one application selected): one Add Pattern button for every application, this page
 p = os.path.join(ROOT, 'shellOrgManager.pmd')
 d = json.load(open(p))
 def som(n):
@@ -188,12 +173,9 @@ def som(n):
         if isinstance(kids, list) and any(isinstance(k, dict) and k.get('id') == 'addPatternBtn' for k in kids):
             for k in kids:
                 if isinstance(k, dict) and k.get('id') == 'addPatternBtn':
-                    k['visible'] = "<% (queryParams.appCode ?? '') == 'X:CLW' %>"
-            if not any(isinstance(k, dict) and k.get('id') == 'addSchemaPatternBtn' for k in kids):
-                i = [k.get('id') if isinstance(k, dict) else None for k in kids].index('addPatternBtn')
-                kids.insert(i + 1, {"type": "button", "id": "addSchemaPatternBtn", "label": "Add Pattern", "action": "PRIMARY",
-                                    "visible": "<% (queryParams.appCode ?? '') != 'X:CLW' %>",
-                                    "taskReference": {"taskId": "newSchemaPattern", "parameterBindings": {"appCode": "<% queryParams.appCode ?? '' %>"}}})
+                    k['taskReference'] = {"taskId": "newSchemaPattern", "parameterBindings": {"appCode": "<% queryParams.appCode ?? '' %>"}}
+                    k.pop('visible', None)
+            kids[:] = [k for k in kids if not (isinstance(k, dict) and k.get('id') == 'addSchemaPatternBtn')]
         for v in n.values(): som(v)
     elif isinstance(n, list):
         for v in n: som(v)
@@ -207,7 +189,7 @@ pills = d['body']['pills']
 if not any(x.get('taskReference', {}).get('taskId') == 'newSchemaPattern' for x in pills):
     pills.append({"label": "Add Pattern (Other Apps)", "taskReference": {"taskId": "newSchemaPattern"}})
 open(p, 'w').write(json.dumps(d, indent=2, ensure_ascii=False) + '\n')
-print('newSchemaPattern written; Clockwork form, Shell Org Manager and Quick Actions updated')
+print('newSchemaPattern written; Shell Org Manager and Quick Actions updated')
 
 # Add Shell Org: the organization subtype is a choice, X:META or X:SHELL (product owner 2026-11-02).
 # Add Pattern always sends X:SHELL (AddShellOrgPattern template).

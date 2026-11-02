@@ -63,7 +63,7 @@ var summary = function(apps, appCode) {
   if (empty(r)) {
     'Not set up';
   } else if (empty(r.patternSchema)) {
-    'Clockwork form (Subject, Course, Section, Academic Period)';
+    'No pattern format yet';
   } else {
     let s = json:parse(r.patternSchema);
     s.prefixes.join(' / ') + ': ' + s.fields.map(f => { f.fieldLabel }).join(', ');
