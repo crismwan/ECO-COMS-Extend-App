@@ -90,7 +90,7 @@ for i in range(MAX_FIELDS):
                    "placeholder": f"<% comsPatterns.fieldCount({SCH}) > {i} ? ('e.g. ' + {SCH}.fields[{i}].example) : '' %>",
                    "onChange": field_on_change(i)})
 
-PICK_ROWS = "comsPatterns.appCodes(existingOrgs.data, comsApplications.data).map(a => { {'appCode': a, 'name': (comsPatterns.recordFor(comsApplications.data, a) ?? {'name': ''}).name ?? '', 'format': comsPatterns.summary(comsApplications.data, a)} })"
+PICK_ROWS = "(comsApplications.data ?? []).filter(x => { !empty(x.patternSchema) || x.appId == 'X:CLW' }).map(x => { x.appId }).distinct().sort().map(a => { {'appCode': a, 'name': (comsPatterns.recordFor(comsApplications.data, a) ?? {'name': ''}).name ?? '', 'format': comsPatterns.summary(comsApplications.data, a)} })"
 txt = lambda cid, label, value: {"type": "column", "columnId": cid, "label": label,
                                  "cellTemplate": {"type": "text", "id": cid + "Text", "enabled": False, "value": value}}
 

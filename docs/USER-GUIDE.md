@@ -67,7 +67,7 @@ The page stops you if the code already exists ("An organization with this code a
 Every application has its own pattern format: a prefix and its own fields. The format lives on the application's record, so a new application needs a new record, not a new page.
 
 1. Open **Add Pattern (Other Apps)** in Shell Org Manager's **Quick Actions**, or select an application in Shell Org Manager and click **Add Pattern**.
-2. Without an application selected, the page lists every application code in Workday with its **Pattern Format**. Click **Add Pattern** on a row.
+2. Without an application selected, the page lists the applications that have a pattern format (the same 15 as Shell Org Manager's Application Patterns tab). Click **Add Pattern** on a row.
 3. The form shows that application's fields, with their names and examples. Some applications have more than one prefix (for example X:ADM: AAP, BBAE, BBAREADER, KEYCLOAK): pick it under **Pattern Prefix**.
 4. Fill the fields. Each one is checked as you type, and **Pattern Name Preview** shows the name: `APPLICATION:PREFIX:field:field`. A blank field becomes `*` (any), except fields marked required (e.g. Subject for Assessment Outcomes).
 

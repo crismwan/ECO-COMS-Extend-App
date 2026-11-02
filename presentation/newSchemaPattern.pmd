@@ -158,7 +158,7 @@
                   "doNotAdd": true,
                   "doNotRemove": true,
                   "label": "Applications",
-                  "rows": "<% comsPatterns.appCodes(existingOrgs.data, comsApplications.data).map(a => { {'appCode': a, 'name': (comsPatterns.recordFor(comsApplications.data, a) ?? {'name': ''}).name ?? '', 'format': comsPatterns.summary(comsApplications.data, a)} }) %>",
+                  "rows": "<% (comsApplications.data ?? []).filter(x => { !empty(x.patternSchema) || x.appId == 'X:CLW' }).map(x => { x.appId }).distinct().sort().map(a => { {'appCode': a, 'name': (comsPatterns.recordFor(comsApplications.data, a) ?? {'name': ''}).name ?? '', 'format': comsPatterns.summary(comsApplications.data, a)} }) %>",
                   "columns": [
                     {
                       "type": "column",
