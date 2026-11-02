@@ -1,0 +1,183 @@
+{
+  "id": "bulkRoleGridApps",
+  "securityDomains": [
+    "ManageCOMSShellOrgs"
+  ],
+  "include": [
+    "comsPatterns.script"
+  ],
+  "endPoints": [
+    {
+      "name": "shellRoles",
+      "baseUrlType": "workday-wql",
+      "url": "data",
+      "authType": "sso",
+      "bestEffort": "true",
+      "wqlQuery": {
+        "queryId": "allShellAssignableRolesinTenant"
+      },
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "name": "comsApplications",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "url": "/comsApplications?limit=100",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 429
+        }
+      ]
+    }
+  ],
+  "presentation": {
+    "headerSize": "HIDDEN",
+    "body": {
+      "type": "basicFormLayout",
+      "id": "bulkRoleGridAppsForm",
+      "sections": [
+        {
+          "type": "layoutSection",
+          "id": "titleBannerSection",
+          "children": [
+            {
+              "type": "richText",
+              "id": "titleBannerRichText",
+              "enabled": false,
+              "value": "<span style=\"color:#0055B3;font-size:24px\"><b>ECO-COMS: Bulk Edit Role Assignments</b></span>"
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "aboutSection",
+          "children": [
+            {
+              "type": "button",
+              "id": "homeButton",
+              "label": "← Home",
+              "action": "LINK",
+              "taskReference": {
+                "taskId": "home"
+              }
+            },
+            {
+              "type": "fieldSet",
+              "id": "aboutFieldSet",
+              "title": "About This Page",
+              "children": [
+                {
+                  "type": "richText",
+                  "id": "aboutRichText",
+                  "enabled": false,
+                  "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">Choose the application whose role assignments you want to change. <b>Edit</b> opens its current assignments, where you can remove positions and add new ones.</span>"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "pickSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "pickFieldSet",
+              "title": "Choose an Application",
+              "children": [
+                {
+                  "type": "grid",
+                  "id": "appPickGrid",
+                  "rowVariableName": "pa",
+                  "label": "Applications",
+                  "rows": "<% list:flatten((shellRoles.data ?? []).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith('X:') }).map(ra => { 'X:' + ra.organization.descriptor.substringAfter(':').substringBefore(':') }) })).distinct().sort().map(a => { {'appCode': a} }) %>",
+                  "columns": [
+                    {
+                      "type": "column",
+                      "columnId": "colAppId",
+                      "label": "Application ID",
+                      "cellTemplate": {
+                        "type": "button",
+                        "id": "appIdLinkButton",
+                        "action": "LINK",
+                        "label": "<% pa.appCode ?? '' %>",
+                        "suppressDiscardDialog": true,
+                        "taskReference": {
+                          "taskId": "bulkRoleGrid",
+                          "parameterBindings": {
+                            "appCode": "<% pa.appCode %>"
+                          }
+                        }
+                      },
+                      "excel": {
+                        "enabled": false
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colAppTitle",
+                      "label": "Name",
+                      "cellTemplate": {
+                        "type": "text",
+                        "id": "appTitleText",
+                        "enabled": false,
+                        "value": "<% (comsPatterns.recordFor(comsApplications.data, pa.appCode) ?? {'name': ''}).name ?? '' %>"
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colAppAction",
+                      "label": "Edit",
+                      "cellTemplate": {
+                        "type": "button",
+                        "id": "appActionButton",
+                        "label": "Edit",
+                        "action": "AUXILIARY",
+                        "suppressDiscardDialog": true,
+                        "taskReference": {
+                          "taskId": "bulkRoleGrid",
+                          "parameterBindings": {
+                            "appCode": "<% pa.appCode %>"
+                          }
+                        }
+                      },
+                      "excel": {
+                        "enabled": false
+                      }
+                    }
+                  ],
+                  "gridType": "LIST",
+                  "multiViewStylingEnabled": true,
+                  "autoPaging": true,
+                  "excelExportEnabled": true
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "footer": {
+      "type": "footer",
+      "children": [
+        {
+          "type": "pod",
+          "podId": "ecoComsFooter"
+        }
+      ]
+    },
+    "pageType": "VIEW"
+  }
+}

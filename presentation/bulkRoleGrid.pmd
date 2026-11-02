@@ -250,7 +250,7 @@
               "suppressDiscardDialog": true,
               "render": "<% !empty(queryParams.appCode) %>",
               "taskReference": {
-                "taskId": "bulkRoleGrid"
+                "taskId": "bulkRoleGridApps"
               }
             },
             {
@@ -279,64 +279,21 @@
               "title": "Choose an Application",
               "children": [
                 {
-                  "type": "grid",
-                  "id": "appPickGrid",
-                  "rowVariableName": "pa",
-                  "doNotAdd": true,
-                  "doNotRemove": true,
-                  "label": "Applications",
-                  "rows": "<% list:flatten((shellRoles.data ?? []).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith('X:') }).map(ra => { 'X:' + ra.organization.descriptor.substringAfter(':').substringBefore(':') }) })).distinct().sort().map(a => { {'appCode': a} }) %>",
-                  "columns": [
-                    {
-                      "type": "column",
-                      "columnId": "colAppId",
-                      "label": "Application ID",
-                      "cellTemplate": {
-                        "type": "button",
-                        "id": "appIdLinkButton",
-                        "action": "LINK",
-                        "label": "<% pa.appCode ?? '' %>",
-                        "suppressDiscardDialog": true,
-                        "taskReference": {
-                          "taskId": "bulkRoleGrid",
-                          "parameterBindings": {
-                            "appCode": "<% pa.appCode %>"
-                          }
-                        }
-                      }
-                    },
-                    {
-                      "type": "column",
-                      "columnId": "colAppTitle",
-                      "label": "Name",
-                      "cellTemplate": {
-                        "type": "text",
-                        "id": "appTitleText",
-                        "enabled": false,
-                        "value": "<% (comsPatterns.recordFor(comsApplications.data, pa.appCode) ?? {'name': ''}).name ?? '' %>"
-                      }
-                    },
-                    {
-                      "type": "column",
-                      "columnId": "colAppAction",
-                      "label": "Edit",
-                      "cellTemplate": {
-                        "type": "button",
-                        "id": "appActionButton",
-                        "label": "Edit",
-                        "action": "AUXILIARY",
-                        "suppressDiscardDialog": true,
-                        "taskReference": {
-                          "taskId": "bulkRoleGrid",
-                          "parameterBindings": {
-                            "appCode": "<% pa.appCode %>"
-                          }
-                        }
-                      }
-                    }
-                  ],
-                  "gridType": "LIST",
-                  "multiViewStylingEnabled": true
+                  "type": "text",
+                  "id": "pickText",
+                  "label": "Application",
+                  "enabled": false,
+                  "value": "<% 'No application chosen yet.' %>"
+                },
+                {
+                  "type": "button",
+                  "id": "pickAppButton",
+                  "label": "Choose an Application",
+                  "action": "PRIMARY",
+                  "suppressDiscardDialog": true,
+                  "taskReference": {
+                    "taskId": "bulkRoleGridApps"
+                  }
                 }
               ]
             }

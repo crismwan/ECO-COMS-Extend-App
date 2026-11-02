@@ -387,6 +387,13 @@
       "page": {
         "id": "schemaPatternApps"
       }
+    },
+    {
+      "id": "bulkRoleGridApps",
+      "routingPattern": "/bulkRoleGridApps",
+      "page": {
+        "id": "bulkRoleGridApps"
+      }
     }
   ],
   "applicationId": "ecocomsphase_xclw_cm_sync2_vmzvxm",

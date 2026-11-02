@@ -238,8 +238,8 @@ results = {"id": "bulkRoleResults", "securityDomains": ["ManageCOMSShellOrgs"],
                      txt("colMessage", "Message", "<% rr.message ?? '' %>")]}]}]}]},
     "footer": FOOT, "pageType": "VIEW"}}
 save('bulkRoleResults', results)
-for cid, title, pills in [("BulkNextStepCard", "Next Step", [("Upload a file", "bulkRoleChanges"), ("Edit in the app", "bulkRoleGrid"), ("View results", "bulkRoleResults")]),
-                          ("BulkRelatedCard", "Related", [("Edit in the app", "bulkRoleGrid"), ("Download template", "bulkRoleTemplate"), ("View results", "bulkRoleResults")])]:
+for cid, title, pills in [("BulkNextStepCard", "Next Step", [("Upload a file", "bulkRoleChanges"), ("Edit in the app", "bulkRoleGridApps"), ("View results", "bulkRoleResults")]),
+                          ("BulkRelatedCard", "Related", [("Edit in the app", "bulkRoleGridApps"), ("Download template", "bulkRoleTemplate"), ("View results", "bulkRoleResults")])]:
     open(os.path.join(ROOT, 'cards', cid + '.card'), 'w').write(json.dumps({"id": cid, "header": {"title": title, "icon": "wd-accent-checkmarked-page"},
         "body": {"type": "pillCard", "pills": [{"label": l, "taskReference": {"taskId": t}} for l, t in pills]}}, indent=2, ensure_ascii=False) + '\n')
 actions_card = {"id": "BulkActionsPillCard", "parameters": ["batch"],
@@ -247,7 +247,7 @@ actions_card = {"id": "BulkActionsPillCard", "parameters": ["batch"],
   "body": {"type": "pillCard", "pills": [
     {"label": "↻ Refresh", "taskReference": {"taskId": "bulkRoleResults", "parameterBindings": {"batch": '<% batch ?? "" %>'}}},
     {"label": "Upload another file", "taskReference": {"taskId": "bulkRoleChanges"}},
-    {"label": "Edit in the app", "taskReference": {"taskId": "bulkRoleGrid"}},
+    {"label": "Edit in the app", "taskReference": {"taskId": "bulkRoleGridApps"}},
     {"label": "Download template", "taskReference": {"taskId": "bulkRoleTemplate"}}]}}
 open(os.path.join(ROOT, 'cards', 'BulkActionsPillCard.card'), 'w').write(json.dumps(actions_card, indent=2, ensure_ascii=False) + '\n')
 

@@ -10,7 +10,7 @@
       {
         "label": "Edit in the app",
         "taskReference": {
-          "taskId": "bulkRoleGrid"
+          "taskId": "bulkRoleGridApps"
         }
       },
       {

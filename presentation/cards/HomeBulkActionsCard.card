@@ -11,7 +11,7 @@
       {
         "label": "Edit in the App",
         "taskReference": {
-          "taskId": "bulkRoleGrid"
+          "taskId": "bulkRoleGridApps"
         }
       },
       {

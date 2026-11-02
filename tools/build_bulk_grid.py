@@ -19,6 +19,7 @@ from app_grid import app_columns
 ROOT = os.path.join(os.path.dirname(__file__), '..', 'presentation')
 MAX = 50
 FOS = lambda codes: [{"code": c} for c in codes]
+PICKER = 'bulkRoleGridApps'   # VIEW page listing the applications (product owner 2026-11-02)
 FOOT = {"type": "footer", "children": [{"type": "pod", "podId": "ecoComsFooter"}]}
 WORKER = {"name": "selectedWorker", "baseUrlType": "COMMON", "url": "/workers/me", "authType": "sso", "bestEffort": "true", "failOnStatusCodes": FOS([400, 403, 429])}
 def note(sid, fid, title, rid, html, color='#0055B7', mark='ⓘ'):
@@ -158,7 +159,7 @@ page = {"id": "bulkRoleGrid", "securityDomains": ["ManageCOMSShellOrgs"], "inclu
       {"type": "layoutSection", "id": "navSection", "children": [
         {"type": "button", "id": "homeButton", "label": "← Home", "action": "LINK", "suppressDiscardDialog": True, "taskReference": {"taskId": "home"}},
         {"type": "button", "id": "changeAppButton", "label": "Choose another application", "action": "LINK", "suppressDiscardDialog": True,
-         "render": "<% !empty(queryParams.appCode) %>", "taskReference": {"taskId": "bulkRoleGrid"}}]},
+         "render": "<% !empty(queryParams.appCode) %>", "taskReference": {"taskId": PICKER}}]},
       note("aboutSection", "aboutFieldSet", "About This Page", "aboutRichText",
         "Change who holds roles on an application's shell organizations, right here. <b>Current Assignments</b> lists every position that holds a role now: "
         "tick <b>Remove</b> to take it off. Under <b>Positions to Add</b>, click + and pick the role and organization, then search for the position. "
@@ -166,9 +167,10 @@ page = {"id": "bulkRoleGrid", "securityDomains": ["ManageCOMSShellOrgs"], "inclu
         "Tick <b>Real run</b> to apply straight away. Up to " + str(MAX) + " changes per submit; for more, use the Excel template."),
       {"type": "layoutSection", "id": "pickSection", "render": "<% empty(queryParams.appCode) %>", "children": [
         {"type": "fieldSet", "id": "pickFieldSet", "title": "Choose an Application", "children": [
-          {"type": "grid", "id": "appPickGrid", "rowVariableName": "pa", "doNotAdd": True, "doNotRemove": True, "label": "Applications",
-           "rows": "<% " + APPS + ".map(a => { {'appCode': a} }) %>",
-           "columns": app_columns("pa", "bulkRoleGrid", {"appCode": "<% pa.appCode %>"}, "Edit", show_format=False)}]}]},
+          # the application list is on its own VIEW page (PICKER): edit pages draw grids with cell borders
+          {"type": "text", "id": "pickText", "label": "Application", "enabled": False, "value": "<% 'No application chosen yet.' %>"},
+          {"type": "button", "id": "pickAppButton", "label": "Choose an Application", "action": "PRIMARY", "suppressDiscardDialog": True,
+           "taskReference": {"taskId": PICKER}}]}]},
       {"type": "layoutSection", "id": "runSection", "render": "<% !empty(queryParams.appCode) %>", "children": [
         {"type": "fieldSet", "id": "runFieldSet", "title": "Run", "children": [
           {"type": "hidden", "id": "batchRefHidden", "value": "<% 'GRID' + date:now().format('yyyyMMddHHmmss') + (selectedWorker.id ?? '').substring(0, 6) %>"},
@@ -215,8 +217,27 @@ page = {"id": "bulkRoleGrid", "securityDomains": ["ManageCOMSShellOrgs"], "inclu
     "footer": FOOT, "pageType": "EDIT"}}
 open(os.path.join(ROOT, 'bulkRoleGrid.pmd'), 'w').write(json.dumps(page, indent=2, ensure_ascii=False) + '\n')
 
+picker = {"id": PICKER, "securityDomains": ["ManageCOMSShellOrgs"], "include": ["comsPatterns.script"],
+  "endPoints": [e for e in page["endPoints"] if e["name"] in ("shellRoles", "comsApplications")],
+  "presentation": {"headerSize": "STANDARD", "title": {"type": "title", "label": "ECO-COMS: Bulk Edit Role Assignments"},
+    "body": {"type": "basicFormLayout", "id": "bulkRoleGridAppsForm", "sections": [
+      {"type": "layoutSection", "id": "navSection", "children": [
+        {"type": "button", "id": "homeButton", "label": "← Home", "action": "LINK", "taskReference": {"taskId": "home"}}]},
+      note("aboutSection", "aboutFieldSet", "About This Page", "aboutRichText",
+        "Choose the application whose role assignments you want to change. <b>Edit</b> opens its current assignments, "
+        "where you can remove positions and add new ones."),
+      {"type": "layoutSection", "id": "pickSection", "children": [
+        {"type": "fieldSet", "id": "pickFieldSet", "title": "Choose an Application", "children": [
+          {"type": "grid", "id": "appPickGrid", "rowVariableName": "pa", "label": "Applications",
+           "rows": "<% " + APPS + ".map(a => { {'appCode': a} }) %>",
+           "columns": app_columns("pa", "bulkRoleGrid", {"appCode": "<% pa.appCode %>"}, "Edit", show_format=False)}]}]}]},
+    "footer": FOOT, "pageType": "VIEW"}}
+open(os.path.join(ROOT, PICKER + '.pmd'), 'w').write(json.dumps(picker, indent=2, ensure_ascii=False) + '\n')
+
 amdp = os.path.join(ROOT, 'ecocomsphase_xclw_cm_sync2_vmzvxm.amd')
 amd = json.load(open(amdp))
+if not any(x['id'] == PICKER for x in amd['tasks']):
+    amd['tasks'].append({"id": PICKER, "routingPattern": "/" + PICKER, "page": {"id": PICKER}})
 if not any(x['id'] == 'bulkRoleGrid' for x in amd['tasks']):
     amd['tasks'].append({"id": "bulkRoleGrid", "routingPattern": "/bulkRoleGrid", "page": {"id": "bulkRoleGrid"}})
 amd['flowDefinitions'] = [f for f in amd.get('flowDefinitions', []) if f['id'] != 'bulkRoleGridFlow'] + [
