@@ -46,7 +46,7 @@ const ORCH = `${API}/orchestrate/v1/apps/${APP_ID}/orchestrations`;
 const argv = process.argv.slice(2);
 const arg = (name) => { const i = argv.indexOf(name); return i === -1 ? null : argv[i + 1]; };
 const VERBOSE = argv.includes('--verbose');
-const SUITES_ALL = ['static', 'smoke', 'full', 'cleanup', 'isu', 'repair', 'seconduser', 'purge', 'demoseed', 'datacheck', 'probe'];
+const SUITES_ALL = ['static', 'smoke', 'full', 'cleanup', 'isu', 'repair', 'seconduser', 'purge', 'demoseed', 'datacheck', 'probe', 'seedapps', 'patternguard'];
 const suiteArg = arg('--suite') || argv.find((a) => !a.startsWith('--') && SUITES_ALL.some((s) => a.split(',').includes(s))) || 'smoke';
 const SUITES = suiteArg.split(',').map((s) => s.trim()).filter(Boolean);
 for (const s of SUITES) if (!SUITES_ALL.includes(s)) { console.error(`Unknown suite "${s}". Use: ${SUITES_ALL.join(', ')}`); process.exit(2); }
@@ -360,6 +360,36 @@ function staticSuite() {
       }
     }
   }
+
+  // 7h. Application pattern schemas (tools/pattern_schemas.json): regexes compile, spreadsheet examples
+  // build the expected names and pass, invalid examples fail, and hints never contain the "fieldLabel"
+  // marker that AddShellOrgPattern counts to know the number of fields.
+  try {
+    const f = JSON.parse(fs.readFileSync(path.join(ROOT, 'tools', 'pattern_schemas.json'), 'utf8'));
+    let n = 0;
+    for (const a of f.applications) {
+      const fields = a.fields || f.fieldSets[a.fieldsFrom];
+      if (!fields || !fields.length || fields.length > 7) { err('schema', `${a.appId}: needs 1 to 7 fields`); continue; }
+      if (!/^X:[A-Z0-9()]+$/.test(a.appId)) err('schema', `${a.appId}: application code must be X:CODE`);
+      for (const x of fields) {
+        if (JSON.stringify(x).replace('"fieldLabel"', '').includes('fieldLabel')) err('schema', `${a.appId}: "fieldLabel" must appear once per field`);
+        try { new RegExp(`^(?:${x.regex})$`); } catch (e) { err('schema', `${a.appId} ${x.fieldLabel}: bad regex ${x.regex}`); }
+      }
+      const ok = (x, v) => (v === '' ? x.blankIsWildcard : new RegExp(`^(?:${x.regex})$`).test(v));
+      for (const ex of a.examples || []) {
+        const bad = fields.filter((x, i) => !ok(x, ex.values[i] ?? ''));
+        const name = `${a.appId}:${ex.prefix || a.prefixes[0]}:${fields.map((x, i) => ex.values[i] || '*').join(':')}`;
+        if (bad.length) err('schema', `${a.appId}: example ${ex.name} fails ${bad.map((x) => x.fieldLabel).join(', ')}`);
+        if (name !== ex.name) err('schema', `${a.appId}: example builds ${name}, expected ${ex.name}`);
+        n++;
+      }
+      for (const iv of a.invalid || []) {
+        if (fields.every((x, i) => ok(x, iv.values[i] ?? ''))) err('schema', `${a.appId}: invalid example ${JSON.stringify(iv.values)} passes (${iv.why})`);
+        n++;
+      }
+    }
+    pass('Static.schemas', `${f.applications.length} application schemas, ${n} examples checked`);
+  } catch (e) { err('schema', `tools/pattern_schemas.json: ${e.message}`); }
 
   // 8. No forbidden test text in anything shipped to the tenant (CLAUDE.md "Test data in the tenant")
   const forbidden = new RegExp(['cl', 'aude'].join(''), 'i');
@@ -1314,6 +1344,70 @@ async function purge(token) {
   if (!APPLY) pass('Purge.dryRun', `would delete every record in ${PURGE_COLLECTIONS.join(', ')}`);
 }
 
+// ═══ Application pattern schemas (tools/pattern_schemas.json) → COMSApplication records ═══
+const SCHEMA_FILE = path.join(__dirname, '..', 'tools', 'pattern_schemas.json');
+function loadSchemas() {
+  const f = JSON.parse(fs.readFileSync(SCHEMA_FILE, 'utf8'));
+  return f.applications.map((a) => {
+    const fields = a.fields || f.fieldSets[a.fieldsFrom];
+    return { ...a, fields, schema: { prefixes: a.prefixes, fields } };
+  });
+}
+async function seedApps(token) {
+  const APPLY = argv.includes('--apply');
+  console.log(`\n-- Seed application records (${APPLY ? 'APPLY' : 'DRY RUN'}) --`);
+  const have = (await request('GET', `${BO}/comsApplications?limit=100`, token)).data || [];
+  for (const a of loadSchemas()) {
+    const body = { name: a.name, appId: a.appId, orgType: a.appId, orgSubtype: 'X:SHELL', namePrefix: a.prefixes.join(','),
+      patternSchema: JSON.stringify(a.schema), active: true, description: `Pattern format from Application Patterns.xlsx: ${a.prefixes.join('/')} + ${a.fields.map((x) => x.fieldLabel).join(', ')}` };
+    const cur = have.find((r) => r.appId === a.appId);
+    const same = cur && cur.namePrefix === body.namePrefix && cur.patternSchema === body.patternSchema && cur.name === body.name;
+    console.log(`   ${cur ? (same ? 'unchanged' : 'update') : 'create'}  ${a.appId}  ${body.namePrefix}  [${a.fields.map((x) => x.fieldLabel).join(', ')}]`);
+    if (!APPLY || same) continue;
+    await test(`Seed.${a.appId}`, async () => {
+      if (cur) await request('PATCH', `${BO}/comsApplications/${cur.id}`, token, body);
+      else await request('POST', `${BO}/comsApplications`, token, body);
+      pass(`Seed.${a.appId}`, cur ? 'updated' : 'created');
+    });
+  }
+  const after = (await request('GET', `${BO}/comsApplications?limit=100`, token)).data || [];
+  const clw = after.find((r) => r.appId === 'X:CLW');
+  if (clw && clw.patternSchema) fail('Seed.clockworkUntouched', 'X:CLW has a patternSchema: its own form would stop listing it');
+  pass('Seed.apps', `${after.length} application records (${after.filter((r) => r.patternSchema).length} with a pattern schema)`);
+}
+
+// Guard check without creating anything: every launch uses effective date 2026-02-30, which Workday rejects,
+// so even a name the guard lets through creates nothing. Read the result per launch in the app Logs
+// (CheckPatternName passes for "accept" names and stops "reject" names before CallAddUpdateOrganization).
+async function patternGuard(token, me) {
+  console.log('\n-- Pattern guard launches (effective date 2026-02-30: nothing can be created) --');
+  const apps = (await request('GET', `${BO}/comsApplications?limit=100`, token)).data || [];
+  const id = (code) => (apps.find((a) => a.appId === code) || {}).id;
+  const cases = [
+    ['accept', 'X:CLW', 'X:CLW:PATTERN:ZZZZ:ZZZZ_V:999:999:2027W2'],
+    ['accept', 'X:BPMS(AOC)', 'X:BPMS(AOC):CP:ZZZZ_V:9*'],
+    ['accept', 'X:ADM', 'X:ADM:KEYCLOAK:ZZGUARDCHECK'],
+    ['reject', 'X:BPMS(AOC)', 'X:BPMS(AOC):XX:MECH_V:1*'],
+    ['reject', 'X:BPMS(AOC)', 'X:BPMS(AOC):CP:MECH_V'],
+    ['reject', 'X:BPMS(AOC)', 'X:BPMS(AOC):CP:mech_v:100'],
+    ['reject', 'X:ADM', 'X:ADM:ORG:ANY'],
+    ['reject', 'X:ADM', 'X:ADM:AAP:A:B'],
+    ['reject', 'X:CLW', 'X:CLW:ORG:MATH'],
+  ];
+  for (const [want, app, name] of cases) {
+    if (!id(app)) { warn(`Guard.${name}`, `no record for ${app}`); continue; }
+    await launch(token, 'AddShellOrgPattern', { comsAppId: id(app), patternName: name, workerId: me.id, attribute1: '', attribute2: '', attribute3: '', attribute5: '',
+      effectiveDate: '2026-02-30', changedBy: me.descriptor, changedByWid: me.id, timestamp: new Date().toISOString().replace(/\.\d+Z$/, 'Z') });
+    console.log(`   launched  expect ${want}  ${name}`);
+    await sleep(1500);
+  }
+  await sleep(20000);
+  const created = ((await wql(token, "SELECT code FROM topLevelOrganizations WHERE code contains 'X:'", 10000)).data || []).map((o) => o.code);
+  const leaked = cases.map((c) => c[2]).filter((n) => created.includes(n));
+  if (leaked.length) fail('Guard.nothingCreated', `created: ${leaked.join(', ')}`);
+  else pass('Guard.nothingCreated', `${cases.length} launches, no new organization (check CheckPatternName per launch in the app Logs)`);
+}
+
 // ═══ Probe: read-only facts for building application pattern schemas ═══
 async function probe(token) {
   console.log('\n-- Probe (read-only) --');
@@ -1534,6 +1628,8 @@ async function demoSeed(token, me) {
         if (live.includes('demoseed')) await demoSeed(token, me);
         if (live.includes('datacheck')) await dataCheck(token);
         if (live.includes('probe')) await probe(token);
+        if (live.includes('seedapps')) await seedApps(token);
+        if (live.includes('patternguard')) await patternGuard(token, me);
       }
     }
   }

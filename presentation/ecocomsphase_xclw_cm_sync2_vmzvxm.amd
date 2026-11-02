@@ -132,6 +132,28 @@
           "endsFlow": true
         }
       ]
+    },
+    {
+      "id": "newSchemaPatternFlow",
+      "flowSteps": [
+        {
+          "id": "newSchemaPatternStep",
+          "taskId": "newSchemaPattern",
+          "startsFlow": true,
+          "transitions": [
+            {
+              "order": "a",
+              "value": "newSchemaPatternDoneStep",
+              "condition": "true"
+            }
+          ]
+        },
+        {
+          "id": "newSchemaPatternDoneStep",
+          "taskId": "newShellOrgPatternSuccess",
+          "endsFlow": true
+        }
+      ]
     }
   ],
   "tasks": [
@@ -364,6 +386,13 @@
       "routingPattern": "/bulkRoleGrid",
       "page": {
         "id": "bulkRoleGrid"
+      }
+    },
+    {
+      "id": "newSchemaPattern",
+      "routingPattern": "/newSchemaPattern",
+      "page": {
+        "id": "newSchemaPattern"
       }
     }
   ],

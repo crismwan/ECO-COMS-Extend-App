@@ -247,7 +247,21 @@
                 "taskReference": {
                   "taskId": "createShellOrgPatternWizard"
                 },
-                "action": "PRIMARY"
+                "action": "PRIMARY",
+                "visible": "<% (queryParams.appCode ?? '') == 'X:CLW' %>"
+              },
+              {
+                "type": "button",
+                "id": "addSchemaPatternBtn",
+                "label": "Add Pattern",
+                "action": "PRIMARY",
+                "visible": "<% (queryParams.appCode ?? '') != 'X:CLW' %>",
+                "taskReference": {
+                  "taskId": "newSchemaPattern",
+                  "parameterBindings": {
+                    "appCode": "<% queryParams.appCode ?? '' %>"
+                  }
+                }
               },
               {
                 "type": "richText",

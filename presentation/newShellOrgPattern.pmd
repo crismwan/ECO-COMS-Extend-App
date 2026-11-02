@@ -184,7 +184,7 @@
                       "id": "<% app.id %>",
                       "descriptor": "<% app.appId %>"
                     },
-                    "on": "<% comsApplications.data %>",
+                    "on": "<% (comsApplications.data ?? []).filter(x => { empty(x.patternSchema) }) %>",
                     "as": "app"
                   },
                   "helpText": "Select the application this pattern belongs to.",

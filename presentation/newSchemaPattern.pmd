@@ -1,0 +1,377 @@
+{
+  "id": "newSchemaPattern",
+  "securityDomains": [
+    "ManageCOMSShellOrgs"
+  ],
+  "include": [
+    "comsValidations.script",
+    "comsPatterns.script"
+  ],
+  "endPoints": [
+    {
+      "name": "selectedWorker",
+      "baseUrlType": "COMMON",
+      "url": "/workers/me",
+      "authType": "sso",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 403
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "name": "comsApplications",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "url": "/comsApplications?limit=100",
+      "authType": "sso",
+      "isCollection": true,
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 403
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "name": "existingOrgs",
+      "baseUrlType": "workday-wql",
+      "url": "data",
+      "authType": "sso",
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 403
+        },
+        {
+          "code": 500
+        }
+      ],
+      "wqlQuery": {
+        "queryId": "customOrganizations"
+      }
+    },
+    {
+      "name": "launchAddShellOrgPattern",
+      "baseUrlType": "orchestration",
+      "authType": "sso",
+      "deferred": "true",
+      "url": "<% '/AddShellOrgPattern/launch?comsAppId=' + aid + '&patternName=' + pn + '&workerId=' + wid + '&attribute1=' + a1 + '&attribute2=' + a2 + '&attribute3=' + a3 + '&attribute4=' + a4 + '&attribute5=' + a5 + '&effectiveDate=' + ed + '&changedBy=' + cb + '&timestamp=' + ts + '&changedByWid=' + cbw %>"
+    },
+    {
+      "name": "verifyPattern",
+      "baseUrlType": "workday-wql",
+      "authType": "sso",
+      "deferred": "true",
+      "url": "<% 'data?limit=' + lim + '&query=SELECT%20workdayID%2C%20code%20FROM%20topLevelOrganizations%20WHERE%20code%20contains%20%27X%3A%27' %>"
+    }
+  ],
+  "onSubmit": "<%\n  let s = comsPatterns.schemaFor(comsApplications.data, queryParams.appCode);\n  let valid = true;\n  prefixDropdown.clearError();\n  effectiveDate.clearError();\n  patternField1Text.clearError();\n  patternField2Text.clearError();\n  patternField3Text.clearError();\n  patternField4Text.clearError();\n  patternField5Text.clearError();\n  patternField6Text.clearError();\n  patternField7Text.clearError();\n  if (empty(queryParams.appCode) || empty(s)) {\n    valid = false;\n  } else {\n    if (comsPatterns.prefixCount(s) > 1 && empty(prefixDropdown.value)) {\n      prefixDropdown.setError('Pick a pattern prefix.');\n      valid = false;\n    }\n    let e1 = comsPatterns.checkField(s, 0, patternField1Text.value);\n    if (e1 != '') { patternField1Text.setError(e1); valid = false; }\n    let e2 = comsPatterns.checkField(s, 1, patternField2Text.value);\n    if (e2 != '') { patternField2Text.setError(e2); valid = false; }\n    let e3 = comsPatterns.checkField(s, 2, patternField3Text.value);\n    if (e3 != '') { patternField3Text.setError(e3); valid = false; }\n    let e4 = comsPatterns.checkField(s, 3, patternField4Text.value);\n    if (e4 != '') { patternField4Text.setError(e4); valid = false; }\n    let e5 = comsPatterns.checkField(s, 4, patternField5Text.value);\n    if (e5 != '') { patternField5Text.setError(e5); valid = false; }\n    let e6 = comsPatterns.checkField(s, 5, patternField6Text.value);\n    if (e6 != '') { patternField6Text.setError(e6); valid = false; }\n    let e7 = comsPatterns.checkField(s, 6, patternField7Text.value);\n    if (e7 != '') { patternField7Text.setError(e7); valid = false; }\n  }\n  if (empty(effectiveDate.value)) {\n    effectiveDate.setError('Effective Date is required.');\n    valid = false;\n  } else if (!comsValidations.isWeekday(effectiveDate.value)) {\n    effectiveDate.setError(comsValidations.errorWeekday());\n    valid = false;\n  } else if (!comsValidations.isCurrentOrFutureYear(effectiveDate.value)) {\n    effectiveDate.setError(comsValidations.errorYear());\n    valid = false;\n  }\n  if (valid) {\n    let dupName = comsPatterns.buildName((queryParams.appCode ?? ''), (comsPatterns.prefixCount(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode)) > 1 ? (empty(prefixDropdown.value) ? '' : prefixDropdown.selectedEntries[0].id) : comsPatterns.firstPrefix(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode))), comsPatterns.schemaFor(comsApplications.data, queryParams.appCode), [patternField1Text.value, patternField2Text.value, patternField3Text.value, patternField4Text.value, patternField5Text.value, patternField6Text.value, patternField7Text.value]);\n    if ((existingOrgs.data ?? []).filter(o => { o.code == dupName }).size() > 0) {\n      patternField1Text.setError('A pattern with this name already exists: ' + dupName);\n      valid = false;\n    }\n  }\n  if (valid) {\n    let rec = comsPatterns.recordFor(comsApplications.data, queryParams.appCode);\n    let pn = comsPatterns.buildName((queryParams.appCode ?? ''), (comsPatterns.prefixCount(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode)) > 1 ? (empty(prefixDropdown.value) ? '' : prefixDropdown.selectedEntries[0].id) : comsPatterns.firstPrefix(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode))), comsPatterns.schemaFor(comsApplications.data, queryParams.appCode), [patternField1Text.value, patternField2Text.value, patternField3Text.value, patternField4Text.value, patternField5Text.value, patternField6Text.value, patternField7Text.value]);\n    let v = [patternField1Text.value, patternField2Text.value, patternField3Text.value, patternField4Text.value, patternField5Text.value, patternField6Text.value, patternField7Text.value];\n    launchAddShellOrgPattern.invoke({'cbw': selectedWorker.id ?? '', 'cb': (selectedWorker.descriptor ?? '').urlEncode(), 'ts': date:now().format(\"yyyy-MM-dd'T'HH:mm:ss'Z'\").urlEncode(), 'aid': rec.id, 'pn': pn.urlEncode(), 'wid': selectedWorker.id ?? '', 'a1': comsPatterns.cell(v[0]).urlEncode(), 'a2': comsPatterns.cell(v[1]).urlEncode(), 'a3': comsPatterns.cell(v[2]).urlEncode(), 'a4': comsPatterns.cell(v[3]).urlEncode(), 'a5': comsPatterns.cell(v[4]).urlEncode(), 'ed': effectiveDate.value.format('yyyy-MM-dd')});\n    let created = (verifyPattern.invoke({'lim': '10000'}).data ?? []).filter(o => { o.code == pn }).size() > 0;\n    if (!created) {\n      patternField1Text.setError('Workday rejected this request, so nothing was created. Check the values and try again.');\n      valid = false;\n    }\n  }\n  valid;\n%>",
+  "presentation": {
+    "headerSize": "STANDARD",
+    "title": {
+      "type": "title",
+      "label": "<% empty(queryParams.appCode) ? 'ECO-COMS: Add Shell Org Pattern' : ('ECO-COMS: Add Shell Org Pattern · ' + queryParams.appCode) %>",
+      "enabled": true
+    },
+    "cancelOverride": {
+      "taskId": "shellOrgManager"
+    },
+    "standardEditButtonsHidden": "<% empty(queryParams.appCode) || empty(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode)) %>",
+    "body": {
+      "type": "basicFormLayout",
+      "id": "schemaPatternForm",
+      "sections": [
+        {
+          "type": "layoutSection",
+          "id": "navSection",
+          "children": [
+            {
+              "type": "button",
+              "id": "backButton",
+              "label": "← Shell Org Manager",
+              "action": "LINK",
+              "suppressDiscardDialog": true,
+              "taskReference": {
+                "taskId": "shellOrgManager"
+              }
+            },
+            {
+              "type": "button",
+              "id": "changeAppButton",
+              "label": "Choose another application",
+              "action": "LINK",
+              "suppressDiscardDialog": true,
+              "render": "<% !empty(queryParams.appCode) %>",
+              "taskReference": {
+                "taskId": "newSchemaPattern"
+              }
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "aboutSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "aboutFieldSet",
+              "title": "About This Page",
+              "children": [
+                {
+                  "type": "richText",
+                  "id": "aboutRichText",
+                  "enabled": false,
+                  "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">Create a shell org pattern for any application. Each application has its own pattern format: a prefix and its own fields (e.g. Subject and Course for Assessment Outcomes, one Role Name for most tools). The form below shows that application's fields, checks each value as you type, and builds the name as <b>APPLICATION:PREFIX:field:field</b>. A blank field becomes * (any). Submitting creates a live organization (subtype X:SHELL) in Workday; it can be inactivated later but not deleted.</span>"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "pickSection",
+          "render": "<% empty(queryParams.appCode) %>",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "pickFieldSet",
+              "title": "Choose an Application",
+              "children": [
+                {
+                  "type": "grid",
+                  "id": "appPickGrid",
+                  "rowVariableName": "pa",
+                  "doNotAdd": true,
+                  "doNotRemove": true,
+                  "label": "Applications",
+                  "rows": "<% comsPatterns.appCodes(existingOrgs.data, comsApplications.data).map(a => { {'appCode': a, 'name': (comsPatterns.recordFor(comsApplications.data, a) ?? {'name': ''}).name ?? '', 'format': comsPatterns.summary(comsApplications.data, a)} }) %>",
+                  "columns": [
+                    {
+                      "type": "column",
+                      "columnId": "colApp",
+                      "label": "Application",
+                      "cellTemplate": {
+                        "type": "text",
+                        "id": "colAppText",
+                        "enabled": false,
+                        "value": "<% pa.appCode %>"
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colName",
+                      "label": "Name",
+                      "cellTemplate": {
+                        "type": "text",
+                        "id": "colNameText",
+                        "enabled": false,
+                        "value": "<% pa.name ?? '' %>"
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colFormat",
+                      "label": "Pattern Format",
+                      "cellTemplate": {
+                        "type": "text",
+                        "id": "colFormatText",
+                        "enabled": false,
+                        "value": "<% pa.format %>"
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colAdd",
+                      "label": "Add Pattern",
+                      "cellTemplate": {
+                        "type": "button",
+                        "id": "addAppButton",
+                        "label": "Add Pattern",
+                        "action": "AUXILIARY",
+                        "suppressDiscardDialog": true,
+                        "taskReference": {
+                          "taskId": "newSchemaPattern",
+                          "parameterBindings": {
+                            "appCode": "<% pa.appCode %>"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "noSchemaSection",
+          "render": "<% !empty(queryParams.appCode) && empty(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode)) %>",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "noSchemaFieldSet",
+              "title": "No Pattern Format",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "noSchemaText",
+                  "label": "Pattern Format",
+                  "enabled": false,
+                  "value": "<% (queryParams.appCode ?? '') == 'X:CLW' ? 'Clockwork has its own pattern form: use the button below.' : ('No pattern format is set up for ' + (queryParams.appCode ?? '') + ' yet. Add it to the application record (patternSchema), then come back.') %>"
+                },
+                {
+                  "type": "button",
+                  "id": "clockworkFormButton",
+                  "label": "Open the Clockwork Pattern Form",
+                  "action": "PRIMARY",
+                  "suppressDiscardDialog": true,
+                  "render": "<% (queryParams.appCode ?? '') == 'X:CLW' %>",
+                  "taskReference": {
+                    "taskId": "createShellOrgPatternWizard"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "formSection",
+          "render": "<% !empty(queryParams.appCode) && !empty(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode)) %>",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "patternDetailsFieldSet",
+              "title": "Pattern Details",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "applicationText",
+                  "label": "Application",
+                  "enabled": false,
+                  "value": "<% (queryParams.appCode ?? '') + ' · ' + ((comsPatterns.recordFor(comsApplications.data, queryParams.appCode) ?? {'name': ''}).name ?? '') %>"
+                },
+                {
+                  "type": "text",
+                  "id": "formatGuideText",
+                  "label": "Format",
+                  "enabled": false,
+                  "value": "<% comsPatterns.formatGuide(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode)) %>"
+                },
+                {
+                  "type": "dropdown",
+                  "id": "prefixDropdown",
+                  "label": "Pattern Prefix",
+                  "values": "<% comsPatterns.prefixOptions(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode)) %>",
+                  "visible": "<% comsPatterns.prefixCount(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode)) > 1 %>",
+                  "onChange": "<%\n  self.clearError();\n  patternPreviewText.setValue(comsPatterns.buildName((queryParams.appCode ?? ''), (comsPatterns.prefixCount(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode)) > 1 ? (empty(prefixDropdown.value) ? '' : prefixDropdown.selectedEntries[0].id) : comsPatterns.firstPrefix(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode))), comsPatterns.schemaFor(comsApplications.data, queryParams.appCode), [patternField1Text.value, patternField2Text.value, patternField3Text.value, patternField4Text.value, patternField5Text.value, patternField6Text.value, patternField7Text.value]));\n%>"
+                },
+                {
+                  "type": "readOnlyText",
+                  "id": "patternPreviewText",
+                  "label": "Pattern Name Preview",
+                  "value": "<% comsPatterns.buildName((queryParams.appCode ?? ''), (comsPatterns.prefixCount(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode)) > 1 ? (empty(prefixDropdown.value) ? '' : prefixDropdown.selectedEntries[0].id) : comsPatterns.firstPrefix(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode))), comsPatterns.schemaFor(comsApplications.data, queryParams.appCode), [patternField1Text.value, patternField2Text.value, patternField3Text.value, patternField4Text.value, patternField5Text.value, patternField6Text.value, patternField7Text.value]) %>"
+                }
+              ]
+            },
+            {
+              "type": "fieldSet",
+              "id": "patternFieldsFieldSet",
+              "title": "Pattern Fields",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "patternField1Text",
+                  "label": "<% comsPatterns.fieldLabel(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode), 0) %>",
+                  "visible": "<% comsPatterns.fieldCount(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode)) > 0 %>",
+                  "placeholder": "<% comsPatterns.fieldCount(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode)) > 0 ? ('e.g. ' + comsPatterns.schemaFor(comsApplications.data, queryParams.appCode).fields[0].example) : '' %>",
+                  "onChange": "<%\n  let s = comsPatterns.schemaFor(comsApplications.data, queryParams.appCode);\n  let err = comsPatterns.checkField(s, 0, self.value);\n  if (err != '') { self.setError(err); } else { self.clearError(); }\n  let pn = comsPatterns.buildName((queryParams.appCode ?? ''), (comsPatterns.prefixCount(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode)) > 1 ? (empty(prefixDropdown.value) ? '' : prefixDropdown.selectedEntries[0].id) : comsPatterns.firstPrefix(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode))), comsPatterns.schemaFor(comsApplications.data, queryParams.appCode), [patternField1Text.value, patternField2Text.value, patternField3Text.value, patternField4Text.value, patternField5Text.value, patternField6Text.value, patternField7Text.value]);\n  patternPreviewText.setValue(pn);\n  if (err == '' && (existingOrgs.data ?? []).filter(o => { o.code == pn }).size() > 0) {\n    self.setError('A pattern with this name already exists: ' + pn);\n  }\n%>"
+                },
+                {
+                  "type": "text",
+                  "id": "patternField2Text",
+                  "label": "<% comsPatterns.fieldLabel(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode), 1) %>",
+                  "visible": "<% comsPatterns.fieldCount(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode)) > 1 %>",
+                  "placeholder": "<% comsPatterns.fieldCount(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode)) > 1 ? ('e.g. ' + comsPatterns.schemaFor(comsApplications.data, queryParams.appCode).fields[1].example) : '' %>",
+                  "onChange": "<%\n  let s = comsPatterns.schemaFor(comsApplications.data, queryParams.appCode);\n  let err = comsPatterns.checkField(s, 1, self.value);\n  if (err != '') { self.setError(err); } else { self.clearError(); }\n  let pn = comsPatterns.buildName((queryParams.appCode ?? ''), (comsPatterns.prefixCount(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode)) > 1 ? (empty(prefixDropdown.value) ? '' : prefixDropdown.selectedEntries[0].id) : comsPatterns.firstPrefix(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode))), comsPatterns.schemaFor(comsApplications.data, queryParams.appCode), [patternField1Text.value, patternField2Text.value, patternField3Text.value, patternField4Text.value, patternField5Text.value, patternField6Text.value, patternField7Text.value]);\n  patternPreviewText.setValue(pn);\n  if (err == '' && (existingOrgs.data ?? []).filter(o => { o.code == pn }).size() > 0) {\n    self.setError('A pattern with this name already exists: ' + pn);\n  }\n%>"
+                },
+                {
+                  "type": "text",
+                  "id": "patternField3Text",
+                  "label": "<% comsPatterns.fieldLabel(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode), 2) %>",
+                  "visible": "<% comsPatterns.fieldCount(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode)) > 2 %>",
+                  "placeholder": "<% comsPatterns.fieldCount(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode)) > 2 ? ('e.g. ' + comsPatterns.schemaFor(comsApplications.data, queryParams.appCode).fields[2].example) : '' %>",
+                  "onChange": "<%\n  let s = comsPatterns.schemaFor(comsApplications.data, queryParams.appCode);\n  let err = comsPatterns.checkField(s, 2, self.value);\n  if (err != '') { self.setError(err); } else { self.clearError(); }\n  let pn = comsPatterns.buildName((queryParams.appCode ?? ''), (comsPatterns.prefixCount(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode)) > 1 ? (empty(prefixDropdown.value) ? '' : prefixDropdown.selectedEntries[0].id) : comsPatterns.firstPrefix(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode))), comsPatterns.schemaFor(comsApplications.data, queryParams.appCode), [patternField1Text.value, patternField2Text.value, patternField3Text.value, patternField4Text.value, patternField5Text.value, patternField6Text.value, patternField7Text.value]);\n  patternPreviewText.setValue(pn);\n  if (err == '' && (existingOrgs.data ?? []).filter(o => { o.code == pn }).size() > 0) {\n    self.setError('A pattern with this name already exists: ' + pn);\n  }\n%>"
+                },
+                {
+                  "type": "text",
+                  "id": "patternField4Text",
+                  "label": "<% comsPatterns.fieldLabel(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode), 3) %>",
+                  "visible": "<% comsPatterns.fieldCount(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode)) > 3 %>",
+                  "placeholder": "<% comsPatterns.fieldCount(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode)) > 3 ? ('e.g. ' + comsPatterns.schemaFor(comsApplications.data, queryParams.appCode).fields[3].example) : '' %>",
+                  "onChange": "<%\n  let s = comsPatterns.schemaFor(comsApplications.data, queryParams.appCode);\n  let err = comsPatterns.checkField(s, 3, self.value);\n  if (err != '') { self.setError(err); } else { self.clearError(); }\n  let pn = comsPatterns.buildName((queryParams.appCode ?? ''), (comsPatterns.prefixCount(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode)) > 1 ? (empty(prefixDropdown.value) ? '' : prefixDropdown.selectedEntries[0].id) : comsPatterns.firstPrefix(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode))), comsPatterns.schemaFor(comsApplications.data, queryParams.appCode), [patternField1Text.value, patternField2Text.value, patternField3Text.value, patternField4Text.value, patternField5Text.value, patternField6Text.value, patternField7Text.value]);\n  patternPreviewText.setValue(pn);\n  if (err == '' && (existingOrgs.data ?? []).filter(o => { o.code == pn }).size() > 0) {\n    self.setError('A pattern with this name already exists: ' + pn);\n  }\n%>"
+                },
+                {
+                  "type": "text",
+                  "id": "patternField5Text",
+                  "label": "<% comsPatterns.fieldLabel(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode), 4) %>",
+                  "visible": "<% comsPatterns.fieldCount(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode)) > 4 %>",
+                  "placeholder": "<% comsPatterns.fieldCount(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode)) > 4 ? ('e.g. ' + comsPatterns.schemaFor(comsApplications.data, queryParams.appCode).fields[4].example) : '' %>",
+                  "onChange": "<%\n  let s = comsPatterns.schemaFor(comsApplications.data, queryParams.appCode);\n  let err = comsPatterns.checkField(s, 4, self.value);\n  if (err != '') { self.setError(err); } else { self.clearError(); }\n  let pn = comsPatterns.buildName((queryParams.appCode ?? ''), (comsPatterns.prefixCount(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode)) > 1 ? (empty(prefixDropdown.value) ? '' : prefixDropdown.selectedEntries[0].id) : comsPatterns.firstPrefix(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode))), comsPatterns.schemaFor(comsApplications.data, queryParams.appCode), [patternField1Text.value, patternField2Text.value, patternField3Text.value, patternField4Text.value, patternField5Text.value, patternField6Text.value, patternField7Text.value]);\n  patternPreviewText.setValue(pn);\n  if (err == '' && (existingOrgs.data ?? []).filter(o => { o.code == pn }).size() > 0) {\n    self.setError('A pattern with this name already exists: ' + pn);\n  }\n%>"
+                },
+                {
+                  "type": "text",
+                  "id": "patternField6Text",
+                  "label": "<% comsPatterns.fieldLabel(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode), 5) %>",
+                  "visible": "<% comsPatterns.fieldCount(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode)) > 5 %>",
+                  "placeholder": "<% comsPatterns.fieldCount(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode)) > 5 ? ('e.g. ' + comsPatterns.schemaFor(comsApplications.data, queryParams.appCode).fields[5].example) : '' %>",
+                  "onChange": "<%\n  let s = comsPatterns.schemaFor(comsApplications.data, queryParams.appCode);\n  let err = comsPatterns.checkField(s, 5, self.value);\n  if (err != '') { self.setError(err); } else { self.clearError(); }\n  let pn = comsPatterns.buildName((queryParams.appCode ?? ''), (comsPatterns.prefixCount(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode)) > 1 ? (empty(prefixDropdown.value) ? '' : prefixDropdown.selectedEntries[0].id) : comsPatterns.firstPrefix(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode))), comsPatterns.schemaFor(comsApplications.data, queryParams.appCode), [patternField1Text.value, patternField2Text.value, patternField3Text.value, patternField4Text.value, patternField5Text.value, patternField6Text.value, patternField7Text.value]);\n  patternPreviewText.setValue(pn);\n  if (err == '' && (existingOrgs.data ?? []).filter(o => { o.code == pn }).size() > 0) {\n    self.setError('A pattern with this name already exists: ' + pn);\n  }\n%>"
+                },
+                {
+                  "type": "text",
+                  "id": "patternField7Text",
+                  "label": "<% comsPatterns.fieldLabel(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode), 6) %>",
+                  "visible": "<% comsPatterns.fieldCount(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode)) > 6 %>",
+                  "placeholder": "<% comsPatterns.fieldCount(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode)) > 6 ? ('e.g. ' + comsPatterns.schemaFor(comsApplications.data, queryParams.appCode).fields[6].example) : '' %>",
+                  "onChange": "<%\n  let s = comsPatterns.schemaFor(comsApplications.data, queryParams.appCode);\n  let err = comsPatterns.checkField(s, 6, self.value);\n  if (err != '') { self.setError(err); } else { self.clearError(); }\n  let pn = comsPatterns.buildName((queryParams.appCode ?? ''), (comsPatterns.prefixCount(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode)) > 1 ? (empty(prefixDropdown.value) ? '' : prefixDropdown.selectedEntries[0].id) : comsPatterns.firstPrefix(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode))), comsPatterns.schemaFor(comsApplications.data, queryParams.appCode), [patternField1Text.value, patternField2Text.value, patternField3Text.value, patternField4Text.value, patternField5Text.value, patternField6Text.value, patternField7Text.value]);\n  patternPreviewText.setValue(pn);\n  if (err == '' && (existingOrgs.data ?? []).filter(o => { o.code == pn }).size() > 0) {\n    self.setError('A pattern with this name already exists: ' + pn);\n  }\n%>"
+                },
+                {
+                  "type": "date",
+                  "id": "effectiveDate",
+                  "label": "Effective Date",
+                  "required": true,
+                  "onChange": "<%\n  if (empty(self.value)) { self.clearError(); }\n  else if (!comsValidations.isWeekday(self.value)) { self.setError(comsValidations.errorWeekday()); }\n  else if (!comsValidations.isCurrentOrFutureYear(self.value)) { self.setError(comsValidations.errorYear()); }\n  else { self.clearError(); }\n%>"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "footer": {
+      "type": "footer",
+      "children": [
+        {
+          "type": "pod",
+          "podId": "ecoComsFooter"
+        }
+      ]
+    },
+    "pageType": "EDIT"
+  }
+}

@@ -19,6 +19,12 @@
         "taskReference": {
           "taskId": "createShellOrgPatternWizard"
         }
+      },
+      {
+        "label": "Add Pattern (Other Apps)",
+        "taskReference": {
+          "taskId": "newSchemaPattern"
+        }
       }
     ]
   }
