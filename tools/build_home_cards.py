@@ -107,7 +107,9 @@ def flow(name, domain, steps, description):
 
 APP = 's"${"/apps/"}${context.appReferenceId()}'
 # number of ids in a JSON array rendered as text: commas + 1, no division (avoids "3.0")
-COUNT = lambda ids: f'(if ({ids}.equals("[]")) "0" else ({ids}.length() - {ids}.replace(",", "").length() + 1).toString())'
+# arrayAtJsonPath on a filtered path fails at run time ("Expected array but found string", 2026-11-02), so count the
+# quoted status value in the response text: len(text with X -> X + "#") - len(text) = occurrences of X, no division
+COUNT = lambda text, value: f'({text}.replace("\\"{value}\\"", "\\"{value}\\"#").length() - {text}.length()).toString()'
 LINK = lambda task: f'"/".append(context.tenant()).append("/d/wday/app/").append(context.appReferenceId()).append("/").append(context.appReferenceId()).append("/{task}.htmld")'
 CARD = ('{"title": "{{data.Counts.title}}", "subtitle": "{{data.Counts.subtitle}}", '
         '"linkText": "{{data.Counts.linkText}}", "linkPath": "{{data.Counts.linkPath}}"}')
@@ -117,10 +119,9 @@ my = flow('MyRoleRequestsCardData', 'ManageCOMSAssignableRoles', [
     values('Me', [('wid', 'data.GetMe.response.asJSON().stringAtJsonPath("$.id")')], 'Viewer WID'),
     get('GetMine', APP + '${"/v1/comsAssignableRoles?limit=100&requestedBy="}${data.Me.wid}"', "The viewer's own role requests (requestedBy is indexed)"),
     values('Counts', [
-        ('pendingIds', 'data.GetMine.response.asJSON().arrayAtJsonPath("$.data[?(@.status == \'Pending ISC Review\')].id").toString()'),
-        ('approvedIds', 'data.GetMine.response.asJSON().arrayAtJsonPath("$.data[?(@.status == \'Approved\')].id").toString()'),
-        ('pending', COUNT('data.Counts.pendingIds')),
-        ('approved', COUNT('data.Counts.approvedIds')),
+        ('text', 'data.GetMine.response.asJSON().toString()'),
+        ('pending', COUNT('data.Counts.text', 'Pending ISC Review')),
+        ('approved', COUNT('data.Counts.text', 'Approved')),
         ('title', '"My Role Requests"'),
         ('subtitle', '(if (data.Counts.pending.equals("0") && data.Counts.approved.equals("0")) "You have no role requests" else data.Counts.pending.append(" pending ISC review · ").append(data.Counts.approved).append(" approved"))'),
         ('linkText', '"Open My Requests"'),
@@ -132,9 +133,10 @@ my = flow('MyRoleRequestsCardData', 'ManageCOMSAssignableRoles', [
 isc = flow('IscQueueCardData', 'MaintainCOMSAssignableRoles', [
     get('GetRequests', APP + '${"/v1/comsAssignableRoles?limit=100"}"', 'Role requests (first 100; the collection returns oldest first, so the oldest pending are included)'),
     values('Counts', [
-        ('pendingIds', 'data.GetRequests.response.asJSON().arrayAtJsonPath("$.data[?(@.status == \'Pending ISC Review\')].id").toString()'),
-        ('oldest', 'data.GetRequests.response.asJSON().arrayAtJsonPath("$.data[?(@.status == \'Pending ISC Review\')].requestedDate").asJSON().stringAtJsonPathWithDefault("$[0]", "")'),
-        ('pending', COUNT('data.Counts.pendingIds')),
+        ('text', 'data.GetRequests.response.asJSON().toString()'),
+        # a filtered path read as a string gives the first match (the collection is oldest first) (unverified)
+        ('oldest', 'data.GetRequests.response.asJSON().stringAtJsonPathWithDefault("$.data[?(@.status == \'Pending ISC Review\')].requestedDate", "")'),
+        ('pending', COUNT('data.Counts.text', 'Pending ISC Review')),
         ('title', '"ISC Queue"'),
         ('subtitle', '(if (data.Counts.pending.equals("0")) "Nothing waiting for review" else data.Counts.pending.append(" waiting for review · oldest requested ").append(data.Counts.oldest.truncate(10)))'),
         ('linkText', '"Open ISC Queue"'),
