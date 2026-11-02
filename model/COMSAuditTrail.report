@@ -1,7 +1,7 @@
 {
-  "id": 10,
-  "name": "AllAuditLogs",
-  "label": "All Audit Logs",
+  "id": 11,
+  "name": "COMSAuditTrail",
+  "label": "ECO-COMS Audit Trail",
   "businessObject": "COMSAuditLog",
   "defaultSecurityDomains": [
     "ViewCOMSAuditLog"
@@ -23,15 +23,15 @@
     },
     {
       "id": 2,
-      "name": "Change Type",
+      "name": "Action",
       "order": "b",
-      "field": "objectType"
+      "field": "action"
     },
     {
       "id": 3,
-      "name": "Action",
+      "name": "Change Type",
       "order": "c",
-      "field": "action"
+      "field": "objectType"
     },
     {
       "id": 4,
@@ -41,32 +41,38 @@
     },
     {
       "id": 5,
-      "name": "Role",
+      "name": "Organization Code",
       "order": "e",
-      "field": "roleName"
+      "field": "coReferenceId"
     },
     {
       "id": 6,
-      "name": "Position",
+      "name": "Role",
       "order": "f",
-      "field": "positionName"
+      "field": "roleName"
     },
     {
       "id": 7,
-      "name": "Effective Date",
+      "name": "Position",
       "order": "g",
-      "field": "effectiveDate"
+      "field": "positionName"
     },
     {
       "id": 8,
-      "name": "Changed By",
+      "name": "Effective Date",
       "order": "h",
-      "field": "triggeredBy"
+      "field": "effectiveDate"
     },
     {
       "id": 9,
-      "name": "Details",
+      "name": "Changed By",
       "order": "i",
+      "field": "triggeredBy"
+    },
+    {
+      "id": 10,
+      "name": "Details",
+      "order": "j",
       "field": "details"
     }
   ]

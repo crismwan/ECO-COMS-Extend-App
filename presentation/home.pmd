@@ -20,6 +20,14 @@
         {
           "type": "item",
           "task": {
+            "taskId": "comsInsights"
+          },
+          "label": "Insights",
+          "icon": "wd-accent-checkmarked-page"
+        },
+        {
+          "type": "item",
+          "task": {
             "taskId": "fuhLandingPage"
           },
           "label": "FUH Administration",

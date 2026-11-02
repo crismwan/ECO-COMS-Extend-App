@@ -1,0 +1,68 @@
+{
+  "id": 13,
+  "name": "COMSApplicationSetup",
+  "label": "ECO-COMS Applications",
+  "businessObject": "COMSApplication",
+  "defaultSecurityDomains": [
+    "ManageCOMSApplicationSetup",
+    "ManageCOMSAdminProvisioning"
+  ],
+  "sortConfigs": [
+    {
+      "id": 1,
+      "order": "a",
+      "field": "appId",
+      "direction": "ASCENDING"
+    }
+  ],
+  "columns": [
+    {
+      "id": 1,
+      "name": "Application ID",
+      "order": "a",
+      "field": "appId"
+    },
+    {
+      "id": 2,
+      "name": "Name",
+      "order": "b",
+      "field": "name"
+    },
+    {
+      "id": 3,
+      "name": "Org Type",
+      "order": "c",
+      "field": "orgType"
+    },
+    {
+      "id": 4,
+      "name": "Org Subtype",
+      "order": "d",
+      "field": "orgSubtype"
+    },
+    {
+      "id": 5,
+      "name": "Allowed Prefixes",
+      "order": "e",
+      "field": "namePrefix"
+    },
+    {
+      "id": 6,
+      "name": "Active",
+      "order": "f",
+      "field": "active"
+    },
+    {
+      "id": 7,
+      "name": "Downstream Consumer",
+      "order": "g",
+      "field": "downstreamConsumer"
+    },
+    {
+      "id": 8,
+      "name": "Workday Organization",
+      "order": "h",
+      "field": "workdayOrgName"
+    }
+  ]
+}

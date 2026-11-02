@@ -1,0 +1,111 @@
+{
+  "id": 10,
+  "name": "COMSRoleRequests",
+  "label": "ECO-COMS Role Requests",
+  "businessObject": "COMSAssignableRole",
+  "defaultSecurityDomains": [
+    "ManageCOMSAssignableRoles",
+    "MaintainCOMSAssignableRoles",
+    "ManageCOMSAdminProvisioning"
+  ],
+  "sortConfigs": [
+    {
+      "id": 1,
+      "order": "a",
+      "field": "requestedDate",
+      "direction": "DESCENDING"
+    }
+  ],
+  "columns": [
+    {
+      "id": 1,
+      "name": "Role Request",
+      "order": "a",
+      "isSelfReferencing": true
+    },
+    {
+      "id": 2,
+      "name": "Reference ID",
+      "order": "b",
+      "field": "referenceId"
+    },
+    {
+      "id": 3,
+      "name": "Role Name",
+      "order": "c",
+      "field": "roleName"
+    },
+    {
+      "id": 4,
+      "name": "Application",
+      "order": "d",
+      "field": "application"
+    },
+    {
+      "id": 5,
+      "name": "Status",
+      "order": "e",
+      "field": "status"
+    },
+    {
+      "id": 6,
+      "name": "Requested By",
+      "order": "f",
+      "field": "requestedBy"
+    },
+    {
+      "id": 7,
+      "name": "Requested Date",
+      "order": "g",
+      "field": "requestedDate"
+    },
+    {
+      "id": 8,
+      "name": "Approved By",
+      "order": "h",
+      "field": "approvedBy"
+    },
+    {
+      "id": 9,
+      "name": "Approved Date",
+      "order": "i",
+      "field": "approvedDate"
+    },
+    {
+      "id": 10,
+      "name": "Shell Org Code",
+      "order": "j",
+      "field": "shellOrgCode"
+    },
+    {
+      "id": 11,
+      "name": "Positions",
+      "order": "k",
+      "field": "positionNames"
+    },
+    {
+      "id": 12,
+      "name": "Security Group",
+      "order": "l",
+      "field": "securityGroupName"
+    },
+    {
+      "id": 13,
+      "name": "Effective Date",
+      "order": "m",
+      "field": "effectiveDate"
+    },
+    {
+      "id": 14,
+      "name": "ISC Ticket",
+      "order": "n",
+      "field": "iscTicketReference"
+    },
+    {
+      "id": 15,
+      "name": "Denial Reason",
+      "order": "o",
+      "field": "denialReason"
+    }
+  ]
+}

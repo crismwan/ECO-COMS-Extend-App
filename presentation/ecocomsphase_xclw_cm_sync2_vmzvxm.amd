@@ -408,6 +408,13 @@
       "page": {
         "id": "iscQueueCard"
       }
+    },
+    {
+      "id": "comsInsights",
+      "routingPattern": "/comsInsights",
+      "page": {
+        "id": "comsInsights"
+      }
     }
   ],
   "applicationId": "ecocomsphase_xclw_cm_sync2_vmzvxm",

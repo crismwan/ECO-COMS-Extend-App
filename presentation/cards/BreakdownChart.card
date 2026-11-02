@@ -1,0 +1,30 @@
+{
+  "id": "BreakdownChart",
+  "parameters": [
+    "title",
+    "subtitle",
+    "slices"
+  ],
+  "header": {
+    "title": "<% title ?? \"\" %>",
+    "subtitle": "<% subtitle ?? \"\" %>"
+  },
+  "body": {
+    "type": "chartCard",
+    "chart": {
+      "type": "donutChart2",
+      "data": "<% slices ?? [] %>",
+      "dataVariableName": "slice",
+      "sliceSizeDataSet": {
+        "name": "Count",
+        "value": "<% slice[\"count\"] %>"
+      },
+      "sliceColorDataSet": {
+        "name": "Group",
+        "value": "<% slice[\"label\"] %>"
+      },
+      "showPercentLabels": false,
+      "animateOnLoad": true
+    }
+  }
+}

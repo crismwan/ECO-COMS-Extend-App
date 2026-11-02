@@ -1,0 +1,79 @@
+{
+  "id": 12,
+  "name": "COMSBulkRunHistory",
+  "label": "ECO-COMS Bulk Runs",
+  "businessObject": "COMSBulkRun",
+  "defaultSecurityDomains": [
+    "ManageCOMSShellOrgs"
+  ],
+  "sortConfigs": [
+    {
+      "id": 1,
+      "order": "a",
+      "field": "uploadedAt",
+      "direction": "DESCENDING"
+    }
+  ],
+  "columns": [
+    {
+      "id": 1,
+      "name": "Batch",
+      "order": "a",
+      "field": "batchRef"
+    },
+    {
+      "id": 2,
+      "name": "Source",
+      "order": "b",
+      "field": "source"
+    },
+    {
+      "id": 3,
+      "name": "Mode",
+      "order": "c",
+      "field": "runMode"
+    },
+    {
+      "id": 4,
+      "name": "Status",
+      "order": "d",
+      "field": "status"
+    },
+    {
+      "id": 5,
+      "name": "Effective Date",
+      "order": "e",
+      "field": "effectiveDate"
+    },
+    {
+      "id": 6,
+      "name": "Changes",
+      "order": "f",
+      "field": "changeCount"
+    },
+    {
+      "id": 7,
+      "name": "Uploaded By",
+      "order": "g",
+      "field": "uploadedByName"
+    },
+    {
+      "id": 8,
+      "name": "Uploaded",
+      "order": "h",
+      "field": "uploadedAt"
+    },
+    {
+      "id": 9,
+      "name": "Finished",
+      "order": "i",
+      "field": "finishedAt"
+    },
+    {
+      "id": 10,
+      "name": "Summary",
+      "order": "j",
+      "field": "summary"
+    }
+  ]
+}

@@ -25,6 +25,7 @@ run tools/build_org_detail.py           # shellOrgDetail + Details buttons in Sh
 run tools/build_request_lists.py        # My Assignable Role Requests, AAA Role Requests
 run tools/build_filter_pills.py         # pill filters, Home action cards, SOM summary, error page
 run tools/build_schema_pattern.py      # Add Shell Org Pattern for any application (schema-driven)
+run tools/build_insights.py             # Insights page across the business objects + lean reports
 run tools/patch_pattern_orchestrations.py  # pattern guards + org subtypes in the create orchestrations
 run tools/title_case.py                 # headings and card titles in Title Case
 run tools/consistency.py                # titles, back links, help text size, success pages
