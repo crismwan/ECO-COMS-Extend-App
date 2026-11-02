@@ -336,6 +336,9 @@
                           "parameterBindings": {
                             "batch": "<% up.batchRef ?? '' %>"
                           }
+                        },
+                        "excel": {
+                          "enabled": false
                         }
                       }
                     }

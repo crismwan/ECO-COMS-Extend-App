@@ -103,6 +103,9 @@
                           "parameterBindings": {
                             "appCode": "<% pa.appCode %>"
                           }
+                        },
+                        "excel": {
+                          "enabled": false
                         }
                       }
                     },
@@ -143,6 +146,9 @@
                           "parameterBindings": {
                             "appCode": "<% pa.appCode %>"
                           }
+                        },
+                        "excel": {
+                          "enabled": false
                         }
                       }
                     }

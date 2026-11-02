@@ -319,6 +319,9 @@
                             "againStatus": "<% role.status ?? '' %>",
                             "againReason": "<% role.denialReason ?? '' %>"
                           }
+                        },
+                        "excel": {
+                          "enabled": false
                         }
                       }
                     }

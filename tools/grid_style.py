@@ -43,6 +43,11 @@ def style(g, page, edit):
     else:
         g['autoPaging'] = True
         g['excelExportEnabled'] = True
+        # App Hub build: a button cell in an exported grid needs excel settings ("To export a column with non-basic widget...")
+        for c in g['columns']:
+            ct = c.get('cellTemplate') or {}
+            if ct.get('type') == 'button' and 'excel' not in ct:
+                ct['excel'] = {"enabled": False}
     if json.dumps(g, sort_keys=True) != before:
         changed.append(f'{page}.{g.get("id")}')
 

@@ -2056,6 +2056,10 @@ A `button` widget's `action` attribute controls its visual style and role. Confi
 
 `"multiViewStylingEnabled": true` enables richer multi-view styling on the grid (confirms to Workday that the grid supports multiple display modes). Use alongside `gridType: "LIST"` on view pages.
 
+### Excel export with button cells
+
+With `excelExportEnabled`, a `button` cell needs `"excel": {"enabled": false}` on the cell widget, or the App Hub build fails: "To export a column with non-basic widget, configure the export properties in the excel attribute" (live 2026-11-02; not raised for every grid, so add it always).
+
 ### `autoPaging`
 
 `"autoPaging": true` on a read-only grid automatically paginates large result sets without requiring the user to click a "load more" button. Use on view pages that may show many rows.
