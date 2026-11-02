@@ -302,9 +302,6 @@
                             "appCode": "<% queryParams.appCode ?? '' %>",
                             "appName": "<% queryParams.appName ?? '' %>"
                           }
-                        },
-                        "excel": {
-                          "enabled": false
                         }
                       }
                     }

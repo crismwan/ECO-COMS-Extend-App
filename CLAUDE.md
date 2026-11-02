@@ -2058,7 +2058,7 @@ A `button` widget's `action` attribute controls its visual style and role. Confi
 
 ### Excel export with button cells
 
-With `excelExportEnabled`, a `button` cell needs `"excel": {"enabled": false}` on the cell widget, or the App Hub build fails: "To export a column with non-basic widget, configure the export properties in the excel attribute" (live 2026-11-02; not raised for every grid, so add it always).
+With `excelExportEnabled`, a `button` column needs `"excel": {"enabled": false}` **on the column** (not on the cell widget, which the build ignored), or the App Hub build fails: "To export a column with non-basic widget, configure the export properties in the excel attribute" (live 2026-11-02; not raised for every grid, so add it always).
 
 ### `autoPaging`
 

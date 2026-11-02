@@ -227,10 +227,10 @@
                           "appCode": "<% app.appCode %>",
                           "appName": "<% app.appCode %>"
                         }
-                      },
-                      "excel": {
-                        "enabled": false
                       }
+                    },
+                    "excel": {
+                      "enabled": false
                     }
                   },
                   {
@@ -271,10 +271,10 @@
                           "appCode": "<% app.appCode %>",
                           "appName": "<% app.appCode %>"
                         }
-                      },
-                      "excel": {
-                        "enabled": false
                       }
+                    },
+                    "excel": {
+                      "enabled": false
                     }
                   }
                 ],
@@ -388,9 +388,6 @@
                           "orgType": "<% queryParams.orgType ?? '' %>",
                           "comsAppId": "<% queryParams.appCode ?? '' %>"
                         }
-                      },
-                      "excel": {
-                        "enabled": false
                       }
                     },
                     "excel": {
@@ -525,9 +522,6 @@
                           "appCode": "<% queryParams.appCode ?? '' %>",
                           "appName": "<% queryParams.appName ?? '' %>"
                         }
-                      },
-                      "excel": {
-                        "enabled": false
                       }
                     }
                   },
@@ -552,9 +546,6 @@
                           "orgType": "<% queryParams.orgType ?? '' %>",
                           "comsAppId": "<% queryParams.appCode ?? '' %>"
                         }
-                      },
-                      "excel": {
-                        "enabled": false
                       }
                     },
                     "excel": {
@@ -642,9 +633,6 @@
                           "appCode": "<% queryParams.appCode ?? '' %>",
                           "appName": "<% queryParams.appName ?? '' %>"
                         }
-                      },
-                      "excel": {
-                        "enabled": false
                       }
                     }
                   },
@@ -669,9 +657,6 @@
                           "orgType": "<% queryParams.orgType ?? '' %>",
                           "comsAppId": "<% queryParams.appCode ?? '' %>"
                         }
-                      },
-                      "excel": {
-                        "enabled": false
                       }
                     },
                     "excel": {
@@ -821,9 +806,6 @@
                           "appCode": "<% queryParams.appCode ?? '' %>",
                           "appName": "<% queryParams.appName ?? '' %>"
                         }
-                      },
-                      "excel": {
-                        "enabled": false
                       }
                     },
                     "excel": {
