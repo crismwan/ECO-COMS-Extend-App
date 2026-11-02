@@ -1335,6 +1335,15 @@ async function probe(token) {
       (r.data || []).forEach((d) => console.log(`   DS[${q}] ${d.alias || ''} | ${d.descriptor || d.name || ''}`));
     } catch (e) { console.log(`   DS[${q}] error ${e.message.slice(0, 120)}`); }
   }
+  for (const f of ['organizationSubtype', 'subtype', 'organizationSubtype1']) {
+    try {
+      const r = await wql(token, `SELECT code, ${f} FROM topLevelOrganizations WHERE code contains 'X:'`, 10000);
+      const cnt = {};
+      (r.data || []).forEach((o) => { const v = o[f]?.descriptor || JSON.stringify(o[f]); const k = `${String(o.code).split(':').length <= 2 ? 'APP-ROOT' : String(o.code).split(':')[2]}|${v}`; cnt[k] = (cnt[k] || 0) + 1; });
+      console.log(`   SUBTYPE via ${f}:`); Object.entries(cnt).sort().forEach(([k, v]) => console.log(`      ${k} = ${v}`));
+      break;
+    } catch (e) { console.log(`   SUBTYPE field ${f}: ${e.message.slice(0, 200)}`); }
+  }
   pass('Probe', `${apps.length} application record(s), ${Object.keys(byApp).length} application codes in Workday`);
 }
 
