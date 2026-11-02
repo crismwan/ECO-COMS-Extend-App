@@ -22,6 +22,7 @@ Open the app from Workday. The **ECO-COMS** hub opens on the **RBAC Hub** page. 
   - **Shell Organizations**: **Open Shell Org Manager**, **Add Shell Org**, **Add Pattern**
   - **Bulk Role Changes**: **Upload File**, **Download Template**, **View Results**
   - **Role Requests**: **View My Requests**, **Submit New Request**, **View AAA Requests**, **Submit AAA Role Request** (the ISC Queue has its own card above)
+- **Insights**: one view across ECO-COMS. Four count cards (pending ISC review, approved and changes in the last 30 days, bulk runs), five charts (requests by status and by application, shell orgs, changes by action, bulk runs), **Applications at a Glance** (shell orgs, patterns and requests per application; select an Application ID to open it in Shell Org Manager) and **Oldest Pending Requests**. For Workday custom reports use the data sources **ECO-COMS Role Requests**, **ECO-COMS Audit Trail**, **ECO-COMS Bulk Runs** and **ECO-COMS Applications**.
 - **FUH Administration**: information about Functional Unit Hierarchy organizations (no actions yet).
 - **Resources**: **Submit a Helpdesk Ticket** and **RBAC Rolename by Application** (external links).
 

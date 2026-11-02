@@ -1730,6 +1730,10 @@ Business objects define an app's data model: they extend Workday's single object
 
 ```
 
+### Model reports
+
+- A `.report` covers **one** business object: `{ id, name, label, businessObject, defaultSecurityDomains, sortConfigs: [{id, order, field, direction: ASCENDING|DESCENDING}], columns: [{id, name, order, field}] }`; a column with `"isSelfReferencing": true` (no field) shows the instance itself. None of the 36 sample apps joins objects in a report: for a cross-object view build a VIEW page. Limit 10 reports per app.
+
 ### Derived fields
 
 Defined in `derivedFields` with an `expression`. Same attributes as standard fields, but **`CURRENCY` and `SINGLE_INSTANCE` types are NOT supported**, and derived fields can't be indexed. Expressions can reference other fields (including through a SINGLE_INSTANCE, e.g. `logo.uploadedDate`) and other derived fields.
