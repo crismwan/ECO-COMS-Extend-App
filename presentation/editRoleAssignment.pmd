@@ -123,71 +123,47 @@
           "id": "currentAssignmentSection",
           "children": [
             {
-              "type": "grid",
-              "id": "currentAssignmentGrid",
-              "label": "Current Assignment",
-              "rows": "<% list:flatten((shellRoles.data ?? []).filter(r => { r.role.id == (queryParams.roleId ?? '') }).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ra.organization.id == (queryParams.orgId ?? '') }).map(ra => { { 'role': r.role, 'org': ra.organization, 'positions': ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? [] } }) })) %>",
-              "rowVariableName": "ra",
-              "columns": [
+              "type": "fieldSet",
+              "id": "currentAssignmentFieldSet",
+              "title": "Current Assignment",
+              "children": [
                 {
-                  "type": "column",
-                  "id": "currentRoleName",
-                  "columnId": "currentRoleName",
+                  "type": "instanceList",
+                  "id": "currentRoleNameInstanceList",
                   "label": "Role",
-                  "cellTemplate": {
-                    "type": "instanceList",
-                    "id": "currentRoleNameInstanceList",
-                    "view": true,
-                    "relatedTask": true,
-                    "enabled": false,
-                    "widKey": "id",
-                    "values": "<% [] %>",
-                    "multiSelect": true,
-                    "selectedValuesAndDescriptors": "<% (ra.role != null ? [ra.role] : []).map(i => { {'id': i.id, 'descriptor': i.descriptor} }) %>"
-                  },
-                  "sortableAndFilterable": "true"
+                  "view": true,
+                  "relatedTask": true,
+                  "enabled": false,
+                  "widKey": "id",
+                  "values": "<% [] %>",
+                  "multiSelect": true,
+                  "selectedValuesAndDescriptors": "<% let cur = list:flatten((shellRoles.data ?? []).filter(r => { r.role.id == (queryParams.roleId ?? '') }).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ra.organization.id == (queryParams.orgId ?? '') }).map(ra => { { 'role': r.role, 'org': ra.organization, 'positions': ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? [] } }) })); empty(cur) ? [] : (cur[0].role != null ? [cur[0].role] : []).map(i => { {'id': i.id, 'descriptor': i.descriptor} }) %>"
                 },
                 {
-                  "type": "column",
-                  "id": "currentAssignmentOrg",
-                  "columnId": "currentAssignmentOrg",
+                  "type": "instanceList",
+                  "id": "currentAssignmentOrgInstanceList",
                   "label": "Organization",
-                  "cellTemplate": {
-                    "type": "instanceList",
-                    "id": "currentAssignmentOrgInstanceList",
-                    "view": true,
-                    "relatedTask": true,
-                    "enabled": false,
-                    "widKey": "id",
-                    "values": "<% [] %>",
-                    "multiSelect": true,
-                    "selectedValuesAndDescriptors": "<% (ra.org != null ? [ra.org] : []).map(i => { {'id': i.id, 'descriptor': i.descriptor} }) %>"
-                  },
-                  "sortableAndFilterable": "true"
+                  "view": true,
+                  "relatedTask": true,
+                  "enabled": false,
+                  "widKey": "id",
+                  "values": "<% [] %>",
+                  "multiSelect": true,
+                  "selectedValuesAndDescriptors": "<% let cur = list:flatten((shellRoles.data ?? []).filter(r => { r.role.id == (queryParams.roleId ?? '') }).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ra.organization.id == (queryParams.orgId ?? '') }).map(ra => { { 'role': r.role, 'org': ra.organization, 'positions': ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? [] } }) })); empty(cur) ? [] : (cur[0].org != null ? [cur[0].org] : []).map(i => { {'id': i.id, 'descriptor': i.descriptor} }) %>"
                 },
                 {
-                  "type": "column",
-                  "id": "currentPositions",
-                  "columnId": "currentPositions",
+                  "type": "instanceList",
+                  "id": "currentPositionsInstanceList",
                   "label": "Current Positions",
-                  "cellTemplate": {
-                    "type": "instanceList",
-                    "id": "currentPositionsInstanceList",
-                    "view": true,
-                    "relatedTask": true,
-                    "enabled": false,
-                    "widKey": "id",
-                    "values": "<% [] %>",
-                    "multiSelect": true,
-                    "selectedValuesAndDescriptors": "<% (ra.positions).map(i => { {'id': i.id, 'descriptor': i.descriptor} }) %>"
-                  },
-                  "sortableAndFilterable": "true"
+                  "view": true,
+                  "relatedTask": true,
+                  "enabled": false,
+                  "widKey": "id",
+                  "values": "<% [] %>",
+                  "multiSelect": true,
+                  "selectedValuesAndDescriptors": "<% let cur = list:flatten((shellRoles.data ?? []).filter(r => { r.role.id == (queryParams.roleId ?? '') }).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ra.organization.id == (queryParams.orgId ?? '') }).map(ra => { { 'role': r.role, 'org': ra.organization, 'positions': ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? [] } }) })); empty(cur) ? [] : (cur[0].positions).map(i => { {'id': i.id, 'descriptor': i.descriptor} }) %>"
                 }
-              ],
-              "doNotAdd": true,
-              "doNotRemove": true,
-              "gridType": "LIST",
-              "multiViewStylingEnabled": true
+              ]
             }
           ]
         },
