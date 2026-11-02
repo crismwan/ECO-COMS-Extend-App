@@ -228,8 +228,7 @@
                           "appName": "<% app.appCode %>"
                         }
                       }
-                    },
-                    "sortableAndFilterable": "true"
+                    }
                   },
                   {
                     "type": "column",
@@ -240,8 +239,7 @@
                       "id": "appTitleText",
                       "enabled": false,
                       "value": "<% (comsPatterns.recordFor(comsApplications.data, app.appCode) ?? {'name': ''}).name ?? '' %>"
-                    },
-                    "sortableAndFilterable": "true"
+                    }
                   },
                   {
                     "type": "column",
@@ -252,8 +250,7 @@
                       "id": "appFormatText",
                       "enabled": false,
                       "value": "<% comsPatterns.summary(comsApplications.data, app.appCode) %>"
-                    },
-                    "sortableAndFilterable": "true"
+                    }
                   },
                   {
                     "type": "column",
@@ -272,8 +269,7 @@
                           "appName": "<% app.appCode %>"
                         }
                       }
-                    },
-                    "sortableAndFilterable": "true"
+                    }
                   }
                 ],
                 "excelExportEnabled": true
@@ -390,8 +386,7 @@
                     },
                     "excel": {
                       "enabled": false
-                    },
-                    "sortableAndFilterable": "true"
+                    }
                   }
                 ],
                 "excelExportEnabled": true
@@ -522,8 +517,7 @@
                           "appName": "<% queryParams.appName ?? '' %>"
                         }
                       }
-                    },
-                    "sortableAndFilterable": "true"
+                    }
                   },
                   {
                     "type": "column",
@@ -550,8 +544,7 @@
                     },
                     "excel": {
                       "enabled": false
-                    },
-                    "sortableAndFilterable": "true"
+                    }
                   }
                 ],
                 "excelExportEnabled": true
@@ -635,8 +628,7 @@
                           "appName": "<% queryParams.appName ?? '' %>"
                         }
                       }
-                    },
-                    "sortableAndFilterable": "true"
+                    }
                   },
                   {
                     "type": "column",
@@ -663,8 +655,7 @@
                     },
                     "excel": {
                       "enabled": false
-                    },
-                    "sortableAndFilterable": "true"
+                    }
                   }
                 ],
                 "excelExportEnabled": true
@@ -813,8 +804,7 @@
                     },
                     "excel": {
                       "enabled": false
-                    },
-                    "sortableAndFilterable": "true"
+                    }
                   }
                 ],
                 "excelExportEnabled": true

@@ -303,8 +303,7 @@
                             "appName": "<% queryParams.appName ?? '' %>"
                           }
                         }
-                      },
-                      "sortableAndFilterable": "true"
+                      }
                     }
                   ]
                 }

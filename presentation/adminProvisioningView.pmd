@@ -291,8 +291,7 @@
                       },
                       "excel": {
                         "enabled": false
-                      },
-                      "sortableAndFilterable": "true"
+                      }
                     }
                   ],
                   "excelExportEnabled": true

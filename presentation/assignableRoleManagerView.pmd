@@ -297,8 +297,7 @@
                       },
                       "excel": {
                         "enabled": false
-                      },
-                      "sortableAndFilterable": "true"
+                      }
                     },
                     {
                       "type": "column",
@@ -321,8 +320,7 @@
                             "againReason": "<% role.denialReason ?? '' %>"
                           }
                         }
-                      },
-                      "sortableAndFilterable": "true"
+                      }
                     }
                   ],
                   "excelExportEnabled": true

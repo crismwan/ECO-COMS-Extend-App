@@ -3,7 +3,8 @@
 
 Every read-only grid gets the same presentation:
   - gridType LIST + multiViewStylingEnabled (the list look used on most pages)
-  - every column sortable and filterable, buttons included (an unsortable header sits lower and looks misaligned)
+  - text-type columns sortable and filterable (Workday can't sort button / fieldSet columns, and draws their headers ~10px
+    lower); the short application lists (SHORT_LISTS) have no sorting at all, so their headers line up
   - button columns last, in their own order (Withdraw's Select column was first)
   - VIEW pages: autoPaging and Excel export (export is view-page only, developer.workday.com "grid")
   - EDIT pages: doNotAdd / doNotRemove, so a display grid shows no +/- icons (readOnly doesn't hide them)
@@ -13,6 +14,8 @@ Editable grids (EDITABLE below) keep Workday's spreadsheet look. Idempotent; run
 import glob, json, os
 ROOT = os.path.join(os.path.dirname(__file__), '..', 'presentation')
 EDITABLE = {('bulkRoleGrid', 'currentGrid'), ('bulkRoleGrid', 'addGrid')}   # users tick / add rows here
+# Application lists (about 15 rows): no sorting, so the button column header lines up (product owner 2026-11-02)
+SHORT_LISTS = {'appPickGrid', 'appsGrid'}
 changed = []
 
 
@@ -22,8 +25,14 @@ def style(g, page, edit):
     g['gridType'] = 'LIST'
     g['multiViewStylingEnabled'] = True
     for c in g.get('columns', []):
-        # every column, buttons too: Workday draws headers of unsortable columns lower, so mixed grids look ragged (live 2026-11-02)
-        c['sortableAndFilterable'] = 'true'
+        # Workday sorts only text-type columns (button and fieldSet columns stay unsortable whatever the attribute says)
+        # and draws an unsortable header ~10px lower (live 2026-11-02). Short lists drop sorting so their headers line up.
+        if g.get('id') in SHORT_LISTS:
+            c.pop('sortableAndFilterable', None)
+        elif (c.get('cellTemplate') or {}).get('type') in ('button', 'fieldSet', 'section'):
+            c.pop('sortableAndFilterable', None)
+        else:
+            c['sortableAndFilterable'] = 'true'
     cols = g.get('columns', [])
     is_btn = lambda c: (c.get('cellTemplate') or {}).get('type') == 'button' and (c.get('cellTemplate') or {}).get('action') != 'LINK'   # a link is the row's name
     g['columns'] = [c for c in cols if not is_btn(c)] + [c for c in cols if is_btn(c)]

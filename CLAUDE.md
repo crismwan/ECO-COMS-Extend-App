@@ -2067,6 +2067,8 @@ A `button` widget's `action` attribute controls its visual style and role. Confi
 
 ### `sortableAndFilterable`
 
+**Only text-type columns sort** (live 2026-11-02): on a `button` or `fieldSet` column the attribute is ignored (no `aria-sort` on its header), and Workday draws an unsortable header about 10px lower than a sortable one. A list grid that mixes both has ragged headers; the only way to line them up is no sorting on that grid.
+
 `"sortableAndFilterable": "true"` (string, not boolean) on a `column` makes that column sortable and filterable by the user in the rendered grid. Apply to columns where user sorting is desired (e.g. status, date, name columns).
 
 ```json

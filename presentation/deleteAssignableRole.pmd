@@ -404,8 +404,7 @@
                             "view": "<% queryParams.view ?? '' %>"
                           }
                         }
-                      },
-                      "sortableAndFilterable": "true"
+                      }
                     }
                   ],
                   "doNotAdd": true,

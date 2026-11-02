@@ -317,8 +317,7 @@
                             }
                           }
                         ]
-                      },
-                      "sortableAndFilterable": "true"
+                      }
                     },
                     {
                       "type": "column",
@@ -338,8 +337,7 @@
                             "batch": "<% up.batchRef ?? '' %>"
                           }
                         }
-                      },
-                      "sortableAndFilterable": "true"
+                      }
                     }
                   ]
                 }

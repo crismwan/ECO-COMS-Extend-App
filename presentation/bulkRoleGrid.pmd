@@ -303,8 +303,7 @@
                             "appCode": "<% pa.appCode %>"
                           }
                         }
-                      },
-                      "sortableAndFilterable": "true"
+                      }
                     },
                     {
                       "type": "column",
@@ -315,8 +314,7 @@
                         "id": "appTitleText",
                         "enabled": false,
                         "value": "<% (comsPatterns.recordFor(comsApplications.data, pa.appCode) ?? {'name': ''}).name ?? '' %>"
-                      },
-                      "sortableAndFilterable": "true"
+                      }
                     },
                     {
                       "type": "column",
@@ -334,8 +332,7 @@
                             "appCode": "<% pa.appCode %>"
                           }
                         }
-                      },
-                      "sortableAndFilterable": "true"
+                      }
                     }
                   ],
                   "gridType": "LIST",

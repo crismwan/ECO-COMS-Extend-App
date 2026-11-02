@@ -313,8 +313,7 @@
                       "value": "<% logEntry.coName ?? '' %>"
                     }
                   ]
-                },
-                "sortableAndFilterable": "true"
+                }
               },
               {
                 "type": "column",
@@ -343,8 +342,7 @@
                       "value": "<% logEntry.roleName ?? '' %>"
                     }
                   ]
-                },
-                "sortableAndFilterable": "true"
+                }
               },
               {
                 "type": "column",
@@ -374,8 +372,7 @@
                       "value": "<% logEntry.positionName ?? '' %>"
                     }
                   ]
-                },
-                "sortableAndFilterable": "true"
+                }
               },
               {
                 "type": "column",
@@ -416,8 +413,7 @@
                       "value": "<% logEntry.triggeredBy ?? '' %>"
                     }
                   ]
-                },
-                "sortableAndFilterable": "true"
+                }
               },
               {
                 "type": "column",

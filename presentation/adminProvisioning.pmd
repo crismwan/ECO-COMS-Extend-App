@@ -558,8 +558,7 @@
                             ]
                           }
                         ]
-                      },
-                      "sortableAndFilterable": "true"
+                      }
                     }
                   ],
                   "doNotAdd": true,
