@@ -184,6 +184,12 @@ The section is context-free: on someone else's profile it still opens *your* req
 - **ECO-COMS: My Role Requests**: pending and approved-this-month counts for the signed-in user; buttons Open My Requests and Submit a Request. Domain: ManageCOMSAssignableRoles.
 - **ECO-COMS: ISC Queue**: number waiting for review and the oldest request date; button Open ISC Queue. Domain: MaintainCOMSAssignableRoles.
 - **Not on Workday Home:** Home Cards Workspace doesn't list Extend Cards. Add them to a Workday-delivered hub with card sections: Maintain Hubs → the hub → View Overview Configuration → Edit → Customize Sections and Cards → add a row → pick the card (needs Set Up: Tenant Setup - Hub). My Role Requests reads up to 100 of your own requests; ISC Queue reads the newest 100 requests (Workday allows two data calls per card).
+- **Workday Home versions (code ready, template pending):** `orchestration/MyRoleRequestsCardData` and `IscQueueCardData` (built by `tools/build_home_cards.py`) are synchronous, read-only orchestrations that make the same calls a Workday Home card will make and return `{title, subtitle, linkText, linkPath}`. The smoke suite launches both (HomeCards.*). To turn them into Home cards once the tenant admin enables People Experience + Journeys and Orchestration Builder offers the **Workday Home Card** template:
+  1. Orchestration Builder → Create Orchestration → Workday Home Card (any name); Settings → **Open Current Source Code**; don't save or deploy it.
+  2. Copy its flow `type`, `start` and `end` into `tools/home_card_template.json` as `{"type": ..., "start": ..., "end": ...}`, and in `end` replace the card's title, subtitle, link text and link values with `__TITLE__`, `__SUBTITLE__`, `__LINKTEXT__`, `__LINKPATH__`.
+  3. Run `tools/rebuild_all.sh`: it writes `MyRoleRequestsHomeCard` and `IscQueueHomeCard`; push to deploy.
+  4. Home Cards Workspace → Add Card → **Create External Card** → pick each orchestration (needs Set Up: Custom Card and View: Custom Card policies, which the security admin grants).
+  The Home version counts all approved requests (the hub card counts this month's).
 
 ## 4. ISC review business process from scratch
 

@@ -2,5 +2,6 @@
   "id": 8,
   "name": "MaintainCOMSAssignableRoles",
   "label": "Maintain: COMS Assignable Roles",
-  "enabledForPageSecurity": true
+  "enabledForPageSecurity": true,
+  "enabledForOrchestrationSecurity": true
 }

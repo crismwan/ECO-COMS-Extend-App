@@ -732,6 +732,30 @@ async function smoke(token, me) {
     if (!step?.id) throw new Error(`no in-progress step on ${r.roleName}'s review event`);
     pass('BP.inProgressStep', `${r.roleName}: step "${step.descriptor || step.stepType?.descriptor || '?'}" id ${step.id} (open reviewRoleRequestAssignableRole/${step.id} to test the step page)`);
   });
+  // Workday Home card data (tools/build_home_cards.py): synchronous, read-only orchestrations that return the
+  // card's title, subtitle and link. Compare their counts with the same counts worked out here.
+  const card = async (name) => {
+    const r = await launch(token, name, {});
+    const c = typeof r === 'string' ? JSON.parse(r) : r;
+    for (const k of ['title', 'subtitle', 'linkText', 'linkPath']) if (typeof c?.[k] !== 'string' || !c[k]) throw new Error(`${name}: no ${k} in ${JSON.stringify(r).slice(0, 300)}`);
+    if (!/^\/[^/]+\/d\/wday\/app\/[^/]+\/[^/]+\/[A-Za-z]+\.htmld$/.test(c.linkPath)) throw new Error(`${name}: odd linkPath ${c.linkPath}`);
+    return c;
+  };
+  const first100 = roles.slice(0, 100);   // the orchestrations read ?limit=100 (oldest first)
+  await test('HomeCards.myRequests', async () => {
+    const c = await card('MyRoleRequestsCardData');
+    const mine = roles.filter((r) => r.requestedBy?.id === me.id).slice(0, 100);
+    const p = mine.filter((r) => r.status === 'Pending ISC Review').length, a = mine.filter((r) => r.status === 'Approved').length;
+    const want = p + a === 0 ? 'You have no role requests' : `${p} pending ISC review · ${a} approved`;
+    if (c.subtitle !== want) throw new Error(`subtitle "${c.subtitle}", expected "${want}"`);
+    pass('HomeCards.myRequests', `${c.title}: ${c.subtitle} → ${c.linkPath}`);
+  });
+  await test('HomeCards.iscQueue', async () => {
+    const c = await card('IscQueueCardData');
+    const p = first100.filter((r) => r.status === 'Pending ISC Review');
+    if (!c.subtitle.startsWith(p.length ? `${p.length} waiting for review` : 'Nothing waiting for review')) throw new Error(`subtitle "${c.subtitle}", expected ${p.length} pending`);
+    pass('HomeCards.iscQueue', `${c.title}: ${c.subtitle} → ${c.linkPath}`);
+  });
 }
 
 // ─── Full suite (writes to the tenant) ────────────────────────────────────────
