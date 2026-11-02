@@ -1,0 +1,94 @@
+{
+  "id": "myRoleRequestsCard",
+  "presentation": {
+    "type": "inlineCard",
+    "header": {
+      "type": "cardHeader",
+      "title": "My Role Requests",
+      "subtitle": "ECO-COMS · requests you submitted",
+      "icon": "wd-accent-clipboard-checklist"
+    },
+    "body": {
+      "type": "simpleCard",
+      "value": "<% let mine = list:flatten([requestPage0.data ?? [], requestPage1.data ?? [], requestPage2.data ?? []]).filter(r => { !empty(r.requestedBy) && r.requestedBy.id == (me.id ?? \"\") }); let month = date:now().format(\"yyyy-MM\"); size(mine) == 0 ? \"You have no role requests.\" : (\"\" + mine.filter(r => { r.status == \"Pending ISC Review\" }).size() + \" pending ISC review · \" + mine.filter(r => { r.status == \"Approved\" && (\"\" + (r.approvedDate ?? \"\")).startsWith(month) }).size() + \" approved this month\") %>"
+    },
+    "footer": [
+      {
+        "label": "Open My Requests",
+        "taskReference": {
+          "taskId": "assignableRoleManagerView"
+        }
+      },
+      {
+        "label": "Submit a Request",
+        "taskReference": {
+          "taskId": "assignableRoleManager"
+        }
+      }
+    ]
+  },
+  "endPoints": [
+    {
+      "name": "me",
+      "baseUrlType": "COMMON",
+      "url": "/workers/me",
+      "authType": "sso",
+      "failOnStatusCodes": [
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "name": "requestCount",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "url": "/comsAssignableRoles?limit=1",
+      "authType": "sso",
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "name": "requestPage0",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 429
+        }
+      ],
+      "url": "<% let t = requestCount.total ?? 0; \"/comsAssignableRoles?limit=100&offset=\" + (t > 0 ? 0 : t) %>"
+    },
+    {
+      "name": "requestPage1",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 429
+        }
+      ],
+      "url": "<% let t = requestCount.total ?? 0; \"/comsAssignableRoles?limit=100&offset=\" + (t > 100 ? 100 : t) %>"
+    },
+    {
+      "name": "requestPage2",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 429
+        }
+      ],
+      "url": "<% let t = requestCount.total ?? 0; \"/comsAssignableRoles?limit=100&offset=\" + (t > 200 ? 200 : t) %>"
+    }
+  ]
+}

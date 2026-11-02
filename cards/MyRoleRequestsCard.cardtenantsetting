@@ -1,0 +1,9 @@
+{
+  "id": 1,
+  "name": "MyRoleRequestsCard",
+  "label": "ECO-COMS: My Role Requests",
+  "securityDomains": [
+    "ManageCOMSAssignableRoles"
+  ],
+  "routePath": "/myRoleRequestsCard"
+}

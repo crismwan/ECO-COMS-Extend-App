@@ -394,6 +394,20 @@
       "page": {
         "id": "bulkRoleGridApps"
       }
+    },
+    {
+      "id": "myRoleRequestsCard",
+      "routingPattern": "/myRoleRequestsCard",
+      "page": {
+        "id": "myRoleRequestsCard"
+      }
+    },
+    {
+      "id": "iscQueueCard",
+      "routingPattern": "/iscQueueCard",
+      "page": {
+        "id": "iscQueueCard"
+      }
     }
   ],
   "applicationId": "ecocomsphase_xclw_cm_sync2_vmzvxm",

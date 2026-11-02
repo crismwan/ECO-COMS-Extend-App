@@ -177,6 +177,8 @@ function staticSuite() {
   // 4. Task references resolve
   const tasks = Object.fromEntries((amd.tasks || []).filter((t) => t && typeof t === 'object').map((t) => [t.id, t]));
   const pageIds = new Set(Object.values(pmds).map((d) => d.id));
+  // Extend Cards for Workday pages: the AMD task's page is the .carddefinition (Workday sample workFromAlmostAnywhere)
+  for (const f of listFiles('presentation/cards').filter((x) => x.endsWith('.carddefinition'))) pageIds.add(path.basename(f, '.carddefinition'));
   for (const [tid, t] of Object.entries(tasks)) {
     const pid = (t.page || {}).id;
     if (pid && !pageIds.has(pid)) err('amdTask', `AMD task '${tid}' points at page '${pid}', which has no .pmd file`);
@@ -336,6 +338,8 @@ function staticSuite() {
   const reached = new Set(refs.map(([, t]) => t));
   for (const c of smd.errorPageConfigurations || []) reached.add(c.page?.id);
   const bpRoutes = new Set();
+  // card tenant settings (cards/*.cardtenantsetting) reach their card task by routePath
+  for (const f of listFiles('cards').filter((x) => x.endsWith('.cardtenantsetting'))) { try { bpRoutes.add(JSON.parse(fs.readFileSync(path.join(ROOT, f), 'utf8')).routePath); } catch (_) {} }
   for (const f of listFiles('model').filter((x) => x.endsWith('.businessprocess'))) walk(docs[f] || {}, (n) => { if (typeof n.pageRoute === 'string') bpRoutes.add(n.pageRoute); });
   for (const [tid, t] of Object.entries(tasks)) {
     if (tid === 'home' || reached.has(tid) || reached.has(t.page?.id) || bpRoutes.has(t.routingPattern)) continue;
