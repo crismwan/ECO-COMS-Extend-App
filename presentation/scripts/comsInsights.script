@@ -12,6 +12,14 @@ var orgAppCode = function(code) {
   c.substringBefore(':') + ':' + c.substringAfter(':').substringBefore(':');
 };
 
+/* A request's application code: its application text, else its shell org code, else its role name;
+   an org or role code ("X:ADM:KEYCLOAK:ANY") is cut to the application part ("X:ADM"). */
+var appOf = function(r) {
+  let a = appCodeOf(r.application);
+  let t = !empty(a) ? a : (!empty(r.shellOrgCode) ? ('' + r.shellOrgCode) : ('' + (r.roleName ?? '')));
+  t.startsWith('X:') ? orgAppCode(t) : (empty(a) ? '' : a);
+};
+
 var isShellOrg = function(o) {
   ('' + (o.code ?? '')).startsWith('X:') && !('' + (o.code ?? '')).contains(':PATTERN');
 };
@@ -48,7 +56,7 @@ var statusSlices = function(requests) {
 };
 
 var appSlices = function(requests) {
-  slices(requests.map(r => { empty(r.application) ? 'No application' : appCodeOf(r.application) }), 8);
+  slices(requests.map(r => { empty(appOf(r)) ? 'No application' : appOf(r) }), 8);
 };
 
 var bulkSlices = function(runs) {
@@ -61,11 +69,11 @@ var appRows = function(requests, orgs, apps) {
   let active = orgs.filter(o => { isShellOrg(o) && o.cf_active1 == true }).map(o => { orgAppCode(o.code) }).sort();
   let inactive = orgs.filter(o => { isShellOrg(o) && o.cf_active1 != true }).map(o => { orgAppCode(o.code) }).sort();
   let pats = orgs.filter(o => { isPattern(o) }).map(o => { orgAppCode(o.code) }).sort();
-  let pend = requests.filter(r => { r.status == 'Pending ISC Review' }).map(r => { appCodeOf(r.application) }).sort();
-  let appr = requests.filter(r => { r.status == 'Approved' }).map(r => { appCodeOf(r.application) }).sort();
-  let den = requests.filter(r => { r.status == 'Denied' }).map(r => { appCodeOf(r.application) }).sort();
+  let pend = requests.filter(r => { r.status == 'Pending ISC Review' }).map(r => { appOf(r) }).sort();
+  let appr = requests.filter(r => { r.status == 'Approved' }).map(r => { appOf(r) }).sort();
+  let den = requests.filter(r => { r.status == 'Denied' }).map(r => { appOf(r) }).sort();
   let newest = list:sort(requests.filter(r => { !empty(r.requestedDate) }), 'requestedDate', false);
-  let newestCodes = newest.map(r => { appCodeOf(r.application) });
+  let newestCodes = newest.map(r => { appOf(r) });
   let appIds = apps.map(a => { a.appId ?? '' });
   let codes = list:flatten([active, inactive, newestCodes]).filter(c => { !empty(c) }).distinct().sort();
   codes.map(c => {
@@ -108,6 +116,7 @@ var countInDays = function(list, field, keys) {
 
 {
   "appCodeOf": appCodeOf,
+  "appOf": appOf,
   "lastDays": lastDays,
   "inDays": inDays,
   "statusSlices": statusSlices,

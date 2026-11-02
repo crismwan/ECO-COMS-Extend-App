@@ -479,7 +479,7 @@
                   "cellTemplate": {
                     "type": "text",
                     "id": "applicationText",
-                    "value": "<% comsInsights.appCodeOf(pendingRow.application) %>",
+                    "value": "<% comsInsights.appOf(pendingRow) %>",
                     "enabled": false
                   },
                   "sortableAndFilterable": "true"

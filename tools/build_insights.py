@@ -8,7 +8,7 @@ Model reports cover one business object each, so the cross-object view is a VIEW
     (last 30 days), bulk runs by status
   - Applications at a Glance: per application code, shell orgs, patterns and role requests
   - Oldest Pending Requests
-Also writes the BreakdownChart card, registers the task and adds the hub link. Idempotent.
+Also writes the BreakdownChart card, registers the task, and adds an Insights card to the RBAC Hub (not a left-panel link). Idempotent.
 Script helpers: presentation/scripts/comsInsights.script.
 """
 import json, os
@@ -115,7 +115,7 @@ pending_grid = {
     "columns": [
         text_col("requestedColumn", "Requested", "<% ('' + (pendingRow.requestedDate ?? '')).substring(0, 10) %>"),
         text_col("roleColumn", "Role", "<% pendingRow.roleName ?? '' %>"),
-        text_col("applicationColumn", "Application", "<% comsInsights.appCodeOf(pendingRow.application) %>"),
+        text_col("applicationColumn", "Application", "<% comsInsights.appOf(pendingRow) %>"),
         text_col("requestedByColumn", "Requested By", "<% !empty(pendingRow.requestedBy) ? (pendingRow.requestedBy.descriptor ?? '') : '' %>"),
         text_col("referenceColumn", "Reference", "<% pendingRow.referenceId ?? '' %>"),
         {"type": "column", "columnId": "openColumn", "label": "Open", "cellTemplate": {
@@ -155,12 +155,26 @@ amd = json.load(open(amdp))
 if not any(t['id'] == 'comsInsights' for t in amd['tasks']):
     amd['tasks'].append({"id": "comsInsights", "routingPattern": "/comsInsights", "page": {"id": "comsInsights"}})
     save(amdp, amd)
+# Opened from a card on the RBAC Hub, not the left panel (product owner 2026-11-02)
 hp = P('presentation', 'home.pmd')
 home = json.load(open(hp))
 nav = home['presentation']['body']['navigationTasks']
-if not any(n.get('task', {}).get('taskId') == 'comsInsights' for n in nav):
-    nav.insert(1, {"type": "item", "task": {"taskId": "comsInsights"}, "label": "Insights", "icon": "wd-accent-checkmarked-page"})
+if any(n.get('task', {}).get('taskId') == 'comsInsights' for n in nav):
+    nav[:] = [n for n in nav if n.get('task', {}).get('taskId') != 'comsInsights']
     save(hp, home)
+save(P('presentation', 'cards', 'InsightsCard.card'), {
+    "id": "InsightsCard",
+    "header": {"title": "Insights", "subtitle": "Requests, shell orgs, audit and bulk runs.", "icon": "wd-accent-checkmarked-page"},
+    "body": {"type": "simpleCard", "value": "Trends and totals across ECO-COMS, with ISC turnaround and a summary per application."},
+    "footer": [{"label": "Open Insights", "taskReference": {"taskId": "comsInsights"}}]})
+lp = P('presentation', 'hubLanding.pmd')
+landing = json.load(open(lp))
+for sec in landing['presentation']['body']['sections']:
+    for c in sec.get('children', []):
+        if c.get('id') == 'dashboardCardContainer' and not any(x.get('cardId') == 'InsightsCard' for x in c['cards']):
+            i = next((k for k, x in enumerate(c['cards']) if x.get('cardId') == 'ShellOrgStatusChart'), len(c['cards']))
+            c['cards'].insert(i, {"type": "card", "cardId": "InsightsCard"})
+            save(lp, landing)
 
 # ---- reports: one lean data source per key object ----
 for old in ['AcademicUnits', 'AllAssignableRoles', 'AllAuditLogs', 'AllShellOrgs']:

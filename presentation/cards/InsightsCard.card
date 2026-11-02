@@ -1,0 +1,20 @@
+{
+  "id": "InsightsCard",
+  "header": {
+    "title": "Insights",
+    "subtitle": "Requests, shell orgs, audit and bulk runs.",
+    "icon": "wd-accent-checkmarked-page"
+  },
+  "body": {
+    "type": "simpleCard",
+    "value": "Trends and totals across ECO-COMS, with ISC turnaround and a summary per application."
+  },
+  "footer": [
+    {
+      "label": "Open Insights",
+      "taskReference": {
+        "taskId": "comsInsights"
+      }
+    }
+  ]
+}
