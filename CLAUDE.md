@@ -58,6 +58,7 @@ These notes apply to **all** Workday Extend apps I work on. Project-specific det
 - CI/CD — deploying with GitHub Actions and wdcli
 - Testing an Extend app
 - Working in the Workday UI with browser automation
+- Patterns from Workday's sample apps (GraphQL, Extend Cards, more widgets)
 
 ## This file is a guide, NOT the single source of truth
 
@@ -2485,3 +2486,39 @@ A typical pipeline: on push to `main`, run static checks, log in, upload to App 
 - An Extend app page opens at `https://<tenant host>/<tenant>/d/wday/app/<appId>/<appId>/<taskId>.htmld?param=value`, e.g. `.../errorPage.htmld?errorCode=404`. A `#/task` hash on the app root doesn't navigate.
 - A page's text is readable with `document.body.innerText` after ~10 s; cards render lazily, so scroll a card into view before reading it.
 - **Timing a page:** in a hidden or background browser pane, cards can take 45 s or more to draw, which isn't the app. Time the server instead: `GET /wday/app/<appId>/<tenant>/<appId>/<taskId>` with `Accept: application/json` returns the page, and each card's `contentUri` returns its content (confirmed 2026-11-01: page 0.9 s, cards 0.1–0.2 s).
+
+## Patterns from Workday's sample apps (GraphQL, Extend Cards, more widgets)
+
+Source: 36 Workday sample apps the user exported to "ECO COMS/Other Apps for inspiration" (2026-11-02): vehicleRegistration, createAWorkEvent, workFromAlmostAnywhere, pmdWidgetDictionary, chartDictionary, capitalProjectPlanning and others. These patterns deploy in Workday's own samples but **haven't been tried in this tenant yet**: treat each as (unverified) until a live test, and check the developer site before relying on exact attribute names.
+
+### GraphQL queries (`.graphquery`)
+
+- Files live in `presentation/graphQueries/<id>.graphquery`: `{ "id", "parameters": [...], "query": "<GraphQL text>", "variables": { ... } }`. Parameters are interpolated in `variables` with `<% name %>`, like a WQL Query component.
+- AMD data provider: `{ "key": "workday-graph", "value": "<% `{{apiGatewayEndpoint}}/graphql/v1/` %>" }` (one sample used `"graph"` with `apiGatewayEndpoint + '/graphql/v1/'`).
+- Inbound endpoint: `{ "name": "me", "baseUrlType": "workday-graph", "httpMethod": "POST", "authType": "sso", "graphQuery": { "queryId": "me", "parameters": { "vehicleId": "<% queryParams.vehicleId %>" } } }`. Results come back under `data.<field>`: `me.data.worker.data[0].primaryJob.location.workdayID.id`.
+- Outbound (create/update/delete) uses the same `graphQuery` on an outbound endpoint, with `variables` built from widget values (`"createVehicle_input": { "color": "<% vehicleColor.value[0] %>", "location": { "id": { "id": "<wid>", "type": "WID" } } }`).
+- App business objects appear in the schema with the **app reference ID as a prefix**: query `<appRef>_<Object>(dataSource: {<appRef>_<collection>: {}} where: {workdayID: {in: [{id: $id}]}})`, mutations `<appRef>_create<Object>` / `_update<Object>` / `_delete<Object>`, input types `<AppRef>_<Collection>Summary_CreateInput` (first letter capitalised). References are `{ "id": { "id": "<wid>", "type": "WID" } }`.
+- Useful because a `where` filter replaces `isCollection` + paging (see the isCollection performance warning), and one query can return nested instance fields. Example worker query: `query { worker(dataSource:{ processingWorker:{}}) { data { descriptor workdayID {id} } } }`.
+
+### Extend Cards on Workday pages (Cards, Card Tenant Settings)
+
+Different from the Page Configuration Cards in `presentation/cards/*.card`. They're cards an administrator places on Workday's own Home page or hubs.
+
+- `presentation/cards/<id>.carddefinition`: `{ "id", "presentation": { "type": "inlineCard", "header": { "type": "cardHeader", "title", "subtitle", "indicator": {"label", "color": "GREEN"}, "icon" }, "body": { "type": "simpleCard" | "listCard", ... }, "footer": [ { "label", "taskReference": {"taskId"} } ] }, "endPoints": [ ... ] }`. A card has its own inbound endpoints. Indicator colours are UPPERCASE here (`GREEN`, `BLUE`).
+- `listCard` body: `{ "type": "listCard", "title", "subtitle", "on": "<% list %>", "as": "row", "template": { "label", "value", "secondaryValue", "secondaryValueWidth": "MEDIUM" } }`.
+- Register the card as an AMD task: `{ "id": "createRequestCard", "routingPattern": "/createRequestCard", "page": { "id": "createRequestCard" } }`.
+- `cards/<Name>.cardtenantsetting` at the app root: `{ "id": 1, "name", "label", "securityDomains": [...], "routePath": "/createRequestCard" }`. This is what an administrator picks when adding the card in Workday.
+- None of the samples uses **Profile Groups**.
+
+### Widgets and attributes ECO-COMS doesn't use yet
+
+- **Collapsible boxes:** `fieldSet` with `"collapsible": true, "initializeCollapsed": true` (for long help text).
+- **Page errors from script:** `presentation.applicationExceptions: [{ "type": "applicationException", "severity": "ERROR", "message": "...", "render": "<% pageVariables.x %>" }]`.
+- **Extra submit buttons:** `editButtonBar` with `editButtons: [{ "type": "editButton", "id", "label", "buttonType": "PRIMARY", "ignoreRequiredFields": "true" }]` (e.g. Save as Draft and Submit; the clicked button's id is available to flows).
+- **Run script from a button:** `pageActionButton` with `onClick` (no navigation, no submit).
+- **Charts in a page (not a card):** `clusteredBarChart2`, `stackedBarChart2` (`categoryDataSet`, `secondaryCategory`, `measurementDataSets: [{name, value}]`, `barOrientation`, `hideChartControls`), `lineChart2`, `comboChart2`, `percentBarChart2`, `waterfallChart2`.
+- **List and detail:** `listDetailHub` (`items`, `itemVariableName`, `navigationTemplate: {label, task}`): a hub whose left pane is generated from a list.
+- **Repeated panels:** `panelList` (`panels`, `panelName`, `indexVariableName`), as an alternative to a grid for a few rich rows.
+- **Others:** `radioGroup`, `externalLink` (`label`, `url`), `progressIndicator` (`value`, `maximumValue`), `congratulationsPopup` (`textCongrats`, `textSubmitted`, shown after a flow), `dynamicSection` (`data`, `dataVariableName`).
+- **Business process history:** `bpExtender` with `bpTemplatedList` + `processHistory` / `commentHistory` templates; the sample fills them from an orchestration that reads the event's history and comments.
+
