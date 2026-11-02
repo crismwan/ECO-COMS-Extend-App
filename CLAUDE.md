@@ -58,7 +58,7 @@ These notes apply to **all** Workday Extend apps I work on. Project-specific det
 - CI/CD — deploying with GitHub Actions and wdcli
 - Testing an Extend app
 - Working in the Workday UI with browser automation
-- Patterns from Workday's sample apps (GraphQL, Extend Cards, more widgets)
+- Patterns from Workday's sample apps (GraphQL, Extend Cards, Profile Groups, more widgets)
 
 ## This file is a guide, NOT the single source of truth
 
@@ -2487,7 +2487,7 @@ A typical pipeline: on push to `main`, run static checks, log in, upload to App 
 - A page's text is readable with `document.body.innerText` after ~10 s; cards render lazily, so scroll a card into view before reading it.
 - **Timing a page:** in a hidden or background browser pane, cards can take 45 s or more to draw, which isn't the app. Time the server instead: `GET /wday/app/<appId>/<tenant>/<appId>/<taskId>` with `Accept: application/json` returns the page, and each card's `contentUri` returns its content (confirmed 2026-11-01: page 0.9 s, cards 0.1–0.2 s).
 
-## Patterns from Workday's sample apps (GraphQL, Extend Cards, more widgets)
+## Patterns from Workday's sample apps (GraphQL, Extend Cards, Profile Groups, more widgets)
 
 Source: 36 Workday sample apps the user exported to "ECO COMS/Other Apps for inspiration" (2026-11-02): vehicleRegistration, createAWorkEvent, workFromAlmostAnywhere, pmdWidgetDictionary, chartDictionary, capitalProjectPlanning and others. These patterns deploy in Workday's own samples but **haven't been tried in this tenant yet**: treat each as (unverified) until a live test, and check the developer site before relying on exact attribute names.
 
@@ -2508,7 +2508,19 @@ Different from the Page Configuration Cards in `presentation/cards/*.card`. They
 - `listCard` body: `{ "type": "listCard", "title", "subtitle", "on": "<% list %>", "as": "row", "template": { "label", "value", "secondaryValue", "secondaryValueWidth": "MEDIUM" } }`.
 - Register the card as an AMD task: `{ "id": "createRequestCard", "routingPattern": "/createRequestCard", "page": { "id": "createRequestCard" } }`.
 - `cards/<Name>.cardtenantsetting` at the app root: `{ "id": 1, "name", "label", "securityDomains": [...], "routePath": "/createRequestCard" }`. This is what an administrator picks when adding the card in Workday.
-- None of the samples uses **Profile Groups**.
+- None of the samples uses **Profile Groups**; see the next section.
+
+### Profile Groups (model profile groups)
+
+Source: developer.workday.com "Profile Group", "Add Profile Groups", "Profile Group Best Practices and Considerations", "Configure Extend Profile Groups in the Tenant", "Add Context-Free Tasks" (read 2026-11-02); Workday admin guide "Steps: Set Up Profiles and Profile Groups". Not yet tried in this tenant.
+
+- **What it is:** a new section in the left pane of a Workday profile (Worker Profile, Organization, Position Restriction Profile and so on), like Job or Compensation on a worker. Its content is the app's **context-free model tasks** (each opens an app page) and **model reports**, shown as tabs.
+- **Component (Code mode):** `{ "id": 1, "name": "myCharityProfile", "label": "My Charity Profile", "profile": "WORKER_PROFILE", "tasks": ["CharityHome"], "reports": ["AllCharities"] }`. It needs at least one task or report, one `profile` only, and the tasks and reports must already exist in the app. Up to **10** profile groups per app. To use the same content on two profiles, make two groups with different names.
+- **Which profiles:** run the tenant report **View Profiles Available to Extend**; its Target Attribute Name is the `profile` value. ubc_wcpdev2 lists 31 (checked 2026-11-02), including `WORKER_PROFILE`, `ORGANIZATION`, `SUPERVISORY_ORGANIZATION`, `POSITION_RESTRICTION_PROFILE`, `JOB_PROFILE`, `COMPANY`, `COST_CENTER`, `STUDENT`, `COURSE_SECTION`.
+- **Context-free only:** a context-free task is one with no business object on it, so the page it opens is **not told which worker or organization the profile belongs to**. A group on the Organization profile shows the same page whichever organization you're on. Whether a model report can be filtered by the profile's subject isn't documented for Extend (the admin guide requires a prompt for the object on custom reports) **(unverified)**.
+- **Tenant setup after deploy (administrator, Set Up: System domain):** App Manager → Configure on the app → Profile Groups grid → Configure → pick the profile, tick **Display in Profile**, set the order. Then **Configure Profile Group** → pick the group → Display in Profile → + → add the allowed tasks and reports in order. Check by opening a profile (e.g. a worker's) and looking for the group in the left pane.
+- **Limits:** users need the domain permission for each task and report. Long Name/Label values can be cut off and can stop tasks rendering. Pages with nested tabs may not render inside a profile group.
+- The repo file name and folder App Builder uses for a profile group aren't known yet: add the first one in App Builder and copy its source into the repo **(unverified)**.
 
 ### Widgets and attributes ECO-COMS doesn't use yet
 
