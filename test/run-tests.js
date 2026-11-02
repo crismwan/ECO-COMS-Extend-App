@@ -46,7 +46,7 @@ const ORCH = `${API}/orchestrate/v1/apps/${APP_ID}/orchestrations`;
 const argv = process.argv.slice(2);
 const arg = (name) => { const i = argv.indexOf(name); return i === -1 ? null : argv[i + 1]; };
 const VERBOSE = argv.includes('--verbose');
-const SUITES_ALL = ['static', 'smoke', 'full', 'cleanup', 'isu', 'repair', 'seconduser', 'purge', 'demoseed'];
+const SUITES_ALL = ['static', 'smoke', 'full', 'cleanup', 'isu', 'repair', 'seconduser', 'purge', 'demoseed', 'datacheck'];
 const suiteArg = arg('--suite') || argv.find((a) => !a.startsWith('--') && SUITES_ALL.some((s) => a.split(',').includes(s))) || 'smoke';
 const SUITES = suiteArg.split(',').map((s) => s.trim()).filter(Boolean);
 for (const s of SUITES) if (!SUITES_ALL.includes(s)) { console.error(`Unknown suite "${s}". Use: ${SUITES_ALL.join(', ')}`); process.exit(2); }
@@ -1295,6 +1295,38 @@ async function purge(token) {
   if (!APPLY) pass('Purge.dryRun', `would delete every record in ${PURGE_COLLECTIONS.join(', ')}`);
 }
 
+// ═══ Data check: every record has the fields its pages display (read-only) ═══
+async function dataCheck(token) {
+  console.log('\n-- Data check (read-only) --');
+  const gaps = [];
+  const need = (label, rec, fields) => {
+    const miss = fields.filter((f) => { const v = rec[f]; return v === undefined || v === null || v === '' || (typeof v === 'object' && !v.id && !v.descriptor && !Array.isArray(v)); });
+    if (miss.length) gaps.push(`${label}: missing ${miss.join(', ')}`);
+  };
+  const reqs = await readAll(token, 'comsAssignableRoles');
+  for (const r of reqs) {
+    const label = `request ${r.roleName} [${r.status}]`;
+    need(label, r, ['referenceId', 'roleName', 'status', 'requestedBy', 'requestedDate', 'effectiveDate', 'enabledForOrganizationTypes', 'positionNames']);
+    if (r.status === 'Pending ISC Review') need(label, r, ['reviewEventWid']);
+    if (r.status === 'Approved') need(label, r, ['securityGroupName', 'approvedDate']);
+    if (r.status === 'Denied') need(label, r, ['denialReason']);
+    if (r.positionNames && /(^|,\s*)[0-9a-f]{32}(\s*,|$)/.test(r.positionNames)) gaps.push(`${label}: positionNames holds a bare WID`);
+  }
+  const audits = await readAll(token, 'comsAuditLogs');
+  for (const a of audits) {
+    const label = `audit ${a.objectType}/${a.action} ${a.coName || a.roleName || ''}`;
+    need(label, a, ['timestamp', 'objectType', 'action', 'triggeredBy', 'changedByWid', 'details']);
+    if (/Shell Org/.test(a.objectType || '') || a.objectType === 'Org Status') need(label, a, ['coName', 'orgWid', 'effectiveDate']);
+    if (a.objectType === 'Role Assignment') need(label, a, ['roleName', 'positionName', 'roleWid', 'positionWid', 'coName', 'effectiveDate']);
+    if (a.objectType === 'Assignable Role') need(label, a, ['roleName', 'coName']);
+  }
+  const runs = [...await readAll(token, 'comsBulkRuns'), ...await readAll(token, 'comsBulkUploads')];
+  for (const b of runs) need(`bulk ${b.batchRef} [${b.status}]`, b, ['batchRef', 'status', 'runMode', 'effectiveDate', 'uploadedByName', 'uploadedAt']);
+  gaps.forEach((g) => console.log(`   ${g}`));
+  if (gaps.length) warn('Data.gaps', `${gaps.length} record(s) missing a field a page displays (listed above)`);
+  else pass('Data.gaps', `${reqs.length} requests, ${audits.length} audit records, ${runs.length} bulk runs: every displayed field is filled`);
+}
+
 // ═══ Demo seed: the three demo test cases, run through the same orchestrations as the pages ═══
 //   1. Clockwork creates a course-section shell org (pattern)        → Shell Org Pattern / ADD
 //   2. A position is given a shell role on its application's org     → Role Assignment / ASSIGN POSITION
@@ -1436,6 +1468,7 @@ async function demoSeed(token, me) {
         if (live.includes('seconduser')) await secondUserSuite(token, me);
         if (live.includes('purge')) await purge(token);
         if (live.includes('demoseed')) await demoSeed(token, me);
+        if (live.includes('datacheck')) await dataCheck(token);
       }
     }
   }
