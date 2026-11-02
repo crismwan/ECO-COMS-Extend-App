@@ -15,5 +15,6 @@
   "iscRoleRequestsView": "actionsInfoSection",
   "newSchemaPattern": "aboutSection",
   "newShellOrg": "aboutSection",
+  "schemaPatternApps": "aboutSection",
   "shellOrgDetail": "aboutSection"
 }

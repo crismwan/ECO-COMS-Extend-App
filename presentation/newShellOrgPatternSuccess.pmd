@@ -117,7 +117,7 @@
               "type": "button",
               "label": "Add Another Pattern",
               "taskReference": {
-                "taskId": "newSchemaPattern"
+                "taskId": "schemaPatternApps"
               },
               "action": "PRIMARY"
             },

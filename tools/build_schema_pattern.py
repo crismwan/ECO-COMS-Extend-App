@@ -20,6 +20,7 @@ from app_grid import app_columns
 ROOT = os.path.join(os.path.dirname(__file__), '..', 'presentation')
 MAX_FIELDS = 7
 FOS = lambda codes: [{"code": c} for c in codes]
+PICKER = 'schemaPatternApps'   # VIEW page listing the applications (product owner 2026-11-02: match Shell Org Manager)
 FOOT = {"type": "footer", "children": [{"type": "pod", "podId": "ecoComsFooter"}]}
 
 APPC = "(queryParams.appCode ?? '')"
@@ -117,17 +118,18 @@ page = {"id": "newSchemaPattern", "securityDomains": ["ManageCOMSShellOrgs"], "i
       {"type": "layoutSection", "id": "navSection", "children": [
         {"type": "button", "id": "backButton", "label": "← Shell Org Manager", "action": "LINK", "suppressDiscardDialog": True, "taskReference": {"taskId": "shellOrgManager"}},
         {"type": "button", "id": "changeAppButton", "label": "Choose another application", "action": "LINK", "suppressDiscardDialog": True,
-         "render": "<% !empty(queryParams.appCode) %>", "taskReference": {"taskId": "newSchemaPattern"}}]},
+         "render": "<% !empty(queryParams.appCode) %>", "taskReference": {"taskId": PICKER}}]},
       note("aboutSection", "aboutFieldSet", "About This Page", "aboutRichText",
         "Create a shell org pattern for any application. Each application has its own pattern format: a prefix and its own fields "
         "(e.g. Subject and Course for Assessment Outcomes, one Role Name for most tools). The form below shows that application's fields, "
         "checks each value as you type, and builds the name as <b>APPLICATION:PREFIX:field:field</b>. A blank field becomes * (any). "
         "Submitting creates a live organization (subtype X:SHELL) in Workday; it can be inactivated later but not deleted."),
+      # the application list lives on its own VIEW page (PICKER): edit pages draw grids with cell borders
       {"type": "layoutSection", "id": "pickSection", "render": "<% empty(queryParams.appCode) %>", "children": [
         {"type": "fieldSet", "id": "pickFieldSet", "title": "Choose an Application", "children": [
-          {"type": "grid", "id": "appPickGrid", "rowVariableName": "pa", "doNotAdd": True, "doNotRemove": True, "label": "Applications",
-           "rows": "<% " + PICK_ROWS + " %>",
-           "columns": app_columns("pa", "newSchemaPattern", {"appCode": "<% pa.appCode %>"}, "Add Pattern")}]}]},
+          {"type": "text", "id": "pickText", "label": "Application", "enabled": False, "value": "<% 'No application chosen yet.' %>"},
+          {"type": "button", "id": "pickAppButton", "label": "Choose an Application", "action": "PRIMARY", "suppressDiscardDialog": True,
+           "taskReference": {"taskId": PICKER}}]}]},
       {"type": "layoutSection", "id": "noSchemaSection", "render": f"<% !empty(queryParams.appCode) && empty({SCH}) %>", "children": [
         {"type": "fieldSet", "id": "noSchemaFieldSet", "title": "No Pattern Format", "children": [
           {"type": "text", "id": "noSchemaText", "label": "Pattern Format", "enabled": False,
@@ -149,9 +151,28 @@ page = {"id": "newSchemaPattern", "securityDomains": ["ManageCOMSShellOrgs"], "i
     "footer": FOOT, "pageType": "EDIT"}}
 open(os.path.join(ROOT, 'newSchemaPattern.pmd'), 'w').write(json.dumps(page, indent=2, ensure_ascii=False) + '\n')
 
+picker = {"id": PICKER, "securityDomains": ["ManageCOMSShellOrgs"], "include": ["comsPatterns.script"],
+  "endPoints": [{"name": "comsApplications", "baseUrlType": "BUSINESS-OBJECT", "url": "/comsApplications?limit=100", "authType": "sso",
+                 "isCollection": True, "failOnStatusCodes": FOS([400, 403, 429])}],
+  "presentation": {"headerSize": "STANDARD", "title": {"type": "title", "label": "ECO-COMS: Add Shell Org Pattern"},
+    "body": {"type": "basicFormLayout", "id": "schemaPatternAppsForm", "sections": [
+      {"type": "layoutSection", "id": "navSection", "children": [
+        {"type": "button", "id": "backButton", "label": "← Shell Org Manager", "action": "LINK", "taskReference": {"taskId": "shellOrgManager"}}]},
+      note("aboutSection", "aboutFieldSet", "About This Page", "aboutRichText",
+        "Choose the application to add a shell org pattern for. Each application has its own pattern format (shown below); "
+        "<b>Add Pattern</b> opens a form with that application's fields."),
+      {"type": "layoutSection", "id": "pickSection", "children": [
+        {"type": "fieldSet", "id": "pickFieldSet", "title": "Choose an Application", "children": [
+          {"type": "grid", "id": "appPickGrid", "rowVariableName": "pa", "label": "Applications", "rows": "<% " + PICK_ROWS + " %>",
+           "columns": app_columns("pa", "newSchemaPattern", {"appCode": "<% pa.appCode %>"}, "Add Pattern")}]}]}]},
+    "footer": FOOT, "pageType": "VIEW"}}
+open(os.path.join(ROOT, PICKER + '.pmd'), 'w').write(json.dumps(picker, indent=2, ensure_ascii=False) + '\n')
+
 # AMD: task + flow to the existing pattern success page
 amdp = os.path.join(ROOT, 'ecocomsphase_xclw_cm_sync2_vmzvxm.amd')
 amd = json.load(open(amdp))
+if not any(x['id'] == PICKER for x in amd['tasks']):
+    amd['tasks'].append({"id": PICKER, "routingPattern": "/" + PICKER, "page": {"id": PICKER}})
 if not any(x['id'] == 'newSchemaPattern' for x in amd['tasks']):
     amd['tasks'].append({"id": "newSchemaPattern", "routingPattern": "/newSchemaPattern", "page": {"id": "newSchemaPattern"}})
 amd['flowDefinitions'] = [f for f in amd.get('flowDefinitions', []) if f['id'] != 'newSchemaPatternFlow'] + [
@@ -182,8 +203,10 @@ open(p, 'w').write(json.dumps(d, indent=2, ensure_ascii=False) + '\n')
 p = os.path.join(ROOT, 'cards', 'ShellOrgQuickActionsCard.card')
 d = json.load(open(p))
 pills = d['body']['pills']
-if not any(x.get('taskReference', {}).get('taskId') == 'newSchemaPattern' for x in pills):
-    pills.append({"label": "Add Pattern (Other Apps)", "taskReference": {"taskId": "newSchemaPattern"}})
+for x in pills:
+    if x.get('taskReference') == {"taskId": "newSchemaPattern"}: x['taskReference'] = {"taskId": PICKER}
+if not any(x.get('taskReference', {}).get('taskId') == PICKER for x in pills):
+    pills.append({"label": "Add Pattern (Other Apps)", "taskReference": {"taskId": PICKER}})
 open(p, 'w').write(json.dumps(d, indent=2, ensure_ascii=False) + '\n')
 print('newSchemaPattern written; Shell Org Manager and Quick Actions updated')
 

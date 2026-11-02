@@ -22,6 +22,7 @@
   "newShellOrgPatternSuccess": "ECO-COMS: Pattern Created",
   "newShellOrgSuccess": "ECO-COMS: Shell Organization Created",
   "roleAssignmentSuccess": "ECO-COMS: Role Assignment Updated",
+  "schemaPatternApps": "ECO-COMS: Add Shell Org Pattern",
   "shellOrgDetail": "<% 'ECO-COMS: Shell Organization – ' + (size(((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))) > 0 ? (((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))[0].organizationByName.descriptor ?? ((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))[0].code) : (queryParams.orgName ?? '')) %>",
   "shellOrgManager": "<% empty(queryParams.appName) ? 'ECO-COMS: Shell Org Manager' : ('ECO-COMS: Shell Org Manager – ' + queryParams.appName) %>"
 }

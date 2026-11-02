@@ -380,6 +380,13 @@
       "page": {
         "id": "newSchemaPattern"
       }
+    },
+    {
+      "id": "schemaPatternApps",
+      "routingPattern": "/schemaPatternApps",
+      "page": {
+        "id": "schemaPatternApps"
+      }
     }
   ],
   "applicationId": "ecocomsphase_xclw_cm_sync2_vmzvxm",

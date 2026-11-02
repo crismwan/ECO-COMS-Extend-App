@@ -22,6 +22,12 @@
             "appCode": "X:CLW"
           }
         }
+      },
+      {
+        "label": "Add Pattern (Other Apps)",
+        "taskReference": {
+          "taskId": "schemaPatternApps"
+        }
       }
     ]
   }
