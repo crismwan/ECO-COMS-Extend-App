@@ -343,6 +343,18 @@ function staticSuite() {
     const n = (docs[f]?.endPoints || JSON.parse(fs.readFileSync(path.join(ROOT, f), 'utf8')).endPoints || []).length;
     if (n > 2) err('cardEndpoints', `${f} has ${n} inbound endpoints; Workday allows 2 per card`);
   }
+  // Workday Script: a helper that calls one defined further down the file is dropped ("Unknown Function call",
+  // live 2026-11-02, waitingText -> waitingFor). Define every helper before its first use.
+  for (const f of listFiles('presentation/scripts').filter((x) => x.endsWith('.script'))) {
+    const src = fs.readFileSync(path.join(ROOT, f), 'utf8').replace(/\/\*[\s\S]*?\*\//g, (c) => c.replace(/[^\n]/g, ' '));
+    const defs = [...src.matchAll(/^var\s+(\w+)\s*=\s*function/gm)].map((m) => ({ name: m[1], at: m.index }));
+    for (const [i, d] of defs.entries()) {
+      const body = src.slice(d.at, i + 1 < defs.length ? defs[i + 1].at : src.length);
+      for (const later of defs.slice(i + 1)) {
+        if (new RegExp('(^|[^.\\w])' + later.name + '\\s*\\(').test(body)) err('scriptOrder', `${f}: ${d.name} calls ${later.name}, which is defined later in the file`);
+      }
+    }
+  }
   // card tenant settings (cards/*.cardtenantsetting) reach their card task by routePath
   for (const f of listFiles('cards').filter((x) => x.endsWith('.cardtenantsetting'))) { try { bpRoutes.add(JSON.parse(fs.readFileSync(path.join(ROOT, f), 'utf8')).routePath); } catch (_) {} }
   for (const f of listFiles('model').filter((x) => x.endsWith('.businessprocess'))) walk(docs[f] || {}, (n) => { if (typeof n.pageRoute === 'string') bpRoutes.add(n.pageRoute); });
