@@ -86,22 +86,6 @@
       ],
       "name": "comsAssignableRolesPage2",
       "url": "<% let t = comsAssignableRolesCount.total ?? 0; '/comsAssignableRoles?limit=100&offset=' + (t > 200 ? 200 : t) %>"
-    },
-    {
-      "name": "positions",
-      "baseUrlType": "workday-staffing-v6",
-      "url": "jobs",
-      "authType": "sso",
-      "isCollection": true,
-      "bestEffort": "true",
-      "failOnStatusCodes": [
-        {
-          "code": 400
-        },
-        {
-          "code": 429
-        }
-      ]
     }
   ],
   "outboundData": {

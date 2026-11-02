@@ -342,6 +342,25 @@ function staticSuite() {
     warn('Static.orphan', `AMD task '${tid}' is not referenced by any page, card, flow or business process`);
   }
 
+  // 7g. Lookups into capped lists. Workday REST collections (jobs, workers, ...) return 20 rows by
+  // default and 100 at most, so filter/find over them silently misses rows (the review pages showed
+  // blank Positions this way, 2026-11-01). WQL and paged BO reads are fine.
+  for (const [f, d] of Object.entries(pmds)) {
+    const raw = JSON.stringify(d);
+    for (const e of d.endPoints || []) {
+      const bt = String(e.baseUrlType || '');
+      if (bt === 'BUSINESS-OBJECT' || /wql/i.test(bt) || bt === 'COMMON' || /orchestr|bp/i.test(bt)) continue;
+      if (/limit=(\d{4,})/.test(String(e.url))) continue;
+      const re = new RegExp(`\\b${e.name}\\.data\\b[^%]{0,120}?\\.(filter|find)\\(`);
+      const m = raw.match(re);
+      if (m) {
+        // Allowed only as a fallback after stored names (e.g. positionNames) are checked first.
+        const before = raw.slice(Math.max(0, m.index - 220), m.index);
+        if (!/Names\)\s*\?/.test(before)) warn('Static.cappedLookup', `${f}: ${e.name} (${bt} ${e.url}) is searched with filter/find; REST returns 20-100 rows, so matches beyond that come back blank`);
+      }
+    }
+  }
+
   // 8. No forbidden test text in anything shipped to the tenant (CLAUDE.md "Test data in the tenant")
   const forbidden = new RegExp(['cl', 'aude'].join(''), 'i');
   for (const f of [...listFiles('presentation', true), ...listFiles('model'), ...listFiles('orchestration')]) {

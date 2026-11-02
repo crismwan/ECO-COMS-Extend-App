@@ -106,22 +106,6 @@
           "code": 429
         }
       ]
-    },
-    {
-      "name": "positions",
-      "baseUrlType": "workday-staffing-v6",
-      "url": "jobs",
-      "authType": "sso",
-      "isCollection": true,
-      "bestEffort": "true",
-      "failOnStatusCodes": [
-        {
-          "code": 400
-        },
-        {
-          "code": 429
-        }
-      ]
     }
   ],
   "outboundData": {
