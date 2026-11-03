@@ -57,6 +57,7 @@ These notes apply to **all** Workday Extend apps I work on. Project-specific det
 - Orchestrations — no Excel parsing node
 - Platform limits reference
 - CI/CD — deploying with GitHub Actions and wdcli
+- Deploy decision guide (what to ask the user to run)
 - Testing an Extend app
 - Working in the Workday UI with browser automation
 - Patterns from Workday's sample apps (GraphQL, Extend Cards, Profile Groups, more widgets)
@@ -2532,13 +2533,52 @@ A typical pipeline: on push to `main`, run static checks, log in, upload to App 
 
 - **Put the static checks first**, before any login step, so a code error is reported even when the tokens have expired.
 - **Strip quotes from pasted token secrets.** A secret pasted with its JSON quotes gave `Authorization: Bearer "…` and AOS answered "The resource requires authentication, which was not supplied with the request" (2026-11-02); the workflow now removes quotes and whitespace from token variables first.
-- **The PKCE user token (`WD_DEV_TOKEN`-style secret) lasts about 8 hours.** A run that fails in under 20 seconds at the token step is an expiry, not a code error: don't revert or change code. The fix needs a person: run `wdcli app deploy <appId>` locally, complete the browser login, then copy the tokens from `~/.config/@workday/wdcli/config.json` (`wcpTenantAccessToken.<tenant>` and `wcpAccessToken`) into the secrets, and rerun.
+- **The tenant token lasts 1 hour; the platform token 8 hours.** Decoded from wdcli's config (2026-11-02): `wcpTenantAccessToken.<tenant>` (the `WD_DEV_TOKEN`-style secret) has `exp - iat` = 3600 s, `wcpAccessToken` 28800 s. So a CI deploy needs tokens refreshed within the hour, and most token-step failures are this expiry. A run that fails in under 20 seconds at the token step is an expiry, not a code error: don't revert or change code; follow **Deploy decision guide** below.
 - **A 401 at the deploy step (`.../aos/v1/deploy`, "The supplied authentication is invalid") while the expiry checks pass** means a revoked or invalidated session: refresh both tokens.
 - **A token copied from an old config.json can expire mid-deploy.** wdcli then fails with "Cannot read properties of undefined (reading 'success')" instead of a 401. Rerun straight after updating the secrets.
 - **`wdcli app upload` uploads the whole folder you give it.** From a repo root that also holds docs, tools, tests and image files, the upload was refused with only "Unable to upload app. Error" (2026-11-02; the repo had 30 PNGs in `brand-assets/`, and App Hub allows 20 images per app). Add a **`.wdignore`** at the app root (gitignore syntax, read by wdcli) listing everything that isn't the app (`docs/`, `tools/`, `test/`, `.github/`, image folders, `*.md`); the next CI upload went through. `wdcli app upload --dry-run -o app.zip` writes the archive without uploading, to check what's included. On Windows PowerShell there's no `unzip`: use `Expand-Archive`.
 - A healthy upload + deploy takes about 1–3 minutes.
 - A run stuck at "in_progress" with every step completed (job conclusion success) did deploy; it can't be cancelled or rerun. A failure at the system-user login step in ~20 s can be transient; rerun once.
 - **GitHub CLI in a sandbox:** `gh workflow run` may fail when GraphQL is blocked; dispatch with REST instead: `gh api -X POST repos/<owner>/<repo>/actions/workflows/<file>.yml/dispatches -f ref=<branch> -f 'inputs[task]=<value>'`. Job logs may be blocked or truncated: write the full test output to `GITHUB_STEP_SUMMARY` and read the run's Summary page. App Hub build errors show on the run page (Summary → "Upload Failure").
+
+### Deploy decision guide (what to ask the user to run)
+
+Placeholders: `<appRef>` = the app's reference ID (in the project notes file), `<tenant>` = the tenant alias, `<owner>/<repo>`, `<app>` = a short folder name. The user runs these in **Windows PowerShell**; on Windows wdcli keeps its config at `$env:LOCALAPPDATA\@workday\wdcli\config.json` (not `~/.config`). Give the commands as one block they can paste, with the real values filled in.
+
+**1. GitHub run failed at the token step (expired tokens).** Ask the user to log in once and push both tokens straight into the repo secrets. With `gh` installed the tokens never pass through the chat:
+
+```powershell
+wdcli app deploy <appRef>    # answer y to "Access token has expired ... log in?", finish the browser login
+$c = Get-Content -Raw "$env:LOCALAPPDATA\@workday\wdcli\config.json" | ConvertFrom-Json
+$c.wcpTenantAccessToken.'<tenant>' | gh secret set WD_DEV_TOKEN -R <owner>/<repo>
+$c.wcpAccessToken | gh secret set WD_WCP_TOKEN -R <owner>/<repo>
+```
+
+Without `gh`: `$c.wcpTenantAccessToken.'<tenant>' | Set-Clipboard`, paste into the secret on GitHub (Settings → Secrets and variables → Actions), then the same for `wcpAccessToken`. Then the user says "refreshed" and I rerun the workflow at once (the tenant token has an hour). The `wdcli app deploy` in the first line already redeploys the version in App Hub, so if the latest commit had reached App Hub the app is live even before CI reruns.
+
+**2. GitHub can't upload, or a refresh isn't worth it** (the user is about to leave, the tokens keep expiring, CI is broken for another reason). I build a zip of only the app folders (`git archive --format=zip -o <app>-app-upload.zip HEAD appManifest.json cards model orchestration presentation`, leaving out any that don't exist), send it, and give:
+
+```powershell
+New-Item -ItemType Directory -Force "$HOME\<app>-upload" | Out-Null
+Set-Location "$HOME\<app>-upload"
+Remove-Item * -Recurse -Force
+Expand-Archive -Path "$HOME\Downloads\<app>-app-upload.zip" -DestinationPath . -Force
+wdcli whoami                 # optional: confirms the CLI is signed in
+"." | wdcli app upload       # "." answers the "path to the app directory" prompt
+wdcli app deploy <appRef>    # answer Yes to the default tenant, y to a login prompt, N to "open in browser"
+```
+
+- `wdcli app deploy` needs the **full** reference ID (a partial one gives "Unable to find app with reference ID").
+- The Version ID stays the same from upload to upload; the **Build ID** changes. A deploy table with `Success true` and the new Build ID means the upload just made is live.
+- A browser download of the same name may become `<app>-app-upload (1).zip`: tell the user to delete old copies first, or adjust the path.
+
+**3. Upload works but the App Hub build fails (build errors).** I fix these myself; don't hand them to the user to edit:
+- Read the error (CI run Summary → "Upload Failure", or the build log on developer.workday.com for the app).
+- Fix it in the repo, run the static checks, and add a static check for that error so it can't recur.
+- If the fix has to be made or confirmed in Workday's tools (App Builder Code mode, Orchestration Builder), do it in the browser myself first. Saving there writes to App Hub, so the repo must get the same change, or the next upload undoes it. Ask before Deploy or Save All in Orchestration Builder.
+- Then redeploy by route 1 or 2.
+
+**Never ask the user to paste tokens into the chat**, and never repeat ones they paste. If they do, note that the tenant token is good for an hour and the platform token for 8, and that the `gh secret set` route avoids it next time.
 
 ## Testing an Extend app
 
