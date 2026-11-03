@@ -24,6 +24,7 @@ These notes apply to **all** Workday Extend apps I work on. Project-specific det
 - Flow definitions
 - editWizard widget
 - hub widget
+- Icons (cards, hubs, navigation items)
 - Common inbound endpoint patterns
 - Submitting data (outbound endpoints)
 - Orchestrations
@@ -963,6 +964,63 @@ A **hub** is a container widget: a left navigation pane plus task pages rendered
 }
 
 ```
+
+## Icons (cards, hubs, navigation items)
+
+Source: developer.workday.com "Reference: Icons" (checked 2026-11-02). Only these names exist. **An unknown name doesn't fail the build**: Workday shows a default icon or none, so a typo or invented name (e.g. `wd-accent-home`, which doesn't exist) goes unnoticed.
+
+**Where each set goes:**
+- **`wd-accent-*`:** card headers (`.card`, `.carddefinition`), `hub` and `listDetailHub` titles.
+- **`wd-icon-*`:** hub `navigationTasks[]` items and groups, and the `listDetailHub` `navigationTemplate`, **only**. A `wd-accent-*` icon there is wrong.
+
+**`wd-accent-*` (by Workday's own category):**
+- Awards: `award-medal`, `trophy`
+- Calendar: `calendar`
+- Charts and Data: `chart-bar-arrow`, `data-loading`, `data-refresh`, `gauge`
+- Chat: `megaphone`, `speech-bubbles`
+- Commerce: `credit-card`, `financial-paper`, `globe-coin`, `shopping-cart`
+- Eco and Energy: `electric-plug`, `globe-earth`, `globe`, `leaves`, `lightbulb`, `sustainability`
+- Education: `education-finance`, `laptop-education`, `skills`, `student`, `student-admissions`, `student-search`
+- Fun and Food: `coffee`, `flag-wave`, `fun`, `rocket`, `target`
+- Health: `heart`, `shield-benefits`, `tooth`
+- Legal and Protection: `legal`, `scroll-shield`, `shield`
+- Media, Papers, and Presentation: `checkmarked-page`, `clipboard-checklist`, `media-file`, `news`, `resources`, `student-records`
+- Office and Buildings: `building`, `id-badge`, `suitcase`
+- People and Hands: `employees`, `handshake`, `open-positions`, `people-group`, `person`, `person-search`, `touchpoints`
+- Science, Technology, and Tools: `candidate-pipeline`, `circuit-board`, `credentials`, `dna`, `inbox`, `privacy`, `radio-tower`, `sigma`, `tablet-lock-check`, `time`, `toolbox`, `tools`, `touch-id`, `worksheets`
+- Shapes: `community`, `location`, `universal`
+
+**`wd-icon-*` (navigation):** `calendar`, `checkboxes`, `clock`, `contact-card-matrix-manager`, `document`, `folder-close`, `globe`, `location`, `mail`, `search-user`, `star`, `task-academic`, `timeline-milestone`, `time-off-balance`, `user`.
+
+**Choosing an icon (framework):**
+1. **Name the subject, not the layout.** Ask "what is this card about?" (role requests, organizations, audit), not "it's a list of actions". Generic icons such as `clipboard-checklist` or `checkmarked-page` on every card tell the user nothing.
+2. **One icon per subject, used everywhere.** Every card about the same thing (the home action card, the list page's actions card, its filter pills, the Workday Home card) gets the same icon, so the icon becomes a signpost between pages. Two subjects never share an icon.
+3. **Pick by meaning, in this order:** a literal match (calendar for a date filter, building for organizations, inbox for a review queue), then the action (sigma for counts, gauge for status, chart-bar-arrow for insights or trends, data-refresh for "start again"), then the outcome (award-medal for success receipts).
+4. **Suggested mappings** for common admin-app subjects:
+
+| Subject | `wd-accent-*` | Navigation `wd-icon-*` |
+|---|---|---|
+| App / hub title for access or role management | `credentials` | n/a |
+| Roles, role requests, access | `id-badge` | `contact-card-matrix-manager` |
+| Work waiting for review, approvals, "needs my attention" | `inbox` | `checkboxes` |
+| Organizations, hierarchies | `building` | `folder-close` |
+| Many people or positions at once (bulk changes) | `people-group` | `search-user` |
+| One person or worker | `person` | `user` |
+| Audit, compliance, history | `scroll-shield` | `timeline-milestone` |
+| Insights, trends, reports | `chart-bar-arrow` | `document` |
+| A count or total | `sigma` | n/a |
+| Status filter or progress | `gauge` | n/a |
+| Date or period filter | `calendar` | `calendar` |
+| Templates, files, uploads | `worksheets` | `document` |
+| Help, links to other pages | `resources` | `globe` |
+| Success / receipt | `award-medal` | n/a |
+| Error recovery ("start again") | `data-refresh` | n/a |
+| Security, privacy, permissions | `privacy` or `shield` | n/a |
+| Settings, configuration | `tools` | `star` (no settings icon exists) |
+| Announcements, notifications | `megaphone` | `mail` |
+
+5. **Keep the choices in one table in the repo** (a small pass that runs last in the build and sets every icon from a card-id → icon map), not scattered across builders, and add a static check that fails on any icon outside the lists above and on a non-`wd-icon-*` navigation icon.
+6. **Images:** a custom image can replace a card-header `icon` only (developer.workday.com "Images"), and an app may hold at most 20 images. Prefer the built-in icons.
 
 ## Common inbound endpoint patterns
 
@@ -2255,9 +2313,9 @@ For large datasets, use WQL with paging or RaaS (which has no pagination limit).
 **Order and paging (confirmed live 2026-10-31 on an app business object):** the collection comes back **oldest first**, so `?limit=100` shows the *oldest* 100 rows once there are more. `?limit=1` gives the total in `.total`; `offset` works, and an `offset` equal to the total returns an empty `data` list. To show the newest rows, add a count endpoint and offset pages that reference it (inbound endpoints can use an earlier endpoint in their URL):
 
 ```json
-{ "name": "auditLogCount", "baseUrlType": "BUSINESS-OBJECT", "url": "/comsAuditLogs?limit=1", "authType": "sso" },
+{ "name": "auditLogCount", "baseUrlType": "BUSINESS-OBJECT", "url": "/auditLogs?limit=1", "authType": "sso" },
 { "name": "auditPage0", "baseUrlType": "BUSINESS-OBJECT", "authType": "sso", "isCollection": true,
-  "url": "<% let t = auditLogCount.total ?? 0; let start = (t - 100) < 0 ? 0 : (t - 100); let cnt = t - start; '/comsAuditLogs?limit=' + (cnt > 0 ? cnt : 1) + '&offset=' + (cnt > 0 ? start : t) %>" }
+  "url": "<% let t = auditLogCount.total ?? 0; let start = (t - 100) < 0 ? 0 : (t - 100); let cnt = t - start; '/auditLogs?limit=' + (cnt > 0 ? cnt : 1) + '&offset=' + (cnt > 0 ? start : t) %>" }
 ```
 
 Join several pages with `list:flatten([auditPage0.data ?? [], auditPage1.data ?? []])`. Leave 400 out of `failOnStatusCodes` on the extra pages so an empty page never fails the load. Tests that look for a just-written record must read every page too.
@@ -2341,7 +2399,7 @@ Pattern that lets a Workday rejection block OK instead of showing a false succes
 - **Deny is offered only while an approval is awaiting action.** If the initiator is in the approval group, the approval auto-completes and only Cancel remains, so pair the same "close the request" orchestration with **Cancel** as well as Deny.
 
 
-- **The API gateway can refuse a launch with an HTML 403** (body starts with `<style>`), before the orchestration or its security runs. Seen 2026-10-31: one AssignRolePositions call was refused every time, while the same call with any one of roleName, orgName or changedByWid changed went through; percent-encoding `( )` didn't help. It looks like a content filter scoring the whole query string. If a launch from a page fails this way, try shorter text values or pass ids the orchestration can look up instead of free text **(cause unverified)**. The same change made through the app page (values sent with `.urlEncode()`) went through, so try the page before changing the orchestration.
+- **The API gateway can refuse a launch with an HTML 403** (body starts with `<style>`), before the orchestration or its security runs. Seen 2026-10-31: one role-assignment orchestration launch was refused every time, while the same call with any one of roleName, orgName or changedByWid changed went through; percent-encoding `( )` didn't help. It looks like a content filter scoring the whole query string. If a launch from a page fails this way, try shorter text values or pass ids the orchestration can look up instead of free text **(cause unverified)**. The same change made through the app page (values sent with `.urlEncode()`) went through, so try the page before changing the orchestration.
 - **Guard `mode`-style parameters.** A launch with an unexpected mode (neither ADD nor REMOVE) still called Workday and wrote audit records with no action. Check allowed values in a Continue on Conditions step before any Workday call.
 - **String functions** in orchestration expressions include `replace`, `replaceOnce`, `normalizeSpace` (collapses whitespace and newlines), `truncate`, `escapeXml`, `trim`, `substringBefore/After`, `urlEncode` (developer.workday.com "Reference: String Member Functions"). To put free text into a JSON template: `.normalizeSpace().replace("\\", "/").replace("\"", "'")` (deploys; not yet tested with real quotes).
 
@@ -2505,7 +2563,7 @@ A typical pipeline: on push to `main`, run static checks, log in, upload to App 
 
 ## Patterns from Workday's sample apps (GraphQL, Extend Cards, Profile Groups, more widgets)
 
-Source: 36 Workday sample apps the user exported to "ECO COMS/Other Apps for inspiration" (2026-11-02): vehicleRegistration, createAWorkEvent, workFromAlmostAnywhere, pmdWidgetDictionary, chartDictionary, capitalProjectPlanning and others. These patterns deploy in Workday's own samples but **haven't been tried in this tenant yet**: treat each as (unverified) until a live test, and check the developer site before relying on exact attribute names.
+Source: 36 Workday sample apps exported from Workday (2026-11-02): vehicleRegistration, createAWorkEvent, workFromAlmostAnywhere, pmdWidgetDictionary, chartDictionary, capitalProjectPlanning and others. These patterns deploy in Workday's own samples but **haven't been tried in this tenant yet**: treat each as (unverified) until a live test, and check the developer site before relying on exact attribute names.
 
 ### GraphQL queries (`.graphquery`)
 
@@ -2525,7 +2583,7 @@ Different from the Page Configuration Cards in `presentation/cards/*.card`. They
 - Register the card as an AMD task: `{ "id": "createRequestCard", "routingPattern": "/createRequestCard", "page": { "id": "createRequestCard" } }`. The task's `page.id` is the `.carddefinition` id (there's no .pmd), so static checks that resolve pages must accept card definitions.
 - **A card definition may have at most 2 inbound endpoints** (App Hub build error "has exceeded the maximum of 2 inbound endpoints", 2026-11-02). Filter on the server instead of paging (e.g. a SINGLE_INSTANCE query param such as `?requestedBy=<wid>`), or use one count + one page.
 - Card body scripts follow the `.card` rule: double-quoted string literals only. A card can't `include` page scripts, so repeat any helper logic inline.
-- **Extend Cards (`.carddefinition`) can't go on Workday Home.** App Manager → app → Cards → Configuration offers Home Cards Workspace, Journeys Workspace, Maintain Hubs and Maintain Search Topics, but Home Cards Workspace → Add Card doesn't list them (live 2026-11-02). Workday docs: Extend Cards go on **Workday-delivered hubs that already have card sections** (Maintain Hubs → hub → View Overview Configuration → Edit → Customize Sections and Cards → add row; security Set Up: Tenant Setup - Hub). A **Workday Home** card is a different thing: an orchestration of type "Workday Home Card" (Create Workday Home Card step), then the Create External Card task (developer.workday.com doc mwd1629844754304; Home needs Journeys outside WCP dev tenants). **Prerequisites (doc.workday.com "Steps: Create External Home Page Cards"):** Workday Journeys access, People Experience and the Journeys functional area enabled, the Set Up: Custom Card and View: Custom Card policies, then Home Cards Workspace → Add Card → Create External Card picks the orchestration. Workday plans to retire External Cards for Journeys. In ubc_wcpdev2 (2026-11-02) the app's Create Orchestration page offered only Synchronous, Asynchronous, Workday Business Process and Workday Integration System (the list comes from the server per app), but **a Home Card orchestration written in code uploads and opens in Orchestration Builder**:
+- **Extend Cards (`.carddefinition`) can't go on Workday Home.** App Manager → app → Cards → Configuration offers Home Cards Workspace, Journeys Workspace, Maintain Hubs and Maintain Search Topics, but Home Cards Workspace → Add Card doesn't list them (live 2026-11-02). Workday docs: Extend Cards go on **Workday-delivered hubs that already have card sections** (Maintain Hubs → hub → View Overview Configuration → Edit → Customize Sections and Cards → add row; security Set Up: Tenant Setup - Hub). A **Workday Home** card is a different thing: an orchestration of type "Workday Home Card" (Create Workday Home Card step), then the Create External Card task (developer.workday.com doc mwd1629844754304; Home needs Journeys outside WCP dev tenants). **Prerequisites (doc.workday.com "Steps: Create External Home Page Cards"):** Workday Journeys access, People Experience and the Journeys functional area enabled, the Set Up: Custom Card and View: Custom Card policies, then Home Cards Workspace → Add Card → Create External Card picks the orchestration. Workday plans to retire External Cards for Journeys. In one dev tenant (2026-11-02) the app's Create Orchestration page offered only Synchronous, Asynchronous, Workday Business Process and Workday Integration System (the list comes from the server per app), but **a Home Card orchestration written in code uploads and opens in Orchestration Builder**:
   - Shapes from the builder's own type schema (developer.workday.com flowbuilder bundle): flow type `.maya.FlowWorkdayTodayCard`; start `StartWorkdayTodayCard` (no properties); step `CreateWorkdayTodayCard` {name, isDisabled, errorHandler, `source` String ("POWERED BY"), `title`/`subtitle`/`linkText` Expr String, `linkDestination` Expr **Url**}; end `EndWorkdayTodayCard` {`refreshFrequency` Int seconds (0 = don't cache … 2419200), `card` Expr Json}.
   - The card step's output is **`card`**: end `card` = `data.<CardStep>.card` (the builder's data picker; `.json` fails the build).
   - **No `securityDomains`** on this type (App Hub: "Security domains can only be defined for Sync and Async orchestrations").
@@ -2539,14 +2597,14 @@ Source: developer.workday.com "Profile Group", "Add Profile Groups", "Profile Gr
 
 - **What it is:** a new section in the left pane of a Workday profile (Worker Profile, Organization, Position Restriction Profile and so on), like Job or Compensation on a worker. Its content is the app's **context-free model tasks** (each opens an app page) and **model reports**, shown as tabs.
 - **Component (Code mode):** `{ "id": 1, "name": "myCharityProfile", "label": "My Charity Profile", "profile": "WORKER_PROFILE", "tasks": ["CharityHome"], "reports": ["AllCharities"] }`. It needs at least one task or report, one `profile` only, and the tasks and reports must already exist in the app. Up to **10** profile groups per app. To use the same content on two profiles, make two groups with different names.
-- **Which profiles:** run the tenant report **View Profiles Available to Extend**; its Target Attribute Name is the `profile` value. ubc_wcpdev2 lists 31 (checked 2026-11-02), including `WORKER_PROFILE`, `ORGANIZATION`, `SUPERVISORY_ORGANIZATION`, `POSITION_RESTRICTION_PROFILE`, `JOB_PROFILE`, `COMPANY`, `COST_CENTER`, `STUDENT`, `COURSE_SECTION`.
+- **Which profiles:** run the tenant report **View Profiles Available to Extend**; its Target Attribute Name is the `profile` value. One dev tenant listed 31 (checked 2026-11-02), including `WORKER_PROFILE`, `ORGANIZATION`, `SUPERVISORY_ORGANIZATION`, `POSITION_RESTRICTION_PROFILE`, `JOB_PROFILE`, `COMPANY`, `COST_CENTER`, `STUDENT`, `COURSE_SECTION`.
 - **Context-free only:** a context-free task is one with no business object on it, so the page it opens is **not told which worker or organization the profile belongs to**. A group on the Organization profile shows the same page whichever organization you're on. Whether a model report can be filtered by the profile's subject isn't documented for Extend (the admin guide requires a prompt for the object on custom reports) **(unverified)**.
 - **Tenant setup after deploy (administrator, Set Up: System domain):** App Manager → Configure on the app → Profile Groups grid → Configure → pick the profile, tick **Display in Profile**, set the order. Then **Configure Profile Group** → pick the group → Display in Profile → + → add the allowed tasks and reports in order. Check by opening a profile (e.g. a worker's) and looking for the group in the left pane.
 - **Limits:** users need the domain permission for each task and report. Long Name/Label values can be cut off and can stop tasks rendering. Pages with nested tabs may not render inside a profile group.
 - **Tenant switch-on (live 2026-11-02):** App Manager → app → Configure → Profile Groups → Configure → tick **Display in Profile** → OK. The Configure Profile Group form only lists **reports** (its grid's column is Report); the group's tasks come from the `.profilegroup` file. Users still need the group's tasks' domain to see the section.
 - **Repo file:** `model/<Name>.profilegroup` with `{ "id", "name", "label", "profile", "tasks": [<model task names>] }` (`reports` optional). Deployed 2026-11-02; App Manager → Configure then lists it as "<label> for Worker Profile". The tasks are `model/<Name>.task` files with no `businessObject` (context-free), a `routePath` to an app page and `securityDomains`.
 
-### Widgets and attributes ECO-COMS doesn't use yet
+### Widgets and attributes not yet tried live
 
 - **Collapsible boxes:** `fieldSet` with `"collapsible": true, "initializeCollapsed": true` (for long help text).
 - **Page errors from script:** `presentation.applicationExceptions: [{ "type": "applicationException", "severity": "ERROR", "message": "...", "render": "<% pageVariables.x %>" }]`.

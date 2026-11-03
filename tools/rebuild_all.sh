@@ -39,6 +39,7 @@ run tools/merge_nav_about.py           # back links at the top of the About box
 run tools/title_banner.py              # white title tile instead of Workday's square page banner
 
 run tools/ux_improvements.py --tiles  # one-line summary under the title tile where the About box starts closed
+run tools/apply_icons.py              # every icon from one table (CLAUDE.md "Icons" framework)
 
 if [[ "${1:-}" == "--check" ]]; then
   changed="$(git status --porcelain -- presentation orchestration model)"

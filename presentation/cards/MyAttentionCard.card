@@ -7,7 +7,7 @@
   "header": {
     "title": "Needs My Attention",
     "subtitle": "Your own role requests and bulk uploads.",
-    "icon": "wd-accent-clipboard-checklist"
+    "icon": "wd-accent-inbox"
   },
   "body": {
     "type": "simpleCard",

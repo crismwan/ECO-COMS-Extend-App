@@ -6,7 +6,7 @@
   ],
   "header": {
     "title": "Time Period",
-    "icon": "wd-accent-clipboard-checklist"
+    "icon": "wd-accent-calendar"
   },
   "body": {
     "type": "pillCard",

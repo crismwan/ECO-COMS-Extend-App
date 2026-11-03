@@ -6,7 +6,7 @@
   "header": {
     "title": "Shell Org Manager",
     "subtitle": "Shell orgs and patterns by application.",
-    "icon": "wd-accent-worksheets"
+    "icon": "wd-accent-building"
   },
   "body": {
     "type": "simpleCard",

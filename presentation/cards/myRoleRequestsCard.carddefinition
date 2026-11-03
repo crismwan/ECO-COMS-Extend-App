@@ -6,7 +6,7 @@
       "type": "cardHeader",
       "title": "My Role Requests",
       "subtitle": "ECO-COMS · requests you submitted",
-      "icon": "wd-accent-clipboard-checklist"
+      "icon": "wd-accent-id-badge"
     },
     "body": {
       "type": "simpleCard",

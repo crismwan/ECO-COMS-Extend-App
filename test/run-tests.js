@@ -451,6 +451,27 @@ function staticSuite() {
   }
   if (quiet) warn('Static.failOnStatusCodes', `${quiet} inbound endpoint(s) have no failOnStatusCodes (errors are swallowed)`);
 
+  // 10. Icons are from Workday's list (developer.workday.com "Reference: Icons"); hub navigation items take wd-icon-* only
+  {
+    const src = fs.readFileSync(path.join(ROOT, 'tools/apply_icons.py'), 'utf8');
+    const grab = (name) => new Set(src.match(new RegExp(`${name} = set\\("""([\\s\\S]*?)"""`))[1].split(/\s+/).filter(Boolean));
+    const ACCENT = grab('ACCENT'), NAV = grab('NAV');
+    const iconFiles = [...Object.keys(pmds), ...Object.keys(cards),
+      ...listFiles('presentation/cards').filter((f) => f.endsWith('.carddefinition'))];
+    for (const f of iconFiles) {
+      const d = docs[f] || JSON.parse(fs.readFileSync(path.join(ROOT, f), 'utf8'));
+      walk(d, (node) => {
+        const icon = node.icon;
+        if (typeof icon !== 'string' || icon.includes('<%')) return;
+        if (node.type === 'item' || node.type === 'group') {
+          if (!icon.startsWith('wd-icon-') || !NAV.has(icon.slice(8))) err('icons', `${f}: navigation item '${node.label}' icon ${icon} isn't a wd-icon-* navigation icon`, f);
+        } else if (!icon.startsWith('wd-accent-') || !ACCENT.has(icon.slice(10))) {
+          err('icons', `${f}: icon ${icon} isn't in Workday's wd-accent-* list`, f);
+        }
+      });
+    }
+  }
+
   if (!errs.length) pass('Static', `${Object.keys(docs).length} JSON components, ${Object.keys(pmds).length} pages, ${Object.keys(tasks).length} AMD tasks, ${orchNames.size} orchestrations, ${Object.keys(cards).length} cards checked`);
   return { pmds };
 }

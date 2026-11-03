@@ -8,7 +8,7 @@
   "header": {
     "title": "<% title ?? \"\" %>",
     "subtitle": "<% subtitle ?? \"\" %>",
-    "icon": "wd-accent-clipboard-checklist"
+    "icon": "wd-accent-sigma"
   },
   "body": {
     "type": "simpleCard",

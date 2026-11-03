@@ -3,7 +3,7 @@
   "header": {
     "title": "Role Requests",
     "subtitle": "Request roles and follow their review.",
-    "icon": "wd-accent-clipboard-checklist"
+    "icon": "wd-accent-id-badge"
   },
   "body": {
     "type": "pillCard",

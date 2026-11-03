@@ -6,7 +6,7 @@
       "type": "cardHeader",
       "title": "ISC Queue",
       "subtitle": "ECO-COMS · latest 100 role requests",
-      "icon": "wd-accent-worksheets"
+      "icon": "wd-accent-inbox"
     },
     "body": {
       "type": "simpleCard",

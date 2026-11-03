@@ -6,7 +6,7 @@
   "header": {
     "title": "Audit Log",
     "subtitle": "Every ECO-COMS change, newest first.",
-    "icon": "wd-accent-checkmarked-page"
+    "icon": "wd-accent-scroll-shield"
   },
   "body": {
     "type": "simpleCard",

@@ -6,7 +6,7 @@
   "header": {
     "title": "ISC Queue",
     "subtitle": "Role requests waiting for ISC review.",
-    "icon": "wd-accent-clipboard-checklist"
+    "icon": "wd-accent-inbox"
   },
   "body": {
     "type": "simpleCard",

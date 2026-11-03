@@ -3,7 +3,7 @@
   "header": {
     "title": "Actions",
     "subtitle": "Assignable role requests",
-    "icon": "wd-accent-clipboard-checklist"
+    "icon": "wd-accent-id-badge"
   },
   "body": {
     "type": "pillCard",

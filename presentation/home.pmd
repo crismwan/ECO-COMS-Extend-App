@@ -4,7 +4,7 @@
     "body": {
       "type": "hub",
       "label": "ECO-COMS",
-      "icon": "wd-accent-home",
+      "icon": "wd-accent-credentials",
       "initialTask": {
         "taskId": "hubLanding"
       },
@@ -15,7 +15,7 @@
             "taskId": "hubLanding"
           },
           "label": "RBAC Hub",
-          "icon": "wd-accent-home"
+          "icon": "wd-icon-contact-card-matrix-manager"
         },
         {
           "type": "item",
@@ -23,7 +23,7 @@
             "taskId": "fuhLandingPage"
           },
           "label": "FUH Administration",
-          "icon": "wd-accent-worksheets"
+          "icon": "wd-icon-folder-close"
         }
       ],
       "additionalLinks": {

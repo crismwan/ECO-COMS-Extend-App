@@ -6,7 +6,7 @@
   ],
   "header": {
     "title": "Change Type",
-    "icon": "wd-accent-clipboard-checklist"
+    "icon": "wd-accent-scroll-shield"
   },
   "body": {
     "type": "pillCard",
