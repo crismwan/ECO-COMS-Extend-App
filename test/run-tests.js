@@ -1218,6 +1218,21 @@ async function repair(token, me) {
   const who = () => ({ changedBy: me.descriptor, changedByWid: me.id, timestamp: new Date().toISOString().replace(/\.\d+Z$/, 'Z') });
   const idOf = (v) => String(v && typeof v === 'object' ? v.id : v || '');
 
+  // --drop-audit <exact org name>: delete only the audit records for that organization (e.g. a demo
+  // rehearsal record). The organization itself is untouched: orgs can only be inactivated.
+  const dropAudit = arg('--drop-audit');
+  if (dropAudit) await test('Repair.dropAudit', async () => {
+    const hits = (await readAll(token, 'comsAuditLogs')).filter((a) => a.coName === dropAudit || a.coReferenceId === dropAudit);
+    hits.forEach((a) => console.log(`   ${apply ? 'delete' : 'would delete'}  ${a.id}  ${a.timestamp}  ${a.objectType}/${a.action}  ${a.coName || ''}  by ${a.triggeredBy || a.worker?.descriptor || ''}`));
+    if (!hits.length) return pass('Repair.dropAudit', `no audit record for ${dropAudit}`);
+    if (!apply) return pass('Repair.dropAudit', `would delete ${hits.length} audit record(s) for ${dropAudit}`);
+    for (const a of hits) await request('DELETE', `${BO}/comsAuditLogs/${a.id}`, token);
+    const left = (await readAll(token, 'comsAuditLogs')).filter((a) => a.coName === dropAudit || a.coReferenceId === dropAudit);
+    if (left.length) throw new Error(`${left.length} still there`);
+    pass('Repair.dropAudit', `deleted ${hits.length} audit record(s) for ${dropAudit}`);
+  });
+  if (dropAudit) return;   // on its own: skip the other repairs below
+
   const unassign = arg('--unassign');
   if (unassign) await test('Repair.unassign', async () => {
     const readRole = async () => {
