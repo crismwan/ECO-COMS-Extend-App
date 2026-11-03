@@ -40,7 +40,10 @@ CARDS = {
     # Audit
     "AuditLogCard": "scroll-shield", "AuditTypePillCard": "scroll-shield",
     # Measures and filters
-    "InsightsCard": "chart-bar-arrow", "CountCard": "sigma",
+    "InsightsCard": "chart-bar-arrow", "BreakdownChart": "chart-bar-arrow", "CountCard": "sigma",
+    "AuditActionChart": "scroll-shield", "ShellOrgStatusChart": "building",
+    # Activity over time across the whole app
+    "AppActivityChart": "time",
     "IscStatusPillCard": "gauge", "AuditPeriodPillCard": "calendar",
     # Outcomes and recovery
     "ShellOrgReceiptCard": "award-medal", "ShellOrgPatternReceiptCard": "award-medal",

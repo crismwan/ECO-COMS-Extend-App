@@ -32,8 +32,26 @@ var countAction = function(logs, action) {
   logs.filter(e => { e.action == action }).size();
 };
 
+/* Changes per day for the last 7 days (oldest first), split by area of the app, for the App Activity chart. */
+/* Day keys are UTC dates, like filterLogs; labels are MM/dd. */
+var countArea = function(logs, dayKey, types) {
+  logs.filter(e => { ('' + (e.timestamp ?? '')).substring(0, 10) == dayKey && types.contains(e.objectType ?? '') }).size();
+};
+
+var activityByDay = function(logs) {
+  [6, 5, 4, 3, 2, 1, 0].map(n => { date:now().minusDays(n).format('yyyy-MM-dd') }).map(k => {
+    {
+      'day': k.substring(5).replace('-', '/'),
+      'shellOrgs': countArea(logs, k, ['Shell Org', 'Shell Org Pattern', 'Org Status']),
+      'assignments': countArea(logs, k, ['Role Assignment']),
+      'requests': countArea(logs, k, ['Assignable Role'])
+    }
+  });
+};
+
 {
   "filterLogs": filterLogs,
   "periodLabel": periodLabel,
-  "countAction": countAction
+  "countAction": countAction,
+  "activityByDay": activityByDay
 }

@@ -6,7 +6,8 @@
   ],
   "header": {
     "title": "Shell Org Overview",
-    "subtitle": "Active vs. inactive shell organizations"
+    "subtitle": "Active vs. inactive shell organizations",
+    "icon": "wd-accent-building"
   },
   "body": {
     "type": "chartCard",

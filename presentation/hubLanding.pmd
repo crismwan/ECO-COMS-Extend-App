@@ -235,8 +235,8 @@
                 },
                 {
                   "type": "card",
-                  "cardId": "ShellOrgStatusChart",
-                  "parameters": "<% { 'activeCount': size((allShellOrgs.data ?? []).filter(o => { (o.code ?? '').startsWith('X:') && !(o.code ?? '').contains(':PATTERN') && o.cf_active1 == true })), 'inactiveCount': size((allShellOrgs.data ?? []).filter(o => { (o.code ?? '').startsWith('X:') && !(o.code ?? '').contains(':PATTERN') && o.cf_active1 != true })) } %>"
+                  "cardId": "AppActivityChart",
+                  "parameters": "<% { 'days': comsAuditFilters.activityByDay(auditPage0.data ?? []), 'totalText': '' + size(comsAuditFilters.filterLogs(auditPage0.data ?? [], '7d', '')) + ' changes in the last 7 days' } %>"
                 }
               ]
             }

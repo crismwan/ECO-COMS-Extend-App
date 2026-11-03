@@ -1,0 +1,53 @@
+{
+  "id": "AppActivityChart",
+  "parameters": [
+    "days",
+    "totalText"
+  ],
+  "header": {
+    "title": "App Activity",
+    "subtitle": "<% totalText ?? \"\" %>",
+    "icon": "wd-accent-time"
+  },
+  "body": {
+    "type": "chartCard",
+    "chart": {
+      "type": "stackedBarChart2",
+      "id": "appActivityStackedBarChart",
+      "data": "<% days ?? [] %>",
+      "dataVariableName": "day",
+      "categoryDataSet": {
+        "name": "Day",
+        "value": "<% day.day %>"
+      },
+      "measurementDataSets": [
+        {
+          "name": "Shell orgs",
+          "value": "<% day.shellOrgs %>"
+        },
+        {
+          "name": "Role assignments",
+          "value": "<% day.assignments %>"
+        },
+        {
+          "name": "Role requests",
+          "value": "<% day.requests %>"
+        }
+      ],
+      "measurementAxisOptions": {
+        "axisTitle": "Changes"
+      }
+    }
+  },
+  "footer": [
+    {
+      "label": "Open Audit Log",
+      "taskReference": {
+        "taskId": "auditLogViewer",
+        "parameterBindings": {
+          "period": "7d"
+        }
+      }
+    }
+  ]
+}

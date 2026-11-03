@@ -14,7 +14,8 @@
   ],
   "header": {
     "title": "Changes by Action",
-    "subtitle": "<% totalText ?? \"\" %>"
+    "subtitle": "<% totalText ?? \"\" %>",
+    "icon": "wd-accent-scroll-shield"
   },
   "body": {
     "type": "chartCard",

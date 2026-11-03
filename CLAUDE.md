@@ -1009,6 +1009,7 @@ Source: developer.workday.com "Reference: Icons" (checked 2026-11-02). Only thes
 | Audit, compliance, history | `scroll-shield` | `timeline-milestone` |
 | Insights, trends, reports | `chart-bar-arrow` | `document` |
 | A count or total | `sigma` | n/a |
+| Activity over time across the whole app | `time` | `clock` |
 | Status filter or progress | `gauge` | n/a |
 | Date or period filter | `calendar` | `calendar` |
 | Templates, files, uploads | `worksheets` | `document` |
@@ -2177,6 +2178,8 @@ A donut/pie chart. All attributes:
 - `showPercentLabels` (boolean) — adds a percentage next to each slice's count (developer.workday.com donutChart2). It prints up to four decimals ("2 (0.939%)"); `false` shows the count only.
 - `title` sits in the donut's centre, which is narrow: "213 organizations" was cut to "213 orga…". Use the bare number.
 - `animateOnLoad` (boolean) — animate the chart when the card loads.
+
+**Other chart types in a chartCard** (developer.workday.com "chartCard"): `bubbleChart2`, `clusteredBarChart2`, `comboChart2`, `donutChart2`, `dualAxisChart2`, `lineChart2`, `overlaidAreaChart2`, `percentAreaChart2`, `percentBarChart2`, `scatterChart2`, `stackedAreaChart2`, `stackedBarChart2`, `waterfallChart2`. The docs' example is a `stackedBarChart2`: `data`, `dataVariableName`, `categoryDataSet: {name, value}` (one bar per item), `measurementDataSets: [{name, value}, ...]` (one stacked segment each), `measurementAxisOptions: {axisTitle}`. A stacked bar of activity per day, split by area, is a good one-card summary of a whole app: build the day rows in a `.script` (oldest first) and pass them as one list parameter **(first live use pending)**.
 
 ```json
 {
