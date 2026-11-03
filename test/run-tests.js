@@ -207,7 +207,11 @@ function staticSuite() {
     .map((f) => docs[f]).filter(Boolean).map((d) => [d.name, d]));
   for (const f of listFiles('orchestration').filter((x) => x.endsWith('.orchestration'))) {
     const v = (docs[f] || {})._value || {};
-    if (String(v.type?._value || '').includes('BusinessProcessTriggered')) continue;
+    // App Hub allows security domains only on Sync and Async orchestrations (build error 2026-11-02)
+    if (/BusinessProcessTriggered|WorkdayTodayCard/.test(String(v.type?._value || ''))) {
+      if (((v.securityDomains || {})._value || {})._value) err('orchSecurity', `${path.basename(f)}: ${v.type._value} can't have securityDomains (App Hub: only Sync and Async)`);
+      continue;
+    }
     const secured = ((v.securityDomains || {})._value || {})._value || [];
     const names = secured.map((x) => x._value);
     if (!names.length) { err('orchSecurity', `${path.basename(f)}: no securityDomains; anyone who can reach its launch URL can run it`); continue; }

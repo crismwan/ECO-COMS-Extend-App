@@ -154,8 +154,8 @@ if not d.get('enabledForOrchestrationSecurity'):
 #   CreateWorkdayTodayCard {name, isDisabled, errorHandler, source: String, title/subtitle/linkText: Expr String,
 #                           linkDestination: Expr Url};
 #   EndWorkdayTodayCard {refreshFrequency: Int (seconds; the builder offers 0 = don't cache ... 4 weeks),
-#                        card: Expr Json} - the card step's output is ".json" (doc klu1629929904384: "Card Data to
-#                        Send Back ... select ... > json").
+#                        card: Expr Json} - the card step's output is "card" (Json), as the builder's data picker
+#                        lists it ("json" fails the build: "Upstream Card does not produce an output named json").
 # Default credential AccessTokenFromInitiatingUser (the builder's default for this type; ours already use it), so
 # /workers/me is the person viewing Workday Home.
 REFRESH_SECONDS = 3600     # "1 hour" in the builder's list: counts stay cheap to serve, at most an hour old
@@ -186,12 +186,12 @@ def to_home_card(data_flow, name, description):
     v['nodes']['_value'] = [n for n in v['nodes']['_value'] if n['_value']['name']['_value'] != 'Card'] + [card]
     v['end'] = {"_type": "EndWorkdayTodayCard", "_value": {
         "refreshFrequency": {"_type": "Int", "_value": REFRESH_SECONDS},
-        "card": expr(["Json", {"_type": ["Opt", "JsonSchemaRef"], "_value": None}], "data.Card.json"),
+        "card": expr(["Json", {"_type": ["Opt", "JsonSchemaRef"], "_value": None}], "data.Card.card"),
         "notes": {"_type": ["List", "Note"], "_value": []}}}
     v['notes']['_value'] = [{"_type": "Note", "_value": {"key": {"_type": "String", "_value": "description"}, "value": {"_type": "String", "_value": description}}}]
-    # keeps the data version's security domain: the orchestration can also be reached by its launch URL. Whether the
-    # Home Card type accepts a domain is (unverified) until the App Hub build; who sees the card on Workday Home is
-    # set in the tenant (Create External Card, Custom Card policies)
+    # App Hub build (2026-11-02): "Security domains can only be defined for Sync and Async orchestrations". Who sees
+    # the card is set in the tenant (Create External Card, Custom Card policies), and the card only reads data
+    v['securityDomains'] = {"_type": ["Opt", ["List", "String"]], "_value": None}
     return f
 
 
