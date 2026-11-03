@@ -147,6 +147,9 @@ if holder:
         if body and not body.endswith(';'): body += ';'
         widget[key] = '<% ' + (body + ' ' if body else '') + MARK + ' ' + COUNT + ' %>'
 
+    # the counter replaces the old changesText field, so OK's checks report on Effective Date instead
+    # (an unknown widget in onSubmit fails the page with "Unknown Variable found: changesText")
+    d['onSubmit'] = d['onSubmit'].replace('changesText.clearError();\n', '').replace('changesText.setError(', 'effectiveDate.setError(')
     hook(find(d, 'removeCheckBox'), 'onChange')
     hook(find(d, 'positionAddList'), 'onChange')
     hook(find(d, 'addGrid'), 'onRowRemove')

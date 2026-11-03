@@ -451,6 +451,24 @@ function staticSuite() {
   }
   if (quiet) warn('Static.failOnStatusCodes', `${quiet} inbound endpoint(s) have no failOnStatusCodes (errors are swallowed)`);
 
+  // 9b. Widget method calls name a widget on the page (an unknown id fails the page at run time:
+  //     "Unknown Variable found: changesText", Bulk Edit, 2026-11-03)
+  {
+    const METHODS = 'setError|clearError|setWarning|clearWarning|setValue|setValues|setVisible|setEnabled|setRequired|setLabel|getValue|isVisible|isEnabled';
+    for (const [f, d] of Object.entries(pmds)) {
+      const ids = new Set();
+      walk(d, (node) => { if (typeof node.id === 'string') ids.add(node.id); });
+      const text = JSON.stringify(d);
+      const seen = new Set();
+      for (const m of text.matchAll(new RegExp(`(?<![\\w.'"])([a-z][A-Za-z0-9]*)\\.(?:${METHODS})\\(`, 'g'))) {
+        const name = m[1];
+        if (name === 'self' || ids.has(name) || seen.has(name)) continue;
+        seen.add(name);
+        err('widgetRef', `${f}: script calls ${name}.${m[0].split('.')[1]} but no widget on the page has id '${name}'`, f);
+      }
+    }
+  }
+
   // 10. Icons are from Workday's list (developer.workday.com "Reference: Icons"); hub navigation items take wd-icon-* only
   {
     const src = fs.readFileSync(path.join(ROOT, 'tools/apply_icons.py'), 'utf8');
