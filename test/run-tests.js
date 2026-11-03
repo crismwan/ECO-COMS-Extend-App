@@ -751,15 +751,21 @@ async function smoke(token, me) {
     const c = await card('MyRoleRequestsCardData');
     const mine = roles.filter((r) => r.requestedBy?.id === me.id).slice(0, 100);
     const p = mine.filter((r) => r.status === 'Pending ISC Review').length, a = mine.filter((r) => r.status === 'Approved').length;
-    const want = p + a === 0 ? 'You have no role requests' : `${p} pending ISC review · ${a} approved`;
-    if (c.subtitle !== want) throw new Error(`subtitle "${c.subtitle}", expected "${want}"`);
-    pass('HomeCards.myRequests', `${c.title}: ${c.subtitle} → ${c.linkPath}`);
+    const wantTitle = p ? `My Role Requests · ${p} pending` : 'My Role Requests';
+    if (c.title !== wantTitle) throw new Error(`title "${c.title}", expected "${wantTitle}"`);
+    const wantSub = p + a === 0 ? 'No role requests yet' : (p ? `· ${a} approved` : `Nothing waiting for ISC review · ${a} approved`);
+    if (!(p ? c.subtitle.startsWith('Oldest: ') && c.subtitle.endsWith(wantSub) : c.subtitle === wantSub)) throw new Error(`subtitle "${c.subtitle}", expected ${p ? '"Oldest: … ' + wantSub + '"' : '"' + wantSub + '"'}`);
+    if (p && !/ · since [A-Z][a-z]{2} \d{1,2} · /.test(c.subtitle)) throw new Error(`subtitle "${c.subtitle}" has no "since Mon D" date`);
+    pass('HomeCards.myRequests', `${c.title} | ${c.subtitle} | ${c.linkText} → ${c.linkPath}`);
   });
   await test('HomeCards.iscQueue', async () => {
     const c = await card('IscQueueCardData');
     const p = first100.filter((r) => r.status === 'Pending ISC Review');
-    if (!c.subtitle.startsWith(p.length ? `${p.length} waiting for review` : 'Nothing waiting for review')) throw new Error(`subtitle "${c.subtitle}", expected ${p.length} pending`);
-    pass('HomeCards.iscQueue', `${c.title}: ${c.subtitle} → ${c.linkPath}`);
+    const wantTitle = p.length ? `ISC Queue · ${p.length} waiting` : 'ISC Queue';
+    if (c.title !== wantTitle) throw new Error(`title "${c.title}", expected "${wantTitle}"`);
+    if (p.length ? !/^Oldest: .+ · since [A-Z][a-z]{2} \d{1,2}$/.test(c.subtitle) : c.subtitle !== 'All caught up: nothing waiting for review') throw new Error(`subtitle "${c.subtitle}"`);
+    if (c.linkText !== (p.length ? 'Review Now' : 'Open ISC Queue')) throw new Error(`link text "${c.linkText}"`);
+    pass('HomeCards.iscQueue', `${c.title} | ${c.subtitle} | ${c.linkText} → ${c.linkPath}`);
   });
 }
 

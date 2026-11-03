@@ -103,6 +103,19 @@ APP = 's"${"/apps/"}${context.appReferenceId()}'
 # quoted status value in the response text: len(text with X -> X + "#") - len(text) = occurrences of X, no division
 COUNT = lambda text, value: f'({text}.replace("\\"{value}\\"", "\\"{value}\\"#").length() - {text}.length()).toString()'
 LINK = lambda task: f'"/".append(context.tenant()).append("/d/wday/app/").append(context.appReferenceId()).append("/").append(context.appReferenceId()).append("/{task}.htmld")'
+# "2026-10-30..." -> "Oct 30" (if-chain: only functions already accepted in these orchestrations)
+def NICE_DATE(d):
+    m = f'{d}.substringAfter("-").truncate(2)'
+    dd = f'{d}.substringAfter("-").substringAfter("-").truncate(2)'
+    day = f'(if ({dd}.startsWith("0")) {dd}.substringAfter("0") else {dd})'
+    names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    expr = '""'
+    for i in range(12, 0, -1):
+        expr = f'(if ({m}.equals("{i:02d}")) "{names[i-1]} " else {expr})'
+    return f'(if ({d}.length() < 10) "" else {expr}.append({day}))'
+# user-entered text going into the card's JSON template: no quotes, backslashes or line breaks
+SAFE = lambda x: f'{x}.normalizeSpace().replace("\\\\", "/").replace("\\"", "\'").truncate(40)'
+FIRST_PENDING = lambda src, field: f'{src}.asJSON().stringAtJsonPathWithDefault("$.data[?(@.status == \'Pending ISC Review\')].{field}", "")'
 CARD = ('{"title": "{{data.Counts.title}}", "subtitle": "{{data.Counts.subtitle}}", '
         '"linkText": "{{data.Counts.linkText}}", "linkPath": "{{data.Counts.linkPath}}"}')
 
@@ -114,10 +127,13 @@ my = flow('MyRoleRequestsCardData', 'ManageCOMSAssignableRoles', [
         ('text', 'data.GetMine.response.asJSON().toString()'),
         ('pending', COUNT('data.Counts.text', 'Pending ISC Review')),
         ('approved', COUNT('data.Counts.text', 'Approved')),
-        ('title', '"My Role Requests"'),
-        ('subtitle', '(if (data.Counts.pending.equals("0") && data.Counts.approved.equals("0")) "You have no role requests" else data.Counts.pending.append(" pending ISC review · ").append(data.Counts.approved).append(" approved"))'),
-        ('linkText', '"Open My Requests"'),
-        ('linkPath', LINK('assignableRoleManagerView')),
+        ('oldestRole', SAFE(FIRST_PENDING('data.GetMine.response', 'roleName'))),
+        ('oldestDate', NICE_DATE(FIRST_PENDING('data.GetMine.response', 'requestedDate'))),
+        ('none', '(if (data.Counts.pending.equals("0") && data.Counts.approved.equals("0")) "yes" else "no")'),
+        ('title', '(if (data.Counts.pending.equals("0")) "My Role Requests" else "My Role Requests · ".append(data.Counts.pending).append(" pending"))'),
+        ('subtitle', '(if (data.Counts.none.equals("yes")) "No role requests yet" else (if (data.Counts.pending.equals("0")) "Nothing waiting for ISC review · ".append(data.Counts.approved).append(" approved") else "Oldest: ".append(data.Counts.oldestRole).append(" · since ").append(data.Counts.oldestDate).append(" · ").append(data.Counts.approved).append(" approved")))'),
+        ('linkText', '(if (data.Counts.none.equals("yes")) "Request a Role" else (if (data.Counts.pending.equals("0")) "Open My Requests" else "Track My Requests"))'),
+        ('linkPath', '(if (data.Counts.none.equals("yes")) ' + LINK('assignableRoleManager') + ' else ' + LINK('assignableRoleManagerView') + ')'),
     ], 'Card text'),
     template('Card', CARD, 'Home card content'),
 ], 'Data for the My Role Requests Workday Home card: the signed-in worker\'s pending and approved requests, and a link to My Assignable Role Requests.')
@@ -129,9 +145,11 @@ isc = flow('IscQueueCardData', 'MaintainCOMSAssignableRoles', [
         # a filtered path read as a string gives the first match (the collection is oldest first) (unverified)
         ('oldest', 'data.GetRequests.response.asJSON().stringAtJsonPathWithDefault("$.data[?(@.status == \'Pending ISC Review\')].requestedDate", "")'),
         ('pending', COUNT('data.Counts.text', 'Pending ISC Review')),
-        ('title', '"ISC Queue"'),
-        ('subtitle', '(if (data.Counts.pending.equals("0")) "Nothing waiting for review" else data.Counts.pending.append(" waiting for review · oldest requested ").append(data.Counts.oldest.truncate(10)))'),
-        ('linkText', '"Open ISC Queue"'),
+        ('oldestRole', SAFE(FIRST_PENDING('data.GetRequests.response', 'roleName'))),
+        ('oldestDate', NICE_DATE('data.Counts.oldest')),
+        ('title', '(if (data.Counts.pending.equals("0")) "ISC Queue" else "ISC Queue · ".append(data.Counts.pending).append(" waiting"))'),
+        ('subtitle', '(if (data.Counts.pending.equals("0")) "All caught up: nothing waiting for review" else "Oldest: ".append(data.Counts.oldestRole).append(" · since ").append(data.Counts.oldestDate))'),
+        ('linkText', '(if (data.Counts.pending.equals("0")) "Open ISC Queue" else "Review Now")'),
         ('linkPath', LINK('iscRoleRequestsView')),
     ], 'Card text'),
     template('Card', CARD, 'Home card content'),
