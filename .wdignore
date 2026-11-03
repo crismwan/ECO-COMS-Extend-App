@@ -1,0 +1,12 @@
+# Files wdcli leaves out of the App Hub upload (gitignore syntax). Only the app itself is uploaded:
+# appManifest.json, cards/, model/, orchestration/, presentation/.
+# 2026-11-02: CI uploads from the repo root failed with "Unable to upload app. Error" while an upload of
+# just these folders worked; brand-assets/ holds 30 PNGs and App Hub allows 20 images per app.
+brand-assets/
+docs/
+tools/
+test/
+.github/
+CLAUDE.md
+UPDATE_NOTES.txt
+*.md
