@@ -1,23 +1,15 @@
 #!/usr/bin/env python3
 """Workday Home card data (product owner 2026-11-02: "create true Home cards ... everything on the code end").
 
-A Workday Home card is an orchestration built from the "Workday Home Card" template (developer.workday.com doc
-mwd1629844754304; needs Workday Journeys, which UBC has in production). That template isn't offered for this app
-in ubc_wcpdev2 yet, so its start/end JSON can't be copied (CLAUDE.md: don't hand-type orchestration JSON or guess it;
-a wrong guess fails the App Hub build for the whole app).
-
-What this builds now, cloned from orchestrations in this repo and Workday's sample apps:
+A Workday Home card is an orchestration of type "Workday Home Card" (developer.workday.com doc mwd1629844754304;
+available in WCP development tenants, and needs Workday Journeys elsewhere). This writes, from the same steps:
   orchestration/MyRoleRequestsCardData.orchestration   synchronous; for the signed-in worker
   orchestration/IscQueueCardData.orchestration         synchronous; for ISC reviewers
 Each makes the same calls the Home card will make and returns the card content as JSON:
   {"title": ..., "subtitle": ..., "linkText": ..., "linkPath": "/<tenant>/d/wday/app/<app>/<app>/<task>.htmld"}
-They deploy and can be launched and tested today (test suite: HomeCards.*).
-
-When the Home Card template appears (tenant admin turns on People Experience + Journeys): create one Home Card
-orchestration in Orchestration Builder, copy its JSON (Settings → Open Current Source Code), save its start node and
-end node as tools/home_card_template.json ({"type", "start", "end"}), and rerun this script: it then also writes
-MyRoleRequestsHomeCard / IscQueueHomeCard with the same steps, mapping title/subtitle/link into the card's end step
-(see to_home_card below; the end-step field mapping is filled in from that template).
+They can be launched and tested like any synchronous orchestration (test suite: HomeCards.*).
+  orchestration/MyRoleRequestsHomeCard.orchestration   the same steps as a Workday Home Card orchestration
+  orchestration/IscQueueHomeCard.orchestration         (add with the tenant task Create External Card)
 Idempotent.
 """
 import copy, hashlib, json, os, sys
@@ -156,27 +148,55 @@ if not d.get('enabledForOrchestrationSecurity'):
     open(p, 'w').write(json.dumps(d, indent=2) + '\n')
 
 
-def to_home_card(data_flow, name, tpl):
-    """Home Card version: the template's start/end, the same steps; the end step's title/subtitle/link fields read
-    data.Counts.*. Called only when tools/home_card_template.json exists (copied from Orchestration Builder)."""
+# ── Workday Home Card orchestrations ─────────────────────────────────────────────────────────────────────────────
+# Shapes from Orchestration Builder's own type schema (flowbuilder bundle on developer.workday.com, read 2026-11-02):
+#   flow type ".maya.FlowWorkdayTodayCard"; start StartWorkdayTodayCard (no properties);
+#   CreateWorkdayTodayCard {name, isDisabled, errorHandler, source: String, title/subtitle/linkText: Expr String,
+#                           linkDestination: Expr Url};
+#   EndWorkdayTodayCard {refreshFrequency: Int (seconds; the builder offers 0 = don't cache ... 4 weeks),
+#                        card: Expr Json} - the card step's output is ".json" (doc klu1629929904384: "Card Data to
+#                        Send Back ... select ... > json").
+# Default credential AccessTokenFromInitiatingUser (the builder's default for this type; ours already use it), so
+# /workers/me is the person viewing Workday Home.
+REFRESH_SECONDS = 3600     # "1 hour" in the builder's list: counts stay cheap to serve, at most an hour old
+
+
+def expr(type_name, source):
+    return {"_type": ["Expr", type_name], "_value": {"type": {"_type": "Type", "_value": type_name},
+            "source": {"_type": "String", "_value": source}, "isAuto": {"_type": "Boolean", "_value": False}}}
+
+
+def to_home_card(data_flow, name, description):
     f = copy.deepcopy(data_flow)
     v = f['_value']
-    v['type'] = tpl['type']; v['start'] = tpl['start']
-    v['nodes']['_value'] = [n for n in v['nodes']['_value'] if n['_value']['name']['_value'] != 'Card']
-    end = json.dumps(tpl['end'])
-    for k in ('title', 'subtitle', 'linkText', 'linkPath'):
-        end = end.replace('__' + k.upper() + '__', 'data.Counts.' + k)   # placeholders put into the saved template by hand
-    v['end'] = json.loads(end)
-    v['name']['_value'] = name
     v['id']['_value'] = hashlib.md5(name.encode()).hexdigest()
+    v['name']['_value'] = name
+    v['type'] = {"_type": "FlowType", "_value": ".maya.FlowWorkdayTodayCard"}
+    v['start'] = {"_type": "StartWorkdayTodayCard", "_value": {"notes": {"_type": ["List", "Note"], "_value": []}}}
+    card = {"_type": "CreateWorkdayTodayCard", "_value": {
+        "name": {"_type": "Identifier", "_value": "Card"},
+        "isDisabled": {"_type": "Boolean", "_value": False},
+        "errorHandler": {"_type": ["Opt", "ErrorHandler"], "_value": None},
+        "source": {"_type": "String", "_value": "ECO-COMS"},
+        "title": expr("String", "data.Counts.title"),
+        "subtitle": expr("String", "data.Counts.subtitle"),
+        "linkDestination": expr("Url", "data.Counts.linkPath"),
+        "linkText": expr("String", "data.Counts.linkText"),
+        "notes": {"_type": ["List", "Note"], "_value": [{"_type": "Note", "_value": {"key": {"_type": "String", "_value": "description"}, "value": {"_type": "String", "_value": "The Workday Home card"}}}]}}}
+    v['nodes']['_value'] = [n for n in v['nodes']['_value'] if n['_value']['name']['_value'] != 'Card'] + [card]
+    v['end'] = {"_type": "EndWorkdayTodayCard", "_value": {
+        "refreshFrequency": {"_type": "Int", "_value": REFRESH_SECONDS},
+        "card": expr(["Json", {"_type": ["Opt", "JsonSchemaRef"], "_value": None}], "data.Card.json"),
+        "notes": {"_type": ["List", "Note"], "_value": []}}}
+    v['notes']['_value'] = [{"_type": "Note", "_value": {"key": {"_type": "String", "_value": "description"}, "value": {"_type": "String", "_value": description}}}]
+    # keeps the data version's security domain: the orchestration can also be reached by its launch URL. Whether the
+    # Home Card type accepts a domain is (unverified) until the App Hub build; who sees the card on Workday Home is
+    # set in the tenant (Create External Card, Custom Card policies)
     return f
 
 
-tp = os.path.join(os.path.dirname(__file__), 'home_card_template.json')
-if os.path.exists(tp):
-    tpl = json.load(open(tp))
-    save('MyRoleRequestsHomeCard', to_home_card(my, 'MyRoleRequestsHomeCard', tpl))
-    save('IscQueueHomeCard', to_home_card(isc, 'IscQueueHomeCard', tpl))
-    print('home card data + Home Card orchestrations written')
-else:
-    print('home card data orchestrations written (Home Card template not captured yet: tools/home_card_template.json)')
+save('MyRoleRequestsHomeCard', to_home_card(my, 'MyRoleRequestsHomeCard',
+     'Workday Home card: the viewer\'s pending and approved role requests, linking to My Assignable Role Requests.'))
+save('IscQueueHomeCard', to_home_card(isc, 'IscQueueHomeCard',
+     'Workday Home card: requests waiting for ISC review and the oldest request date, linking to the ISC Queue.'))
+print('home card data + Workday Home Card orchestrations written')
