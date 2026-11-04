@@ -1733,7 +1733,7 @@ async function timingSuite(token) {
   }
   await med('WQL positionFill (Access Review)', async () => { const r = await wql(token, 'SELECT cf_PositionID, cf_PositionIsFilled FROM allPositions WHERE supervisoryOrganization is not empty', 10000); return `${(r.data || []).length} rows, ${kb(r)}`; });
   await med('REST requests: count + 3 pages (today)', async () => { await request('GET', `${BO}/comsAssignableRoles?limit=1`, token); const r = await Promise.all([0, 100, 200].map((o) => request('GET', `${BO}/comsAssignableRoles?limit=100&offset=${o}`, token))); return `${r.reduce((n, x) => n + (x.data || []).length, 0)} rows, ${kb(r)}`; });
-  const RQ = 'workdayID { id } referenceId roleName application status requestedBy { id descriptor } requestedDate approvedDate effectiveDate shellOrgCode positionNames reviewEventWid';
+  const RQ = 'workdayID { id } referenceId roleName application status requestedBy { workdayID { id } descriptor } requestedDate approvedDate effectiveDate shellOrgCode positionNames reviewEventWid';
   const req = (where) => `query { r: ${APP_ID}_COMSAssignableRole(dataSource: {${APP_ID}_comsAssignableRoles: {}}${where ? ', where: ' + where : ''}, orderBy: {requestedDate: DESC}, limit: 100) { total data { ${RQ} } } }`;
   await med('Graph requests: all, newest first', async () => { const r = await gql(token, req('')); return `${r.r.data.length} rows (total ${r.r.total}), ${kb(r)}`; });
   await med('Graph requests: pending only', async () => { const r = await gql(token, req('{status: {eq: "Pending ISC Review"}}')); return `${r.r.data.length} rows, ${kb(r)}`; });
