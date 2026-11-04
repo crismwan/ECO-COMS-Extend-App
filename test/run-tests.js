@@ -46,7 +46,7 @@ const ORCH = `${API}/orchestrate/v1/apps/${APP_ID}/orchestrations`;
 const argv = process.argv.slice(2);
 const arg = (name) => { const i = argv.indexOf(name); return i === -1 ? null : argv[i + 1]; };
 const VERBOSE = argv.includes('--verbose');
-const SUITES_ALL = ['static', 'smoke', 'full', 'cleanup', 'isu', 'repair', 'seconduser', 'purge', 'demoseed', 'datacheck', 'probe', 'seedapps', 'patternguard', 'graphql'];
+const SUITES_ALL = ['static', 'smoke', 'full', 'cleanup', 'isu', 'repair', 'seconduser', 'purge', 'demoseed', 'datacheck', 'probe', 'seedapps', 'patternguard', 'graphql', 'eventlinks'];
 const suiteArg = arg('--suite') || argv.find((a) => !a.startsWith('--') && SUITES_ALL.some((s) => a.split(',').includes(s))) || 'smoke';
 const SUITES = suiteArg.split(',').map((s) => s.trim()).filter(Boolean);
 for (const s of SUITES) if (!SUITES_ALL.includes(s)) { console.error(`Unknown suite "${s}". Use: ${SUITES_ALL.join(', ')}`); process.exit(2); }
@@ -567,6 +567,7 @@ function resolveToken() {
 }
 
 // ─── HTTP ─────────────────────────────────────────────────────────────────────
+let lastHeaders = {};
 function request(method, url, token, body) {
   return new Promise((resolve, reject) => {
     const u = new URL(url);
@@ -583,6 +584,7 @@ function request(method, url, token, body) {
       res.on('data', (d) => { raw += d; });
       res.on('end', () => {
         if (VERBOSE) console.log(`    ${method} ${u.pathname} -> ${res.statusCode}`);
+        lastHeaders = res.headers;
         if (res.statusCode >= 400) return reject(new Error(`HTTP ${res.statusCode} ${u.pathname}: ${raw.slice(0, 200)}`));
         try { resolve(JSON.parse(raw)); } catch (_) { resolve(raw); }
       });
@@ -622,11 +624,12 @@ async function launchAndVerify(token, name, params) {
   const ids = async () => (await readAll(token, 'comsAuditLogs'));
   const before = new Set((await ids()).map((a) => a.id));
   await launch(token, name, params);
+  const launchId = lastHeaders['x-orchestrate-id'] || null;
   for (let i = 0; i < 10; i++) {
     await sleep(2000);
     // Match the new record by id: timestamps can tie, so "newest" is not reliable.
     const fresh = (await ids()).filter((a) => !before.has(a.id));
-    if (fresh.length) return fresh[0];
+    if (fresh.length) return Object.assign(fresh[0], { _launchId: launchId });
   }
   throw new Error(`${name}: no new audit record after 20 s (Workday rejected the call or the orchestration failed; check app Logs)`);
 }
@@ -967,50 +970,7 @@ async function full(token, me) {
   });
 
   // ── Role assignment: add a position to the test role, then remove it (net no change) ──
-  await test('RoleAssignment.addRemove', async () => {
-    const roleName = TEST_ROLE;
-    const readRole = async () => {
-      const r = await wql(token, `SELECT role, roleAssignments{organization, cf_ZCF_EE_RoleAssignedToAsPositionRestrictions} as roleAssignments FROM assignableRoles WHERE roleName = '${roleName}'`, 5);
-      const row = (r.data || [])[0];
-      const ra = (row?.roleAssignments || []).find((x) => String(x.organization?.descriptor || '').startsWith('X:'));
-      return row && ra ? { role: row.role, org: ra.organization, positions: ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions || [] } : null;
-    };
-    const cur = await readRole();
-    if (!cur) return skip('RoleAssignment.addRemove', `test role ${roleName} has no X: organization assignment`);
-    const assigned = cur.positions.map((p) => String(p.descriptor || ''));
-    const pos = ((await wql(token, 'SELECT cf_PositionID, workdayID, position_PositionManagement, cf_PositionText, cf_PositionIsFilled FROM allPositions WHERE supervisoryOrganization is not empty', 300)).data || [])
-      .filter((p) => p.cf_PositionID && p.cf_PositionIsFilled !== false && !assigned.some((d) => d.includes(p.cf_PositionID)))[0];
-    if (!pos) return skip('RoleAssignment.addRemove', `no unassigned position found for ${roleName}`);
-    const posWid = pos.workdayID?.id || pos.workdayID;
-    // Same full name the Manage Role Assignment page sends (its search results' descriptor).
-    const posName = pos.position_PositionManagement?.descriptor || pos.cf_PositionText || pos.cf_PositionID;
-    const base = { roleId: cur.role.id, roleName, orgId: cur.org.id, orgName: cur.org.descriptor, effectiveDate: today };
-    const add = await launchAndVerify(token, 'AssignRolePositions', {
-      ...base, positionId: pos.cf_PositionID, positionIdType: 'Position_ID', positionName: posName,
-      mode: 'ADD', positionWid: posWid, ...who(),
-    });
-    expectAudit(add, 'Role Assignment', 'ASSIGN POSITION');
-    let added = null;
-    // WQL can lag the change by well over 20 s: poll up to 90 s. If it never shows, say so loudly,
-    // because the position is then left on the test role and must be removed by hand.
-    for (let i = 0; i < 18 && !added; i++) {
-      const after = await readRole();
-      added = (after?.positions || []).find((p) => !cur.positions.some((q) => q.id === p.id));
-      if (!added) await sleep(5000);
-    }
-    if (!added) throw new Error(`${pos.cf_PositionID} was audited as added to ${roleName} but did not appear on the role assignment within 90 s; it is probably still assigned: remove it in Manage Role Assignments`);
-    const rem = await launchAndVerify(token, 'AssignRolePositions', {
-      ...base, positionId: added.id, positionIdType: 'WID', positionName: added.descriptor || pos.cf_PositionID,
-      mode: 'REMOVE', positionWid: added.id, ...who(),
-    });
-    expectAudit(rem, 'Role Assignment', 'REMOVE POSITION');
-    // The audit log must show the same full position name for both changes, never a bare ID.
-    for (const a of [add, rem]) {
-      if (/^P-\d+$/.test(String(a.positionName || '').trim())) throw new Error(`${a.action} audit shows only the position ID "${a.positionName}"`);
-    }
-    if (add.positionName !== rem.positionName) throw new Error(`position name differs: assign "${add.positionName}" vs remove "${rem.positionName}"`);
-    pass('RoleAssignment.addRemove', `${pos.cf_PositionID} added to and removed from ${roleName} on ${cur.org.descriptor}`);
-  });
+  await test('RoleAssignment.addRemove', async () => { await roleAddRemove(token, me); });
 
   // ── Role request: create → start review BP → cancel the event → DenyRoleRequest marks it Denied ──
   // Leaves one Denied TESTROLECI request: requests linked to a BP event can't be deleted.
@@ -1641,6 +1601,81 @@ async function probe(token) {
   pass('Probe', `${apps.length} application record(s), ${Object.keys(byApp).length} application codes in Workday`);
 }
 
+// ── Role assignment: add a position to the test role, then remove it (net no change) ──
+// Shared by the full suite and the eventlinks suite. Returns both audit records.
+async function roleAddRemove(token, me) {
+  const today = tenantDate();
+  const who = () => ({ changedBy: me.descriptor, changedByWid: me.id, timestamp: new Date().toISOString().replace(/\.\d+Z$/, 'Z') });
+  const expectAudit = (a, type, action) => {
+    if (a.objectType !== type || a.action !== action) throw new Error(`audit record is ${a.objectType}/${a.action}, expected ${type}/${action}`);
+  };
+    const roleName = TEST_ROLE;
+  const readRole = async () => {
+    const r = await wql(token, `SELECT role, roleAssignments{organization, cf_ZCF_EE_RoleAssignedToAsPositionRestrictions} as roleAssignments FROM assignableRoles WHERE roleName = '${roleName}'`, 5);
+    const row = (r.data || [])[0];
+    const ra = (row?.roleAssignments || []).find((x) => String(x.organization?.descriptor || '').startsWith('X:'));
+    return row && ra ? { role: row.role, org: ra.organization, positions: ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions || [] } : null;
+  };
+  const cur = await readRole();
+  if (!cur) return skip('RoleAssignment.addRemove', `test role ${roleName} has no X: organization assignment`);
+  const assigned = cur.positions.map((p) => String(p.descriptor || ''));
+  const pos = ((await wql(token, 'SELECT cf_PositionID, workdayID, position_PositionManagement, cf_PositionText, cf_PositionIsFilled FROM allPositions WHERE supervisoryOrganization is not empty', 300)).data || [])
+    .filter((p) => p.cf_PositionID && p.cf_PositionIsFilled !== false && !assigned.some((d) => d.includes(p.cf_PositionID)))[0];
+  if (!pos) return skip('RoleAssignment.addRemove', `no unassigned position found for ${roleName}`);
+  const posWid = pos.workdayID?.id || pos.workdayID;
+  // Same full name the Manage Role Assignment page sends (its search results' descriptor).
+  const posName = pos.position_PositionManagement?.descriptor || pos.cf_PositionText || pos.cf_PositionID;
+  const base = { roleId: cur.role.id, roleName, orgId: cur.org.id, orgName: cur.org.descriptor, effectiveDate: today };
+  const add = await launchAndVerify(token, 'AssignRolePositions', {
+    ...base, positionId: pos.cf_PositionID, positionIdType: 'Position_ID', positionName: posName,
+    mode: 'ADD', positionWid: posWid, ...who(),
+  });
+  expectAudit(add, 'Role Assignment', 'ASSIGN POSITION');
+  let added = null;
+  // WQL can lag the change by well over 20 s: poll up to 90 s. If it never shows, say so loudly,
+  // because the position is then left on the test role and must be removed by hand.
+  for (let i = 0; i < 18 && !added; i++) {
+    const after = await readRole();
+    added = (after?.positions || []).find((p) => !cur.positions.some((q) => q.id === p.id));
+    if (!added) await sleep(5000);
+  }
+  if (!added) throw new Error(`${pos.cf_PositionID} was audited as added to ${roleName} but did not appear on the role assignment within 90 s; it is probably still assigned: remove it in Manage Role Assignments`);
+  const rem = await launchAndVerify(token, 'AssignRolePositions', {
+    ...base, positionId: added.id, positionIdType: 'WID', positionName: added.descriptor || pos.cf_PositionID,
+    mode: 'REMOVE', positionWid: added.id, ...who(),
+  });
+  expectAudit(rem, 'Role Assignment', 'REMOVE POSITION');
+  // The audit log must show the same full position name for both changes, never a bare ID.
+  for (const a of [add, rem]) {
+    if (/^P-\d+$/.test(String(a.positionName || '').trim())) throw new Error(`${a.action} audit shows only the position ID "${a.positionName}"`);
+  }
+  if (add.positionName !== rem.positionName) throw new Error(`position name differs: assign "${add.positionName}" vs remove "${rem.positionName}"`);
+  pass('RoleAssignment.addRemove', `${pos.cf_PositionID} added to and removed from ${roleName} on ${cur.org.descriptor}`);
+  return { add, rem, pos, roleName };
+}
+
+// ═══ Event links (writes): one role assignment add + remove, then check both audit records ═══
+// carry the run ID Workday returned for their launch and an event that opens in Workday.
+async function eventLinks(token, me) {
+  console.log('\n-- Event links (writes: adds then removes one position on the test role) --');
+  let r = null;
+  await test('EventLinks.roleChange', async () => { r = await roleAddRemove(token, me); });
+  if (!r || !r.add) return skip('EventLinks', 'the role change did not run');
+  for (const a of [r.add, r.rem]) {
+    const n = `EventLinks.${a.action === 'ASSIGN POSITION' ? 'add' : 'remove'}`;
+    await test(`${n}.runId`, async () => {
+      if (!a.runId) throw new Error('audit record has no runId');
+      if (a._launchId && a._launchId !== a.runId) throw new Error(`runId ${a.runId} differs from the launch's X-Orchestrate-Id ${a._launchId}`);
+      pass(`${n}.runId`, `runId ${a.runId}` + (a._launchId ? ' = the launch\'s X-Orchestrate-Id' : ' (launch returned no X-Orchestrate-Id header to compare)'));
+    });
+    await test(`${n}.event`, async () => {
+      if (!a.eventWid) throw new Error('audit record has no eventWid (Assign_Roles_Event_Reference not found in the Staffing response)');
+      const ev = await request('GET', `${BP}/events/${a.eventWid}`, token);
+      pass(`${n}.event`, `eventWid ${a.eventWid} opens: ${ev.descriptor || ev.businessProcess?.descriptor || JSON.stringify(ev).slice(0, 120)}`);
+    });
+  }
+}
+
 // ═══ GraphQL probe (read-only): what the Graph API schema offers for this app's objects ═══
 // Names per developer.workday.com "Model Components in the Graph API Schema":
 // query <appRef>_<BusinessObject>(dataSource: {<appRef>_<collection>: {}}, where, limit, offset).
@@ -1917,6 +1952,7 @@ async function demoSeed(token, me) {
         if (live.includes('datacheck')) await dataCheck(token);
         if (live.includes('probe')) await probe(token);
         if (live.includes('graphql')) await graphqlSuite(token);
+        if (live.includes('eventlinks')) await eventLinks(token, me);
         if (live.includes('seedapps')) await seedApps(token);
         if (live.includes('patternguard')) await patternGuard(token, me);
       }
