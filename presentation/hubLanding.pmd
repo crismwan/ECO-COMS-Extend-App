@@ -235,6 +235,10 @@
                 },
                 {
                   "type": "card",
+                  "cardId": "AccessReviewCard"
+                },
+                {
+                  "type": "card",
                   "cardId": "AppActivityChart",
                   "parameters": "<% { 'days': comsAuditFilters.activityByDay(auditPage0.data ?? []), 'totalText': '' + size(comsAuditFilters.filterLogs(auditPage0.data ?? [], '7d', '')) + ' changes in the last 7 days' } %>"
                 }

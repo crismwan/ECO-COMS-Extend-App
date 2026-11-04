@@ -1,0 +1,21 @@
+/* Access Review helpers (tools/build_access_review.py). logs come newest first. */
+var lastWhen = function(logs, actions, roleName, posWid, posName) {
+  let posId = (posName ?? '').substringBefore(' ');
+  let m = logs.filter(a => { actions.contains(a.action ?? '') && (a.roleName ?? '') == roleName && ((!empty(posWid) && (a.positionWid ?? '').contains(posWid)) || (!empty(posId) && (a.positionName ?? '').contains(posId))) });
+  m.size() == 0 ? '' : ('' + (m[0].timestamp ?? '')).substring(0, 10);
+};
+
+var lastChanged = function(logs, roleName, posWid, posName) {
+  let d = lastWhen(logs, ['ASSIGN POSITION'], roleName, posWid, posName);
+  empty(d) ? 'Not through ECO-COMS' : d;
+};
+
+var lastReviewed = function(logs, roleName, posWid, posName) {
+  let d = lastWhen(logs, ['REVIEW'], roleName, posWid, posName);
+  empty(d) ? 'Never' : d;
+};
+
+{
+  "lastChanged": lastChanged,
+  "lastReviewed": lastReviewed
+}

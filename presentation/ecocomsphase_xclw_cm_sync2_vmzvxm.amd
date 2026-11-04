@@ -415,6 +415,13 @@
       "page": {
         "id": "comsInsights"
       }
+    },
+    {
+      "id": "accessReview",
+      "routingPattern": "/accessReview",
+      "page": {
+        "id": "accessReview"
+      }
     }
   ],
   "applicationId": "ecocomsphase_xclw_cm_sync2_vmzvxm",
