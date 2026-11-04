@@ -20,7 +20,9 @@ import json, os, re
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 APP = 'ecocomsphase_xclw_cm_sync2_vmzvxm'
-PAGES = ['auditLogViewer']
+# Read-only pages only. The success pages look up a record written moments earlier; they stay on REST
+# until a Graph read right after a write is confirmed.
+PAGES = ['auditLogViewer', 'comsInsights', 'hubLanding', 'shellOrgDetail']
 QUERY_ID = 'auditLogsNewest'
 PROVIDER = 'workday-graph'
 FIELDS = ('workdayID { id } timestamp action objectType coName coReferenceId triggeredBy details '
@@ -82,7 +84,8 @@ def convert(page):
         m = re.fullmatch(r'auditPage(\d+)', e['name'])
         if m:
             k = int(m.group(1))
-            e = {"name": e['name'], "baseUrlType": PROVIDER, "httpMethod": "POST", "authType": "sso",
+            be = {"bestEffort": e['bestEffort']} if 'bestEffort' in e else {}
+            e = {"name": e['name'], "baseUrlType": PROVIDER, **be, "httpMethod": "POST", "authType": "sso",
                  "failOnStatusCodes": FAIL if k == 0 else [{"code": 429}],
                  "graphQuery": {"queryId": QUERY_ID, "parameters": {"offset": 0 if k == 0 else f"<% {TOTAL} > {k * 100} ? {k * 100} : 0 %>"}}}
         out.append(e)

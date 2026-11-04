@@ -41,42 +41,44 @@
       ]
     },
     {
-      "name": "auditLogCount",
-      "baseUrlType": "BUSINESS-OBJECT",
-      "url": "/comsAuditLogs?limit=1",
+      "name": "auditPage0",
+      "baseUrlType": "workday-graph",
+      "httpMethod": "POST",
       "authType": "sso",
       "failOnStatusCodes": [
         {
           "code": 400
         },
         {
-          "code": 429
-        }
-      ]
-    },
-    {
-      "name": "auditPage0",
-      "baseUrlType": "BUSINESS-OBJECT",
-      "authType": "sso",
-      "isCollection": true,
-      "failOnStatusCodes": [
+          "code": 403
+        },
         {
           "code": 429
         }
       ],
-      "url": "<% let t = auditLogCount.total ?? 0; let start = (t - 100) < 0 ? 0 : (t - 100); let cnt = t - start; '/comsAuditLogs?limit=' + (cnt > 0 ? cnt : 1) + '&offset=' + (cnt > 0 ? start : t) %>"
+      "graphQuery": {
+        "queryId": "auditLogsNewest",
+        "parameters": {
+          "offset": 0
+        }
+      }
     },
     {
       "name": "auditPage1",
-      "baseUrlType": "BUSINESS-OBJECT",
+      "baseUrlType": "workday-graph",
+      "httpMethod": "POST",
       "authType": "sso",
-      "isCollection": true,
       "failOnStatusCodes": [
         {
           "code": 429
         }
       ],
-      "url": "<% let t = auditLogCount.total ?? 0; let end = (t - 100) < 0 ? 0 : (t - 100); let start = (end - 100) < 0 ? 0 : (end - 100); let cnt = end - start; '/comsAuditLogs?limit=' + (cnt > 0 ? cnt : 1) + '&offset=' + (cnt > 0 ? start : t) %>"
+      "graphQuery": {
+        "queryId": "auditLogsNewest",
+        "parameters": {
+          "offset": "<% ((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 100 ? 100 : 0 %>"
+        }
+      }
     }
   ],
   "presentation": {
@@ -151,7 +153,7 @@
                 {
                   "type": "card",
                   "cardId": "CountCard",
-                  "parameters": "<% { 'title': 'Changes', 'subtitle': 'Made through ECO-COMS', 'countText': '' + size((list:sort(list:flatten([auditPage0.data ?? [], auditPage1.data ?? []]).filter(a => { (!empty(a.orgWid) && a.orgWid == (queryParams.orgId ?? '')) || (!empty(queryParams.orgCode) && (a.coReferenceId ?? '') == queryParams.orgCode) || (!empty(queryParams.orgName) && (a.coName ?? '') == queryParams.orgName) }), 'timestamp', false))) + (size((list:sort(list:flatten([auditPage0.data ?? [], auditPage1.data ?? []]).filter(a => { (!empty(a.orgWid) && a.orgWid == (queryParams.orgId ?? '')) || (!empty(queryParams.orgCode) && (a.coReferenceId ?? '') == queryParams.orgCode) || (!empty(queryParams.orgName) && (a.coName ?? '') == queryParams.orgName) }), 'timestamp', false))) == 1 ? ' change recorded' : ' changes recorded') } %>"
+                  "parameters": "<% { 'title': 'Changes', 'subtitle': 'Made through ECO-COMS', 'countText': '' + size((list:sort(list:flatten([((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.data ?? []) : []), ((((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 100 && !empty(auditPage1.data) && !empty(auditPage1.data.r)) ? (auditPage1.data.r.data ?? []) : [])]).filter(a => { (!empty(a.orgWid) && a.orgWid == (queryParams.orgId ?? '')) || (!empty(queryParams.orgCode) && (a.coReferenceId ?? '') == queryParams.orgCode) || (!empty(queryParams.orgName) && (a.coName ?? '') == queryParams.orgName) }), 'timestamp', false))) + (size((list:sort(list:flatten([((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.data ?? []) : []), ((((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 100 && !empty(auditPage1.data) && !empty(auditPage1.data.r)) ? (auditPage1.data.r.data ?? []) : [])]).filter(a => { (!empty(a.orgWid) && a.orgWid == (queryParams.orgId ?? '')) || (!empty(queryParams.orgCode) && (a.coReferenceId ?? '') == queryParams.orgCode) || (!empty(queryParams.orgName) && (a.coName ?? '') == queryParams.orgName) }), 'timestamp', false))) == 1 ? ' change recorded' : ' changes recorded') } %>"
                 }
               ]
             }
@@ -325,7 +327,7 @@
                   "id": "noHistoryText",
                   "label": "ⓘ Nothing to show",
                   "enabled": false,
-                  "visible": "<% size((list:sort(list:flatten([auditPage0.data ?? [], auditPage1.data ?? []]).filter(a => { (!empty(a.orgWid) && a.orgWid == (queryParams.orgId ?? '')) || (!empty(queryParams.orgCode) && (a.coReferenceId ?? '') == queryParams.orgCode) || (!empty(queryParams.orgName) && (a.coName ?? '') == queryParams.orgName) }), 'timestamp', false))) == 0 %>",
+                  "visible": "<% size((list:sort(list:flatten([((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.data ?? []) : []), ((((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 100 && !empty(auditPage1.data) && !empty(auditPage1.data.r)) ? (auditPage1.data.r.data ?? []) : [])]).filter(a => { (!empty(a.orgWid) && a.orgWid == (queryParams.orgId ?? '')) || (!empty(queryParams.orgCode) && (a.coReferenceId ?? '') == queryParams.orgCode) || (!empty(queryParams.orgName) && (a.coName ?? '') == queryParams.orgName) }), 'timestamp', false))) == 0 %>",
                   "value": "No ECO-COMS changes to this organization in the newest 200 Audit Log records. Older changes are in the Audit Log Viewer."
                 },
                 {
@@ -337,7 +339,7 @@
                   "enabled": false,
                   "excelExportEnabled": true,
                   "rowVariableName": "al",
-                  "rows": "<% (list:sort(list:flatten([auditPage0.data ?? [], auditPage1.data ?? []]).filter(a => { (!empty(a.orgWid) && a.orgWid == (queryParams.orgId ?? '')) || (!empty(queryParams.orgCode) && (a.coReferenceId ?? '') == queryParams.orgCode) || (!empty(queryParams.orgName) && (a.coName ?? '') == queryParams.orgName) }), 'timestamp', false)) %>",
+                  "rows": "<% (list:sort(list:flatten([((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.data ?? []) : []), ((((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 100 && !empty(auditPage1.data) && !empty(auditPage1.data.r)) ? (auditPage1.data.r.data ?? []) : [])]).filter(a => { (!empty(a.orgWid) && a.orgWid == (queryParams.orgId ?? '')) || (!empty(queryParams.orgCode) && (a.coReferenceId ?? '') == queryParams.orgCode) || (!empty(queryParams.orgName) && (a.coName ?? '') == queryParams.orgName) }), 'timestamp', false)) %>",
                   "label": "Changes",
                   "columns": [
                     {
