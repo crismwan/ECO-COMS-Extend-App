@@ -12,6 +12,7 @@
   "bulkRoleTemplate": "aboutSection",
   "bulkTemplateUpload": "aboutSection",
   "comsInsights": "aboutSection",
+  "comsInsightsApps": "aboutSection",
   "deleteAssignableRole": "descSection",
   "editRoleAssignment": "aboutSection",
   "fuhLandingPage": "overviewSection",

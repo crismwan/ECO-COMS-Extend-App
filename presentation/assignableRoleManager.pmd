@@ -132,47 +132,12 @@
       "exclude": "<% empty instanceListQuery %>"
     },
     {
-      "name": "positions",
-      "baseUrlType": "workday-staffing-v6",
-      "url": "jobs",
-      "authType": "sso",
-      "isCollection": true,
-      "bestEffort": "true",
-      "failOnStatusCodes": [
-        {
-          "code": 400
-        },
-        {
-          "code": 429
-        }
-      ]
-    },
-    {
       "name": "allShellRoles",
       "baseUrlType": "workday-wql",
       "url": "<% 'data?query=' + string:pathEncode('SELECT role FROM assignableRoles WHERE roleName contains \\':ROLE:\\' AND roleName not contains \\'Organizations and Roles Assignment Administrator\\'') %>",
       "authType": "sso",
       "isCollection": true,
       "bestEffort": "true",
-      "failOnStatusCodes": [
-        {
-          "code": 400
-        },
-        {
-          "code": 429
-        }
-      ]
-    },
-    {
-      "name": "allPositions",
-      "baseUrlType": "workday-wql",
-      "url": "data",
-      "authType": "sso",
-      "isCollection": true,
-      "bestEffort": "true",
-      "wqlQuery": {
-        "queryId": "allPositions"
-      },
       "failOnStatusCodes": [
         {
           "code": 400
@@ -416,7 +381,7 @@
                       "label": "Positions / Delegated Roles",
                       "cellTemplate": {
                         "type": "text",
-                        "value": "<% !empty(role.positionNames) ? role.positionNames : (empty(role.positions) || empty(positions.data) ? '' : positions.data.filter(p => { role.positions.contains(p.id) }).map(p => { p.descriptor }).join(', ')) %>",
+                        "value": "<% role.positionNames ?? '' %>",
                         "enabled": false
                       },
                       "sortableAndFilterable": "true"

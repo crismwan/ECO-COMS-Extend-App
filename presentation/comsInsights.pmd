@@ -134,7 +134,8 @@
         "parameters": {
           "offset": "<% ((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 100 ? 100 : 0 %>"
         }
-      }
+      },
+      "exclude": "<% ((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) <= 100 %>"
     },
     {
       "name": "auditPage2",
@@ -152,7 +153,8 @@
         "parameters": {
           "offset": "<% ((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 200 ? 200 : 0 %>"
         }
-      }
+      },
+      "exclude": "<% ((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) <= 200 %>"
     },
     {
       "name": "bulkRunCount",
@@ -309,138 +311,29 @@
         },
         {
           "type": "layoutSection",
-          "id": "appsSection",
+          "id": "appsLinkSection",
           "children": [
             {
-              "type": "grid",
-              "id": "appInsightsGrid",
-              "label": "Applications at a Glance",
-              "readOnly": true,
-              "rows": "<% comsInsights.appRows(list:flatten([requestPage0.data ?? [], requestPage1.data ?? [], requestPage2.data ?? []]), (allShellOrgs.data ?? []), comsApplications.data ?? []) %>",
-              "rowVariableName": "appRow",
-              "columns": [
+              "type": "fieldSet",
+              "id": "appsLinkFieldSet",
+              "title": "Applications at a Glance",
+              "children": [
                 {
-                  "type": "column",
-                  "columnId": "appCodeColumn",
-                  "label": "Application ID",
-                  "cellTemplate": {
-                    "type": "button",
-                    "id": "appCodeButton",
-                    "action": "LINK",
-                    "label": "<% appRow.code %>",
-                    "taskReference": {
-                      "taskId": "shellOrgManager",
-                      "parameterBindings": {
-                        "appCode": "<% appRow.code %>",
-                        "appName": "<% appRow.name %>"
-                      }
-                    }
-                  },
-                  "excel": {
-                    "enabled": false
+                  "type": "richText",
+                  "id": "appsLinkDesc",
+                  "enabled": false,
+                  "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">Shell orgs, patterns and role requests for each application, on a page of its own.</span>"
+                },
+                {
+                  "type": "button",
+                  "id": "openAppsButton",
+                  "label": "Open Applications at a Glance",
+                  "action": "AUXILIARY",
+                  "taskReference": {
+                    "taskId": "comsInsightsApps"
                   }
-                },
-                {
-                  "type": "column",
-                  "columnId": "appNameColumn",
-                  "label": "Name",
-                  "cellTemplate": {
-                    "type": "text",
-                    "id": "appNameText",
-                    "value": "<% appRow.name %>",
-                    "enabled": false
-                  },
-                  "sortableAndFilterable": "true"
-                },
-                {
-                  "type": "column",
-                  "columnId": "shellActiveColumn",
-                  "label": "Active Shell Orgs",
-                  "cellTemplate": {
-                    "type": "number",
-                    "id": "shellActiveNumber",
-                    "value": "<% appRow.shellActive %>",
-                    "enabled": false
-                  },
-                  "sortableAndFilterable": "true"
-                },
-                {
-                  "type": "column",
-                  "columnId": "shellInactiveColumn",
-                  "label": "Inactive Shell Orgs",
-                  "cellTemplate": {
-                    "type": "number",
-                    "id": "shellInactiveNumber",
-                    "value": "<% appRow.shellInactive %>",
-                    "enabled": false
-                  },
-                  "sortableAndFilterable": "true"
-                },
-                {
-                  "type": "column",
-                  "columnId": "patternsColumn",
-                  "label": "Patterns",
-                  "cellTemplate": {
-                    "type": "number",
-                    "id": "patternsNumber",
-                    "value": "<% appRow.patterns %>",
-                    "enabled": false
-                  },
-                  "sortableAndFilterable": "true"
-                },
-                {
-                  "type": "column",
-                  "columnId": "pendingColumn",
-                  "label": "Pending Requests",
-                  "cellTemplate": {
-                    "type": "number",
-                    "id": "pendingNumber",
-                    "value": "<% appRow.pending %>",
-                    "enabled": false
-                  },
-                  "sortableAndFilterable": "true"
-                },
-                {
-                  "type": "column",
-                  "columnId": "approvedColumn",
-                  "label": "Approved",
-                  "cellTemplate": {
-                    "type": "number",
-                    "id": "approvedNumber",
-                    "value": "<% appRow.approved %>",
-                    "enabled": false
-                  },
-                  "sortableAndFilterable": "true"
-                },
-                {
-                  "type": "column",
-                  "columnId": "deniedColumn",
-                  "label": "Denied",
-                  "cellTemplate": {
-                    "type": "number",
-                    "id": "deniedNumber",
-                    "value": "<% appRow.denied %>",
-                    "enabled": false
-                  },
-                  "sortableAndFilterable": "true"
-                },
-                {
-                  "type": "column",
-                  "columnId": "lastRequestColumn",
-                  "label": "Last Request",
-                  "cellTemplate": {
-                    "type": "text",
-                    "id": "lastRequestText",
-                    "value": "<% appRow.lastRequest %>",
-                    "enabled": false
-                  },
-                  "sortableAndFilterable": "true"
                 }
-              ],
-              "gridType": "LIST",
-              "multiViewStylingEnabled": true,
-              "autoPaging": true,
-              "excelExportEnabled": true
+              ]
             }
           ]
         },

@@ -13,6 +13,7 @@
   "bulkRoleTemplate": "ECO-COMS: Bulk Role Changes – Template",
   "bulkTemplateUpload": "ECO-COMS: Upload Bulk Template Version",
   "comsInsights": "ECO-COMS: Insights",
+  "comsInsightsApps": "ECO-COMS: Applications at a Glance",
   "confirmAccessReview": "ECO-COMS: Review All Positions",
   "deleteAssignableRole": "<% 'ECO-COMS: Withdraw ' + (queryParams.view == 'aaa' ? 'AAA ' : (queryParams.view == 'assignable' ? 'Assignable ' : '')) + 'Role Request' %>",
   "editRoleAssignment": "<% 'ECO-COMS: Manage Role Assignment – ' + (queryParams.roleName ?? 'Role') %>",

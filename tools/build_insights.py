@@ -142,19 +142,49 @@ page = {
                         "ECO-COMS report data sources (Role Requests, Audit Trail, Bulk Runs, Applications).")}]}]},
             {"type": "layoutSection", "id": "kpiSection", "children": [{"type": "cardContainer", "id": "kpiCardContainer", "layout": "masonry", "cards": kpis}]},
             {"type": "layoutSection", "id": "chartsSection", "children": [{"type": "cardContainer", "id": "chartsCardContainer", "layout": "masonry", "cards": charts}]},
-            {"type": "layoutSection", "id": "appsSection", "children": [apps_grid]},
+            {"type": "layoutSection", "id": "appsLinkSection", "children": [
+                {"type": "fieldSet", "id": "appsLinkFieldSet", "title": "Applications at a Glance", "children": [
+                    {"type": "richText", "id": "appsLinkDesc", "enabled": False, "value": INFO.format(
+                        "Shell orgs, patterns and role requests for each application, on a page of its own.")},
+                    {"type": "button", "id": "openAppsButton", "label": "Open Applications at a Glance", "action": "AUXILIARY",
+                     "taskReference": {"taskId": "comsInsightsApps"}}]}]},
             {"type": "layoutSection", "id": "pendingSection", "children": [pending_grid]},
         ]},
         "footer": {"type": "footer", "children": [{"type": "pod", "podId": "ecoComsFooter"}]},
     }}
 save(P('presentation', 'comsInsights.pmd'), page)
 
+# Applications at a Glance on its own page (2026-11-04): it counts ~600 shell orgs per application in the page
+# script, the heaviest part of Insights (4-7 s), and isn't needed for the counts and charts. Only the data it uses.
+apps_page = {
+    "id": "comsInsightsApps",
+    "securityDomains": ["ManageCOMSShellOrgs"],
+    "include": ["comsRequestStats.script", "comsAuditFilters.script", "comsInsights.script"],
+    "endPoints": [e for e in eps if e['name'] in ('requestCount', 'requestPage0', 'requestPage1', 'requestPage2', 'allShellOrgs', 'comsApplications')],
+    "presentation": {
+        "title": {"type": "title", "label": "ECO-COMS: Applications at a Glance"},
+        "pageType": "VIEW",
+        "body": {"type": "basicFormLayout", "id": "comsInsightsAppsForm", "sections": [
+            {"type": "layoutSection", "id": "navSection", "children": [
+                {"type": "button", "label": "← Insights", "taskReference": {"taskId": "comsInsights"}, "action": "LINK", "suppressDiscardDialog": True}]},
+            {"type": "layoutSection", "id": "aboutSection", "children": [
+                {"type": "fieldSet", "id": "aboutFieldSet", "title": "About This Page", "children": [
+                    {"type": "richText", "id": "aboutDesc", "enabled": False, "value": INFO.format(
+                        "Per application: active and inactive shell organizations, patterns, and role requests by status "
+                        "(up to 300 requests). Select an <b>Application ID</b> to open it in Shell Org Manager.")}]}]},
+            {"type": "layoutSection", "id": "appsSection", "children": [apps_grid]},
+        ]},
+        "footer": {"type": "footer", "children": [{"type": "pod", "podId": "ecoComsFooter"}]},
+    }}
+save(P('presentation', 'comsInsightsApps.pmd'), apps_page)
+
 # ---- AMD task + hub link ----
 amdp = P('presentation', 'ecocomsphase_xclw_cm_sync2_vmzvxm.amd')
 amd = json.load(open(amdp))
-if not any(t['id'] == 'comsInsights' for t in amd['tasks']):
-    amd['tasks'].append({"id": "comsInsights", "routingPattern": "/comsInsights", "page": {"id": "comsInsights"}})
-    save(amdp, amd)
+for tid in ('comsInsights', 'comsInsightsApps'):
+    if not any(t['id'] == tid for t in amd['tasks']):
+        amd['tasks'].append({"id": tid, "routingPattern": "/" + tid, "page": {"id": tid}})
+        save(amdp, amd)
 # Opened from a card on the RBAC Hub, not the left panel (product owner 2026-11-02)
 hp = P('presentation', 'home.pmd')
 home = json.load(open(hp))

@@ -52,6 +52,7 @@ SUMMARY = {
     'bulkRoleGrid': 'Add or remove positions on roles across an application, then validate and apply.',
     'bulkRoleResults': 'Your bulk uploads and grid edits, newest first, with the result of each row.',
     'comsInsights': 'Role requests, shell organizations, audit records and bulk runs in one view.',
+    'comsInsightsApps': 'Shell orgs, patterns and role requests for each application.',
     'shellOrgDetail': 'One shell organization: its status, its roles and the changes made to it.',
     'bulkTemplateUpload': 'Publish a new version of the bulk role change template.',
     'adminProvisioningView': 'AAA role requests: who can manage shell orgs and submit role requests.',

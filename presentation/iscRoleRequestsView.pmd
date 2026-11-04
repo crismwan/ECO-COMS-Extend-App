@@ -275,32 +275,23 @@
                     },
                     {
                       "type": "column",
-                      "id": "colRoleName",
-                      "columnId": "colRoleName",
-                      "label": "Role Name",
-                      "sortableAndFilterable": "true",
-                      "cellTemplate": {
-                        "type": "text",
-                        "value": "<% role.roleName ?? '' %>",
-                        "enabled": false
-                      }
-                    },
-                    {
-                      "type": "column",
                       "id": "colWdRoleName",
                       "columnId": "colWdRoleName",
-                      "label": "Workday Assignable Role",
+                      "label": "Role",
                       "cellTemplate": {
                         "type": "instanceList",
                         "view": false,
                         "instanceList": [
                           {
-                            "descriptor": "<% role.workdayRoleId ?? '' %>",
+                            "descriptor": "<% role.roleName ?? '' %>",
                             "wid": "<% role.workdayAssignableRole ?? '' %>"
                           }
                         ]
                       },
-                      "sortableAndFilterable": "true"
+                      "sortableAndFilterable": "true",
+                      "excel": {
+                        "value": "<% role.roleName ?? '' %>"
+                      }
                     },
                     {
                       "type": "column",

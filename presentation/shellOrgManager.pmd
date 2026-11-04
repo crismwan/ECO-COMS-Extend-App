@@ -5,24 +5,6 @@
   ],
   "endPoints": [
     {
-      "name": "shellOrgPatterns",
-      "baseUrlType": "workday-wql",
-      "url": "data",
-      "authType": "sso",
-      "bestEffort": "true",
-      "wqlQuery": {
-        "queryId": "existingPatterns"
-      },
-      "failOnStatusCodes": [
-        {
-          "code": 400
-        },
-        {
-          "code": 429
-        }
-      ]
-    },
-    {
       "name": "shellRoles",
       "baseUrlType": "workday-wql",
       "url": "data",
@@ -313,7 +295,7 @@
                 "id": "patternsEmptyText",
                 "enabled": false,
                 "label": "ⓘ Nothing to show",
-                "visible": "<% !empty(queryParams.appCode) && size((empty(queryParams.appCode) ? [] : ((queryParams.appCode == 'X:CLW') ? (shellOrgPatterns.data ?? []).filter(p => { (p.code ?? '').startsWith('X:') && (p.code ?? '').contains(':PATTERN:') }).filter(p => { p.code.startsWith((queryParams.appCode ?? '') + ':PATTERN') }) : (allShellOrgs.data ?? []).filter(o => { ((comsApplications.data ?? []).filter(a => { a.appId == (queryParams.appCode ?? '') }).map(a => { a.namePrefix ?? '' }).join(',')).split(',').filter(pf => { !empty(pf) && (o.code ?? '').startsWith((queryParams.appCode ?? '') + ':' + pf + ':') }).size() > 0 })))) == 0 %>",
+                "visible": "<% !empty(queryParams.appCode) && size((empty(queryParams.appCode) ? [] : ((queryParams.appCode == 'X:CLW') ? (allShellOrgs.data ?? []).filter(p => { (p.code ?? '').startsWith('X:') && (p.code ?? '').contains(':PATTERN:') }).filter(p => { p.code.startsWith((queryParams.appCode ?? '') + ':PATTERN') }) : (allShellOrgs.data ?? []).filter(o => { ((comsApplications.data ?? []).filter(a => { a.appId == (queryParams.appCode ?? '') }).map(a => { a.namePrefix ?? '' }).join(',')).split(',').filter(pf => { !empty(pf) && (o.code ?? '').startsWith((queryParams.appCode ?? '') + ':' + pf + ':') }).size() > 0 })))) == 0 %>",
                 "value": "No shell org patterns found for this application. Use the Add Pattern button above to create one."
               },
               {
@@ -321,12 +303,12 @@
                 "gridType": "LIST",
                 "multiViewStylingEnabled": true,
                 "id": "patternsGrid",
-                "rows": "<% (empty(queryParams.appCode) ? [] : ((queryParams.appCode == 'X:CLW') ? (shellOrgPatterns.data ?? []).filter(p => { (p.code ?? '').startsWith('X:') && (p.code ?? '').contains(':PATTERN:') }).filter(p => { p.code.startsWith((queryParams.appCode ?? '') + ':PATTERN') }) : (allShellOrgs.data ?? []).filter(o => { ((comsApplications.data ?? []).filter(a => { a.appId == (queryParams.appCode ?? '') }).map(a => { a.namePrefix ?? '' }).join(',')).split(',').filter(pf => { !empty(pf) && (o.code ?? '').startsWith((queryParams.appCode ?? '') + ':' + pf + ':') }).size() > 0 }))) %>",
+                "rows": "<% (empty(queryParams.appCode) ? [] : ((queryParams.appCode == 'X:CLW') ? (allShellOrgs.data ?? []).filter(p => { (p.code ?? '').startsWith('X:') && (p.code ?? '').contains(':PATTERN:') }).filter(p => { p.code.startsWith((queryParams.appCode ?? '') + ':PATTERN') }) : (allShellOrgs.data ?? []).filter(o => { ((comsApplications.data ?? []).filter(a => { a.appId == (queryParams.appCode ?? '') }).map(a => { a.namePrefix ?? '' }).join(',')).split(',').filter(pf => { !empty(pf) && (o.code ?? '').startsWith((queryParams.appCode ?? '') + ':' + pf + ':') }).size() > 0 }))) %>",
                 "rowVariableName": "pattern",
                 "enabled": false,
                 "label": "<% 'Patterns for ' + (queryParams.appName ?? queryParams.appCode ?? '') %>",
                 "autoPaging": true,
-                "visible": "<% !empty(queryParams.appCode) && size((empty(queryParams.appCode) ? [] : ((queryParams.appCode == 'X:CLW') ? (shellOrgPatterns.data ?? []).filter(p => { (p.code ?? '').startsWith('X:') && (p.code ?? '').contains(':PATTERN:') }).filter(p => { p.code.startsWith((queryParams.appCode ?? '') + ':PATTERN') }) : (allShellOrgs.data ?? []).filter(o => { ((comsApplications.data ?? []).filter(a => { a.appId == (queryParams.appCode ?? '') }).map(a => { a.namePrefix ?? '' }).join(',')).split(',').filter(pf => { !empty(pf) && (o.code ?? '').startsWith((queryParams.appCode ?? '') + ':' + pf + ':') }).size() > 0 })))) > 0 %>",
+                "visible": "<% !empty(queryParams.appCode) && size((empty(queryParams.appCode) ? [] : ((queryParams.appCode == 'X:CLW') ? (allShellOrgs.data ?? []).filter(p => { (p.code ?? '').startsWith('X:') && (p.code ?? '').contains(':PATTERN:') }).filter(p => { p.code.startsWith((queryParams.appCode ?? '') + ':PATTERN') }) : (allShellOrgs.data ?? []).filter(o => { ((comsApplications.data ?? []).filter(a => { a.appId == (queryParams.appCode ?? '') }).map(a => { a.namePrefix ?? '' }).join(',')).split(',').filter(pf => { !empty(pf) && (o.code ?? '').startsWith((queryParams.appCode ?? '') + ':' + pf + ':') }).size() > 0 })))) > 0 %>",
                 "columns": [
                   {
                     "type": "column",

@@ -37,6 +37,7 @@ run tools/add_empty_messages.py         # "Nothing to show" texts
 run tools/polish.py                     # final pass: labels, About boxes, names, Pacific times
 run tools/ux_improvements.py          # UI recommendations 2026-11-02: help text, Waiting column, counters, links
 run tools/grid_style.py                # one grid format: list look, sortable columns, no +/- on display grids
+run tools/ui_tweaks.py                 # ISC Queue: one Role column
 run tools/collapse_about.py            # About boxes start closed on the long pages
 run tools/merge_nav_about.py           # back links at the top of the About box
 run tools/title_banner.py              # white title tile instead of Workday's square page banner
@@ -46,6 +47,9 @@ run tools/request_audit.py          # REQUEST audit records written by the revie
 run tools/audit_run_id.py           # audit records carry the orchestration run ID (field runId)
 run tools/audit_event_ref.py        # audit records carry their Workday event (field eventWid)
 run tools/graphql_audit.py          # audit records through the Graph API (newest first, sorted on the server)
+run tools/audit_speed.py            # Audit Log: no lookup lists, empty Graph pages skipped
+run tools/som_speed.py              # Shell Org Manager: one organization list, not two
+run tools/arm_speed.py              # Assignable Role Manager: unused position lists dropped
 run tools/audit_filters_more.py      # Audit Log Changed By + Organization filters, Shell Org Detail link
 run tools/excel_export_values.py     # fieldSet columns get an Excel export value (else the export fails)
 run tools/clear_submit_errors.py      # every OK check clears its own earlier errors first
