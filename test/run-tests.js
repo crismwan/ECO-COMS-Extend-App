@@ -1718,6 +1718,18 @@ async function graphqlSuite(token) {
     const overlap = b.r.data.filter((x) => a.r.data.some((y) => y.workdayID.id === x.workdayID.id)).length;
     (b.r.data.length && !overlap ? pass : fail)('GraphQL.offsetAfterFirst', `total ${a.r.total}: page 1 ${a.r.data.length} rows, page 2 ${b.r.data.length} rows, ${overlap} repeated`);
   });
+
+  // 5. A second (non-admin) user: Graph API calls need the "Workday Graph API Applications" domain
+  // (developer.workday.com "Run Graph API Queries on a Page"). Without it the Graph pages fail for them.
+  await test('GraphQL.secondUser', async () => {
+    const token2 = process.env.WD_SECOND_TOKEN || arg('--token2');
+    if (!token2) return skip('GraphQL.secondUser', 'WD_SECOND_TOKEN is not set');
+    let me2; try { me2 = await request('GET', `${API}/common/v1/workers/me`, token2); } catch (e) { return skip('GraphQL.secondUser', 'second token not usable: ' + e.message.slice(0, 120)); }
+    const q = `query { r: ${APP_ID}_COMSAuditLog(dataSource: {${APP_ID}_comsAuditLogs: {}}, orderBy: {timestamp: DESC}, limit: 1) { total } }`;
+    let rest = null; try { rest = (await request('GET', `${BO}/comsAuditLogs?limit=1`, token2)).total; } catch (e) { rest = 'REST ' + e.message.slice(0, 80); }
+    try { const d = await gql(token2, q); pass('GraphQL.secondUser', `${me2.descriptor}: Graph total ${d.r?.total}, REST total ${rest}`); }
+    catch (e) { fail('GraphQL.secondUser', `${me2.descriptor} can't run the audit Graph query (REST total ${rest}): ${e.message.slice(0, 300)}`); }
+  });
 }
 
 // ═══ Data check: every record has the fields its pages display (read-only) ═══
