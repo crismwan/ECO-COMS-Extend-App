@@ -38,16 +38,5 @@
         "axisTitle": "Changes"
       }
     }
-  },
-  "footer": [
-    {
-      "label": "Open Audit Log",
-      "taskReference": {
-        "taskId": "auditLogViewer",
-        "parameterBindings": {
-          "period": "7d"
-        }
-      }
-    }
-  ]
+  }
 }

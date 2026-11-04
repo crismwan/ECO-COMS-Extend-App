@@ -27,8 +27,7 @@ save(P('presentation', 'cards', 'AppActivityChart.card'), {
             {"name": "Shell orgs", "value": "<% day.shellOrgs %>"},
             {"name": "Role assignments", "value": "<% day.assignments %>"},
             {"name": "Role requests", "value": "<% day.requests %>"}],
-        "measurementAxisOptions": {"axisTitle": "Changes"}}},
-    "footer": [{"label": "Open Audit Log", "taskReference": {"taskId": "auditLogViewer", "parameterBindings": {"period": "7d"}}}]})
+        "measurementAxisOptions": {"axisTitle": "Changes"}}}})  # no footer: the Audit Log card beside it already links there (product owner 2026-11-04)
 
 lp = P('presentation', 'hubLanding.pmd')
 landing = json.load(open(lp, encoding='utf-8'))
