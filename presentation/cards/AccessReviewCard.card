@@ -2,12 +2,12 @@
   "id": "AccessReviewCard",
   "header": {
     "title": "Access Review",
-    "subtitle": "Is every role still needed?",
+    "subtitle": "Vacant positions still holding roles",
     "icon": "wd-accent-shield"
   },
   "body": {
     "type": "simpleCard",
-    "value": "Every position holding a shell role, when it last changed and when it was last reviewed. Confirm or remove each one."
+    "value": "Positions whose holder has left but which still carry a shell role. Keep or remove each one."
   },
   "footer": [
     {

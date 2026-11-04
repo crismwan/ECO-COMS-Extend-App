@@ -55,7 +55,7 @@ SUMMARY = {
     'shellOrgDetail': 'One shell organization: its status, its roles and the changes made to it.',
     'bulkTemplateUpload': 'Publish a new version of the bulk role change template.',
     'adminProvisioningView': 'AAA role requests: who can manage shell orgs and submit role requests.',
-    'accessReview': 'Every position holding a shell role. Confirm it is still needed, or manage it.',
+    'accessReview': 'Vacant positions that still hold a shell role. Keep or remove each one.',
 }
 SUB = '<br><span style="color:#374151;font-size:13px">{}</span>'
 if '--tiles' in sys.argv:

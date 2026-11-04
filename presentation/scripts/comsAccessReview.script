@@ -1,7 +1,19 @@
 /* Access Review helpers (tools/build_access_review.py). logs come newest first. */
-var rowsFrom = function(roles) {
+/* IDs (P-00010) of positions with no incumbent (allPositions cf_PositionIsFilled = false). */
+var vacantIds = function(positions) {
+  positions.filter(p => { p.cf_PositionIsFilled == false }).map(p => { '' + (p.cf_PositionID ?? '') });
+};
+
+var allRows = function(roles) {
   list:flatten(roles.map(r => { list:flatten((r.roleAssignments ?? []).filter(ra => { ra.organization != null && r.role != null }).map(ra => { (ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? []).map(p => { { 'role': r.role.descriptor ?? '', 'roleWid': r.role.id ?? '', 'org': ra.organization.descriptor ?? '', 'orgWid': ra.organization.id ?? '', 'pos': p.descriptor ?? '', 'posWid': p.id ?? '' } }) })) }));
 };
+
+/* One row per role, organization and position, kept only where the position is vacant (product owner 2026-11-04:
+   "only keep for vacant positions, so if role assignment incumbent has left"). */
+var rowsFrom = function(roles, vacant) {
+  allRows(roles).filter(r => { vacant.contains(r.pos.substringBefore(' ')) });
+};
+
 
 var lastWhen = function(logs, action, roleName, posWid, posName) {
   let posId = (posName ?? '').substringBefore(' ');
@@ -28,6 +40,8 @@ var countOutside = function(rows, logs) {
 };
 
 {
+  "vacantIds": vacantIds,
+  "allRows": allRows,
   "rowsFrom": rowsFrom,
   "lastWhen": lastWhen,
   "lastChanged": lastChanged,

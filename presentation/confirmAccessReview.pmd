@@ -44,6 +44,22 @@
       ]
     },
     {
+      "name": "positionFill",
+      "baseUrlType": "workday-wql",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "url": "<% 'data?limit=10000&query=' + string:pathEncode('SELECT cf_PositionID, cf_PositionIsFilled FROM allPositions WHERE supervisoryOrganization is not empty') %>",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
       "name": "auditPage0",
       "baseUrlType": "workday-graph",
       "httpMethod": "POST",
@@ -165,15 +181,15 @@
                   "id": "noRowsText",
                   "label": "ⓘ Nothing to show",
                   "enabled": false,
-                  "visible": "<% size(comsAccessReview.rowsFrom(shellRoles.data ?? [])) == 0 %>",
-                  "value": "No positions hold an ECO-COMS shell role right now."
+                  "visible": "<% size(comsAccessReview.rowsFrom(shellRoles.data ?? [], comsAccessReview.vacantIds(positionFill.data ?? []))) == 0 %>",
+                  "value": "No vacant position holds an ECO-COMS shell role."
                 },
                 {
                   "type": "grid",
                   "id": "reviewChecklistGrid",
-                  "label": "Positions Holding Shell Roles",
+                  "label": "Vacant Positions Holding Shell Roles",
                   "rowVariableName": "rv",
-                  "rows": "<% comsAccessReview.rowsFrom(shellRoles.data ?? []) %>",
+                  "rows": "<% comsAccessReview.rowsFrom(shellRoles.data ?? [], comsAccessReview.vacantIds(positionFill.data ?? [])) %>",
                   "doNotAdd": true,
                   "doNotRemove": true,
                   "columns": [
@@ -186,7 +202,13 @@
                         "type": "text",
                         "id": "colRoleText",
                         "enabled": false,
-                        "value": "<% rv.role %>"
+                        "value": "<% rv.role %>",
+                        "valuesOut": [
+                          {
+                            "value": "<% self.value %>",
+                            "valueOutBinding": "postReview.roleName"
+                          }
+                        ]
                       }
                     },
                     {
@@ -198,19 +220,84 @@
                         "type": "text",
                         "id": "colOrgText",
                         "enabled": false,
-                        "value": "<% rv.org %>"
+                        "value": "<% rv.org %>",
+                        "valuesOut": [
+                          {
+                            "value": "<% self.value %>",
+                            "valueOutBinding": "postReview.coName"
+                          }
+                        ]
                       }
                     },
                     {
                       "type": "column",
                       "columnId": "colPosition",
                       "label": "Position",
-                      "sortableAndFilterable": "true",
                       "cellTemplate": {
-                        "type": "text",
-                        "id": "colPositionText",
-                        "enabled": false,
-                        "value": "<% rv.pos %>"
+                        "type": "fieldSet",
+                        "id": "positionFieldSet",
+                        "children": [
+                          {
+                            "type": "text",
+                            "id": "colPositionText",
+                            "enabled": false,
+                            "value": "<% rv.pos %>",
+                            "valuesOut": [
+                              {
+                                "value": "<% self.value %>",
+                                "valueOutBinding": "postReview.positionName"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "hidden",
+                            "id": "roleWidHidden",
+                            "value": "<% rv.roleWid %>",
+                            "valuesOut": [
+                              {
+                                "value": "<% self.value %>",
+                                "valueOutBinding": "postReview.roleWid"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "hidden",
+                            "id": "orgWidHidden",
+                            "value": "<% rv.orgWid %>",
+                            "valuesOut": [
+                              {
+                                "value": "<% self.value %>",
+                                "valueOutBinding": "postReview.orgWid"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "hidden",
+                            "id": "posWidHidden",
+                            "value": "<% rv.posWid %>",
+                            "valuesOut": [
+                              {
+                                "value": "<% self.value %>",
+                                "valueOutBinding": "postReview.positionWid"
+                              },
+                              {
+                                "value": "<% self.value %>",
+                                "valueOutBinding": "postReview.coReferenceId"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "hidden",
+                            "id": "detailsHidden",
+                            "value": "<% 'Access review: ' + rv.pos + ' still needs ' + rv.role + ' on ' + rv.org %>",
+                            "valuesOut": [
+                              {
+                                "value": "<% self.value %>",
+                                "valueOutBinding": "postReview.details"
+                              }
+                            ]
+                          }
+                        ]
                       }
                     },
                     {
@@ -247,34 +334,6 @@
                             "valueOutBinding": "postReview.action"
                           },
                           {
-                            "value": "<% rv.posWid %>",
-                            "valueOutBinding": "postReview.coReferenceId"
-                          },
-                          {
-                            "value": "<% rv.org %>",
-                            "valueOutBinding": "postReview.coName"
-                          },
-                          {
-                            "value": "<% rv.role %>",
-                            "valueOutBinding": "postReview.roleName"
-                          },
-                          {
-                            "value": "<% rv.roleWid %>",
-                            "valueOutBinding": "postReview.roleWid"
-                          },
-                          {
-                            "value": "<% rv.orgWid %>",
-                            "valueOutBinding": "postReview.orgWid"
-                          },
-                          {
-                            "value": "<% rv.pos %>",
-                            "valueOutBinding": "postReview.positionName"
-                          },
-                          {
-                            "value": "<% rv.posWid %>",
-                            "valueOutBinding": "postReview.positionWid"
-                          },
-                          {
                             "value": "<% date:now().format('yyyy-MM-dd') %>",
                             "valueOutBinding": "postReview.effectiveDate"
                           },
@@ -285,10 +344,6 @@
                           {
                             "value": "<% selectedWorker.id ?? '' %>",
                             "valueOutBinding": "postReview.changedByWid"
-                          },
-                          {
-                            "value": "<% 'Access review: ' + rv.pos + ' still needs ' + rv.role + ' on ' + rv.org %>",
-                            "valueOutBinding": "postReview.details"
                           }
                         ]
                       },

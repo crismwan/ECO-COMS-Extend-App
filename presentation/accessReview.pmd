@@ -26,6 +26,22 @@
       ]
     },
     {
+      "name": "positionFill",
+      "baseUrlType": "workday-wql",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "url": "<% 'data?limit=10000&query=' + string:pathEncode('SELECT cf_PositionID, cf_PositionIsFilled FROM allPositions WHERE supervisoryOrganization is not empty') %>",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
       "name": "auditPage0",
       "baseUrlType": "workday-graph",
       "httpMethod": "POST",
@@ -81,7 +97,7 @@
               "type": "richText",
               "id": "titleBannerRichText",
               "enabled": false,
-              "value": "<span style=\"color:#0055B3;font-size:24px\"><b>ECO-COMS: Access Review</b></span><br><span style=\"color:#374151;font-size:13px\">Every position holding a shell role. Confirm it is still needed, or manage it.</span>"
+              "value": "<span style=\"color:#0055B3;font-size:24px\"><b>ECO-COMS: Access Review</b></span><br><span style=\"color:#374151;font-size:13px\">Vacant positions that still hold a shell role. Keep or remove each one.</span>"
             }
           ]
         },
@@ -106,7 +122,7 @@
                   "type": "richText",
                   "id": "aboutRichText",
                   "enabled": false,
-                  "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">Every position that holds an ECO-COMS shell role in Workday, with when ECO-COMS last changed it and when someone last confirmed it is still needed (from the newest 200 Audit Log records). Workday role assignments have no expiry date, so review them here: <b>Confirm</b> records in the Audit Log that the position still needs the role, and <b>Manage</b> opens the role assignment to remove it.</span>"
+                  "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">Vacant positions that still hold an ECO-COMS shell role: the person in the position has left, and Workday keeps the role on the position, so whoever fills it next gets the access. Decide for each one: keep the role (<b>Review All Positions</b>, tick <b>Still Needed</b>; recorded in the Audit Log) or remove it (<b>Manage</b>). Dates come from the newest 200 Audit Log records.</span>"
                 }
               ],
               "collapsible": true,
@@ -126,17 +142,17 @@
                 {
                   "type": "card",
                   "cardId": "CountCard",
-                  "parameters": "<% { 'title': 'Positions', 'subtitle': 'Holding a shell role', 'countText': '' + size(comsAccessReview.rowsFrom(shellRoles.data ?? [])) + ' positions' } %>"
+                  "parameters": "<% { 'title': 'Vacant Positions', 'subtitle': 'Still holding a shell role', 'countText': '' + size(comsAccessReview.rowsFrom(shellRoles.data ?? [], comsAccessReview.vacantIds(positionFill.data ?? []))) + ' vacant positions' } %>"
                 },
                 {
                   "type": "card",
                   "cardId": "CountCard",
-                  "parameters": "<% { 'title': 'Never Reviewed', 'subtitle': 'No review in the Audit Log', 'countText': '' + comsAccessReview.countNeverReviewed(comsAccessReview.rowsFrom(shellRoles.data ?? []), list:flatten([((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.data ?? []) : []), ((((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 100 && !empty(auditPage1.data) && !empty(auditPage1.data.r)) ? (auditPage1.data.r.data ?? []) : [])])) + ' never reviewed' } %>"
+                  "parameters": "<% { 'title': 'Never Reviewed', 'subtitle': 'No review in the Audit Log', 'countText': '' + comsAccessReview.countNeverReviewed(comsAccessReview.rowsFrom(shellRoles.data ?? [], comsAccessReview.vacantIds(positionFill.data ?? [])), list:flatten([((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.data ?? []) : []), ((((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 100 && !empty(auditPage1.data) && !empty(auditPage1.data.r)) ? (auditPage1.data.r.data ?? []) : [])])) + ' never reviewed' } %>"
                 },
                 {
                   "type": "card",
                   "cardId": "CountCard",
-                  "parameters": "<% { 'title': 'Assigned Outside ECO-COMS', 'subtitle': 'No ECO-COMS change on record', 'countText': '' + comsAccessReview.countOutside(comsAccessReview.rowsFrom(shellRoles.data ?? []), list:flatten([((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.data ?? []) : []), ((((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 100 && !empty(auditPage1.data) && !empty(auditPage1.data.r)) ? (auditPage1.data.r.data ?? []) : [])])) + ' assigned outside' } %>"
+                  "parameters": "<% { 'title': 'Assigned Outside ECO-COMS', 'subtitle': 'No ECO-COMS change on record', 'countText': '' + comsAccessReview.countOutside(comsAccessReview.rowsFrom(shellRoles.data ?? [], comsAccessReview.vacantIds(positionFill.data ?? [])), list:flatten([((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.data ?? []) : []), ((((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 100 && !empty(auditPage1.data) && !empty(auditPage1.data.r)) ? (auditPage1.data.r.data ?? []) : [])])) + ' assigned outside' } %>"
                 }
               ]
             }
@@ -156,8 +172,8 @@
                   "id": "noRowsText",
                   "label": "ⓘ Nothing to show",
                   "enabled": false,
-                  "visible": "<% size(comsAccessReview.rowsFrom(shellRoles.data ?? [])) == 0 %>",
-                  "value": "No positions hold an ECO-COMS shell role right now."
+                  "visible": "<% size(comsAccessReview.rowsFrom(shellRoles.data ?? [], comsAccessReview.vacantIds(positionFill.data ?? []))) == 0 %>",
+                  "value": "No vacant position holds an ECO-COMS shell role."
                 },
                 {
                   "type": "button",
@@ -171,10 +187,10 @@
                 {
                   "type": "grid",
                   "id": "accessReviewGrid",
-                  "label": "Positions Holding Shell Roles",
+                  "label": "Vacant Positions Holding Shell Roles",
                   "rowVariableName": "rv",
                   "readOnly": true,
-                  "rows": "<% comsAccessReview.rowsFrom(shellRoles.data ?? []) %>",
+                  "rows": "<% comsAccessReview.rowsFrom(shellRoles.data ?? [], comsAccessReview.vacantIds(positionFill.data ?? [])) %>",
                   "columns": [
                     {
                       "type": "column",

@@ -25,9 +25,21 @@ load = lambda n: json.load(open(os.path.join(ROOT, n), encoding='utf-8'))
 def save(n, d): open(os.path.join(ROOT, n), 'w', encoding='utf-8').write(json.dumps(d, indent=2, ensure_ascii=False) + '\n')
 
 SCRIPT = '''/* Access Review helpers (tools/build_access_review.py). logs come newest first. */
-var rowsFrom = function(roles) {
+/* IDs (P-00010) of positions with no incumbent (allPositions cf_PositionIsFilled = false). */
+var vacantIds = function(positions) {
+  positions.filter(p => { p.cf_PositionIsFilled == false }).map(p => { '' + (p.cf_PositionID ?? '') });
+};
+
+var allRows = function(roles) {
   list:flatten(roles.map(r => { list:flatten((r.roleAssignments ?? []).filter(ra => { ra.organization != null && r.role != null }).map(ra => { (ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? []).map(p => { { 'role': r.role.descriptor ?? '', 'roleWid': r.role.id ?? '', 'org': ra.organization.descriptor ?? '', 'orgWid': ra.organization.id ?? '', 'pos': p.descriptor ?? '', 'posWid': p.id ?? '' } }) })) }));
 };
+
+/* One row per role, organization and position, kept only where the position is vacant (product owner 2026-11-04:
+   "only keep for vacant positions, so if role assignment incumbent has left"). */
+var rowsFrom = function(roles, vacant) {
+  allRows(roles).filter(r => { vacant.contains(r.pos.substringBefore(' ')) });
+};
+
 
 var lastWhen = function(logs, action, roleName, posWid, posName) {
   let posId = (posName ?? '').substringBefore(' ');
@@ -54,6 +66,8 @@ var countOutside = function(rows, logs) {
 };
 
 {
+  "vacantIds": vacantIds,
+  "allRows": allRows,
   "rowsFrom": rowsFrom,
   "lastWhen": lastWhen,
   "lastChanged": lastChanged,
@@ -64,10 +78,14 @@ var countOutside = function(rows, logs) {
 '''
 open(os.path.join(ROOT, 'scripts', 'comsAccessReview.script'), 'w', encoding='utf-8').write(SCRIPT)
 
-ROWS = "comsAccessReview.rowsFrom(shellRoles.data ?? [])"
+ROWS = "comsAccessReview.rowsFrom(shellRoles.data ?? [], comsAccessReview.vacantIds(positionFill.data ?? []))"
 LOGS = "list:flatten([auditPage0.data ?? [], auditPage1.data ?? []])"
 NOTE = lambda html: {"type": "richText", "id": "aboutRichText", "enabled": False,
     "value": '<span style="color:#0055B7;font-size:12px;font-weight:700">ⓘ </span><span style="color:#374151;font-size:12px">' + html + '</span>'}
+# fill status of every position (static WQL, no user input); filtered to vacant IDs in comsAccessReview.vacantIds
+POSITION_FILL = {"name": "positionFill", "baseUrlType": "workday-wql", "authType": "sso", "isCollection": True, "bestEffort": "true",
+    "url": "<% 'data?limit=10000&query=' + string:pathEncode('SELECT cf_PositionID, cf_PositionIsFilled FROM allPositions WHERE supervisoryOrganization is not empty') %>",
+    "failOnStatusCodes": FOS([400, 429])}
 AUDIT_EPS = [
     {"name": "auditLogCount", "baseUrlType": "BUSINESS-OBJECT", "url": "/comsAuditLogs?limit=1", "authType": "sso", "failOnStatusCodes": FOS([400, 429])},
     {"name": "auditPage0", "baseUrlType": "BUSINESS-OBJECT", "authType": "sso", "isCollection": True, "failOnStatusCodes": FOS([429]),
@@ -84,26 +102,25 @@ count = lambda title, sub, text: {"type": "card", "cardId": "CountCard",
 page = {"id": "accessReview", "securityDomains": ["ManageCOMSShellOrgs"], "include": ["comsAccessReview.script"],
   "endPoints": [
     {"name": "shellRoles", "baseUrlType": "workday-wql", "url": "data", "authType": "sso", "bestEffort": "true",
-     "wqlQuery": {"queryId": "allShellAssignableRolesinTenant"}, "failOnStatusCodes": FOS([400, 429])}] + AUDIT_EPS,
+     "wqlQuery": {"queryId": "allShellAssignableRolesinTenant"}, "failOnStatusCodes": FOS([400, 429])}, POSITION_FILL] + AUDIT_EPS,
   "presentation": {"pageType": "VIEW", "headerSize": "STANDARD", "title": {"type": "title", "label": "ECO-COMS: Access Review"},
     "body": {"type": "basicFormLayout", "id": "accessReviewForm", "sections": [
       {"type": "layoutSection", "id": "navSection", "children": [
         {"type": "button", "label": "← Home", "taskReference": {"taskId": "home"}, "action": "LINK"}]},
       {"type": "layoutSection", "id": "aboutSection", "children": [{"type": "fieldSet", "id": "aboutFieldSet", "title": "About This Page", "children": [NOTE(
-        "Every position that holds an ECO-COMS shell role in Workday, with when ECO-COMS last changed it and when someone last "
-        "confirmed it is still needed (from the newest 200 Audit Log records). Workday role assignments have no expiry date, so "
-        "review them here: <b>Confirm</b> records in the Audit Log that the position still needs the role, and <b>Manage</b> "
-        "opens the role assignment to remove it.")]}]},
+        "Vacant positions that still hold an ECO-COMS shell role: the person in the position has left, and Workday keeps the role "
+        "on the position, so whoever fills it next gets the access. Decide for each one: keep the role (<b>Review All Positions</b>, "
+        "tick <b>Still Needed</b>; recorded in the Audit Log) or remove it (<b>Manage</b>). Dates come from the newest 200 Audit Log records.")]}]},
       {"type": "layoutSection", "id": "summaryCardsSection", "children": [{"type": "cardContainer", "id": "accessReviewCardContainer", "layout": "grid", "cards": [
-        count("Positions", "Holding a shell role", "'' + size(" + ROWS + ") + ' positions'"),
+        count("Vacant Positions", "Still holding a shell role", "'' + size(" + ROWS + ") + ' vacant positions'"),
         count("Never Reviewed", "No review in the Audit Log", "'' + comsAccessReview.countNeverReviewed(" + ROWS + ", " + LOGS + ") + ' never reviewed'"),
         count("Assigned Outside ECO-COMS", "No ECO-COMS change on record", "'' + comsAccessReview.countOutside(" + ROWS + ", " + LOGS + ") + ' assigned outside'")]}]},
       {"type": "layoutSection", "id": "gridSection", "children": [{"type": "fieldSet", "id": "reviewFieldSet", "title": "Role Assignments", "children": [
         {"type": "text", "id": "noRowsText", "label": "ⓘ Nothing to show", "enabled": False, "visible": "<% size(" + ROWS + ") == 0 %>",
-         "value": "No positions hold an ECO-COMS shell role right now."},
+         "value": "No vacant position holds an ECO-COMS shell role."},
         {"type": "button", "id": "reviewAllButton", "label": "Review All Positions", "action": "PRIMARY",
          "taskReference": {"taskId": "confirmAccessReview"}},
-        {"type": "grid", "id": "accessReviewGrid", "label": "Positions Holding Shell Roles", "rowVariableName": "rv", "readOnly": True,
+        {"type": "grid", "id": "accessReviewGrid", "label": "Vacant Positions Holding Shell Roles", "rowVariableName": "rv", "readOnly": True,
          "rows": "<% " + ROWS + " %>",
          "columns": [
            txt("colRole", "Role", "<% rv.role %>"),
@@ -119,16 +136,25 @@ page = {"id": "accessReview", "securityDomains": ["ManageCOMSShellOrgs"], "inclu
 save('accessReview.pmd', page)
 
 GOUT = lambda field, value: {"value": value, "valueOutBinding": "postReview." + field}
+# At OK the grid's row variable (rv) no longer exists ("Unknown Variable found: rv.posWid", live 2026-11-04), so every
+# row value travels in the row's own cells (evaluated at page load) and the tick box binds only constants.
 REVIEW_OUT = [
     GOUT("timestamp", "<% date:now().format(\"yyyy-MM-dd'T'HH:mm:ss'Z'\") %>"),
     GOUT("objectType", "Role Assignment"), GOUT("action", "REVIEW"),
-    GOUT("coReferenceId", "<% rv.posWid %>"), GOUT("coName", "<% rv.org %>"),
-    GOUT("roleName", "<% rv.role %>"), GOUT("roleWid", "<% rv.roleWid %>"), GOUT("orgWid", "<% rv.orgWid %>"),
-    GOUT("positionName", "<% rv.pos %>"), GOUT("positionWid", "<% rv.posWid %>"),
     GOUT("effectiveDate", "<% date:now().format('yyyy-MM-dd') %>"),
     GOUT("triggeredBy", "<% selectedWorker.descriptor ?? '' %>"), GOUT("changedByWid", "<% selectedWorker.id ?? '' %>"),
-    GOUT("details", "<% 'Access review: ' + rv.pos + ' still needs ' + rv.role + ' on ' + rv.org %>"),
 ]
+cell = lambda cid, label, value, outs: {"type": "column", "columnId": cid, "label": label, "sortableAndFilterable": "true",
+    "cellTemplate": {"type": "text", "id": cid + "Text", "enabled": False, "value": value,
+                     "valuesOut": [GOUT(f, "<% self.value %>") for f in outs]}}
+hid = lambda hid_, value, outs: {"type": "hidden", "id": hid_, "value": value, "valuesOut": [GOUT(f, "<% self.value %>") for f in outs]}
+POSITION_CELL = {"type": "column", "columnId": "colPosition", "label": "Position", "cellTemplate": {
+    "type": "fieldSet", "id": "positionFieldSet", "children": [
+        {"type": "text", "id": "colPositionText", "enabled": False, "value": "<% rv.pos %>", "valuesOut": [GOUT("positionName", "<% self.value %>")]},
+        hid("roleWidHidden", "<% rv.roleWid %>", ["roleWid"]),
+        hid("orgWidHidden", "<% rv.orgWid %>", ["orgWid"]),
+        hid("posWidHidden", "<% rv.posWid %>", ["positionWid", "coReferenceId"]),
+        hid("detailsHidden", "<% 'Access review: ' + rv.pos + ' still needs ' + rv.role + ' on ' + rv.org %>", ["details"])]}}
 # Checklist (product owner 2026-11-04: "the checklist worked best so you can review all at once"): every row on one
 # EDIT page; each ticked row is its own POST (per-row grid submission), unticked rows are excluded.
 confirm = {"id": "confirmAccessReview", "securityDomains": ["ManageCOMSShellOrgs"], "include": ["comsAccessReview.script"],
@@ -136,7 +162,7 @@ confirm = {"id": "confirmAccessReview", "securityDomains": ["ManageCOMSShellOrgs
     {"name": "selectedWorker", "baseUrlType": "COMMON", "url": "/workers/me", "authType": "sso", "bestEffort": "true",
      "failOnStatusCodes": FOS([400, 403, 429])},
     {"name": "shellRoles", "baseUrlType": "workday-wql", "url": "data", "authType": "sso", "bestEffort": "true",
-     "wqlQuery": {"queryId": "allShellAssignableRolesinTenant"}, "failOnStatusCodes": FOS([400, 429])}] + AUDIT_EPS,
+     "wqlQuery": {"queryId": "allShellAssignableRolesinTenant"}, "failOnStatusCodes": FOS([400, 429])}, POSITION_FILL] + AUDIT_EPS,
   "outboundData": {"outboundEndPoints": [
     {"name": "postReview", "baseUrlType": "BUSINESS-OBJECT", "url": "/comsAuditLogs", "httpMethod": "POST", "authType": "sso",
      "exclude": "<% stillNeededCheckBox.value != true %>", "failOnStatusCodes": FOS([400, 403, 429, 500])}]},
@@ -149,13 +175,13 @@ confirm = {"id": "confirmAccessReview", "securityDomains": ["ManageCOMSShellOrgs
         "<b>Manage</b> on the Access Review.")]}]},
       {"type": "layoutSection", "id": "reviewSection", "children": [{"type": "fieldSet", "id": "reviewFieldSet", "title": "Role Assignments", "children": [
         {"type": "text", "id": "noRowsText", "label": "ⓘ Nothing to show", "enabled": False, "visible": "<% size(" + ROWS + ") == 0 %>",
-         "value": "No positions hold an ECO-COMS shell role right now."},
-        {"type": "grid", "id": "reviewChecklistGrid", "label": "Positions Holding Shell Roles", "rowVariableName": "rv",
+         "value": "No vacant position holds an ECO-COMS shell role."},
+        {"type": "grid", "id": "reviewChecklistGrid", "label": "Vacant Positions Holding Shell Roles", "rowVariableName": "rv",
          "rows": "<% " + ROWS + " %>", "doNotAdd": True, "doNotRemove": True,
          "columns": [
-           txt("colRole", "Role", "<% rv.role %>"),
-           txt("colOrg", "Organization", "<% rv.org %>"),
-           txt("colPosition", "Position", "<% rv.pos %>"),
+           cell("colRole", "Role", "<% rv.role %>", ["roleName"]),
+           cell("colOrg", "Organization", "<% rv.org %>", ["coName"]),
+           POSITION_CELL,
            txt("colReviewed", "Last Reviewed", "<% comsAccessReview.lastReviewed(" + LOGS + ", rv.role, rv.posWid, rv.pos) %>"),
            {"type": "column", "columnId": "colStillNeeded", "label": "Still Needed", "cellTemplate": {
              "type": "checkBox", "id": "stillNeededCheckBox", "value": "<% false %>", "valuesOut": REVIEW_OUT}}]}]}]}]},
@@ -175,8 +201,8 @@ save(amd_name, amd)
 
 save(os.path.join('cards', 'AccessReviewCard.card'), {
     "id": "AccessReviewCard",
-    "header": {"title": "Access Review", "subtitle": "Is every role still needed?", "icon": "wd-accent-shield"},
-    "body": {"type": "simpleCard", "value": "Every position holding a shell role, when it last changed and when it was last reviewed. Confirm or remove each one."},
+    "header": {"title": "Access Review", "subtitle": "Vacant positions still holding roles", "icon": "wd-accent-shield"},
+    "body": {"type": "simpleCard", "value": "Positions whose holder has left but which still carry a shell role. Keep or remove each one."},
     "footer": [{"label": "Open Access Review", "taskReference": {"taskId": "accessReview"}}]})
 hub = load('hubLanding.pmd')
 
