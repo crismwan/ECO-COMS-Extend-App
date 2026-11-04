@@ -198,10 +198,13 @@
                       "label": "Role",
                       "sortableAndFilterable": "true",
                       "cellTemplate": {
-                        "type": "text",
-                        "id": "colRoleText",
+                        "type": "instanceList",
+                        "id": "colRoleInstanceList",
+                        "view": true,
+                        "relatedTask": true,
                         "enabled": false,
-                        "value": "<% rv.role %>"
+                        "widKey": "id",
+                        "values": "<% empty(rv.roleWid) ? [] : [{ 'id': rv.roleWid, 'descriptor': rv.role }] %>"
                       }
                     },
                     {
@@ -210,10 +213,13 @@
                       "label": "Organization",
                       "sortableAndFilterable": "true",
                       "cellTemplate": {
-                        "type": "text",
-                        "id": "colOrgText",
+                        "type": "instanceList",
+                        "id": "colOrgInstanceList",
+                        "view": true,
+                        "relatedTask": true,
                         "enabled": false,
-                        "value": "<% rv.org %>"
+                        "widKey": "id",
+                        "values": "<% empty(rv.orgWid) ? [] : [{ 'id': rv.orgWid, 'descriptor': rv.org }] %>"
                       }
                     },
                     {
@@ -222,10 +228,13 @@
                       "label": "Position",
                       "sortableAndFilterable": "true",
                       "cellTemplate": {
-                        "type": "text",
-                        "id": "colPositionText",
+                        "type": "instanceList",
+                        "id": "colPositionInstanceList",
+                        "view": true,
+                        "relatedTask": true,
                         "enabled": false,
-                        "value": "<% rv.pos %>"
+                        "widKey": "id",
+                        "values": "<% empty(rv.posWid) ? [] : [{ 'id': rv.posWid, 'descriptor': rv.pos }] %>"
                       }
                     },
                     {

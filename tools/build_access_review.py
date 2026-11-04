@@ -94,6 +94,10 @@ AUDIT_EPS = [
      "url": "<% let t = auditLogCount.total ?? 0; let end = (t - 100) < 0 ? 0 : (t - 100); let start = (end - 100) < 0 ? 0 : (end - 100); let cnt = end - start; '/comsAuditLogs?limit=' + (cnt > 0 ? cnt : 1) + '&offset=' + (cnt > 0 ? start : t) %>"}]
 txt = lambda cid, label, value: {"type": "column", "columnId": cid, "label": label, "sortableAndFilterable": "true",
     "cellTemplate": {"type": "text", "id": cid + "Text", "enabled": False, "value": value}}
+# Workday instance links with related actions (product owner 2026-11-04), as on Shell Org Manager's role grid; VIEW page only
+inst = lambda cid, label, name, wid: {"type": "column", "columnId": cid, "label": label, "sortableAndFilterable": "true",
+    "cellTemplate": {"type": "instanceList", "id": cid + "InstanceList", "view": True, "relatedTask": True, "enabled": False,
+                     "widKey": "id", "values": "<% empty(rv." + wid + ") ? [] : [{ 'id': rv." + wid + ", 'descriptor': rv." + name + " }] %>"}}
 ROW_PARAMS = {"role": "<% rv.role %>", "roleWid": "<% rv.roleWid %>", "org": "<% rv.org %>", "orgWid": "<% rv.orgWid %>",
               "pos": "<% rv.pos %>", "posWid": "<% rv.posWid %>"}
 count = lambda title, sub, text: {"type": "card", "cardId": "CountCard",
@@ -123,9 +127,9 @@ page = {"id": "accessReview", "securityDomains": ["ManageCOMSShellOrgs"], "inclu
         {"type": "grid", "id": "accessReviewGrid", "label": "Vacant Positions Holding Shell Roles", "rowVariableName": "rv", "readOnly": True,
          "rows": "<% " + ROWS + " %>",
          "columns": [
-           txt("colRole", "Role", "<% rv.role %>"),
-           txt("colOrg", "Organization", "<% rv.org %>"),
-           txt("colPosition", "Position", "<% rv.pos %>"),
+           inst("colRole", "Role", "role", "roleWid"),
+           inst("colOrg", "Organization", "org", "orgWid"),
+           inst("colPosition", "Position", "pos", "posWid"),
            txt("colChanged", "Last Changed in ECO-COMS", "<% comsAccessReview.lastChanged(" + LOGS + ", rv.role, rv.posWid, rv.pos) %>"),
            txt("colReviewed", "Last Reviewed", "<% comsAccessReview.lastReviewed(" + LOGS + ", rv.role, rv.posWid, rv.pos) %>"),
            {"type": "column", "columnId": "colManage", "label": "Manage", "cellTemplate": {
