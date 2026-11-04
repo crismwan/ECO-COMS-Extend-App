@@ -46,7 +46,7 @@ const ORCH = `${API}/orchestrate/v1/apps/${APP_ID}/orchestrations`;
 const argv = process.argv.slice(2);
 const arg = (name) => { const i = argv.indexOf(name); return i === -1 ? null : argv[i + 1]; };
 const VERBOSE = argv.includes('--verbose');
-const SUITES_ALL = ['static', 'smoke', 'full', 'cleanup', 'isu', 'repair', 'seconduser', 'purge', 'demoseed', 'datacheck', 'probe', 'seedapps', 'patternguard'];
+const SUITES_ALL = ['static', 'smoke', 'full', 'cleanup', 'isu', 'repair', 'seconduser', 'purge', 'demoseed', 'datacheck', 'probe', 'seedapps', 'patternguard', 'graphql'];
 const suiteArg = arg('--suite') || argv.find((a) => !a.startsWith('--') && SUITES_ALL.some((s) => a.split(',').includes(s))) || 'smoke';
 const SUITES = suiteArg.split(',').map((s) => s.trim()).filter(Boolean);
 for (const s of SUITES) if (!SUITES_ALL.includes(s)) { console.error(`Unknown suite "${s}". Use: ${SUITES_ALL.join(', ')}`); process.exit(2); }
@@ -1602,6 +1602,54 @@ async function probe(token) {
   pass('Probe', `${apps.length} application record(s), ${Object.keys(byApp).length} application codes in Workday`);
 }
 
+// ═══ GraphQL probe (read-only): what the Graph API schema offers for this app's objects ═══
+// Names per developer.workday.com "Model Components in the Graph API Schema":
+// query <appRef>_<BusinessObject>(dataSource: {<appRef>_<collection>: {}}, where, limit, offset).
+const GQL = `${API}/graphql/v1`;
+async function gql(token, query, variables) {
+  const r = await request('POST', GQL, token, { query, variables: variables || {} });
+  if (r && r.errors && r.errors.length) throw new Error('GraphQL: ' + JSON.stringify(r.errors).slice(0, 400));
+  return r.data;
+}
+async function graphqlSuite(token) {
+  console.log('\n-- GraphQL (read-only) --');
+  const objs = [['COMSAuditLog', 'comsAuditLogs'], ['COMSAssignableRole', 'comsAssignableRoles'],
+    ['COMSShellOrgRequest', 'comsShellOrgRequests'], ['COMSApplication', 'comsApplications'], ['COMSBulkRun', 'comsBulkRuns']];
+  const typeInfo = async (name) => {
+    const d = await gql(token, `query($n: String!) { __type(name: $n) { name kind fields { name type { name kind ofType { name kind } } } inputFields { name type { name kind ofType { name kind } } } } }`, { n: name });
+    return d.__type;
+  };
+  // 1. The root query fields for this app.
+  await test('GraphQL.schema', async () => {
+    const d = await gql(token, `{ __schema { queryType { fields(includeDeprecated: false) { name args { name type { name kind ofType { name kind } } } type { name kind ofType { name } } } } } }`);
+    const mine = d.__schema.queryType.fields.filter((f) => f.name.startsWith(APP_ID));
+    mine.forEach((f) => console.log(`   QUERY ${f.name} -> ${f.type.name || f.type.ofType?.name} args: ${f.args.map((a) => a.name + ':' + (a.type.name || a.type.ofType?.name)).join(', ')}`));
+    if (!mine.length) throw new Error('no query fields start with ' + APP_ID);
+    pass('GraphQL.schema', `${mine.length} query field(s) for this app`);
+    for (const f of mine) {
+      for (const a of f.args.filter((x) => ['where', 'dataSource'].includes(x.name))) {
+        const tn = a.type.name || a.type.ofType?.name; const t = await typeInfo(tn);
+        console.log(`   ${f.name}.${a.name} (${tn}): ${(t?.inputFields || []).map((x) => x.name + ':' + (x.type.name || x.type.ofType?.name)).join(', ')}`);
+      }
+      const rt = f.type.name || f.type.ofType?.name; const t = await typeInfo(rt);
+      const dataF = (t?.fields || []).find((x) => x.name === 'data');
+      const itemT = dataF && (dataF.type.name || dataF.type.ofType?.name);
+      const it = itemT && await typeInfo(itemT);
+      console.log(`   ${f.name} result ${rt}: ${(t?.fields || []).map((x) => x.name).join(', ')}; item ${itemT}: ${(it?.fields || []).map((x) => x.name + ':' + (x.type.name || x.type.ofType?.name)).join(', ')}`);
+    }
+  });
+  // 2. Totals agree with REST.
+  for (const [obj, coll] of objs) {
+    await test(`GraphQL.total.${obj}`, async () => {
+      const q = `query { r: ${APP_ID}_${obj}(dataSource: {${APP_ID}_${coll}: {}}, limit: 1) { total data { descriptor workdayID { id } } } }`;
+      const t0 = Date.now(); const d = await gql(token, q); const ms = Date.now() - t0;
+      const rest = (await request('GET', `${BO}/${coll}?limit=1`, token)).total;
+      const g = d.r.total;
+      (String(g) === String(rest) ? pass : fail)(`GraphQL.total.${obj}`, `GraphQL total ${g}, REST total ${rest} (${ms} ms); first: ${d.r.data?.[0]?.descriptor ?? '-'}`);
+    });
+  }
+}
+
 // ═══ Data check: every record has the fields its pages display (read-only) ═══
 async function dataCheck(token) {
   console.log('\n-- Data check (read-only) --');
@@ -1777,6 +1825,7 @@ async function demoSeed(token, me) {
         if (live.includes('demoseed')) await demoSeed(token, me);
         if (live.includes('datacheck')) await dataCheck(token);
         if (live.includes('probe')) await probe(token);
+        if (live.includes('graphql')) await graphqlSuite(token);
         if (live.includes('seedapps')) await seedApps(token);
         if (live.includes('patternguard')) await patternGuard(token, me);
       }
