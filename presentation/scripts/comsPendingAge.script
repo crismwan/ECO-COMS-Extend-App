@@ -1,0 +1,45 @@
+/* Pending Requests by Age (tools/build_pending_age.py). Pure functions; dates compared as yyyy-MM-dd. */
+var isWeekday = function(d) {
+  let day = d.format('E');
+  day != 'Sat' && day != 'Sun';
+};
+
+var isAaa = function(r) {
+  (r.roleName ?? '').startsWith('Organizations and Roles Assignment Administrator');
+};
+
+/* Business days a request has waited (0 = requested today); 99 when older than 60 days. Same count as the ISC Queue's Waiting column. */
+var businessAge = function(r, days, keys) {
+  let i = keys.indexOf(('' + r.requestedDate).substring(0, 10));
+  i < 0 ? 99 : days.subList(0, i).filter(d => { isWeekday(d) }).size();
+};
+
+var bucketOf = function(n) {
+  n <= 1 ? '0-1 days' : (n <= 3 ? '2-3 days' : (n <= 5 ? '4-5 days' : 'Over 5 days'));
+};
+
+var pending = function(list) {
+  list.filter(r => { r.status == 'Pending ISC Review' && !empty(r.requestedDate) });
+};
+
+var buckets = function(list) {
+  let days = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59].map(n => { date:now().minusDays(n) });
+  let keys = days.map(d => { d.format('yyyy-MM-dd') });
+  let aged = pending(list).map(r => { { 'b': bucketOf(businessAge(r, days, keys)), 'aaa': isAaa(r) } });
+  ['0-1 days', '2-3 days', '4-5 days', 'Over 5 days'].map(b => { { 'age': b, 'assignable': aged.filter(a => { a.b == b && !a.aaa }).size(), 'aaa': aged.filter(a => { a.b == b && a.aaa }).size() } });
+};
+
+var totalText = function(list) {
+  let n = pending(list).size();
+  n == 0 ? 'Nothing waiting for ISC review' : ('' + n + ' waiting for ISC review');
+};
+
+{
+  "isWeekday": isWeekday,
+  "isAaa": isAaa,
+  "businessAge": businessAge,
+  "bucketOf": bucketOf,
+  "pending": pending,
+  "buckets": buckets,
+  "totalText": totalText
+}

@@ -28,6 +28,7 @@ run tools/build_schema_pattern.py      # Add Shell Org Pattern for any applicati
 run tools/build_insights.py             # Insights page across the business objects + lean reports
 run tools/build_access_review.py        # Access Review page + hub card (role assignments still needed?)
 run tools/build_activity_chart.py      # App Activity chart (7 days by area) on the RBAC Hub
+run tools/build_pending_age.py         # Pending Requests by Age chart on the RBAC Hub
 run tools/build_home_cards.py           # Home card data orchestrations (Workday Home Card wrap once the template exists)
 run tools/patch_pattern_orchestrations.py  # pattern guards + org subtypes in the create orchestrations
 run tools/title_case.py                 # headings and card titles in Title Case

@@ -5,7 +5,8 @@
   ],
   "include": [
     "comsRequestStats.script",
-    "comsAuditFilters.script"
+    "comsAuditFilters.script",
+    "comsPendingAge.script"
   ],
   "endPoints": [
     {
@@ -253,7 +254,7 @@
             {
               "type": "cardContainer",
               "id": "actionsCardContainer",
-              "layout": "grid",
+              "layout": "masonry",
               "cards": [
                 {
                   "type": "card",
@@ -266,6 +267,11 @@
                 {
                   "type": "card",
                   "cardId": "HomeRoleRequestActionsCard"
+                },
+                {
+                  "type": "card",
+                  "cardId": "PendingAgeChart",
+                  "parameters": "<% { 'ages': comsPendingAge.buckets(list:flatten([pendingRequestsPage0.data ?? [], pendingRequestsPage1.data ?? [], pendingRequestsPage2.data ?? []])), 'totalText': comsPendingAge.totalText(list:flatten([pendingRequestsPage0.data ?? [], pendingRequestsPage1.data ?? [], pendingRequestsPage2.data ?? []])) } %>"
                 }
               ]
             }

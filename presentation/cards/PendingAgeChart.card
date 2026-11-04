@@ -1,0 +1,38 @@
+{
+  "id": "PendingAgeChart",
+  "parameters": [
+    "ages",
+    "totalText"
+  ],
+  "header": {
+    "title": "Pending Requests by Age",
+    "subtitle": "<% totalText ?? \"\" %>",
+    "icon": "wd-accent-inbox"
+  },
+  "body": {
+    "type": "chartCard",
+    "chart": {
+      "type": "stackedBarChart2",
+      "id": "pendingAgeStackedBarChart",
+      "data": "<% ages ?? [] %>",
+      "dataVariableName": "age",
+      "categoryDataSet": {
+        "name": "Business days waiting",
+        "value": "<% age.age %>"
+      },
+      "measurementDataSets": [
+        {
+          "name": "Assignable roles",
+          "value": "<% age.assignable %>"
+        },
+        {
+          "name": "AAA roles",
+          "value": "<% age.aaa %>"
+        }
+      ],
+      "measurementAxisOptions": {
+        "axisTitle": "Requests"
+      }
+    }
+  }
+}
