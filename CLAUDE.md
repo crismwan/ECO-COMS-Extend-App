@@ -1700,7 +1700,11 @@ Referenced from a PMD like any other card (`cardId` must match the card file nam
 
 Each `taskId` referenced by a pill must exist in the AMD `tasks` array.
 
+**Pills have no `render`** (developer.workday.com "pillCard": a pill is only `label` + `taskReference`), so a pill can't be hidden on its own. Hide or show a whole card with the `card`'s `render` in the `cardContainer` (used live 2026-11-04 for an Organization filter card that appears only while one is picked). When several pill cards drive one page's query params, give every pill every param, or switching one filter drops the others.
+
 **Pills as filters and action rows (confirmed live 2026-10-31):** a pill's `taskReference` takes `parameterBindings`, so a pill card can drive a page's query-param filters (the Audit Log's `?period=7d` came through). Mark the current choice by scripting the label from card parameters, double-quoted only: `"label": "<% period == \"7d\" ? \"✓ Last 7 days\" : \"Last 7 days\" %>"`. Pills wrap side by side, so they replace a column of stacked buttons. Workday renders buttons in a section one per row; there is no row layout for plain buttons.
+
+**Collapsible boxes (confirmed live):** `fieldSet` with `"collapsible": true, "initializeCollapsed": true` starts closed with an arrow; pair it with a one-line summary that stays visible.
 
 **Card rows:** the number of cards per row follows the page width (three in a ~1440px window, four at 1600px, confirmed live 2026-11-01), so a fixed 'three per row' plan leaves gaps on wider screens. Put related cards in **one** `masonry` container rather than two half-full rows. Card subtitles show two lines (about 40 characters) and are then cut off with "…"; keep them short. A card's `render` hides it conditionally (used on the error page). A `cardContainer` can follow a `fieldSet` in the same `layoutSection`, which keeps help text and its action card in one box.
 
@@ -2134,6 +2138,10 @@ A `button` widget's `action` attribute controls its visual style and role. Confi
 ### Excel export with button cells
 
 With `excelExportEnabled`, a `button` column needs `"excel": {"enabled": false}` **on the column** (not on the cell widget, which the build ignored), or the App Hub build fails: "To export a column with non-basic widget, configure the export properties in the excel attribute" (live 2026-11-02; not raised for every grid, so add it always).
+
+**A `fieldSet` cell breaks the whole export** (live 2026-11-04): with `excelExportEnabled`, one `fieldSet` column without an `excel.value` makes Export to Excel fail for the grid ("attempted to resolve exporter, but no exporter found for widget ...StandardFieldSet"); the user just gets no file. `instanceList` and `text` columns export without settings. Give every `fieldSet` column `"excel": {"value": "<% row.someField ?? '' %>"}` (or `enabled: false`); the grid view doesn't change. Exports can't carry hyperlinks (`valueType` is `boolean`, `date`, `number` or `string`), so write an address as text, e.g. a Workday instance page `https://<host>/<tenant>/d/wid/<WID>.htmld` (`tenant` is a predefined app variable; there's none for the host).
+
+**Checking an export without downloading it:** the Export to Excel click calls `GET .../w/excel/create/<id>`, which returns `{"docReadyUri": ".../w/excel/download/<id>?fileName=<grid label>.xlsx"}` or an `Application_Error` with the reason. Record the request in the page (wrap `XMLHttpRequest.prototype.open`), fetch it again, then fetch `docReadyUri` and unzip `xl/worksheets/sheet1.xml` with `DecompressionStream('deflate-raw')`.
 
 ### `autoPaging`
 
@@ -2666,7 +2674,6 @@ Source: developer.workday.com "Profile Group", "Add Profile Groups", "Profile Gr
 
 ### Widgets and attributes not yet tried live
 
-- **Collapsible boxes:** `fieldSet` with `"collapsible": true, "initializeCollapsed": true` (for long help text).
 - **Page errors from script:** `presentation.applicationExceptions: [{ "type": "applicationException", "severity": "ERROR", "message": "...", "render": "<% pageVariables.x %>" }]`.
 - **Extra submit buttons:** `editButtonBar` with `editButtons: [{ "type": "editButton", "id", "label", "buttonType": "PRIMARY", "ignoreRequiredFields": "true" }]` (e.g. Save as Draft and Submit; the clicked button's id is available to flows).
 - **Run script from a button:** `pageActionButton` with `onClick` (no navigation, no submit).
