@@ -1684,14 +1684,22 @@ async function eventLinks(token, me) {
 // Workday call, so nothing changes; only the gateway's answer (200 vs HTML 403) is recorded.
 async function gatewayProbe(token, me) {
   console.log('\n-- Gateway probe (no changes: mode=PROBE is rejected by CheckMode) --');
-  const full = { roleId: '0123456789abcdef0123456789abcdef', roleName: TEST_ROLE, orgId: '0123456789abcdef0123456789abcdef',
-    orgName: 'X:BPMS(ODMT)', effectiveDate: tenantDate(), positionId: 'P-00001', positionIdType: 'Position_ID',
-    positionName: 'P-00001 Chief Executive Officer - Steve Morgan', mode: 'PROBE', positionWid: '0123456789abcdef0123456789abcdef',
+  // The real values the role add/remove test sends (read-only lookups).
+  const r = await wql(token, `SELECT role, roleAssignments{organization, cf_ZCF_EE_RoleAssignedToAsPositionRestrictions} as roleAssignments FROM assignableRoles WHERE roleName = '${TEST_ROLE}'`, 5);
+  const row = (r.data || [])[0];
+  const ra = (row?.roleAssignments || []).find((x) => String(x.organization?.descriptor || '').startsWith('X:'));
+  const assigned = (ra?.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions || []).map((p) => String(p.descriptor || ''));
+  const pos = ((await wql(token, 'SELECT cf_PositionID, workdayID, position_PositionManagement, cf_PositionText, cf_PositionIsFilled FROM allPositions WHERE supervisoryOrganization is not empty', 300)).data || [])
+    .filter((p) => p.cf_PositionID && p.cf_PositionIsFilled !== false && !assigned.some((d) => d.includes(p.cf_PositionID)))[0];
+  const full = { roleId: row.role.id, roleName: TEST_ROLE, orgId: ra.organization.id,
+    orgName: ra.organization.descriptor, effectiveDate: tenantDate(), positionId: pos.cf_PositionID, positionIdType: 'Position_ID',
+    positionName: pos.position_PositionManagement?.descriptor || pos.cf_PositionText || pos.cf_PositionID, mode: 'PROBE', positionWid: pos.workdayID?.id || pos.workdayID,
     changedBy: me.descriptor, changedByWid: me.id, timestamp: new Date().toISOString().replace(/\.\d+Z$/, 'Z') };
   const tryIt = async (label, params) => {
     try { await launch(token, 'AssignRolePositions', params); console.log(`   200  ${label}`); return true; }
     catch (e) { console.log(`   ${e.message.slice(5, 8)}  ${label}`); return false; }
   };
+  console.log('   values: ' + JSON.stringify(full));
   await tryIt('all parameters', full);
   for (const k of Object.keys(full)) { if (k === 'mode') continue; const p = { ...full }; delete p[k]; await tryIt(`without ${k}`, p); }
   await tryIt('only mode', { mode: 'PROBE' });
