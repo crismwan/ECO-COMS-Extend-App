@@ -614,8 +614,11 @@ const wql = (token, query, limit = 100) =>
   request('GET', `${WQL}?limit=${limit}&query=${encodeURIComponent(query)}`, token);
 // ManageShellOrgStatus picks inactivate vs reactivate from includeInactive ("true" = inactivate),
 // not from action; action is only written to the audit record. Send both, as the page does.
+// Encode like the pages' .urlEncode() (Java URLEncoder: space as +, only A-Z a-z 0-9 . - * _ left as is).
+// The API gateway refused (HTML 403) some test launches that the same change sent from a page passed.
+const formEncode = (v) => encodeURIComponent(String(v ?? '')).replace(/[!'()~]/g, (c) => '%' + c.charCodeAt(0).toString(16).toUpperCase()).replace(/%20/g, '+');
 const launch = (token, name, params) => {
-  const qs = Object.entries(params).map(([k, v]) => `${k}=${encodeURIComponent(v ?? '')}`).join('&');
+  const qs = Object.entries(params).map(([k, v]) => `${k}=${formEncode(v)}`).join('&');
   return request('POST', `${ORCH}/${name}/launch?${qs}`, token, {});
 };
 // Same check the pages use (run-and-verify): the orchestration writes an audit record only
