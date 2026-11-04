@@ -320,6 +320,8 @@ Grid columns are NOT typed widgets placed directly in `columns`. Putting `"type"
 
 - The grid declares `rowVariableName` (e.g. `"swagRow"`); cell bindings reference THAT alias, not `row` — e.g. `<% swagRow.name %>`.
 
+- **The row variable is gone at OK** (live 2026-11-04: "Unknown Variable found: rv.posWid" on submit). `valuesOut` / `valueOutBinding` on a cell are evaluated when the body is built, so don't reference the row variable there: give each cell `value: "<% rv.x %>"` and bind `"<% self.value %>"`, carrying non-displayed values in `hidden` tags (inside a `fieldSet` cell).
+
 - Each column is `{ "type": "column", "columnId": "...", "label": "...", "cellTemplate": { <widget> } }`.
 
 - The actual widget (`text`, `number`, `dropdown`, `date`, `checkBox`, etc.) lives inside `cellTemplate` with its own `id` and `value`.
