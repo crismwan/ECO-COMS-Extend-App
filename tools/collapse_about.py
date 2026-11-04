@@ -9,7 +9,7 @@ ROOT = os.path.join(os.path.dirname(__file__), '..', 'presentation')
 # under each page's title tile stays visible (ux_improvements.py --tiles)
 # 2026-11-04: also every other page whose About text runs to 350+ characters
 PAGES = ['bulkRoleChanges', 'bulkRoleTemplate', 'newSchemaPattern', 'iscRoleRequestsView', 'auditLogViewer', 'shellOrgManager',
-         'bulkRoleGrid', 'bulkRoleResults', 'comsInsights', 'shellOrgDetail', 'bulkTemplateUpload', 'adminProvisioningView']
+         'bulkRoleGrid', 'bulkRoleResults', 'comsInsights', 'shellOrgDetail', 'bulkTemplateUpload', 'adminProvisioningView', 'accessReview']
 done = []
 
 

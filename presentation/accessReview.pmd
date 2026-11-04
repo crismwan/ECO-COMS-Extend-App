@@ -8,24 +8,6 @@
   ],
   "endPoints": [
     {
-      "name": "selectedWorker",
-      "baseUrlType": "COMMON",
-      "url": "/workers/me",
-      "authType": "sso",
-      "bestEffort": "true",
-      "failOnStatusCodes": [
-        {
-          "code": 400
-        },
-        {
-          "code": 403
-        },
-        {
-          "code": 429
-        }
-      ]
-    },
-    {
       "name": "shellRoles",
       "baseUrlType": "workday-wql",
       "url": "data",
@@ -84,38 +66,9 @@
       }
     }
   ],
-  "outboundData": {
-    "outboundEndPoints": [
-      {
-        "name": "postReview",
-        "baseUrlType": "BUSINESS-OBJECT",
-        "url": "/comsAuditLogs",
-        "httpMethod": "POST",
-        "authType": "sso",
-        "exclude": "<% stillNeededCheckBox.value != true %>",
-        "failOnStatusCodes": [
-          {
-            "code": 400
-          },
-          {
-            "code": 403
-          },
-          {
-            "code": 429
-          },
-          {
-            "code": 500
-          }
-        ]
-      }
-    ]
-  },
   "presentation": {
-    "pageType": "EDIT",
+    "pageType": "VIEW",
     "headerSize": "HIDDEN",
-    "cancelOverride": {
-      "taskId": "home"
-    },
     "body": {
       "type": "basicFormLayout",
       "id": "accessReviewForm",
@@ -128,7 +81,7 @@
               "type": "richText",
               "id": "titleBannerRichText",
               "enabled": false,
-              "value": "<span style=\"color:#0055B3;font-size:24px\"><b>ECO-COMS: Access Review</b></span>"
+              "value": "<span style=\"color:#0055B3;font-size:24px\"><b>ECO-COMS: Access Review</b></span><br><span style=\"color:#374151;font-size:13px\">Every position holding a shell role. Confirm it is still needed, or manage it.</span>"
             }
           ]
         },
@@ -136,6 +89,14 @@
           "type": "layoutSection",
           "id": "aboutSection",
           "children": [
+            {
+              "type": "button",
+              "label": "← Home",
+              "taskReference": {
+                "taskId": "home"
+              },
+              "action": "LINK"
+            },
             {
               "type": "fieldSet",
               "id": "aboutFieldSet",
@@ -145,7 +106,37 @@
                   "type": "richText",
                   "id": "aboutRichText",
                   "enabled": false,
-                  "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">Every position that holds an ECO-COMS shell role in Workday, with when ECO-COMS last changed it and when someone last confirmed it is still needed (from the newest 200 Audit Log records). Tick <b>Still needed</b> on the ones you checked and click <b>OK</b>: each tick is recorded in the Audit Log as a review. To take a role away, use <b>Manage</b> on that row.</span>"
+                  "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">Every position that holds an ECO-COMS shell role in Workday, with when ECO-COMS last changed it and when someone last confirmed it is still needed (from the newest 200 Audit Log records). Workday role assignments have no expiry date, so review them here: <b>Confirm</b> records in the Audit Log that the position still needs the role, and <b>Manage</b> opens the role assignment to remove it.</span>"
+                }
+              ],
+              "collapsible": true,
+              "initializeCollapsed": true
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "summaryCardsSection",
+          "children": [
+            {
+              "type": "cardContainer",
+              "id": "accessReviewCardContainer",
+              "layout": "grid",
+              "cards": [
+                {
+                  "type": "card",
+                  "cardId": "CountCard",
+                  "parameters": "<% { 'title': 'Positions', 'subtitle': 'Holding a shell role', 'countText': '' + size(comsAccessReview.rowsFrom(shellRoles.data ?? [])) + ' positions' } %>"
+                },
+                {
+                  "type": "card",
+                  "cardId": "CountCard",
+                  "parameters": "<% { 'title': 'Never Reviewed', 'subtitle': 'No review in the Audit Log', 'countText': '' + comsAccessReview.countNeverReviewed(comsAccessReview.rowsFrom(shellRoles.data ?? []), list:flatten([((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.data ?? []) : []), ((((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 100 && !empty(auditPage1.data) && !empty(auditPage1.data.r)) ? (auditPage1.data.r.data ?? []) : [])])) + ' never reviewed' } %>"
+                },
+                {
+                  "type": "card",
+                  "cardId": "CountCard",
+                  "parameters": "<% { 'title': 'Assigned Outside ECO-COMS', 'subtitle': 'No ECO-COMS change on record', 'countText': '' + comsAccessReview.countOutside(comsAccessReview.rowsFrom(shellRoles.data ?? []), list:flatten([((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.data ?? []) : []), ((((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 100 && !empty(auditPage1.data) && !empty(auditPage1.data.r)) ? (auditPage1.data.r.data ?? []) : [])])) + ' assigned outside' } %>"
                 }
               ]
             }
@@ -153,7 +144,7 @@
         },
         {
           "type": "layoutSection",
-          "id": "reviewSection",
+          "id": "gridSection",
           "children": [
             {
               "type": "fieldSet",
@@ -165,7 +156,7 @@
                   "id": "noRowsText",
                   "label": "ⓘ Nothing to show",
                   "enabled": false,
-                  "visible": "<% (list:flatten((shellRoles.data ?? []).map(r => { list:flatten((r.roleAssignments ?? []).filter(ra => { ra.organization != null && r.role != null }).map(ra => { (ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? []).map(p => { { 'role': r.role.descriptor ?? '', 'roleWid': r.role.id ?? '', 'org': ra.organization.descriptor ?? '', 'orgWid': ra.organization.id ?? '', 'pos': p.descriptor ?? '', 'posWid': p.id ?? '' } }) })) }))).size() == 0 %>",
+                  "visible": "<% size(comsAccessReview.rowsFrom(shellRoles.data ?? [])) == 0 %>",
                   "value": "No positions hold an ECO-COMS shell role right now."
                 },
                 {
@@ -173,9 +164,8 @@
                   "id": "accessReviewGrid",
                   "label": "Positions Holding Shell Roles",
                   "rowVariableName": "rv",
-                  "rows": "<% list:flatten((shellRoles.data ?? []).map(r => { list:flatten((r.roleAssignments ?? []).filter(ra => { ra.organization != null && r.role != null }).map(ra => { (ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? []).map(p => { { 'role': r.role.descriptor ?? '', 'roleWid': r.role.id ?? '', 'org': ra.organization.descriptor ?? '', 'orgWid': ra.organization.id ?? '', 'pos': p.descriptor ?? '', 'posWid': p.id ?? '' } }) })) })) %>",
-                  "doNotAdd": true,
-                  "doNotRemove": true,
+                  "readOnly": true,
+                  "rows": "<% comsAccessReview.rowsFrom(shellRoles.data ?? []) %>",
                   "columns": [
                     {
                       "type": "column",
@@ -239,72 +229,28 @@
                     },
                     {
                       "type": "column",
-                      "columnId": "colStillNeeded",
-                      "label": "Still Needed",
+                      "columnId": "colConfirm",
+                      "label": "Confirm",
                       "cellTemplate": {
-                        "type": "checkBox",
-                        "id": "stillNeededCheckBox",
-                        "value": "<% false %>",
-                        "valuesOut": [
-                          {
-                            "value": "<% date:now().format(\"yyyy-MM-dd'T'HH:mm:ss'Z'\") %>",
-                            "valueOutBinding": "postReview.timestamp"
-                          },
-                          {
-                            "value": "Role Assignment",
-                            "valueOutBinding": "postReview.objectType"
-                          },
-                          {
-                            "value": "REVIEW",
-                            "valueOutBinding": "postReview.action"
-                          },
-                          {
-                            "value": "<% rv.posWid %>",
-                            "valueOutBinding": "postReview.coReferenceId"
-                          },
-                          {
-                            "value": "<% rv.org %>",
-                            "valueOutBinding": "postReview.coName"
-                          },
-                          {
-                            "value": "<% rv.role %>",
-                            "valueOutBinding": "postReview.roleName"
-                          },
-                          {
-                            "value": "<% rv.roleWid %>",
-                            "valueOutBinding": "postReview.roleWid"
-                          },
-                          {
-                            "value": "<% rv.orgWid %>",
-                            "valueOutBinding": "postReview.orgWid"
-                          },
-                          {
-                            "value": "<% rv.pos %>",
-                            "valueOutBinding": "postReview.positionName"
-                          },
-                          {
-                            "value": "<% rv.posWid %>",
-                            "valueOutBinding": "postReview.positionWid"
-                          },
-                          {
-                            "value": "<% date:now().format('yyyy-MM-dd') %>",
-                            "valueOutBinding": "postReview.effectiveDate"
-                          },
-                          {
-                            "value": "<% selectedWorker.descriptor ?? '' %>",
-                            "valueOutBinding": "postReview.triggeredBy"
-                          },
-                          {
-                            "value": "<% selectedWorker.id ?? '' %>",
-                            "valueOutBinding": "postReview.changedByWid"
-                          },
-                          {
-                            "value": "<% 'Access review: ' + rv.pos + ' still needs ' + rv.role + ' on ' + rv.org %>",
-                            "valueOutBinding": "postReview.details"
+                        "type": "button",
+                        "id": "confirmReviewButton",
+                        "label": "Confirm",
+                        "action": "AUXILIARY",
+                        "taskReference": {
+                          "taskId": "confirmAccessReview",
+                          "parameterBindings": {
+                            "role": "<% rv.role %>",
+                            "roleWid": "<% rv.roleWid %>",
+                            "org": "<% rv.org %>",
+                            "orgWid": "<% rv.orgWid %>",
+                            "pos": "<% rv.pos %>",
+                            "posWid": "<% rv.posWid %>"
                           }
-                        ]
+                        }
                       },
-                      "sortableAndFilterable": "true"
+                      "excel": {
+                        "enabled": false
+                      }
                     },
                     {
                       "type": "column",
@@ -315,7 +261,6 @@
                         "id": "manageRoleButton",
                         "label": "Manage",
                         "action": "AUXILIARY",
-                        "suppressDiscardDialog": true,
                         "taskReference": {
                           "taskId": "editRoleAssignment",
                           "parameterBindings": {
@@ -325,11 +270,16 @@
                             "orgName": "<% rv.org %>"
                           }
                         }
+                      },
+                      "excel": {
+                        "enabled": false
                       }
                     }
                   ],
                   "gridType": "LIST",
-                  "multiViewStylingEnabled": true
+                  "multiViewStylingEnabled": true,
+                  "autoPaging": true,
+                  "excelExportEnabled": true
                 }
               ]
             }

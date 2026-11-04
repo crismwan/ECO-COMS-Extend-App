@@ -154,6 +154,28 @@
           "endsFlow": true
         }
       ]
+    },
+    {
+      "id": "accessReviewFlow",
+      "flowSteps": [
+        {
+          "id": "confirmAccessReviewStep",
+          "taskId": "confirmAccessReview",
+          "startsFlow": true,
+          "transitions": [
+            {
+              "order": "a",
+              "value": "accessReviewStep",
+              "condition": "true"
+            }
+          ]
+        },
+        {
+          "id": "accessReviewStep",
+          "taskId": "accessReview",
+          "endsFlow": true
+        }
+      ]
     }
   ],
   "tasks": [
@@ -407,6 +429,13 @@
       "routingPattern": "/accessReview",
       "page": {
         "id": "accessReview"
+      }
+    },
+    {
+      "id": "confirmAccessReview",
+      "routingPattern": "/confirmAccessReview",
+      "page": {
+        "id": "confirmAccessReview"
       }
     }
   ],
