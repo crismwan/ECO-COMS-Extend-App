@@ -1846,6 +1846,18 @@ async function graphqlSuite(token) {
 // ═══ Data check: every record has the fields its pages display (read-only) ═══
 async function dataCheck(token) {
   console.log('\n-- Data check (read-only) --');
+  // Fields no page, orchestration, report or test uses (2026-11-04): how many records hold a value in each.
+  const UNUSED = { comsApplications: ['idPrefix', 'createdBy', 'workdayOrgId'],
+    comsAssignableRoles: ['enabledForCompany', 'enabledForCompanyHierarchy', 'positionRestrictions', 'workdayPositionId', 'positionIsFilled', 'organizationRoleAssignments'] };
+  for (const [col, fields] of Object.entries(UNUSED)) {
+    const recs = await readAll(token, col);
+    const counts = fields.map((f) => {
+      const n = recs.filter((r) => { const v = r[f]; return !(v === undefined || v === null || v === '' || v === false || (Array.isArray(v) && !v.length)); }).length;
+      const t = recs.filter((r) => r[f] === true).length;
+      return `${f}=${n}${t ? ' (true ' + t + ')' : ''}`;
+    });
+    pass('DataCheck.unusedFields', `${col} (${recs.length} records): ${counts.join(', ')}`);
+  }
   const gaps = [];
   const need = (label, rec, fields) => {
     const miss = fields.filter((f) => { const v = rec[f]; return v === undefined || v === null || v === '' || (typeof v === 'object' && !v.id && !v.descriptor && !Array.isArray(v)); });
