@@ -260,14 +260,26 @@
     ]
   },
   "presentation": {
-    "headerSize": "STANDARD",
+    "headerSize": "HIDDEN",
     "body": {
       "type": "basicFormLayout",
       "id": "adminProvisioningForm",
       "sections": [
         {
           "type": "layoutSection",
-          "id": "navSection",
+          "id": "titleBannerSection",
+          "children": [
+            {
+              "type": "richText",
+              "id": "titleBannerRichText",
+              "enabled": false,
+              "value": "<span style=\"color:#0055B3;font-size:24px\"><b>ECO-COMS: Submit AAA Role Request</b></span>"
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "descSection",
           "children": [
             {
               "type": "button",
@@ -287,13 +299,7 @@
                 }
               },
               "action": "AUXILIARY"
-            }
-          ]
-        },
-        {
-          "type": "layoutSection",
-          "id": "descSection",
-          "children": [
+            },
             {
               "type": "fieldSet",
               "id": "aboutFieldSet",
@@ -655,10 +661,6 @@
     "pageType": "EDIT",
     "cancelOverride": {
       "taskId": "home"
-    },
-    "title": {
-      "type": "title",
-      "label": "ECO-COMS: Submit AAA Role Request"
     }
   },
   "onSubmit": "<%\n  applicationDropdown.clearError();\n  effectiveDate.clearError();\n  generatedRoleName.clearError();\n  let valid = true;\n  if (empty(applicationDropdown.value)) {\n    applicationDropdown.setError('Application is required.');\n    valid = false;\n  }\n  if (empty(effectiveDate.value)) {\n    effectiveDate.setError('Effective Date is required.');\n    valid = false;\n  }\n  if (!empty(generatedRoleName.value) && comsValidations.isDuplicateAAARole(generatedRoleName.value, allAAAroles.data)) {\n    generatedRoleName.setError(comsValidations.errorDuplicateAAARole(generatedRoleName.value));\n    valid = false;\n  }\n  valid;\n%>"

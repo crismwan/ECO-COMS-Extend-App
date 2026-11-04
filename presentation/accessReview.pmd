@@ -42,58 +42,68 @@
       ]
     },
     {
-      "name": "auditLogCount",
-      "baseUrlType": "BUSINESS-OBJECT",
-      "url": "/comsAuditLogs?limit=1",
+      "name": "auditPage0",
+      "baseUrlType": "workday-graph",
+      "httpMethod": "POST",
       "authType": "sso",
       "failOnStatusCodes": [
         {
           "code": 400
         },
         {
-          "code": 429
-        }
-      ]
-    },
-    {
-      "name": "auditPage0",
-      "baseUrlType": "BUSINESS-OBJECT",
-      "authType": "sso",
-      "isCollection": true,
-      "failOnStatusCodes": [
+          "code": 403
+        },
         {
           "code": 429
         }
       ],
-      "url": "<% let t = auditLogCount.total ?? 0; let start = (t - 100) < 0 ? 0 : (t - 100); let cnt = t - start; '/comsAuditLogs?limit=' + (cnt > 0 ? cnt : 1) + '&offset=' + (cnt > 0 ? start : t) %>"
+      "graphQuery": {
+        "queryId": "auditLogsNewest",
+        "parameters": {
+          "offset": 0
+        }
+      }
     },
     {
       "name": "auditPage1",
-      "baseUrlType": "BUSINESS-OBJECT",
+      "baseUrlType": "workday-graph",
+      "httpMethod": "POST",
       "authType": "sso",
-      "isCollection": true,
       "failOnStatusCodes": [
         {
           "code": 429
         }
       ],
-      "url": "<% let t = auditLogCount.total ?? 0; let end = (t - 100) < 0 ? 0 : (t - 100); let start = (end - 100) < 0 ? 0 : (end - 100); let cnt = end - start; '/comsAuditLogs?limit=' + (cnt > 0 ? cnt : 1) + '&offset=' + (cnt > 0 ? start : t) %>"
+      "graphQuery": {
+        "queryId": "auditLogsNewest",
+        "parameters": {
+          "offset": "<% ((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 100 ? 100 : 0 %>"
+        }
+      }
     }
   ],
   "presentation": {
     "pageType": "VIEW",
-    "headerSize": "STANDARD",
-    "title": {
-      "type": "title",
-      "label": "ECO-COMS: Access Review"
-    },
+    "headerSize": "HIDDEN",
     "body": {
       "type": "basicFormLayout",
       "id": "accessReviewForm",
       "sections": [
         {
           "type": "layoutSection",
-          "id": "navSection",
+          "id": "titleBannerSection",
+          "children": [
+            {
+              "type": "richText",
+              "id": "titleBannerRichText",
+              "enabled": false,
+              "value": "<span style=\"color:#0055B3;font-size:24px\"><b>ECO-COMS: Access Review</b></span><br><span style=\"color:#374151;font-size:13px\">Vacant positions that still hold a shell role. Keep or remove each one.</span>"
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "aboutSection",
           "children": [
             {
               "type": "button",
@@ -102,13 +112,7 @@
                 "taskId": "home"
               },
               "action": "LINK"
-            }
-          ]
-        },
-        {
-          "type": "layoutSection",
-          "id": "aboutSection",
-          "children": [
+            },
             {
               "type": "fieldSet",
               "id": "aboutFieldSet",
@@ -120,7 +124,9 @@
                   "enabled": false,
                   "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">Vacant positions that still hold an ECO-COMS shell role: the person in the position has left, and Workday keeps the role on the position, so whoever fills it next gets the access. Decide for each one: keep the role (<b>Review All Positions</b>, tick <b>Still Needed</b>; recorded in the Audit Log) or remove it (<b>Manage</b>). Dates come from the newest 200 Audit Log records.</span>"
                 }
-              ]
+              ],
+              "collapsible": true,
+              "initializeCollapsed": true
             }
           ]
         },
@@ -141,12 +147,12 @@
                 {
                   "type": "card",
                   "cardId": "CountCard",
-                  "parameters": "<% { 'title': 'Never Reviewed', 'subtitle': 'No review in the Audit Log', 'countText': '' + comsAccessReview.countNeverReviewed(comsAccessReview.rowsFrom(shellRoles.data ?? [], comsAccessReview.vacantIds(positionFill.data ?? [])), list:flatten([auditPage0.data ?? [], auditPage1.data ?? []])) + ' never reviewed' } %>"
+                  "parameters": "<% { 'title': 'Never Reviewed', 'subtitle': 'No review in the Audit Log', 'countText': '' + comsAccessReview.countNeverReviewed(comsAccessReview.rowsFrom(shellRoles.data ?? [], comsAccessReview.vacantIds(positionFill.data ?? [])), list:flatten([((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.data ?? []) : []), ((((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 100 && !empty(auditPage1.data) && !empty(auditPage1.data.r)) ? (auditPage1.data.r.data ?? []) : [])])) + ' never reviewed' } %>"
                 },
                 {
                   "type": "card",
                   "cardId": "CountCard",
-                  "parameters": "<% { 'title': 'Assigned Outside ECO-COMS', 'subtitle': 'No ECO-COMS change on record', 'countText': '' + comsAccessReview.countOutside(comsAccessReview.rowsFrom(shellRoles.data ?? [], comsAccessReview.vacantIds(positionFill.data ?? [])), list:flatten([auditPage0.data ?? [], auditPage1.data ?? []])) + ' assigned outside' } %>"
+                  "parameters": "<% { 'title': 'Assigned Outside ECO-COMS', 'subtitle': 'No ECO-COMS change on record', 'countText': '' + comsAccessReview.countOutside(comsAccessReview.rowsFrom(shellRoles.data ?? [], comsAccessReview.vacantIds(positionFill.data ?? [])), list:flatten([((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.data ?? []) : []), ((((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 100 && !empty(auditPage1.data) && !empty(auditPage1.data.r)) ? (auditPage1.data.r.data ?? []) : [])])) + ' assigned outside' } %>"
                 }
               ]
             }
@@ -240,7 +246,7 @@
                         "type": "text",
                         "id": "colChangedText",
                         "enabled": false,
-                        "value": "<% comsAccessReview.lastChanged(list:flatten([auditPage0.data ?? [], auditPage1.data ?? []]), rv.role, rv.posWid, rv.pos) %>"
+                        "value": "<% comsAccessReview.lastChanged(list:flatten([((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.data ?? []) : []), ((((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 100 && !empty(auditPage1.data) && !empty(auditPage1.data.r)) ? (auditPage1.data.r.data ?? []) : [])]), rv.role, rv.posWid, rv.pos) %>"
                       }
                     },
                     {
@@ -252,7 +258,7 @@
                         "type": "text",
                         "id": "colReviewedText",
                         "enabled": false,
-                        "value": "<% comsAccessReview.lastReviewed(list:flatten([auditPage0.data ?? [], auditPage1.data ?? []]), rv.role, rv.posWid, rv.pos) %>"
+                        "value": "<% comsAccessReview.lastReviewed(list:flatten([((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.data ?? []) : []), ((((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 100 && !empty(auditPage1.data) && !empty(auditPage1.data.r)) ? (auditPage1.data.r.data ?? []) : [])]), rv.role, rv.posWid, rv.pos) %>"
                       }
                     },
                     {
@@ -273,9 +279,16 @@
                             "orgName": "<% rv.org %>"
                           }
                         }
+                      },
+                      "excel": {
+                        "enabled": false
                       }
                     }
-                  ]
+                  ],
+                  "gridType": "LIST",
+                  "multiViewStylingEnabled": true,
+                  "autoPaging": true,
+                  "excelExportEnabled": true
                 }
               ]
             }

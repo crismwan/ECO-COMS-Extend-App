@@ -41,57 +41,67 @@
       ]
     },
     {
-      "name": "auditLogCount",
-      "baseUrlType": "BUSINESS-OBJECT",
-      "url": "/comsAuditLogs?limit=1",
+      "name": "auditPage0",
+      "baseUrlType": "workday-graph",
+      "httpMethod": "POST",
       "authType": "sso",
       "failOnStatusCodes": [
         {
           "code": 400
         },
         {
-          "code": 429
-        }
-      ]
-    },
-    {
-      "name": "auditPage0",
-      "baseUrlType": "BUSINESS-OBJECT",
-      "authType": "sso",
-      "isCollection": true,
-      "failOnStatusCodes": [
+          "code": 403
+        },
         {
           "code": 429
         }
       ],
-      "url": "<% let t = auditLogCount.total ?? 0; let start = (t - 100) < 0 ? 0 : (t - 100); let cnt = t - start; '/comsAuditLogs?limit=' + (cnt > 0 ? cnt : 1) + '&offset=' + (cnt > 0 ? start : t) %>"
+      "graphQuery": {
+        "queryId": "auditLogsNewest",
+        "parameters": {
+          "offset": 0
+        }
+      }
     },
     {
       "name": "auditPage1",
-      "baseUrlType": "BUSINESS-OBJECT",
+      "baseUrlType": "workday-graph",
+      "httpMethod": "POST",
       "authType": "sso",
-      "isCollection": true,
       "failOnStatusCodes": [
         {
           "code": 429
         }
       ],
-      "url": "<% let t = auditLogCount.total ?? 0; let end = (t - 100) < 0 ? 0 : (t - 100); let start = (end - 100) < 0 ? 0 : (end - 100); let cnt = end - start; '/comsAuditLogs?limit=' + (cnt > 0 ? cnt : 1) + '&offset=' + (cnt > 0 ? start : t) %>"
+      "graphQuery": {
+        "queryId": "auditLogsNewest",
+        "parameters": {
+          "offset": "<% ((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 100 ? 100 : 0 %>"
+        }
+      }
     }
   ],
   "presentation": {
-    "headerSize": "STANDARD",
-    "title": {
-      "type": "title",
-      "label": "<% 'ECO-COMS: Shell Organization – ' + (size(((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))) > 0 ? (((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))[0].organizationByName.descriptor ?? ((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))[0].code) : (queryParams.orgName ?? '')) %>"
-    },
+    "headerSize": "HIDDEN",
     "body": {
       "type": "basicFormLayout",
       "id": "orgDetailForm",
       "sections": [
         {
           "type": "layoutSection",
-          "id": "navSection",
+          "id": "titleBannerSection",
+          "children": [
+            {
+              "type": "richText",
+              "id": "titleBannerRichText",
+              "enabled": false,
+              "value": "<% '<span style=\"color:#0055B3;font-size:24px\"><b>' + ('ECO-COMS: Shell Organization – ' + (size(((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))) > 0 ? (((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))[0].organizationByName.descriptor ?? ((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))[0].code) : (queryParams.orgName ?? ''))).replace('<', '&lt;') + '</b></span>' + '<br><span style=\"color:#374151;font-size:13px\">One shell organization: its status, its roles and the changes made to it.</span>' %>"
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "aboutSection",
           "children": [
             {
               "type": "button",
@@ -105,13 +115,21 @@
                   "appName": "<% queryParams.appName ?? '' %>"
                 }
               }
-            }
-          ]
-        },
-        {
-          "type": "layoutSection",
-          "id": "aboutSection",
-          "children": [
+            },
+            {
+              "type": "button",
+              "id": "auditLogButton",
+              "label": "View changes in Audit Log",
+              "action": "LINK",
+              "taskReference": {
+                "taskId": "auditLogViewer",
+                "parameterBindings": {
+                  "orgId": "<% queryParams.orgId ?? '' %>",
+                  "orgCode": "<% queryParams.orgCode ?? '' %>",
+                  "orgName": "<% queryParams.orgName ?? '' %>"
+                }
+              }
+            },
             {
               "type": "fieldSet",
               "id": "aboutFieldSet",
@@ -123,7 +141,9 @@
                   "enabled": false,
                   "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">One shell organization: its status in Workday, the roles assigned on it with their positions and workers, and the ECO-COMS changes made to it (from the newest 200 Audit Log records). Use <b>Inactivate Organization</b> or <b>Reactivate Organization</b> to change its status, or <b>Manage</b> on a role to add or remove positions.</span>"
                 }
-              ]
+              ],
+              "collapsible": true,
+              "initializeCollapsed": true
             }
           ]
         },
@@ -149,7 +169,7 @@
                 {
                   "type": "card",
                   "cardId": "CountCard",
-                  "parameters": "<% { 'title': 'Changes', 'subtitle': 'Made through ECO-COMS', 'countText': '' + size((list:sort(list:flatten([auditPage0.data ?? [], auditPage1.data ?? []]).filter(a => { (!empty(a.orgWid) && a.orgWid == (queryParams.orgId ?? '')) || (!empty(queryParams.orgCode) && (a.coReferenceId ?? '') == queryParams.orgCode) || (!empty(queryParams.orgName) && (a.coName ?? '') == queryParams.orgName) }), 'timestamp', false))) + (size((list:sort(list:flatten([auditPage0.data ?? [], auditPage1.data ?? []]).filter(a => { (!empty(a.orgWid) && a.orgWid == (queryParams.orgId ?? '')) || (!empty(queryParams.orgCode) && (a.coReferenceId ?? '') == queryParams.orgCode) || (!empty(queryParams.orgName) && (a.coName ?? '') == queryParams.orgName) }), 'timestamp', false))) == 1 ? ' change recorded' : ' changes recorded') } %>"
+                  "parameters": "<% { 'title': 'Changes', 'subtitle': 'Made through ECO-COMS', 'countText': '' + size((list:sort(list:flatten([((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.data ?? []) : []), ((((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 100 && !empty(auditPage1.data) && !empty(auditPage1.data.r)) ? (auditPage1.data.r.data ?? []) : [])]).filter(a => { (!empty(a.orgWid) && a.orgWid == (queryParams.orgId ?? '')) || (!empty(queryParams.orgCode) && (a.coReferenceId ?? '') == queryParams.orgCode) || (!empty(queryParams.orgName) && (a.coName ?? '') == queryParams.orgName) }), 'timestamp', false))) + (size((list:sort(list:flatten([((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.data ?? []) : []), ((((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 100 && !empty(auditPage1.data) && !empty(auditPage1.data.r)) ? (auditPage1.data.r.data ?? []) : [])]).filter(a => { (!empty(a.orgWid) && a.orgWid == (queryParams.orgId ?? '')) || (!empty(queryParams.orgCode) && (a.coReferenceId ?? '') == queryParams.orgCode) || (!empty(queryParams.orgName) && (a.coName ?? '') == queryParams.orgName) }), 'timestamp', false))) == 1 ? ' change recorded' : ' changes recorded') } %>"
                 }
               ]
             }
@@ -245,7 +265,8 @@
                         "enabled": false,
                         "values": "<% ra.role != null ? [ra.role] : [] %>",
                         "widKey": "id"
-                      }
+                      },
+                      "sortableAndFilterable": "true"
                     },
                     {
                       "type": "column",
@@ -259,7 +280,8 @@
                         "enabled": false,
                         "values": "<% ra.positions %>",
                         "widKey": "id"
-                      }
+                      },
+                      "sortableAndFilterable": "true"
                     },
                     {
                       "type": "column",
@@ -273,7 +295,8 @@
                         "enabled": false,
                         "values": "<% ra.workers %>",
                         "widKey": "id"
-                      }
+                      },
+                      "sortableAndFilterable": "true"
                     },
                     {
                       "type": "column",
@@ -320,7 +343,7 @@
                   "id": "noHistoryText",
                   "label": "ⓘ Nothing to show",
                   "enabled": false,
-                  "visible": "<% size((list:sort(list:flatten([auditPage0.data ?? [], auditPage1.data ?? []]).filter(a => { (!empty(a.orgWid) && a.orgWid == (queryParams.orgId ?? '')) || (!empty(queryParams.orgCode) && (a.coReferenceId ?? '') == queryParams.orgCode) || (!empty(queryParams.orgName) && (a.coName ?? '') == queryParams.orgName) }), 'timestamp', false))) == 0 %>",
+                  "visible": "<% size((list:sort(list:flatten([((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.data ?? []) : []), ((((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 100 && !empty(auditPage1.data) && !empty(auditPage1.data.r)) ? (auditPage1.data.r.data ?? []) : [])]).filter(a => { (!empty(a.orgWid) && a.orgWid == (queryParams.orgId ?? '')) || (!empty(queryParams.orgCode) && (a.coReferenceId ?? '') == queryParams.orgCode) || (!empty(queryParams.orgName) && (a.coName ?? '') == queryParams.orgName) }), 'timestamp', false))) == 0 %>",
                   "value": "No ECO-COMS changes to this organization in the newest 200 Audit Log records. Older changes are in the Audit Log Viewer."
                 },
                 {
@@ -332,7 +355,7 @@
                   "enabled": false,
                   "excelExportEnabled": true,
                   "rowVariableName": "al",
-                  "rows": "<% (list:sort(list:flatten([auditPage0.data ?? [], auditPage1.data ?? []]).filter(a => { (!empty(a.orgWid) && a.orgWid == (queryParams.orgId ?? '')) || (!empty(queryParams.orgCode) && (a.coReferenceId ?? '') == queryParams.orgCode) || (!empty(queryParams.orgName) && (a.coName ?? '') == queryParams.orgName) }), 'timestamp', false)) %>",
+                  "rows": "<% (list:sort(list:flatten([((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.data ?? []) : []), ((((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 100 && !empty(auditPage1.data) && !empty(auditPage1.data.r)) ? (auditPage1.data.r.data ?? []) : [])]).filter(a => { (!empty(a.orgWid) && a.orgWid == (queryParams.orgId ?? '')) || (!empty(queryParams.orgCode) && (a.coReferenceId ?? '') == queryParams.orgCode) || (!empty(queryParams.orgName) && (a.coName ?? '') == queryParams.orgName) }), 'timestamp', false)) %>",
                   "label": "Changes",
                   "columns": [
                     {

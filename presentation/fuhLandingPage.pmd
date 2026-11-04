@@ -5,14 +5,26 @@
   ],
   "endPoints": [],
   "presentation": {
-    "headerSize": "STANDARD",
+    "headerSize": "HIDDEN",
     "body": {
       "type": "basicFormLayout",
       "id": "fuhLandingPageForm",
       "sections": [
         {
           "type": "layoutSection",
-          "id": "navSection",
+          "id": "titleBannerSection",
+          "children": [
+            {
+              "type": "richText",
+              "id": "titleBannerRichText",
+              "enabled": false,
+              "value": "<span style=\"color:#0055B3;font-size:24px\"><b>ECO-COMS: Functional Unit Hierarchy Administration</b></span>"
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "overviewSection",
           "children": [
             {
               "type": "button",
@@ -22,13 +34,7 @@
               },
               "action": "LINK",
               "suppressDiscardDialog": true
-            }
-          ]
-        },
-        {
-          "type": "layoutSection",
-          "id": "overviewSection",
-          "children": [
+            },
             {
               "type": "fieldSet",
               "id": "overviewFieldSet",
@@ -55,10 +61,6 @@
         }
       ]
     },
-    "pageType": "VIEW",
-    "title": {
-      "type": "title",
-      "label": "ECO-COMS: Functional Unit Hierarchy Administration"
-    }
+    "pageType": "VIEW"
   }
 }

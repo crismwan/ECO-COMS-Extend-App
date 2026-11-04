@@ -2,7 +2,7 @@
   "id": "ErrorStartAgainCard",
   "header": {
     "title": "Start Again",
-    "icon": "wd-accent-home"
+    "icon": "wd-accent-data-refresh"
   },
   "body": {
     "type": "pillCard",

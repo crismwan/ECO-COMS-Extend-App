@@ -2,7 +2,7 @@
   "id": "BulkNextStepCard",
   "header": {
     "title": "Next Step",
-    "icon": "wd-accent-checkmarked-page"
+    "icon": "wd-accent-people-group"
   },
   "body": {
     "type": "pillCard",

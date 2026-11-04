@@ -3,7 +3,7 @@
   "header": {
     "title": "Insights",
     "subtitle": "Requests, shell orgs, audit and bulk runs.",
-    "icon": "wd-accent-checkmarked-page"
+    "icon": "wd-accent-chart-bar-arrow"
   },
   "body": {
     "type": "simpleCard",

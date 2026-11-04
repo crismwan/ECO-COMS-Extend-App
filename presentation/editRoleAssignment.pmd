@@ -73,14 +73,26 @@
   ],
   "onSubmit": "<%\n  effectiveDate.clearError();\n  positionsToAddInstanceList.clearError();\n  let valid = true;\n  let adds = positionsToAddInstanceList.selectedEntries ?? [];\n  let removes = positionsToRemoveInstanceList.selectedEntries ?? [];\n  if (size(adds) + size(removes) == 0) {\n    positionsToAddInstanceList.setError('Select at least one position to add or remove.');\n    valid = false;\n  }\n  if (empty(effectiveDate.value)) {\n    effectiveDate.setError('Effective Date is required.');\n    valid = false;\n  }\n  if (valid) {\n    let ed = effectiveDate.value.format('yyyy-MM-dd');\n    let before = verifyRoleAudit.invoke({'lim': '1'}).total ?? 0;\n    let count = 0;\n    for (var p : adds) {\n      let pw = posWidLookup.invoke({'q': string:pathEncode('SELECT workdayID FROM allPositions WHERE cf_PositionID = \\'' + p.id + '\\'')}).data ?? [];\n      let pwid = size(pw) > 0 ? (pw[0].workdayID ?? '') : '';\n      launchAssignRole.invoke({'pwid': pwid, 'cbw': selectedWorker.id ?? '', 'cb': (selectedWorker.descriptor ?? '').urlEncode(), 'ts': date:now().format(\"yyyy-MM-dd'T'HH:mm:ss'Z'\").urlEncode(), 'rid': queryParams.roleId ?? '', 'rn': (queryParams.roleName ?? '').urlEncode(), 'oid': queryParams.orgId ?? '', 'on': (queryParams.orgName ?? '').urlEncode(), 'pid': p.id, 'pn': (p.descriptor ?? '').urlEncode(), 'md': 'ADD', 'pt': 'Position_ID', 'ed': ed});\n      count = count + 1;\n    }\n    for (var p : removes) {\n      launchAssignRole.invoke({'pwid': p.id, 'cbw': selectedWorker.id ?? '', 'cb': (selectedWorker.descriptor ?? '').urlEncode(), 'ts': date:now().format(\"yyyy-MM-dd'T'HH:mm:ss'Z'\").urlEncode(), 'rid': queryParams.roleId ?? '', 'rn': (queryParams.roleName ?? '').urlEncode(), 'oid': queryParams.orgId ?? '', 'on': (queryParams.orgName ?? '').urlEncode(), 'pid': p.id, 'pn': (p.descriptor ?? '').urlEncode(), 'md': 'REMOVE', 'pt': 'WID', 'ed': ed});\n      count = count + 1;\n    }\n    let after = verifyRoleAudit.invoke({'lim': '1'}).total ?? 0;\n    if (after - before < count) {\n      positionsToAddInstanceList.setError('Workday rejected ' + (count - (after - before)) + ' of ' + count + ' changes. Check the role assignment in Workday and try again.');\n      valid = false;\n    }\n  }\n  valid;\n%>",
   "presentation": {
-    "headerSize": "STANDARD",
+    "headerSize": "HIDDEN",
     "body": {
       "type": "basicFormLayout",
       "id": "editRoleAssignmentForm",
       "sections": [
         {
           "type": "layoutSection",
-          "id": "navSection",
+          "id": "titleBannerSection",
+          "children": [
+            {
+              "type": "richText",
+              "id": "titleBannerRichText",
+              "enabled": false,
+              "value": "<% '<span style=\"color:#0055B3;font-size:24px\"><b>' + ('ECO-COMS: Manage Role Assignment – ' + (queryParams.roleName ?? 'Role')).replace('<', '&lt;') + '</b></span>' %>"
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "aboutSection",
           "children": [
             {
               "type": "button",
@@ -90,13 +102,7 @@
               },
               "action": "LINK",
               "suppressDiscardDialog": true
-            }
-          ]
-        },
-        {
-          "type": "layoutSection",
-          "id": "aboutSection",
-          "children": [
+            },
             {
               "type": "fieldSet",
               "id": "aboutFieldSet",
@@ -220,10 +226,6 @@
         "appCode": "<% queryParams.appCode ?? '' %>",
         "appName": "<% queryParams.appName ?? '' %>"
       }
-    },
-    "title": {
-      "type": "title",
-      "label": "<% 'ECO-COMS: Manage Role Assignment – ' + (queryParams.roleName ?? 'Role') %>"
     }
   },
   "outboundData": {

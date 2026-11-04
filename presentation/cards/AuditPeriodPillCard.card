@@ -2,11 +2,15 @@
   "id": "AuditPeriodPillCard",
   "parameters": [
     "period",
-    "changeType"
+    "changeType",
+    "by",
+    "orgId",
+    "orgCode",
+    "orgName"
   ],
   "header": {
     "title": "Time Period",
-    "icon": "wd-accent-clipboard-checklist"
+    "icon": "wd-accent-calendar"
   },
   "body": {
     "type": "pillCard",
@@ -17,7 +21,11 @@
           "taskId": "auditLogViewer",
           "parameterBindings": {
             "period": "all",
-            "changeType": "<% changeType ?? \"\" %>"
+            "changeType": "<% changeType ?? \"\" %>",
+            "by": "<% by ?? \"\" %>",
+            "orgId": "<% orgId ?? \"\" %>",
+            "orgCode": "<% orgCode ?? \"\" %>",
+            "orgName": "<% orgName ?? \"\" %>"
           }
         }
       },
@@ -27,7 +35,11 @@
           "taskId": "auditLogViewer",
           "parameterBindings": {
             "period": "24h",
-            "changeType": "<% changeType ?? \"\" %>"
+            "changeType": "<% changeType ?? \"\" %>",
+            "by": "<% by ?? \"\" %>",
+            "orgId": "<% orgId ?? \"\" %>",
+            "orgCode": "<% orgCode ?? \"\" %>",
+            "orgName": "<% orgName ?? \"\" %>"
           }
         }
       },
@@ -37,7 +49,11 @@
           "taskId": "auditLogViewer",
           "parameterBindings": {
             "period": "7d",
-            "changeType": "<% changeType ?? \"\" %>"
+            "changeType": "<% changeType ?? \"\" %>",
+            "by": "<% by ?? \"\" %>",
+            "orgId": "<% orgId ?? \"\" %>",
+            "orgCode": "<% orgCode ?? \"\" %>",
+            "orgName": "<% orgName ?? \"\" %>"
           }
         }
       },
@@ -47,7 +63,11 @@
           "taskId": "auditLogViewer",
           "parameterBindings": {
             "period": "30d",
-            "changeType": "<% changeType ?? \"\" %>"
+            "changeType": "<% changeType ?? \"\" %>",
+            "by": "<% by ?? \"\" %>",
+            "orgId": "<% orgId ?? \"\" %>",
+            "orgCode": "<% orgCode ?? \"\" %>",
+            "orgName": "<% orgName ?? \"\" %>"
           }
         }
       }

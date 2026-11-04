@@ -2,7 +2,7 @@
   "id": "ErrorOtherPagesCard",
   "header": {
     "title": "Other Pages",
-    "icon": "wd-accent-home"
+    "icon": "wd-accent-resources"
   },
   "body": {
     "type": "pillCard",

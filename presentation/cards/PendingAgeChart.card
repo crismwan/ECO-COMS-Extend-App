@@ -7,7 +7,7 @@
   "header": {
     "title": "Pending Requests by Age",
     "subtitle": "<% totalText ?? \"\" %>",
-    "icon": "wd-accent-inbox"
+    "icon": "wd-accent-data-loading"
   },
   "body": {
     "type": "chartCard",

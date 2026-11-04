@@ -118,18 +118,26 @@
     }
   ],
   "presentation": {
-    "headerSize": "STANDARD",
-    "title": {
-      "type": "title",
-      "label": "ECO-COMS: Bulk Role Changes – Results"
-    },
+    "headerSize": "HIDDEN",
     "body": {
       "type": "basicFormLayout",
       "id": "bulkResultsForm",
       "sections": [
         {
           "type": "layoutSection",
-          "id": "navSection",
+          "id": "titleBannerSection",
+          "children": [
+            {
+              "type": "richText",
+              "id": "titleBannerRichText",
+              "enabled": false,
+              "value": "<span style=\"color:#0055B3;font-size:24px\"><b>ECO-COMS: Bulk Role Changes – Results</b></span><br><span style=\"color:#374151;font-size:13px\">Your bulk uploads and grid edits, newest first, with the result of each row.</span>"
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "aboutSection",
           "children": [
             {
               "type": "button",
@@ -139,13 +147,7 @@
               "taskReference": {
                 "taskId": "home"
               }
-            }
-          ]
-        },
-        {
-          "type": "layoutSection",
-          "id": "aboutSection",
-          "children": [
+            },
             {
               "type": "fieldSet",
               "id": "aboutFieldSet",
@@ -157,7 +159,9 @@
                   "enabled": false,
                   "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">Your uploads and grid edits, newest first, and the row results of the selected one (the newest unless you pick another). A run works in the background: while the status is Uploaded, Queued or Running, click <b>Refresh</b> in a minute to see more rows. When a validation run shows no INVALID rows, click <b>Apply</b> on that upload to run the same file for real. <b>VALID</b>/<b>INVALID</b>: validation run, nothing changed. <b>DONE</b>/<b>FAILED</b>: real run.</span>"
                 }
-              ]
+              ],
+              "collapsible": true,
+              "initializeCollapsed": true
             }
           ]
         },
@@ -292,26 +296,6 @@
                     },
                     {
                       "type": "column",
-                      "columnId": "colOpen",
-                      "label": "Results",
-                      "excel": {
-                        "enabled": false
-                      },
-                      "cellTemplate": {
-                        "type": "button",
-                        "id": "openResultsButton",
-                        "label": "View",
-                        "action": "AUXILIARY",
-                        "taskReference": {
-                          "taskId": "bulkRoleResults",
-                          "parameterBindings": {
-                            "batch": "<% up.batchRef ?? '' %>"
-                          }
-                        }
-                      }
-                    },
-                    {
-                      "type": "column",
                       "columnId": "colApply",
                       "label": "Apply",
                       "excel": {
@@ -335,6 +319,26 @@
                             }
                           }
                         ]
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colOpen",
+                      "label": "Results",
+                      "excel": {
+                        "enabled": false
+                      },
+                      "cellTemplate": {
+                        "type": "button",
+                        "id": "openResultsButton",
+                        "label": "View",
+                        "action": "AUXILIARY",
+                        "taskReference": {
+                          "taskId": "bulkRoleResults",
+                          "parameterBindings": {
+                            "batch": "<% up.batchRef ?? '' %>"
+                          }
+                        }
                       }
                     }
                   ]

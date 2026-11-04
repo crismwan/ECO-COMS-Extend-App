@@ -2,7 +2,7 @@
   "id": "BulkRelatedCard",
   "header": {
     "title": "Related",
-    "icon": "wd-accent-checkmarked-page"
+    "icon": "wd-accent-people-group"
   },
   "body": {
     "type": "pillCard",

@@ -73,14 +73,26 @@
   ],
   "presentation": {
     "pageType": "VIEW",
-    "headerSize": "STANDARD",
+    "headerSize": "HIDDEN",
     "body": {
       "type": "basicFormLayout",
       "id": "adminProvisioningViewForm",
       "sections": [
         {
           "type": "layoutSection",
-          "id": "navSection",
+          "id": "titleBannerSection",
+          "children": [
+            {
+              "type": "richText",
+              "id": "titleBannerRichText",
+              "enabled": false,
+              "value": "<span style=\"color:#0055B3;font-size:24px\"><b>ECO-COMS: AAA Role Requests</b></span><br><span style=\"color:#374151;font-size:13px\">AAA role requests: who can manage shell orgs and submit role requests.</span>"
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "descSection",
           "children": [
             {
               "type": "button",
@@ -89,13 +101,7 @@
                 "taskId": "home"
               },
               "action": "LINK"
-            }
-          ]
-        },
-        {
-          "type": "layoutSection",
-          "id": "descSection",
-          "children": [
+            },
             {
               "type": "fieldSet",
               "id": "aboutFieldSet",
@@ -317,10 +323,6 @@
           "podId": "ecoComsFooter"
         }
       ]
-    },
-    "title": {
-      "type": "title",
-      "label": "ECO-COMS: AAA Role Requests"
     }
   }
 }

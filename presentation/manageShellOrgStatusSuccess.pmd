@@ -1,11 +1,23 @@
 {
   "id": "manageShellOrgStatusSuccess",
   "presentation": {
-    "headerSize": "STANDARD",
+    "headerSize": "HIDDEN",
     "body": {
       "type": "basicFormLayout",
       "id": "successForm",
       "sections": [
+        {
+          "type": "layoutSection",
+          "id": "titleBannerSection",
+          "children": [
+            {
+              "type": "richText",
+              "id": "titleBannerRichText",
+              "enabled": false,
+              "value": "<span style=\"color:#0055B3;font-size:24px\"><b>ECO-COMS: Status Updated</b></span>"
+            }
+          ]
+        },
         {
           "type": "layoutSection",
           "id": "successSection",
@@ -88,10 +100,6 @@
         }
       ]
     },
-    "pageType": "VIEW",
-    "title": {
-      "type": "title",
-      "label": "ECO-COMS: Status Updated"
-    }
+    "pageType": "VIEW"
   }
 }

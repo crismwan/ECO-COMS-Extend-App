@@ -27,18 +27,26 @@
     }
   ],
   "presentation": {
-    "headerSize": "STANDARD",
-    "title": {
-      "type": "title",
-      "label": "ECO-COMS: Add Shell Org Pattern"
-    },
+    "headerSize": "HIDDEN",
     "body": {
       "type": "basicFormLayout",
       "id": "schemaPatternAppsForm",
       "sections": [
         {
           "type": "layoutSection",
-          "id": "navSection",
+          "id": "titleBannerSection",
+          "children": [
+            {
+              "type": "richText",
+              "id": "titleBannerRichText",
+              "enabled": false,
+              "value": "<span style=\"color:#0055B3;font-size:24px\"><b>ECO-COMS: Add Shell Org Pattern</b></span>"
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "aboutSection",
           "children": [
             {
               "type": "button",
@@ -48,13 +56,7 @@
               "taskReference": {
                 "taskId": "shellOrgManager"
               }
-            }
-          ]
-        },
-        {
-          "type": "layoutSection",
-          "id": "aboutSection",
-          "children": [
+            },
             {
               "type": "fieldSet",
               "id": "aboutFieldSet",
@@ -102,6 +104,9 @@
                             "appCode": "<% pa.appCode %>"
                           }
                         }
+                      },
+                      "excel": {
+                        "enabled": false
                       }
                     },
                     {
@@ -142,9 +147,16 @@
                             "appCode": "<% pa.appCode %>"
                           }
                         }
+                      },
+                      "excel": {
+                        "enabled": false
                       }
                     }
-                  ]
+                  ],
+                  "gridType": "LIST",
+                  "multiViewStylingEnabled": true,
+                  "autoPaging": true,
+                  "excelExportEnabled": true
                 }
               ]
             }

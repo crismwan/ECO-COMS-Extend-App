@@ -95,58 +95,64 @@
       ]
     },
     {
-      "name": "auditLogCount",
-      "baseUrlType": "BUSINESS-OBJECT",
-      "url": "/comsAuditLogs?limit=1",
-      "authType": "sso",
+      "name": "auditPage0",
+      "baseUrlType": "workday-graph",
       "bestEffort": "true",
+      "httpMethod": "POST",
+      "authType": "sso",
       "failOnStatusCodes": [
         {
           "code": 400
         },
         {
-          "code": 429
-        }
-      ]
-    },
-    {
-      "name": "auditPage0",
-      "baseUrlType": "BUSINESS-OBJECT",
-      "authType": "sso",
-      "isCollection": true,
-      "bestEffort": "true",
-      "failOnStatusCodes": [
+          "code": 403
+        },
         {
           "code": 429
         }
       ],
-      "url": "<% let t = auditLogCount.total ?? 0; let start = (t - 100) < 0 ? 0 : (t - 100); let cnt = t - 0 - start; '/comsAuditLogs?limit=' + (cnt > 0 ? cnt : 1) + '&offset=' + (cnt > 0 ? start : t) %>"
+      "graphQuery": {
+        "queryId": "auditLogsNewest",
+        "parameters": {
+          "offset": 0
+        }
+      }
     },
     {
       "name": "auditPage1",
-      "baseUrlType": "BUSINESS-OBJECT",
-      "authType": "sso",
-      "isCollection": true,
+      "baseUrlType": "workday-graph",
       "bestEffort": "true",
+      "httpMethod": "POST",
+      "authType": "sso",
       "failOnStatusCodes": [
         {
           "code": 429
         }
       ],
-      "url": "<% let t = auditLogCount.total ?? 0; let start = (t - 200) < 0 ? 0 : (t - 200); let cnt = t - 100 - start; '/comsAuditLogs?limit=' + (cnt > 0 ? cnt : 1) + '&offset=' + (cnt > 0 ? start : t) %>"
+      "graphQuery": {
+        "queryId": "auditLogsNewest",
+        "parameters": {
+          "offset": "<% ((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 100 ? 100 : 0 %>"
+        }
+      }
     },
     {
       "name": "auditPage2",
-      "baseUrlType": "BUSINESS-OBJECT",
-      "authType": "sso",
-      "isCollection": true,
+      "baseUrlType": "workday-graph",
       "bestEffort": "true",
+      "httpMethod": "POST",
+      "authType": "sso",
       "failOnStatusCodes": [
         {
           "code": 429
         }
       ],
-      "url": "<% let t = auditLogCount.total ?? 0; let start = (t - 300) < 0 ? 0 : (t - 300); let cnt = t - 200 - start; '/comsAuditLogs?limit=' + (cnt > 0 ? cnt : 1) + '&offset=' + (cnt > 0 ? start : t) %>"
+      "graphQuery": {
+        "queryId": "auditLogsNewest",
+        "parameters": {
+          "offset": "<% ((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 200 ? 200 : 0 %>"
+        }
+      }
     },
     {
       "name": "bulkRunCount",
@@ -178,10 +184,6 @@
     }
   ],
   "presentation": {
-    "title": {
-      "type": "title",
-      "label": "ECO-COMS: Insights"
-    },
     "pageType": "VIEW",
     "body": {
       "type": "basicFormLayout",
@@ -189,7 +191,19 @@
       "sections": [
         {
           "type": "layoutSection",
-          "id": "navSection",
+          "id": "titleBannerSection",
+          "children": [
+            {
+              "type": "richText",
+              "id": "titleBannerRichText",
+              "enabled": false,
+              "value": "<span style=\"color:#0055B3;font-size:24px\"><b>ECO-COMS: Insights</b></span><br><span style=\"color:#374151;font-size:13px\">Role requests, shell organizations, audit records and bulk runs in one view.</span>"
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "aboutSection",
           "children": [
             {
               "type": "button",
@@ -199,13 +213,7 @@
               },
               "action": "LINK",
               "suppressDiscardDialog": true
-            }
-          ]
-        },
-        {
-          "type": "layoutSection",
-          "id": "aboutSection",
-          "children": [
+            },
             {
               "type": "fieldSet",
               "id": "aboutFieldSet",
@@ -217,7 +225,9 @@
                   "enabled": false,
                   "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">One view across ECO-COMS: role requests, shell organizations and patterns, the audit log and bulk runs. Counts read up to 300 role requests, the newest 300 audit records and the newest 100 bulk runs. Select an <b>Application ID</b> to open it in Shell Org Manager. For Workday custom reports use the ECO-COMS report data sources (Role Requests, Audit Trail, Bulk Runs, Applications).</span>"
                 }
-              ]
+              ],
+              "collapsible": true,
+              "initializeCollapsed": true
             }
           ]
         },
@@ -248,7 +258,7 @@
                 {
                   "type": "card",
                   "cardId": "CountCard",
-                  "parameters": "<% { 'title': 'Changes, Last 30 Days', 'countText': '' + comsInsights.countInDays(list:flatten([auditPage0.data ?? [], auditPage1.data ?? [], auditPage2.data ?? []]), 'timestamp', comsInsights.lastDays(30)) + ' audit records', 'subtitle': 'Newest 300 audit records' } %>"
+                  "parameters": "<% { 'title': 'Changes, Last 30 Days', 'countText': '' + comsInsights.countInDays(list:flatten([((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.data ?? []) : []), ((((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 100 && !empty(auditPage1.data) && !empty(auditPage1.data.r)) ? (auditPage1.data.r.data ?? []) : []), ((((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 200 && !empty(auditPage2.data) && !empty(auditPage2.data.r)) ? (auditPage2.data.r.data ?? []) : [])]), 'timestamp', comsInsights.lastDays(30)) + ' audit records', 'subtitle': 'Newest 300 audit records' } %>"
                 },
                 {
                   "type": "card",
@@ -286,7 +296,7 @@
                 {
                   "type": "card",
                   "cardId": "AuditActionChart",
-                  "parameters": "<% let f = comsAuditFilters.filterLogs(list:flatten([auditPage0.data ?? [], auditPage1.data ?? [], auditPage2.data ?? []]), '30d', ''); { 'addCount': comsAuditFilters.countAction(f, 'ADD'), 'inactivateCount': comsAuditFilters.countAction(f, 'INACTIVATE'), 'reactivateCount': comsAuditFilters.countAction(f, 'REACTIVATE'), 'assignCount': comsAuditFilters.countAction(f, 'ASSIGN POSITION'), 'removeCount': comsAuditFilters.countAction(f, 'REMOVE POSITION'), 'requestCount': comsAuditFilters.countAction(f, 'REQUEST'), 'approveCount': comsAuditFilters.countAction(f, 'APPROVE'), 'denyCount': comsAuditFilters.countAction(f, 'DENY'), 'deleteCount': comsAuditFilters.countAction(f, 'DELETE'), 'totalText': '' + size(f) + ' records, last 30 days' } %>"
+                  "parameters": "<% let f = comsAuditFilters.filterLogs(list:flatten([((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.data ?? []) : []), ((((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 100 && !empty(auditPage1.data) && !empty(auditPage1.data.r)) ? (auditPage1.data.r.data ?? []) : []), ((((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 200 && !empty(auditPage2.data) && !empty(auditPage2.data.r)) ? (auditPage2.data.r.data ?? []) : [])]), '30d', ''); { 'addCount': comsAuditFilters.countAction(f, 'ADD'), 'inactivateCount': comsAuditFilters.countAction(f, 'INACTIVATE'), 'reactivateCount': comsAuditFilters.countAction(f, 'REACTIVATE'), 'assignCount': comsAuditFilters.countAction(f, 'ASSIGN POSITION'), 'removeCount': comsAuditFilters.countAction(f, 'REMOVE POSITION'), 'requestCount': comsAuditFilters.countAction(f, 'REQUEST'), 'approveCount': comsAuditFilters.countAction(f, 'APPROVE'), 'denyCount': comsAuditFilters.countAction(f, 'DENY'), 'deleteCount': comsAuditFilters.countAction(f, 'DELETE'), 'totalText': '' + size(f) + ' records, last 30 days' } %>"
                 },
                 {
                   "type": "card",
@@ -325,6 +335,9 @@
                         "appName": "<% appRow.name %>"
                       }
                     }
+                  },
+                  "excel": {
+                    "enabled": false
                   }
                 },
                 {
@@ -336,7 +349,8 @@
                     "id": "appNameText",
                     "value": "<% appRow.name %>",
                     "enabled": false
-                  }
+                  },
+                  "sortableAndFilterable": "true"
                 },
                 {
                   "type": "column",
@@ -347,7 +361,8 @@
                     "id": "shellActiveNumber",
                     "value": "<% appRow.shellActive %>",
                     "enabled": false
-                  }
+                  },
+                  "sortableAndFilterable": "true"
                 },
                 {
                   "type": "column",
@@ -358,7 +373,8 @@
                     "id": "shellInactiveNumber",
                     "value": "<% appRow.shellInactive %>",
                     "enabled": false
-                  }
+                  },
+                  "sortableAndFilterable": "true"
                 },
                 {
                   "type": "column",
@@ -369,7 +385,8 @@
                     "id": "patternsNumber",
                     "value": "<% appRow.patterns %>",
                     "enabled": false
-                  }
+                  },
+                  "sortableAndFilterable": "true"
                 },
                 {
                   "type": "column",
@@ -380,7 +397,8 @@
                     "id": "pendingNumber",
                     "value": "<% appRow.pending %>",
                     "enabled": false
-                  }
+                  },
+                  "sortableAndFilterable": "true"
                 },
                 {
                   "type": "column",
@@ -391,7 +409,8 @@
                     "id": "approvedNumber",
                     "value": "<% appRow.approved %>",
                     "enabled": false
-                  }
+                  },
+                  "sortableAndFilterable": "true"
                 },
                 {
                   "type": "column",
@@ -402,7 +421,8 @@
                     "id": "deniedNumber",
                     "value": "<% appRow.denied %>",
                     "enabled": false
-                  }
+                  },
+                  "sortableAndFilterable": "true"
                 },
                 {
                   "type": "column",
@@ -413,9 +433,14 @@
                     "id": "lastRequestText",
                     "value": "<% appRow.lastRequest %>",
                     "enabled": false
-                  }
+                  },
+                  "sortableAndFilterable": "true"
                 }
-              ]
+              ],
+              "gridType": "LIST",
+              "multiViewStylingEnabled": true,
+              "autoPaging": true,
+              "excelExportEnabled": true
             }
           ]
         },
@@ -440,7 +465,8 @@
                     "id": "requestedText",
                     "value": "<% ('' + (pendingRow.requestedDate ?? '')).substring(0, 10) %>",
                     "enabled": false
-                  }
+                  },
+                  "sortableAndFilterable": "true"
                 },
                 {
                   "type": "column",
@@ -451,7 +477,8 @@
                     "id": "roleText",
                     "value": "<% pendingRow.roleName ?? '' %>",
                     "enabled": false
-                  }
+                  },
+                  "sortableAndFilterable": "true"
                 },
                 {
                   "type": "column",
@@ -462,7 +489,8 @@
                     "id": "applicationText",
                     "value": "<% comsInsights.appOfIn(pendingRow, comsApplications.data ?? []) %>",
                     "enabled": false
-                  }
+                  },
+                  "sortableAndFilterable": "true"
                 },
                 {
                   "type": "column",
@@ -473,7 +501,8 @@
                     "id": "requestedByText",
                     "value": "<% !empty(pendingRow.requestedBy) ? (pendingRow.requestedBy.descriptor ?? '') : '' %>",
                     "enabled": false
-                  }
+                  },
+                  "sortableAndFilterable": "true"
                 },
                 {
                   "type": "column",
@@ -484,7 +513,8 @@
                     "id": "referenceText",
                     "value": "<% pendingRow.referenceId ?? '' %>",
                     "enabled": false
-                  }
+                  },
+                  "sortableAndFilterable": "true"
                 },
                 {
                   "type": "column",
@@ -498,9 +528,16 @@
                     "taskReference": {
                       "taskId": "iscRoleRequestsView"
                     }
+                  },
+                  "excel": {
+                    "enabled": false
                   }
                 }
-              ]
+              ],
+              "gridType": "LIST",
+              "multiViewStylingEnabled": true,
+              "autoPaging": true,
+              "excelExportEnabled": true
             }
           ]
         }
@@ -514,6 +551,7 @@
           "podId": "ecoComsFooter"
         }
       ]
-    }
+    },
+    "headerSize": "HIDDEN"
   }
 }

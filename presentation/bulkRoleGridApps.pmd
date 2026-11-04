@@ -43,18 +43,26 @@
     }
   ],
   "presentation": {
-    "headerSize": "STANDARD",
-    "title": {
-      "type": "title",
-      "label": "ECO-COMS: Bulk Edit Role Assignments"
-    },
+    "headerSize": "HIDDEN",
     "body": {
       "type": "basicFormLayout",
       "id": "bulkRoleGridAppsForm",
       "sections": [
         {
           "type": "layoutSection",
-          "id": "navSection",
+          "id": "titleBannerSection",
+          "children": [
+            {
+              "type": "richText",
+              "id": "titleBannerRichText",
+              "enabled": false,
+              "value": "<span style=\"color:#0055B3;font-size:24px\"><b>ECO-COMS: Bulk Edit Role Assignments</b></span>"
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "aboutSection",
           "children": [
             {
               "type": "button",
@@ -64,13 +72,7 @@
               "taskReference": {
                 "taskId": "home"
               }
-            }
-          ]
-        },
-        {
-          "type": "layoutSection",
-          "id": "aboutSection",
-          "children": [
+            },
             {
               "type": "fieldSet",
               "id": "aboutFieldSet",
@@ -118,6 +120,9 @@
                             "appCode": "<% pa.appCode %>"
                           }
                         }
+                      },
+                      "excel": {
+                        "enabled": false
                       }
                     },
                     {
@@ -147,9 +152,16 @@
                             "appCode": "<% pa.appCode %>"
                           }
                         }
+                      },
+                      "excel": {
+                        "enabled": false
                       }
                     }
-                  ]
+                  ],
+                  "gridType": "LIST",
+                  "multiViewStylingEnabled": true,
+                  "autoPaging": true,
+                  "excelExportEnabled": true
                 }
               ]
             }

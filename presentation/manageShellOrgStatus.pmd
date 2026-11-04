@@ -61,11 +61,23 @@
   },
   "onSubmit": "<%\n  confirmStatusChange.clearError();\n  effectiveDate.clearError();\n  let valid = true;\n  if (confirmStatusChange.value != true) {\n    confirmStatusChange.setError('Please confirm the status change.');\n    valid = false;\n  }\n  if (empty(effectiveDate.value)) {\n    effectiveDate.setError('Effective Date is required.');\n    valid = false;\n  }\n  if (valid) {\n    let oc = queryParams.orgCode ?? '';\n    let ot = oc.substringBefore(':') + ':' + oc.substringAfter(':').substringBefore(':');\n    let inactivating = queryParams.currentStatus == 'Active';\n    let act = inactivating ? 'INACTIVATE' : 'REACTIVATE';\n    let oid = queryParams.orgId ?? '';\n    let before = verifyOrgStatus.invoke({'lim': '1'}).total ?? 0;\n    launchManageStatus.invoke({'cbw': selectedWorker.id ?? '', 'cb': (selectedWorker.descriptor ?? '').urlEncode(), 'ts': date:now().format(\"yyyy-MM-dd'T'HH:mm:ss'Z'\").urlEncode(), 'oid': oid, 'act': act, 'oc': oc.urlEncode(), 'on': (queryParams.orgName ?? oc).replace(' (inactive)', '').urlEncode(), 'inact': inactivating ? 'true' : 'false', 'ed': effectiveDate.value.format('yyyy-MM-dd'), 'ot': ot, 'vo': 'false'});\n    let after = verifyOrgStatus.invoke({'lim': '1'}).total ?? 0;\n    let changed = after > before;\n    if (!changed) {\n      confirmStatusChange.setError('Workday rejected this status change, so nothing was changed. Try again or check the organization in Workday.');\n      valid = false;\n    }\n  }\n  valid;\n%>",
   "presentation": {
-    "headerSize": "STANDARD",
+    "headerSize": "HIDDEN",
     "body": {
       "type": "basicFormLayout",
       "id": "manageStatusForm",
       "sections": [
+        {
+          "type": "layoutSection",
+          "id": "titleBannerSection",
+          "children": [
+            {
+              "type": "richText",
+              "id": "titleBannerRichText",
+              "enabled": false,
+              "value": "<% '<span style=\"color:#0055B3;font-size:24px\"><b>' + ('ECO-COMS: Change Status – ' + (queryParams.orgCode ?? 'Organization')).replace('<', '&lt;') + '</b></span>' %>"
+            }
+          ]
+        },
         {
           "type": "layoutSection",
           "id": "navSection",
@@ -191,10 +203,6 @@
     "pageType": "EDIT",
     "cancelOverride": {
       "taskId": "shellOrgManager"
-    },
-    "title": {
-      "type": "title",
-      "label": "<% 'ECO-COMS: Change Status – ' + (queryParams.orgCode ?? 'Organization') %>"
     }
   }
 }
