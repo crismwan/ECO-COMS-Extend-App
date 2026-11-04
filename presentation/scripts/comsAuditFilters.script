@@ -24,6 +24,12 @@ var filterLogs = function(logs, period, changeType) {
   logs.filter(e => { (empty(e.timestamp) ? empty(period) || period == 'all' : inPeriod(e, period, keys)) && (empty(changeType) || e.objectType == changeType) });
 };
 
+/* Organization and Changed By filters (tools/audit_filters_more.py). A record belongs to the org by its
+   WID, its code (coReferenceId or coName) or its name, as on Shell Org Detail. */
+var filterOrgBy = function(logs, orgId, orgCode, orgName, by) {
+  (empty(orgId) && empty(orgCode) && empty(orgName) && empty(by)) ? logs : logs.filter(e => { (empty(by) || (e.changedByWid ?? '') == by) && ((empty(orgId) && empty(orgCode) && empty(orgName)) || (!empty(orgId) && (e.orgWid ?? '') == orgId) || (!empty(orgCode) && ((e.coReferenceId ?? '') == orgCode || (e.coName ?? '') == orgCode)) || (!empty(orgName) && (e.coName ?? '') == orgName)) });
+};
+
 var periodLabel = function(period) {
   period == '24h' ? 'last 24 hours' : (period == '7d' ? 'last 7 days' : (period == '30d' ? 'last 30 days' : (period == '90d' ? 'last 90 days' : 'all time')));
 };
@@ -51,6 +57,7 @@ var activityByDay = function(logs) {
 
 {
   "filterLogs": filterLogs,
+  "filterOrgBy": filterOrgBy,
   "periodLabel": periodLabel,
   "countAction": countAction,
   "activityByDay": activityByDay

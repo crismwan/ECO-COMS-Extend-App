@@ -117,6 +117,20 @@
               }
             },
             {
+              "type": "button",
+              "id": "auditLogButton",
+              "label": "View changes in Audit Log",
+              "action": "LINK",
+              "taskReference": {
+                "taskId": "auditLogViewer",
+                "parameterBindings": {
+                  "orgId": "<% queryParams.orgId ?? '' %>",
+                  "orgCode": "<% queryParams.orgCode ?? '' %>",
+                  "orgName": "<% queryParams.orgName ?? '' %>"
+                }
+              }
+            },
+            {
               "type": "fieldSet",
               "id": "aboutFieldSet",
               "title": "About This Page",

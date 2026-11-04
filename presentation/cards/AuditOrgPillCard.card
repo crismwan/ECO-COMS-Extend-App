@@ -1,0 +1,48 @@
+{
+  "id": "AuditOrgPillCard",
+  "parameters": [
+    "period",
+    "changeType",
+    "by",
+    "orgId",
+    "orgCode",
+    "orgName"
+  ],
+  "header": {
+    "title": "Organization",
+    "icon": "wd-accent-building"
+  },
+  "body": {
+    "type": "pillCard",
+    "pills": [
+      {
+        "label": "All organizations",
+        "taskReference": {
+          "taskId": "auditLogViewer",
+          "parameterBindings": {
+            "period": "<% period ?? \"\" %>",
+            "changeType": "<% changeType ?? \"\" %>",
+            "by": "<% by ?? \"\" %>",
+            "orgId": "",
+            "orgCode": "",
+            "orgName": ""
+          }
+        }
+      },
+      {
+        "label": "<% \"✓ \" + ((orgCode ?? \"\") != \"\" ? orgCode : (orgName ?? \"\")) %>",
+        "taskReference": {
+          "taskId": "auditLogViewer",
+          "parameterBindings": {
+            "period": "<% period ?? \"\" %>",
+            "changeType": "<% changeType ?? \"\" %>",
+            "by": "<% by ?? \"\" %>",
+            "orgId": "<% orgId ?? \"\" %>",
+            "orgCode": "<% orgCode ?? \"\" %>",
+            "orgName": "<% orgName ?? \"\" %>"
+          }
+        }
+      }
+    ]
+  }
+}

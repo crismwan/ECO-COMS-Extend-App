@@ -1,0 +1,49 @@
+{
+  "id": "AuditByPillCard",
+  "parameters": [
+    "period",
+    "changeType",
+    "by",
+    "orgId",
+    "orgCode",
+    "orgName",
+    "me"
+  ],
+  "header": {
+    "title": "Changed By",
+    "icon": "wd-accent-person"
+  },
+  "body": {
+    "type": "pillCard",
+    "pills": [
+      {
+        "label": "<% (empty(by)) ? \"✓ Anyone\" : \"Anyone\" %>",
+        "taskReference": {
+          "taskId": "auditLogViewer",
+          "parameterBindings": {
+            "period": "<% period ?? \"\" %>",
+            "changeType": "<% changeType ?? \"\" %>",
+            "by": "",
+            "orgId": "<% orgId ?? \"\" %>",
+            "orgCode": "<% orgCode ?? \"\" %>",
+            "orgName": "<% orgName ?? \"\" %>"
+          }
+        }
+      },
+      {
+        "label": "<% (!empty(by) && by == (me ?? \"\")) ? \"✓ Only my changes\" : \"Only my changes\" %>",
+        "taskReference": {
+          "taskId": "auditLogViewer",
+          "parameterBindings": {
+            "period": "<% period ?? \"\" %>",
+            "changeType": "<% changeType ?? \"\" %>",
+            "by": "<% me ?? \"\" %>",
+            "orgId": "<% orgId ?? \"\" %>",
+            "orgCode": "<% orgCode ?? \"\" %>",
+            "orgName": "<% orgName ?? \"\" %>"
+          }
+        }
+      }
+    ]
+  }
+}

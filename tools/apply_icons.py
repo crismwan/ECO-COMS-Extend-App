@@ -45,6 +45,7 @@ CARDS = {
     # Activity over time across the whole app
     "AppActivityChart": "time",
     "IscStatusPillCard": "gauge", "AuditPeriodPillCard": "calendar",
+    "AuditByPillCard": "person", "AuditOrgPillCard": "building",
     # Outcomes and recovery
     "ShellOrgReceiptCard": "award-medal", "ShellOrgPatternReceiptCard": "award-medal",
     "ShellOrgStatusReceiptCard": "award-medal",
