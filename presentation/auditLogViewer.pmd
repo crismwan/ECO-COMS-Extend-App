@@ -364,6 +364,9 @@
                       "value": "<% logEntry.coName ?? '' %>"
                     }
                   ]
+                },
+                "excel": {
+                  "value": "<% logEntry.coName ?? '' %>"
                 }
               },
               {
@@ -393,6 +396,9 @@
                       "value": "<% logEntry.roleName ?? '' %>"
                     }
                   ]
+                },
+                "excel": {
+                  "value": "<% logEntry.roleName ?? '' %>"
                 }
               },
               {
@@ -423,6 +429,9 @@
                       "value": "<% logEntry.positionName ?? '' %>"
                     }
                   ]
+                },
+                "excel": {
+                  "value": "<% logEntry.positionName ?? '' %>"
                 }
               },
               {
@@ -464,6 +473,9 @@
                       "value": "<% logEntry.triggeredBy ?? '' %>"
                     }
                   ]
+                },
+                "excel": {
+                  "value": "<% logEntry.triggeredBy ?? '' %>"
                 }
               },
               {

@@ -416,6 +416,18 @@ function staticSuite() {
     }
   }
 
+  // 7g3. Excel export: a fieldSet cell can't be exported on its own; the whole export then fails with
+  // "no exporter found for widget ...StandardFieldSet" (Audit Log, 2026-11-04). Give it an excel value.
+  for (const [f, d] of Object.entries(pmds)) {
+    walk(d, (n) => {
+      if (n.type !== 'grid' || !(n.excelExportEnabled === true || n.excelExportEnabled === 'true')) return;
+      for (const c of n.columns || []) {
+        if (c.cellTemplate?.type === 'fieldSet' && !(c.excel && (c.excel.value || c.excel.enabled === false)))
+          err('excelFieldSet', `${f}: grid ${n.id} column ${c.columnId} is a fieldSet with no excel value or excel.enabled false; Excel export fails`, f);
+      }
+    });
+  }
+
   // 7h. Application pattern schemas (tools/pattern_schemas.json): regexes compile, spreadsheet examples
   // build the expected names and pass, invalid examples fail, and hints never contain the "fieldLabel"
   // marker that AddShellOrgPattern counts to know the number of fields.
