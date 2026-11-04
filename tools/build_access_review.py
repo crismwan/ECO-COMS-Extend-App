@@ -157,11 +157,10 @@ amd = load(amd_name)
 for tid in ('accessReview', 'confirmAccessReview'):
     if not any(t['id'] == tid for t in amd['tasks']):
         amd['tasks'].append({"id": tid, "routingPattern": "/" + tid, "page": {"id": tid}})
-if not any(f['id'] == 'accessReviewFlow' for f in amd.get('flowDefinitions', [])):
-    amd.setdefault('flowDefinitions', []).append({"id": "accessReviewFlow", "flowSteps": [
+amd['flowDefinitions'] = [f for f in amd.get('flowDefinitions', []) if f['id'] != 'accessReviewFlow'] + [{"id": "accessReviewFlow", "flowSteps": [
         {"id": "confirmAccessReviewStep", "taskId": "confirmAccessReview", "startsFlow": True,
          "transitions": [{"order": "a", "value": "accessReviewStep", "condition": "true"}]},
-        {"id": "accessReviewStep", "taskId": "accessReview", "endsFlow": True}]})
+        {"id": "accessReviewStep", "taskId": "accessReview", "endsFlow": True}]}]
 save(amd_name, amd)
 
 save(os.path.join('cards', 'AccessReviewCard.card'), {
