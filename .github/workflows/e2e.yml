@@ -22,6 +22,10 @@ on:
         description: "cleanup only: limit inactivation to these org codes (comma-separated)"
         required: false
         default: ""
+      repair_flags:
+        description: "repair only: extra flags, e.g. --backfill-wids"
+        required: false
+        default: ""
       unassign:
         description: "repair only: position ID (e.g. P-00001) to remove from the test role"
         required: false
@@ -55,8 +59,8 @@ jobs:
             static|smoke|full|isu|seconduser|datacheck|probe|graphql|eventlinks|timing) node test/run-tests.js "${TASK}" ;;
             cleanup-dry-run) node test/run-tests.js cleanup --also "${ALSO}" ;;
             cleanup-apply)   node test/run-tests.js cleanup --apply --also "${ALSO}" ${EFFECTIVE:+--effective "$EFFECTIVE"} ${ONLY:+--only "$ONLY"} ;;
-            repair-dry-run)  node test/run-tests.js repair ${UNASSIGN:+--unassign "$UNASSIGN"} ${ONLY:+--drop-audit "$ONLY"} ;;
-            repair-apply)    node test/run-tests.js repair --apply ${UNASSIGN:+--unassign "$UNASSIGN"} ${ONLY:+--drop-audit "$ONLY"} ;;
+            repair-dry-run)  node test/run-tests.js repair ${{ github.event.inputs.repair_flags }} ${UNASSIGN:+--unassign "$UNASSIGN"} ${ONLY:+--drop-audit "$ONLY"} ;;
+            repair-apply)    node test/run-tests.js repair --apply ${{ github.event.inputs.repair_flags }} ${UNASSIGN:+--unassign "$UNASSIGN"} ${ONLY:+--drop-audit "$ONLY"} ;;
             seed-apps-dry-run) node test/run-tests.js seedapps ;;
             seed-apps-apply)   node test/run-tests.js seedapps --apply ;;
             pattern-guard)     node test/run-tests.js patternguard ;;

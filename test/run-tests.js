@@ -1274,6 +1274,25 @@ async function repair(token, me) {
   });
   if (dropAudit) return;   // on its own: skip the other repairs below
 
+  // --backfill-wids: give old audit records the org and role WIDs newer records store, so the Audit Log no longer needs
+  // its three lookup lists (all shell orgs, shell roles, AAA roles) just to link these few (2026-11-04).
+  if (argv.includes('--backfill-wids')) await test('Repair.backfillWids', async () => {
+    const wqlFile = (id) => JSON.parse(fs.readFileSync(path.join(ROOT, 'presentation/wqlQueries', id + '.wqlquery'), 'utf8')).query;
+    const orgs = (await wql(token, wqlFile('allShellOrgs'), 10000)).data || [];
+    const roles = [...((await wql(token, wqlFile('allShellAssignableRolesinTenant'), 1000)).data || []), ...((await wql(token, wqlFile('allAAArolesinTenant'), 1000)).data || [])];
+    const todo = (await readAll(token, 'comsAuditLogs')).filter((a) => (!a.orgWid && a.coName) || (!a.roleWid && a.roleName));
+    let done = 0;
+    for (const a of todo) {
+      const body = {};
+      if (!a.orgWid && a.coName) { const o = orgs.find((x) => x.code === a.coName && x.organizationByName?.id); if (o) body.orgWid = o.organizationByName.id; }
+      if (!a.roleWid && a.roleName) { const r = roles.find((x) => x.role?.descriptor === a.roleName && x.role?.id); if (r) body.roleWid = r.role.id; }
+      console.log(`   ${a.id} ${a.timestamp} ${a.objectType}/${a.action} ${a.coName || ''} ${a.roleName || ''} -> ${JSON.stringify(body) === '{}' ? 'no match (stays text)' : (apply ? 'set ' : 'would set ') + Object.keys(body).join(', ')}`);
+      if (apply && Object.keys(body).length) { await request('PATCH', `${BO}/comsAuditLogs/${a.id}`, token, body); done++; }
+    }
+    pass('Repair.backfillWids', `${todo.length} record(s) without WIDs; ${apply ? 'updated ' + done : 'dry run'}`);
+  });
+  if (argv.includes('--backfill-wids')) return;
+
   const unassign = arg('--unassign');
   if (unassign) await test('Repair.unassign', async () => {
     const readRole = async () => {
