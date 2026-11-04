@@ -752,6 +752,22 @@ async function smoke(token, me) {
     (missing.length ? fail : pass)('Audit.runId', `${recent.length - missing.length} of ${recent.length} record(s) since ${since} carry a run ID` + (missing.length ? `; missing on ${missing.slice(0, 3).map((a) => a.objectType + ' ' + a.action + ' ' + a.timestamp).join(', ')}` : ''));
   });
 
+  // Access Review lists vacant positions that still hold a shell role (tools/build_access_review.py): the same two
+  // queries the page makes, so a 0 on the page can be told apart from a broken filter.
+  await test('AccessReview.vacant', async () => {
+    const pos = (await wql(token, 'SELECT cf_PositionID, cf_PositionIsFilled FROM allPositions WHERE supervisoryOrganization is not empty', 10000)).data || [];
+    const vacant = new Set(pos.filter((p) => p.cf_PositionIsFilled === false).map((p) => String(p.cf_PositionID || '')));
+    const q = JSON.parse(fs.readFileSync(path.join(ROOT, 'presentation/wqlQueries/allShellAssignableRolesinTenant.wqlquery'), 'utf8')).query;
+    const roles = (await wql(token, q, 1000)).data || [];
+    const held = roles.flatMap((r) => (r.roleAssignments || []).flatMap((ra) => (ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions || []).map((p) => ({ role: r.role?.descriptor, pos: p.descriptor || '' }))));
+    const rows = held.filter((h) => vacant.has(h.pos.split(' ')[0]));
+    const sample = pos.slice(0, 2).map((p) => JSON.stringify(p)).join(' ');
+    if (!pos.length) throw new Error('allPositions returned no positions');
+    if (!pos.some((p) => typeof p.cf_PositionIsFilled === 'boolean')) throw new Error(`cf_PositionIsFilled isn't a boolean: ${sample}`);
+    pass('AccessReview.vacant', `${pos.length} positions, ${vacant.size} vacant; ${held.length} shell-role assignments, ${rows.length} on vacant positions` +
+      (rows.length ? ` (e.g. ${rows[0].role} on ${rows[0].pos})` : '') + `; sample ${sample}`);
+  });
+
   let roles = [];
   await test('Requests.read', async () => {
     roles = await readAll(token, 'comsAssignableRoles');
