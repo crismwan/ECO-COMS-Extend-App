@@ -1741,8 +1741,8 @@ async function timingSuite(token) {
   const aud = (where, limit = 100) => `query { r: ${APP_ID}_COMSAuditLog(dataSource: {${APP_ID}_comsAuditLogs: {}}${where ? ', where: ' + where : ''}, orderBy: {timestamp: DESC}, limit: ${limit}) { total data { ${AQ} } } }`;
   const since = new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10) + 'T00:00:00Z';
   await med('Graph audit: page 0 (today)', async () => { const r = await gql(token, aud('')); return `total ${r.r.total}, ${kb(r)}`; });
-  await med('Graph audit: last 7 days (where timestamp gte)', async () => { const r = await gql(token, aud(`{timestamp: {gte: "${since}"}}`)); return `${r.r.data.length} rows (total ${r.r.total}), ${kb(r)}`; });
-  await med('Graph audit: total only (limit 1)', async () => { const r = await gql(token, `query { r: ${APP_ID}_COMSAuditLog(dataSource: {${APP_ID}_comsAuditLogs: {}}, where: {timestamp: {gte: "${since}"}}, limit: 1) { total } }`); return `total ${r.r.total}`; });
+  // timestamp is a TEXT field: String_Filter has no gt/gte (2026-11-04), so a period can't be filtered on the server
+  await med('Graph audit: total only (limit 1)', async () => { const r = await gql(token, `query { r: ${APP_ID}_COMSAuditLog(dataSource: {${APP_ID}_comsAuditLogs: {}}, limit: 1) { total } }`); return `total ${r.r.total}`; });
   const audits = await readAll(token, 'comsAuditLogs');
   const noOrg = audits.filter((a) => !a.orgWid && a.coName).length, noRole = audits.filter((a) => !a.roleWid && a.roleName).length;
   pass('Timing', `see lines above; ${audits.length} audit records, ${noOrg} without orgWid, ${noRole} without roleWid (the Audit Log's lookup lists only serve these)`);
