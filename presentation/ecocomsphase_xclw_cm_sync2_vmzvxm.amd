@@ -482,6 +482,10 @@
     {
       "key": "workday-staffing-v7",
       "value": "<% `{{apiGatewayEndpoint}}/staffing/v7/` %>"
+    },
+    {
+      "key": "workday-graph",
+      "value": "<% `{{apiGatewayEndpoint}}/graphql/v1` %>"
     }
   ]
 }

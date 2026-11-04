@@ -374,7 +374,7 @@ function staticSuite() {
     const raw = JSON.stringify(d);
     for (const e of d.endPoints || []) {
       const bt = String(e.baseUrlType || '');
-      if (bt === 'BUSINESS-OBJECT' || /wql/i.test(bt) || bt === 'COMMON' || /orchestr|bp/i.test(bt)) continue;
+      if (bt === 'BUSINESS-OBJECT' || bt === 'workday-graph' || /wql/i.test(bt) || bt === 'COMMON' || /orchestr|bp/i.test(bt)) continue;
       if (/limit=(\d{4,})/.test(String(e.url))) continue;
       const re = new RegExp(`\\b${e.name}\\.data\\b[^%]{0,120}?\\.(filter|find)\\(`);
       const m = raw.match(re);
@@ -382,6 +382,36 @@ function staticSuite() {
         // Allowed only as a fallback after stored names (e.g. positionNames) are checked first.
         const before = raw.slice(Math.max(0, m.index - 220), m.index);
         if (!/Names\)\s*\?/.test(before)) warn('Static.cappedLookup', `${f}: ${e.name} (${bt} ${e.url}) is searched with filter/find; REST returns 20-100 rows, so matches beyond that come back blank`);
+      }
+    }
+  }
+
+  // 7g2. Graph API endpoints (developer.workday.com "Run Graph API Queries on a Page"): POST, a
+  // provider in the AMD, a Graph Query component that exists and declares every parameter passed,
+  // and guarded reads: a Graph error is HTTP 200 with data.<field> null, so `x.data.r` needs a
+  // !empty(x.data) check first.
+  {
+    const amdDoc = docs[AMD_PATH] || {};
+    const providers = new Set((amdDoc.dataProviders || []).map((p) => p.key));
+    const gqs = {};
+    for (const f of listFiles('presentation/graphQueries').filter((x) => x.endsWith('.graphquery'))) {
+      try { const q = JSON.parse(fs.readFileSync(path.join(ROOT, f), 'utf8')); gqs[q.id] = q;
+        if (path.basename(f, '.graphquery') !== q.id) err('graphQuery', `${f}: id "${q.id}" must match the file name`, f);
+        if (/<%/.test(q.query || '')) err('graphQuery', `${f}: the query string can't contain PMD script; pass values through variables`, f);
+        for (const prm of q.parameters || []) if (!JSON.stringify(q.variables || {}).includes(prm)) err('graphQuery', `${f}: parameter "${prm}" isn't used in variables`, f);
+      } catch (e) { err('graphQuery', `${f}: ${e.message}`, f); }
+    }
+    for (const [f, d] of Object.entries(pmds)) {
+      const raw = JSON.stringify(d);
+      for (const e of d.endPoints || []) {
+        if (!e.graphQuery) continue;
+        if (String(e.httpMethod).toUpperCase() !== 'POST') err('graphQuery', `${f}: ${e.name} must use httpMethod POST`, f);
+        if (!providers.has(e.baseUrlType)) err('graphQuery', `${f}: ${e.name} uses provider "${e.baseUrlType}", not in the AMD`, f);
+        const q = e.graphQuery.queryId && gqs[e.graphQuery.queryId];
+        if (e.graphQuery.queryId && !q) err('graphQuery', `${f}: ${e.name} references missing Graph Query "${e.graphQuery.queryId}"`, f);
+        if (q) for (const k of Object.keys(e.graphQuery.parameters || {})) if (!(q.parameters || []).includes(k)) err('graphQuery', `${f}: ${e.name} passes "${k}", which ${q.id} doesn't declare`, f);
+        const unguarded = raw.split(`${e.name}.data.`).length - 1 - (raw.split(`!empty(${e.name}.data)`).length - 1) * 2;
+        if (unguarded > 0) err('graphQuery', `${f}: ${e.name}.data.<field> is read without a !empty(${e.name}.data) guard`, f);
       }
     }
   }

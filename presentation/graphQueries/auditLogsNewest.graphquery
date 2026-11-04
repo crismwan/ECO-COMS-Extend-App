@@ -1,0 +1,10 @@
+{
+  "id": "auditLogsNewest",
+  "parameters": [
+    "offset"
+  ],
+  "query": "query auditLogsNewest($offset: BigInt) { r: ecocomsphase_xclw_cm_sync2_vmzvxm_COMSAuditLog(dataSource: {ecocomsphase_xclw_cm_sync2_vmzvxm_comsAuditLogs: {}}, orderBy: {timestamp: DESC}, limit: 100, offset: $offset) { total data { workdayID { id } timestamp action objectType coName coReferenceId triggeredBy details effectiveDate roleName positionName changedByWid orgWid roleWid positionWid } } }",
+  "variables": {
+    "offset": "<% offset %>"
+  }
+}
