@@ -62,8 +62,8 @@ Known issues are listed in `KNOWN_ISSUES` near the top of the static section. Th
 Setup (a person does this once per tenant):
 
 1. Pick a test worker who is not an admin. Give them **Manage: COMS Assignable Roles** (and nothing ISC-level), and make sure **Cancel** for the Initiator is on the BP policy.
-2. Sign in as them with wdcli (`wdcli app deploy <appId>` in a separate config, or log out first), and copy `wcpTenantAccessToken.ubc_wcpdev2` from `~/.config/@workday/wdcli/config.json`.
-3. Store it as the repo secret **`WD_SECOND_TOKEN`** (it expires after about 8 hours, like `WD_DEV_TOKEN`).
+2. Sign in as them with wdcli (`wdcli app deploy <appId>` in a separate config, or log out first), and copy `wcpTenantAccessToken.ubc_wcpdev2` from wdcli's config.json (Windows: `$env:LOCALAPPDATA\@workday\wdcli\config.json`).
+3. Store it as the repo secret **`WD_SECOND_TOKEN`** (it expires after 1 hour, like `WD_DEV_TOKEN`, so run the suite right after setting it).
 
 Without the secret the suite reports SKIP. Each run leaves 3 Denied TEST requests (`TESTROLEWD/OC/XC RUN<n>`); BP-linked records can't be deleted.
 
