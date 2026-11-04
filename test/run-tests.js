@@ -1068,11 +1068,7 @@ async function full(token, me) {
       enabledForOrganizationTypes: unit.name, enabledForWid: unit.wid, academicUnitWid: unit.wid, academicUnitDescription: unit.name,
     });
     if (!req.id) throw new Error('request POST returned no id');
-    await request('POST', `${BO}/comsAuditLogs`, token, {
-      timestamp: who().timestamp, objectType: 'Assignable Role', action: 'REQUEST', coReferenceId: roleName, coName: orgCode,
-      details: `Assignable role request submitted: ${roleName} for org ${orgCode}`, triggeredBy: me.descriptor,
-      roleName, effectiveDate: today, changedByWid: me.id, positionName: pos.name, positionWid: pos.wid,
-    });
+    // StartRoleRequestReview writes the REQUEST audit record (with the event and run ID) since 2026-11-04.
     await launch(token, 'StartRoleRequestReview', { ref });
     let eventWid = null;
     for (let i = 0; i < 10 && !eventWid; i++) {
@@ -1083,6 +1079,9 @@ async function full(token, me) {
     const ev = await request('GET', `${BP}/events/${eventWid}`, token);
     const st = String(ev?.status?.descriptor || ev?.overallStatus?.descriptor || '');
     if (/complete|terminat|cancel|denied/i.test(st)) throw new Error(`review event for ${roleName} is already "${st}"`);
+    const reqAudit = (await readAll(token, 'comsAuditLogs')).find((a) => a.action === 'REQUEST' && a.roleName === roleName);
+    if (!reqAudit) throw new Error(`StartRoleRequestReview wrote no REQUEST audit record for ${roleName}`);
+    if (reqAudit.eventWid !== eventWid || !reqAudit.runId) throw new Error(`REQUEST audit for ${roleName}: eventWid ${reqAudit.eventWid || '-'} (want ${eventWid}), runId ${reqAudit.runId || '-'}`);
     return { roleName, st, pos: pos.name, unit: unit.name };
   };
 
@@ -1977,11 +1976,7 @@ async function demoSeed(token, me) {
       requestedDate: tenantDate(), requestedBy: { id: me.id }, active: false, effectiveDate: EFF, ...fields,
     });
     if (!req.id) throw new Error('request POST returned no id');
-    await request('POST', `${BO}/comsAuditLogs`, token, {
-      timestamp: who().timestamp, objectType: 'Assignable Role', action: 'REQUEST', coReferenceId: roleName, coName: PATTERN,
-      details: `Assignable role request submitted: ${roleName} for org ${PATTERN}`, triggeredBy: me.descriptor,
-      roleName, effectiveDate: EFF, changedByWid: me.id, positionName: names.join(', '), positionWid: wids.join(','),
-    });
+    // StartRoleRequestReview writes the REQUEST audit record (with the event and run ID) since 2026-11-04.
     await launch(token, 'StartRoleRequestReview', { ref });
     let ev = null;
     for (let i = 0; i < 10 && !ev; i++) { await sleep(3000); ev = (await request('GET', `${BO}/comsAssignableRoles/${req.id}`, token)).reviewEventWid || null; }

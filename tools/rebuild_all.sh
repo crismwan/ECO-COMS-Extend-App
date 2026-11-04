@@ -40,6 +40,7 @@ run tools/merge_nav_about.py           # back links at the top of the About box
 run tools/title_banner.py              # white title tile instead of Workday's square page banner
 
 run tools/ux_improvements.py --tiles  # one-line summary under the title tile where the About box starts closed
+run tools/request_audit.py          # REQUEST audit records written by the review orchestrations (with event + run ID)
 run tools/audit_run_id.py           # audit records carry the orchestration run ID (field runId)
 run tools/audit_event_ref.py        # audit records carry their Workday event (field eventWid)
 run tools/graphql_audit.py          # audit records through the Graph API (newest first, sorted on the server)
