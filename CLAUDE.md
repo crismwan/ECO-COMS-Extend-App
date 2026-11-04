@@ -1049,6 +1049,15 @@ Then filter in the grid `rows` binding: `"<% positions.data.filter(p => { myIdLi
 
 The AMD data provider key is `workday-staffing-v6` pointing to the Workday Staffing v6 API base URL.
 
+### Measuring page speed (2026-11-04)
+
+- Time the server, not the browser: `GET /wday/app/<appId>/<tenant>/<appId>/<taskId>` with `Accept: application/json`, 7 loads, take the median (first loads after a quiet spell are 2-5x slower). Time each data call on its own from CI (an e2e `timing` suite with the developer token) to see which one costs what.
+- Data calls run in parallel, except an endpoint that references another, which waits for it. A slow page is usually one big list (a 600-row WQL is ~500 ms) or page script over hundreds of rows, not the number of calls.
+- **Graph isn't automatically faster.** The same 43-row read took 246-2043 ms through Graph against a steady ~300 ms for count + 3 REST pages. Measure before switching.
+- An inbound endpoint takes `exclude`, so a page of a paged list can be skipped when the first page's total says it would be empty.
+- A TEXT date field (e.g. an ISO timestamp stored as text) gets `String_Filter` in Graph: no `gt`/`gte`, so no server-side date range.
+- Before deleting a fallback lookup list, backfill the records that needed it; then the page reads stored values only.
+
 ### Deferred endpoints — null guard required (`?? []`)
 
 An inbound endpoint marked `"deferred": true` does **not** fetch until its data is first needed (e.g. when a tab using it is opened). However, Workday evaluates **all PMD script expressions at page load time** — including `rows`, `visible`, and `filter` expressions on every tab, not just the active one. This means a deferred endpoint's `.data` property is accessed before the fetch has occurred, causing:
