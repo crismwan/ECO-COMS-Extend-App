@@ -1821,6 +1821,15 @@ async function graphqlSuite(token) {
     (b.r.data.length && !overlap ? pass : fail)('GraphQL.offsetAfterFirst', `total ${a.r.total}: page 1 ${a.r.data.length} rows, page 2 ${b.r.data.length} rows, ${overlap} repeated`);
   });
 
+  // 4b. The Audit Log's own Graph Query returns the run ID and event on the newest records.
+  await test('GraphQL.auditLinks', async () => {
+    const q = JSON.parse(fs.readFileSync(path.join(ROOT, 'presentation/graphQueries/auditLogsNewest.graphquery'), 'utf8'));
+    const d = await gql(token, q.query, { offset: 0 });
+    const rows = d.r.data || [];
+    rows.slice(0, 5).forEach((x) => console.log(`   ${x.timestamp} ${x.objectType} ${x.action} runId=${x.runId || '-'} eventWid=${x.eventWid || '-'}`));
+    const linked = rows.filter((x) => x.runId && x.eventWid);
+    (linked.length ? pass : fail)('GraphQL.auditLinks', `${linked.length} of ${rows.length} records carry both a run ID and an event (the page's own query)`);
+  });
   // 5. A second (non-admin) user: Graph API calls need the "Workday Graph API Applications" domain
   // (developer.workday.com "Run Graph API Queries on a Page"). Without it the Graph pages fail for them.
   await test('GraphQL.secondUser', async () => {
