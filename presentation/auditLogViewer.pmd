@@ -43,7 +43,7 @@
       "graphQuery": {
         "queryId": "auditLogsNewest",
         "parameters": {
-          "offset": 100
+          "offset": "<% ((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 100 ? 100 : 0 %>"
         }
       }
     },
@@ -60,7 +60,7 @@
       "graphQuery": {
         "queryId": "auditLogsNewest",
         "parameters": {
-          "offset": 200
+          "offset": "<% ((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 200 ? 200 : 0 %>"
         }
       }
     },
@@ -77,7 +77,7 @@
       "graphQuery": {
         "queryId": "auditLogsNewest",
         "parameters": {
-          "offset": 300
+          "offset": "<% ((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 300 ? 300 : 0 %>"
         }
       }
     },
@@ -94,7 +94,7 @@
       "graphQuery": {
         "queryId": "auditLogsNewest",
         "parameters": {
-          "offset": 400
+          "offset": "<% ((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 400 ? 400 : 0 %>"
         }
       }
     },

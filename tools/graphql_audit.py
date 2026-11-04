@@ -8,6 +8,11 @@ Fields come back with the same names; the record id is workdayID.id (the pages d
 Confirmed by the graphql test suite (2026-11-04). Docs: developer.workday.com
 "Run Graph API Queries on a Page", "Graph Query Components", "Pagination of Graph API Query Results".
 
+Graph paging is cache based: a request with an offset fails ("Requests with offsets need to be run
+after an initial request without an offset", HTTP 200 + error, and the page shows an endpoint error
+even without failOnStatusCodes) unless the same query ran first with offset 0. So pages 1..N read
+page 0's total in their offset, which makes them wait for it, and repeat offset 0 when not needed.
+
 Pages in PAGES get: auditLogCount removed, auditPage0..N replaced by Graph endpoints with the same
 names, and every `auditPageK.data ?? []` / `auditLogCount.total` reference rewritten.
 """
@@ -52,12 +57,16 @@ def add_provider():
     return 1
 
 
+TOTAL = "((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0)"
+
+
 def rows(k):
     # A Graph error comes back as HTTP 200 with data.r null, so guard each level before reading it.
-    return f"((!empty(auditPage{k}.data) && !empty(auditPage{k}.data.r)) ? (auditPage{k}.data.r.data ?? []) : [])"
-
-
-TOTAL = "((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0)"
+    # Page k > 0 asks for offset 0 (a repeat of page 0) when there are too few records; skip it then.
+    g = f"!empty(auditPage{k}.data) && !empty(auditPage{k}.data.r)"
+    if k:
+        g = f"{TOTAL} > {k * 100} && " + g
+    return f"(({g}) ? (auditPage{k}.data.r.data ?? []) : [])"
 
 
 def convert(page):
@@ -75,7 +84,7 @@ def convert(page):
             k = int(m.group(1))
             e = {"name": e['name'], "baseUrlType": PROVIDER, "httpMethod": "POST", "authType": "sso",
                  "failOnStatusCodes": FAIL if k == 0 else [{"code": 429}],
-                 "graphQuery": {"queryId": QUERY_ID, "parameters": {"offset": k * 100}}}
+                 "graphQuery": {"queryId": QUERY_ID, "parameters": {"offset": 0 if k == 0 else f"<% {TOTAL} > {k * 100} ? {k * 100} : 0 %>"}}}
         out.append(e)
     d['endPoints'] = out
     s = json.dumps(d, indent=2, ensure_ascii=False)

@@ -1708,6 +1708,16 @@ async function graphqlSuite(token) {
     const w = await gql(token, `query { r: ${APP_ID}_COMSAuditLog(dataSource: {${APP_ID}_comsAuditLogs: {}}, where: {objectType: {eq: "Role Assignment"}}, limit: 100) { total } }`);
     pass('GraphQL.auditWhere', `where objectType = Role Assignment: ${w.r.total} (REST filtering would need an index)`);
   });
+
+  // 4. Offset paging order (the Audit Log relies on it): offset 0 first, then offset 100 works.
+  await test('GraphQL.offsetAfterFirst', async () => {
+    const q = 'query($o: BigInt) { r: worker(dataSource: {indexedAllWorkers: {filter: {indexedAllWorkersFilter: {isActive: true}}}}, limit: 100, offset: $o) { total data { workdayID { id } } } }';
+    const a = await gql(token, q, { o: 0 });
+    if ((a.r.total || 0) <= 100) return skip('GraphQL.offsetAfterFirst', `only ${a.r.total} active workers`);
+    const b = await gql(token, q, { o: 100 });
+    const overlap = b.r.data.filter((x) => a.r.data.some((y) => y.workdayID.id === x.workdayID.id)).length;
+    (b.r.data.length && !overlap ? pass : fail)('GraphQL.offsetAfterFirst', `total ${a.r.total}: page 1 ${a.r.data.length} rows, page 2 ${b.r.data.length} rows, ${overlap} repeated`);
+  });
 }
 
 // ═══ Data check: every record has the fields its pages display (read-only) ═══
