@@ -88,6 +88,11 @@ def convert(page):
         out.append(e)
     d['endPoints'] = out
     s = json.dumps(d, indent=2, ensure_ascii=False)
+    # Undo an earlier run (this pass or an older version of it) so the rewrite below always applies.
+    for k in pages:
+        plain = f"((!empty(auditPage{k}.data) && !empty(auditPage{k}.data.r)) ? (auditPage{k}.data.r.data ?? []) : [])"
+        s = s.replace(rows(k), f"auditPage{k}.data ?? []").replace(plain, f"auditPage{k}.data ?? []")
+    s = s.replace(TOTAL, "auditLogCount.total ?? 0")
     for k in pages:
         s = s.replace(f"auditPage{k}.data ?? []", rows(k).replace('"', '\\"'))
     s = s.replace("(auditLogCount.total ?? 0)", TOTAL).replace("auditLogCount.total ?? 0", TOTAL)
