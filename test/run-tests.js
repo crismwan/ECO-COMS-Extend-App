@@ -469,6 +469,18 @@ function staticSuite() {
     }
   }
 
+  // 9c. Every onSubmit clears each widget it flags before checking (an error it set stays after the
+  //     user fixes the cause, and OK keeps failing until a reload)
+  for (const [f, d] of Object.entries(pmds)) {
+    const sub = typeof d.onSubmit === 'string' ? d.onSubmit : (d.presentation || {}).onSubmit;
+    if (typeof sub !== 'string' || !sub.includes('setError(')) continue;
+    const first = sub.indexOf('setError(');
+    const flagged = [...new Set([...sub.matchAll(/\b([a-zA-Z][A-Za-z0-9]*)\.setError\(/g)].map((m) => m[1]))].filter((w) => w !== 'self');
+    const cleared = new Set([...sub.slice(0, first).matchAll(/\b([a-zA-Z][A-Za-z0-9]*)\.clearError\(\)/g)].map((m) => m[1]));
+    const miss = flagged.filter((w) => !cleared.has(w));
+    if (miss.length) err('submitClears', `${f}: onSubmit flags ${miss.join(', ')} without clearing it first (run tools/clear_submit_errors.py)`, f);
+  }
+
   // 10. Icons are from Workday's list (developer.workday.com "Reference: Icons"); hub navigation items take wd-icon-* only
   {
     const src = fs.readFileSync(path.join(ROOT, 'tools/apply_icons.py'), 'utf8');

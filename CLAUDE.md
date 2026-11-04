@@ -277,7 +277,9 @@ This is the mechanism for conditional/cross-field validation, including **inside
 
 Compare a Date against another **widget's** value, not a raw inbound string — the widget has already parsed the string into a Date object.
 
-**The same applies to `onSubmit`.** An error it sets stays after the user fixes the cause, and OK keeps failing until a reload (confirmed live 2026-10-31). Clear every widget's error at the start of `onSubmit`, and give confirmation checkboxes `"onChange": "<% self.clearError() %>"`.
+**Cross-field checks go stale.** When a field's error depends on other fields (a name built from several boxes, "pick one of these two", a duplicate check), an `onChange` that sets the error only on `self` leaves it behind on the field that set it after another field changes (seen live 2026-11-04: an "already exists" error stayed under Course after Subject changed). In every such `onChange`, recheck **all** the fields involved and set or clear each one's error; when one field makes another's error moot (picking an existing item instead of typing a new name), clear the other's error; when a field resets others with `setValue`, clear their errors too.
+
+**The same applies to `onSubmit`.** An error it sets stays after the user fixes the cause, and OK keeps failing until a reload (confirmed live 2026-10-31). Clear every widget's error at the start of `onSubmit`, and give confirmation checkboxes `"onChange": "<% self.clearError() %>"`. Enforce it with a build pass that adds the missing `clearError()` calls for every widget an `onSubmit` flags, plus a static check (one app had 6 pages without them, 2026-11-04).
 
 **Scripting methods available on widgets:** `clearError()`, `clearWarning()`, `setError(String)`, `setWarning(String)` (non-blocking), `getLabel()` / `setLabel(String)`, `getValue()` / `setValue(Object)`, `getValueOutBinding()` / `setValueOutBinding(String)`, `isEnabled()` / `setEnabled(boolean)`, `isRequired()` / `setRequired(boolean)`, `isVisible()` / `setVisible(boolean)`, `isUpdated()` (changed by the end user), `isUpdatedByScript()` (changed by a PMD script).
 
