@@ -46,7 +46,7 @@ const ORCH = `${API}/orchestrate/v1/apps/${APP_ID}/orchestrations`;
 const argv = process.argv.slice(2);
 const arg = (name) => { const i = argv.indexOf(name); return i === -1 ? null : argv[i + 1]; };
 const VERBOSE = argv.includes('--verbose');
-const SUITES_ALL = ['static', 'smoke', 'full', 'cleanup', 'isu', 'repair', 'seconduser', 'purge', 'demoseed', 'datacheck', 'probe', 'seedapps', 'patternguard', 'graphql', 'eventlinks'];
+const SUITES_ALL = ['static', 'smoke', 'full', 'cleanup', 'isu', 'repair', 'seconduser', 'purge', 'demoseed', 'datacheck', 'probe', 'seedapps', 'patternguard', 'graphql', 'eventlinks', 'gatewayprobe'];
 const suiteArg = arg('--suite') || argv.find((a) => !a.startsWith('--') && SUITES_ALL.some((s) => a.split(',').includes(s))) || 'smoke';
 const SUITES = suiteArg.split(',').map((s) => s.trim()).filter(Boolean);
 for (const s of SUITES) if (!SUITES_ALL.includes(s)) { console.error(`Unknown suite "${s}". Use: ${SUITES_ALL.join(', ')}`); process.exit(2); }
@@ -1679,6 +1679,26 @@ async function eventLinks(token, me) {
   }
 }
 
+// ═══ Gateway probe: which launch parameters make the API gateway refuse AssignRolePositions ═══
+// Every launch uses mode=PROBE, which the orchestration's CheckMode guard rejects before any
+// Workday call, so nothing changes; only the gateway's answer (200 vs HTML 403) is recorded.
+async function gatewayProbe(token, me) {
+  console.log('\n-- Gateway probe (no changes: mode=PROBE is rejected by CheckMode) --');
+  const full = { roleId: '0123456789abcdef0123456789abcdef', roleName: TEST_ROLE, orgId: '0123456789abcdef0123456789abcdef',
+    orgName: 'X:BPMS(ODMT)', effectiveDate: tenantDate(), positionId: 'P-00001', positionIdType: 'Position_ID',
+    positionName: 'P-00001 Chief Executive Officer - Steve Morgan', mode: 'PROBE', positionWid: '0123456789abcdef0123456789abcdef',
+    changedBy: me.descriptor, changedByWid: me.id, timestamp: new Date().toISOString().replace(/\.\d+Z$/, 'Z') };
+  const tryIt = async (label, params) => {
+    try { await launch(token, 'AssignRolePositions', params); console.log(`   200  ${label}`); return true; }
+    catch (e) { console.log(`   ${e.message.slice(5, 8)}  ${label}`); return false; }
+  };
+  await tryIt('all parameters', full);
+  for (const k of Object.keys(full)) { if (k === 'mode') continue; const p = { ...full }; delete p[k]; await tryIt(`without ${k}`, p); }
+  await tryIt('only mode', { mode: 'PROBE' });
+  for (const k of Object.keys(full)) { if (k === 'mode') continue; await tryIt(`only ${k}`, { mode: 'PROBE', [k]: full[k] }); }
+  pass('GatewayProbe', 'see lines above');
+}
+
 // ═══ GraphQL probe (read-only): what the Graph API schema offers for this app's objects ═══
 // Names per developer.workday.com "Model Components in the Graph API Schema":
 // query <appRef>_<BusinessObject>(dataSource: {<appRef>_<collection>: {}}, where, limit, offset).
@@ -1956,6 +1976,7 @@ async function demoSeed(token, me) {
         if (live.includes('probe')) await probe(token);
         if (live.includes('graphql')) await graphqlSuite(token);
         if (live.includes('eventlinks')) await eventLinks(token, me);
+        if (live.includes('gatewayprobe')) await gatewayProbe(token, me);
         if (live.includes('seedapps')) await seedApps(token);
         if (live.includes('patternguard')) await patternGuard(token, me);
       }
