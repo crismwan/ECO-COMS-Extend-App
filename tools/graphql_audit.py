@@ -106,6 +106,23 @@ def add_run_column(d):
         return False
     if not walk(d):
         raise SystemExit("graphql_audit: AuditLogGrid not found on auditLogViewer")
+    # The grid's rows expression rebuilds each record with a fixed field list; carry the two links too
+    # (without this the columns rendered empty, seen live 2026-11-04).
+    def rows_fix(n):
+        if isinstance(n, dict):
+            if n.get('id') == 'AuditLogGrid':
+                end = "'roleWid': !empty(e.roleWid) ? e.roleWid : (size(rm) > 0 ? rm[0].id : '') }"
+                if "'runId': e.runId" not in n['rows']:
+                    if end not in n['rows']:
+                        raise SystemExit("graphql_audit: AuditLogGrid rows changed shape")
+                    n['rows'] = n['rows'].replace(end, end[:-2] + ", 'runId': e.runId ?? '', 'eventWid': e.eventWid ?? '' }", 1)
+                return
+            for v in n.values():
+                rows_fix(v)
+        elif isinstance(n, list):
+            for v in n:
+                rows_fix(v)
+    rows_fix(d)
 
 
 def convert(page):
