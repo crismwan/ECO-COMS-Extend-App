@@ -1648,6 +1648,36 @@ async function graphqlSuite(token) {
       (String(g) === String(rest) ? pass : fail)(`GraphQL.total.${obj}`, `GraphQL total ${g}, REST total ${rest} (${ms} ms); first: ${d.r.data?.[0]?.descriptor ?? '-'}`);
     });
   }
+
+  // 3. What the Audit Log page would use: newest first, the same fields the page reads, shapes vs REST.
+  await test('GraphQL.auditNewestFirst', async () => {
+    for (const n of [`Ecocomsphase_xclw_cm_sync2_vmzvxm_COMSAuditLog_OrderInput`, 'String_Filter', 'Instant_Filter']) {
+      const t = await typeInfo(n);
+      console.log(`   TYPE ${n}: ${(t?.inputFields || []).map((x) => x.name + ':' + (x.type.name || x.type.ofType?.name)).join(', ')}`);
+      for (const f of (t?.inputFields || [])) {
+        const tn = f.type.name || f.type.ofType?.name;
+        if (tn && /Order|Direction|Sort/i.test(tn)) {
+          const e = (await gql(token, `query($n: String!) { __type(name: $n) { kind enumValues { name } inputFields { name type { name } } } }`, { n: tn })).__type;
+          console.log(`      ${tn}: ${JSON.stringify(e)}`);
+        }
+      }
+    }
+    const fields = 'workdayID { id } timestamp action objectType coName coReferenceId triggeredBy details effectiveDate roleName positionName changedByWid orgWid roleWid positionWid';
+    let d, used;
+    for (const ob of ['{timestamp: DESC}', '[{timestamp: DESC}]', '{field: timestamp, direction: DESC}']) {
+      try { d = await gql(token, `query { r: ${APP_ID}_COMSAuditLog(dataSource: {${APP_ID}_comsAuditLogs: {}}, orderBy: ${ob}, limit: 100) { total data { ${fields} } } }`); used = ob; break; }
+      catch (e) { console.log(`   orderBy ${ob}: ${e.message.slice(0, 300)}`); }
+    }
+    if (!d) throw new Error('no orderBy form accepted');
+    const g = d.r.data; const rest = (await request('GET', `${BO}/comsAuditLogs?limit=100`, token)).data || [];
+    console.log(`   orderBy ${used}: ${g.map((x) => x.timestamp).join(' > ')}`);
+    console.log(`   GQL item: ${JSON.stringify(g[0])}`);
+    console.log(`   REST item: ${JSON.stringify(rest.find((x) => x.id === g[0]?.workdayID?.id) || rest[0])}`);
+    const sorted = g.every((x, i) => i === 0 || String(g[i - 1].timestamp) >= String(x.timestamp));
+    (sorted ? pass : fail)('GraphQL.auditNewestFirst', `${g.length} of ${d.r.total} rows, newest first: ${sorted}`);
+    const w = await gql(token, `query { r: ${APP_ID}_COMSAuditLog(dataSource: {${APP_ID}_comsAuditLogs: {}}, where: {objectType: {eq: "Role Assignment"}}, limit: 100) { total } }`);
+    pass('GraphQL.auditWhere', `where objectType = Role Assignment: ${w.r.total} (REST filtering would need an index)`);
+  });
 }
 
 // ═══ Data check: every record has the fields its pages display (read-only) ═══
