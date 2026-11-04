@@ -41,10 +41,17 @@ def note(sid, fid, title, rid, html, color='#0055B7', mark='ⓘ', render=None):
 
 
 def field_on_change(i):
+    # Recheck every field, not just this one: a duplicate error set on another field for an earlier
+    # name would otherwise stay after the name changes (seen live 2026-11-04). Then flag a duplicate
+    # of the current name on this field only.
+    recheck = "".join(
+        f"  let e{j} = comsPatterns.checkField(s, {j}, {FIELD(j)}.value);\n"
+        f"  if (e{j} != '') {{ {FIELD(j)}.setError(e{j}); }} else {{ {FIELD(j)}.clearError(); }}\n"
+        for j in range(MAX_FIELDS))
     return ("<%\n"
             f"  let s = {SCH};\n"
-            f"  let err = comsPatterns.checkField(s, {i}, self.value);\n"
-            "  if (err != '') { self.setError(err); } else { self.clearError(); }\n"
+            + recheck +
+            f"  let err = e{i};\n"
             f"  let pn = {NAME};\n"
             "  patternPreviewText.setValue(pn);\n"
             "  if (err == '' && (existingOrgs.data ?? []).filter(o => { o.code == pn }).size() > 0) {\n"
@@ -141,7 +148,10 @@ page = {"id": "newSchemaPattern", "securityDomains": ["ManageCOMSShellOrgs"], "i
           {"type": "text", "id": "formatGuideText", "label": "Format", "enabled": False, "value": f"<% comsPatterns.formatGuide({SCH}) %>"},
           {"type": "dropdown", "id": "prefixDropdown", "label": "Pattern Prefix", "values": f"<% comsPatterns.prefixOptions({SCH}) %>",
            "visible": f"<% comsPatterns.prefixCount({SCH}) > 1 %>",
-           "onChange": f"<%\n  self.clearError();\n  patternPreviewText.setValue({NAME});\n%>"},
+           "onChange": "<%\n  self.clearError();\n  let s = " + SCH + ";\n" + "".join(
+               f"  let e{j} = comsPatterns.checkField(s, {j}, {FIELD(j)}.value);\n"
+               f"  if (e{j} != '') {{ {FIELD(j)}.setError(e{j}); }} else {{ {FIELD(j)}.clearError(); }}\n" for j in range(MAX_FIELDS))
+               + f"  patternPreviewText.setValue({NAME});\n%>"},
           {"type": "readOnlyText", "id": "patternPreviewText", "label": "Pattern Name Preview",
            # page-load value: the fields are declared further down, so they can't be referenced here yet
            "value": f"<% comsPatterns.buildName({APPC}, comsPatterns.prefixCount({SCH}) > 1 ? '' : comsPatterns.firstPrefix({SCH}), {SCH}, ['', '', '', '', '', '', '']) %>"}]},
