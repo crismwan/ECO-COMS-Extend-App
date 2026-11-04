@@ -75,7 +75,13 @@ def rows(k):
 # run, and its history is on the developer site, so it's for support only (user decision 2026-11-04).
 # The Workday business process event (tools/audit_event_ref.py): a tenant instance, so it opens with
 # related actions like the Changed By and Role columns.
+# Excel export can't carry a hyperlink (valueType is boolean, date, number or string: developer.workday.com
+# "Concept: grid", Exporting to Microsoft Excel), so the export writes the event's address as text. The
+# event page is <host>/<tenant>/d/wid/<WID>.htmld (seen live 2026-11-04). No app variable gives the host,
+# so it is set here: change it when the app moves to a tenant on another host.
+WORKDAY_HOST = "https://wcpdev.wd101.myworkday.com"
 EVENT_COLUMN = {"type": "column", "columnId": "columnEvent", "label": "Workday Event",
+                "excel": {"value": "<% empty(logEntry.eventWid) ? '' : '" + WORKDAY_HOST + "/' + tenant + '/d/wid/' + logEntry.eventWid + '.htmld' %>"},
                 "cellTemplate": {"type": "fieldSet", "id": "eventFieldSet", "children": [
                     {"type": "instanceList", "id": "eventInstanceList", "view": True, "relatedTask": True,
                      "enabled": False, "visible": "<% !empty(logEntry.eventWid) %>", "widKey": "id",

@@ -453,6 +453,9 @@
                 "type": "column",
                 "columnId": "columnEvent",
                 "label": "Workday Event",
+                "excel": {
+                  "value": "<% empty(logEntry.eventWid) ? '' : 'https://wcpdev.wd101.myworkday.com/' + tenant + '/d/wid/' + logEntry.eventWid + '.htmld' %>"
+                },
                 "cellTemplate": {
                   "type": "fieldSet",
                   "id": "eventFieldSet",
