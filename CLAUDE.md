@@ -2618,7 +2618,19 @@ Source: 36 Workday sample apps exported from Workday (2026-11-02): vehicleRegist
 - Inbound endpoint: `{ "name": "me", "baseUrlType": "workday-graph", "httpMethod": "POST", "authType": "sso", "graphQuery": { "queryId": "me", "parameters": { "vehicleId": "<% queryParams.vehicleId %>" } } }`. Results come back under `data.<field>`: `me.data.worker.data[0].primaryJob.location.workdayID.id`.
 - Outbound (create/update/delete) uses the same `graphQuery` on an outbound endpoint, with `variables` built from widget values (`"createVehicle_input": { "color": "<% vehicleColor.value[0] %>", "location": { "id": { "id": "<wid>", "type": "WID" } } }`).
 - App business objects appear in the schema with the **app reference ID as a prefix**: query `<appRef>_<Object>(dataSource: {<appRef>_<collection>: {}} where: {workdayID: {in: [{id: $id}]}})`, mutations `<appRef>_create<Object>` / `_update<Object>` / `_delete<Object>`, input types `<AppRef>_<Collection>Summary_CreateInput` (first letter capitalised). References are `{ "id": { "id": "<wid>", "type": "WID" } }`.
-- Useful because a `where` filter replaces `isCollection` + paging (see the isCollection performance warning), and one query can return nested instance fields. Example worker query: `query { worker(dataSource:{ processingWorker:{}}) { data { descriptor workdayID {id} } } }`.
+- Useful because a `where` filter replaces `isCollection` + paging (see the isCollection performance warning), and one query can return nested instance fields (nested fields not yet tried live). Example worker query: `query { worker(dataSource:{ processingWorker:{}}) { data { descriptor workdayID {id} } } }`.
+
+**Confirmed live (2026-11-04, one dev tenant; developer.workday.com "Run Graph API Queries on a Page", "Graph Query Components", "Pagination of Graph API Query Results", "Query Filters"):**
+- A `.graphquery` in `presentation/graphQueries/` deploys through App Hub, and an inbound endpoint `{ "baseUrlType": "workday-graph", "httpMethod": "POST", "authType": "sso", "graphQuery": { "queryId", "parameters" } }` (no `url`) works on a page. Provider value used: `` <% `{{apiGatewayEndpoint}}/graphql/v1` %> ``.
+- **Every field of an app business object is filterable** in `where` (`String_Filter`: eq, neq, in, notIn, contains, startsWith, endsWith, empty; `Instant_Filter` adds gt/gte/lt/lte), not just the 5 indexed ones REST allows. **`orderBy: {field: DESC}`** (enum `ASC`/`DESC`) sorts on the server, which fixes REST collections coming back oldest first.
+- Field names match REST; the record id is `workdayID { id }` instead of `id`, and empty fields come back as `null`. Aliases work (`r: <appRef>_<Object>(...)` → `endpoint.data.r.data`, `.data.r.total`).
+- `limit` is 100 at most (default 20), like REST.
+- **Offsets need a first request without one.** A request with `offset > 0` that runs before the same query ran with offset 0 returns HTTP 200 with `"Requests with offsets need to be run after an initial request without an offset"`, and **the page shows an endpoint error even without that code in `failOnStatusCodes`**. So later page endpoints must reference the first one (e.g. read its `total` in their `offset` parameter), which makes them wait for it. A test paging 624 workers (offset 0 then 100) confirmed no repeated rows.
+- **Errors come back as HTTP 200** with `data.<field>: null` plus `errors`. Guard reads: `(!empty(x.data) && !empty(x.data.r)) ? (x.data.r.data ?? []) : []`.
+- Speed: warm page loads matched REST (about 0.8 s); the first call after a while was slower (2-7 s).
+- Users need the **Workday Graph API Applications** domain (System). In one dev tenant its Report/Task View already included All Users; check the policy before promoting to another tenant.
+- Introspection (`__schema`, `__type`) works with a normal user token and is the quickest way to list an object's criteria and order fields.
+- A build pass that rewrites expressions must be **idempotent**: one that only matched the original text silently skipped its own later changes on the second run (a page showed every record 5 times).
 
 ### Extend Cards on Workday pages (Cards, Card Tenant Settings)
 
