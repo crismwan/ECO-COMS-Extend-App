@@ -47,12 +47,6 @@
       "type": "TEXT"
     },
     {
-      "id": 7,
-      "name": "idPrefix",
-      "label": "CO ID Prefix",
-      "type": "TEXT"
-    },
-    {
       "id": 8,
       "name": "patternSchema",
       "label": "Pattern Schema JSON",
@@ -68,20 +62,6 @@
       "id": 10,
       "name": "downstreamConsumer",
       "label": "Downstream Consumer",
-      "type": "TEXT"
-    },
-    {
-      "id": 11,
-      "name": "createdBy",
-      "label": "Created By",
-      "type": "SINGLE_INSTANCE",
-      "target": "WORKER",
-      "secureByTarget": false
-    },
-    {
-      "id": 12,
-      "name": "workdayOrgId",
-      "label": "Workday Org ID",
       "type": "TEXT"
     },
     {

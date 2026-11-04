@@ -38,18 +38,6 @@
       "type": "TEXT"
     },
     {
-      "id": 6,
-      "name": "enabledForCompany",
-      "label": "Enabled For Company",
-      "type": "BOOLEAN"
-    },
-    {
-      "id": 7,
-      "name": "enabledForCompanyHierarchy",
-      "label": "Enabled For Company Hierarchy",
-      "type": "BOOLEAN"
-    },
-    {
       "id": 8,
       "name": "status",
       "label": "Status",
@@ -192,30 +180,6 @@
       "id": 28,
       "name": "workersAssigned",
       "label": "Workers Assigned",
-      "type": "TEXT"
-    },
-    {
-      "id": 29,
-      "name": "positionRestrictions",
-      "label": "Position Restrictions",
-      "type": "TEXT"
-    },
-    {
-      "id": 31,
-      "name": "workdayPositionId",
-      "label": "Workday Position ID",
-      "type": "TEXT"
-    },
-    {
-      "id": 32,
-      "name": "positionIsFilled",
-      "label": "Position Is Filled",
-      "type": "BOOLEAN"
-    },
-    {
-      "id": 33,
-      "name": "organizationRoleAssignments",
-      "label": "Organization - Role Assignments",
       "type": "TEXT"
     },
     {
