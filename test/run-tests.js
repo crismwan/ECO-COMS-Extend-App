@@ -46,7 +46,7 @@ const ORCH = `${API}/orchestrate/v1/apps/${APP_ID}/orchestrations`;
 const argv = process.argv.slice(2);
 const arg = (name) => { const i = argv.indexOf(name); return i === -1 ? null : argv[i + 1]; };
 const VERBOSE = argv.includes('--verbose');
-const SUITES_ALL = ['static', 'smoke', 'full', 'cleanup', 'isu', 'repair', 'seconduser', 'purge', 'demoseed', 'datacheck', 'probe', 'seedapps', 'patternguard', 'graphql', 'eventlinks', 'gatewayprobe'];
+const SUITES_ALL = ['static', 'smoke', 'full', 'cleanup', 'isu', 'repair', 'seconduser', 'purge', 'demoseed', 'datacheck', 'probe', 'seedapps', 'patternguard', 'graphql', 'eventlinks', 'gatewayprobe', 'timing'];
 const suiteArg = arg('--suite') || argv.find((a) => !a.startsWith('--') && SUITES_ALL.some((s) => a.split(',').includes(s))) || 'smoke';
 const SUITES = suiteArg.split(',').map((s) => s.trim()).filter(Boolean);
 for (const s of SUITES) if (!SUITES_ALL.includes(s)) { console.error(`Unknown suite "${s}". Use: ${SUITES_ALL.join(', ')}`); process.exit(2); }
@@ -1718,6 +1718,22 @@ async function gatewayProbe(token, me) {
   pass('GatewayProbe', 'see lines above');
 }
 
+// ═══ Timing (read-only): the audit reads the pages make, REST (this morning) vs Graph (now) ═══
+async function timingSuite(token) {
+  console.log('\n-- Timing (read-only) --');
+  const t = async (f) => { const s = Date.now(); await f(); return Date.now() - s; };
+  const q = (o) => `query { r: ${APP_ID}_COMSAuditLog(dataSource: {${APP_ID}_comsAuditLogs: {}}, orderBy: {timestamp: DESC}, limit: 100, offset: ${o}) { total data { workdayID { id } timestamp action objectType coName roleName positionName changedByWid orgWid roleWid positionWid runId eventWid details triggeredBy effectiveDate coReferenceId } } }`;
+  const rest = async (pages) => { const c = (await request('GET', `${BO}/comsAuditLogs?limit=1`, token)).total; await Promise.all([...Array(pages).keys()].map((k) => request('GET', `${BO}/comsAuditLogs?limit=100&offset=${Math.max(0, c - 100 * (k + 1))}`, token))); };
+  const graph = async (pages) => { await gql(token, q(0)); await Promise.all([...Array(pages - 1).keys()].map(() => gql(token, q(0)))); };
+  const graphOne = async () => { await gql(token, q(0)); };
+  for (const [label, f] of [['REST count + 5 pages (old Audit Log)', () => rest(5)], ['Graph page 0 + 4 repeats (new Audit Log)', () => graph(5)],
+    ['Graph page 0 only', graphOne], ['REST count + 1 page (old RBAC Hub)', () => rest(1)], ['Graph 1 page (new RBAC Hub)', graphOne]]) {
+    const ms = []; for (let i = 0; i < 5; i++) ms.push(await t(f));
+    console.log(`   ${label}: ${ms.join(', ')} ms (median ${ms.slice().sort((a, b) => a - b)[2]})`);
+  }
+  pass('Timing', 'see lines above');
+}
+
 // ═══ GraphQL probe (read-only): what the Graph API schema offers for this app's objects ═══
 // Names per developer.workday.com "Model Components in the Graph API Schema":
 // query <appRef>_<BusinessObject>(dataSource: {<appRef>_<collection>: {}}, where, limit, offset).
@@ -1996,6 +2012,7 @@ async function demoSeed(token, me) {
         if (live.includes('graphql')) await graphqlSuite(token);
         if (live.includes('eventlinks')) await eventLinks(token, me);
         if (live.includes('gatewayprobe')) await gatewayProbe(token, me);
+        if (live.includes('timing')) await timingSuite(token);
         if (live.includes('seedapps')) await seedApps(token);
         if (live.includes('patternguard')) await patternGuard(token, me);
       }
