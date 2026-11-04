@@ -86,7 +86,7 @@
                   "id": "appPickGrid",
                   "rowVariableName": "pa",
                   "label": "Applications",
-                  "rows": "<% (comsApplications.data ?? []).filter(x => { !empty(x.patternSchema) }).map(x => { x.appId }).distinct().sort().map(a => { {'appCode': a} }) %>",
+                  "rows": "<% (comsApplications.data ?? []).filter(x => { !empty(x.patternSchema) && x.active != false }).map(x => { x.appId }).distinct().sort().map(a => { {'appCode': a} }) %>",
                   "columns": [
                     {
                       "type": "column",

@@ -28,6 +28,12 @@
             "appCode": "X:CLW"
           }
         }
+      },
+      {
+        "label": "Application Patterns",
+        "taskReference": {
+          "taskId": "appPatternSetup"
+        }
       }
     ]
   }

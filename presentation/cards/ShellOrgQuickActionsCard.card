@@ -28,6 +28,12 @@
         "taskReference": {
           "taskId": "schemaPatternApps"
         }
+      },
+      {
+        "label": "Application Patterns",
+        "taskReference": {
+          "taskId": "appPatternSetup"
+        }
       }
     ]
   }

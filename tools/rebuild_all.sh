@@ -27,6 +27,7 @@ run tools/build_filter_pills.py         # pill filters, Home action cards, SOM s
 run tools/build_schema_pattern.py      # Add Shell Org Pattern for any application (schema-driven)
 run tools/build_insights.py             # Insights page across the business objects + lean reports
 run tools/build_access_review.py        # Access Review page + hub card (role assignments still needed?)
+run tools/build_app_patterns.py         # Application Patterns setup: list + edit page for each application's pattern format
 run tools/build_activity_chart.py      # App Activity chart (7 days by area) on the RBAC Hub
 run tools/build_pending_age.py         # Pending Requests by Age chart on the RBAC Hub
 run tools/build_home_cards.py           # Home card data orchestrations (Workday Home Card wrap once the template exists)

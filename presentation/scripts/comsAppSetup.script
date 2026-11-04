@@ -1,0 +1,116 @@
+/* Application Patterns setup (tools/build_app_patterns.py). Pure functions; each check returns '' or an error. */
+var recordById = function(apps, id) {
+  let m = (apps ?? []).filter(a => { a.id == id });
+  empty(id) || empty(m) ? null : m[0];
+};
+
+var schemaOf = function(rec) {
+  (empty(rec) || empty(rec.patternSchema)) ? null : json:parse(rec.patternSchema);
+};
+
+var fieldRows = function(rec) {
+  let s = schemaOf(rec);
+  empty(s) ? [{ 'fieldLabel': '', 'regex': '', 'hint': '', 'example': '', 'blankIsWildcard': false }] : s.fields;
+};
+
+var prefixText = function(rec) {
+  let s = schemaOf(rec);
+  empty(s) ? (empty(rec) ? '' : (rec.namePrefix ?? '')) : s.prefixes.join(', ');
+};
+
+var prefixList = function(text) {
+  empty(text) ? [] : text.split(',').map(p => { p.trim() }).filter(p => { !empty(p) });
+};
+
+var appIdError = function(appId, apps, isNew) {
+  if (!isNew) {
+    '';
+  } else if (empty(appId)) {
+    'Application ID is required, e.g. X:BPMS(AOC).';
+  } else if (!validate:match('X:[A-Z0-9]+(\\([A-Z0-9]+\\))?', appId)) {
+    'Use X: then capital letters or digits, with an optional part in brackets, e.g. X:OAM or X:BPMS(AOC).';
+  } else if ((apps ?? []).filter(a => { a.appId == appId }).size() > 0) {
+    appId + ' is already set up. Edit it from the list instead.';
+  } else {
+    '';
+  }
+};
+
+var nameError = function(name) {
+  empty(name) ? 'Name is required.' : (name.length() > 100 ? 'Keep the name to 100 characters or fewer.' : '');
+};
+
+var prefixError = function(text) {
+  let ps = prefixList(text);
+  if (ps.size() == 0) {
+    'Add at least one prefix, e.g. ORG. Separate several with commas.';
+  } else if (ps.filter(p => { !validate:match('[A-Z0-9_]+', p) }).size() > 0) {
+    'Prefixes use capital letters, digits and _ only (e.g. ORG, CP, PATTERN).';
+  } else if (ps.distinct().size() != ps.size()) {
+    'Each prefix can appear only once.';
+  } else {
+    '';
+  }
+};
+
+var rowError = function(r, n) {
+  let where = 'Field ' + n + ': ';
+  if (empty(r.fieldLabel)) {
+    where + 'a label is required.';
+  } else if (r.fieldLabel.contains(':')) {
+    where + 'the label cannot contain a colon.';
+  } else if (empty(r.regex)) {
+    where + 'a format is required (a regular expression, e.g. [A-Z]{2,4}).';
+  } else if (empty(r.example)) {
+    where + 'an example value is required.';
+  } else if (r.example.contains(':') || r.example.contains(' ')) {
+    where + 'the example cannot contain a colon or spaces.';
+  } else if (!validate:match(r.regex, r.example)) {
+    where + 'the example ' + r.example + ' does not match the format ' + r.regex + '.';
+  } else {
+    '';
+  }
+};
+
+var fieldsError = function(rows) {
+  if (rows.size() == 0) {
+    'Add at least one field.';
+  } else if (rows.size() > 7) {
+    'At most 7 fields: the Add Pattern form has 7 boxes.';
+  } else if (rows.map(r => { r.fieldLabel }).distinct().size() != rows.size()) {
+    'Each field needs its own label.';
+  } else {
+    let errs = rows.map((r, i) => { rowError(r, i + 1) }).filter(e => { e != '' });
+    errs.size() == 0 ? '' : errs[0];
+  }
+};
+
+var schemaJson = function(prefixTextValue, rows) {
+  json:stringify({ 'prefixes': prefixList(prefixTextValue), 'fields': rows });
+};
+
+var exampleName = function(appId, prefixTextValue, rows) {
+  let ps = prefixList(prefixTextValue);
+  (empty(appId) ? 'X:APP' : appId) + ':' + (ps.size() == 0 ? 'PREFIX' : ps[0]) + ':' + rows.map(r => { empty(r.example) ? '*' : r.example }).join(':');
+};
+
+var summary = function(rec) {
+  let s = schemaOf(rec);
+  empty(s) ? 'No pattern format yet' : (s.prefixes.join(' / ') + ': ' + s.fields.map(f => { f.fieldLabel }).join(', '));
+};
+
+{
+  "recordById": recordById,
+  "schemaOf": schemaOf,
+  "fieldRows": fieldRows,
+  "prefixText": prefixText,
+  "prefixList": prefixList,
+  "appIdError": appIdError,
+  "nameError": nameError,
+  "prefixError": prefixError,
+  "rowError": rowError,
+  "fieldsError": fieldsError,
+  "schemaJson": schemaJson,
+  "exampleName": exampleName,
+  "summary": summary
+}

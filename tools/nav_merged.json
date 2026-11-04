@@ -2,6 +2,7 @@
   "accessReview": "aboutSection",
   "adminProvisioning": "descSection",
   "adminProvisioningView": "descSection",
+  "appPatternSetup": "aboutSection",
   "assignableRoleManager": "contentSection",
   "assignableRoleManagerView": "descSection",
   "auditLogViewer": "aboutSection",

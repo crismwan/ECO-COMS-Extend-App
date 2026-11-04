@@ -1,0 +1,414 @@
+{
+  "id": "editAppPattern",
+  "securityDomains": [
+    "ManageCOMSApplicationSetup"
+  ],
+  "include": [
+    "comsAppSetup.script"
+  ],
+  "endPoints": [
+    {
+      "name": "comsApplications",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "url": "/comsApplications?limit=100",
+      "authType": "sso",
+      "isCollection": true,
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 403
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "name": "selectedWorker",
+      "baseUrlType": "COMMON",
+      "url": "/workers/me",
+      "authType": "sso",
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 403
+        },
+        {
+          "code": 429
+        }
+      ]
+    }
+  ],
+  "outboundData": {
+    "outboundEndPoints": [
+      {
+        "name": "postApplication",
+        "baseUrlType": "BUSINESS-OBJECT",
+        "url": "/comsApplications",
+        "httpMethod": "POST",
+        "authType": "sso",
+        "exclude": "<% !empty(queryParams.recordId) %>",
+        "failOnStatusCodes": [
+          {
+            "code": 400
+          },
+          {
+            "code": 403
+          },
+          {
+            "code": 429
+          },
+          {
+            "code": 500
+          }
+        ],
+        "values": [
+          {
+            "outboundPath": "appId",
+            "value": "<% (appIdText.value ?? '').trim() %>"
+          },
+          {
+            "outboundPath": "name",
+            "value": "<% (appNameText.value ?? '').trim() %>"
+          },
+          {
+            "outboundPath": "description",
+            "value": "<% (appDescriptionText.value ?? '').trim() %>"
+          },
+          {
+            "outboundPath": "orgType",
+            "value": "<% (appIdText.value ?? '').trim() %>"
+          },
+          {
+            "outboundPath": "orgSubtype",
+            "value": "X:SHELL"
+          },
+          {
+            "outboundPath": "namePrefix",
+            "value": "<% comsAppSetup.prefixList(prefixesText.value ?? '').join(',') %>"
+          },
+          {
+            "outboundPath": "patternSchema",
+            "value": "<% comsAppSetup.schemaJson(prefixesText.value ?? '', fieldsGrid.rows.map(r => { { 'fieldLabel': (r.childrenMap.colFieldLabel.value ?? '').trim(), 'regex': (r.childrenMap.colRegex.value ?? '').trim(), 'hint': (r.childrenMap.colHint.value ?? '').trim(), 'example': (r.childrenMap.colExample.value ?? '').trim(), 'blankIsWildcard': r.childrenMap.colBlank.value == true } })) %>"
+          },
+          {
+            "outboundPath": "active",
+            "value": "<% appActiveCheckBox.value == true %>"
+          }
+        ]
+      },
+      {
+        "name": "patchApplication",
+        "baseUrlType": "BUSINESS-OBJECT",
+        "url": "<% '/comsApplications/' + (queryParams.recordId ?? '') %>",
+        "httpMethod": "PATCH",
+        "authType": "sso",
+        "exclude": "<% empty(queryParams.recordId) %>",
+        "failOnStatusCodes": [
+          {
+            "code": 400
+          },
+          {
+            "code": 403
+          },
+          {
+            "code": 404
+          },
+          {
+            "code": 429
+          },
+          {
+            "code": 500
+          }
+        ],
+        "values": [
+          {
+            "outboundPath": "name",
+            "value": "<% (appNameText.value ?? '').trim() %>"
+          },
+          {
+            "outboundPath": "description",
+            "value": "<% (appDescriptionText.value ?? '').trim() %>"
+          },
+          {
+            "outboundPath": "namePrefix",
+            "value": "<% comsAppSetup.prefixList(prefixesText.value ?? '').join(',') %>"
+          },
+          {
+            "outboundPath": "patternSchema",
+            "value": "<% comsAppSetup.schemaJson(prefixesText.value ?? '', fieldsGrid.rows.map(r => { { 'fieldLabel': (r.childrenMap.colFieldLabel.value ?? '').trim(), 'regex': (r.childrenMap.colRegex.value ?? '').trim(), 'hint': (r.childrenMap.colHint.value ?? '').trim(), 'example': (r.childrenMap.colExample.value ?? '').trim(), 'blankIsWildcard': r.childrenMap.colBlank.value == true } })) %>"
+          },
+          {
+            "outboundPath": "active",
+            "value": "<% appActiveCheckBox.value == true %>"
+          }
+        ]
+      },
+      {
+        "name": "postAudit",
+        "baseUrlType": "BUSINESS-OBJECT",
+        "url": "/comsAuditLogs",
+        "httpMethod": "POST",
+        "authType": "sso",
+        "failOnStatusCodes": [
+          {
+            "code": 400
+          },
+          {
+            "code": 403
+          },
+          {
+            "code": 429
+          },
+          {
+            "code": 500
+          }
+        ],
+        "values": [
+          {
+            "outboundPath": "timestamp",
+            "value": "<% date:now().format(\"yyyy-MM-dd'T'HH:mm:ss'Z'\") %>"
+          },
+          {
+            "outboundPath": "objectType",
+            "value": "Application Pattern"
+          },
+          {
+            "outboundPath": "action",
+            "value": "<% empty(queryParams.recordId) ? 'ADD' : 'UPDATE' %>"
+          },
+          {
+            "outboundPath": "coReferenceId",
+            "value": "<% (empty(queryParams.recordId) ? (appIdText.value ?? '').trim() : (comsAppSetup.recordById(comsApplications.data, queryParams.recordId) ?? {'appId': ''}).appId) %>"
+          },
+          {
+            "outboundPath": "coName",
+            "value": "<% (empty(queryParams.recordId) ? (appIdText.value ?? '').trim() : (comsAppSetup.recordById(comsApplications.data, queryParams.recordId) ?? {'appId': ''}).appId) %>"
+          },
+          {
+            "outboundPath": "triggeredBy",
+            "value": "<% selectedWorker.descriptor ?? '' %>"
+          },
+          {
+            "outboundPath": "changedByWid",
+            "value": "<% selectedWorker.id ?? '' %>"
+          },
+          {
+            "outboundPath": "details",
+            "value": "<% 'Pattern format for ' + (empty(queryParams.recordId) ? (appIdText.value ?? '').trim() : (comsAppSetup.recordById(comsApplications.data, queryParams.recordId) ?? {'appId': ''}).appId) + ': ' + comsAppSetup.prefixList(prefixesText.value ?? '').join(',').replace(',', ' / ') + ' + ' + fieldsGrid.rows.map(r => { { 'fieldLabel': (r.childrenMap.colFieldLabel.value ?? '').trim(), 'regex': (r.childrenMap.colRegex.value ?? '').trim(), 'hint': (r.childrenMap.colHint.value ?? '').trim(), 'example': (r.childrenMap.colExample.value ?? '').trim(), 'blankIsWildcard': r.childrenMap.colBlank.value == true } }).map(r => { r.fieldLabel }).join(', ') + (appActiveCheckBox.value == true ? '' : ' (inactive)') %>"
+          }
+        ]
+      }
+    ]
+  },
+  "onSubmit": "<%\n  appIdText.clearError();\n  appNameText.clearError();\n  prefixesText.clearError();\n  fieldsCheckText.clearError();\n  let valid = true;\n  let e1 = comsAppSetup.appIdError((appIdText.value ?? '').trim(), comsApplications.data, empty(queryParams.recordId));\n  if (e1 != '') { appIdText.setError(e1); valid = false; }\n  let e2 = comsAppSetup.nameError((appNameText.value ?? '').trim());\n  if (e2 != '') { appNameText.setError(e2); valid = false; }\n  let e3 = comsAppSetup.prefixError(prefixesText.value ?? '');\n  if (e3 != '') { prefixesText.setError(e3); valid = false; }\n  let e4 = comsAppSetup.fieldsError(fieldsGrid.rows.map(r => { { 'fieldLabel': (r.childrenMap.colFieldLabel.value ?? '').trim(), 'regex': (r.childrenMap.colRegex.value ?? '').trim(), 'hint': (r.childrenMap.colHint.value ?? '').trim(), 'example': (r.childrenMap.colExample.value ?? '').trim(), 'blankIsWildcard': r.childrenMap.colBlank.value == true } }));\n  if (e4 != '') { fieldsCheckText.setError(e4); valid = false; }\n  valid;\n%>",
+  "presentation": {
+    "pageType": "EDIT",
+    "headerSize": "HIDDEN",
+    "cancelOverride": {
+      "taskId": "appPatternSetup"
+    },
+    "body": {
+      "type": "basicFormLayout",
+      "id": "editAppPatternForm",
+      "sections": [
+        {
+          "type": "layoutSection",
+          "id": "titleBannerSection",
+          "children": [
+            {
+              "type": "richText",
+              "id": "titleBannerRichText",
+              "enabled": false,
+              "value": "<% '<span style=\"color:#0055B3;font-size:24px\"><b>' + (empty(queryParams.recordId) ? 'ECO-COMS: Add Application' : ('ECO-COMS: Edit Pattern Format · ' + (comsAppSetup.recordById(comsApplications.data, queryParams.recordId) ?? {'appId': ''}).appId)).replace('<', '&lt;') + '</b></span>' %>"
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "aboutSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "aboutFieldSet",
+              "title": "About This Page",
+              "children": [
+                {
+                  "type": "richText",
+                  "id": "aboutRichText",
+                  "enabled": false,
+                  "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">A pattern name is <b>APPLICATION:PREFIX:field:field:…</b>. Set the prefixes the application may use and its fields, in order. Each field has a label (shown on the Add Pattern form), a format (a regular expression the value must match, e.g. <b>[A-Z]{2,4}</b>), a hint shown when a value doesn't match, and an example that matches the format. Tick <b>Blank means any</b> when a field may be left empty (it becomes *). Existing patterns keep their names. A new application also needs an organization type of the same name in Workday before its patterns can be created.</span>"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "appSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "appFieldSet",
+              "title": "Application",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "appIdShownText",
+                  "label": "Application ID",
+                  "enabled": false,
+                  "visible": "<% !empty(queryParams.recordId) %>",
+                  "value": "<% (comsAppSetup.recordById(comsApplications.data, queryParams.recordId) ?? {'appId': ''}).appId ?? '' %>"
+                },
+                {
+                  "type": "text",
+                  "id": "appIdText",
+                  "label": "Application ID",
+                  "visible": "<% empty(queryParams.recordId) %>",
+                  "value": "<% '' %>",
+                  "placeholder": "e.g. X:BPMS(AOC)",
+                  "onChange": "<%\n  let e = comsAppSetup.appIdError((self.value ?? '').trim(), comsApplications.data, empty(queryParams.recordId));\n  if (e != '') { self.setError(e); } else { self.clearError(); }\n  exampleNameText.setValue(comsAppSetup.exampleName((empty(queryParams.recordId) ? (appIdText.value ?? '').trim() : (comsAppSetup.recordById(comsApplications.data, queryParams.recordId) ?? {'appId': ''}).appId), prefixesText.value ?? '', fieldsGrid.rows.map(r => { { 'fieldLabel': (r.childrenMap.colFieldLabel.value ?? '').trim(), 'regex': (r.childrenMap.colRegex.value ?? '').trim(), 'hint': (r.childrenMap.colHint.value ?? '').trim(), 'example': (r.childrenMap.colExample.value ?? '').trim(), 'blankIsWildcard': r.childrenMap.colBlank.value == true } })));\n%>"
+                },
+                {
+                  "type": "text",
+                  "id": "appNameText",
+                  "label": "Name",
+                  "required": true,
+                  "value": "<% (comsAppSetup.recordById(comsApplications.data, queryParams.recordId) ?? {'name': ''}).name ?? '' %>",
+                  "onChange": "<%\n  let e = comsAppSetup.nameError((self.value ?? '').trim());\n  if (e != '') { self.setError(e); } else { self.clearError(); }\n%>"
+                },
+                {
+                  "type": "text",
+                  "id": "appDescriptionText",
+                  "label": "Description",
+                  "value": "<% (comsAppSetup.recordById(comsApplications.data, queryParams.recordId) ?? {'description': ''}).description ?? '' %>"
+                },
+                {
+                  "type": "checkBox",
+                  "id": "appActiveCheckBox",
+                  "label": "Active (shown on the Add Pattern form)",
+                  "value": "<% (comsAppSetup.recordById(comsApplications.data, queryParams.recordId) ?? {'active': true}).active != false %>"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "formatSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "formatFieldSet",
+              "title": "Pattern Format",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "prefixesText",
+                  "label": "Prefixes",
+                  "required": true,
+                  "placeholder": "e.g. ORG, or CP, PRIV for several",
+                  "value": "<% comsAppSetup.prefixText(comsAppSetup.recordById(comsApplications.data, queryParams.recordId)) %>",
+                  "onChange": "<%\n  let e = comsAppSetup.prefixError(self.value ?? '');\n  if (e != '') { self.setError(e); } else { self.clearError(); }\n  exampleNameText.setValue(comsAppSetup.exampleName((empty(queryParams.recordId) ? (appIdText.value ?? '').trim() : (comsAppSetup.recordById(comsApplications.data, queryParams.recordId) ?? {'appId': ''}).appId), prefixesText.value ?? '', fieldsGrid.rows.map(r => { { 'fieldLabel': (r.childrenMap.colFieldLabel.value ?? '').trim(), 'regex': (r.childrenMap.colRegex.value ?? '').trim(), 'hint': (r.childrenMap.colHint.value ?? '').trim(), 'example': (r.childrenMap.colExample.value ?? '').trim(), 'blankIsWildcard': r.childrenMap.colBlank.value == true } })));\n%>"
+                },
+                {
+                  "type": "readOnlyText",
+                  "id": "exampleNameText",
+                  "label": "Example Pattern Name",
+                  "value": "<% let s = comsAppSetup.schemaOf(comsAppSetup.recordById(comsApplications.data, queryParams.recordId)); empty(s) ? '' : comsAppSetup.exampleName((comsAppSetup.recordById(comsApplications.data, queryParams.recordId)).appId, s.prefixes.join(','), s.fields) %>"
+                },
+                {
+                  "type": "text",
+                  "id": "fieldsCheckText",
+                  "label": "Fields",
+                  "enabled": false,
+                  "value": "<% 'Up to 7 fields, in the order they appear in the name. Add a row with +.' %>"
+                },
+                {
+                  "type": "grid",
+                  "id": "fieldsGrid",
+                  "label": "Fields",
+                  "rowVariableName": "fr",
+                  "rows": "<% comsAppSetup.fieldRows(comsAppSetup.recordById(comsApplications.data, queryParams.recordId)) %>",
+                  "columns": [
+                    {
+                      "type": "column",
+                      "columnId": "colFieldLabel",
+                      "label": "Label",
+                      "cellTemplate": {
+                        "type": "text",
+                        "id": "colFieldLabelText",
+                        "value": "<% fr.fieldLabel ?? '' %>",
+                        "onChange": "<% exampleNameText.setValue(comsAppSetup.exampleName((empty(queryParams.recordId) ? (appIdText.value ?? '').trim() : (comsAppSetup.recordById(comsApplications.data, queryParams.recordId) ?? {'appId': ''}).appId), prefixesText.value ?? '', fieldsGrid.rows.map(r => { { 'fieldLabel': (r.childrenMap.colFieldLabel.value ?? '').trim(), 'regex': (r.childrenMap.colRegex.value ?? '').trim(), 'hint': (r.childrenMap.colHint.value ?? '').trim(), 'example': (r.childrenMap.colExample.value ?? '').trim(), 'blankIsWildcard': r.childrenMap.colBlank.value == true } }))); %>"
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colRegex",
+                      "label": "Format (regular expression)",
+                      "cellTemplate": {
+                        "type": "text",
+                        "id": "colRegexText",
+                        "value": "<% fr.regex ?? '' %>",
+                        "onChange": "<% exampleNameText.setValue(comsAppSetup.exampleName((empty(queryParams.recordId) ? (appIdText.value ?? '').trim() : (comsAppSetup.recordById(comsApplications.data, queryParams.recordId) ?? {'appId': ''}).appId), prefixesText.value ?? '', fieldsGrid.rows.map(r => { { 'fieldLabel': (r.childrenMap.colFieldLabel.value ?? '').trim(), 'regex': (r.childrenMap.colRegex.value ?? '').trim(), 'hint': (r.childrenMap.colHint.value ?? '').trim(), 'example': (r.childrenMap.colExample.value ?? '').trim(), 'blankIsWildcard': r.childrenMap.colBlank.value == true } }))); %>"
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colHint",
+                      "label": "Hint",
+                      "cellTemplate": {
+                        "type": "text",
+                        "id": "colHintText",
+                        "value": "<% fr.hint ?? '' %>",
+                        "onChange": "<% exampleNameText.setValue(comsAppSetup.exampleName((empty(queryParams.recordId) ? (appIdText.value ?? '').trim() : (comsAppSetup.recordById(comsApplications.data, queryParams.recordId) ?? {'appId': ''}).appId), prefixesText.value ?? '', fieldsGrid.rows.map(r => { { 'fieldLabel': (r.childrenMap.colFieldLabel.value ?? '').trim(), 'regex': (r.childrenMap.colRegex.value ?? '').trim(), 'hint': (r.childrenMap.colHint.value ?? '').trim(), 'example': (r.childrenMap.colExample.value ?? '').trim(), 'blankIsWildcard': r.childrenMap.colBlank.value == true } }))); %>"
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colExample",
+                      "label": "Example",
+                      "cellTemplate": {
+                        "type": "text",
+                        "id": "colExampleText",
+                        "value": "<% fr.example ?? '' %>",
+                        "onChange": "<% exampleNameText.setValue(comsAppSetup.exampleName((empty(queryParams.recordId) ? (appIdText.value ?? '').trim() : (comsAppSetup.recordById(comsApplications.data, queryParams.recordId) ?? {'appId': ''}).appId), prefixesText.value ?? '', fieldsGrid.rows.map(r => { { 'fieldLabel': (r.childrenMap.colFieldLabel.value ?? '').trim(), 'regex': (r.childrenMap.colRegex.value ?? '').trim(), 'hint': (r.childrenMap.colHint.value ?? '').trim(), 'example': (r.childrenMap.colExample.value ?? '').trim(), 'blankIsWildcard': r.childrenMap.colBlank.value == true } }))); %>"
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colBlank",
+                      "label": "Blank means any (*)",
+                      "cellTemplate": {
+                        "type": "checkBox",
+                        "id": "colBlankCheckBox",
+                        "value": "<% fr.blankIsWildcard ?? false %>",
+                        "onChange": "<% exampleNameText.setValue(comsAppSetup.exampleName((empty(queryParams.recordId) ? (appIdText.value ?? '').trim() : (comsAppSetup.recordById(comsApplications.data, queryParams.recordId) ?? {'appId': ''}).appId), prefixesText.value ?? '', fieldsGrid.rows.map(r => { { 'fieldLabel': (r.childrenMap.colFieldLabel.value ?? '').trim(), 'regex': (r.childrenMap.colRegex.value ?? '').trim(), 'hint': (r.childrenMap.colHint.value ?? '').trim(), 'example': (r.childrenMap.colExample.value ?? '').trim(), 'blankIsWildcard': r.childrenMap.colBlank.value == true } }))); %>"
+                      }
+                    }
+                  ],
+                  "gridType": "LIST",
+                  "multiViewStylingEnabled": true
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "footer": {
+      "type": "footer",
+      "children": [
+        {
+          "type": "pod",
+          "podId": "ecoComsFooter"
+        }
+      ]
+    }
+  }
+}

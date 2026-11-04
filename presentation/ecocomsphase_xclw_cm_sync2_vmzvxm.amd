@@ -176,6 +176,28 @@
           "endsFlow": true
         }
       ]
+    },
+    {
+      "id": "editAppPatternFlow",
+      "flowSteps": [
+        {
+          "id": "editAppPatternStep",
+          "taskId": "editAppPattern",
+          "startsFlow": true,
+          "transitions": [
+            {
+              "order": "a",
+              "value": "appPatternSetupStep",
+              "condition": "true"
+            }
+          ]
+        },
+        {
+          "id": "appPatternSetupStep",
+          "taskId": "appPatternSetup",
+          "endsFlow": true
+        }
+      ]
     }
   ],
   "tasks": [
@@ -443,6 +465,20 @@
       "routingPattern": "/comsInsightsApps",
       "page": {
         "id": "comsInsightsApps"
+      }
+    },
+    {
+      "id": "appPatternSetup",
+      "routingPattern": "/appPatternSetup",
+      "page": {
+        "id": "appPatternSetup"
+      }
+    },
+    {
+      "id": "editAppPattern",
+      "routingPattern": "/editAppPattern",
+      "page": {
+        "id": "editAppPattern"
       }
     }
   ],

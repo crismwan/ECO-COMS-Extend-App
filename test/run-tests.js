@@ -53,8 +53,8 @@ for (const s of SUITES) if (!SUITES_ALL.includes(s)) { console.error(`Unknown su
 
 // Fixed vocabulary (CLAUDE.md "Audit log design"). A new value here means a page or
 // orchestration started writing something the viewer and reports don't expect.
-const OBJECT_TYPES = ['Shell Org', 'Shell Org Pattern', 'Org Status', 'Role Assignment', 'Assignable Role'];
-const ACTIONS = ['ADD', 'INACTIVATE', 'REACTIVATE', 'ASSIGN POSITION', 'REMOVE POSITION', 'REQUEST', 'APPROVE', 'DENY', 'DELETE', 'REVIEW'];
+const OBJECT_TYPES = ['Shell Org', 'Shell Org Pattern', 'Org Status', 'Role Assignment', 'Assignable Role', 'Application Pattern'];
+const ACTIONS = ['ADD', 'INACTIVATE', 'REACTIVATE', 'ASSIGN POSITION', 'REMOVE POSITION', 'REQUEST', 'APPROVE', 'DENY', 'DELETE', 'REVIEW', 'UPDATE'];
 const TEST_ROLE = arg('--role') || process.env.E2E_ROLE || 'X:BPMS(ODMT):ROLE:ADVISORS';
 const BO_COLLECTIONS = ['comsApplications', 'comsAssignableRoles', 'comsAuditLogs'];
 
@@ -750,6 +750,25 @@ async function smoke(token, me) {
     if (!recent.length) return skip('Audit.runId', `no audit records since ${since} yet`);
     const missing = recent.filter((a) => !a.runId);
     (missing.length ? fail : pass)('Audit.runId', `${recent.length - missing.length} of ${recent.length} record(s) since ${since} carry a run ID` + (missing.length ? `; missing on ${missing.slice(0, 3).map((a) => a.objectType + ' ' + a.action + ' ' + a.timestamp).join(', ')}` : ''));
+  });
+
+  // Application pattern formats are edited in the app (editAppPattern, 2026-11-04): every saved one must still be usable
+  // by the Add Pattern form (prefixes, 1-7 fields, each example matching its format; regex checked in JS, close to Java).
+  await test('Apps.patternFormats', async () => {
+    const apps = (await request('GET', `${BO}/comsApplications?limit=100`, token)).data || [];
+    const bad = [];
+    for (const a of apps.filter((x) => x.patternSchema)) {
+      let s; try { s = JSON.parse(a.patternSchema); } catch (e) { bad.push(`${a.appId}: patternSchema isn't JSON`); continue; }
+      if (!Array.isArray(s.prefixes) || !s.prefixes.length) bad.push(`${a.appId}: no prefixes`);
+      if (!Array.isArray(s.fields) || !s.fields.length || s.fields.length > 7) bad.push(`${a.appId}: ${s.fields?.length ?? 0} fields (1-7 allowed)`);
+      (s.fields || []).forEach((f, i) => {
+        let ok = false; try { ok = new RegExp('^(?:' + f.regex + ')$').test(f.example); } catch (e) { bad.push(`${a.appId} field ${i + 1}: format isn't a valid regex`); return; }
+        if (!f.fieldLabel || !ok) bad.push(`${a.appId} field ${i + 1} (${f.fieldLabel || 'no label'}): example ${f.example} doesn't match ${f.regex}`);
+      });
+      if ((a.namePrefix || '') !== (s.prefixes || []).join(',')) bad.push(`${a.appId}: namePrefix ${a.namePrefix} differs from the format's prefixes`);
+    }
+    if (bad.length) throw new Error(bad.slice(0, 5).join('; '));
+    pass('Apps.patternFormats', `${apps.filter((x) => x.patternSchema).length} application formats valid`);
   });
 
   // Access Review lists vacant positions that still hold a shell role (tools/build_access_review.py): the same two
@@ -1556,8 +1575,11 @@ async function seedApps(token) {
     const cur = have.find((r) => r.appId === a.appId);
     // An existing record keeps its name, org type and subtype (X:CLW was set up by hand); only the pattern format changes.
     const same = cur && cur.namePrefix === body.namePrefix && cur.patternSchema === body.patternSchema;
-    console.log(`   ${cur ? (same ? 'unchanged' : 'update') : 'create'}  ${a.appId}  ${body.namePrefix}  [${a.fields.map((x) => x.fieldLabel).join(', ')}]`);
-    if (!APPLY || same) continue;
+    // Formats are edited on the Application Patterns page now (2026-11-04), so an existing record is only replaced
+    // from tools/pattern_schemas.json with --overwrite; by default this only creates missing applications.
+    const keep = cur && !same && !argv.includes('--overwrite');
+    console.log(`   ${cur ? (same ? 'unchanged' : (keep ? 'kept (differs; edited in the app? --overwrite replaces it)' : 'update')) : 'create'}  ${a.appId}  ${body.namePrefix}  [${a.fields.map((x) => x.fieldLabel).join(', ')}]`);
+    if (!APPLY || same || keep) continue;
     await test(`Seed.${a.appId}`, async () => {
       if (cur) await request('PATCH', `${BO}/comsApplications/${cur.id}`, token, { namePrefix: body.namePrefix, patternSchema: body.patternSchema });
       else await request('POST', `${BO}/comsApplications`, token, body);
