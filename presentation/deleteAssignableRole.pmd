@@ -185,6 +185,10 @@
           {
             "outboundPath": "changedByWid",
             "value": "<% selectedWorker.id ?? '' %>"
+          },
+          {
+            "outboundPath": "eventWid",
+            "value": "<% (size((list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? []).filter(r => { r.id == (queryParams.roleId ?? '') && r.status == 'Pending ISC Review' && !empty(r.requestedBy) && r.requestedBy.id == (selectedWorker.id ?? '') })) > 0 ? ((list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? []).filter(r => { r.id == (queryParams.roleId ?? '') && r.status == 'Pending ISC Review' && !empty(r.requestedBy) && r.requestedBy.id == (selectedWorker.id ?? '') })[0].reviewEventWid ?? '') : '') %>"
           }
         ],
         "failOnStatusCodes": [

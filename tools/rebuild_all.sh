@@ -41,6 +41,7 @@ run tools/title_banner.py              # white title tile instead of Workday's s
 
 run tools/ux_improvements.py --tiles  # one-line summary under the title tile where the About box starts closed
 run tools/audit_run_id.py           # audit records carry the orchestration run ID (field runId)
+run tools/audit_event_ref.py        # audit records carry their Workday event (field eventWid)
 run tools/graphql_audit.py          # audit records through the Graph API (newest first, sorted on the server)
 run tools/clear_submit_errors.py      # every OK check clears its own earlier errors first
 run tools/apply_icons.py              # every icon from one table (CLAUDE.md "Icons" framework)

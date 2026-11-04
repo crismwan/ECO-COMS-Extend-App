@@ -451,15 +451,59 @@
               },
               {
                 "type": "column",
+                "columnId": "columnEvent",
+                "label": "Workday Event",
+                "cellTemplate": {
+                  "type": "fieldSet",
+                  "id": "eventFieldSet",
+                  "children": [
+                    {
+                      "type": "instanceList",
+                      "id": "eventInstanceList",
+                      "view": true,
+                      "relatedTask": true,
+                      "enabled": false,
+                      "visible": "<% !empty(logEntry.eventWid) %>",
+                      "widKey": "id",
+                      "values": "<% empty(logEntry.eventWid) ? [] : [{'id': logEntry.eventWid, 'descriptor': (logEntry.objectType == 'Role Assignment' ? 'Assign Roles event' : 'Review event')}] %>"
+                    },
+                    {
+                      "type": "text",
+                      "id": "eventText",
+                      "enabled": false,
+                      "visible": "<% empty(logEntry.eventWid) %>",
+                      "value": "<% '' %>"
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "column",
                 "columnId": "columnRunId",
                 "label": "Run ID",
-                "cellTemplate": {
-                  "type": "text",
-                  "id": "runIdText",
-                  "value": "<% logEntry.runId ?? '' %>",
+                "excel": {
                   "enabled": false
                 },
-                "sortableAndFilterable": "true"
+                "cellTemplate": {
+                  "type": "fieldSet",
+                  "id": "runIdFieldSet",
+                  "children": [
+                    {
+                      "type": "externalLink",
+                      "id": "runIdExternalLink",
+                      "visible": "<% !empty(logEntry.runId) %>",
+                      "descriptor": "<% logEntry.runId ?? '' %>",
+                      "url": "https://developer.workday.com/console/apps/view/ecocomsphase_xclw_cm_sync2_vmzvxm"
+                    },
+                    {
+                      "type": "text",
+                      "id": "runIdText",
+                      "enabled": false,
+                      "visible": "<% empty(logEntry.runId) %>",
+                      "value": "<% '' %>"
+                    }
+                  ]
+                }
               }
             ],
             "excelExportEnabled": true

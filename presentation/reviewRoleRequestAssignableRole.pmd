@@ -245,6 +245,10 @@
           {
             "outboundPath": "changedByWid",
             "value": "<% selectedWorker.id ?? '' %>"
+          },
+          {
+            "outboundPath": "eventWid",
+            "value": "<% (!empty(bpStep.event)) ? (bpStep.event.id ?? '') : '' %>"
           }
         ]
       },

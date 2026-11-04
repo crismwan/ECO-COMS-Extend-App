@@ -26,7 +26,7 @@ PAGES = ['auditLogViewer', 'comsInsights', 'hubLanding', 'shellOrgDetail']
 QUERY_ID = 'auditLogsNewest'
 PROVIDER = 'workday-graph'
 FIELDS = ('workdayID { id } timestamp action objectType coName coReferenceId triggeredBy details '
-          'effectiveDate roleName positionName changedByWid orgWid roleWid positionWid runId')
+          'effectiveDate roleName positionName changedByWid orgWid roleWid positionWid runId eventWid')
 FAIL = [{"code": 400}, {"code": 403}, {"code": 429}]
 
 
@@ -71,19 +71,34 @@ def rows(k):
     return f"(({g}) ? (auditPage{k}.data.r.data ?? []) : [])"
 
 
-RUN_COLUMN = {"type": "column", "columnId": "columnRunId", "label": "Run ID",
-              "cellTemplate": {"type": "text", "id": "runIdText", "value": "<% logEntry.runId ?? '' %>", "enabled": False},
-              "sortableAndFilterable": "true"}
+CONSOLE = f"https://developer.workday.com/console/apps/view/{APP}"
+# The orchestration run that wrote the record (tools/audit_run_id.py). Workday has no page per run, so
+# the link opens the app's developer console (Orchestration Activity / Logs list runs; search the ID).
+RUN_COLUMN = {"type": "column", "columnId": "columnRunId", "label": "Run ID", "excel": {"enabled": False},
+              "cellTemplate": {"type": "fieldSet", "id": "runIdFieldSet", "children": [
+                  {"type": "externalLink", "id": "runIdExternalLink", "visible": "<% !empty(logEntry.runId) %>",
+                   "descriptor": "<% logEntry.runId ?? '' %>", "url": CONSOLE},
+                  {"type": "text", "id": "runIdText", "enabled": False, "visible": "<% empty(logEntry.runId) %>",
+                   "value": "<% '' %>"}]}}
+# The Workday business process event (tools/audit_event_ref.py): a tenant instance, so it opens with
+# related actions like the Changed By and Role columns.
+EVENT_COLUMN = {"type": "column", "columnId": "columnEvent", "label": "Workday Event",
+                "cellTemplate": {"type": "fieldSet", "id": "eventFieldSet", "children": [
+                    {"type": "instanceList", "id": "eventInstanceList", "view": True, "relatedTask": True,
+                     "enabled": False, "visible": "<% !empty(logEntry.eventWid) %>", "widKey": "id",
+                     "values": "<% empty(logEntry.eventWid) ? [] : [{'id': logEntry.eventWid, 'descriptor': "
+                               "(logEntry.objectType == 'Role Assignment' ? 'Assign Roles event' : 'Review event')}] %>"},
+                    {"type": "text", "id": "eventText", "enabled": False, "visible": "<% empty(logEntry.eventWid) %>",
+                     "value": "<% '' %>"}]}}
 
 
 def add_run_column(d):
-    # The orchestration run that wrote the record (tools/audit_run_id.py); matches developer.workday.com
-    # app > Orchestration Activity. Empty on records written before 2026-11-04.
+    """Event then Run ID as the last two columns, replaced each run so the build stays idempotent."""
     def walk(n):
         if isinstance(n, dict):
             if n.get('id') == 'AuditLogGrid':
-                if not any(c.get('columnId') == 'columnRunId' for c in n['columns']):
-                    n['columns'].append(json.loads(json.dumps(RUN_COLUMN)))
+                cols = [c for c in n['columns'] if c.get('columnId') not in ('columnRunId', 'columnEvent')]
+                n['columns'] = cols + [json.loads(json.dumps(EVENT_COLUMN)), json.loads(json.dumps(RUN_COLUMN))]
                 return True
             return any(walk(v) for v in n.values())
         if isinstance(n, list):
