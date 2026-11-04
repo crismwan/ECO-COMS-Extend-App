@@ -49,26 +49,18 @@
     }
   ],
   "presentation": {
-    "headerSize": "HIDDEN",
+    "headerSize": "STANDARD",
+    "title": {
+      "type": "title",
+      "label": "ECO-COMS: Bulk Role Changes – Template"
+    },
     "body": {
       "type": "basicFormLayout",
       "id": "bulkTemplateForm",
       "sections": [
         {
           "type": "layoutSection",
-          "id": "titleBannerSection",
-          "children": [
-            {
-              "type": "richText",
-              "id": "titleBannerRichText",
-              "enabled": false,
-              "value": "<span style=\"color:#0055B3;font-size:24px\"><b>ECO-COMS: Bulk Role Changes – Template</b></span><br><span style=\"color:#374151;font-size:13px\">Download the current template for bulk role changes.</span>"
-            }
-          ]
-        },
-        {
-          "type": "layoutSection",
-          "id": "aboutSection",
+          "id": "navSection",
           "children": [
             {
               "type": "button",
@@ -78,7 +70,13 @@
               "taskReference": {
                 "taskId": "home"
               }
-            },
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "aboutSection",
+          "children": [
             {
               "type": "fieldSet",
               "id": "aboutFieldSet",
@@ -90,9 +88,7 @@
                   "enabled": false,
                   "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\"><b>Easiest:</b> download the <b>Excel template</b> below. It already lists every current role assignment, checks each row as you type and tells you when the file is ready to save as CSV. Its <b>How to use</b> sheet has the steps.<br/><b>Or</b> export the grid below to Excel (the export icon on the grid); each row is one position that holds a role on a shell organization. Then:<br/>1. In <b>Action</b>, type <b>REMOVE</b> on the rows to take a position off a role.<br/>2. To add a position, copy a row of the same role, type <b>ADD</b> in Action and put the new <b>Position ID</b> (for example P-00123) in that column. Leave Assignee WID empty on ADD rows.<br/>3. Leave Action empty on rows you don't want to change. Keep the columns in this order and don't edit the WID columns.<br/>4. Save as <b>CSV</b> (Excel: File → Save As → CSV) and upload it on the Bulk Role Changes page. Up to 1,000 ADD or REMOVE rows per file.</span>"
                 }
-              ],
-              "collapsible": true,
-              "initializeCollapsed": true
+              ]
             },
             {
               "type": "cardContainer",

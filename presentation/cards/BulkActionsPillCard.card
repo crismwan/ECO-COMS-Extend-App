@@ -6,7 +6,7 @@
   "header": {
     "title": "Actions",
     "subtitle": "Refresh while a run is in progress",
-    "icon": "wd-accent-people-group"
+    "icon": "wd-accent-checkmarked-page"
   },
   "body": {
     "type": "pillCard",

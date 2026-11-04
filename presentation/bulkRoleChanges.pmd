@@ -78,7 +78,11 @@
     ]
   },
   "presentation": {
-    "headerSize": "HIDDEN",
+    "headerSize": "STANDARD",
+    "title": {
+      "type": "title",
+      "label": "ECO-COMS: Bulk Role Changes"
+    },
     "cancelOverride": {
       "taskId": "home"
     },
@@ -88,19 +92,7 @@
       "sections": [
         {
           "type": "layoutSection",
-          "id": "titleBannerSection",
-          "children": [
-            {
-              "type": "richText",
-              "id": "titleBannerRichText",
-              "enabled": false,
-              "value": "<span style=\"color:#0055B3;font-size:24px\"><b>ECO-COMS: Bulk Role Changes</b></span><br><span style=\"color:#374151;font-size:13px\">Upload a file of role changes, validate it, then apply it.</span>"
-            }
-          ]
-        },
-        {
-          "type": "layoutSection",
-          "id": "aboutSection",
+          "id": "navSection",
           "children": [
             {
               "type": "button",
@@ -110,7 +102,13 @@
               "taskReference": {
                 "taskId": "home"
               }
-            },
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "aboutSection",
+          "children": [
             {
               "type": "fieldSet",
               "id": "aboutFieldSet",
@@ -122,9 +120,7 @@
                   "enabled": false,
                   "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">Upload the CSV made from the template. Run it as <b>Validate only</b> first: every row is checked and nothing changes in Workday. Then upload the same file again with <b>Real run</b> ticked: each ADD or REMOVE row is applied in Workday's Assign Roles, one row at a time, and each change is written to the Audit Log. A row that Workday rejects is recorded as FAILED and the run carries on. Both runs work in the background; the results page shows progress. Up to 1,000 ADD or REMOVE rows per file; unchanged rows don't count.</span>"
                 }
-              ],
-              "collapsible": true,
-              "initializeCollapsed": true
+              ]
             },
             {
               "type": "cardContainer",
@@ -188,8 +184,7 @@
                     "title": "Effective Date",
                     "text": "The date the role changes take effect: a weekday in this year or next. One date applies to every row in the file."
                   },
-                  "onChange": "<%\n  if (empty(self.value)) { self.clearError(); }\n  else if (!comsValidations.isWeekday(self.value)) { self.setError(comsValidations.errorWeekday()); }\n  else if (!comsValidations.isCurrentOrFutureYear(self.value)) { self.setError(comsValidations.errorYear()); }\n  else { self.clearError(); }\n%>",
-                  "helpText": "A weekday this year or next. One date applies to every row."
+                  "onChange": "<%\n  if (empty(self.value)) { self.clearError(); }\n  else if (!comsValidations.isWeekday(self.value)) { self.setError(comsValidations.errorWeekday()); }\n  else if (!comsValidations.isCurrentOrFutureYear(self.value)) { self.setError(comsValidations.errorYear()); }\n  else { self.clearError(); }\n%>"
                 },
                 {
                   "type": "checkBox",
@@ -202,8 +197,7 @@
                     "id": "realRunGuide",
                     "title": "Validate only or real run",
                     "text": "Leave this unticked to validate only: every row is checked and nothing changes. Tick it to apply the ADD and REMOVE rows in Workday."
-                  },
-                  "helpText": "Leave unticked to validate only: nothing changes in Workday."
+                  }
                 },
                 {
                   "type": "checkBox",

@@ -184,23 +184,11 @@
     }
   ],
   "presentation": {
-    "headerSize": "HIDDEN",
+    "headerSize": "STANDARD",
     "body": {
       "type": "basicFormLayout",
       "id": "hubLandingForm",
       "sections": [
-        {
-          "type": "layoutSection",
-          "id": "titleBannerSection",
-          "children": [
-            {
-              "type": "richText",
-              "id": "titleBannerRichText",
-              "enabled": false,
-              "value": "<span style=\"color:#0055B3;font-size:24px\"><b>ECO-COMS: RBAC Hub</b></span>"
-            }
-          ]
-        },
         {
           "type": "layoutSection",
           "id": "dashboardSection",
@@ -254,7 +242,7 @@
             {
               "type": "cardContainer",
               "id": "actionsCardContainer",
-              "layout": "masonry",
+              "layout": "grid",
               "cards": [
                 {
                   "type": "card",
@@ -267,11 +255,6 @@
                 {
                   "type": "card",
                   "cardId": "HomeRoleRequestActionsCard"
-                },
-                {
-                  "type": "card",
-                  "cardId": "PendingAgeChart",
-                  "parameters": "<% { 'ages': comsPendingAge.buckets(list:flatten([pendingRequestsPage0.data ?? [], pendingRequestsPage1.data ?? [], pendingRequestsPage2.data ?? []])), 'totalText': comsPendingAge.totalText(list:flatten([pendingRequestsPage0.data ?? [], pendingRequestsPage1.data ?? [], pendingRequestsPage2.data ?? []])) } %>"
                 }
               ]
             }
@@ -288,6 +271,10 @@
         }
       ]
     },
-    "pageType": "VIEW"
+    "pageType": "VIEW",
+    "title": {
+      "type": "title",
+      "label": "ECO-COMS: RBAC Hub"
+    }
   }
 }

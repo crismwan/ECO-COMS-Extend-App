@@ -7,8 +7,7 @@
   ],
   "header": {
     "title": "<% title ?? \"\" %>",
-    "subtitle": "<% subtitle ?? \"\" %>",
-    "icon": "wd-accent-chart-bar-arrow"
+    "subtitle": "<% subtitle ?? \"\" %>"
   },
   "body": {
     "type": "chartCard",

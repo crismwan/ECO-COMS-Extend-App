@@ -215,26 +215,14 @@
   },
   "presentation": {
     "pageType": "EDIT",
-    "headerSize": "HIDDEN",
+    "headerSize": "STANDARD",
     "body": {
       "type": "basicFormLayout",
       "id": "deleteForm",
       "sections": [
         {
           "type": "layoutSection",
-          "id": "titleBannerSection",
-          "children": [
-            {
-              "type": "richText",
-              "id": "titleBannerRichText",
-              "enabled": false,
-              "value": "<% '<span style=\"color:#0055B3;font-size:24px\"><b>' + ('ECO-COMS: Withdraw ' + (queryParams.view == 'aaa' ? 'AAA ' : (queryParams.view == 'assignable' ? 'Assignable ' : '')) + 'Role Request').replace('<', '&lt;') + '</b></span>' %>"
-            }
-          ]
-        },
-        {
-          "type": "layoutSection",
-          "id": "descSection",
+          "id": "navSection",
           "children": [
             {
               "type": "button",
@@ -255,7 +243,13 @@
               "action": "LINK",
               "suppressDiscardDialog": true,
               "visible": "<% queryParams.view == 'aaa' %>"
-            },
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "descSection",
+          "children": [
             {
               "type": "fieldSet",
               "id": "aboutFieldSet",
@@ -472,6 +466,10 @@
     },
     "cancelOverride": {
       "taskId": "home"
+    },
+    "title": {
+      "type": "title",
+      "label": "<% 'ECO-COMS: Withdraw ' + (queryParams.view == 'aaa' ? 'AAA ' : (queryParams.view == 'assignable' ? 'Assignable ' : '')) + 'Role Request' %>"
     }
   },
   "onSubmit": "<%\n  confirmDeleteCheckBox.clearError();\n  let valid = true;\n  if (empty(queryParams.roleId)) {\n    valid = false;\n  } else if (size((list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? []).filter(r => { r.id == (queryParams.roleId ?? '') && r.status == 'Pending ISC Review' && !empty(r.requestedBy) && r.requestedBy.id == (selectedWorker.id ?? '') })) == 0) {\n    confirmDeleteCheckBox.setError('This request is not one of your pending requests, so it can\\'t be withdrawn here.');\n    valid = false;\n  } else if (confirmDeleteCheckBox.value != true) {\n    confirmDeleteCheckBox.setError('Tick the box to confirm the withdrawal.');\n    valid = false;\n  }\n  valid;\n%>"

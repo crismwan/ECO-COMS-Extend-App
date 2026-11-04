@@ -60,7 +60,7 @@ open(os.path.join(ROOT, 'scripts', 'comsPendingAge.script'), 'w', encoding='utf-
 save(os.path.join('cards', 'PendingAgeChart.card'), {
     "id": "PendingAgeChart",
     "parameters": ["ages", "totalText"],
-    "header": {"title": "Pending Requests by Age", "subtitle": "<% totalText ?? \"\" %>", "icon": "wd-accent-inbox"},
+    "header": {"title": "Pending Requests by Age", "subtitle": "<% totalText ?? \"\" %>", "icon": "wd-accent-data-loading"}  # waiting over time; the only clock (time) is App Activity's,
     "body": {"type": "chartCard", "chart": {
         "type": "stackedBarChart2",
         "id": "pendingAgeStackedBarChart",

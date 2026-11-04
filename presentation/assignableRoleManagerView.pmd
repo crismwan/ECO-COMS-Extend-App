@@ -91,26 +91,14 @@
   ],
   "presentation": {
     "pageType": "VIEW",
-    "headerSize": "HIDDEN",
+    "headerSize": "STANDARD",
     "body": {
       "type": "basicFormLayout",
       "id": "assignableRoleManagerViewForm",
       "sections": [
         {
           "type": "layoutSection",
-          "id": "titleBannerSection",
-          "children": [
-            {
-              "type": "richText",
-              "id": "titleBannerRichText",
-              "enabled": false,
-              "value": "<span style=\"color:#0055B3;font-size:24px\"><b>ECO-COMS: My Assignable Role Requests</b></span>"
-            }
-          ]
-        },
-        {
-          "type": "layoutSection",
-          "id": "descSection",
+          "id": "navSection",
           "children": [
             {
               "type": "button",
@@ -119,7 +107,13 @@
                 "taskId": "home"
               },
               "action": "LINK"
-            },
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "descSection",
+          "children": [
             {
               "type": "fieldSet",
               "id": "aboutFieldSet",
@@ -350,6 +344,10 @@
           "podId": "ecoComsFooter"
         }
       ]
+    },
+    "title": {
+      "type": "title",
+      "label": "ECO-COMS: My Assignable Role Requests"
     }
   }
 }

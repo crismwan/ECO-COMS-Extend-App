@@ -268,26 +268,14 @@
   },
   "presentation": {
     "pageType": "EDIT",
-    "headerSize": "HIDDEN",
+    "headerSize": "STANDARD",
     "body": {
       "type": "basicFormLayout",
       "id": "assignableRoleManagerForm",
       "sections": [
         {
           "type": "layoutSection",
-          "id": "titleBannerSection",
-          "children": [
-            {
-              "type": "richText",
-              "id": "titleBannerRichText",
-              "enabled": false,
-              "value": "<span style=\"color:#0055B3;font-size:24px\"><b>ECO-COMS: Submit Assignable Role Request</b></span>"
-            }
-          ]
-        },
-        {
-          "type": "layoutSection",
-          "id": "contentSection",
+          "id": "navSection",
           "children": [
             {
               "type": "button",
@@ -296,7 +284,13 @@
                 "taskId": "assignableRoleManagerView"
               },
               "action": "LINK"
-            },
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "contentSection",
+          "children": [
             {
               "type": "fieldSet",
               "id": "aboutFieldSet",
@@ -657,6 +651,10 @@
     },
     "cancelOverride": {
       "taskId": "home"
+    },
+    "title": {
+      "type": "title",
+      "label": "ECO-COMS: Submit Assignable Role Request"
     }
   },
   "securityDomains": [

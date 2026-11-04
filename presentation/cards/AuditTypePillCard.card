@@ -2,15 +2,11 @@
   "id": "AuditTypePillCard",
   "parameters": [
     "period",
-    "changeType",
-    "by",
-    "orgId",
-    "orgCode",
-    "orgName"
+    "changeType"
   ],
   "header": {
     "title": "Change Type",
-    "icon": "wd-accent-scroll-shield"
+    "icon": "wd-accent-clipboard-checklist"
   },
   "body": {
     "type": "pillCard",
@@ -21,11 +17,7 @@
           "taskId": "auditLogViewer",
           "parameterBindings": {
             "period": "<% period ?? \"\" %>",
-            "changeType": "",
-            "by": "<% by ?? \"\" %>",
-            "orgId": "<% orgId ?? \"\" %>",
-            "orgCode": "<% orgCode ?? \"\" %>",
-            "orgName": "<% orgName ?? \"\" %>"
+            "changeType": ""
           }
         }
       },
@@ -35,11 +27,7 @@
           "taskId": "auditLogViewer",
           "parameterBindings": {
             "period": "<% period ?? \"\" %>",
-            "changeType": "Shell Org",
-            "by": "<% by ?? \"\" %>",
-            "orgId": "<% orgId ?? \"\" %>",
-            "orgCode": "<% orgCode ?? \"\" %>",
-            "orgName": "<% orgName ?? \"\" %>"
+            "changeType": "Shell Org"
           }
         }
       },
@@ -49,11 +37,7 @@
           "taskId": "auditLogViewer",
           "parameterBindings": {
             "period": "<% period ?? \"\" %>",
-            "changeType": "Shell Org Pattern",
-            "by": "<% by ?? \"\" %>",
-            "orgId": "<% orgId ?? \"\" %>",
-            "orgCode": "<% orgCode ?? \"\" %>",
-            "orgName": "<% orgName ?? \"\" %>"
+            "changeType": "Shell Org Pattern"
           }
         }
       },
@@ -63,11 +47,7 @@
           "taskId": "auditLogViewer",
           "parameterBindings": {
             "period": "<% period ?? \"\" %>",
-            "changeType": "Org Status",
-            "by": "<% by ?? \"\" %>",
-            "orgId": "<% orgId ?? \"\" %>",
-            "orgCode": "<% orgCode ?? \"\" %>",
-            "orgName": "<% orgName ?? \"\" %>"
+            "changeType": "Org Status"
           }
         }
       },
@@ -77,11 +57,7 @@
           "taskId": "auditLogViewer",
           "parameterBindings": {
             "period": "<% period ?? \"\" %>",
-            "changeType": "Role Assignment",
-            "by": "<% by ?? \"\" %>",
-            "orgId": "<% orgId ?? \"\" %>",
-            "orgCode": "<% orgCode ?? \"\" %>",
-            "orgName": "<% orgName ?? \"\" %>"
+            "changeType": "Role Assignment"
           }
         }
       },
@@ -91,11 +67,7 @@
           "taskId": "auditLogViewer",
           "parameterBindings": {
             "period": "<% period ?? \"\" %>",
-            "changeType": "Assignable Role",
-            "by": "<% by ?? \"\" %>",
-            "orgId": "<% orgId ?? \"\" %>",
-            "orgCode": "<% orgCode ?? \"\" %>",
-            "orgName": "<% orgName ?? \"\" %>"
+            "changeType": "Assignable Role"
           }
         }
       }

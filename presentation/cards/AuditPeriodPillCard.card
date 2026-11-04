@@ -2,15 +2,11 @@
   "id": "AuditPeriodPillCard",
   "parameters": [
     "period",
-    "changeType",
-    "by",
-    "orgId",
-    "orgCode",
-    "orgName"
+    "changeType"
   ],
   "header": {
     "title": "Time Period",
-    "icon": "wd-accent-calendar"
+    "icon": "wd-accent-clipboard-checklist"
   },
   "body": {
     "type": "pillCard",
@@ -21,11 +17,7 @@
           "taskId": "auditLogViewer",
           "parameterBindings": {
             "period": "all",
-            "changeType": "<% changeType ?? \"\" %>",
-            "by": "<% by ?? \"\" %>",
-            "orgId": "<% orgId ?? \"\" %>",
-            "orgCode": "<% orgCode ?? \"\" %>",
-            "orgName": "<% orgName ?? \"\" %>"
+            "changeType": "<% changeType ?? \"\" %>"
           }
         }
       },
@@ -35,11 +27,7 @@
           "taskId": "auditLogViewer",
           "parameterBindings": {
             "period": "24h",
-            "changeType": "<% changeType ?? \"\" %>",
-            "by": "<% by ?? \"\" %>",
-            "orgId": "<% orgId ?? \"\" %>",
-            "orgCode": "<% orgCode ?? \"\" %>",
-            "orgName": "<% orgName ?? \"\" %>"
+            "changeType": "<% changeType ?? \"\" %>"
           }
         }
       },
@@ -49,11 +37,7 @@
           "taskId": "auditLogViewer",
           "parameterBindings": {
             "period": "7d",
-            "changeType": "<% changeType ?? \"\" %>",
-            "by": "<% by ?? \"\" %>",
-            "orgId": "<% orgId ?? \"\" %>",
-            "orgCode": "<% orgCode ?? \"\" %>",
-            "orgName": "<% orgName ?? \"\" %>"
+            "changeType": "<% changeType ?? \"\" %>"
           }
         }
       },
@@ -63,11 +47,7 @@
           "taskId": "auditLogViewer",
           "parameterBindings": {
             "period": "30d",
-            "changeType": "<% changeType ?? \"\" %>",
-            "by": "<% by ?? \"\" %>",
-            "orgId": "<% orgId ?? \"\" %>",
-            "orgCode": "<% orgCode ?? \"\" %>",
-            "orgName": "<% orgName ?? \"\" %>"
+            "changeType": "<% changeType ?? \"\" %>"
           }
         }
       }

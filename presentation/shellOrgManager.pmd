@@ -78,24 +78,12 @@
     }
   ],
   "presentation": {
-    "headerSize": "HIDDEN",
+    "headerSize": "STANDARD",
     "pageType": "VIEW",
     "body": {
       "type": "basicFormLayout",
       "id": "shellOrgManagerForm",
       "sections": [
-        {
-          "type": "layoutSection",
-          "id": "titleBannerSection",
-          "children": [
-            {
-              "type": "richText",
-              "id": "titleBannerRichText",
-              "enabled": false,
-              "value": "<% '<span style=\"color:#0055B3;font-size:24px\"><b>' + (empty(queryParams.appName) ? 'ECO-COMS: Shell Org Manager' : ('ECO-COMS: Shell Org Manager – ' + queryParams.appName)).replace('<', '&lt;') + '</b></span>' + '<br><span style=\"color:#374151;font-size:13px\">Shell organizations, patterns and role assignments for one application.</span>' %>"
-            }
-          ]
-        },
         {
           "type": "layoutSection",
           "id": "navSection",
@@ -230,9 +218,6 @@
                           "appName": "<% app.appCode %>"
                         }
                       }
-                    },
-                    "excel": {
-                      "enabled": false
                     }
                   },
                   {
@@ -274,9 +259,6 @@
                           "appName": "<% app.appCode %>"
                         }
                       }
-                    },
-                    "excel": {
-                      "enabled": false
                     }
                   }
                 ],
@@ -837,7 +819,11 @@
           }
         ]
       }
-    ]
+    ],
+    "title": {
+      "type": "title",
+      "label": "<% empty(queryParams.appName) ? 'ECO-COMS: Shell Org Manager' : ('ECO-COMS: Shell Org Manager – ' + queryParams.appName) %>"
+    }
   },
   "include": [
     "comsPatterns.script"

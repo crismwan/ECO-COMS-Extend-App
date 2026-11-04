@@ -81,7 +81,12 @@
   ],
   "onSubmit": "<%\n  let s = comsPatterns.schemaFor(comsApplications.data, queryParams.appCode);\n  let valid = true;\n  prefixDropdown.clearError();\n  effectiveDate.clearError();\n  patternField1Text.clearError();\n  patternField2Text.clearError();\n  patternField3Text.clearError();\n  patternField4Text.clearError();\n  patternField5Text.clearError();\n  patternField6Text.clearError();\n  patternField7Text.clearError();\n  if (empty(queryParams.appCode) || empty(s)) {\n    valid = false;\n  } else {\n    if (comsPatterns.prefixCount(s) > 1 && empty(prefixDropdown.value)) {\n      prefixDropdown.setError('Pick a pattern prefix.');\n      valid = false;\n    }\n    let e1 = comsPatterns.checkField(s, 0, patternField1Text.value);\n    if (e1 != '') { patternField1Text.setError(e1); valid = false; }\n    let e2 = comsPatterns.checkField(s, 1, patternField2Text.value);\n    if (e2 != '') { patternField2Text.setError(e2); valid = false; }\n    let e3 = comsPatterns.checkField(s, 2, patternField3Text.value);\n    if (e3 != '') { patternField3Text.setError(e3); valid = false; }\n    let e4 = comsPatterns.checkField(s, 3, patternField4Text.value);\n    if (e4 != '') { patternField4Text.setError(e4); valid = false; }\n    let e5 = comsPatterns.checkField(s, 4, patternField5Text.value);\n    if (e5 != '') { patternField5Text.setError(e5); valid = false; }\n    let e6 = comsPatterns.checkField(s, 5, patternField6Text.value);\n    if (e6 != '') { patternField6Text.setError(e6); valid = false; }\n    let e7 = comsPatterns.checkField(s, 6, patternField7Text.value);\n    if (e7 != '') { patternField7Text.setError(e7); valid = false; }\n  }\n  if (empty(effectiveDate.value)) {\n    effectiveDate.setError('Effective Date is required.');\n    valid = false;\n  } else if (!comsValidations.isWeekday(effectiveDate.value)) {\n    effectiveDate.setError(comsValidations.errorWeekday());\n    valid = false;\n  } else if (!comsValidations.isCurrentOrFutureYear(effectiveDate.value)) {\n    effectiveDate.setError(comsValidations.errorYear());\n    valid = false;\n  }\n  if (valid) {\n    let dupName = comsPatterns.buildName((queryParams.appCode ?? ''), (comsPatterns.prefixCount(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode)) > 1 ? (empty(prefixDropdown.value) ? '' : prefixDropdown.selectedEntries[0].id) : comsPatterns.firstPrefix(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode))), comsPatterns.schemaFor(comsApplications.data, queryParams.appCode), [patternField1Text.value, patternField2Text.value, patternField3Text.value, patternField4Text.value, patternField5Text.value, patternField6Text.value, patternField7Text.value]);\n    if ((existingOrgs.data ?? []).filter(o => { o.code == dupName }).size() > 0) {\n      patternField1Text.setError('A pattern with this name already exists: ' + dupName);\n      valid = false;\n    }\n  }\n  if (valid) {\n    let rec = comsPatterns.recordFor(comsApplications.data, queryParams.appCode);\n    let pn = comsPatterns.buildName((queryParams.appCode ?? ''), (comsPatterns.prefixCount(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode)) > 1 ? (empty(prefixDropdown.value) ? '' : prefixDropdown.selectedEntries[0].id) : comsPatterns.firstPrefix(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode))), comsPatterns.schemaFor(comsApplications.data, queryParams.appCode), [patternField1Text.value, patternField2Text.value, patternField3Text.value, patternField4Text.value, patternField5Text.value, patternField6Text.value, patternField7Text.value]);\n    let v = [patternField1Text.value, patternField2Text.value, patternField3Text.value, patternField4Text.value, patternField5Text.value, patternField6Text.value, patternField7Text.value];\n    launchAddShellOrgPattern.invoke({'cbw': selectedWorker.id ?? '', 'cb': (selectedWorker.descriptor ?? '').urlEncode(), 'ts': date:now().format(\"yyyy-MM-dd'T'HH:mm:ss'Z'\").urlEncode(), 'aid': rec.id, 'pn': pn.urlEncode(), 'wid': selectedWorker.id ?? '', 'a1': comsPatterns.cell(v[0]).urlEncode(), 'a2': comsPatterns.cell(v[1]).urlEncode(), 'a3': comsPatterns.cell(v[2]).urlEncode(), 'a4': comsPatterns.cell(v[3]).urlEncode(), 'a5': comsPatterns.cell(v[4]).urlEncode(), 'ed': effectiveDate.value.format('yyyy-MM-dd')});\n    let created = (verifyPattern.invoke({'lim': '10000'}).data ?? []).filter(o => { o.code == pn }).size() > 0;\n    if (!created) {\n      patternField1Text.setError('Workday rejected this request, so nothing was created. Check the values and try again.');\n      valid = false;\n    }\n  }\n  valid;\n%>",
   "presentation": {
-    "headerSize": "HIDDEN",
+    "headerSize": "STANDARD",
+    "title": {
+      "type": "title",
+      "label": "<% empty(queryParams.appCode) ? 'ECO-COMS: Add Shell Org Pattern' : ('ECO-COMS: Add Shell Org Pattern · ' + queryParams.appCode) %>",
+      "enabled": true
+    },
     "cancelOverride": {
       "taskId": "shellOrgManager"
     },
@@ -92,19 +97,7 @@
       "sections": [
         {
           "type": "layoutSection",
-          "id": "titleBannerSection",
-          "children": [
-            {
-              "type": "richText",
-              "id": "titleBannerRichText",
-              "enabled": false,
-              "value": "<% '<span style=\"color:#0055B3;font-size:24px\"><b>' + (empty(queryParams.appCode) ? 'ECO-COMS: Add Shell Org Pattern' : ('ECO-COMS: Add Shell Org Pattern · ' + queryParams.appCode)).replace('<', '&lt;') + '</b></span>' + '<br><span style=\"color:#374151;font-size:13px\">Add a shell org pattern in the format the application uses.</span>' %>"
-            }
-          ]
-        },
-        {
-          "type": "layoutSection",
-          "id": "aboutSection",
+          "id": "navSection",
           "children": [
             {
               "type": "button",
@@ -126,7 +119,13 @@
               "taskReference": {
                 "taskId": "schemaPatternApps"
               }
-            },
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "aboutSection",
+          "children": [
             {
               "type": "fieldSet",
               "id": "aboutFieldSet",
@@ -138,9 +137,7 @@
                   "enabled": false,
                   "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">Create a shell org pattern for any application. Each application has its own pattern format: a prefix and its own fields (e.g. Subject and Course for Assessment Outcomes, one Role Name for most tools). The form below shows that application's fields, checks each value as you type, and builds the name as <b>APPLICATION:PREFIX:field:field</b>. A blank field becomes * (any). Submitting creates a live organization (subtype X:SHELL) in Workday; it can be inactivated later but not deleted.</span>"
                 }
-              ],
-              "collapsible": true,
-              "initializeCollapsed": true
+              ]
             }
           ]
         },

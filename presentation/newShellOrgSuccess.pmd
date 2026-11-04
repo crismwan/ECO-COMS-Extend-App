@@ -49,23 +49,11 @@
     }
   ],
   "presentation": {
-    "headerSize": "HIDDEN",
+    "headerSize": "STANDARD",
     "body": {
       "type": "basicFormLayout",
       "id": "successForm",
       "sections": [
-        {
-          "type": "layoutSection",
-          "id": "titleBannerSection",
-          "children": [
-            {
-              "type": "richText",
-              "id": "titleBannerRichText",
-              "enabled": false,
-              "value": "<span style=\"color:#0055B3;font-size:24px\"><b>ECO-COMS: Shell Organization Created</b></span>"
-            }
-          ]
-        },
         {
           "type": "layoutSection",
           "id": "successSection",
@@ -150,6 +138,10 @@
         }
       ]
     },
-    "pageType": "VIEW"
+    "pageType": "VIEW",
+    "title": {
+      "type": "title",
+      "label": "ECO-COMS: Shell Organization Created"
+    }
   }
 }

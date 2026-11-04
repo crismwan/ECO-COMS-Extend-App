@@ -3,7 +3,7 @@
   "header": {
     "title": "Quick Actions",
     "subtitle": "Create in Workday",
-    "icon": "wd-accent-building"
+    "icon": "wd-accent-worksheets"
   },
   "body": {
     "type": "pillCard",

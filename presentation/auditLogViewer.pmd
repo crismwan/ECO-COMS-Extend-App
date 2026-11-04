@@ -172,26 +172,14 @@
     }
   ],
   "presentation": {
-    "headerSize": "HIDDEN",
+    "headerSize": "STANDARD",
     "body": {
       "type": "basicFormLayout",
       "id": "auditLogViewerForm",
       "sections": [
         {
           "type": "layoutSection",
-          "id": "titleBannerSection",
-          "children": [
-            {
-              "type": "richText",
-              "id": "titleBannerRichText",
-              "enabled": false,
-              "value": "<span style=\"color:#0055B3;font-size:24px\"><b>ECO-COMS: Audit Log Viewer</b></span><br><span style=\"color:#374151;font-size:13px\">Every change ECO-COMS made in Workday. Filter by time period and change type.</span>"
-            }
-          ]
-        },
-        {
-          "type": "layoutSection",
-          "id": "aboutSection",
+          "id": "navSection",
           "children": [
             {
               "type": "button",
@@ -200,7 +188,13 @@
                 "taskId": "home"
               },
               "action": "LINK"
-            },
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "aboutSection",
+          "children": [
             {
               "type": "fieldSet",
               "id": "aboutFieldSet",
@@ -244,23 +238,12 @@
                 {
                   "type": "card",
                   "cardId": "AuditPeriodPillCard",
-                  "parameters": "<% { 'period': queryParams.period ?? '', 'changeType': queryParams.changeType ?? '', 'by': queryParams.by ?? '', 'orgId': queryParams.orgId ?? '', 'orgCode': queryParams.orgCode ?? '', 'orgName': queryParams.orgName ?? '' } %>"
+                  "parameters": "<% { 'period': queryParams.period ?? '', 'changeType': queryParams.changeType ?? '' } %>"
                 },
                 {
                   "type": "card",
                   "cardId": "AuditTypePillCard",
-                  "parameters": "<% { 'period': queryParams.period ?? '', 'changeType': queryParams.changeType ?? '', 'by': queryParams.by ?? '', 'orgId': queryParams.orgId ?? '', 'orgCode': queryParams.orgCode ?? '', 'orgName': queryParams.orgName ?? '' } %>"
-                },
-                {
-                  "type": "card",
-                  "cardId": "AuditByPillCard",
-                  "parameters": "<% { 'period': queryParams.period ?? '', 'changeType': queryParams.changeType ?? '', 'by': queryParams.by ?? '', 'orgId': queryParams.orgId ?? '', 'orgCode': queryParams.orgCode ?? '', 'orgName': queryParams.orgName ?? '' , 'me': selectedWorker.id ?? '' } %>"
-                },
-                {
-                  "type": "card",
-                  "cardId": "AuditOrgPillCard",
-                  "parameters": "<% { 'period': queryParams.period ?? '', 'changeType': queryParams.changeType ?? '', 'by': queryParams.by ?? '', 'orgId': queryParams.orgId ?? '', 'orgCode': queryParams.orgCode ?? '', 'orgName': queryParams.orgName ?? '' } %>",
-                  "render": "<% !empty(queryParams.orgId) || !empty(queryParams.orgCode) || !empty(queryParams.orgName) %>"
+                  "parameters": "<% { 'period': queryParams.period ?? '', 'changeType': queryParams.changeType ?? '' } %>"
                 },
                 {
                   "type": "card",
@@ -542,6 +525,10 @@
         }
       ]
     },
-    "pageType": "VIEW"
+    "pageType": "VIEW",
+    "title": {
+      "type": "title",
+      "label": "ECO-COMS: Audit Log Viewer"
+    }
   }
 }

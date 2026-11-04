@@ -50,7 +50,11 @@
     ]
   },
   "presentation": {
-    "headerSize": "HIDDEN",
+    "headerSize": "STANDARD",
+    "title": {
+      "type": "title",
+      "label": "ECO-COMS: Upload Bulk Template Version"
+    },
     "cancelOverride": {
       "taskId": "bulkRoleTemplate"
     },
@@ -60,19 +64,7 @@
       "sections": [
         {
           "type": "layoutSection",
-          "id": "titleBannerSection",
-          "children": [
-            {
-              "type": "richText",
-              "id": "titleBannerRichText",
-              "enabled": false,
-              "value": "<span style=\"color:#0055B3;font-size:24px\"><b>ECO-COMS: Upload Bulk Template Version</b></span><br><span style=\"color:#374151;font-size:13px\">Publish a new version of the bulk role change template.</span>"
-            }
-          ]
-        },
-        {
-          "type": "layoutSection",
-          "id": "aboutSection",
+          "id": "navSection",
           "children": [
             {
               "type": "button",
@@ -82,7 +74,13 @@
               "taskReference": {
                 "taskId": "bulkRoleTemplate"
               }
-            },
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "aboutSection",
+          "children": [
             {
               "type": "fieldSet",
               "id": "aboutFieldSet",
@@ -94,9 +92,7 @@
                   "enabled": false,
                   "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">Publish a new version of the validated Excel template. Everyone who opens Download Template gets the newest version. Build it with <b>tools/publish_template.js</b> (pre-filled with every current role assignment) or <b>tools/build_bulk_xlsx.py</b> (blank). Older versions stay stored.</span>"
                 }
-              ],
-              "collapsible": true,
-              "initializeCollapsed": true
+              ]
             }
           ]
         },

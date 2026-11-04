@@ -91,7 +91,7 @@
       "sections": [
         {
           "type": "layoutSection",
-          "id": "aboutSection",
+          "id": "navSection",
           "children": [
             {
               "type": "button",
@@ -101,7 +101,13 @@
               },
               "action": "LINK",
               "suppressDiscardDialog": true
-            },
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "aboutSection",
+          "children": [
             {
               "type": "fieldSet",
               "id": "aboutFieldSet",

@@ -3,7 +3,7 @@
   "header": {
     "title": "Bulk Role Changes",
     "subtitle": "Add or remove positions in bulk.",
-    "icon": "wd-accent-people-group"
+    "icon": "wd-accent-checkmarked-page"
   },
   "body": {
     "type": "pillCard",

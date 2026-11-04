@@ -3,7 +3,7 @@
   "header": {
     "title": "Shell Organizations",
     "subtitle": "Add orgs and patterns, manage status.",
-    "icon": "wd-accent-building"
+    "icon": "wd-accent-worksheets"
   },
   "body": {
     "type": "pillCard",

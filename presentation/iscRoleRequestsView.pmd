@@ -117,26 +117,14 @@
   },
   "presentation": {
     "pageType": "VIEW",
-    "headerSize": "HIDDEN",
+    "headerSize": "STANDARD",
     "body": {
       "type": "basicFormLayout",
       "id": "iscRoleRequestsViewForm",
       "sections": [
         {
           "type": "layoutSection",
-          "id": "titleBannerSection",
-          "children": [
-            {
-              "type": "richText",
-              "id": "titleBannerRichText",
-              "enabled": false,
-              "value": "<% '<span style=\"color:#0055B3;font-size:24px\"><b>' + ('ECO-COMS: ISC Queue – ' + (comsRequestStats.statusOrDefault(queryParams.status ?? '') == 'All' ? 'All' : (comsRequestStats.statusOrDefault(queryParams.status ?? '') == 'Pending ISC Review' ? 'Pending' : comsRequestStats.statusOrDefault(queryParams.status ?? ''))) + ' ' + (queryParams.view == 'aaa' ? 'AAA Role Requests' : (queryParams.view == 'assignable' ? 'Assignable Role Requests' : 'Role Requests'))).replace('<', '&lt;') + '</b></span>' + '<br><span style=\"color:#374151;font-size:13px\">Role requests waiting for ISC review. Open a row&#39;s Review Process link to approve or deny it.</span>' %>"
-            }
-          ]
-        },
-        {
-          "type": "layoutSection",
-          "id": "actionsInfoSection",
+          "id": "navSection",
           "children": [
             {
               "type": "button",
@@ -145,7 +133,13 @@
                 "taskId": "home"
               },
               "action": "LINK"
-            },
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "actionsInfoSection",
+          "children": [
             {
               "type": "fieldSet",
               "id": "actionsInfoFieldSet",
@@ -469,6 +463,10 @@
           "podId": "ecoComsFooter"
         }
       ]
+    },
+    "title": {
+      "type": "title",
+      "label": "<% 'ECO-COMS: ISC Queue – ' + (comsRequestStats.statusOrDefault(queryParams.status ?? '') == 'All' ? 'All' : (comsRequestStats.statusOrDefault(queryParams.status ?? '') == 'Pending ISC Review' ? 'Pending' : comsRequestStats.statusOrDefault(queryParams.status ?? ''))) + ' ' + (queryParams.view == 'aaa' ? 'AAA Role Requests' : (queryParams.view == 'assignable' ? 'Assignable Role Requests' : 'Role Requests')) %>"
     }
   }
 }

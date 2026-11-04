@@ -43,7 +43,7 @@ CARDS = {
     "InsightsCard": "chart-bar-arrow", "BreakdownChart": "chart-bar-arrow", "CountCard": "sigma",
     "AuditActionChart": "scroll-shield", "ShellOrgStatusChart": "building",
     # Activity over time across the whole app
-    "AppActivityChart": "time", "PendingAgeChart": "inbox",
+    "AppActivityChart": "time", "PendingAgeChart": "data-loading",
     "IscStatusPillCard": "gauge", "AuditPeriodPillCard": "calendar",
     "AuditByPillCard": "person", "AuditOrgPillCard": "building",
     # Outcomes and recovery
