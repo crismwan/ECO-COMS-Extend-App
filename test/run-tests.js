@@ -725,6 +725,15 @@ async function smoke(token, me) {
     pass('Audit.requiredFields', 'timestamp, objectType and action present on all');
   });
 
+  // Orchestrations store their run ID on every audit record from 2026-11-05 on (tools/audit_run_id.py).
+  await test('Audit.runId', async () => {
+    const since = '2026-11-05';
+    const recent = audits.filter((a) => String(a.timestamp || '') >= since);
+    if (!recent.length) return skip('Audit.runId', `no audit records since ${since} yet`);
+    const missing = recent.filter((a) => !a.runId);
+    (missing.length ? fail : pass)('Audit.runId', `${recent.length - missing.length} of ${recent.length} record(s) since ${since} carry a run ID` + (missing.length ? `; missing on ${missing.slice(0, 3).map((a) => a.objectType + ' ' + a.action + ' ' + a.timestamp).join(', ')}` : ''));
+  });
+
   let roles = [];
   await test('Requests.read', async () => {
     roles = await readAll(token, 'comsAssignableRoles');

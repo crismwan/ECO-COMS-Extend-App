@@ -448,6 +448,17 @@
                   "enabled": false
                 },
                 "sortableAndFilterable": "true"
+              },
+              {
+                "type": "column",
+                "columnId": "columnRunId",
+                "label": "Run ID",
+                "cellTemplate": {
+                  "type": "text",
+                  "id": "runIdText",
+                  "value": "<% logEntry.runId ?? '' %>",
+                  "enabled": false
+                }
               }
             ],
             "excelExportEnabled": true

@@ -26,7 +26,7 @@ PAGES = ['auditLogViewer', 'comsInsights', 'hubLanding', 'shellOrgDetail']
 QUERY_ID = 'auditLogsNewest'
 PROVIDER = 'workday-graph'
 FIELDS = ('workdayID { id } timestamp action objectType coName coReferenceId triggeredBy details '
-          'effectiveDate roleName positionName changedByWid orgWid roleWid positionWid')
+          'effectiveDate roleName positionName changedByWid orgWid roleWid positionWid runId')
 FAIL = [{"code": 400}, {"code": 403}, {"code": 429}]
 
 
@@ -71,6 +71,27 @@ def rows(k):
     return f"(({g}) ? (auditPage{k}.data.r.data ?? []) : [])"
 
 
+RUN_COLUMN = {"type": "column", "columnId": "columnRunId", "label": "Run ID",
+              "cellTemplate": {"type": "text", "id": "runIdText", "value": "<% logEntry.runId ?? '' %>", "enabled": False}}
+
+
+def add_run_column(d):
+    # The orchestration run that wrote the record (tools/audit_run_id.py); matches developer.workday.com
+    # app > Orchestration Activity. Empty on records written before 2026-11-04.
+    def walk(n):
+        if isinstance(n, dict):
+            if n.get('id') == 'AuditLogGrid':
+                if not any(c.get('columnId') == 'columnRunId' for c in n['columns']):
+                    n['columns'].append(json.loads(json.dumps(RUN_COLUMN)))
+                return True
+            return any(walk(v) for v in n.values())
+        if isinstance(n, list):
+            return any(walk(v) for v in n)
+        return False
+    if not walk(d):
+        raise SystemExit("graphql_audit: AuditLogGrid not found on auditLogViewer")
+
+
 def convert(page):
     p = os.path.join(ROOT, 'presentation', page + '.pmd')
     raw = open(p, encoding='utf-8').read()
@@ -90,6 +111,8 @@ def convert(page):
                  "graphQuery": {"queryId": QUERY_ID, "parameters": {"offset": 0 if k == 0 else f"<% {TOTAL} > {k * 100} ? {k * 100} : 0 %>"}}}
         out.append(e)
     d['endPoints'] = out
+    if page == 'auditLogViewer':
+        add_run_column(d)
     s = json.dumps(d, indent=2, ensure_ascii=False)
     # Undo an earlier run (this pass or an older version of it) so the rewrite below always applies.
     for k in pages:

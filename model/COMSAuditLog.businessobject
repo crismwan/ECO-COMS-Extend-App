@@ -109,6 +109,12 @@
       "name": "positionWid",
       "label": "Position WID",
       "type": "TEXT"
+    },
+    {
+      "id": 17,
+      "name": "runId",
+      "label": "Orchestration Run ID",
+      "type": "TEXT"
     }
   ]
 }
