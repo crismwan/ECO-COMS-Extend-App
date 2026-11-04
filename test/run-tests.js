@@ -1720,18 +1720,32 @@ async function eventLinks(token, me) {
 
 // ═══ Timing (read-only): the audit reads the pages make, REST (this morning) vs Graph (now) ═══
 async function timingSuite(token) {
-  console.log('\n-- Timing (read-only) --');
-  const t = async (f) => { const s = Date.now(); await f(); return Date.now() - s; };
-  const q = (o) => `query { r: ${APP_ID}_COMSAuditLog(dataSource: {${APP_ID}_comsAuditLogs: {}}, orderBy: {timestamp: DESC}, limit: 100, offset: ${o}) { total data { workdayID { id } timestamp action objectType coName roleName positionName changedByWid orgWid roleWid positionWid runId eventWid details triggeredBy effectiveDate coReferenceId } } }`;
-  const rest = async (pages) => { const c = (await request('GET', `${BO}/comsAuditLogs?limit=1`, token)).total; await Promise.all([...Array(pages).keys()].map((k) => request('GET', `${BO}/comsAuditLogs?limit=100&offset=${Math.max(0, c - 100 * (k + 1))}`, token))); };
-  const graph = async (pages) => { await gql(token, q(0)); await Promise.all([...Array(pages - 1).keys()].map(() => gql(token, q(0)))); };
-  const graphOne = async () => { await gql(token, q(0)); };
-  for (const [label, f] of [['REST count + 5 pages (old Audit Log)', () => rest(5)], ['Graph page 0 + 4 repeats (new Audit Log)', () => graph(5)],
-    ['Graph page 0 only', graphOne], ['REST count + 1 page (old RBAC Hub)', () => rest(1)], ['Graph 1 page (new RBAC Hub)', graphOne]]) {
-    const ms = []; for (let i = 0; i < 5; i++) ms.push(await t(f));
-    console.log(`   ${label}: ${ms.join(', ')} ms (median ${ms.slice().sort((a, b) => a - b)[2]})`);
+  console.log('\n-- Timing (read-only): every data call the slow pages make, one at a time --');
+  const med = async (label, f, n = 3) => {
+    const ms = []; let info = '';
+    for (let i = 0; i < n; i++) { const s = Date.now(); info = await f(); ms.push(Date.now() - s); }
+    console.log(`   ${label}: median ${ms.slice().sort((x, y) => x - y)[Math.floor(n / 2)]} ms (${ms.join(', ')})${info ? ' · ' + info : ''}`);
+  };
+  const wqlFile = (id) => JSON.parse(fs.readFileSync(path.join(ROOT, 'presentation/wqlQueries', id + '.wqlquery'), 'utf8')).query;
+  const kb = (r) => Math.round(JSON.stringify(r).length / 1024) + ' KB';
+  for (const id of ['allShellOrgs', 'existingPatterns', 'allShellAssignableRolesinTenant', 'allAAArolesinTenant', 'allPositions', 'customOrganizations']) {
+    await med(`WQL ${id}`, async () => { const r = await wql(token, wqlFile(id), 10000); return `${(r.data || []).length} rows, ${kb(r)}`; });
   }
-  pass('Timing', 'see lines above');
+  await med('WQL positionFill (Access Review)', async () => { const r = await wql(token, 'SELECT cf_PositionID, cf_PositionIsFilled FROM allPositions WHERE supervisoryOrganization is not empty', 10000); return `${(r.data || []).length} rows, ${kb(r)}`; });
+  await med('REST requests: count + 3 pages (today)', async () => { await request('GET', `${BO}/comsAssignableRoles?limit=1`, token); const r = await Promise.all([0, 100, 200].map((o) => request('GET', `${BO}/comsAssignableRoles?limit=100&offset=${o}`, token))); return `${r.reduce((n, x) => n + (x.data || []).length, 0)} rows, ${kb(r)}`; });
+  const RQ = 'workdayID { id } referenceId roleName application status requestedBy { id descriptor } requestedDate approvedDate effectiveDate shellOrgCode positionNames reviewEventWid';
+  const req = (where) => `query { r: ${APP_ID}_COMSAssignableRole(dataSource: {${APP_ID}_comsAssignableRoles: {}}${where ? ', where: ' + where : ''}, orderBy: {requestedDate: DESC}, limit: 100) { total data { ${RQ} } } }`;
+  await med('Graph requests: all, newest first', async () => { const r = await gql(token, req('')); return `${r.r.data.length} rows (total ${r.r.total}), ${kb(r)}`; });
+  await med('Graph requests: pending only', async () => { const r = await gql(token, req('{status: {eq: "Pending ISC Review"}}')); return `${r.r.data.length} rows, ${kb(r)}`; });
+  const AQ = 'workdayID { id } timestamp action objectType coName coReferenceId triggeredBy details effectiveDate roleName positionName changedByWid orgWid roleWid positionWid runId eventWid';
+  const aud = (where, limit = 100) => `query { r: ${APP_ID}_COMSAuditLog(dataSource: {${APP_ID}_comsAuditLogs: {}}${where ? ', where: ' + where : ''}, orderBy: {timestamp: DESC}, limit: ${limit}) { total data { ${AQ} } } }`;
+  const since = new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10) + 'T00:00:00Z';
+  await med('Graph audit: page 0 (today)', async () => { const r = await gql(token, aud('')); return `total ${r.r.total}, ${kb(r)}`; });
+  await med('Graph audit: last 7 days (where timestamp gte)', async () => { const r = await gql(token, aud(`{timestamp: {gte: "${since}"}}`)); return `${r.r.data.length} rows (total ${r.r.total}), ${kb(r)}`; });
+  await med('Graph audit: total only (limit 1)', async () => { const r = await gql(token, `query { r: ${APP_ID}_COMSAuditLog(dataSource: {${APP_ID}_comsAuditLogs: {}}, where: {timestamp: {gte: "${since}"}}, limit: 1) { total } }`); return `total ${r.r.total}`; });
+  const audits = await readAll(token, 'comsAuditLogs');
+  const noOrg = audits.filter((a) => !a.orgWid && a.coName).length, noRole = audits.filter((a) => !a.roleWid && a.roleName).length;
+  pass('Timing', `see lines above; ${audits.length} audit records, ${noOrg} without orgWid, ${noRole} without roleWid (the Audit Log's lookup lists only serve these)`);
 }
 
 // ═══ GraphQL probe (read-only): what the Graph API schema offers for this app's objects ═══
