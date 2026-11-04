@@ -5,6 +5,5 @@
   "securityDomains": [
     "ManageCOMSShellOrgs"
   ],
-  "routePath": "/schemaPatternApps",
-  "businessObject": "COMSShellOrgRequest"
+  "routePath": "/schemaPatternApps"
 }

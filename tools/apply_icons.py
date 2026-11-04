@@ -28,10 +28,10 @@ HUB = {"icon": "credentials",
 # Card id -> accent icon. One icon per subject, so the same icon means the same thing everywhere.
 CARDS = {
     # Role requests (asking for and tracking roles)
-    "HomeRoleRequestActionsCard": "id-badge", "myRoleRequestsCard": "id-badge",
+    "HomeRoleRequestActionsCard": "id-badge",
     "ListAssignableActionsCard": "id-badge", "ListAaaActionsCard": "id-badge", "IscViewPillCard": "id-badge",
     # ISC review queue (work waiting for someone)
-    "PendingIscCard": "inbox", "iscQueueCard": "inbox", "MyAttentionCard": "inbox",
+    "PendingIscCard": "inbox", "MyAttentionCard": "inbox",
     # Shell organizations
     "HomeShellOrgActionsCard": "building", "ShellOrgCard": "building", "ShellOrgQuickActionsCard": "building",
     # Bulk role changes (many positions at once)

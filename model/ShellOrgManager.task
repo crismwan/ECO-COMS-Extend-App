@@ -5,6 +5,5 @@
   "securityDomains": [
     "ManageCOMSShellOrgs"
   ],
-  "routePath": "/shellOrgManager",
-  "businessObject": "COMSShellOrgRequest"
+  "routePath": "/shellOrgManager"
 }

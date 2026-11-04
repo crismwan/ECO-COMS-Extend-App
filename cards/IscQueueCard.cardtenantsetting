@@ -1,9 +1,0 @@
-{
-  "id": 2,
-  "name": "IscQueueCard",
-  "label": "ECO-COMS: ISC Queue",
-  "securityDomains": [
-    "MaintainCOMSAssignableRoles"
-  ],
-  "routePath": "/iscQueueCard"
-}

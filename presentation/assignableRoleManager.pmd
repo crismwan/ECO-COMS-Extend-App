@@ -102,25 +102,6 @@
       ]
     },
     {
-      "name": "selectedShellOrg",
-      "baseUrlType": "BUSINESS-OBJECT",
-      "url": "<% empty(selectedShellOrgId.value) ? '/comsShellOrgRequests/none' : '/comsShellOrgRequests/' + selectedShellOrgId.value[0] %>",
-      "authType": "sso",
-      "bestEffort": "true",
-      "exclude": "<% true %>",
-      "failOnStatusCodes": [
-        {
-          "code": 400
-        },
-        {
-          "code": 403
-        },
-        {
-          "code": 429
-        }
-      ]
-    },
-    {
       "name": "fuhSearch",
       "baseUrlType": "workday-wql",
       "url": "<% 'data?query=' + string:pathEncode('SELECT workdayID, organization1, code FROM customOrganizations WHERE type1 in (b40d8b016367100175b147f364840000) AND code contains \\'' + instanceListQuery.replace('\\'', '').replace('\\\\', '') + '\\'') %>",

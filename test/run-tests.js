@@ -46,7 +46,7 @@ const ORCH = `${API}/orchestrate/v1/apps/${APP_ID}/orchestrations`;
 const argv = process.argv.slice(2);
 const arg = (name) => { const i = argv.indexOf(name); return i === -1 ? null : argv[i + 1]; };
 const VERBOSE = argv.includes('--verbose');
-const SUITES_ALL = ['static', 'smoke', 'full', 'cleanup', 'isu', 'repair', 'seconduser', 'purge', 'demoseed', 'datacheck', 'probe', 'seedapps', 'patternguard', 'graphql', 'eventlinks', 'gatewayprobe', 'timing'];
+const SUITES_ALL = ['static', 'smoke', 'full', 'cleanup', 'isu', 'repair', 'seconduser', 'purge', 'demoseed', 'datacheck', 'probe', 'seedapps', 'patternguard', 'graphql', 'eventlinks', 'timing'];
 const suiteArg = arg('--suite') || argv.find((a) => !a.startsWith('--') && SUITES_ALL.some((s) => a.split(',').includes(s))) || 'smoke';
 const SUITES = suiteArg.split(',').map((s) => s.trim()).filter(Boolean);
 for (const s of SUITES) if (!SUITES_ALL.includes(s)) { console.error(`Unknown suite "${s}". Use: ${SUITES_ALL.join(', ')}`); process.exit(2); }
@@ -56,7 +56,7 @@ for (const s of SUITES) if (!SUITES_ALL.includes(s)) { console.error(`Unknown su
 const OBJECT_TYPES = ['Shell Org', 'Shell Org Pattern', 'Org Status', 'Role Assignment', 'Assignable Role'];
 const ACTIONS = ['ADD', 'INACTIVATE', 'REACTIVATE', 'ASSIGN POSITION', 'REMOVE POSITION', 'REQUEST', 'APPROVE', 'DENY', 'DELETE', 'REVIEW'];
 const TEST_ROLE = arg('--role') || process.env.E2E_ROLE || 'X:BPMS(ODMT):ROLE:ADVISORS';
-const BO_COLLECTIONS = ['comsApplications', 'comsAssignableRoles', 'comsAuditLogs', 'comsRoleAssignments', 'comsShellOrgRequests'];
+const BO_COLLECTIONS = ['comsApplications', 'comsAssignableRoles', 'comsAuditLogs'];
 
 // ─── Results ──────────────────────────────────────────────────────────────────
 const results = [];
@@ -1701,33 +1701,6 @@ async function eventLinks(token, me) {
   }
 }
 
-// ═══ Gateway probe: which launch parameters make the API gateway refuse AssignRolePositions ═══
-// Every launch uses mode=PROBE, which the orchestration's CheckMode guard rejects before any
-// Workday call, so nothing changes; only the gateway's answer (200 vs HTML 403) is recorded.
-async function gatewayProbe(token, me) {
-  console.log('\n-- Gateway probe (no changes: mode=PROBE is rejected by CheckMode) --');
-  // The real values the role add/remove test sends (read-only lookups).
-  const r = await wql(token, `SELECT role, roleAssignments{organization, cf_ZCF_EE_RoleAssignedToAsPositionRestrictions} as roleAssignments FROM assignableRoles WHERE roleName = '${TEST_ROLE}'`, 5);
-  const row = (r.data || [])[0];
-  const ra = (row?.roleAssignments || []).find((x) => String(x.organization?.descriptor || '').startsWith('X:'));
-  const assigned = (ra?.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions || []).map((p) => String(p.descriptor || ''));
-  const pos = ((await wql(token, 'SELECT cf_PositionID, workdayID, position_PositionManagement, cf_PositionText, cf_PositionIsFilled FROM allPositions WHERE supervisoryOrganization is not empty', 300)).data || [])
-    .filter((p) => p.cf_PositionID && p.cf_PositionIsFilled !== false && !assigned.some((d) => d.includes(p.cf_PositionID)))[0];
-  const full = { roleId: row.role.id, roleName: TEST_ROLE, orgId: ra.organization.id,
-    orgName: ra.organization.descriptor, effectiveDate: tenantDate(), positionId: pos.cf_PositionID, positionIdType: 'Position_ID',
-    positionName: pos.position_PositionManagement?.descriptor || pos.cf_PositionText || pos.cf_PositionID, mode: 'PROBE', positionWid: pos.workdayID?.id || pos.workdayID,
-    changedBy: me.descriptor, changedByWid: me.id, timestamp: new Date().toISOString().replace(/\.\d+Z$/, 'Z') };
-  const tryIt = async (label, params) => {
-    try { await launch(token, 'AssignRolePositions', params); console.log(`   200  ${label}`); return true; }
-    catch (e) { console.log(`   ${e.message.slice(5, 8)}  ${label}`); return false; }
-  };
-  console.log('   values: ' + JSON.stringify(full));
-  await tryIt('all parameters', full);
-  for (const k of Object.keys(full)) { if (k === 'mode') continue; const p = { ...full }; delete p[k]; await tryIt(`without ${k}`, p); }
-  await tryIt('only mode', { mode: 'PROBE' });
-  for (const k of Object.keys(full)) { if (k === 'mode') continue; await tryIt(`only ${k}`, { mode: 'PROBE', [k]: full[k] }); }
-  pass('GatewayProbe', 'see lines above');
-}
 
 // ═══ Timing (read-only): the audit reads the pages make, REST (this morning) vs Graph (now) ═══
 async function timingSuite(token) {
@@ -1757,7 +1730,7 @@ async function gql(token, query, variables) {
 async function graphqlSuite(token) {
   console.log('\n-- GraphQL (read-only) --');
   const objs = [['COMSAuditLog', 'comsAuditLogs'], ['COMSAssignableRole', 'comsAssignableRoles'],
-    ['COMSShellOrgRequest', 'comsShellOrgRequests'], ['COMSApplication', 'comsApplications'], ['COMSBulkRun', 'comsBulkRuns']];
+    ['COMSApplication', 'comsApplications'], ['COMSBulkRun', 'comsBulkRuns']];
   const typeInfo = async (name) => {
     const d = await gql(token, `query($n: String!) { __type(name: $n) { name kind fields { name type { name kind ofType { name kind } } } inputFields { name type { name kind ofType { name kind } } } } }`, { n: name });
     return d.__type;
@@ -2027,7 +2000,6 @@ async function demoSeed(token, me) {
         if (live.includes('probe')) await probe(token);
         if (live.includes('graphql')) await graphqlSuite(token);
         if (live.includes('eventlinks')) await eventLinks(token, me);
-        if (live.includes('gatewayprobe')) await gatewayProbe(token, me);
         if (live.includes('timing')) await timingSuite(token);
         if (live.includes('seedapps')) await seedApps(token);
         if (live.includes('patternguard')) await patternGuard(token, me);

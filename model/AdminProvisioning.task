@@ -5,6 +5,5 @@
   "securityDomains": [
     "ManageCOMSAdminProvisioning"
   ],
-  "routePath": "/adminProvisioning",
-  "businessObject": "COMSRoleAssignment"
+  "routePath": "/adminProvisioning"
 }

@@ -396,20 +396,6 @@
       }
     },
     {
-      "id": "myRoleRequestsCard",
-      "routingPattern": "/myRoleRequestsCard",
-      "page": {
-        "id": "myRoleRequestsCard"
-      }
-    },
-    {
-      "id": "iscQueueCard",
-      "routingPattern": "/iscQueueCard",
-      "page": {
-        "id": "iscQueueCard"
-      }
-    },
-    {
       "id": "comsInsights",
       "routingPattern": "/comsInsights",
       "page": {
