@@ -197,7 +197,7 @@
               "type": "richText",
               "id": "titleBannerRichText",
               "enabled": false,
-              "value": "<span style=\"color:#0055B3;font-size:24px\"><b>ECO-COMS: Insights</b></span>"
+              "value": "<span style=\"color:#0055B3;font-size:24px\"><b>ECO-COMS: Insights</b></span><br><span style=\"color:#374151;font-size:13px\">Role requests, shell organizations, audit records and bulk runs in one view.</span>"
             }
           ]
         },
@@ -225,7 +225,9 @@
                   "enabled": false,
                   "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">One view across ECO-COMS: role requests, shell organizations and patterns, the audit log and bulk runs. Counts read up to 300 role requests, the newest 300 audit records and the newest 100 bulk runs. Select an <b>Application ID</b> to open it in Shell Org Manager. For Workday custom reports use the ECO-COMS report data sources (Role Requests, Audit Trail, Bulk Runs, Applications).</span>"
                 }
-              ]
+              ],
+              "collapsible": true,
+              "initializeCollapsed": true
             }
           ]
         },

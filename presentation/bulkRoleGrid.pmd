@@ -224,7 +224,7 @@
               "type": "richText",
               "id": "titleBannerRichText",
               "enabled": false,
-              "value": "<span style=\"color:#0055B3;font-size:24px\"><b>ECO-COMS: Bulk Edit Role Assignments</b></span>"
+              "value": "<span style=\"color:#0055B3;font-size:24px\"><b>ECO-COMS: Bulk Edit Role Assignments</b></span><br><span style=\"color:#374151;font-size:13px\">Add or remove positions on roles across an application, then validate and apply.</span>"
             }
           ]
         },
@@ -264,7 +264,9 @@
                   "enabled": false,
                   "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">Change who holds roles on an application's shell organizations, right here. <b>Current Assignments</b> lists every position that holds a role now: tick <b>Remove</b> to take it off. Under <b>Positions to Add</b>, click + and pick the role and organization, then search for the position. OK checks every change in Workday first (<b>Validate only</b>, nothing changes) and opens Results, where <b>Apply</b> makes the changes. Tick <b>Real run</b> to apply straight away. Up to 50 changes per submit; for more, use the Excel template.</span>"
                 }
-              ]
+              ],
+              "collapsible": true,
+              "initializeCollapsed": true
             }
           ]
         },

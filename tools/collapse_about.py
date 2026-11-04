@@ -7,7 +7,9 @@ import json, os
 ROOT = os.path.join(os.path.dirname(__file__), '..', 'presentation')
 # 2026-11-02 (UI recommendations, item 4): also the daily-use list pages with long About text; a one-line summary
 # under each page's title tile stays visible (ux_improvements.py --tiles)
-PAGES = ['bulkRoleChanges', 'bulkRoleTemplate', 'newSchemaPattern', 'iscRoleRequestsView', 'auditLogViewer', 'shellOrgManager']
+# 2026-11-04: also every other page whose About text runs to 350+ characters
+PAGES = ['bulkRoleChanges', 'bulkRoleTemplate', 'newSchemaPattern', 'iscRoleRequestsView', 'auditLogViewer', 'shellOrgManager',
+         'bulkRoleGrid', 'bulkRoleResults', 'comsInsights', 'shellOrgDetail', 'bulkTemplateUpload', 'adminProvisioningView']
 done = []
 
 

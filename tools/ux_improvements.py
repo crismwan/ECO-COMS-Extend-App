@@ -49,6 +49,12 @@ SUMMARY = {
     'bulkRoleChanges': 'Upload a file of role changes, validate it, then apply it.',
     'bulkRoleTemplate': 'Download the current template for bulk role changes.',
     'newSchemaPattern': 'Add a shell org pattern in the format the application uses.',
+    'bulkRoleGrid': 'Add or remove positions on roles across an application, then validate and apply.',
+    'bulkRoleResults': 'Your bulk uploads and grid edits, newest first, with the result of each row.',
+    'comsInsights': 'Role requests, shell organizations, audit records and bulk runs in one view.',
+    'shellOrgDetail': 'One shell organization: its status, its roles and the changes made to it.',
+    'bulkTemplateUpload': 'Publish a new version of the bulk role change template.',
+    'adminProvisioningView': 'AAA role requests: who can manage shell orgs and submit role requests.',
 }
 SUB = '<br><span style="color:#374151;font-size:13px">{}</span>'
 if '--tiles' in sys.argv:
