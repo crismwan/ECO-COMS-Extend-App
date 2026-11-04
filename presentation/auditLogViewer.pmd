@@ -458,7 +458,8 @@
                   "id": "runIdText",
                   "value": "<% logEntry.runId ?? '' %>",
                   "enabled": false
-                }
+                },
+                "sortableAndFilterable": "true"
               }
             ],
             "excelExportEnabled": true

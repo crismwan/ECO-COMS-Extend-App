@@ -72,7 +72,8 @@ def rows(k):
 
 
 RUN_COLUMN = {"type": "column", "columnId": "columnRunId", "label": "Run ID",
-              "cellTemplate": {"type": "text", "id": "runIdText", "value": "<% logEntry.runId ?? '' %>", "enabled": False}}
+              "cellTemplate": {"type": "text", "id": "runIdText", "value": "<% logEntry.runId ?? '' %>", "enabled": False},
+              "sortableAndFilterable": "true"}
 
 
 def add_run_column(d):
