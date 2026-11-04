@@ -71,15 +71,8 @@ def rows(k):
     return f"(({g}) ? (auditPage{k}.data.r.data ?? []) : [])"
 
 
-CONSOLE = f"https://developer.workday.com/console/apps/view/{APP}"
-# The orchestration run that wrote the record (tools/audit_run_id.py). Workday has no page per run, so
-# the link opens the app's developer console (Orchestration Activity / Logs list runs; search the ID).
-RUN_COLUMN = {"type": "column", "columnId": "columnRunId", "label": "Run ID", "excel": {"enabled": False},
-              "cellTemplate": {"type": "fieldSet", "id": "runIdFieldSet", "children": [
-                  {"type": "externalLink", "id": "runIdExternalLink", "visible": "<% !empty(logEntry.runId) %>",
-                   "descriptor": "<% logEntry.runId ?? '' %>", "url": CONSOLE},
-                  {"type": "text", "id": "runIdText", "enabled": False, "visible": "<% empty(logEntry.runId) %>",
-                   "value": "<% '' %>"}]}}
+# The run ID (tools/audit_run_id.py) stays on every record but has no column: Workday has no page per
+# run, and its history is on the developer site, so it's for support only (user decision 2026-11-04).
 # The Workday business process event (tools/audit_event_ref.py): a tenant instance, so it opens with
 # related actions like the Changed By and Role columns.
 EVENT_COLUMN = {"type": "column", "columnId": "columnEvent", "label": "Workday Event",
@@ -93,12 +86,12 @@ EVENT_COLUMN = {"type": "column", "columnId": "columnEvent", "label": "Workday E
 
 
 def add_run_column(d):
-    """Event then Run ID as the last two columns, replaced each run so the build stays idempotent."""
+    """Workday Event as the last column, replaced each run so the build stays idempotent."""
     def walk(n):
         if isinstance(n, dict):
             if n.get('id') == 'AuditLogGrid':
                 cols = [c for c in n['columns'] if c.get('columnId') not in ('columnRunId', 'columnEvent')]
-                n['columns'] = cols + [json.loads(json.dumps(EVENT_COLUMN)), json.loads(json.dumps(RUN_COLUMN))]
+                n['columns'] = cols + [json.loads(json.dumps(EVENT_COLUMN))]
                 return True
             return any(walk(v) for v in n.values())
         if isinstance(n, list):
@@ -106,16 +99,16 @@ def add_run_column(d):
         return False
     if not walk(d):
         raise SystemExit("graphql_audit: AuditLogGrid not found on auditLogViewer")
-    # The grid's rows expression rebuilds each record with a fixed field list; carry the two links too
+    # The grid's rows expression rebuilds each record with a fixed field list; carry the event too
     # (without this the columns rendered empty, seen live 2026-11-04).
     def rows_fix(n):
         if isinstance(n, dict):
             if n.get('id') == 'AuditLogGrid':
                 end = "'roleWid': !empty(e.roleWid) ? e.roleWid : (size(rm) > 0 ? rm[0].id : '') }"
-                if "'runId': e.runId" not in n['rows']:
+                if "'eventWid': e.eventWid" not in n['rows']:
                     if end not in n['rows']:
                         raise SystemExit("graphql_audit: AuditLogGrid rows changed shape")
-                    n['rows'] = n['rows'].replace(end, end[:-2] + ", 'runId': e.runId ?? '', 'eventWid': e.eventWid ?? '' }", 1)
+                    n['rows'] = n['rows'].replace(end, end[:-2] + ", 'eventWid': e.eventWid ?? '' }", 1)
                 return
             for v in n.values():
                 rows_fix(v)
