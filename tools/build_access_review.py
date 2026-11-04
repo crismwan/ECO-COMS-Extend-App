@@ -4,9 +4,10 @@ changed it and when someone last confirmed it is still needed.
 
 Same structure as the other list pages (product owner 2026-11-04: "grids are not similar to the structure on
 other pages"): a VIEW page with the ← Home link and About box, count cards, and a list grid (Excel export,
-sortable text columns, buttons last). Editable grids on EDIT pages draw as boxed tables, so the review is
-not ticked in the grid; each row's Confirm button opens a small EDIT page (confirmAccessReview) whose OK
-writes one Role Assignment / REVIEW audit record and returns to the list (flow accessReviewFlow).
+sortable text columns, buttons last). Grids with tick boxes only exist on EDIT pages, which Workday draws as
+boxed tables, so the checklist is its own page: Review All Positions opens confirmAccessReview, one row per
+position with a Still Needed tick; OK writes one Role Assignment / REVIEW audit record per ticked row and
+returns to the list (flow accessReviewFlow).
 
 - Rows: Workday's role assignments (WQL allShellAssignableRolesinTenant), one row per role, organization and
   position. Workday role assignments carry no expiry date, so the review is based on the app's own history.
@@ -100,6 +101,8 @@ page = {"id": "accessReview", "securityDomains": ["ManageCOMSShellOrgs"], "inclu
       {"type": "layoutSection", "id": "gridSection", "children": [{"type": "fieldSet", "id": "reviewFieldSet", "title": "Role Assignments", "children": [
         {"type": "text", "id": "noRowsText", "label": "ⓘ Nothing to show", "enabled": False, "visible": "<% size(" + ROWS + ") == 0 %>",
          "value": "No positions hold an ECO-COMS shell role right now."},
+        {"type": "button", "id": "reviewAllButton", "label": "Review All Positions", "action": "PRIMARY",
+         "taskReference": {"taskId": "confirmAccessReview"}},
         {"type": "grid", "id": "accessReviewGrid", "label": "Positions Holding Shell Roles", "rowVariableName": "rv", "readOnly": True,
          "rows": "<% " + ROWS + " %>",
          "columns": [
@@ -108,9 +111,6 @@ page = {"id": "accessReview", "securityDomains": ["ManageCOMSShellOrgs"], "inclu
            txt("colPosition", "Position", "<% rv.pos %>"),
            txt("colChanged", "Last Changed in ECO-COMS", "<% comsAccessReview.lastChanged(" + LOGS + ", rv.role, rv.posWid, rv.pos) %>"),
            txt("colReviewed", "Last Reviewed", "<% comsAccessReview.lastReviewed(" + LOGS + ", rv.role, rv.posWid, rv.pos) %>"),
-           {"type": "column", "columnId": "colConfirm", "label": "Confirm", "cellTemplate": {
-             "type": "button", "id": "confirmReviewButton", "label": "Confirm", "action": "AUXILIARY",
-             "taskReference": {"taskId": "confirmAccessReview", "parameterBindings": ROW_PARAMS}}},
            {"type": "column", "columnId": "colManage", "label": "Manage", "cellTemplate": {
              "type": "button", "id": "manageRoleButton", "label": "Manage", "action": "AUXILIARY",
              "taskReference": {"taskId": "editRoleAssignment", "parameterBindings": {
@@ -118,37 +118,47 @@ page = {"id": "accessReview", "securityDomains": ["ManageCOMSShellOrgs"], "inclu
     "footer": FOOT}}
 save('accessReview.pmd', page)
 
-ro = lambda wid, label, value: {"type": "text", "id": wid, "label": label, "enabled": False, "value": value}
-OUT = lambda field, value: {"outboundPath": field, "value": value}
-confirm = {"id": "confirmAccessReview", "securityDomains": ["ManageCOMSShellOrgs"],
+GOUT = lambda field, value: {"value": value, "valueOutBinding": "postReview." + field}
+REVIEW_OUT = [
+    GOUT("timestamp", "<% date:now().format(\"yyyy-MM-dd'T'HH:mm:ss'Z'\") %>"),
+    GOUT("objectType", "Role Assignment"), GOUT("action", "REVIEW"),
+    GOUT("coReferenceId", "<% rv.posWid %>"), GOUT("coName", "<% rv.org %>"),
+    GOUT("roleName", "<% rv.role %>"), GOUT("roleWid", "<% rv.roleWid %>"), GOUT("orgWid", "<% rv.orgWid %>"),
+    GOUT("positionName", "<% rv.pos %>"), GOUT("positionWid", "<% rv.posWid %>"),
+    GOUT("effectiveDate", "<% date:now().format('yyyy-MM-dd') %>"),
+    GOUT("triggeredBy", "<% selectedWorker.descriptor ?? '' %>"), GOUT("changedByWid", "<% selectedWorker.id ?? '' %>"),
+    GOUT("details", "<% 'Access review: ' + rv.pos + ' still needs ' + rv.role + ' on ' + rv.org %>"),
+]
+# Checklist (product owner 2026-11-04: "the checklist worked best so you can review all at once"): every row on one
+# EDIT page; each ticked row is its own POST (per-row grid submission), unticked rows are excluded.
+confirm = {"id": "confirmAccessReview", "securityDomains": ["ManageCOMSShellOrgs"], "include": ["comsAccessReview.script"],
   "endPoints": [
     {"name": "selectedWorker", "baseUrlType": "COMMON", "url": "/workers/me", "authType": "sso", "bestEffort": "true",
-     "failOnStatusCodes": FOS([400, 403, 429])}],
+     "failOnStatusCodes": FOS([400, 403, 429])},
+    {"name": "shellRoles", "baseUrlType": "workday-wql", "url": "data", "authType": "sso", "bestEffort": "true",
+     "wqlQuery": {"queryId": "allShellAssignableRolesinTenant"}, "failOnStatusCodes": FOS([400, 429])}] + AUDIT_EPS,
   "outboundData": {"outboundEndPoints": [
     {"name": "postReview", "baseUrlType": "BUSINESS-OBJECT", "url": "/comsAuditLogs", "httpMethod": "POST", "authType": "sso",
-     "failOnStatusCodes": FOS([400, 403, 429, 500]), "values": [
-       OUT("timestamp", "<% date:now().format(\"yyyy-MM-dd'T'HH:mm:ss'Z'\") %>"),
-       OUT("objectType", "Role Assignment"), OUT("action", "REVIEW"),
-       OUT("coReferenceId", "<% queryParams.posWid ?? '' %>"), OUT("coName", "<% queryParams.org ?? '' %>"),
-       OUT("roleName", "<% queryParams.role ?? '' %>"), OUT("roleWid", "<% queryParams.roleWid ?? '' %>"),
-       OUT("orgWid", "<% queryParams.orgWid ?? '' %>"),
-       OUT("positionName", "<% queryParams.pos ?? '' %>"), OUT("positionWid", "<% queryParams.posWid ?? '' %>"),
-       OUT("effectiveDate", "<% date:now().format('yyyy-MM-dd') %>"),
-       OUT("triggeredBy", "<% selectedWorker.descriptor ?? '' %>"), OUT("changedByWid", "<% selectedWorker.id ?? '' %>"),
-       OUT("details", "<% 'Access review: ' + (queryParams.pos ?? '') + ' still needs ' + (queryParams.role ?? '') + ' on ' + (queryParams.org ?? '') %>")]}]},
-  "onSubmit": "<%\n  stillNeededCheckBox.clearError();\n  let valid = true;\n  if (stillNeededCheckBox.value != true) {\n    stillNeededCheckBox.setError('Tick the box to confirm this position still needs the role.');\n    valid = false;\n  }\n  valid;\n%>",
-  "presentation": {"pageType": "EDIT", "headerSize": "STANDARD", "title": {"type": "title", "label": "ECO-COMS: Confirm Access"},
+     "exclude": "<% stillNeededCheckBox.value != true %>", "failOnStatusCodes": FOS([400, 403, 429, 500])}]},
+  "presentation": {"pageType": "EDIT", "headerSize": "STANDARD", "title": {"type": "title", "label": "ECO-COMS: Review All Positions"},
     "cancelOverride": {"taskId": "accessReview"},
     "body": {"type": "basicFormLayout", "id": "confirmAccessReviewForm", "sections": [
       {"type": "layoutSection", "id": "aboutSection", "children": [{"type": "fieldSet", "id": "aboutFieldSet", "title": "About This Page", "children": [NOTE(
-        "Confirm that this position still needs this role. Clicking <b>OK</b> records your review in the Audit Log; nothing "
-        "changes in Workday. To take the role away instead, click <b>Cancel</b> and use <b>Manage</b> on the Access Review.")]}]},
-      {"type": "layoutSection", "id": "confirmSection", "children": [{"type": "fieldSet", "id": "confirmFieldSet", "title": "Role Assignment", "children": [
-        ro("roleText", "Role", "<% queryParams.role ?? '' %>"),
-        ro("orgText", "Organization", "<% queryParams.org ?? '' %>"),
-        ro("positionText", "Position", "<% queryParams.pos ?? '' %>"),
-        {"type": "checkBox", "id": "stillNeededCheckBox", "label": "This position still needs this role", "value": "<% false %>",
-         "onChange": "<% self.clearError() %>"}]}]}]},
+        "Tick <b>Still Needed</b> on every position you checked and click <b>OK</b>: each tick is recorded in the Audit Log as a "
+        "review, and nothing changes in Workday. Leave a row unticked to skip it. To take a role away, click <b>Cancel</b> and use "
+        "<b>Manage</b> on the Access Review.")]}]},
+      {"type": "layoutSection", "id": "reviewSection", "children": [{"type": "fieldSet", "id": "reviewFieldSet", "title": "Role Assignments", "children": [
+        {"type": "text", "id": "noRowsText", "label": "ⓘ Nothing to show", "enabled": False, "visible": "<% size(" + ROWS + ") == 0 %>",
+         "value": "No positions hold an ECO-COMS shell role right now."},
+        {"type": "grid", "id": "reviewChecklistGrid", "label": "Positions Holding Shell Roles", "rowVariableName": "rv",
+         "rows": "<% " + ROWS + " %>", "doNotAdd": True, "doNotRemove": True,
+         "columns": [
+           txt("colRole", "Role", "<% rv.role %>"),
+           txt("colOrg", "Organization", "<% rv.org %>"),
+           txt("colPosition", "Position", "<% rv.pos %>"),
+           txt("colReviewed", "Last Reviewed", "<% comsAccessReview.lastReviewed(" + LOGS + ", rv.role, rv.posWid, rv.pos) %>"),
+           {"type": "column", "columnId": "colStillNeeded", "label": "Still Needed", "cellTemplate": {
+             "type": "checkBox", "id": "stillNeededCheckBox", "value": "<% false %>", "valuesOut": REVIEW_OUT}}]}]}]}]},
     "footer": FOOT}}
 save('confirmAccessReview.pmd', confirm)
 

@@ -22,7 +22,7 @@ ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 APP = 'ecocomsphase_xclw_cm_sync2_vmzvxm'
 # Read-only pages only. The success pages look up a record written moments earlier; they stay on REST
 # until a Graph read right after a write is confirmed.
-PAGES = ['auditLogViewer', 'comsInsights', 'shellOrgDetail', 'accessReview']  # hubLanding back on REST: 2.0-2.6 s with Graph vs 0.7 s (timed 2026-11-04)
+PAGES = ['auditLogViewer', 'comsInsights', 'shellOrgDetail', 'accessReview', 'confirmAccessReview']  # hubLanding back on REST: 2.0-2.6 s with Graph vs 0.7 s (timed 2026-11-04)
 QUERY_ID = 'auditLogsNewest'
 PROVIDER = 'workday-graph'
 FIELDS = ('workdayID { id } timestamp action objectType coName coReferenceId triggeredBy details '

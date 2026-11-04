@@ -160,6 +160,15 @@
                   "value": "No positions hold an ECO-COMS shell role right now."
                 },
                 {
+                  "type": "button",
+                  "id": "reviewAllButton",
+                  "label": "Review All Positions",
+                  "action": "PRIMARY",
+                  "taskReference": {
+                    "taskId": "confirmAccessReview"
+                  }
+                },
+                {
                   "type": "grid",
                   "id": "accessReviewGrid",
                   "label": "Positions Holding Shell Roles",
@@ -225,31 +234,6 @@
                         "id": "colReviewedText",
                         "enabled": false,
                         "value": "<% comsAccessReview.lastReviewed(list:flatten([((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.data ?? []) : []), ((((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 100 && !empty(auditPage1.data) && !empty(auditPage1.data.r)) ? (auditPage1.data.r.data ?? []) : [])]), rv.role, rv.posWid, rv.pos) %>"
-                      }
-                    },
-                    {
-                      "type": "column",
-                      "columnId": "colConfirm",
-                      "label": "Confirm",
-                      "cellTemplate": {
-                        "type": "button",
-                        "id": "confirmReviewButton",
-                        "label": "Confirm",
-                        "action": "AUXILIARY",
-                        "taskReference": {
-                          "taskId": "confirmAccessReview",
-                          "parameterBindings": {
-                            "role": "<% rv.role %>",
-                            "roleWid": "<% rv.roleWid %>",
-                            "org": "<% rv.org %>",
-                            "orgWid": "<% rv.orgWid %>",
-                            "pos": "<% rv.pos %>",
-                            "posWid": "<% rv.posWid %>"
-                          }
-                        }
-                      },
-                      "excel": {
-                        "enabled": false
                       }
                     },
                     {
