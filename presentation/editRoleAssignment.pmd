@@ -69,6 +69,27 @@
       "url": "<% 'data?limit=10&query=' + q %>",
       "authType": "sso",
       "deferred": "true"
+    },
+    {
+      "name": "posTreeRoot",
+      "baseUrlType": "workday-staffing-v6",
+      "url": "values/jobChangesGroup/supervisoryOrganization/",
+      "authType": "sso",
+      "bestEffort": "true"
+    },
+    {
+      "name": "posTreeNode",
+      "baseUrlType": "workday-staffing-v6",
+      "url": "<% h + '?limit=100&offset=' + o %>",
+      "authType": "sso",
+      "deferred": "true"
+    },
+    {
+      "name": "posTreeOrgPositions",
+      "baseUrlType": "workday-wql",
+      "url": "<% 'data?limit=200&query=' + string:pathEncode('SELECT cf_PositionID, position_PositionManagement, cf_PositionText FROM allPositions WHERE supervisoryOrganization in (\\'' + org.replace('\\'', '').replace('\\\\', '') + '\\')') %>",
+      "authType": "sso",
+      "deferred": "true"
     }
   ],
   "onSubmit": "<%\n  effectiveDate.clearError();\n  positionsToAddInstanceList.clearError();\n  let valid = true;\n  let adds = positionsToAddInstanceList.selectedEntries ?? [];\n  let removes = positionsToRemoveInstanceList.selectedEntries ?? [];\n  if (size(adds) + size(removes) == 0) {\n    positionsToAddInstanceList.setError('Select at least one position to add or remove.');\n    valid = false;\n  }\n  if (empty(effectiveDate.value)) {\n    effectiveDate.setError('Effective Date is required.');\n    valid = false;\n  }\n  if (valid) {\n    let ed = effectiveDate.value.format('yyyy-MM-dd');\n    let before = verifyRoleAudit.invoke({'lim': '1'}).total ?? 0;\n    let count = 0;\n    for (var p : adds) {\n      let pw = posWidLookup.invoke({'q': string:pathEncode('SELECT workdayID FROM allPositions WHERE cf_PositionID = \\'' + p.id + '\\'')}).data ?? [];\n      let pwid = size(pw) > 0 ? (pw[0].workdayID ?? '') : '';\n      launchAssignRole.invoke({'pwid': pwid, 'cbw': selectedWorker.id ?? '', 'cb': (selectedWorker.descriptor ?? '').urlEncode(), 'ts': date:now().format(\"yyyy-MM-dd'T'HH:mm:ss'Z'\").urlEncode(), 'rid': queryParams.roleId ?? '', 'rn': (queryParams.roleName ?? '').urlEncode(), 'oid': queryParams.orgId ?? '', 'on': (queryParams.orgName ?? '').urlEncode(), 'pid': p.id, 'pn': (p.descriptor ?? '').urlEncode(), 'md': 'ADD', 'pt': 'Position_ID', 'ed': ed});\n      count = count + 1;\n    }\n    for (var p : removes) {\n      launchAssignRole.invoke({'pwid': p.id, 'cbw': selectedWorker.id ?? '', 'cb': (selectedWorker.descriptor ?? '').urlEncode(), 'ts': date:now().format(\"yyyy-MM-dd'T'HH:mm:ss'Z'\").urlEncode(), 'rid': queryParams.roleId ?? '', 'rn': (queryParams.roleName ?? '').urlEncode(), 'oid': queryParams.orgId ?? '', 'on': (queryParams.orgName ?? '').urlEncode(), 'pid': p.id, 'pn': (p.descriptor ?? '').urlEncode(), 'md': 'REMOVE', 'pt': 'WID', 'ed': ed});\n      count = count + 1;\n    }\n    let after = verifyRoleAudit.invoke({'lim': '1'}).total ?? 0;\n    if (after - before < count) {\n      positionsToAddInstanceList.setError('Workday rejected ' + (count - (after - before)) + ' of ' + count + ' changes. Check the role assignment in Workday and try again.');\n      valid = false;\n    }\n  }\n  valid;\n%>",
@@ -182,10 +203,11 @@
                   "label": "Positions to Add",
                   "required": false,
                   "multiSelect": true,
-                  "values": "<% [] %>",
+                  "values": "<% (posTreeRoot.data ?? []).filter(r => { r.descriptor == 'My Favorites' || r.descriptor == 'My Organizations' || r.descriptor == 'Supervisory Organizations by Manager' || r.descriptor == 'Supervisory Organization' }).map(r => { {'id': r.id, 'descriptor': r.descriptor} }) %>",
                   "searchEndPoint": "<% endpoints.posSearch %>",
                   "searchResultValues": "<% empty(posSearch.data) ? [] : posSearch.data.filter(o => { !empty(o.cf_PositionID) }).map(o => { {'id': o.cf_PositionID, 'descriptor': !empty(o.position_PositionManagement.descriptor) ? o.position_PositionManagement.descriptor : (!empty(o.cf_PositionText) ? o.cf_PositionText : o.cf_PositionID)} }) %>",
-                  "helpText": "Search by position name or ID. Each selected position is added to this role on this organization. Shows the first 50 matches; type more of the title or ID to narrow."
+                  "helpText": "Click to browse by supervisory organization, or type a position name or ID. Search by position name or ID. Each selected position is added to this role on this organization. Shows the first 50 matches; type more of the title or ID to narrow.",
+                  "dynamicMonikerLevels": "<%\n  const sel = self.promptSelections;\n  const roots = posTreeRoot.data ?? [];\n  const i = roots.map(r => { r.id }).indexOf(sel[0]);\n  const href = i < 0 ? '' : (roots[i].href ?? '');\n  const byManager = i < 0 ? false : roots[i].descriptor == 'Supervisory Organizations by Manager';\n  if (sel.size() == 1 || (byManager && sel.size() == 2)) {\n    const node = sel.size() == 1 ? href : (href + '/' + sel[1]);\n    const first = posTreeNode.invoke({'h': node, 'o': '0'});\n    const more = (first.total ?? 0) > 100 ? (posTreeNode.invoke({'h': node, 'o': '100'}).data ?? []) : [];\n    return [list:flatten([first.data ?? [], more]).map(o => { {'id': o.id, 'descriptor': o.descriptor} }), true];\n  }\n  const ps = posTreeOrgPositions.invoke({'org': sel[sel.size() - 1]}).data ?? [];\n  return [ps.filter(o => { !empty(o.cf_PositionID) }).map(o => { {'id': o.cf_PositionID, 'descriptor': !empty(o.position_PositionManagement.descriptor) ? o.position_PositionManagement.descriptor : (!empty(o.cf_PositionText) ? o.cf_PositionText : o.cf_PositionID)} }), false];\n%>"
                 },
                 {
                   "type": "instanceList",
