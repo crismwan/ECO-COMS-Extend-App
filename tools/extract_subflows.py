@@ -309,11 +309,21 @@ def share_audit():
     lines = []
     for f in AUDIT_FIELDS:
         pair = f'"{f}": "{{{{data.start.{f}}}}}"'
-        lines.append(pair if f in AUDIT_ALWAYS else f'{{{{#if data.start.{f}}}}}{pair},{{{{/if}}}}')
+        lines.append(pair if f in AUDIT_ALWAYS else f'{{{{#if data.AuditFlags.has{f[0].upper() + f[1:]}}}}}{pair},{{{{/if}}}}')
     # optional fields carry their own comma, so the record always ends with a required field (details)
     body['_value']['body']['_value']['_value']['message']['_value'] = '{\n' + '\n'.join(
         (l + ',') if (not l.startswith('{{#if') and l != lines[-1]) else l for l in lines) + '\n}'
     body['_value']['notes'] = NOTES('Write one comsAuditLogs record; fields other writers do not set are left out when empty.')
+    # {{#if}} takes a Boolean only (App Hub build 2026-11-05: "StringType is not compatible with ... BooleanType"),
+    # so the optional fields get has<Field> flags first.
+    flags = {"_type": "CreateValues", "_value": {
+        "name": I('AuditFlags'), "isDisabled": B(False), "errorHandler": {"_type": ["Opt", "ErrorHandler"], "_value": None},
+        "values": {"_type": ["List", "Assignment"], "_value": [
+            {"_type": "Assignment", "_value": {
+                "param": {"_type": "Parameter", "_value": {"name": I('has' + f[0].upper() + f[1:]), "type": TYPE('Boolean'),
+                                                           "default": {"_type": ["Opt", "Any"], "_value": None}}},
+                "expr": EXPR(f'data.start.{f}.isEmpty().not()', 'Boolean')}} for f in AUDIT_FIELDS if f not in AUDIT_ALWAYS]},
+        "notes": NOTES('True when the writer passed a value for an optional field (the template leaves the field out otherwise).')}}
     fv = first['flowVersion'] if 'flowVersion' in first else '3.7.0'
     src = first['_value']
     sub = {"flowVersion": fv, "_type": "Flow", "_value": {
@@ -325,7 +335,7 @@ def share_audit():
             "notes": NOTES('One audit record, every field as text (empty when the writer has no value): ' + ', '.join(AUDIT_FIELDS))}},
         "end": {"_type": "EndSubflow", "_value": {"exports": {"_type": ["List", "Assignment"], "_value": []},
                                                   "notes": NOTES('No outputs.')}},
-        "nodes": {"_type": ["List", "Node"], "_value": [body]},
+        "nodes": {"_type": ["List", "Node"], "_value": [flags, body]},
         "notes": NOTES('The one audit-record template, called by every orchestration that writes comsAuditLogs (except the '
                        'business-process-triggered DenyRoleRequest). Built by tools/extract_subflows.py.'),
         "resources": copy.deepcopy(src['resources']),

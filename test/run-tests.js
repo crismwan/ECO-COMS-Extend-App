@@ -247,6 +247,25 @@ function staticSuite() {
     });
   }
 
+  // 5d. A template's {{#if x}} needs a Boolean x (App Hub build 2026-11-05: "Actual type of argument (StringType) is not
+  // compatible with required type of argument (BooleanType)"). Checks values made by CreateValues steps and sub inputs.
+  for (const f of listFiles('orchestration').filter((x) => /\.(orchestration|suborchestration)$/.test(x))) {
+    const typeOf = {};
+    walk(docs[f] || {}, (node) => {
+      if (node._type === 'CreateValues') for (const a of node._value?.values?._value || [])
+        typeOf[`${node._value.name?._value}.${a._value?.param?._value?.name?._value}`] = a._value?.param?._value?.type?._value;
+      if (node._type === 'StartSubflow') for (const p of node._value?.parameters?._value || [])
+        typeOf[`start.${p._value?.name?._value}`] = p._value?.type?._value;
+    });
+    walk(docs[f] || {}, (node) => {
+      if (node._type !== 'TextTemplate' || typeof node._value !== 'string') return;
+      for (const m of node._value.matchAll(/\{\{#if data\.([\w.]+)\}\}/g)) {
+        const t = typeOf[m[1]];
+        if (t && t !== 'Boolean') err('templateIf', `${path.basename(f)}: {{#if data.${m[1]}}} uses a ${t}; App Hub needs a Boolean (make a has<Field> flag with .isEmpty().not())`);
+      }
+    });
+  }
+
   // 6. Business process routes have matching AMD tasks
   const routes = new Set(Object.values(tasks).map((t) => t.routingPattern));
   for (const f of listFiles('model').filter((x) => x.endsWith('.businessprocess'))) {
