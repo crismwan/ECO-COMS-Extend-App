@@ -1255,9 +1255,26 @@ async function cleanup(token, me) {
   console.log('   kept (not identified as test):');
   audits.filter((a) => !testAudit(a)).forEach((a) => console.log(`     ${a.id}  ${a.timestamp}  ${a.objectType}/${a.action}  ${a.coName || ''} ${a.roleName || ''} ${a.positionName || ''}`.trimEnd()));
 
+  // 4. Test bulk runs and their row records (batchRef TEST..., written by bulkvalidate / bulkapply) -> delete.
+  // Runs and rows not marked TEST (e.g. a demo's bulk edit) are kept; `purge` is the suite that clears everything.
+  const isTestRef = (r) => /^TEST/i.test(String(r.batchRef || '')) || EXTRA_TEST_IDS.includes(r.id);
+  const bulkRuns = await readAll(token, 'comsBulkRuns');
+  const bulkRows = await readAll(token, 'comsBulkRowResults');
+  console.log(`\nBulk runs: ${bulkRuns.length} read, ${bulkRuns.filter(isTestRef).length} to delete; row records: ${bulkRows.length} read, ${bulkRows.filter(isTestRef).length} to delete:`);
+  [...bulkRuns, ...bulkRows].filter(isTestRef).forEach((r) => console.log(`   delete  ${r.id}  ${r.batchRef}  ${r.runMode || ''} ${r.status || r.result || ''}`.trimEnd()));
+  console.log('   kept (not identified as test):');
+  [...bulkRuns, ...bulkRows].filter((r) => !isTestRef(r)).forEach((r) => console.log(`     ${r.id}  ${r.batchRef}  ${r.runMode || ''} ${r.status || r.result || ''}  ${r.roleName || r.summary || ''}`.trimEnd()));
+
   if (!APPLY) {
-    pass('Cleanup.dryRun', `would inactivate ${activeTest.length} org(s), cancel ${pendingTest.length} pending review(s), delete ${testRoles.length} request(s) and ${audits.filter(testAudit).length}+ audit entr(ies)`);
+    pass('Cleanup.dryRun', `would inactivate ${activeTest.length} org(s), cancel ${pendingTest.length} pending review(s), delete ${testRoles.length} request(s), ${audits.filter(testAudit).length}+ audit entr(ies) and ${bulkRuns.filter(isTestRef).length + bulkRows.filter(isTestRef).length} bulk record(s)`);
     return;
+  }
+  for (const r of [...bulkRows, ...bulkRuns].filter(isTestRef)) {
+    await test(`Cleanup.deleteBulk ${r.batchRef}`, async () => {
+      const coll = bulkRuns.includes(r) ? 'comsBulkRuns' : 'comsBulkRowResults';
+      await request('DELETE', `${BO}/${coll}/${r.id}`, token);
+      pass(`Cleanup.deleteBulk ${r.batchRef}`, `${coll} record deleted`);
+    });
   }
 
   const tomorrow = tenantDate(1);
