@@ -1942,6 +1942,33 @@ async function posTreeProbe(token) {
       console.log(`   REST tree "${node.descriptor}" (${Date.now() - s2} ms): ${d.length} entries; first: ${d.slice(0, 3).map((x) => x.descriptor).join(' | ')}; deeper levels: ${d.some((x) => x.href) ? 'yes' : 'no'}`);
     }
   } catch (e) { console.log('   REST tree error ' + e.message.slice(0, 150)); }
+  // details for a page build: ids, hrefs, depth of each root, manager -> orgs, tree org id -> positions
+  try {
+    const orgIds = new Set(all.map((p) => { const o = p.supervisoryOrganization; return (o && (o.id || (o[0] && o[0].id))) || ''; }));
+    const r = await request('GET', `${API}/staffing/v6/values/jobChangesGroup/supervisoryOrganization/`, token);
+    console.log('   ROOT ids: ' + (r.data || []).map((x) => `${x.descriptor}=${x.id} href=${(x.href || '').replace(API, '')}`).join(' ; '));
+    for (const node of (r.data || [])) {
+      if (!node.href) continue;
+      const s = Date.now(); const c = await request('GET', node.href + (node.href.includes('?') ? '&' : '?') + 'limit=100', token); const d = c.data || [];
+      const f = d[0] || {};
+      console.log(`   NODE "${node.descriptor}" ${Date.now() - s} ms total=${c.total} got=${d.length} first=${f.descriptor}|id=${f.id}|href=${(f.href || '').replace(API, '')} orgWithPositions=${d.filter((x) => orgIds.has(x.id)).length}`);
+      if (f.href) {
+        const g = await request('GET', f.href, token); const gd = g.data || [];
+        console.log(`     L2 of "${f.descriptor}": total=${g.total} first=${(gd[0] || {}).descriptor}|id=${(gd[0] || {}).id}|href=${((gd[0] || {}).href || '').replace(API, '')} orgWithPositions=${gd.filter((x) => orgIds.has(x.id)).length}`);
+      }
+    }
+    const mg = await request('GET', `${API}/staffing/v6/values/jobChangesGroup/supervisoryOrganization/`, token);
+    const byMgr = (mg.data || []).find((x) => /by Manager$/.test(x.descriptor));
+    if (byMgr) {
+      const mlist = (await request('GET', byMgr.href + '?limit=5', token)).data || [];
+      for (const m of mlist.slice(0, 3)) {
+        try { const s = Date.now(); const so = await request('GET', `${API}/common/v1/workers/${m.id}/supervisoryOrganizationsManaged`, token);
+          const sd = so.data || []; console.log(`   MGR ${m.descriptor} (${m.id}) ${Date.now() - s} ms orgsManaged=${sd.length} first=${(sd[0] || {}).descriptor}|${(sd[0] || {}).id} withPositions=${sd.filter((x) => orgIds.has(x.id)).length}`);
+          if (sd[0]) { const s2 = Date.now(); const pq = await wql(token, `SELECT cf_PositionID, position_PositionManagement, cf_PositionText FROM allPositions WHERE supervisoryOrganization in ('${sd[0].id}')`, 200); console.log(`     positions in ${sd[0].descriptor}: ${(pq.data || []).length} (${Date.now() - s2} ms) e.g. ${((pq.data || [])[0] || {}).cf_PositionID}`); }
+        } catch (e) { console.log(`   MGR ${m.descriptor} error ${e.message.slice(0, 120)}`); }
+      }
+    }
+  } catch (e) { console.log('   detail error ' + e.message.slice(0, 200)); }
   pass('PosTree.probe', 'see lines above');
 }
 
