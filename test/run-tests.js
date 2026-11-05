@@ -46,7 +46,7 @@ const ORCH = `${API}/orchestrate/v1/apps/${APP_ID}/orchestrations`;
 const argv = process.argv.slice(2);
 const arg = (name) => { const i = argv.indexOf(name); return i === -1 ? null : argv[i + 1]; };
 const VERBOSE = argv.includes('--verbose');
-const SUITES_ALL = ['static', 'smoke', 'full', 'cleanup', 'isu', 'repair', 'seconduser', 'purge', 'demoseed', 'datacheck', 'probe', 'bulkvalidate', 'subflows', 'seedapps', 'patternguard', 'orgguard', 'gateway', 'prompts', 'possearch', 'graphql', 'eventlinks', 'timing', 'bulkapply'];
+const SUITES_ALL = ['static', 'smoke', 'full', 'cleanup', 'isu', 'repair', 'seconduser', 'purge', 'demoseed', 'datacheck', 'probe', 'bulkvalidate', 'subflows', 'seedapps', 'patternguard', 'orgguard', 'gateway', 'prompts', 'possearch', 'postree', 'graphql', 'eventlinks', 'timing', 'bulkapply'];
 const suiteArg = arg('--suite') || argv.find((a) => !a.startsWith('--') && SUITES_ALL.some((s) => a.split(',').includes(s))) || 'smoke';
 const SUITES = suiteArg.split(',').map((s) => s.trim()).filter(Boolean);
 for (const s of SUITES) if (!SUITES_ALL.includes(s)) { console.error(`Unknown suite "${s}". Use: ${SUITES_ALL.join(', ')}`); process.exit(2); }
@@ -1913,6 +1913,38 @@ async function posSearchTiming(token) {
   pass('PosSearch.timing', 'see lines above');
 }
 
+// ═══ Position tree probe (read-only): can positions be browsed by supervisory organization? ═══
+async function posTreeProbe(token) {
+  console.log('\n-- Position tree probe (read-only) --');
+  const t0 = Date.now();
+  const all = (await wql(token, 'SELECT cf_PositionID, workdayID, supervisoryOrganization FROM allPositions WHERE supervisoryOrganization is not empty', 10000)).data || [];
+  console.log(`   positions with a supervisory org: ${all.length} (${Date.now() - t0} ms)`);
+  const by = {};
+  all.forEach((p) => { const o = p.supervisoryOrganization; const k = (o && (o.descriptor || (o[0] && o[0].descriptor))) || '?'; const id = (o && (o.id || (o[0] && o[0].id))) || ''; (by[k] = by[k] || { id, n: 0 }).n++; });
+  const sizes = Object.values(by).map((x) => x.n).sort((a, b) => a - b);
+  const q = (f) => sizes[Math.floor((sizes.length - 1) * f)];
+  console.log(`   supervisory orgs holding them: ${sizes.length}; positions per org: median ${q(0.5)}, 90th pct ${q(0.9)}, max ${sizes[sizes.length - 1]}`);
+  Object.entries(by).sort((a, b) => b[1].n - a[1].n).slice(0, 5).forEach(([k, v]) => console.log(`   BIG ${v.n} · ${k}`));
+  const big = Object.entries(by).sort((a, b) => b[1].n - a[1].n)[0];
+  if (big && big[1].id) {
+    const ms = [];
+    for (let i = 0; i < 3; i++) { const s = Date.now(); await wql(token, `SELECT cf_PositionID, workdayID, position_PositionManagement, cf_PositionText FROM allPositions WHERE supervisoryOrganization in ('${big[1].id}')`, 200); ms.push(Date.now() - s); }
+    console.log(`   TIME positions in one org (largest, ${big[1].n}): ${ms.join(', ')} ms`);
+  }
+  // Workday's own supervisory-org tree (the Staffing "values" list from developer.workday.com "Concept: Multilevel Lists")
+  try {
+    const s = Date.now(); const r = await request('GET', `${API}/staffing/v6/values/jobChangesGroup/supervisoryOrganization/`, token);
+    console.log(`   REST tree root (${Date.now() - s} ms): ${(r.data || []).map((x) => x.descriptor).join(' | ')}`);
+    for (const node of (r.data || []).slice(0, 3)) {
+      if (!node.href) continue;
+      const s2 = Date.now(); const c = await request('GET', node.href, token);
+      const d = c.data || [];
+      console.log(`   REST tree "${node.descriptor}" (${Date.now() - s2} ms): ${d.length} entries; first: ${d.slice(0, 3).map((x) => x.descriptor).join(' | ')}; deeper levels: ${d.some((x) => x.href) ? 'yes' : 'no'}`);
+    }
+  } catch (e) { console.log('   REST tree error ' + e.message.slice(0, 150)); }
+  pass('PosTree.probe', 'see lines above');
+}
+
 // ═══ Probe: read-only facts for building application pattern schemas ═══
 // ═══ Bulk validate: one TEST batch through BulkRoleGridApply in VALIDATE mode (no role changes) ═══
 // Proves the per-row sub-orchestration (ProcessBulkRoleRow, tools/extract_subflows.py) runs: the run must finish as
@@ -2536,6 +2568,7 @@ async function demoSeed(token, me) {
         if (live.includes('gateway')) await gatewayProbe(token, me);
         if (live.includes('prompts')) await promptsProbe(token);
         if (live.includes('possearch')) await posSearchTiming(token);
+        if (live.includes('postree')) await posTreeProbe(token);
       }
     }
   }
