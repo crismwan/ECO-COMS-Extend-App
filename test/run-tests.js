@@ -46,7 +46,7 @@ const ORCH = `${API}/orchestrate/v1/apps/${APP_ID}/orchestrations`;
 const argv = process.argv.slice(2);
 const arg = (name) => { const i = argv.indexOf(name); return i === -1 ? null : argv[i + 1]; };
 const VERBOSE = argv.includes('--verbose');
-const SUITES_ALL = ['static', 'smoke', 'full', 'cleanup', 'isu', 'repair', 'seconduser', 'purge', 'demoseed', 'datacheck', 'probe', 'seedapps', 'patternguard', 'graphql', 'eventlinks', 'timing'];
+const SUITES_ALL = ['static', 'smoke', 'full', 'cleanup', 'isu', 'repair', 'seconduser', 'purge', 'demoseed', 'datacheck', 'probe', 'bulkvalidate', 'seedapps', 'patternguard', 'graphql', 'eventlinks', 'timing'];
 const suiteArg = arg('--suite') || argv.find((a) => !a.startsWith('--') && SUITES_ALL.some((s) => a.split(',').includes(s))) || 'smoke';
 const SUITES = suiteArg.split(',').map((s) => s.trim()).filter(Boolean);
 for (const s of SUITES) if (!SUITES_ALL.includes(s)) { console.error(`Unknown suite "${s}". Use: ${SUITES_ALL.join(', ')}`); process.exit(2); }
@@ -1669,6 +1669,44 @@ async function patternGuard(token, me) {
 }
 
 // ═══ Probe: read-only facts for building application pattern schemas ═══
+// ═══ Bulk validate: one TEST batch through BulkRoleGridApply in VALIDATE mode (no role changes) ═══
+// Proves the per-row sub-orchestration (ProcessBulkRoleRow, tools/extract_subflows.py) runs: the run must finish as
+// Validated, its row must get a VALID or INVALID result, and no Role Assignment audit record may appear for it.
+// Leaves a run record and two row records marked TEST<n> (bulk run data is cleared by the purge suite).
+async function bulkValidate(token, me) {
+  console.log('\n-- Bulk validate (writes a TEST run; changes no roles) --');
+  await test('Bulk.validateRun', async () => {
+    const audits = await readAll(token, 'comsAuditLogs');
+    const src = audits.filter((a) => a.objectType === 'Role Assignment' && a.roleWid && a.orgWid && a.coReferenceId).pop();
+    if (!src) return skip('Bulk.validateRun', 'no Role Assignment audit record to take a role, organization and position from');
+    const ref = 'TEST' + new Date().toISOString().replace(/\D/g, '').slice(0, 14);
+    const stamp = new Date().toISOString().replace(/\.\d+Z$/, 'Z');
+    const today = new Date(Date.now() - 8 * 3600e3).toISOString().slice(0, 10);   // tenant (Pacific) date
+    await request('POST', `${BO}/comsBulkRuns`, token, { batchRef: ref, source: 'Grid', runMode: 'VALIDATE', status: 'Uploaded',
+      effectiveDate: today, uploadedByName: me.descriptor, uploadedByWid: me.id, uploadedAt: stamp, changeCount: '1', summary: 'TEST validate run' });
+    await request('POST', `${BO}/comsBulkRowResults`, token, { batchRef: ref + '-DRAFT', runMode: 'VALIDATE', rowAction: 'ADD', result: 'DRAFT',
+      roleName: src.roleName || '', roleWid: src.roleWid, orgName: src.coName || '', orgWid: src.orgWid,
+      positionId: src.coReferenceId, positionName: src.positionName || '', assigneeWid: '', timestamp: stamp });
+    const auditsBefore = new Set(audits.map((a) => a.id));
+    const r = await launch(token, 'BulkRoleGridApply', { ref, mode: 'VALIDATE', effectiveDate: today, changedBy: me.descriptor, changedByWid: me.id });
+    console.log('   launch: ' + String(typeof r === 'string' ? r : JSON.stringify(r)).slice(0, 200));
+    let run, rows = [];
+    for (let i = 0; i < 30; i++) {
+      await sleep(4000);
+      run = ((await request('GET', `${BO}/comsBulkRuns?limit=100&batchRef=${encodeURIComponent(ref)}`, token)).data || [])[0];
+      rows = (await request('GET', `${BO}/comsBulkRowResults?limit=100&batchRef=${encodeURIComponent(ref)}`, token)).data || [];
+      if (run && /Validated|Completed|Rejected|Failed/.test(run.status || '') && rows.length) break;
+    }
+    if (!run || run.status !== 'Validated') throw new Error(`${ref}: run status ${run?.status} (${run?.statusMessage || ''}) after 2 minutes`);
+    if (!rows.length) throw new Error(`${ref}: no row result (the per-row sub-orchestration didn't write one)`);
+    const bad = rows.filter((x) => !/^(VALID|INVALID)$/.test(x.result || ''));
+    if (bad.length) throw new Error(`${ref}: unexpected row result ${bad.map((x) => x.result).join(', ')}`);
+    const newAudits = (await readAll(token, 'comsAuditLogs')).filter((a) => !auditsBefore.has(a.id) && (a.details || '').includes(ref));
+    if (newAudits.length) throw new Error(`${ref}: VALIDATE wrote ${newAudits.length} audit record(s)`);
+    pass('Bulk.validateRun', `${ref}: Validated; row ${rows[0].result}: ${rows[0].message || ''} (role ${src.roleName}, ${src.coReferenceId})`);
+  });
+}
+
 async function probe(token) {
   console.log('\n-- Probe (read-only) --');
   // Sub-orchestration probe (tools/probe_subflow.py): ProbeSubflowCall calls ProbeEcho and returns {"echo": "echo:hello"}.
@@ -2125,6 +2163,7 @@ async function demoSeed(token, me) {
         if (live.includes('demoseed')) await demoSeed(token, me);
         if (live.includes('datacheck')) await dataCheck(token);
         if (live.includes('probe')) await probe(token);
+        if (live.includes('bulkvalidate')) await bulkValidate(token, me);
         if (live.includes('graphql')) await graphqlSuite(token);
         if (live.includes('eventlinks')) await eventLinks(token, me);
         if (live.includes('timing')) await timingSuite(token);
