@@ -46,7 +46,7 @@ const ORCH = `${API}/orchestrate/v1/apps/${APP_ID}/orchestrations`;
 const argv = process.argv.slice(2);
 const arg = (name) => { const i = argv.indexOf(name); return i === -1 ? null : argv[i + 1]; };
 const VERBOSE = argv.includes('--verbose');
-const SUITES_ALL = ['static', 'smoke', 'full', 'cleanup', 'isu', 'repair', 'seconduser', 'purge', 'demoseed', 'datacheck', 'probe', 'bulkvalidate', 'subflows', 'seedapps', 'patternguard', 'orgguard', 'gateway', 'prompts', 'possearch', 'postree', 'orgtree', 'graphql', 'eventlinks', 'timing', 'bulkapply'];
+const SUITES_ALL = ['static', 'smoke', 'full', 'cleanup', 'isu', 'repair', 'seconduser', 'purge', 'demoseed', 'datacheck', 'probe', 'bulkvalidate', 'subflows', 'seedapps', 'patternguard', 'orgguard', 'gateway', 'prompts', 'possearch', 'postree', 'orgtree', 'aaaname', 'graphql', 'eventlinks', 'timing', 'bulkapply'];
 const suiteArg = arg('--suite') || argv.find((a) => !a.startsWith('--') && SUITES_ALL.some((s) => a.split(',').includes(s))) || 'smoke';
 const SUITES = suiteArg.split(',').map((s) => s.trim()).filter(Boolean);
 for (const s of SUITES) if (!SUITES_ALL.includes(s)) { console.error(`Unknown suite "${s}". Use: ${SUITES_ALL.join(', ')}`); process.exit(2); }
@@ -2106,6 +2106,32 @@ async function orgTreeProbe(token) {
   pass('OrgTree.probe', 'see lines above');
 }
 
+// ═══ AAA role names use the full application ID (read-only; tools/aaa_full_app_id.py, 2026-11-05) ═══
+async function aaaNameCheck(token) {
+  console.log('\n-- AAA role name: full application ID (read-only) --');
+  const page = JSON.parse(fs.readFileSync(path.join(ROOT, 'presentation/adminProvisioning.pmd'), 'utf8'));
+  const find = (n, id) => { if (!n || typeof n !== 'object') return null; if (n.id === id) return n; for (const v of Object.values(n)) { const r = find(v, id); if (r) return r; } return null; };
+  const script = find(page.presentation, 'applicationDropdown').values;
+  await test('AAA.listUsesFullId', async () => { if (!script.includes("code.substringBefore(')') + ')'") || script.includes("code.substringAfter('(').substringBefore(')')")) throw new Error('application list still reduces bracketed IDs'); return 'page script keeps X:APP(CODE)'; });
+  const wqlFile = (id) => JSON.parse(fs.readFileSync(path.join(ROOT, 'presentation/wqlQueries', id + '.wqlquery'), 'utf8')).query;
+  const orgs = (await wql(token, wqlFile('customOrganizations'), 10000)).data || [];
+  // the page's own rule, in JS
+  const appOf = (code) => code.includes('(') ? code.split(')')[0] + ')' : (code.split(':').slice(1).join(':').includes(':') ? code.split(':')[0] + ':' + code.split(':')[1] : code);
+  const apps = []; const seen = new Set(); orgs.forEach((o) => { const a = appOf(o.code || ''); if (!seen.has(a)) { seen.add(a); apps.push(a); } });
+  console.log(`   ${orgs.length} orgs -> ${apps.length} applications; bracketed: ${apps.filter((a) => a.includes('(')).join(' | ')}`);
+  const roles = ((await wql(token, wqlFile('allAAArolesinTenant'), 1000)).data || []).map((r) => r.role?.descriptor || '');
+  await test('AAA.duplicateCheckSeesExistingRoles', async () => {
+    const miss = roles.filter((r) => { const m = r.match(/^Organizations and Roles Assignment Administrator \((.*)\)$/); return !m || !apps.some((a) => `Organizations and Roles Assignment Administrator (${a})` === r || r.startsWith(`Organizations and Roles Assignment Administrator (${a},`)); });
+    if (miss.length) throw new Error('no application in the list builds: ' + miss.join(' | '));
+    return `${roles.length} existing AAA role(s) match a listed application exactly: ${roles.join(' | ')}`;
+  });
+  await test('AAA.noEmptyOrBrokenIds', async () => {
+    const bad = apps.filter((a) => !a || (a.includes('(') && !/^[^()]+\([^()]+\)$/.test(a)));
+    if (bad.length) throw new Error('odd application IDs: ' + bad.join(' | '));
+    return 'every bracketed ID is APP(CODE)';
+  });
+}
+
 // ═══ Probe: read-only facts for building application pattern schemas ═══
 // ═══ Bulk validate: one TEST batch through BulkRoleGridApply in VALIDATE mode (no role changes) ═══
 // Proves the per-row sub-orchestration (ProcessBulkRoleRow, tools/extract_subflows.py) runs: the run must finish as
@@ -2731,6 +2757,7 @@ async function demoSeed(token, me) {
         if (live.includes('possearch')) await posSearchTiming(token);
         if (live.includes('postree')) await posTreeProbe(token);
         if (live.includes('orgtree')) await orgTreeProbe(token);
+        if (live.includes('aaaname')) await aaaNameCheck(token);
       }
     }
   }

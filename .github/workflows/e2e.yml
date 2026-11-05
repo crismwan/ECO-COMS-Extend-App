@@ -8,7 +8,7 @@ on:
       task:
         description: "static = repo checks; smoke = read-only; full = smoke + write tests; isu = ISU lockdown (only once ISU writes are live); cleanup-dry-run / cleanup-apply = list / remove TEST data; repair-dry-run / repair-apply = one-off data fixes; publish-template = rebuild the pre-filled Excel template from Workday and publish it to Download Template"
         type: choice
-        options: [static, smoke, full, isu, seconduser, cleanup-dry-run, cleanup-apply, repair-dry-run, repair-apply, purge-dry-run, purge-apply, demo-seed, datacheck, probe, bulkvalidate, bulkapply, subflows, graphql, eventlinks, timing, seed-apps-dry-run, seed-apps-apply, pattern-guard, org-guard, gateway, prompts, possearch, postree, orgtree, publish-template]
+        options: [static, smoke, full, isu, seconduser, cleanup-dry-run, cleanup-apply, repair-dry-run, repair-apply, purge-dry-run, purge-apply, demo-seed, datacheck, probe, bulkvalidate, bulkapply, subflows, graphql, eventlinks, timing, seed-apps-dry-run, seed-apps-apply, pattern-guard, org-guard, gateway, prompts, possearch, postree, orgtree, aaaname, publish-template]
         default: smoke
       also:
         description: "cleanup only: extra record ids (comma-separated) to treat as test data"
@@ -70,6 +70,7 @@ jobs:
             possearch)         node test/run-tests.js possearch ;;
             postree)           node test/run-tests.js postree ;;
             orgtree)           node test/run-tests.js orgtree ;;
+            aaaname)           node test/run-tests.js aaaname ;;
             purge-dry-run)   node test/run-tests.js purge ;;
             purge-apply)     node test/run-tests.js purge --apply ;;
             demo-seed)       node test/run-tests.js demoseed ${EFFECTIVE:+--effective "$EFFECTIVE"} ;;

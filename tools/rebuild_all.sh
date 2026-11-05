@@ -45,6 +45,7 @@ run tools/enabled_for_choice.py        # request pages: Enabled For type first, 
 run tools/pos_search_limit.py          # position searches: first 50 matches (--off to roll back)
 run tools/pos_tree.py                  # position picker: browse by supervisory organization too (pilot, --off to roll back)
 run tools/unit_tree.py                 # FUH / Academic Unit pickers: browse by type too (--off to roll back)
+run tools/aaa_full_app_id.py           # AAA Role Request: full application ID in the role name (--off to roll back)
 run tools/clear_on_change.py           # a field OK flagged clears its error when changed (edited pages)
 run tools/collapse_about.py            # About boxes start closed on the long pages
 run tools/merge_nav_about.py           # back links at the top of the About box
