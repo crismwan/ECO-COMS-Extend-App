@@ -474,6 +474,19 @@ function staticSuite() {
     });
   }
 
+  // 7g4. A field OK flags must clear its error when the user changes it, or OK stays refused until a reload (found
+  // live on Edit Role Assignment 2026-11-05; tools/clear_on_change.py adds the calls on the pages it lists).
+  for (const [f, d] of Object.entries(pmds)) {
+    const sub = typeof d.onSubmit === 'string' ? d.onSubmit : ''; if (!sub) continue;
+    const ids = {}; walk(d.presentation || {}, (n) => { if (n && n.id) ids[n.id] = n; });
+    for (const t of new Set([...sub.matchAll(/(\w+)\.setError\(/g)].map((m) => m[1]))) {
+      const w = ids[t]; if (!w || w.enabled === false || w.enabled === 'false') continue;
+      const oc = String(w.onChange || '');
+      if (oc.includes('self.clearError()') || oc.includes(`${t}.clearError()`) || oc.includes('self.setError')) continue;
+      warn('Static.clearOnChange', `${f}: OK can flag ${t}, but changing it doesn't clear the error (add the page to tools/clear_on_change.py)`);
+    }
+  }
+
   // 7g2. Graph API endpoints (developer.workday.com "Run Graph API Queries on a Page"): POST, a
   // provider in the AMD, a Graph Query component that exists and declares every parameter passed,
   // and guarded reads: a Graph error is HTTP 200 with data.<field> null, so `x.data.r` needs a

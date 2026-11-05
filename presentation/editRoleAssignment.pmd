@@ -207,7 +207,8 @@
                   "searchEndPoint": "<% endpoints.posSearch %>",
                   "searchResultValues": "<% empty(posSearch.data) ? [] : posSearch.data.filter(o => { !empty(o.cf_PositionID) }).map(o => { {'id': o.cf_PositionID, 'descriptor': !empty(o.position_PositionManagement.descriptor) ? o.position_PositionManagement.descriptor : (!empty(o.cf_PositionText) ? o.cf_PositionText : o.cf_PositionID)} }) %>",
                   "helpText": "Click to browse by supervisory organization, or type a position name or ID. Each selected position is added to this role on this organization. Shows the first 50 matches; type more of the title or ID to narrow.",
-                  "dynamicMonikerLevels": "<%\n  const sel = self.promptSelections;\n  const roots = posTreeRoot.data ?? [];\n  const i = roots.map(r => { r.id }).indexOf(sel[0]);\n  const href = i < 0 ? '' : (roots[i].href ?? '');\n  const byManager = i < 0 ? false : roots[i].descriptor == 'Supervisory Organizations by Manager';\n  if (sel.size() == 1 || (byManager && sel.size() == 2)) {\n    const node = sel.size() == 1 ? href : (href + '/' + sel[1]);\n    const first = posTreeNode.invoke({'h': node, 'o': '0'});\n    const more = (first.total ?? 0) > 100 ? (posTreeNode.invoke({'h': node, 'o': '100'}).data ?? []) : [];\n    return [list:flatten([first.data ?? [], more]).map(o => { {'id': o.id, 'descriptor': o.descriptor} }), true];\n  }\n  const ps = posTreeOrgPositions.invoke({'org': sel[sel.size() - 1]}).data ?? [];\n  return [ps.filter(o => { !empty(o.cf_PositionID) }).map(o => { {'id': o.cf_PositionID, 'descriptor': !empty(o.position_PositionManagement.descriptor) ? o.position_PositionManagement.descriptor : (!empty(o.cf_PositionText) ? o.cf_PositionText : o.cf_PositionID)} }), false];\n%>"
+                  "dynamicMonikerLevels": "<%\n  const sel = self.promptSelections;\n  const roots = posTreeRoot.data ?? [];\n  const i = roots.map(r => { r.id }).indexOf(sel[0]);\n  const href = i < 0 ? '' : (roots[i].href ?? '');\n  const byManager = i < 0 ? false : roots[i].descriptor == 'Supervisory Organizations by Manager';\n  if (sel.size() == 1 || (byManager && sel.size() == 2)) {\n    const node = sel.size() == 1 ? href : (href + '/' + sel[1]);\n    const first = posTreeNode.invoke({'h': node, 'o': '0'});\n    const more = (first.total ?? 0) > 100 ? (posTreeNode.invoke({'h': node, 'o': '100'}).data ?? []) : [];\n    return [list:flatten([first.data ?? [], more]).map(o => { {'id': o.id, 'descriptor': o.descriptor} }), true];\n  }\n  const ps = posTreeOrgPositions.invoke({'org': sel[sel.size() - 1]}).data ?? [];\n  return [ps.filter(o => { !empty(o.cf_PositionID) }).map(o => { {'id': o.cf_PositionID, 'descriptor': !empty(o.position_PositionManagement.descriptor) ? o.position_PositionManagement.descriptor : (!empty(o.cf_PositionText) ? o.cf_PositionText : o.cf_PositionID)} }), false];\n%>",
+                  "onChange": "<% self.clearError(); %>"
                 },
                 {
                   "type": "instanceList",
@@ -216,7 +217,8 @@
                   "multiSelect": true,
                   "required": false,
                   "values": "<% list:flatten(list:flatten((shellRoles.data ?? []).filter(r => { r.role.id == (queryParams.roleId ?? '') }).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ra.organization.id == (queryParams.orgId ?? '') }).map(ra => { ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? [] }) }))).map(p => { {'id': p.id, 'descriptor': p.descriptor} }) %>",
-                  "helpText": "Pick from the positions currently assigned."
+                  "helpText": "Pick from the positions currently assigned.",
+                  "onChange": "<% positionsToAddInstanceList.clearError(); %>"
                 },
                 {
                   "type": "date",

@@ -363,7 +363,7 @@
                   "visible": false,
                   "label": "I want to apply these changes without validating first",
                   "value": "<% false %>",
-                  "onChange": "<% self.clearError() %>"
+                  "onChange": "<%\n  self.clearError(); self.clearError() %>"
                 }
               ]
             }
