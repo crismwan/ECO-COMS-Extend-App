@@ -46,7 +46,7 @@ const ORCH = `${API}/orchestrate/v1/apps/${APP_ID}/orchestrations`;
 const argv = process.argv.slice(2);
 const arg = (name) => { const i = argv.indexOf(name); return i === -1 ? null : argv[i + 1]; };
 const VERBOSE = argv.includes('--verbose');
-const SUITES_ALL = ['static', 'smoke', 'full', 'cleanup', 'isu', 'repair', 'seconduser', 'purge', 'demoseed', 'datacheck', 'probe', 'bulkvalidate', 'subflows', 'seedapps', 'patternguard', 'orgguard', 'gateway', 'prompts', 'possearch', 'postree', 'graphql', 'eventlinks', 'timing', 'bulkapply'];
+const SUITES_ALL = ['static', 'smoke', 'full', 'cleanup', 'isu', 'repair', 'seconduser', 'purge', 'demoseed', 'datacheck', 'probe', 'bulkvalidate', 'subflows', 'seedapps', 'patternguard', 'orgguard', 'gateway', 'prompts', 'possearch', 'postree', 'orgtree', 'graphql', 'eventlinks', 'timing', 'bulkapply'];
 const suiteArg = arg('--suite') || argv.find((a) => !a.startsWith('--') && SUITES_ALL.some((s) => a.split(',').includes(s))) || 'smoke';
 const SUITES = suiteArg.split(',').map((s) => s.trim()).filter(Boolean);
 for (const s of SUITES) if (!SUITES_ALL.includes(s)) { console.error(`Unknown suite "${s}". Use: ${SUITES_ALL.join(', ')}`); process.exit(2); }
@@ -1976,6 +1976,28 @@ async function posTreeProbe(token) {
   pass('PosTree.probe', 'see lines above');
 }
 
+// ═══ Academic Unit / FUH tree probe (read-only): what parent links do the two lists have? ═══
+async function orgTreeProbe(token) {
+  console.log('\n-- Academic Unit / FUH tree probe (read-only) --');
+  for (const alias of ['academicUnits', 'customOrganizations', 'academicUnitHierarchies', 'organizations']) {
+    try {
+      const ds = await request('GET', `${API}/wql/v1/dataSources?alias=${alias}`, token);
+      const id = (ds.data || [])[0]?.id; if (!id) { console.log(`   DS ${alias}: none`); continue; }
+      let all = [];
+      for (let off = 0; off < 3000; off += 100) { const page = (await request('GET', `${API}/wql/v1/dataSources/${id}/fields?limit=100&offset=${off}`, token)).data || []; all = all.concat(page); if (page.length < 100) break; }
+      console.log(`   DS ${alias}: ${all.length} fields`);
+      all.filter((x) => /superior|parent|subordinate|hierarch|included|level|top|child|inactive|type/i.test(`${x.alias} ${x.descriptor}`)).slice(0, 40).forEach((x) => console.log(`     FIELD ${alias}.${x.alias} | ${x.descriptor} | ${x.type || ''}`));
+    } catch (e) { console.log(`   DS ${alias} error ${e.message.slice(0, 150)}`); }
+  }
+  for (const q of ['Academic Unit Hierarch', 'Functional Unit', 'Organization Hierarch', 'Superior']) {
+    try { const r = await request('GET', `${API}/wql/v1/dataSources?search=${encodeURIComponent(q)}&limit=15`, token);
+      (r.data || []).forEach((d) => console.log(`   DSS[${q}] ${d.alias || ''} | ${d.descriptor || ''}`)); } catch (e) { console.log(`   DSS[${q}] error ${e.message.slice(0, 100)}`); }
+  }
+  try { const r = await wql(token, 'SELECT workdayID, academicUnit, academicUnitName FROM academicUnits WHERE inactive = false', 10000); console.log(`   AU active count ${(r.data || []).length}`); } catch (e) { console.log('   AU count error ' + e.message.slice(0, 150)); }
+  try { const r = await wql(token, 'SELECT workdayID, organization1, code FROM customOrganizations WHERE type1 in (b40d8b016367100175b147f364840000)', 10000); const d = r.data || []; console.log(`   FUH count ${d.length}; sample codes: ${d.slice(0, 8).map((x) => x.code).join(' | ')}`); } catch (e) { console.log('   FUH count error ' + e.message.slice(0, 150)); }
+  pass('OrgTree.probe', 'see lines above');
+}
+
 // ═══ Probe: read-only facts for building application pattern schemas ═══
 // ═══ Bulk validate: one TEST batch through BulkRoleGridApply in VALIDATE mode (no role changes) ═══
 // Proves the per-row sub-orchestration (ProcessBulkRoleRow, tools/extract_subflows.py) runs: the run must finish as
@@ -2600,6 +2622,7 @@ async function demoSeed(token, me) {
         if (live.includes('prompts')) await promptsProbe(token);
         if (live.includes('possearch')) await posSearchTiming(token);
         if (live.includes('postree')) await posTreeProbe(token);
+        if (live.includes('orgtree')) await orgTreeProbe(token);
       }
     }
   }
