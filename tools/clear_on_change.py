@@ -14,8 +14,17 @@ import json, os, re
 
 R = os.path.join(os.path.dirname(__file__), '..', 'presentation')
 PAGES = ['editRoleAssignment', 'bulkRoleGrid', 'assignableRoleManager', 'adminProvisioning', 'newShellOrg']
-# (page, widget whose change clears) -> widgets whose OK error it clears ("add or remove": either list fixes it)
-EXTRA = {('editRoleAssignment', 'positionsToRemoveInstanceList'): ['positionsToAddInstanceList']}
+# (page, widget whose change clears, event) -> widgets whose OK error it clears ("add or remove": either list fixes it).
+# Bulk Edit puts its grid-level errors (no changes yet, over 50, duplicate row, already holds the role, role/org
+# missing) on Effective Date, so every grid change clears it too (regression 2026-11-05: ticking Remove left
+# "No changes yet" showing and OK refused). OK re-checks the date anyway.
+_BULK_DATE = ['effectiveDate']
+EXTRA = {('editRoleAssignment', 'positionsToRemoveInstanceList', 'onChange'): ['positionsToAddInstanceList'],
+         ('bulkRoleGrid', 'removeCheckBox', 'onChange'): _BULK_DATE,
+         ('bulkRoleGrid', 'positionAddList', 'onChange'): _BULK_DATE,
+         ('bulkRoleGrid', 'roleOrgDropdown', 'onChange'): _BULK_DATE,
+         ('bulkRoleGrid', 'addGrid', 'onRowRemove'): _BULK_DATE,
+         ('bulkRoleGrid', 'addGrid', 'onRowAdd'): _BULK_DATE}
 
 
 def index(n, out):
@@ -27,15 +36,17 @@ def index(n, out):
     return out
 
 
-def add_clear(w, call):
-    oc = w.get('onChange')
+def add_clear(w, call, ev='onChange'):
+    oc = w.get(ev)
     if not isinstance(oc, str) or not oc.strip():
-        w['onChange'] = f'<% {call} %>'
+        w[ev] = f'<% {call} %>'
         return True
-    if call in oc: return False
+    oc = oc.replace('self.clearError(); self.clearError()', 'self.clearError()')  # an earlier run doubled it
+    w[ev] = oc
+    if call.rstrip(';') in oc: return False
     m = re.match(r'\s*<%', oc)
     assert m, w.get('id')
-    w['onChange'] = oc[:m.end()] + f'\n  {call}' + oc[m.end():]
+    w[ev] = oc[:m.end()] + f'\n  {call}' + oc[m.end():]
     return True
 
 
@@ -51,9 +62,9 @@ for page in PAGES:
         oc = str(w.get('onChange', ''))
         if f'{t}.clearError()' in oc or 'self.setError' in oc: continue
         if add_clear(w, 'self.clearError();'): changed.append(t)
-    for (pg, src), targets in EXTRA.items():
+    for (pg, src, ev), targets in EXTRA.items():
         if pg != page: continue
         for t in targets:
-            if add_clear(ids[src], f'{t}.clearError();'): changed.append(f'{src}->{t}')
+            if add_clear(ids[src], f'{t}.clearError();', ev): changed.append(f'{src}.{ev}->{t}')
     open(p, 'w').write(json.dumps(d, indent=2, ensure_ascii=False) + '\n')
     print(f"{page}: {', '.join(changed) if changed else 'nothing to add'}")
