@@ -594,3 +594,20 @@ Asked: instead of an empty position picker until you type, let users drill down 
   picked by search plus one picked by browsing both ended up selected (2 items). No submit was made (test role/org).
 - Not yet done: Submit Assignable Role Request and AAA Role Request (same change: add them to PAGES), Bulk Edit (grid
   cell, untested), the two "... by Hierarchy" folders (nest to any depth).
+
+### Rolled out to every picker (2026-11-05)
+- **Positions** (`tools/pos_tree.py`): Edit Role Assignment, Bulk Edit (grid cell, single select), Submit Assignable
+  Role Request and AAA Role Request. The leaf id follows what each page already saves: Position ID on Edit Role
+  Assignment and Bulk Edit, WID on the two request pages. Live: grid cell browse -> My Organizations -> HR Services
+  Department -> P-00008, row counter "1 addition ready"; request page leaves carried WIDs.
+- **Functional Unit Hierarchy / Academic Unit** (`tools/unit_tree.py`, both request pages). There is no hierarchy in
+  this tenant (e2e `orgtree`: all 837 FUH orgs at level 1, no superior/included orgs; all 157 Academic Units top
+  nodes, academicUnitHierarchies empty), so the folders are the types: FUH subtype (01 Company ... 07 Department
+  (363) ... 11 Other) and Academic Unit subtype (Campus/Senate, College, Department, Faculty, ...), with counts. A
+  type with more than 40 entries opens to an A-Z level first. One eager WQL each (fuhTreeAll 0.37 s / 191 KB,
+  auTreeAll 0.18 s / 38 KB, in parallel with the page's other loads). Typed search unchanged (FUH by code, AU by name).
+  Live: FUH 08 Sub-Department -> D -> Dental Clinic; AU Faculty -> Faculty of Arts.
+- The AU list (inactive = false) still includes "Faculty of Arts and Sciences (inactive as of 1/7/2020)": the
+  record isn't flagged inactive in Workday. Same as the typed search.
+- If the production tenant has real FUH / Academic Unit hierarchies, the tree should follow them instead
+  (superiorOrganization / academicUnitHierarchies.directSubordinates); re-run `orgtree` there first.
