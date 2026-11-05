@@ -139,7 +139,7 @@
     {
       "name": "posSearch",
       "baseUrlType": "workday-wql",
-      "url": "<% 'data?query=' + string:pathEncode('SELECT cf_PositionID, workdayID, position_PositionManagement, cf_PositionIsFilled, cf_PositionText FROM allPositions WHERE supervisoryOrganization is not empty AND cf_PositionText contains \\'' + instanceListQuery.replace('\\'', '').replace('\\\\', '') + '\\'') %>",
+      "url": "<% 'data?limit=50&query=' + string:pathEncode('SELECT cf_PositionID, workdayID, position_PositionManagement, cf_PositionIsFilled, cf_PositionText FROM allPositions WHERE supervisoryOrganization is not empty AND cf_PositionText contains \\'' + instanceListQuery.replace('\\'', '').replace('\\\\', '') + '\\'') %>",
       "authType": "sso",
       "isCollection": true,
       "bestEffort": "true",
@@ -630,7 +630,8 @@
                       "value": "<% (self.selectedEntries ?? []).map(p => { p.descriptor }).join(', ') %>",
                       "valueOutBinding": "postAssignableRole.positionNames"
                     }
-                  ]
+                  ],
+                  "helpText": "Shows the first 50 matches; type more of the title or ID to narrow."
                 },
                 {
                   "type": "hidden",

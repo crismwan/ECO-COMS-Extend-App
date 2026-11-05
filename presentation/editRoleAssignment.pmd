@@ -42,7 +42,7 @@
     {
       "name": "posSearch",
       "baseUrlType": "workday-wql",
-      "url": "<% 'data?query=' + string:pathEncode('SELECT cf_PositionID, workdayID, position_PositionManagement, cf_PositionIsFilled, cf_PositionText FROM allPositions WHERE supervisoryOrganization is not empty AND cf_PositionText contains \\'' + instanceListQuery.replace('\\'', '').replace('\\\\', '') + '\\'') %>",
+      "url": "<% 'data?limit=50&query=' + string:pathEncode('SELECT cf_PositionID, workdayID, position_PositionManagement, cf_PositionIsFilled, cf_PositionText FROM allPositions WHERE supervisoryOrganization is not empty AND cf_PositionText contains \\'' + instanceListQuery.replace('\\'', '').replace('\\\\', '') + '\\'') %>",
       "authType": "sso",
       "isCollection": true,
       "bestEffort": "true",
@@ -185,7 +185,7 @@
                   "values": "<% [] %>",
                   "searchEndPoint": "<% endpoints.posSearch %>",
                   "searchResultValues": "<% empty(posSearch.data) ? [] : posSearch.data.filter(o => { !empty(o.cf_PositionID) }).map(o => { {'id': o.cf_PositionID, 'descriptor': !empty(o.position_PositionManagement.descriptor) ? o.position_PositionManagement.descriptor : (!empty(o.cf_PositionText) ? o.cf_PositionText : o.cf_PositionID)} }) %>",
-                  "helpText": "Search by position name or ID. Each selected position is added to this role on this organization."
+                  "helpText": "Search by position name or ID. Each selected position is added to this role on this organization. Shows the first 50 matches; type more of the title or ID to narrow."
                 },
                 {
                   "type": "instanceList",

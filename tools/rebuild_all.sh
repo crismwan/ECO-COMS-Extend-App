@@ -42,6 +42,7 @@ run tools/ux_improvements.py          # UI recommendations 2026-11-02: help text
 run tools/grid_style.py                # one grid format: list look, sortable columns, no +/- on display grids
 run tools/ui_tweaks.py                 # ISC Queue: one Role column
 run tools/enabled_for_choice.py        # request pages: Enabled For type first, then only that picker (--off to roll back)
+run tools/pos_search_limit.py          # position searches: first 50 matches (--off to roll back)
 run tools/collapse_about.py            # About boxes start closed on the long pages
 run tools/merge_nav_about.py           # back links at the top of the About box
 run tools/title_banner.py              # white title tile instead of Workday's square page banner
