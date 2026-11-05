@@ -2102,7 +2102,7 @@ async function orgTreeProbe(token) {
     for (let i = 0; i < 5; i++) { const t = Date.now(); const r = await wql(token, q, 10000); ms.push(Date.now() - t); bytes = JSON.stringify(r).length; }
     ms.sort((a, b) => a - b); console.log(`   TIME ${n}: median ${ms[2]} ms (${ms.join(', ')}), ${Math.round(bytes / 1024)} KB`);
   }
-  try { const r = await wql(token, wqlFile('allAAArolesinTenant'), 1000); console.log(`   AAA roles: ${(r.data || []).map((x) => x.role?.descriptor).join(' | ')}`); } catch (e) { console.log('   AAA roles error ' + e.message.slice(0, 120)); }
+  try { const q = JSON.parse(fs.readFileSync(path.join(ROOT, 'presentation/wqlQueries/allAAArolesinTenant.wqlquery'), 'utf8')).query; const r = await wql(token, q, 1000); console.log(`   AAA roles: ${(r.data || []).map((x) => x.role?.descriptor).join(' | ')}`); } catch (e) { console.log('   AAA roles error ' + e.message.slice(0, 120)); }
   pass('OrgTree.probe', 'see lines above');
 }
 
