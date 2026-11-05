@@ -661,10 +661,13 @@ Asked: instead of an empty position picker until you type, let users drill down 
 - **Stuck errors on three more pages** (`clear_on_change.py`): Bulk Role Changes (the CSV uploader clears its
   "Choose the CSV file" error in `onFileAdd`: a fileUploader has no onChange, developer.workday.com "fileUploader"),
   Withdraw Assignable Role and Manage Shell Org Status (confirmation checkboxes). Static.clearOnChange now flags no
-  page. Not yet retested in the browser (the linked computer was offline).
+  page. App Hub accepted `onFileAdd` with `<uploader>.clearError()` (build 2026-11-05); the clearing itself isn't
+  tried live (it needs a real file upload).
 - **Bulk Edit counter** (`ux_improvements.py` step 5): counts as "ready" only additions that OK would accept (role/org
   and position set, not already held, no repeat); the others show as "N rows to fix". It uses OK's own already-holds
-  list, copied from onSubmit at build time. Changing a row's role/org now updates it too. Not yet retested live.
+  list, copied from onSubmit at build time. Changing a row's role/org now updates it too. Live after deploy (ODMT):
+  ADVISORS + P-00011 (already holds it) gave "1 removal and 0 additions ready, 1 row to fix"; switching the row to
+  STAFF gave "1 removal and 1 addition ready". Nothing submitted.
 - `origin` now points at github.com/crismwan/ECO-COMS-Extend-App (GitHub had reported the repository moved).
 - **Build failure on the way (fixed):** the first counter build failed App Hub with "PMD Scripting syntax error"
   (the copied already-holds list lacked one `)`). Found with CI's new build-log step (deploy.yml runs
