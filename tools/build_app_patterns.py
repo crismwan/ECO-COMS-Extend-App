@@ -191,10 +191,13 @@ APPID = f"({NEW} ? (appIdText.value ?? '').trim() : ({REC} ?? {{'appId': ''}}).a
 ROWS = ("fieldsGrid.rows.map(r => { { 'fieldLabel': (r.childrenMap.colFieldLabel.value ?? '').trim(), "
         "'regex': (r.childrenMap.colRegex.value ?? '').trim(), 'hint': (r.childrenMap.colHint.value ?? '').trim(), "
         "'example': (r.childrenMap.colExample.value ?? '').trim(), 'blankIsWildcard': r.childrenMap.colBlank.value == true } })")
+# An error OK puts on the Fields line has no box of its own to clear it, and Workday refuses OK while any error shows
+# (live 2026-11-04: the page stayed stuck after the row was fixed), so every table edit clears it; OK re-checks.
 PREVIEW = f"exampleNameText.setValue(comsAppSetup.exampleName({APPID}, prefixesText.value ?? '', {ROWS}));"
+FIELDS_TOUCHED = "fieldsCheckText.clearError(); " + PREVIEW
 cell = lambda cid, label, key, kind="text": {"type": "column", "columnId": cid, "label": label, "cellTemplate": {
     "type": kind, "id": cid + ("CheckBox" if kind == "checkBox" else "Text"),
-    "value": f"<% fr.{key} ?? {'false' if kind == 'checkBox' else chr(39) * 2} %>", "onChange": "<% " + PREVIEW + " %>"}}
+    "value": f"<% fr.{key} ?? {'false' if kind == 'checkBox' else chr(39) * 2} %>", "onChange": "<% " + FIELDS_TOUCHED + " %>"}}
 OUT = lambda path, value: {"outboundPath": path, "value": value}
 SCHEMA = f"comsAppSetup.schemaJson(prefixesText.value ?? '', {ROWS})"
 PREFIXES = "comsAppSetup.prefixList(prefixesText.value ?? '').join(',')"
@@ -268,6 +271,7 @@ edit = {"id": "editAppPattern", "securityDomains": [DOMAIN], "include": ["comsAp
         {"type": "text", "id": "fieldsCheckText", "label": "Fields", "enabled": False,
          "value": f"<% 'Up to {MAX_FIELDS} fields, in the order they appear in the name. Add a row with +.' %>"},
         {"type": "grid", "id": "fieldsGrid", "label": "Fields", "rowVariableName": "fr",
+         "onRowAdd": "<% " + FIELDS_TOUCHED + " %>", "onRowRemove": "<% " + FIELDS_TOUCHED + " %>",
          "rows": f"<% comsAppSetup.fieldRows({REC}) %>",
          "columns": [
            cell("colFieldLabel", "Label", "fieldLabel"),

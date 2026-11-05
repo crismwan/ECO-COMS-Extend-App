@@ -36,3 +36,27 @@ new = json.dumps(d, indent=2, ensure_ascii=False) + '\n'
 if new != raw:
     open(p, 'w', encoding='utf-8').write(new)
 print('ui_tweaks: ' + ('ISC Queue role columns merged' if new != raw else 'no change'))
+
+# Submit AAA Role Request: OK's duplicate check sets an error on the generated role name, a box the user can't edit, and
+# Workday refuses OK while any error shows. The three pickers that make up the name now clear it (Static.stuckError).
+p = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'presentation', 'adminProvisioning.pmd')
+raw = open(p, encoding='utf-8').read()
+d = json.loads(raw)
+CLEAR = 'generatedRoleName.clearError();'
+
+
+def fix(n):
+    if isinstance(n, dict):
+        oc = n.get('onChange')
+        if n.get('id') in ('applicationDropdown', 'fuhPicker', 'academicUnitPicker') and isinstance(oc, str) and CLEAR not in oc:
+            n['onChange'] = oc.replace('<%', '<%\n            ' + CLEAR, 1)
+        for v in n.values(): fix(v)
+    elif isinstance(n, list):
+        for v in n: fix(v)
+
+
+fix(d)
+new = json.dumps(d, indent=2, ensure_ascii=False) + '\n'
+if new != raw:
+    open(p, 'w', encoding='utf-8').write(new)
+print('ui_tweaks: AAA request role-name error ' + ('now cleared by its pickers' if new != raw else 'already cleared'))

@@ -307,6 +307,19 @@ function staticSuite() {
       err('pageTitle', `${name}: title "${title.slice(0, 60)}" should start with 'ECO-COMS: '`);
     }
   }
+  // 7b2. An error OK (onSubmit) sets on a widget the user can't edit (a disabled text, a message line) is never cleared
+  // by the user, and Workday refuses OK while any error shows, so the page stays stuck (live 2026-11-04, editAppPattern).
+  // Some other handler on the page must clear it (e.g. the onChange of the boxes it's about).
+  for (const [f, d] of Object.entries(pmds)) {
+    if (typeof d.onSubmit !== 'string') continue;
+    const set = [...new Set([...d.onSubmit.matchAll(/(\w+)\.setError\(/g)].map((m) => m[1]))];
+    const disabled = new Set();
+    walk(d, (node) => { if (node && node.id && node.enabled === false && ['text', 'readOnlyText'].includes(node.type)) disabled.add(node.id); });
+    const rest = JSON.stringify({ ...d, onSubmit: '' });
+    for (const id of set.filter((x) => disabled.has(x))) {
+      if (!rest.includes(id + '.clearError()')) err('stuckError', `${path.basename(f)}: onSubmit sets an error on ${id}, which the user can't edit, and nothing else clears it; OK would stay blocked`);
+    }
+  }
   // 7c. Only the first richText in a fieldSet renders; the rest are silently dropped.
   for (const [f, d] of Object.entries(pmds)) {
     walk(d, (node) => {

@@ -334,6 +334,8 @@
                   "id": "fieldsGrid",
                   "label": "Fields",
                   "rowVariableName": "fr",
+                  "onRowAdd": "<% fieldsCheckText.clearError(); exampleNameText.setValue(comsAppSetup.exampleName((empty(queryParams.recordId) ? (appIdText.value ?? '').trim() : (comsAppSetup.recordById(comsApplications.data, queryParams.recordId) ?? {'appId': ''}).appId), prefixesText.value ?? '', fieldsGrid.rows.map(r => { { 'fieldLabel': (r.childrenMap.colFieldLabel.value ?? '').trim(), 'regex': (r.childrenMap.colRegex.value ?? '').trim(), 'hint': (r.childrenMap.colHint.value ?? '').trim(), 'example': (r.childrenMap.colExample.value ?? '').trim(), 'blankIsWildcard': r.childrenMap.colBlank.value == true } }))); %>",
+                  "onRowRemove": "<% fieldsCheckText.clearError(); exampleNameText.setValue(comsAppSetup.exampleName((empty(queryParams.recordId) ? (appIdText.value ?? '').trim() : (comsAppSetup.recordById(comsApplications.data, queryParams.recordId) ?? {'appId': ''}).appId), prefixesText.value ?? '', fieldsGrid.rows.map(r => { { 'fieldLabel': (r.childrenMap.colFieldLabel.value ?? '').trim(), 'regex': (r.childrenMap.colRegex.value ?? '').trim(), 'hint': (r.childrenMap.colHint.value ?? '').trim(), 'example': (r.childrenMap.colExample.value ?? '').trim(), 'blankIsWildcard': r.childrenMap.colBlank.value == true } }))); %>",
                   "rows": "<% comsAppSetup.fieldRows(comsAppSetup.recordById(comsApplications.data, queryParams.recordId)) %>",
                   "columns": [
                     {
@@ -344,7 +346,7 @@
                         "type": "text",
                         "id": "colFieldLabelText",
                         "value": "<% fr.fieldLabel ?? '' %>",
-                        "onChange": "<% exampleNameText.setValue(comsAppSetup.exampleName((empty(queryParams.recordId) ? (appIdText.value ?? '').trim() : (comsAppSetup.recordById(comsApplications.data, queryParams.recordId) ?? {'appId': ''}).appId), prefixesText.value ?? '', fieldsGrid.rows.map(r => { { 'fieldLabel': (r.childrenMap.colFieldLabel.value ?? '').trim(), 'regex': (r.childrenMap.colRegex.value ?? '').trim(), 'hint': (r.childrenMap.colHint.value ?? '').trim(), 'example': (r.childrenMap.colExample.value ?? '').trim(), 'blankIsWildcard': r.childrenMap.colBlank.value == true } }))); %>"
+                        "onChange": "<% fieldsCheckText.clearError(); exampleNameText.setValue(comsAppSetup.exampleName((empty(queryParams.recordId) ? (appIdText.value ?? '').trim() : (comsAppSetup.recordById(comsApplications.data, queryParams.recordId) ?? {'appId': ''}).appId), prefixesText.value ?? '', fieldsGrid.rows.map(r => { { 'fieldLabel': (r.childrenMap.colFieldLabel.value ?? '').trim(), 'regex': (r.childrenMap.colRegex.value ?? '').trim(), 'hint': (r.childrenMap.colHint.value ?? '').trim(), 'example': (r.childrenMap.colExample.value ?? '').trim(), 'blankIsWildcard': r.childrenMap.colBlank.value == true } }))); %>"
                       }
                     },
                     {
@@ -355,7 +357,7 @@
                         "type": "text",
                         "id": "colRegexText",
                         "value": "<% fr.regex ?? '' %>",
-                        "onChange": "<% exampleNameText.setValue(comsAppSetup.exampleName((empty(queryParams.recordId) ? (appIdText.value ?? '').trim() : (comsAppSetup.recordById(comsApplications.data, queryParams.recordId) ?? {'appId': ''}).appId), prefixesText.value ?? '', fieldsGrid.rows.map(r => { { 'fieldLabel': (r.childrenMap.colFieldLabel.value ?? '').trim(), 'regex': (r.childrenMap.colRegex.value ?? '').trim(), 'hint': (r.childrenMap.colHint.value ?? '').trim(), 'example': (r.childrenMap.colExample.value ?? '').trim(), 'blankIsWildcard': r.childrenMap.colBlank.value == true } }))); %>"
+                        "onChange": "<% fieldsCheckText.clearError(); exampleNameText.setValue(comsAppSetup.exampleName((empty(queryParams.recordId) ? (appIdText.value ?? '').trim() : (comsAppSetup.recordById(comsApplications.data, queryParams.recordId) ?? {'appId': ''}).appId), prefixesText.value ?? '', fieldsGrid.rows.map(r => { { 'fieldLabel': (r.childrenMap.colFieldLabel.value ?? '').trim(), 'regex': (r.childrenMap.colRegex.value ?? '').trim(), 'hint': (r.childrenMap.colHint.value ?? '').trim(), 'example': (r.childrenMap.colExample.value ?? '').trim(), 'blankIsWildcard': r.childrenMap.colBlank.value == true } }))); %>"
                       }
                     },
                     {
@@ -366,7 +368,7 @@
                         "type": "text",
                         "id": "colHintText",
                         "value": "<% fr.hint ?? '' %>",
-                        "onChange": "<% exampleNameText.setValue(comsAppSetup.exampleName((empty(queryParams.recordId) ? (appIdText.value ?? '').trim() : (comsAppSetup.recordById(comsApplications.data, queryParams.recordId) ?? {'appId': ''}).appId), prefixesText.value ?? '', fieldsGrid.rows.map(r => { { 'fieldLabel': (r.childrenMap.colFieldLabel.value ?? '').trim(), 'regex': (r.childrenMap.colRegex.value ?? '').trim(), 'hint': (r.childrenMap.colHint.value ?? '').trim(), 'example': (r.childrenMap.colExample.value ?? '').trim(), 'blankIsWildcard': r.childrenMap.colBlank.value == true } }))); %>"
+                        "onChange": "<% fieldsCheckText.clearError(); exampleNameText.setValue(comsAppSetup.exampleName((empty(queryParams.recordId) ? (appIdText.value ?? '').trim() : (comsAppSetup.recordById(comsApplications.data, queryParams.recordId) ?? {'appId': ''}).appId), prefixesText.value ?? '', fieldsGrid.rows.map(r => { { 'fieldLabel': (r.childrenMap.colFieldLabel.value ?? '').trim(), 'regex': (r.childrenMap.colRegex.value ?? '').trim(), 'hint': (r.childrenMap.colHint.value ?? '').trim(), 'example': (r.childrenMap.colExample.value ?? '').trim(), 'blankIsWildcard': r.childrenMap.colBlank.value == true } }))); %>"
                       }
                     },
                     {
@@ -377,7 +379,7 @@
                         "type": "text",
                         "id": "colExampleText",
                         "value": "<% fr.example ?? '' %>",
-                        "onChange": "<% exampleNameText.setValue(comsAppSetup.exampleName((empty(queryParams.recordId) ? (appIdText.value ?? '').trim() : (comsAppSetup.recordById(comsApplications.data, queryParams.recordId) ?? {'appId': ''}).appId), prefixesText.value ?? '', fieldsGrid.rows.map(r => { { 'fieldLabel': (r.childrenMap.colFieldLabel.value ?? '').trim(), 'regex': (r.childrenMap.colRegex.value ?? '').trim(), 'hint': (r.childrenMap.colHint.value ?? '').trim(), 'example': (r.childrenMap.colExample.value ?? '').trim(), 'blankIsWildcard': r.childrenMap.colBlank.value == true } }))); %>"
+                        "onChange": "<% fieldsCheckText.clearError(); exampleNameText.setValue(comsAppSetup.exampleName((empty(queryParams.recordId) ? (appIdText.value ?? '').trim() : (comsAppSetup.recordById(comsApplications.data, queryParams.recordId) ?? {'appId': ''}).appId), prefixesText.value ?? '', fieldsGrid.rows.map(r => { { 'fieldLabel': (r.childrenMap.colFieldLabel.value ?? '').trim(), 'regex': (r.childrenMap.colRegex.value ?? '').trim(), 'hint': (r.childrenMap.colHint.value ?? '').trim(), 'example': (r.childrenMap.colExample.value ?? '').trim(), 'blankIsWildcard': r.childrenMap.colBlank.value == true } }))); %>"
                       }
                     },
                     {
@@ -388,7 +390,7 @@
                         "type": "checkBox",
                         "id": "colBlankCheckBox",
                         "value": "<% fr.blankIsWildcard ?? false %>",
-                        "onChange": "<% exampleNameText.setValue(comsAppSetup.exampleName((empty(queryParams.recordId) ? (appIdText.value ?? '').trim() : (comsAppSetup.recordById(comsApplications.data, queryParams.recordId) ?? {'appId': ''}).appId), prefixesText.value ?? '', fieldsGrid.rows.map(r => { { 'fieldLabel': (r.childrenMap.colFieldLabel.value ?? '').trim(), 'regex': (r.childrenMap.colRegex.value ?? '').trim(), 'hint': (r.childrenMap.colHint.value ?? '').trim(), 'example': (r.childrenMap.colExample.value ?? '').trim(), 'blankIsWildcard': r.childrenMap.colBlank.value == true } }))); %>"
+                        "onChange": "<% fieldsCheckText.clearError(); exampleNameText.setValue(comsAppSetup.exampleName((empty(queryParams.recordId) ? (appIdText.value ?? '').trim() : (comsAppSetup.recordById(comsApplications.data, queryParams.recordId) ?? {'appId': ''}).appId), prefixesText.value ?? '', fieldsGrid.rows.map(r => { { 'fieldLabel': (r.childrenMap.colFieldLabel.value ?? '').trim(), 'regex': (r.childrenMap.colRegex.value ?? '').trim(), 'hint': (r.childrenMap.colHint.value ?? '').trim(), 'example': (r.childrenMap.colExample.value ?? '').trim(), 'blankIsWildcard': r.childrenMap.colBlank.value == true } }))); %>"
                       }
                     }
                   ],
