@@ -1776,7 +1776,7 @@ async function orgGuard(token, me) {
     ['X:META', 'X:LLIS', 'X:LLIS(TSTGUARD)', 'X:LLIS(TSTGUARD)', 'X:LLIS(TSTGUARD)', 'meta under an application, full name'],
     ['X:META', 'X:BPMS(AOC)', 'TSTGUARD', 'X:BPMS(TSTGUARD)', 'X:BPMS(TSTGUARD)', 'meta under a bracketed application'],
     ['X:META', '', 'X:TSTGUARDPAGE', 'X:TSTGUARDPAGE', 'X:TSTGUARDPAGE', 'meta, new application'],
-    ['X:SHELL', 'X:BPMS(AOC)', 'TEST:GUARDPAGE', 'X:BPMS(AOC):TEST:GUARDPAGE', 'TEST:GUARDPAGE', 'shell under a bracketed application'],
+    ['X:SHELL', 'X:BPMS(AOC)', 'ORG:TST', 'X:BPMS(AOC):ORG:TST', 'ORG:TST', 'shell under a bracketed application'],
   ];
   for (const [subtype, ac, typed, wantName, wantCode, label] of pageCases) {
     await test(`OrgGuard.page ${label}`, async () => {
