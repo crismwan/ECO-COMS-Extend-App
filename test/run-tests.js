@@ -46,7 +46,7 @@ const ORCH = `${API}/orchestrate/v1/apps/${APP_ID}/orchestrations`;
 const argv = process.argv.slice(2);
 const arg = (name) => { const i = argv.indexOf(name); return i === -1 ? null : argv[i + 1]; };
 const VERBOSE = argv.includes('--verbose');
-const SUITES_ALL = ['static', 'smoke', 'full', 'cleanup', 'isu', 'repair', 'seconduser', 'purge', 'demoseed', 'datacheck', 'probe', 'bulkvalidate', 'seedapps', 'patternguard', 'graphql', 'eventlinks', 'timing'];
+const SUITES_ALL = ['static', 'smoke', 'full', 'cleanup', 'isu', 'repair', 'seconduser', 'purge', 'demoseed', 'datacheck', 'probe', 'bulkvalidate', 'subflows', 'seedapps', 'patternguard', 'graphql', 'eventlinks', 'timing'];
 const suiteArg = arg('--suite') || argv.find((a) => !a.startsWith('--') && SUITES_ALL.some((s) => a.split(',').includes(s))) || 'smoke';
 const SUITES = suiteArg.split(',').map((s) => s.trim()).filter(Boolean);
 for (const s of SUITES) if (!SUITES_ALL.includes(s)) { console.error(`Unknown suite "${s}". Use: ${SUITES_ALL.join(', ')}`); process.exit(2); }
@@ -1707,6 +1707,38 @@ async function bulkValidate(token, me) {
   });
 }
 
+// ═══ Sub-orchestrations (tools/extract_subflows.py): each parent → its sub-orchestration → Workday, leaving nothing ═══
+// Each call gets input only Workday rejects (an impossible effective date, an unknown request), so the error comes from
+// inside the sub-orchestration's own steps and nothing is created. ProcessBulkRoleRow's success path: suite bulkvalidate.
+async function subflowsSuite(token, me) {
+  console.log('\n-- Sub-orchestrations (rejected calls only; nothing is created) --');
+  const who = () => ({ changedBy: me.descriptor, changedByWid: me.id, timestamp: new Date().toISOString().replace(/\.\d+Z$/, 'Z') });
+  const txt = (r) => (typeof r === 'string' ? r : JSON.stringify(r));
+  const auditTotal = async () => (await request('GET', `${BO}/comsAuditLogs?limit=1`, token)).total;
+  const expectRejected = async (name, step, params, want) => {
+    const before = await auditTotal();
+    const r = txt(await launch(token, name, params));
+    await sleep(3000);
+    const after = await auditTotal();
+    if (!/Completed with error/.test(r)) throw new Error(`${name}: expected a rejected run, got: ${r.slice(0, 300)}`);
+    if (want && !want.test(r)) throw new Error(`${name}: the error didn't come from the sub-orchestration's own step: ${r.slice(0, 300)}`);
+    if (after !== before) throw new Error(`${name}: ${after - before} audit record(s) written by a rejected run`);
+    pass(step, r.slice(0, 220));
+  };
+  await test('Subflow.createShellOrg', () => expectRejected('AddShellOrg', 'Subflow.createShellOrg', {
+    comsAppId: '', orgType: 'X:ADM', organizationName: 'X:ADM:TEST:SUBFLOW', organizationCode: 'X:ADM:TEST:SUBFLOW',
+    orgSubtype: 'X:SHELL', workerId: me.id, effectiveDate: 'NOTADATE', ...who() }, /rejected the request for X:ADM:TEST:SUBFLOW/));
+  await test('Subflow.createShellOrgPattern', async () => {
+    const app = ((await request('GET', `${BO}/comsApplications?limit=100`, token)).data || []).find((a) => a.appId === 'X:CLW');
+    if (!app) return skip('Subflow.createShellOrgPattern', 'no X:CLW record');
+    const pname = 'X:CLW:PATTERN:TEST:TEST:999:900:2026W1';
+    await expectRejected('AddShellOrgPattern', 'Subflow.createShellOrgPattern', { comsAppId: app.id, patternName: pname, workerId: me.id,
+      attribute1: 'TEST', attribute2: 'TEST', attribute3: '999', attribute4: '900', attribute5: '2026W1', effectiveDate: 'NOTADATE', ...who() },
+      new RegExp('rejected the request for ' + pname.replace(/[()]/g, '\\$&')));
+  });
+  await test('Subflow.startReview', () => expectRejected('StartRoleRequestReview', 'Subflow.startReview', { ref: 'TEST-NO-SUCH-REQUEST' }, null));
+}
+
 async function probe(token) {
   console.log('\n-- Probe (read-only) --');
   // Sub-orchestration probe (tools/probe_subflow.py): ProbeSubflowCall calls ProbeEcho and returns {"echo": "echo:hello"}.
@@ -2164,6 +2196,7 @@ async function demoSeed(token, me) {
         if (live.includes('datacheck')) await dataCheck(token);
         if (live.includes('probe')) await probe(token);
         if (live.includes('bulkvalidate')) await bulkValidate(token, me);
+        if (live.includes('subflows')) await subflowsSuite(token, me);
         if (live.includes('graphql')) await graphqlSuite(token);
         if (live.includes('eventlinks')) await eventLinks(token, me);
         if (live.includes('timing')) await timingSuite(token);
