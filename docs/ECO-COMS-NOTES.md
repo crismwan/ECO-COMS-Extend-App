@@ -633,8 +633,26 @@ Asked: instead of an empty position picker until you type, let users drill down 
 - **Not run live, on purpose:** OK paths that would pass validation (they create real requests / role changes).
   Workday's own required-field checks run before onSubmit, so the scripted "Enabled For chosen but nothing picked"
   check can only be reached with a complete form.
-- **Open finding (product decision):** AAA Role Request builds the role name from the application's inner code
-  ("...(COMS)") while the two existing AAA roles are "...(X:BPMS(COMS))" and "...(X:BPMS(ODMT))", so the duplicate
-  check (exact name) would not stop a second admin role for COMS / ODMT.
+- **Resolved (product owner: "Use the full ID"):** AAA Role Request built the role name from the application's
+  inner code ("...(COMS)") while the existing AAA roles are "...(X:BPMS(COMS))" and "...(X:BPMS(ODMT))", so the
+  duplicate check missed them. `tools/aaa_full_app_id.py` (`--off` rolls back) keeps the full ID up to the closing
+  bracket on that page only. Live: the list shows full IDs, the name reads "...(X:BPMS(COMS))", and OK is refused as
+  a duplicate. e2e `aaaname` 4/4 (list uses full IDs, duplicate check sees both existing roles, no empty ids). The
+  one pending request from before keeps its old name "(AOC, Functional Org)".
 - Minor: Bulk Edit's change counter counts a row that has the duplicate error ("1 addition ready"); OK is still
   refused while the error shows.
+
+### Regression hour (2026-11-05, 15:04-16:05)
+- **Live suites:** smoke 31/31, datacheck 3 pass + 1 warning (58 gaps on old October TESTROLE requests, known),
+  org-guard 22/22, graphql 10, eventlinks 6, possearch 2, aaaname 4, timing 2, pattern-guard passed on rerun.
+- **Test bug fixed:** pattern-guard threw "pageCases is not defined": an org-guard edit had landed in patternGuard.
+- **Bug fixed (Bulk Edit):** onSubmit puts its grid-level errors ("No changes yet", over 50, duplicate row, already
+  holds the role, role/org missing) on Effective Date, which only its own onChange cleared. Ticking Remove after a
+  "No changes yet" left the error showing and OK refused. `clear_on_change.py` now clears it from Remove, the
+  position and role/org cells, and row add/remove (the date is re-checked on OK anyway); it also stopped doubling
+  an existing `self.clearError()` (the real-run confirmation checkbox had it twice). Retested live after deploy:
+  the error clears on ticking Remove and on Add Row.
+- **Passed live in the browser:** Add Shell Org (X:META prompt, lower-case refusal and its clearing, X:SHELL naming);
+  Edit Role Assignment on ODMT STAFF (empty OK error, cleared from Positions to Remove); AAA Role Requests and ISC
+  Queue views load; FUH typed search (CPDK); AAA full-ID names; Bulk Edit required date -> calendar pick clears it,
+  then "No changes yet".
