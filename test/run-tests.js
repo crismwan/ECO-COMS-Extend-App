@@ -1829,10 +1829,12 @@ async function subflowsSuite(token, me) {
 async function probe(token) {
   console.log('\n-- Probe (read-only) --');
   // Sub-orchestration probe (tools/probe_subflow.py): ProbeSubflowCall calls ProbeEcho and returns {"echo": "echo:hello"}.
-  try { const r = await launch(token, 'ProbeSubflowCall', {}); console.log('   SUBFLOW ' + (typeof r === 'string' ? r : JSON.stringify(r)).slice(0, 400)); }
-  catch (e) { console.log('   SUBFLOW error ' + e.message.slice(0, 400)); }
+  // Application Pattern audit rows vs application records (Audit Log link, 2026-11-05)
+  const ap = (await readAll(token, 'comsAuditLogs')).filter((a) => a.objectType === 'Application Pattern');
+  ap.forEach((a) => console.log(`   APPAUDIT coReferenceId=${JSON.stringify(a.coReferenceId)} coName=${JSON.stringify(a.coName)} keys=${Object.keys(a).join(',')}`));
   const apps = (await request('GET', `${BO}/comsApplications?limit=100`, token)).data || [];
   console.log(`comsApplications: ${apps.length}`);
+  apps.slice(0, 3).forEach((a) => console.log(`   APPREC id=${a.id} appId=${JSON.stringify(a.appId)} keys=${Object.keys(a).join(',')}`));
   apps.forEach((a) => console.log('   APP ' + JSON.stringify(a)));
   const orgs = (await wql(token, "SELECT code, cf_active1 FROM topLevelOrganizations WHERE code contains 'X:'", 10000)).data || [];
   const byApp = {};
