@@ -474,6 +474,22 @@ function staticSuite() {
     });
   }
 
+  // 7g5. Brackets in every page script balance (App Hub build 2026-11-05: "PMD Scripting syntax error ... Parsing
+  // Error" from a counter missing one ')'). String literals are blanked first.
+  for (const [f, d] of Object.entries(pmds)) {
+    const seen = new Set();
+    walk(d, (n) => {
+      if (!n || typeof n !== 'object') return;
+      for (const [k, v] of Object.entries(n)) {
+        if (typeof v !== 'string' || !v.trim().startsWith('<%')) continue;
+        const t = v.replace(/'(?:[^'\\]|\\.)*'/g, "''").replace(/"(?:[^"\\]|\\.)*"/g, '""').replace(/`[^`]*`/g, '``');
+        const bad = [['(', ')'], ['{', '}'], ['[', ']']].filter(([o, c]) => t.split(o).length !== t.split(c).length);
+        if (bad.length) { const key = `${n.id || n.name || '?'}.${k}`; if (!seen.has(key)) { seen.add(key); fail('Static.scriptBrackets', `${f}: ${key} has unbalanced ${bad.map((b) => b.join('')).join(', ')}`); } }
+      }
+    });
+    if (!seen.size) pass('Static.scriptBrackets', `${f}: brackets balance`);
+  }
+
   // 7g4. A field OK flags must clear its error when the user changes it, or OK stays refused until a reload (found
   // live on Edit Role Assignment 2026-11-05; tools/clear_on_change.py adds the calls on the pages it lists).
   for (const [f, d] of Object.entries(pmds)) {

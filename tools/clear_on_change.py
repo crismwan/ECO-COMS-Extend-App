@@ -17,9 +17,7 @@ PAGES = ['editRoleAssignment', 'bulkRoleGrid', 'assignableRoleManager', 'adminPr
          'bulkRoleChanges', 'deleteAssignableRole', 'manageShellOrgStatus']
 # A fileUploader has no onChange; its event is onFileAdd (developer.workday.com "fileUploader", 2026-11-05).
 EVENT = {'fileUploader': 'onFileAdd'}
-# onFileAdd with clearError() failed the App Hub build (2026-11-05, build b6af4c8c...); left out until the build
-# error is read on developer.workday.com.
-SKIP_TYPES = {'fileUploader'}
+SKIP_TYPES = set()
 # (page, widget whose change clears, event) -> widgets whose OK error it clears ("add or remove": either list fixes it).
 # Bulk Edit puts its grid-level errors (no changes yet, over 50, duplicate row, already holds the role, role/org
 # missing) on Effective Date, so every grid change clears it too (regression 2026-11-05: ticking Remove left

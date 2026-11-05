@@ -141,7 +141,8 @@ d = load('bulkRoleGrid.pmd')
 _sub = d['onSubmit']
 _a = _sub.index('(list:flatten(list:flatten((shellRoles.data')
 _m = ".map(x => { x.roleWid + '|' + x.orgWid + '|' + x.positionId })"
-HELD = _sub[_a:_sub.index(_m, _a) + len(_m)]
+HELD = _sub[_a:_sub.index(_m, _a) + len(_m)] + ')'  # onSubmit closes the outer bracket before .contains(k)
+assert HELD.count('(') == HELD.count(')') and HELD.count('{') == HELD.count('}'), 'already-holds list is unbalanced'
 COUNT = ("let removals = currentGrid.rows.filter(r => { r.childrenMap.colRemove.value == true }).size(); "
          "let addRows = addGrid.rows.filter(r => { !empty(r.childrenMap.colPositionAdd.value) }); "
          "let keys = addRows.filter(r => { !empty(r.childrenMap.colRoleOrg.value) }).map(r => { (r.childrenMap.colRoleOrg.selectedEntries[0].id + '|' + r.childrenMap.colPositionAdd.value[0]) }); "
