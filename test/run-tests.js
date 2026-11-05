@@ -1957,6 +1957,10 @@ async function posTreeProbe(token) {
         console.log(`     L2 of "${f.descriptor}": total=${g.total} first=${(gd[0] || {}).descriptor}|id=${(gd[0] || {}).id}|href=${((gd[0] || {}).href || '').replace(API, '')} orgWithPositions=${gd.filter((x) => orgIds.has(x.id)).length}`);
       }
     }
+    const az = (r.data || []).find((x) => x.descriptor === 'Supervisory Organization');
+    if (az) { const p1 = await request('GET', az.href + '?limit=100&offset=0', token); const p2 = await request('GET', az.href + '?limit=100&offset=100', token);
+      const names = [...(p1.data || []), ...(p2.data || [])].map((x) => x.descriptor);
+      console.log(`   PAGE2 A-Z total=${p1.total} page1=${(p1.data || []).length} page2=${(p2.data || []).length} distinct=${new Set(names).size} last=${names[names.length - 1]}`); }
     const mg = await request('GET', `${API}/staffing/v6/values/jobChangesGroup/supervisoryOrganization/`, token);
     const byMgr = (mg.data || []).find((x) => /by Manager$/.test(x.descriptor));
     if (byMgr) {

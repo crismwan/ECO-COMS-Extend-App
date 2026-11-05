@@ -25,6 +25,7 @@ FOLDERS = ['My Favorites', 'My Organizations', 'Supervisory Organizations by Man
 BY_MANAGER = 'Supervisory Organizations by Manager'
 NAMES = ('posTreeRoot', 'posTreeNode', 'posTreeOrgPositions')
 HINT = 'Click to browse by supervisory organization, or type a position name or ID.'
+ORIG = 'Search by position name or ID.'
 LABEL = ("!empty(o.position_PositionManagement.descriptor) ? o.position_PositionManagement.descriptor : "
          "(!empty(o.cf_PositionText) ? o.cf_PositionText : o.cf_PositionID)")
 
@@ -75,8 +76,9 @@ for page, picker in PAGES.items():
     d = json.load(open(p))
     d['endPoints'] = [e for e in d['endPoints'] if e['name'] not in NAMES]
     w = find(d['presentation'], picker)
-    h = (w.get('helpText') or '').replace(HINT, '').strip()
+    h = (w.get('helpText') or '').replace(HINT, '').replace(ORIG, '').strip()
     if OFF:
+        h = (ORIG + ' ' + h).strip()
         w['values'] = '<% [] %>'
         w.pop('dynamicMonikerLevels', None)
     else:
