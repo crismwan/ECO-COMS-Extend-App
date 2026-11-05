@@ -1720,6 +1720,7 @@ async function orgGuard(token, me) {
     ['guard',   'X:ADM',     'X:CLW:TEST:GUARD',   'X:SHELL', 'name not under its type'],
     ['guard',   'X:TSTGUARD','X:TSTGUARD',         'X:SHELL', 'new application as X:SHELL'],
     ['guard',   'X:ADM',     'X:ADM:TEST GUARD',   'X:SHELL', 'space in name'],
+    ['guard',   'X:ADM',     'X:ADM:X:CLW:GUARD',  'X:META',  'second X: after the application'],
     ['workday', 'X:TSTGUARD','X:TSTGUARD',         'X:META',  'new application, X:META'],
     ['workday', 'X:ADM',     'X:ADM:TEST:GUARD',   'X:SHELL', 'under an application'],
     ['workday', 'X:ADM',     'X:ADM:TEST:GUARDMETA','X:META', 'X:META under an application'],
@@ -1987,6 +1988,20 @@ async function probe(token) {
       console.log(`   SUBTYPE via ${f}:`); Object.entries(cnt).sort().forEach(([k, v]) => console.log(`      ${k} = ${v}`));
       break;
     } catch (e) { console.log(`   SUBTYPE field ${f}: ${e.message.slice(0, 200)}`); }
+  }
+  // Application-level organizations (X:APP, X:APP(SUB)): their organization type and subtype (2026-11-05, X:META design)
+  for (const f of ['organizationType', 'type', 'type1', 'customOrganizationType']) {
+    try {
+      const r = await wql(token, `SELECT code, subtype, ${f} FROM topLevelOrganizations WHERE code contains 'X:'`, 10000);
+      const roots = (r.data || []).filter((o) => String(o.code).split(':').length <= 2 || /\)$/.test(String(o.code).split(':').slice(0, 2).join(':')));
+      const seen = {};
+      roots.filter((o) => String(o.code).split(':').length <= 2).forEach((o) => console.log(`   ROOT ${o.code} | type ${o[f]?.descriptor || JSON.stringify(o[f])} | subtype ${o.subtype?.descriptor || JSON.stringify(o.subtype)}`));
+      (r.data || []).filter((o) => String(o.code).includes('(') && String(o.code).split(':').length > 2).forEach((o) => {
+        const app = String(o.code).split(':').slice(0, 2).join(':'); const t = o[f]?.descriptor || JSON.stringify(o[f]);
+        if (!seen[app + t]) { seen[app + t] = 1; console.log(`   UNDER ${app} | example ${o.code} | type ${t}`); }
+      });
+      break;
+    } catch (e) { console.log(`   TYPE field ${f}: ${e.message.slice(0, 160)}`); }
   }
   pass('Probe', `${apps.length} application record(s), ${Object.keys(byApp).length} application codes in Workday`);
 }

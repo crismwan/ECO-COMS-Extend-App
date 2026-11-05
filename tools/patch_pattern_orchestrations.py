@@ -84,6 +84,9 @@ ORG_ASSERTIONS = [
     (f'{N}.equals({T}).or({N}.startsWith({T}.append(":")))', f'"Organization name must be " + {T} + " or start with " + {T} + ":, got " + {N}'),
     (f'(if ({N}.equals({T})) {ST}.equals("X:META") else true)', f'"A new application organization (" + {N} + ") must have subtype X:META"'),
     (f'{N}.contains(" ").not()', f'"Organization name must not contain spaces: " + {N}'),
+    # with an application the name starts with its ID once (product owner 2026-11-05): no second X: after it
+    (f'(if ({N}.equals({T})) true else {N}.substringAfter({T}.append(":")).startsWith("X:").not())',
+     f'"Organization name must start with " + {T} + ": once, got " + {N}'),
 ]
 
 
