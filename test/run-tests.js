@@ -46,7 +46,7 @@ const ORCH = `${API}/orchestrate/v1/apps/${APP_ID}/orchestrations`;
 const argv = process.argv.slice(2);
 const arg = (name) => { const i = argv.indexOf(name); return i === -1 ? null : argv[i + 1]; };
 const VERBOSE = argv.includes('--verbose');
-const SUITES_ALL = ['static', 'smoke', 'full', 'cleanup', 'isu', 'repair', 'seconduser', 'purge', 'demoseed', 'datacheck', 'probe', 'bulkvalidate', 'subflows', 'seedapps', 'patternguard', 'orgguard', 'gateway', 'graphql', 'eventlinks', 'timing', 'bulkapply'];
+const SUITES_ALL = ['static', 'smoke', 'full', 'cleanup', 'isu', 'repair', 'seconduser', 'purge', 'demoseed', 'datacheck', 'probe', 'bulkvalidate', 'subflows', 'seedapps', 'patternguard', 'orgguard', 'gateway', 'prompts', 'graphql', 'eventlinks', 'timing', 'bulkapply'];
 const suiteArg = arg('--suite') || argv.find((a) => !a.startsWith('--') && SUITES_ALL.some((s) => a.split(',').includes(s))) || 'smoke';
 const SUITES = suiteArg.split(',').map((s) => s.trim()).filter(Boolean);
 for (const s of SUITES) if (!SUITES_ALL.includes(s)) { console.error(`Unknown suite "${s}". Use: ${SUITES_ALL.join(', ')}`); process.exit(2); }
@@ -1843,6 +1843,37 @@ async function gatewayProbe(token, me) {
   pass('Gateway.probe', 'see the lines above');
 }
 
+// ═══ Prompt values probe (read-only): Workday's own prompt values (Graph "prompts" query) vs the app's WQL searches ═══
+// developer.workday.com "Input Prompt Values for Mutations". Lists which mutations offer prompts for the app's subjects.
+async function promptsProbe(token) {
+  console.log('\n-- Prompt values probe (read-only) --');
+  const T = async (name) => (await gql(token, `query { __type(name: "${name}") { name kind fields { name args { name } type { name kind ofType { name kind ofType { name kind } } } } } }`)).__type;
+  const named = (t) => (t ? (t.name || named(t.ofType)) : null);
+  const root = await T('Mutation_Prompts');
+  if (!root) { console.log('   no Mutation_Prompts type'); return pass('Prompts.probe', 'no Mutation_Prompts type'); }
+  console.log(`   Mutation_Prompts: ${root.fields.length} mutations with prompt values`);
+  const want = /role|organi|position|academic|unit|supervisory|custom|hierarch/i;
+  const hits = root.fields.filter((f) => want.test(f.name));
+  console.log(`   mutations matching role/organization/position/academic: ${hits.map((f) => f.name).join(', ') || 'none'}`);
+  const seen = new Set(); const leaves = [];
+  const walk = async (typeName, pathTxt, depth) => {
+    if (!typeName || seen.has(typeName + pathTxt) || depth > 4) return;
+    seen.add(typeName + pathTxt);
+    const t = await T(typeName); if (!t || !t.fields) return;
+    for (const f of t.fields) {
+      const tn = named(f.type);
+      const args = (f.args || []).map((a) => a.name);
+      if (args.includes('search') || args.includes('promptPath')) leaves.push(`${pathTxt}.${f.name}`);
+      else if (tn && /Prompts$/.test(tn)) await walk(tn, `${pathTxt}.${f.name}`, depth + 1);
+    }
+  };
+  for (const f of hits.slice(0, 25)) await walk(named(f.type), f.name, 1);
+  const rel = leaves.filter((l) => /position|organi|academic|unit|role|supervisory/i.test(l.split('.').pop()));
+  console.log(`   prompt ID fields under them: ${leaves.length}; about positions/organizations/academic units/roles: ${rel.length}`);
+  rel.slice(0, 80).forEach((l) => console.log(`   FIELD ${l}`));
+  pass('Prompts.probe', `${root.fields.length} mutations with prompts, ${hits.length} on the app's subjects, ${rel.length} matching ID fields`);
+}
+
 // ═══ Probe: read-only facts for building application pattern schemas ═══
 // ═══ Bulk validate: one TEST batch through BulkRoleGridApply in VALIDATE mode (no role changes) ═══
 // Proves the per-row sub-orchestration (ProcessBulkRoleRow, tools/extract_subflows.py) runs: the run must finish as
@@ -2464,6 +2495,7 @@ async function demoSeed(token, me) {
         if (live.includes('patternguard')) await patternGuard(token, me);
         if (live.includes('orgguard')) await orgGuard(token, me);
         if (live.includes('gateway')) await gatewayProbe(token, me);
+        if (live.includes('prompts')) await promptsProbe(token);
       }
     }
   }
