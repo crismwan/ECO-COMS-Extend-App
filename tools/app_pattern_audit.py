@@ -17,8 +17,10 @@ EP = {"name": "auditApplications", "baseUrlType": "BUSINESS-OBJECT", "url": "/co
       "isCollection": True, "bestEffort": "true", "failOnStatusCodes": [{"code": 400}, {"code": 429}]}
 d['endPoints'] = [e for e in d['endPoints'] if e.get('name') != 'auditApplications'] + [EP]
 
-APP = ("(logEntry.objectType == 'Application Pattern' ? (auditApplications.data ?? [])"
-       ".filter(a => { a.appId == (logEntry.coReferenceId ?? '') }) : [])")
+# list:filter(list, key, value), not a closure: a closure inside a grid cell didn't see the row variable (live
+# 2026-11-05: every row fell back to text)
+APP = ("(logEntry.objectType == 'Application Pattern' ? "
+       "list:filter(auditApplications.data ?? [], 'appId', logEntry.coReferenceId ?? '') : [])")
 ORG = "(empty(logEntry.orgWid) ? [] : [{'id': logEntry.orgWid, 'descriptor': logEntry.coName ?? ''}])"
 VALUES = f"<% let o = {ORG}; o.size() > 0 ? o : {APP}.map(a => {{ {{'id': a.id, 'descriptor': (logEntry.coName ?? '') + ' (application pattern)'}} }}) %>"
 HAS = f"(!empty(logEntry.orgWid) || {APP}.size() > 0)"
