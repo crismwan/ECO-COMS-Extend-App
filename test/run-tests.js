@@ -2027,6 +2027,25 @@ async function orgTreeProbe(token) {
     const per = {}; d.forEach((x) => (x.hierarchicParents || []).forEach((p) => { per[p.descriptor] = (per[p.descriptor] || 0) + 1; }));
     console.log(`   AU rows ${d.length}; without hierarchy ${noParent.length}; topNode ${d.filter((x) => x.academicUnitIsTopNode).length}; per hierarchy (top 8): ${Object.entries(per).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([k, v]) => k + '=' + v).join(' | ')}; sample ${JSON.stringify(d[0]).slice(0, 200)}`);
   } catch (e) { console.log('   AU parents error ' + e.message.slice(0, 200)); }
+  // third pass: other link fields
+  const show = (v) => Array.isArray(v) ? v.map((x) => x.descriptor || x.id).slice(0, 3).join('+') + (v.length > 3 ? `+${v.length - 3}` : '') : (v && typeof v === 'object' ? (v.descriptor || v.id) : String(v ?? ''));
+  for (const f of ['includedByOrganizations', 'includedOrganizations', 'subordinateOrganizations', 'level01FromTheTop', 'organizationLevelFromTop', 'superiorOrganizationCode', 'subtype']) {
+    try {
+      const r = await wql(token, `SELECT code, ${f} FROM customOrganizations WHERE type1 in (b40d8b016367100175b147f364840000)`, 10000); const d = r.data || [];
+      const filled = d.filter((o) => { const v = o[f]; return Array.isArray(v) ? v.length : (v !== undefined && v !== null && v !== ''); });
+      const dist = {}; filled.forEach((o) => { const k = show(o[f]).slice(0, 40); dist[k] = (dist[k] || 0) + 1; });
+      console.log(`   FUH2 ${f}: filled ${filled.length}/${d.length}; values ${Object.entries(dist).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([k, v]) => k + '=' + v).join(' | ')}`);
+    } catch (e) { console.log(`   FUH2 ${f}: ${e.message.slice(0, 140)}`); }
+  }
+  for (const f of ['academicUnitSubtype', 'subordinateAcademicUnits', 'superiorAcademicUnit', 'academicUnitAndSuperiorAcademicUnits', 'includedInAcademicUnitHierarchies_TopNode', 'academicLevel']) {
+    try {
+      const r = await wql(token, `SELECT academicUnit, ${f} FROM academicUnits WHERE inactive = false`, 10000); const d = r.data || [];
+      const filled = d.filter((o) => { const v = o[f]; return Array.isArray(v) ? v.length : (v !== undefined && v !== null && v !== ''); });
+      const dist = {}; filled.forEach((o) => { const k = show(o[f]).slice(0, 50); dist[k] = (dist[k] || 0) + 1; });
+      console.log(`   AU2 ${f}: filled ${filled.length}/${d.length}; values ${Object.entries(dist).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([k, v]) => k + '=' + v).join(' | ')}`);
+    } catch (e) { console.log(`   AU2 ${f}: ${e.message.slice(0, 140)}`); }
+  }
+  try { const h = await wql(token, 'SELECT workdayID, academicUnitHierarchy FROM academicUnitHierarchies', 10000); console.log(`   AUH2 rows ${(h.data || []).length}: ${(h.data || []).slice(0, 5).map((x) => show(x.academicUnitHierarchy)).join(' | ')}`); } catch (e) { console.log('   AUH2 ' + e.message.slice(0, 160)); }
   pass('OrgTree.probe', 'see lines above');
 }
 
