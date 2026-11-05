@@ -1717,7 +1717,7 @@ async function orgGuard(token, me) {
     ['guard',   'NEWAPP',    'NEWAPP',             'X:META',  'type without X:'],
     ['guard',   'X:',        'X:',                 'X:META',  'type X: alone'],
     ['guard',   'X:TST:ONE', 'X:TST:ONE',          'X:META',  'type with two parts'],
-    ['guard',   'X:ADM',     'X:CLW:ORG:ANY',      'X:SHELL', 'name not under its type'],
+    ['guard',   'X:ADM',     'X:CLW:TEST:GUARD',   'X:SHELL', 'name not under its type'],
     ['guard',   'X:TSTGUARD','X:TSTGUARD',         'X:SHELL', 'new application as X:SHELL'],
     ['guard',   'X:ADM',     'X:ADM:TEST GUARD',   'X:SHELL', 'space in name'],
     ['workday', 'X:TSTGUARD','X:TSTGUARD',         'X:META',  'new application, X:META'],
@@ -1725,6 +1725,8 @@ async function orgGuard(token, me) {
     ['workday', 'X:ADM',     'X:ADM:TEST:GUARDMETA','X:META', 'X:META under an application'],
   ];
   const auditTotal = async () => (await request('GET', `${BO}/comsAuditLogs?limit=1`, token)).total;
+  const orgCodes = async () => ((await wql(token, "SELECT code FROM topLevelOrganizations WHERE code contains 'X:'", 10000)).data || []).map((o) => o.code);
+  const existed = new Set(await orgCodes());
   const before = await auditTotal();
   for (const [want, type, name, subtype, label] of cases) {
     await test(`OrgGuard.${label}`, async () => {
@@ -1741,10 +1743,26 @@ async function orgGuard(token, me) {
   const after = await auditTotal();
   if (after !== before) fail('OrgGuard.noAudit', `${after - before} audit record(s) written`);
   else pass('OrgGuard.noAudit', `${cases.length} launches, no audit record`);
-  const created = ((await wql(token, "SELECT code FROM topLevelOrganizations WHERE code contains 'X:'", 10000)).data || []).map((o) => o.code);
-  const leaked = cases.map((c) => c[2]).filter((n) => created.includes(n));
+  const created = await orgCodes();
+  const leaked = cases.map((c) => c[2]).filter((n) => created.includes(n) && !existed.has(n));
   if (leaked.length) fail('OrgGuard.nothingCreated', `created: ${leaked.join(', ')}`);
   else pass('OrgGuard.nothingCreated', 'no new organization');
+
+  // The application pick-lists (Add Shell Org, Maintain Application Pattern's Add Application, AAA and role pages) come
+  // from the customOrganizations WQL component, which sets no limit. A new application's X:META org (X:NEWAPP) must
+  // appear in it, so the default must not cut the list.
+  await test('Apps.listComplete', async () => {
+    const q = JSON.parse(fs.readFileSync(path.join(ROOT, 'presentation/wqlQueries/customOrganizations.wqlquery'), 'utf8')).query;
+    const noLimit = await request('GET', `${WQL}?query=${encodeURIComponent(q)}`, token);
+    const full = await wql(token, q, 10000);
+    const n0 = (noLimit.data || []).length, n1 = (full.data || []).length;
+    const appOf = (c) => (c.split(':').length > 2 ? c.split(':').slice(0, 2).join(':') : c);
+    const apps = [...new Set((full.data || []).map((o) => appOf(o.code || '')).filter((c) => c.startsWith('X:')))].sort();
+    console.log(`   X: orgs: ${n1} (total ${full.total}); without a limit: ${n0} (total ${noLimit.total}); ${apps.length} application codes: ${apps.join(', ')}`);
+    if (n1 !== full.total) throw new Error(`limit 10000 returned ${n1} of ${full.total}`);
+    if (n0 < n1) throw new Error(`without a limit the query returns ${n0} of ${n1}: new applications could be missing from the pick-lists`);
+    pass('Apps.listComplete', `${n1} X: organizations, ${apps.length} application codes; the default returns them all`);
+  });
 }
 
 // ═══ Probe: read-only facts for building application pattern schemas ═══
