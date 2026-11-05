@@ -2494,6 +2494,14 @@ Source: developer.workday.com "Concept: fileUploader", "fileUploaderRow", "attac
 - Reports: one report can take several `defaultSecurityDomains`. Delete unused WQL components and reports as you go: apps have tight limits.
 
 
+### Sub-orchestrations (partly confirmed, 2026-11-04)
+
+- Created in Orchestration Builder: an open orchestration's left panel → **Suborchestrations +** → Start from Scratch (or Import Existing Orchestration). The parent adds it from Components → Suborchestrations → **Call <name>** (drag only; automated drags don't register).
+- Source view of a new one (flowVersion 3.7.0): flow type `.maya.FlowSubflow`; start `StartSubflow` {`parameters`: List<`ExprParameter` {name Identifier, type Type, expr Opt<Expr<Opt<Any>>>}>}; end `EndSubflow` {`exports`: List<`Assignment`>}; `securityDomains` null; default credential `AccessTokenFromInitiatingUser`.
+- The call step, from the builder's own type schema: `CallSubflow` {name, isDisabled, errorHandler, `subflowId` String, `parameters` List<Assignment>, `executionDelay` Opt<`SubflowExecutionDelay` {delayMinutes Expr Number}>}. The builder fills `subflowId` from its sub-orchestration list's `id`.
+- **A hand-written `.maya.FlowSubflow` file in `orchestration/` is not picked up by App Hub** (build: "no orchestration with name: ProbeEcho found"), and a call to it fails ("Invalid Subflow Reference ID"). How App Hub stores sub-orchestrations (folder, file name, registration, what `subflowId` holds) is still unknown: save one from Orchestration Builder to App Hub (ask first), then read the app's source.
+- Still unverified: how start inputs and call outputs are referenced (guessed `data.start.<input>` and `data.<callStep>.<export>`).
+
 ## Orchestrations — synchronous page limit is 25 seconds
 
 A **synchronous orchestration launched from a PMD page** has a **25-second total timeout** (overrides the orchestration's own 5-minute sync limit). Any orchestration that loops over many records (e.g. bulk creating/updating 50+ objects) will hit this limit and apply only partial work with no error shown to the user.
