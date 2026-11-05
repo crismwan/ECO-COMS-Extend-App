@@ -177,7 +177,22 @@ jobs:
           echo "=== Upload exit code: ${UPLOAD_EXIT} ==="
           if [ "${UPLOAD_EXIT}" -ne 0 ]; then
             echo "ERROR: wdcli app upload failed with exit code ${UPLOAD_EXIT}"
+            # App Hub build errors are otherwise only on developer.workday.com: fetch them with wdcli
+            BUILD_ID=$(grep -oE 'builds/[0-9a-f]{32}' /tmp/upload-output.txt | head -1 | cut -d/ -f2) || true
+            if [ -n "${BUILD_ID}" ]; then
+              echo "=== App Hub build log (${BUILD_ID}) ==="
+              wdcli app builds logs "${BUILD_ID}" --ci -f json > /tmp/build-log.json 2>&1 || true
+              # keep the lines that matter (errors first), the full log is in the artifact-free step output
+              grep -iE '"(level|severity)"[^,]*"?(ERROR|FATAL)|error' /tmp/build-log.json | head -60 || true
+              echo "--- full build log ---"; cat /tmp/build-log.json | head -400
+            fi
             {
+              if [ -n "${BUILD_ID}" ]; then
+                echo "## App Hub build errors"
+                echo '```'
+                grep -iE 'error' /tmp/build-log.json 2>/dev/null | head -60 || echo "(none matched; see the step log)"
+                echo '```'
+              fi
               echo "## Upload Failure"
               echo "Exit code: ${UPLOAD_EXIT}"
               echo "### Upload output:"
