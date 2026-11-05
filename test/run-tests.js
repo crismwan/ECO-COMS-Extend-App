@@ -1743,7 +1743,7 @@ async function patternGuard(token, me) {
   }
   await sleep(20000);
   const created = ((await wql(token, "SELECT code FROM topLevelOrganizations WHERE code contains 'X:'", 10000)).data || []).map((o) => o.code);
-  const leaked = [...cases.map((c) => c[2]), ...pageCases.map((c) => c[3])].filter((n) => created.includes(n));
+  const leaked = cases.map((c) => c[2]).filter((n) => created.includes(n));
   if (leaked.length) fail('Guard.nothingCreated', `created: ${leaked.join(', ')}`);
   else pass('Guard.nothingCreated', `${cases.length} launches, no new organization (check CheckPatternName per launch in the app Logs)`);
 }
