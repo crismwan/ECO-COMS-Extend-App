@@ -23,7 +23,7 @@ MARK = '/* enabled-for choice */'
 MARK_END = '/* enabled-for choice end */'
 
 HELP_OLD = '<b>Functional Unit Hierarchy</b>: Limits where the role applies to one Functional Unit Hierarchy. Pick either an FUH or an Academic Unit, not both. Leave both empty for the whole university (Academic Unit - University of British Columbia).<br/><b>Academic Unit</b>: Limits where the role applies to one Academic Unit. Pick either an Academic Unit or an FUH, not both. Leave both empty for the whole university.'
-HELP_NEW = '<b>Enabled For</b>: Limits where the role applies. Pick Functional Unit Hierarchy or Academic Unit, then search for one in the box that appears. Leave it blank for the whole university (Academic Unit - University of British Columbia).<br/><b>Applies To</b>: Shows where the role will apply.'
+HELP_NEW = '<b>Enabled For</b>: Limits where the role applies. Pick Functional Unit Hierarchy or Academic Unit, then search for one in the box that appears. Leave it blank for the whole university (Academic Unit - University of British Columbia).'
 
 
 def texts(n, a, b):
@@ -58,8 +58,12 @@ for page in PAGES:
     kids[:] = [k for k in kids if not (isinstance(k, dict) and k.get('id') == 'enabledForTypeDropdown')]
     for w in (fuh, au):
         w.pop('visible', None)
+    # display-only (nothing reads its value; the request's enabledFor fields come straight from the pickers), so hidden
     disp = byid.get('enabledForDisplay')
-    if disp is not None: disp['label'] = 'Enabled For' if OFF else 'Applies To'
+    if disp is not None:
+        disp['label'] = 'Enabled For'
+        if OFF: disp.pop('visible', None)
+        else: disp['visible'] = False
     if OFF: texts(d['presentation'], HELP_NEW, HELP_OLD)
     else: texts(d['presentation'], HELP_OLD, HELP_NEW)
     # remove an earlier copy of the OK check (idempotent)
