@@ -527,7 +527,7 @@ DenyRoleRequest: `actorWid = bp.initiatingPerson().getIDValues("WID").get(0)` (a
 - Full write suite 2026-11-05 (run 42057373245): 46/46, including the success paths of CreateShellOrganization, ManageShellOrgStatus, StartRequestReview and DenyRoleRequest through the shared WriteAuditRecord step.
 - Cleanup 2026-11-05 (product owner: keep only demo data): kept the 3 demo setup records, the CPSC_V:110 rehearsal orgs, P-00030 on STAFF/DEPTSTAFF (Access Review demo data), the 4 Application Pattern update records and the two 10-30 pending requests (KEYCLOAK COORDINATOR, AOC administrator).
 
-## Recommendation: Workday prompt values in the instanceList prompts (2026-11-05, not yet built)
+## Recommendation: Workday prompt values in the instanceList prompts (2026-11-05; outcome: not adopted)
 
 Source: developer.workday.com "Input Prompt Values for Mutations", "Concept: instanceList", "Concept: Multilevel Lists". General notes are in CLAUDE.md (instanceList → Prompt values from Workday).
 
@@ -559,3 +559,11 @@ Current typed-search prompts (all `searchEndPoint`/`onSearch` + WQL `contains`, 
 - Application ID lists (Add Shell Org, Maintain Application Pattern → Add Application, AAA and role pages) all come from the `customOrganizations` WQL over topLevelOrganizations `code contains 'X:'`, so a new X:NEWAPP or X:LLIS(NEW) org appears in them once Workday has it (Add Application only lists codes without a record).
 - Gateway: one test value set (`X:BPMS(AOC):TEST:GUARDPAGE`) got HTML 403; the same application with another code, other bracketed applications and bracketed X:META names went through. Brackets aren't the trigger; a rare user value could still be refused by the gateway's content filter.
 - Browser: Next on this wizard step doesn't run OK's checks; OK does. After Back, the preview shows its page-load text until a field changes (wizard limitation).
+
+### Outcome of the prompt values check (2026-11-05, e2e `prompts`, read-only)
+
+- The Graph `prompts` query exists for only 5 mutations in ubc_wcpdev2: createReferenceLetterForWorker, referACandidate, startPerformanceReview, submitAccountingJournal, submitSupplier. None covers positions, custom organizations (FUH), academic units or roles, so there is no Workday prompt source for any of the app's 8 prompts.
+- REST `values` endpoints give a browse tree (e.g. staffing `values/jobChangesGroup/supervisoryOrganization/`: My Favorites, ...), no typed search, and not the organizations the app uses.
+- Impact check: Edit Role Assignment and Bulk Edit keep the Position ID (Assign_Roles needs it, a WID is rejected); prompt values return WIDs only, so they would need an extra lookup there anyway.
+- Baseline (median of 3): FUH search 207 ms, Academic Unit search 170 ms, Position search 1,083 ms (100-row cap). Nothing changed in the app; the current WQL searches stay.
+- Still open, independent of prompt values: merging the FUH and Academic Unit pickers into one multilevel list (removes the "not both" error), and the 1.1 s position search.
