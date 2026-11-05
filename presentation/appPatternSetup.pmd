@@ -152,7 +152,7 @@
                         "type": "text",
                         "id": "colExampleText",
                         "enabled": false,
-                        "value": "<% comsAppSetup.exampleName(ap.appId, ap) %>"
+                        "value": "<% comsAppSetup.exampleOf(ap.appId, ap) %>"
                       }
                     },
                     {

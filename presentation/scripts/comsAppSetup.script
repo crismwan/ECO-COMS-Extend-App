@@ -1,5 +1,4 @@
-/* Application Patterns setup (tools/build_app_patterns.py). Pure functions; each check returns '' or an error.
-   A format is written as on the list: PREFIX / PREFIX: Field, Field. An example is a full name: APP:PREFIX:value:value. */
+/* Application Patterns setup (tools/build_app_patterns.py). Pure functions; each check returns '' or an error. */
 var recordById = function(apps, id) {
   let m = (apps ?? []).filter(a => { a.id == id });
   empty(id) || empty(m) ? null : m[0];
@@ -9,58 +8,25 @@ var schemaOf = function(rec) {
   (empty(rec) || empty(rec.patternSchema)) ? null : json:parse(rec.patternSchema);
 };
 
-var parts = function(text, sep) {
-  empty(text) ? [] : text.split(sep).map(p => { p.trim() }).filter(p => { !empty(p) });
-};
-
-var prefixesOf = function(formatText) {
-  let t = (formatText ?? '').trim();
-  t.contains(':') ? parts(t.substringBefore(':'), '/') : [];
-};
-
-var labelsOf = function(formatText) {
-  let t = (formatText ?? '').trim();
-  t.contains(':') ? parts(t.substringAfter(':'), ',') : [];
-};
-
-var summary = function(rec) {
+var fieldRows = function(rec) {
   let s = schemaOf(rec);
-  empty(s) ? '' : (s.prefixes.join(' / ') + ': ' + s.fields.map(f => { f.fieldLabel }).join(', '));
+  empty(s) ? [{ 'fieldLabel': '', 'regex': '', 'hint': '', 'example': '', 'blankIsWildcard': false }] : s.fields;
 };
 
-var exampleName = function(appId, rec) {
+var prefixText = function(rec) {
   let s = schemaOf(rec);
-  empty(s) ? '' : (empty(s.example) ? ((appId ?? '') + ':' + s.prefixes[0] + ':' + s.fields.map(f => { empty(f.example) ? '*' : f.example }).join(':')) : s.example);
+  empty(s) ? (empty(rec) ? '' : (rec.namePrefix ?? '')) : s.prefixes.join(', ');
 };
 
-/* The same example with another application's ID in front (Copy from). */
-var exampleFor = function(appId, src) {
-  let ex = exampleName(src.appId, src);
-  (empty(appId) || empty(ex)) ? ex : (appId + ':' + ex.substringAfter(src.appId + ':'));
+var prefixList = function(text) {
+  empty(text) ? [] : text.split(',').map(p => { p.trim() }).filter(p => { !empty(p) });
 };
 
-/* Applications in Workday (X: organization codes, as on Add Shell Org) without a record here yet. */
+/* Application codes from Workday's X: organizations (as on Add Shell Org) that have no record here yet. */
 var newAppOptions = function(orgs, apps) {
   let have = (apps ?? []).map(a => { a.appId ?? '' });
   (orgs ?? []).map(o => { let c = o.code ?? ''; c.substringAfter(':').contains(':') ? (c.substringBefore(':') + ':' + c.substringAfter(':').substringBefore(':')) : c })
     .filter(c => { c.startsWith('X:') && !have.contains(c) }).distinct().sort().map(c => { { 'id': c, 'descriptor': c } });
-};
-
-var copyOptions = function(apps, appId) {
-  list:sort((apps ?? []).filter(a => { !empty(a.patternSchema) && a.appId != appId }), 'appId', true)
-    .map(a => { { 'id': a.id, 'descriptor': a.appId + ' · ' + summary(a) } });
-};
-
-/* A field's rules (format, hint, blank means any): this record's field of that name, else any application's,
-   else the standard Role Name rule. */
-var knownField = function(label, apps, rec) {
-  let own = schemaOf(rec);
-  let mine = empty(own) ? [] : own.fields.filter(f => { f.fieldLabel == label });
-  let others = list:flatten((apps ?? []).filter(a => { !empty(a.patternSchema) }).map(a => { json:parse(a.patternSchema).fields }))
-    .filter(f => { f.fieldLabel == label });
-  let std = { 'fieldLabel': label, 'regex': '[*]|[A-Z0-9][A-Z0-9_-]{0,29}[*]?', 'example': 'ANY', 'blankIsWildcard': true,
-              'hint': 'Capital letters, digits, _ or - (up to 30), optionally ending in * (e.g. ANY). Leave blank for any (*).' };
-  !empty(mine) ? mine[0] : (!empty(others) ? others[0] : std);
 };
 
 var appIdError = function(appId, apps, isNew) {
@@ -79,94 +45,92 @@ var nameError = function(name) {
   empty(name) ? 'Name is required.' : (name.length() > 100 ? 'Keep the name to 100 characters or fewer.' : '');
 };
 
-var formatError = function(formatText) {
-  let t = (formatText ?? '').trim();
-  let ps = prefixesOf(t);
-  let ls = labelsOf(t);
-  if (empty(t)) {
-    'Enter the pattern format, e.g. ORG: Role Name.';
-  } else if (!t.contains(':')) {
-    'Put a colon between the prefixes and the fields, e.g. ORG: Role Name.';
-  } else if (t.substringAfter(':').contains(':')) {
-    'Use one colon only: prefixes before it, fields after it.';
-  } else if (ps.size() == 0) {
-    'Add a prefix before the colon, e.g. ORG. Separate several with /.';
+var prefixError = function(text) {
+  let ps = prefixList(text);
+  if (ps.size() == 0) {
+    'Add at least one prefix, e.g. ORG. Separate several with commas.';
   } else if (ps.filter(p => { !validate:match('[A-Z0-9_]+', p) }).size() > 0) {
     'Prefixes use capital letters, digits and _ only (e.g. ORG, CP, PATTERN).';
   } else if (ps.distinct().size() != ps.size()) {
     'Each prefix can appear only once.';
-  } else if (ls.size() == 0) {
-    'Add a field after the colon, e.g. Role Name. Separate several with commas.';
-  } else if (ls.size() > 7) {
+  } else {
+    '';
+  }
+};
+
+var rowError = function(r, n) {
+  let where = 'Field ' + n + ': ';
+  if (empty(r.fieldLabel)) {
+    where + 'a label is required.';
+  } else if (r.fieldLabel.contains(':')) {
+    where + 'the label cannot contain a colon.';
+  } else if (empty(r.regex)) {
+    where + 'a format is required (a regular expression, e.g. [A-Z]{2,4}).';
+  } else if (empty(r.example)) {
+    where + 'an example value is required.';
+  } else if (r.example.contains(':') || r.example.contains(' ')) {
+    where + 'the example cannot contain a colon or spaces.';
+  } else if (!validate:match(r.regex, r.example)) {
+    where + 'the example ' + r.example + ' does not match the format ' + r.regex + '.';
+  } else {
+    '';
+  }
+};
+
+var fieldsError = function(rows) {
+  if (rows.size() == 0) {
+    'Add at least one field.';
+  } else if (rows.size() > 7) {
     'At most 7 fields: the Add Pattern form has 7 boxes.';
-  } else if (ls.distinct().size() != ls.size()) {
-    'Each field needs its own name.';
-  } else if (ls.filter(l => { l.length() > 40 }).size() > 0) {
-    'Keep each field name to 40 characters or fewer.';
+  } else if (rows.map(r => { r.fieldLabel }).distinct().size() != rows.size()) {
+    'Each field needs its own label.';
   } else {
-    '';
+    let errs = rows.map((r, i) => { rowError(r, i + 1) }).filter(e => { e != '' });
+    errs.size() == 0 ? '' : errs[0];
   }
 };
 
-var valuesOf = function(appId, example) {
-  let rest = (example ?? '').trim().substringAfter(appId + ':');
-  rest.contains(':') ? rest.substringAfter(':').split(':') : [];
+var schemaJson = function(prefixTextValue, rows) {
+  json:stringify({ 'prefixes': prefixList(prefixTextValue), 'fields': rows });
 };
 
-var exampleError = function(appId, example, formatText, apps, rec) {
-  let ex = (example ?? '').trim();
-  let ps = prefixesOf(formatText);
-  let ls = labelsOf(formatText);
-  if (empty(ex)) {
-    'Enter an example pattern name, e.g. ' + (empty(appId) ? 'X:APP' : appId) + ':ORG:ANY.';
-  } else if (ex.contains(' ')) {
-    'The example cannot contain spaces.';
-  } else if (empty(appId) || formatError(formatText) != '') {
-    '';
-  } else if (!ex.startsWith(appId + ':')) {
-    'The example must start with ' + appId + ':';
-  } else {
-    let pre = ex.substringAfter(appId + ':').substringBefore(':');
-    let vals = valuesOf(appId, ex);
-    let bad = ls.filter((l, i) => { i < vals.size() && !validate:match(knownField(l, apps, rec).regex, vals[i]) });
-    if (!ps.contains(pre)) {
-      'After ' + appId + ': the example needs one of the prefixes (' + ps.join(', ') + '), not ' + pre + '.';
-    } else if (vals.size() != ls.size()) {
-      'The example needs ' + ls.size() + ' value(s) after ' + pre + ', one for each field (' + ls.join(', ') + '). Use * for any. It has ' + vals.size() + '.';
-    } else if (bad.size() > 0) {
-      bad[0] + ': ' + knownField(bad[0], apps, rec).hint;
-    } else {
-      '';
-    }
-  }
+var exampleName = function(appId, prefixTextValue, rows) {
+  let ps = prefixList(prefixTextValue);
+  (empty(appId) ? 'X:APP' : appId) + ':' + (ps.size() == 0 ? 'PREFIX' : ps[0]) + ':' + rows.map(r => { empty(r.example) ? '*' : r.example }).join(':');
 };
 
-var fieldFor = function(label, value, apps, rec) {
-  let k = knownField(label, apps, rec);
-  let f = { 'fieldLabel': label, 'regex': k.regex, 'hint': k.hint, 'example': empty(value) ? k.example : value, 'blankIsWildcard': k.blankIsWildcard == true };
-  f;
+var summary = function(rec) {
+  let s = schemaOf(rec);
+  empty(s) ? '' : (s.prefixes.join(' / ') + ': ' + s.fields.map(f => { f.fieldLabel }).join(', '));
 };
 
-var schemaJson = function(appId, formatText, example, apps, rec) {
-  let vals = valuesOf(appId, example);
-  let fields = labelsOf(formatText).map((l, i) => { fieldFor(l, i < vals.size() ? vals[i] : '', apps, rec) });
-  json:stringify({ 'prefixes': prefixesOf(formatText), 'fields': fields, 'example': (example ?? '').trim() });
+/* The list's Example column: the stored full example if any (saved by the earlier text-box version), else built from the fields. */
+var exampleOf = function(appId, rec) {
+  let s = schemaOf(rec);
+  empty(s) ? '' : (empty(s.example) ? exampleName(appId, s.prefixes.join(','), s.fields) : s.example);
+};
+
+/* Copy from: every other application that has a format. */
+var copyOptions = function(apps, appId) {
+  list:sort((apps ?? []).filter(a => { !empty(a.patternSchema) && a.appId != appId }), 'appId', true)
+    .map(a => { { 'id': a.id, 'descriptor': a.appId + ' · ' + summary(a) } });
 };
 
 {
   "recordById": recordById,
   "schemaOf": schemaOf,
-  "prefixesOf": prefixesOf,
-  "labelsOf": labelsOf,
-  "summary": summary,
-  "exampleName": exampleName,
-  "exampleFor": exampleFor,
+  "fieldRows": fieldRows,
+  "prefixText": prefixText,
+  "prefixList": prefixList,
   "newAppOptions": newAppOptions,
-  "copyOptions": copyOptions,
-  "knownField": knownField,
   "appIdError": appIdError,
   "nameError": nameError,
-  "formatError": formatError,
-  "exampleError": exampleError,
-  "schemaJson": schemaJson
+  "prefixError": prefixError,
+  "rowError": rowError,
+  "fieldsError": fieldsError,
+  "schemaJson": schemaJson,
+  "exampleName": exampleName,
+  "summary": summary,
+  "exampleOf": exampleOf,
+  "copyOptions": copyOptions
 }
