@@ -278,6 +278,13 @@
                   "onChange": "<%\n  let e = comsAppSetup.appIdError((empty(appIdDropdown.value) ? '' : appIdDropdown.selectedEntries[0].id), comsApplications.data, empty(queryParams.recordId));\n  if (e != '') { self.setError(e); } else { self.clearError(); }\n  let ee = comsAppSetup.exampleError((empty(queryParams.recordId) ? (empty(appIdDropdown.value) ? '' : appIdDropdown.selectedEntries[0].id) : (comsAppSetup.recordById(comsApplications.data, queryParams.recordId) ?? {'appId': ''}).appId), (exampleText.value ?? ''), (formatText.value ?? ''), comsApplications.data, comsAppSetup.recordById(comsApplications.data, queryParams.recordId)); if (ee != '') { exampleText.setError(ee); } else { exampleText.clearError(); }\n%>"
                 },
                 {
+                  "type": "richText",
+                  "id": "missingAppRichText",
+                  "enabled": false,
+                  "render": "<% empty(queryParams.recordId) %>",
+                  "value": "<span style=\"color:#B45309;font-size:12px;font-weight:700\">⚠ Application not in the list? </span><span style=\"color:#374151;font-size:12px\">The list shows applications that already have an organization in Workday and no pattern format here yet. For a new application, first set it up in Workday:<br><b>1.</b> An organization type named after the application ID (e.g. <b>X:NEWAPP</b>), added by the Workday configuration team.<br><b>2.</b> Its organization: <b>Create Custom Organization</b> with that type, code <b>X:NEWAPP</b> and organization subtype <b>X:META</b>.<br>Then reopen <b>Add Application</b> and pick it. (Add Shell Org adds organizations under an application that already exists, so it can't create this one.)</span>"
+                },
+                {
                   "type": "text",
                   "id": "appNameText",
                   "label": "Name",

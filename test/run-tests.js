@@ -207,8 +207,9 @@ function staticSuite() {
     .map((f) => docs[f]).filter(Boolean).map((d) => [d.name, d]));
   for (const f of listFiles('orchestration').filter((x) => x.endsWith('.orchestration'))) {
     const v = (docs[f] || {})._value || {};
-    // App Hub allows security domains only on Sync and Async orchestrations (build error 2026-11-02)
-    if (/BusinessProcessTriggered|WorkdayTodayCard/.test(String(v.type?._value || ''))) {
+    // App Hub allows security domains only on Sync and Async orchestrations (build error 2026-11-02); a sub-orchestration
+    // (FlowSubflow) has no launch URL, only its callers do (the builder writes it with securityDomains null)
+    if (/BusinessProcessTriggered|WorkdayTodayCard|FlowSubflow/.test(String(v.type?._value || ''))) {
       if (((v.securityDomains || {})._value || {})._value) err('orchSecurity', `${path.basename(f)}: ${v.type._value} can't have securityDomains (App Hub: only Sync and Async)`);
       continue;
     }
@@ -1646,6 +1647,9 @@ async function patternGuard(token, me) {
 // ═══ Probe: read-only facts for building application pattern schemas ═══
 async function probe(token) {
   console.log('\n-- Probe (read-only) --');
+  // Sub-orchestration probe (tools/probe_subflow.py): ProbeSubflowCall calls ProbeEcho and returns {"echo": "echo:hello"}.
+  try { const r = await launch(token, 'ProbeSubflowCall', {}); console.log('   SUBFLOW ' + (typeof r === 'string' ? r : JSON.stringify(r)).slice(0, 400)); }
+  catch (e) { console.log('   SUBFLOW error ' + e.message.slice(0, 400)); }
   const apps = (await request('GET', `${BO}/comsApplications?limit=100`, token)).data || [];
   console.log(`comsApplications: ${apps.length}`);
   apps.forEach((a) => console.log('   APP ' + JSON.stringify(a)));

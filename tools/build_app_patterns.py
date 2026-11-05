@@ -309,6 +309,19 @@ edit = {"id": "editAppPattern", "securityDomains": [DOMAIN], "include": ["comsAp
          "helpText": "Applications in Workday that aren't set up here yet.",
          "values": "<% comsAppSetup.newAppOptions(existingOrgs.data, comsApplications.data) %>",
          "onChange": f"<%\n  let e = comsAppSetup.appIdError({CHOSEN}, comsApplications.data, {NEW});\n  if (e != '') {{ self.setError(e); }} else {{ self.clearError(); }}\n  {CHECK_EX}\n%>"},
+        # Add only: the list comes from Workday's X: application organizations, so a missing one is created in Workday first
+        # (product owner 2026-11-04: "create a shell organization with X:META sub org type"). Add Shell Org can't do it:
+        # it only adds <existing application>:<code> organizations, and the new one needs its own organization type.
+        {"type": "richText", "id": "missingAppRichText", "enabled": False, "render": f"<% {NEW} %>", "value": (
+          '<span style="color:#B45309;font-size:12px;font-weight:700">⚠ Application not in the list? </span>'
+          '<span style="color:#374151;font-size:12px">The list shows applications that already have an organization in '
+          'Workday and no pattern format here yet. For a new application, first set it up in Workday:<br>'
+          '<b>1.</b> An organization type named after the application ID (e.g. <b>X:NEWAPP</b>), added by the Workday '
+          'configuration team.<br>'
+          '<b>2.</b> Its organization: <b>Create Custom Organization</b> with that type, code <b>X:NEWAPP</b> and '
+          'organization subtype <b>X:META</b>.<br>'
+          'Then reopen <b>Add Application</b> and pick it. (Add Shell Org adds organizations under an application '
+          'that already exists, so it can\'t create this one.)</span>')},
         {"type": "text", "id": "appNameText", "label": "Name", "required": f"<% {NEW} %>", "enabled": f"<% {NEW} %>",
          "value": f"<% ({REC} ?? {{'name': ''}}).name ?? '' %>",
          "onChange": "<%\n  let e = comsAppSetup.nameError((self.value ?? '').trim());\n  if (e != '') { self.setError(e); } else { self.clearError(); }\n%>"}]}]},
