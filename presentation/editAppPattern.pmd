@@ -112,7 +112,7 @@
           },
           {
             "outboundPath": "active",
-            "value": "<% true %>"
+            "value": "<% appActiveCheckBox.value == true %>"
           }
         ]
       },
@@ -148,6 +148,10 @@
           {
             "outboundPath": "patternSchema",
             "value": "<% comsAppSetup.schemaJson((empty(queryParams.recordId) ? (empty(appIdDropdown.value) ? '' : appIdDropdown.selectedEntries[0].id) : (comsAppSetup.recordById(comsApplications.data, queryParams.recordId) ?? {'appId': ''}).appId), (formatText.value ?? ''), (exampleText.value ?? ''), comsApplications.data, comsAppSetup.recordById(comsApplications.data, queryParams.recordId)) %>"
+          },
+          {
+            "outboundPath": "active",
+            "value": "<% appActiveCheckBox.value == true %>"
           }
         ]
       },
@@ -202,7 +206,7 @@
           },
           {
             "outboundPath": "details",
-            "value": "<% 'Pattern format for ' + (empty(queryParams.recordId) ? (empty(appIdDropdown.value) ? '' : appIdDropdown.selectedEntries[0].id) : (comsAppSetup.recordById(comsApplications.data, queryParams.recordId) ?? {'appId': ''}).appId) + ': ' + (formatText.value ?? '').trim() + ' (example ' + (exampleText.value ?? '').trim() + ')' %>"
+            "value": "<% 'Pattern format for ' + (empty(queryParams.recordId) ? (empty(appIdDropdown.value) ? '' : appIdDropdown.selectedEntries[0].id) : (comsAppSetup.recordById(comsApplications.data, queryParams.recordId) ?? {'appId': ''}).appId) + ': ' + (formatText.value ?? '').trim() + ' (example ' + (exampleText.value ?? '').trim() + ')' + (appActiveCheckBox.value == true ? '' : ', inactive') %>"
           }
         ]
       }
@@ -236,6 +240,26 @@
           "id": "aboutSection",
           "children": [
             {
+              "type": "button",
+              "id": "appPatternsBackButton",
+              "label": "← Application Patterns",
+              "action": "LINK",
+              "suppressDiscardDialog": true,
+              "taskReference": {
+                "taskId": "appPatternSetup"
+              }
+            },
+            {
+              "type": "button",
+              "id": "shellOrgManagerBackButton",
+              "label": "← Shell Org Manager",
+              "action": "LINK",
+              "suppressDiscardDialog": true,
+              "taskReference": {
+                "taskId": "shellOrgManager"
+              }
+            },
+            {
               "type": "fieldSet",
               "id": "aboutFieldSet",
               "title": "About This Page",
@@ -244,7 +268,7 @@
                   "type": "richText",
                   "id": "aboutRichText",
                   "enabled": false,
-                  "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">Write the format as on the list: the prefixes, a colon, then the fields in order, e.g. <b>CP: Subject, Course</b> (several prefixes: <b>COMM / PRIV: Role Name</b>). The example is a full pattern name with one value per field, e.g. <b>X:BPMS(AOC):CP:MECH_V:1*</b>; use * for any. <b>Copy from</b> fills both from another application. A field keeps its rules (allowed characters, hint) from a field of the same name; a new field name gets the Role Name rules. Existing patterns keep their names.</span>"
+                  "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">Write the format as on the list: the prefixes, a colon, then the fields in order, e.g. <b>CP: Subject, Course</b> (several prefixes: <b>COMM / PRIV: Role Name</b>). The example is a full pattern name with one value per field, e.g. <b>X:BPMS(AOC):CP:MECH_V:1*</b>; use * for any. <b>Copy from</b> fills both from another application. A field keeps its rules (allowed characters, hint) from a field of the same name; a new field name gets the Role Name rules. Existing patterns keep their names. An <b>inactive</b> application takes no new patterns.</span>"
                 }
               ]
             }
@@ -306,6 +330,13 @@
               "id": "formatFieldSet",
               "title": "Pattern Format",
               "children": [
+                {
+                  "type": "checkBox",
+                  "id": "appActiveCheckBox",
+                  "label": "Active",
+                  "helpText": "Untick to stop new patterns for this application (existing ones stay). Inactive applications are hidden from Add Pattern.",
+                  "value": "<% (comsAppSetup.recordById(comsApplications.data, queryParams.recordId) ?? {'active': true}).active != false %>"
+                },
                 {
                   "type": "dropdown",
                   "id": "copyFromDropdown",

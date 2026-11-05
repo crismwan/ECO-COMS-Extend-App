@@ -282,7 +282,8 @@
                     "appCode": "<% queryParams.appCode ?? '' %>"
                   }
                 },
-                "action": "PRIMARY"
+                "action": "PRIMARY",
+                "render": "<% (comsApplications.data ?? []).filter(a => { a.appId == (queryParams.appCode ?? '') && a.active == false }).size() == 0 %>"
               },
               {
                 "type": "richText",

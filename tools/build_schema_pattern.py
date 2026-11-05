@@ -25,6 +25,8 @@ FOOT = {"type": "footer", "children": [{"type": "pod", "podId": "ecoComsFooter"}
 
 APPC = "(queryParams.appCode ?? '')"
 SCH = "comsPatterns.schemaFor(comsApplications.data, queryParams.appCode)"
+# an application switched off on Application Patterns (editAppPattern) takes no new patterns (product owner 2026-11-04)
+INACTIVE = "((comsPatterns.recordFor(comsApplications.data, queryParams.appCode) ?? {'active': true}).active == false)"
 FIELD = lambda i: f"patternField{i + 1}Text"
 VALUES = "[" + ", ".join(f"{FIELD(i)}.value" for i in range(MAX_FIELDS)) + "]"
 PREFIX = (f"(comsPatterns.prefixCount({SCH}) > 1 ? (empty(prefixDropdown.value) ? '' : prefixDropdown.selectedEntries[0].id)"
@@ -120,7 +122,7 @@ page = {"id": "newSchemaPattern", "securityDomains": ["ManageCOMSShellOrgs"], "i
     "title": {"type": "title", "label": "<% empty(queryParams.appCode) ? 'ECO-COMS: Add Shell Org Pattern' : ('ECO-COMS: Add Shell Org Pattern · ' + queryParams.appCode) %>", "enabled": True},
     "cancelOverride": {"taskId": "shellOrgManager"},
     # nothing to submit until an application with a pattern schema is chosen
-    "standardEditButtonsHidden": f"<% empty(queryParams.appCode) || empty({SCH}) %>",
+    "standardEditButtonsHidden": f"<% empty(queryParams.appCode) || empty({SCH}) || {INACTIVE} %>",
     "body": {"type": "basicFormLayout", "id": "schemaPatternForm", "sections": [
       {"type": "layoutSection", "id": "navSection", "children": [
         {"type": "button", "id": "backButton", "label": "← Shell Org Manager", "action": "LINK", "suppressDiscardDialog": True, "taskReference": {"taskId": "shellOrgManager"}},
@@ -137,11 +139,15 @@ page = {"id": "newSchemaPattern", "securityDomains": ["ManageCOMSShellOrgs"], "i
           {"type": "text", "id": "pickText", "label": "Application", "enabled": False, "value": "<% 'No application chosen yet.' %>"},
           {"type": "button", "id": "pickAppButton", "label": "Choose an Application", "action": "PRIMARY", "suppressDiscardDialog": True,
            "taskReference": {"taskId": PICKER}}]}]},
-      {"type": "layoutSection", "id": "noSchemaSection", "render": f"<% !empty(queryParams.appCode) && empty({SCH}) %>", "children": [
+      {"type": "layoutSection", "id": "inactiveSection", "render": f"<% !empty(queryParams.appCode) && {INACTIVE} %>", "children": [
+        {"type": "fieldSet", "id": "inactiveFieldSet", "title": "Application Inactive", "children": [
+          {"type": "text", "id": "inactiveText", "label": "Status", "enabled": False,
+           "value": f"<% (queryParams.appCode ?? '') + ' is inactive, so it takes no new patterns. Reactivate it on Application Patterns (Edit, Active) to add one.' %>"}]}]},
+      {"type": "layoutSection", "id": "noSchemaSection", "render": f"<% !empty(queryParams.appCode) && empty({SCH}) && !{INACTIVE} %>", "children": [
         {"type": "fieldSet", "id": "noSchemaFieldSet", "title": "No Pattern Format", "children": [
           {"type": "text", "id": "noSchemaText", "label": "Pattern Format", "enabled": False,
            "value": f"<% 'No pattern format is set up for ' + (queryParams.appCode ?? '') + ' yet. Add it to the application record (patternSchema), then come back.' %>"}]}]},
-      {"type": "layoutSection", "id": "formSection", "render": f"<% !empty(queryParams.appCode) && !empty({SCH}) %>", "children": [
+      {"type": "layoutSection", "id": "formSection", "render": f"<% !empty(queryParams.appCode) && !empty({SCH}) && !{INACTIVE} %>", "children": [
         {"type": "fieldSet", "id": "patternDetailsFieldSet", "title": "Pattern Details", "children": [
           {"type": "text", "id": "applicationText", "label": "Application", "enabled": False,
            "value": f"<% {APPC} + ' · ' + ((comsPatterns.recordFor(comsApplications.data, queryParams.appCode) ?? {{'name': ''}}).name ?? '') %>"},
@@ -202,6 +208,8 @@ def som(n):
                 if isinstance(k, dict) and k.get('id') == 'addPatternBtn':
                     k['taskReference'] = {"taskId": "newSchemaPattern", "parameterBindings": {"appCode": "<% queryParams.appCode ?? '' %>"}}
                     k.pop('visible', None)
+                    # no Add Pattern for an application switched off on Application Patterns
+                    k['render'] = "<% (comsApplications.data ?? []).filter(a => { a.appId == (queryParams.appCode ?? '') && a.active == false }).size() == 0 %>"
             kids[:] = [k for k in kids if not (isinstance(k, dict) and k.get('id') == 'addSchemaPatternBtn')]
         for v in n.values(): som(v)
     elif isinstance(n, list):

@@ -217,7 +217,8 @@ setup = {"id": "appPatternSetup", "securityDomains": [DOMAIN], "include": ["coms
   "presentation": {"pageType": "VIEW", "headerSize": "STANDARD", "title": {"type": "title", "label": "ECO-COMS: Application Patterns"},
     "body": {"type": "basicFormLayout", "id": "appPatternSetupForm", "sections": [
       {"type": "layoutSection", "id": "navSection", "children": [
-        {"type": "button", "label": "← Home", "taskReference": {"taskId": "home"}, "action": "LINK"}]},
+        {"type": "button", "label": "← Home", "taskReference": {"taskId": "home"}, "action": "LINK"},
+        {"type": "button", "id": "shellOrgManagerButton", "label": "← Shell Org Manager", "taskReference": {"taskId": "shellOrgManager"}, "action": "LINK"}]},
       {"type": "layoutSection", "id": "aboutSection", "children": [{"type": "fieldSet", "id": "aboutFieldSet", "title": "About This Page", "children": [
         {"type": "richText", "id": "aboutRichText", "enabled": False, "value": INFO(
           "Each application's shell org pattern format: its prefixes and its fields. The <b>Add Shell Org Pattern</b> form reads "
@@ -278,29 +279,34 @@ edit = {"id": "editAppPattern", "securityDomains": [DOMAIN], "include": ["comsAp
      "exclude": f"<% !{NEW} %>", "failOnStatusCodes": FOS([400, 403, 429, 500]), "values": [
        OUT("appId", f"<% {CHOSEN} %>"), OUT("name", "<% (appNameText.value ?? '').trim() %>"),
        OUT("orgType", f"<% {CHOSEN} %>"), OUT("orgSubtype", "X:SHELL"),
-       OUT("namePrefix", f"<% {PREFIXES} %>"), OUT("patternSchema", f"<% {SCHEMA} %>"), OUT("active", "<% true %>")]},
+       OUT("namePrefix", f"<% {PREFIXES} %>"), OUT("patternSchema", f"<% {SCHEMA} %>"), OUT("active", "<% appActiveCheckBox.value == true %>")]},
     {"name": "patchApplication", "baseUrlType": "BUSINESS-OBJECT", "url": "<% '/comsApplications/' + (queryParams.recordId ?? '') %>",
      "httpMethod": "PATCH", "authType": "sso", "exclude": f"<% {NEW} %>", "failOnStatusCodes": FOS([400, 403, 404, 429, 500]), "values": [
-       OUT("namePrefix", f"<% {PREFIXES} %>"), OUT("patternSchema", f"<% {SCHEMA} %>")]},
+       OUT("namePrefix", f"<% {PREFIXES} %>"), OUT("patternSchema", f"<% {SCHEMA} %>"), OUT("active", "<% appActiveCheckBox.value == true %>")]},
     {"name": "postAudit", "baseUrlType": "BUSINESS-OBJECT", "url": "/comsAuditLogs", "httpMethod": "POST", "authType": "sso",
      "failOnStatusCodes": FOS([400, 403, 429, 500]), "values": [
        OUT("timestamp", f"<% {STAMP} %>"), OUT("objectType", "Application Pattern"),
        OUT("action", f"<% {NEW} ? 'ADD' : 'UPDATE' %>"),
        OUT("coReferenceId", f"<% {APPID} %>"), OUT("coName", f"<% {APPID} %>"),
        OUT("triggeredBy", "<% selectedWorker.descriptor ?? '' %>"), OUT("changedByWid", "<% selectedWorker.id ?? '' %>"),
-       OUT("details", f"<% 'Pattern format for ' + {APPID} + ': ' + {FMT}.trim() + ' (example ' + {EX}.trim() + ')' %>")]}]},
+       OUT("details", f"<% 'Pattern format for ' + {APPID} + ': ' + {FMT}.trim() + ' (example ' + {EX}.trim() + ')' + (appActiveCheckBox.value == true ? '' : ', inactive') %>")]}]},
   "onSubmit": submit,
   "presentation": {"pageType": "EDIT", "headerSize": "STANDARD",
     "title": {"type": "title", "label": f"<% {NEW} ? 'ECO-COMS: Add Application' : ('ECO-COMS: Edit Pattern Format · ' + ({REC} ?? {{'appId': ''}}).appId) %>"},
     "cancelOverride": {"taskId": "appPatternSetup"},
     "body": {"type": "basicFormLayout", "id": "editAppPatternForm", "sections": [
+      {"type": "layoutSection", "id": "navSection", "children": [
+        {"type": "button", "id": "appPatternsBackButton", "label": "← Application Patterns", "action": "LINK", "suppressDiscardDialog": True,
+         "taskReference": {"taskId": "appPatternSetup"}},
+        {"type": "button", "id": "shellOrgManagerBackButton", "label": "← Shell Org Manager", "action": "LINK", "suppressDiscardDialog": True,
+         "taskReference": {"taskId": "shellOrgManager"}}]},
       {"type": "layoutSection", "id": "aboutSection", "children": [{"type": "fieldSet", "id": "aboutFieldSet", "title": "About This Page", "children": [
         {"type": "richText", "id": "aboutRichText", "enabled": False, "value": INFO(
           "Write the format as on the list: the prefixes, a colon, then the fields in order, e.g. <b>CP: Subject, Course</b> "
           "(several prefixes: <b>COMM / PRIV: Role Name</b>). The example is a full pattern name with one value per field, "
           "e.g. <b>X:BPMS(AOC):CP:MECH_V:1*</b>; use * for any. <b>Copy from</b> fills both from another application. "
           "A field keeps its rules (allowed characters, hint) from a field of the same name; a new field name gets the "
-          "Role Name rules. Existing patterns keep their names.")}]}]},
+          "Role Name rules. Existing patterns keep their names. An <b>inactive</b> application takes no new patterns.")}]}]},
       {"type": "layoutSection", "id": "appSection", "children": [{"type": "fieldSet", "id": "appFieldSet", "title": "Application", "children": [
         # an existing application's ID and name are shown, not edited (patterns are named after the ID)
         {"type": "text", "id": "appIdShownText", "label": "Application ID", "enabled": False, "visible": f"<% !{NEW} %>",
@@ -326,6 +332,10 @@ edit = {"id": "editAppPattern", "securityDomains": [DOMAIN], "include": ["comsAp
          "value": f"<% ({REC} ?? {{'name': ''}}).name ?? '' %>",
          "onChange": "<%\n  let e = comsAppSetup.nameError((self.value ?? '').trim());\n  if (e != '') { self.setError(e); } else { self.clearError(); }\n%>"}]}]},
       {"type": "layoutSection", "id": "formatSection", "children": [{"type": "fieldSet", "id": "formatFieldSet", "title": "Pattern Format", "children": [
+        # product owner 2026-11-04: where to reactivate (X:CLW was inactive by default: a yes/no field left unset is stored as no)
+        {"type": "checkBox", "id": "appActiveCheckBox", "label": "Active",
+         "helpText": "Untick to stop new patterns for this application (existing ones stay). Inactive applications are hidden from Add Pattern.",
+         "value": f"<% ({REC} ?? {{'active': true}}).active != false %>"},
         {"type": "dropdown", "id": "copyFromDropdown", "label": "Copy from",
          "helpText": "Fills the format and example from another application. You can still change them.",
          "values": f"<% comsAppSetup.copyOptions(comsApplications.data, {APPID}) %>",

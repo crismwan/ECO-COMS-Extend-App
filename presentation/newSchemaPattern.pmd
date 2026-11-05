@@ -85,7 +85,7 @@
     "cancelOverride": {
       "taskId": "shellOrgManager"
     },
-    "standardEditButtonsHidden": "<% empty(queryParams.appCode) || empty(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode)) %>",
+    "standardEditButtonsHidden": "<% empty(queryParams.appCode) || empty(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode)) || ((comsPatterns.recordFor(comsApplications.data, queryParams.appCode) ?? {'active': true}).active == false) %>",
     "body": {
       "type": "basicFormLayout",
       "id": "schemaPatternForm",
@@ -177,8 +177,29 @@
         },
         {
           "type": "layoutSection",
+          "id": "inactiveSection",
+          "render": "<% !empty(queryParams.appCode) && ((comsPatterns.recordFor(comsApplications.data, queryParams.appCode) ?? {'active': true}).active == false) %>",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "inactiveFieldSet",
+              "title": "Application Inactive",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "inactiveText",
+                  "label": "Status",
+                  "enabled": false,
+                  "value": "<% (queryParams.appCode ?? '') + ' is inactive, so it takes no new patterns. Reactivate it on Application Patterns (Edit, Active) to add one.' %>"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
           "id": "noSchemaSection",
-          "render": "<% !empty(queryParams.appCode) && empty(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode)) %>",
+          "render": "<% !empty(queryParams.appCode) && empty(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode)) && !((comsPatterns.recordFor(comsApplications.data, queryParams.appCode) ?? {'active': true}).active == false) %>",
           "children": [
             {
               "type": "fieldSet",
@@ -199,7 +220,7 @@
         {
           "type": "layoutSection",
           "id": "formSection",
-          "render": "<% !empty(queryParams.appCode) && !empty(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode)) %>",
+          "render": "<% !empty(queryParams.appCode) && !empty(comsPatterns.schemaFor(comsApplications.data, queryParams.appCode)) && !((comsPatterns.recordFor(comsApplications.data, queryParams.appCode) ?? {'active': true}).active == false) %>",
           "children": [
             {
               "type": "fieldSet",

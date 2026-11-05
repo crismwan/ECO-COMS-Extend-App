@@ -51,6 +51,15 @@
           "children": [
             {
               "type": "button",
+              "id": "shellOrgManagerButton",
+              "label": "← Shell Org Manager",
+              "taskReference": {
+                "taskId": "shellOrgManager"
+              },
+              "action": "LINK"
+            },
+            {
+              "type": "button",
               "label": "← Home",
               "taskReference": {
                 "taskId": "home"
