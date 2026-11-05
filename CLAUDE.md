@@ -1777,6 +1777,8 @@ Business objects define an app's data model: they extend Workday's single object
 
 - **`DATE`** — `precision`: `MILLISECOND` | `SECOND` | `MINUTE` | `HOUR` | `DAY` | `MONTH` | `YEAR`.
 
+- **A `BOOLEAN` left unset reads as `false`**, not empty (live 2026-11-04: a record created by hand before an `active` flag was used showed Inactive). Test with `x.active != false` only when the default should be true, and set the flag explicitly on every create.
+
 - **`DECIMAL`** — `decimals`: up to **10** decimal places.
 
 - **`INTEGER`**, **`CURRENCY`**, **`BOOLEAN`** — no extra attributes.
