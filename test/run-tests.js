@@ -46,7 +46,7 @@ const ORCH = `${API}/orchestrate/v1/apps/${APP_ID}/orchestrations`;
 const argv = process.argv.slice(2);
 const arg = (name) => { const i = argv.indexOf(name); return i === -1 ? null : argv[i + 1]; };
 const VERBOSE = argv.includes('--verbose');
-const SUITES_ALL = ['static', 'smoke', 'full', 'cleanup', 'isu', 'repair', 'seconduser', 'purge', 'demoseed', 'datacheck', 'probe', 'bulkvalidate', 'subflows', 'seedapps', 'patternguard', 'orgguard', 'gateway', 'prompts', 'graphql', 'eventlinks', 'timing', 'bulkapply'];
+const SUITES_ALL = ['static', 'smoke', 'full', 'cleanup', 'isu', 'repair', 'seconduser', 'purge', 'demoseed', 'datacheck', 'probe', 'bulkvalidate', 'subflows', 'seedapps', 'patternguard', 'orgguard', 'gateway', 'prompts', 'possearch', 'graphql', 'eventlinks', 'timing', 'bulkapply'];
 const suiteArg = arg('--suite') || argv.find((a) => !a.startsWith('--') && SUITES_ALL.some((s) => a.split(',').includes(s))) || 'smoke';
 const SUITES = suiteArg.split(',').map((s) => s.trim()).filter(Boolean);
 for (const s of SUITES) if (!SUITES_ALL.includes(s)) { console.error(`Unknown suite "${s}". Use: ${SUITES_ALL.join(', ')}`); process.exit(2); }
@@ -1886,6 +1886,33 @@ async function promptsProbe(token) {
   pass('Prompts.probe', `${root.fields.length} mutations with prompts, ${hits.length} on the app's subjects, ${rel.length} matching ID fields`);
 }
 
+// ═══ Position search timing (read-only): the four pages' position search and candidate changes ═══
+async function posSearchTiming(token) {
+  console.log('\n-- Position search timing (read-only, median of 5) --');
+  const run = async (q) => request('GET', `${WQL}?query=${encodeURIComponent(q)}${''}`, token);
+  const runL = async (q, lim) => request('GET', `${WQL}?limit=${lim}&query=${encodeURIComponent(q)}`, token);
+  const med = async (label, f) => {
+    const ms = []; let info = '';
+    for (let i = 0; i < 5; i++) { const t0 = Date.now(); try { info = await f(); } catch (e) { info = 'ERROR ' + e.message.slice(0, 100); } ms.push(Date.now() - t0); }
+    const m = ms.slice().sort((a, b) => a - b)[2];
+    console.log(`   TIME ${label}: median ${m} ms (${ms.join(', ')}) · ${info}`);
+    return m;
+  };
+  const F5 = 'cf_PositionID, workdayID, position_PositionManagement, cf_PositionIsFilled, cf_PositionText';
+  const F4 = 'cf_PositionID, workdayID, position_PositionManagement, cf_PositionText';
+  const W = (t) => `supervisoryOrganization is not empty AND cf_PositionText contains '${t}'`;
+  const rows = (r) => `${(r.data || []).length} rows (total ${r.total ?? '?'}), ${Math.round(JSON.stringify(r).length / 1024)} KB`;
+  for (const t of ['a', 'Manager', 'Director', 'P-00', 'Advisor']) {
+    console.log(`   -- "${t}"`);
+    await med(`now: 5 fields, no limit`, async () => rows(await run(`SELECT ${F5} FROM allPositions WHERE ${W(t)}`)));
+    await med(`5 fields, limit 50`, async () => rows(await runL(`SELECT ${F5} FROM allPositions WHERE ${W(t)}`, 50)));
+    await med(`4 fields, limit 50`, async () => rows(await runL(`SELECT ${F4} FROM allPositions WHERE ${W(t)}`, 50)));
+    await med(`4 fields, limit 25`, async () => rows(await runL(`SELECT ${F4} FROM allPositions WHERE ${W(t)}`, 25)));
+    await med(`(info) 4 fields, limit 50, no supervisory filter`, async () => rows(await runL(`SELECT ${F4} FROM allPositions WHERE cf_PositionText contains '${t}'`, 50)));
+  }
+  pass('PosSearch.timing', 'see lines above');
+}
+
 // ═══ Probe: read-only facts for building application pattern schemas ═══
 // ═══ Bulk validate: one TEST batch through BulkRoleGridApply in VALIDATE mode (no role changes) ═══
 // Proves the per-row sub-orchestration (ProcessBulkRoleRow, tools/extract_subflows.py) runs: the run must finish as
@@ -2508,6 +2535,7 @@ async function demoSeed(token, me) {
         if (live.includes('orgguard')) await orgGuard(token, me);
         if (live.includes('gateway')) await gatewayProbe(token, me);
         if (live.includes('prompts')) await promptsProbe(token);
+        if (live.includes('possearch')) await posSearchTiming(token);
       }
     }
   }
