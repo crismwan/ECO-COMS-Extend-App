@@ -237,3 +237,119 @@ extract('StartRequestReview', ['StartRoleRequestReview', 'StartAAARequestReview'
         notes=("Shared by StartRoleRequestReview and StartAAARequestReview (two copies only for their different security domains): "
                "start the review event for one request, save it on the request, write the REQUEST audit record. Built by tools/extract_subflows.py.",
                "The request and the audit wording: ", "No outputs: the event is saved on the request and the audit record is written here."))
+
+
+# ---------------------------------------------------------------------------------------------------------------
+# Shared audit record: every comsAuditLogs POST (WriteAuditLog) in these files becomes a call to WriteAuditRecord,
+# which holds the one record template. Sub-orchestrations may call sub-orchestrations (doc.workday.com "Modular
+# Orchestration Design": "You can also call suborchestrations from other suborchestrations"), so the three subs above
+# are included. Left out: DenyRoleRequest (business-process triggered; whether those can call a sub isn't documented,
+# and a Deny can't be launched from a test).
+# Each parent passes one String per field; template wording such as {{#if isAdd}}Assigned{{/if}} becomes an
+# (if (c) "..." else "") expression. Fields only some writers set are left out of the record when empty, as before.
+AUDIT_SUB = 'WriteAuditRecord'
+AUDIT_FIELDS = ['timestamp', 'runId', 'eventWid', 'objectType', 'action', 'coReferenceId', 'coName', 'roleName',
+                'positionName', 'effectiveDate', 'changedByWid', 'orgWid', 'roleWid', 'positionWid', 'triggeredBy', 'details']
+AUDIT_ALWAYS = {'timestamp', 'runId', 'objectType', 'action', 'coReferenceId', 'coName', 'effectiveDate',
+                'changedByWid', 'triggeredBy', 'details'}
+AUDIT_WRITERS = [('AssignRolePositions', '.orchestration'), ('ManageShellOrgStatus', '.orchestration'),
+                 ('ProcessBulkRoleRow', '.suborchestration'), ('CreateShellOrganization', '.suborchestration'),
+                 ('StartRequestReview', '.suborchestration')]
+
+def template_expr(t):
+    """'{{#if c}}Assigned{{/if}} position {{x}}' -> '(if (c) "Assigned" else "") + " position " + x'."""
+    toks = [m.group(0) for m in re.finditer(r'\{\{[^}]*\}\}|[^{]+', t)]
+    pos = [0]
+    def join(parts): return ' + '.join(parts) if parts else '""'
+    def seq(inside_if):
+        parts = []
+        while pos[0] < len(toks):
+            tok = toks[pos[0]]; pos[0] += 1
+            if tok == '{{/if}}':
+                if not inside_if: sys.exit(f'unmatched {{{{/if}}}} in {t!r}')
+                return parts
+            if tok.startswith('{{#if '): parts.append(f'(if ({tok[6:-2].strip()}) ({join(seq(True))}) else "")')
+            elif tok.startswith('{{'): parts.append(tok[2:-2].strip())
+            else:
+                if '"' in tok or '\\' in tok: sys.exit(f'audit template literal needs escaping: {tok!r}')
+                parts.append(json.dumps(tok))
+        if inside_if: sys.exit(f'missing {{{{/if}}}} in {t!r}')
+        return parts
+    return join(seq(False))
+
+def share_audit():
+    sid = flow_id(AUDIT_SUB)
+    proto, first, done = None, None, []
+    for name, ext in AUDIT_WRITERS:
+        d = load(name, ext)
+        node = find(d, 'WriteAuditLog')
+        if node is None:
+            if find(d, 'CallWriteAudit') is None: sys.exit(f'{name}: no WriteAuditLog to share')
+            print(f'   {name}: already calls {AUDIT_SUB}'); continue
+        if ext == '.orchestration':   # keep the full parent for --restore (subs are rebuilt from their parents)
+            open(os.path.join(SRC, name + ext), 'w').write(json.dumps(d, separators=(',', ':')))
+        tpl = node['_value']['body']['_value']['_value']['message']['_value']
+        fields = dict(re.findall(r'"(\w+)":\s*"((?:[^"\\]|\\.)*)"', tpl))
+        if set(fields) - set(AUDIT_FIELDS): sys.exit(f'{name}: audit fields {set(fields) - set(AUDIT_FIELDS)} unknown to {AUDIT_SUB}')
+        if AUDIT_ALWAYS - set(fields): sys.exit(f'{name}: audit record lacks {AUDIT_ALWAYS - set(fields)}')
+        rest = copy.deepcopy(node); rest['_value'].pop('body'); rest['_value'].pop('name')
+        if proto is None: proto, first = node, d
+        elif rest != {**proto, '_value': {k: v for k, v in proto['_value'].items() if k not in ('body', 'name')}}:
+            sys.exit(f'{name}: WriteAuditLog differs from the others outside its body; check before sharing')
+        call = {"_type": "CallSubflow", "_value": {
+            "name": I('CallWriteAudit'), "isDisabled": B(False), "errorHandler": {"_type": ["Opt", "ErrorHandler"], "_value": None},
+            "subflowId": S(sid), "parameters": {"_type": ["List", "Assignment"], "_value": [
+                {"_type": "Assignment", "_value": {
+                    "param": {"_type": "Parameter", "_value": {"name": I(f), "type": TYPE('String'), "default": {"_type": ["Opt", "Any"], "_value": None}}},
+                    "expr": EXPR(template_expr(fields[f]) if f in fields else '""', 'String')}} for f in AUDIT_FIELDS]},
+            "executionDelay": {"_type": ["Opt", "SubflowExecutionDelay"], "_value": None}}}
+        done.append((name, ext, d, node, call))
+    if not done: return
+    body = copy.deepcopy(proto)
+    lines = []
+    for f in AUDIT_FIELDS:
+        pair = f'"{f}": "{{{{data.start.{f}}}}}"'
+        lines.append(pair if f in AUDIT_ALWAYS else f'{{{{#if data.start.{f}}}}}{pair},{{{{/if}}}}')
+    # optional fields carry their own comma, so the record always ends with a required field (details)
+    body['_value']['body']['_value']['_value']['message']['_value'] = '{\n' + '\n'.join(
+        (l + ',') if (not l.startswith('{{#if') and l != lines[-1]) else l for l in lines) + '\n}'
+    body['_value']['notes'] = NOTES('Write one comsAuditLogs record; fields other writers do not set are left out when empty.')
+    fv = first['flowVersion'] if 'flowVersion' in first else '3.7.0'
+    src = first['_value']
+    sub = {"flowVersion": fv, "_type": "Flow", "_value": {
+        "id": S(sid), "name": I(AUDIT_SUB), "type": {"_type": "FlowType", "_value": ".maya.FlowSubflow"},
+        "start": {"_type": "StartSubflow", "_value": {
+            "parameters": {"_type": ["List", "ExprParameter"], "_value": [
+                {"_type": "ExprParameter", "_value": {"name": I(n), "type": TYPE('String'),
+                                                      "expr": {"_type": ["Opt", ["Expr", ["Opt", "Any"]]], "_value": None}}} for n in AUDIT_FIELDS]},
+            "notes": NOTES('One audit record, every field as text (empty when the writer has no value): ' + ', '.join(AUDIT_FIELDS))}},
+        "end": {"_type": "EndSubflow", "_value": {"exports": {"_type": ["List", "Assignment"], "_value": []},
+                                                  "notes": NOTES('No outputs.')}},
+        "nodes": {"_type": ["List", "Node"], "_value": [body]},
+        "notes": NOTES('The one audit-record template, called by every orchestration that writes comsAuditLogs (except the '
+                       'business-process-triggered DenyRoleRequest). Built by tools/extract_subflows.py.'),
+        "resources": copy.deepcopy(src['resources']),
+        "defaultWorkdayCredentialRef": copy.deepcopy(src['defaultWorkdayCredentialRef']),
+        "defaultTlsConfigRef": copy.deepcopy(src['defaultTlsConfigRef']),
+        "defaultFtpCredRef": copy.deepcopy(src['defaultFtpCredRef']),
+        "mayaVersion": copy.deepcopy(src['mayaVersion']),
+        "errorHandler": {"_type": ["Opt", "ErrorHandler"], "_value": None},
+        "cancelBarrier": {"_type": ["Opt", "Identifier"], "_value": None},
+        "defaultLocale": copy.deepcopy(src['defaultLocale']),
+        "securityDomains": {"_type": ["Opt", ["List", "String"]], "_value": None}}}
+    save(AUDIT_SUB, sub, '.suborchestration')
+    for name, ext, d, node, call in done:
+        def swap(n):
+            if isinstance(n, list):
+                for i, x in enumerate(n):
+                    if x is node: n[i] = call; return True
+                    if swap(x): return True
+            elif isinstance(n, dict):
+                for x in n.values():
+                    if swap(x): return True
+            return False
+        if not swap(d): sys.exit(f'{name}: could not replace WriteAuditLog')
+        save(name, d, ext)
+        print(f'   {name}: WriteAuditLog -> CallWriteAudit')
+
+share_audit()
