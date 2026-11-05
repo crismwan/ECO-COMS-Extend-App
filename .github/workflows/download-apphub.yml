@@ -1,0 +1,88 @@
+# Manual: download the app as App Hub holds it (e.g. after saving something in Orchestration Builder), to see
+# how App Hub stores components the repo doesn't have yet. Setup steps copied from deploy.yml.
+name: Download App Hub source
+on:
+  workflow_dispatch: {}
+jobs:
+  download:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Install WDCLI from GitHub Release
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: "# WDCLI v1.9.43 is stored as a release asset on this repo\n# To update: download Linux x64 from https://developer.workday.com/downloads\n# then upload it as a release asset tagged \"wdcli-v1.9.43\"\
+        \nmkdir -p /opt/wdcli-download\ngh release download wdcli-v1.9.43 \\\n  --repo crismwan/ECO-COMS-Extend-App \\\n  --pattern \"wdcli-installer-linux-x64-*.tar.gz\" \\\n  --dir /opt/wdcli-download\n\
+        \nmkdir -p /opt/wdcli\ntar xzvf /opt/wdcli-download/wdcli-installer-linux-x64-*.tar.gz -C /opt/wdcli\n\nWDCLI_BIN=$(find /opt/wdcli -name \"wdcli\" -type f | head -1)\nif [ -z \"${WDCLI_BIN}\" ];\
+        \ then\n  echo \"ERROR: Could not find wdcli binary after extraction\"\n  exit 1\nfi\nchmod +x \"${WDCLI_BIN}\"\necho \"$(dirname ${WDCLI_BIN})\" >> $GITHUB_PATH\n"
+    - name: Pre-populate wdcli config with developer token
+      env:
+        WDCLI_CLIENT_ID: ${{ secrets.WD_CLIENT_ID }}
+        WDCLI_CLIENT_SECRET: ${{ secrets.WD_CLIENT_SECRET }}
+        WD_DEV_TOKEN: ${{ secrets.WD_DEV_TOKEN }}
+        WD_ORG_UUID: ${{ secrets.WD_ORG_UUID }}
+      run: "# Secrets pasted from config.json can carry the JSON quotes or a newline; a JWT has neither, so drop them.\nfor v in WD_DEV_TOKEN WD_WCP_TOKEN WDCLI_TENANT_TOKEN; do if [ -n \"${!v:-}\" ]; then\
+        \ export \"$v=$(printf '%s' \"${!v}\" | tr -d '[:space:]\\\"')\"; fi; done\nset -euo pipefail\n# WD_DEV_TOKEN = wcpTenantAccessToken[\"ubc_wcpdev2\"] from interactive `wdcli app deploy`\n# This\
+        \ is the PKCE user token scoped to ubc_wcpdev2 (aud: wd, tenant: ubc_wcpdev2).\n# It is written by wdcli when you run `wdcli app deploy <ref>` interactively and\n# complete the browser login for\
+        \ the ubc_wcpdev2 tenant.\n# Obtain it: run `wdcli app deploy ecocomsphase_xclw_cm_sync2_vmzvxm` locally,\n# log in via browser, then copy config.json > wcpTenantAccessToken > ubc_wcpdev2.\n# Token\
+        \ TTL is ~8h; refresh by repeating the interactive deploy and updating the secret.\n\nWDCLI_CONFIG_DIR=\"${HOME}/.config/@workday/wdcli\"\nmkdir -p \"${WDCLI_CONFIG_DIR}\"\nCONFIG_FILE=\"${WDCLI_CONFIG_DIR}/config.json\"\
+        \n\n# Build config with tenant token in the correct slot + client credentials\n# wcpTenantAccessToken[\"ubc_wcpdev2\"] is what AOS /deploy uses as Authorization: Bearer\njq -n \\\n  --arg devToken\
+        \ \"${WD_DEV_TOKEN}\" \\\n  --arg orgUuid \"${WD_ORG_UUID}\" \\\n  --arg clientId \"${WDCLI_CLIENT_ID}\" \\\n  --arg clientSecret \"${WDCLI_CLIENT_SECRET}\" \\\n  '{\n    wcpTenantAccessToken: {\"\
+        ubc_wcpdev2\": $devToken},\n    organizationUuid: $orgUuid,\n    clientId: $clientId,\n    clientSecret: $clientSecret,\n    defaultAccountShortId: \"vmzvxm\",\n    defaultTenantAlias: \"ubc_wcpdev2\"\
+        \n  }' > \"${CONFIG_FILE}\"\n\necho \"Config written (keys): $(jq -r 'keys | @csv' \"${CONFIG_FILE}\")\"\n\n# Decode JWT expiry to check token freshness\nJWT_PAYLOAD=$(echo \"${WD_DEV_TOKEN}\" |\
+        \ cut -d'.' -f2)\nPADDED=$(echo \"${JWT_PAYLOAD}\" | tr '_-' '/+' | awk '{n=length($0)%4; if(n==2) print $0\"==\"; else if(n==3) print $0\"=\"; else print $0}')\nEXP=$(echo \"${PADDED}\" | base64\
+        \ -d 2>/dev/null | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d.get('exp','no exp'))\" 2>/dev/null || echo \"parse-error\")\nNOW=$(date +%s)\nif [ \"${EXP}\" = \"parse-error\" ]\
+        \ || [ \"${EXP}\" = \"no exp\" ]; then\n  echo \"WD_DEV_TOKEN JWT exp: could not decode\"\nelif [ \"${EXP}\" -lt \"${NOW}\" ]; then\n  echo \"WARNING: WD_DEV_TOKEN EXPIRED (exp=${EXP}, now=${NOW},\
+        \ expired $((NOW - EXP))s ago)\"\n  echo \"ACTION: run 'wdcli app deploy ecocomsphase_xclw_cm_sync2_vmzvxm' locally, log in, update WD_DEV_TOKEN secret\"\n  exit 1\nelse\n  echo \"WD_DEV_TOKEN valid\
+        \ (exp=${EXP}, expires in $((EXP - NOW))s)\"\nfi\n\n# Export org UUID for later steps\necho \"ORG_UUID=${WD_ORG_UUID}\" >> $GITHUB_ENV\n"
+    - name: Check platform token (WD_WCP_TOKEN) expiry
+      env:
+        WD_WCP_TOKEN: ${{ secrets.WD_WCP_TOKEN }}
+      run: "# Secrets pasted from config.json can carry the JSON quotes or a newline; a JWT has neither, so drop them.\nfor v in WD_DEV_TOKEN WD_WCP_TOKEN WDCLI_TENANT_TOKEN; do if [ -n \"${!v:-}\" ]; then\
+        \ export \"$v=$(printf '%s' \"${!v}\" | tr -d '[:space:]\\\"')\"; fi; done\n# The AOS deploy also needs WD_WCP_TOKEN (config.json wcpAccessToken from an interactive\n# wdcli login). When only this\
+        \ one has expired, deploy fails late with a 401\n# \"The supplied authentication is invalid\". Fail early with a clear message instead.\npython3 - <<'PY'\nimport base64, json, os, sys, time\ntok\
+        \ = os.environ.get(\"WD_WCP_TOKEN\", \"\")\ntry:\n    part = tok.split(\".\")[1]\n    exp = json.loads(base64.urlsafe_b64decode(part + \"=\" * (-len(part) % 4))).get(\"exp\")\nexcept Exception:\n\
+        \    print(\"WD_WCP_TOKEN: could not decode expiry; continuing\")\n    sys.exit(0)\nleft = int(exp) - int(time.time()) if exp else None\nif left is None:\n    print(\"WD_WCP_TOKEN: no exp claim;\
+        \ continuing\")\nelif left < 0:\n    print(f\"ERROR: WD_WCP_TOKEN expired {-left}s ago.\")\n    print(\"ACTION: run 'wdcli app deploy ecocomsphase_xclw_cm_sync2_vmzvxm' locally, log in, then update\"\
+        )\n    print(\"BOTH secrets from ~/.config/@workday/wdcli/config.json: WD_DEV_TOKEN = wcpTenantAccessToken.ubc_wcpdev2,\")\n    print(\"WD_WCP_TOKEN = wcpAccessToken.\")\n    sys.exit(1)\nelse:\n\
+        \    print(f\"WD_WCP_TOKEN valid for another {left // 60} min\")\nPY\n"
+    - name: Authenticate as system user (for upload)
+      env:
+        WDCLI_CLIENT_ID: ${{ secrets.WD_CLIENT_ID }}
+        WDCLI_CLIENT_SECRET: ${{ secrets.WD_CLIENT_SECRET }}
+      run: 'set -euo pipefail
+
+        # Runs wdcli auth login --system-user, which overwrites wcpAccessToken
+
+        # in config with the OctopaAS client-credentials token.
+
+        # This token works for upload (/apps/source/archive) and getOrganizations,
+
+        # but NOT for the DevTools deploy endpoint (/apps/{uuid}/deploy).
+
+        # We restore the PKCE WD_DEV_TOKEN into wcpAccessToken after upload.
+
+        wdcli auth login --system-user
+
+        wdcli whoami
+
+        '
+    - name: Download the app from App Hub (latest version)
+      run: 'set -uo pipefail
+
+        mkdir -p /tmp/apphub
+
+        wdcli app download "${APP_REF_ID:-ecocomsphase_xclw_cm_sync2_vmzvxm}" -d /tmp/apphub --latest-version --overwrite --ci 2>&1 | tail -20
+
+        find /tmp/apphub -maxdepth 3 | sort | head -200
+
+        '
+    - name: Keep the download as an artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: apphub-source
+        path: /tmp/apphub
+        if-no-files-found: warn
