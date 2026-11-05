@@ -54,13 +54,18 @@ var prefixList = function(text) {
   empty(text) ? [] : text.split(',').map(p => { p.trim() }).filter(p => { !empty(p) });
 };
 
+/* Application codes from Workday's X: organizations (as on Add Shell Org) that have no record here yet. */
+var newAppOptions = function(orgs, apps) {
+  let have = (apps ?? []).map(a => { a.appId ?? '' });
+  (orgs ?? []).map(o => { let c = o.code ?? ''; c.substringAfter(':').contains(':') ? (c.substringBefore(':') + ':' + c.substringAfter(':').substringBefore(':')) : c })
+    .filter(c => { c.startsWith('X:') && !have.contains(c) }).distinct().sort().map(c => { { 'id': c, 'descriptor': c } });
+};
+
 var appIdError = function(appId, apps, isNew) {
   if (!isNew) {
     '';
   } else if (empty(appId)) {
-    'Application ID is required, e.g. X:BPMS(AOC).';
-  } else if (!validate:match('X:[A-Z0-9]+(\\\\([A-Z0-9]+\\\\))?', appId)) {
-    'Use X: then capital letters or digits, with an optional part in brackets, e.g. X:OAM or X:BPMS(AOC).';
+    'Choose the application.';
   } else if ((apps ?? []).filter(a => { a.appId == appId }).size() > 0) {
     appId + ' is already set up. Edit it from the list instead.';
   } else {
@@ -137,6 +142,7 @@ var summary = function(rec) {
   "fieldRows": fieldRows,
   "prefixText": prefixText,
   "prefixList": prefixList,
+  "newAppOptions": newAppOptions,
   "appIdError": appIdError,
   "nameError": nameError,
   "prefixError": prefixError,
@@ -187,7 +193,8 @@ save('appPatternSetup.pmd', setup)
 # ---- edit page ----
 REC = "comsAppSetup.recordById(comsApplications.data, queryParams.recordId)"
 NEW = "empty(queryParams.recordId)"
-APPID = f"({NEW} ? (appIdText.value ?? '').trim() : ({REC} ?? {{'appId': ''}}).appId)"
+CHOSEN = "(empty(appIdDropdown.value) ? '' : appIdDropdown.selectedEntries[0].id)"
+APPID = f"({NEW} ? {CHOSEN} : ({REC} ?? {{'appId': ''}}).appId)"
 ROWS = ("fieldsGrid.rows.map(r => { { 'fieldLabel': (r.childrenMap.colFieldLabel.value ?? '').trim(), "
         "'regex': (r.childrenMap.colRegex.value ?? '').trim(), 'hint': (r.childrenMap.colHint.value ?? '').trim(), "
         "'example': (r.childrenMap.colExample.value ?? '').trim(), 'blankIsWildcard': r.childrenMap.colBlank.value == true } })")
@@ -203,10 +210,10 @@ SCHEMA = f"comsAppSetup.schemaJson(prefixesText.value ?? '', {ROWS})"
 PREFIXES = "comsAppSetup.prefixList(prefixesText.value ?? '').join(',')"
 STAMP = "date:now().format(\"yyyy-MM-dd'T'HH:mm:ss'Z'\")"
 submit = ("<%\n"
-          "  appIdText.clearError();\n  appNameText.clearError();\n  prefixesText.clearError();\n  fieldsCheckText.clearError();\n"
+          "  appIdDropdown.clearError();\n  appNameText.clearError();\n  prefixesText.clearError();\n  fieldsCheckText.clearError();\n"
           "  let valid = true;\n"
-          f"  let e1 = comsAppSetup.appIdError((appIdText.value ?? '').trim(), comsApplications.data, {NEW});\n"
-          "  if (e1 != '') { appIdText.setError(e1); valid = false; }\n"
+          f"  let e1 = comsAppSetup.appIdError({CHOSEN}, comsApplications.data, {NEW});\n"
+          "  if (e1 != '') { appIdDropdown.setError(e1); valid = false; }\n"
           "  let e2 = comsAppSetup.nameError((appNameText.value ?? '').trim());\n"
           "  if (e2 != '') { appNameText.setError(e2); valid = false; }\n"
           "  let e3 = comsAppSetup.prefixError(prefixesText.value ?? '');\n"
@@ -216,13 +223,15 @@ submit = ("<%\n"
           "  valid;\n%>")
 edit = {"id": "editAppPattern", "securityDomains": [DOMAIN], "include": ["comsAppSetup.script"],
   "endPoints": [APPS_EP,
+    {"name": "existingOrgs", "baseUrlType": "workday-wql", "url": "data", "authType": "sso", "bestEffort": "true",
+     "wqlQuery": {"queryId": "customOrganizations"}, "failOnStatusCodes": FOS([400, 429])},
     {"name": "selectedWorker", "baseUrlType": "COMMON", "url": "/workers/me", "authType": "sso", "bestEffort": "true", "failOnStatusCodes": FOS([400, 403, 429])}],
   "outboundData": {"outboundEndPoints": [
     {"name": "postApplication", "baseUrlType": "BUSINESS-OBJECT", "url": "/comsApplications", "httpMethod": "POST", "authType": "sso",
      "exclude": f"<% !{NEW} %>", "failOnStatusCodes": FOS([400, 403, 429, 500]), "values": [
-       OUT("appId", "<% (appIdText.value ?? '').trim() %>"), OUT("name", "<% (appNameText.value ?? '').trim() %>"),
+       OUT("appId", f"<% {CHOSEN} %>"), OUT("name", "<% (appNameText.value ?? '').trim() %>"),
        OUT("description", "<% (appDescriptionText.value ?? '').trim() %>"),
-       OUT("orgType", "<% (appIdText.value ?? '').trim() %>"), OUT("orgSubtype", "X:SHELL"),
+       OUT("orgType", f"<% {CHOSEN} %>"), OUT("orgSubtype", "X:SHELL"),
        OUT("namePrefix", f"<% {PREFIXES} %>"), OUT("patternSchema", f"<% {SCHEMA} %>"),
        OUT("active", "<% appActiveCheckBox.value == true %>")]},
     {"name": "patchApplication", "baseUrlType": "BUSINESS-OBJECT", "url": "<% '/comsApplications/' + (queryParams.recordId ?? '') %>",
@@ -253,9 +262,10 @@ edit = {"id": "editAppPattern", "securityDomains": [DOMAIN], "include": ["comsAp
         # a new application gets an editable ID; an existing one shows it read-only (the ID can't change: patterns are named after it)
         {"type": "text", "id": "appIdShownText", "label": "Application ID", "enabled": False, "visible": f"<% !{NEW} %>",
          "value": f"<% ({REC} ?? {{'appId': ''}}).appId ?? '' %>"},
-        {"type": "text", "id": "appIdText", "label": "Application ID", "visible": f"<% {NEW} %>",
-         "value": "<% '' %>", "placeholder": "e.g. X:BPMS(AOC)",
-         "onChange": f"<%\n  let e = comsAppSetup.appIdError((self.value ?? '').trim(), comsApplications.data, {NEW});\n  if (e != '') {{ self.setError(e); }} else {{ self.clearError(); }}\n  {PREVIEW}\n%>"},
+        {"type": "dropdown", "id": "appIdDropdown", "label": "Application ID", "visible": f"<% {NEW} %>",
+         "helpText": "Applications in Workday that don't have a pattern format here yet.",
+         "values": "<% comsAppSetup.newAppOptions(existingOrgs.data, comsApplications.data) %>",
+         "onChange": f"<%\n  let e = comsAppSetup.appIdError({CHOSEN}, comsApplications.data, {NEW});\n  if (e != '') {{ self.setError(e); }} else {{ self.clearError(); }}\n  {PREVIEW}\n%>"},
         {"type": "text", "id": "appNameText", "label": "Name", "required": True, "value": f"<% ({REC} ?? {{'name': ''}}).name ?? '' %>",
          "onChange": "<%\n  let e = comsAppSetup.nameError((self.value ?? '').trim());\n  if (e != '') { self.setError(e); } else { self.clearError(); }\n%>"},
         {"type": "text", "id": "appDescriptionText", "label": "Description", "value": f"<% ({REC} ?? {{'description': ''}}).description ?? '' %>"},

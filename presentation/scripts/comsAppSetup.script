@@ -22,13 +22,18 @@ var prefixList = function(text) {
   empty(text) ? [] : text.split(',').map(p => { p.trim() }).filter(p => { !empty(p) });
 };
 
+/* Application codes from Workday's X: organizations (as on Add Shell Org) that have no record here yet. */
+var newAppOptions = function(orgs, apps) {
+  let have = (apps ?? []).map(a => { a.appId ?? '' });
+  (orgs ?? []).map(o => { let c = o.code ?? ''; c.substringAfter(':').contains(':') ? (c.substringBefore(':') + ':' + c.substringAfter(':').substringBefore(':')) : c })
+    .filter(c => { c.startsWith('X:') && !have.contains(c) }).distinct().sort().map(c => { { 'id': c, 'descriptor': c } });
+};
+
 var appIdError = function(appId, apps, isNew) {
   if (!isNew) {
     '';
   } else if (empty(appId)) {
-    'Application ID is required, e.g. X:BPMS(AOC).';
-  } else if (!validate:match('X:[A-Z0-9]+(\\([A-Z0-9]+\\))?', appId)) {
-    'Use X: then capital letters or digits, with an optional part in brackets, e.g. X:OAM or X:BPMS(AOC).';
+    'Choose the application.';
   } else if ((apps ?? []).filter(a => { a.appId == appId }).size() > 0) {
     appId + ' is already set up. Edit it from the list instead.';
   } else {
@@ -105,6 +110,7 @@ var summary = function(rec) {
   "fieldRows": fieldRows,
   "prefixText": prefixText,
   "prefixList": prefixList,
+  "newAppOptions": newAppOptions,
   "appIdError": appIdError,
   "nameError": nameError,
   "prefixError": prefixError,
