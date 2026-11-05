@@ -14,18 +14,21 @@ posTreeNode (deferred, the folder's href; two pages when it holds more than 100,
 an organization opens with posTreeOrgPositions (deferred WQL, positions WHERE supervisoryOrganization in (<WID>),
 ~0.4 s, 41 at most). [values, true] = more levels below, [values, false] = these are the positions.
 
-Pages: PAGES below (pilot: Edit Role Assignment). Rollback: `python3 tools/pos_tree.py --off`.
+Pages: PAGES below (Edit Role Assignment first, then every position picker, 2026-11-05). Rollback: `python3 tools/pos_tree.py --off`.
 """
 import json, os, sys
 
 R = os.path.join(os.path.dirname(__file__), '..', 'presentation')
 OFF = '--off' in sys.argv
-PAGES = {'editRoleAssignment': 'positionsToAddInstanceList'}
+# page: (picker, the id the page stores for a position, the help sentence the hint replaces)
+PAGES = {'editRoleAssignment': ('positionsToAddInstanceList', 'cf_PositionID', 'Search by position name or ID.'),
+         'bulkRoleGrid': ('positionAddList', 'cf_PositionID', ''),
+         'assignableRoleManager': ('positionsList', 'workdayID', ''),
+         'adminProvisioning': ('positionsList', 'workdayID', '')}
 FOLDERS = ['My Favorites', 'My Organizations', 'Supervisory Organizations by Manager', 'Supervisory Organization']
 BY_MANAGER = 'Supervisory Organizations by Manager'
 NAMES = ('posTreeRoot', 'posTreeNode', 'posTreeOrgPositions')
 HINT = 'Click to browse by supervisory organization, or type a position name or ID.'
-ORIG = 'Search by position name or ID.'
 LABEL = ("!empty(o.position_PositionManagement.descriptor) ? o.position_PositionManagement.descriptor : "
          "(!empty(o.cf_PositionText) ? o.cf_PositionText : o.cf_PositionID)")
 
@@ -35,14 +38,14 @@ ENDPOINTS = [
     {"name": "posTreeNode", "baseUrlType": "workday-staffing-v6", "url": "<% h + '?limit=100&offset=' + o %>",
      "authType": "sso", "deferred": "true"},
     {"name": "posTreeOrgPositions", "baseUrlType": "workday-wql",
-     "url": ("<% 'data?limit=200&query=' + string:pathEncode('SELECT cf_PositionID, position_PositionManagement, cf_PositionText "
+     "url": ("<% 'data?limit=200&query=' + string:pathEncode('SELECT cf_PositionID, workdayID, position_PositionManagement, cf_PositionText "
              "FROM allPositions WHERE supervisoryOrganization in (\\'' + org.replace('\\'', '').replace('\\\\', '') + '\\')') %>"),
      "authType": "sso", "deferred": "true"},
 ]
 
 ROOT_VALUES = "<% (posTreeRoot.data ?? []).filter(r => { " + " || ".join(f"r.descriptor == '{f}'" for f in FOLDERS) + " }).map(r => { {'id': r.id, 'descriptor': r.descriptor} }) %>"
 
-LEVELS = f"""<%
+LEVELS_T = f"""<%
   const sel = self.promptSelections;
   const roots = posTreeRoot.data ?? [];
   const i = roots.map(r => {{ r.id }}).indexOf(sel[0]);
@@ -55,7 +58,7 @@ LEVELS = f"""<%
     return [list:flatten([first.data ?? [], more]).map(o => {{ {{'id': o.id, 'descriptor': o.descriptor}} }}), true];
   }}
   const ps = posTreeOrgPositions.invoke({{'org': sel[sel.size() - 1]}}).data ?? [];
-  return [ps.filter(o => {{ !empty(o.cf_PositionID) }}).map(o => {{ {{'id': o.cf_PositionID, 'descriptor': {LABEL}}} }}), false];
+  return [ps.filter(o => {{ !empty(o.IDKEY) }}).map(o => {{ {{'id': o.IDKEY, 'descriptor': {LABEL}}} }}), false];
 %>"""
 
 
@@ -71,20 +74,21 @@ def find(n, wid):
             if r: return r
 
 
-for page, picker in PAGES.items():
+for page, (picker, idkey, ORIG) in PAGES.items():
     p = os.path.join(R, page + '.pmd')
     d = json.load(open(p))
     d['endPoints'] = [e for e in d['endPoints'] if e['name'] not in NAMES]
     w = find(d['presentation'], picker)
-    h = (w.get('helpText') or '').replace(HINT, '').replace(ORIG, '').strip()
+    h = (w.get('helpText') or '').replace(HINT, '')
+    h = (h.replace(ORIG, '') if ORIG else h).strip()
     if OFF:
-        h = (ORIG + ' ' + h).strip()
+        h = (ORIG + ' ' + h).strip() if ORIG else h
         w['values'] = '<% [] %>'
         w.pop('dynamicMonikerLevels', None)
     else:
         d['endPoints'] += [dict(e) for e in ENDPOINTS]
         w['values'] = ROOT_VALUES
-        w['dynamicMonikerLevels'] = LEVELS
+        w['dynamicMonikerLevels'] = LEVELS_T.replace('IDKEY', idkey)
         h = (HINT + ' ' + h).strip()
     if h: w['helpText'] = h
     else: w.pop('helpText', None)

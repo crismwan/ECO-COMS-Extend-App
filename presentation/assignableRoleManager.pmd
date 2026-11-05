@@ -146,6 +146,41 @@
           "code": 429
         }
       ]
+    },
+    {
+      "name": "posTreeRoot",
+      "baseUrlType": "workday-staffing-v6",
+      "url": "values/jobChangesGroup/supervisoryOrganization/",
+      "authType": "sso",
+      "bestEffort": "true"
+    },
+    {
+      "name": "posTreeNode",
+      "baseUrlType": "workday-staffing-v6",
+      "url": "<% h + '?limit=100&offset=' + o %>",
+      "authType": "sso",
+      "deferred": "true"
+    },
+    {
+      "name": "posTreeOrgPositions",
+      "baseUrlType": "workday-wql",
+      "url": "<% 'data?limit=200&query=' + string:pathEncode('SELECT cf_PositionID, workdayID, position_PositionManagement, cf_PositionText FROM allPositions WHERE supervisoryOrganization in (\\'' + org.replace('\\'', '').replace('\\\\', '') + '\\')') %>",
+      "authType": "sso",
+      "deferred": "true"
+    },
+    {
+      "name": "fuhTreeAll",
+      "baseUrlType": "workday-wql",
+      "url": "<% 'data?limit=10000&query=' + string:pathEncode('SELECT workdayID, organization1, subtype FROM customOrganizations WHERE type1 in (b40d8b016367100175b147f364840000)') %>",
+      "authType": "sso",
+      "bestEffort": "true"
+    },
+    {
+      "name": "auTreeAll",
+      "baseUrlType": "workday-wql",
+      "url": "<% 'data?limit=10000&query=' + string:pathEncode('SELECT workdayID, academicUnit, academicUnitSubtype FROM academicUnits WHERE inactive = false') %>",
+      "authType": "sso",
+      "bestEffort": "true"
     }
   ],
   "outboundData": {
@@ -520,7 +555,7 @@
                   "label": "Positions",
                   "required": true,
                   "multiSelect": true,
-                  "values": "<% [] %>",
+                  "values": "<% (posTreeRoot.data ?? []).filter(r => { r.descriptor == 'My Favorites' || r.descriptor == 'My Organizations' || r.descriptor == 'Supervisory Organizations by Manager' || r.descriptor == 'Supervisory Organization' }).map(r => { {'id': r.id, 'descriptor': r.descriptor} }) %>",
                   "searchEndPoint": "<% endpoints.posSearch %>",
                   "searchResultValues": "<% empty(posSearch.data) ? [] : posSearch.data.map(o => { {'id': o.workdayID, 'descriptor': !empty(o.position_PositionManagement.descriptor) ? o.position_PositionManagement.descriptor : (!empty(o.cf_PositionText) ? o.cf_PositionText : (!empty(o.cf_PositionID) ? o.cf_PositionID : o.workdayID))} }) %>",
                   "onChange": "<%\n            if (empty(self.value)) {\n              self.setError('At least one Position is required.');\n            } else {\n              self.clearError();\n            }\n          %>",
@@ -534,7 +569,8 @@
                       "valueOutBinding": "postAssignableRole.positionNames"
                     }
                   ],
-                  "helpText": "Shows the first 50 matches; type more of the title or ID to narrow."
+                  "helpText": "Click to browse by supervisory organization, or type a position name or ID. Shows the first 50 matches; type more of the title or ID to narrow.",
+                  "dynamicMonikerLevels": "<%\n  const sel = self.promptSelections;\n  const roots = posTreeRoot.data ?? [];\n  const i = roots.map(r => { r.id }).indexOf(sel[0]);\n  const href = i < 0 ? '' : (roots[i].href ?? '');\n  const byManager = i < 0 ? false : roots[i].descriptor == 'Supervisory Organizations by Manager';\n  if (sel.size() == 1 || (byManager && sel.size() == 2)) {\n    const node = sel.size() == 1 ? href : (href + '/' + sel[1]);\n    const first = posTreeNode.invoke({'h': node, 'o': '0'});\n    const more = (first.total ?? 0) > 100 ? (posTreeNode.invoke({'h': node, 'o': '100'}).data ?? []) : [];\n    return [list:flatten([first.data ?? [], more]).map(o => { {'id': o.id, 'descriptor': o.descriptor} }), true];\n  }\n  const ps = posTreeOrgPositions.invoke({'org': sel[sel.size() - 1]}).data ?? [];\n  return [ps.filter(o => { !empty(o.workdayID) }).map(o => { {'id': o.workdayID, 'descriptor': !empty(o.position_PositionManagement.descriptor) ? o.position_PositionManagement.descriptor : (!empty(o.cf_PositionText) ? o.cf_PositionText : o.cf_PositionID)} }), false];\n%>"
                 },
                 {
                   "type": "hidden",
@@ -569,11 +605,13 @@
                   "id": "fuhPicker",
                   "label": "Functional Unit Hierarchy",
                   "required": false,
-                  "values": "<% [] %>",
+                  "values": "<% let d = fuhTreeAll.data ?? []; let ts = d.map(o => { (empty(o.subtype) ? '(No subtype)' : (o.subtype.descriptor ?? '(No subtype)')) }); ts.distinct().sort().map(t => { {'id': 'T:' + t, 'descriptor': t + ' (' + ts.filter(x => { x == t }).size() + ')'} }) %>",
                   "searchEndPoint": "<% endpoints.fuhSearch %>",
                   "searchResultValues": "<% empty(fuhSearch.data) ? [] : fuhSearch.data.map(o => { {'id': o.workdayID, 'descriptor': o.organization1.descriptor} }) %>",
                   "onChange": "<%\n            if (!empty(self.value) && !empty(academicUnitPicker.value)) {\n              self.setError('Cannot select both Functional Unit Hierarchy and Academic Unit.');\n            } else {\n              self.clearError();\n              academicUnitPicker.clearError();\n            }\n            enabledForWidBinding.setValue(!empty(self.value) ? self.value[0] : (!empty(academicUnitPicker.value) ? academicUnitPicker.value[0] : ''));\n            enabledForDisplay.setValue(\n              !empty(self.value) ? self.selectedEntries[0].descriptor :\n              (!empty(academicUnitPicker.value) ? academicUnitPicker.selectedEntries[0].descriptor : 'Academic Unit - University of British Columbia')\n            );\n          %>",
                   "multiSelect": false,
+                  "dynamicMonikerLevels": "<%\n  const sel = self.promptSelections;\n  const t = sel[0].substring(2);\n  const items = (fuhTreeAll.data ?? []).filter(o => { (empty(o.subtype) ? '(No subtype)' : (o.subtype.descriptor ?? '(No subtype)')) == t }).map(o => { {'id': o.workdayID, 'descriptor': (empty(o.organization1) ? '' : (o.organization1.descriptor ?? ''))} });\n  const first = items.map(o => { (o.descriptor + ' ').substring(0, 1).upperCase() });\n  if (sel.size() == 1 && items.size() > 40) {\n    return [first.distinct().sort().map(l => { {'id': 'L:' + l, 'descriptor': l + ' (' + first.filter(x => { x == l }).size() + ')'} }), true];\n  }\n  const l = sel.size() > 1 ? sel[1].substring(2) : '';\n  return [list:sort(items.filter(o => { l == '' || (o.descriptor + ' ').substring(0, 1).upperCase() == l }), 'descriptor', true), false];\n%>",
+                  "helpText": "Click to browse by type, or type a code to search.",
                   "visible": "<% ((!empty(enabledForTypeDropdown.value)) ? enabledForTypeDropdown.selectedEntries[0].id : '') == 'FUH' %>"
                 },
                 {
@@ -581,11 +619,13 @@
                   "id": "academicUnitPicker",
                   "label": "Academic Unit",
                   "required": false,
-                  "values": "<% [] %>",
+                  "values": "<% let d = auTreeAll.data ?? []; let ts = d.map(o => { (empty(o.academicUnitSubtype) ? '(No subtype)' : (o.academicUnitSubtype.descriptor ?? '(No subtype)')) }); ts.distinct().sort().map(t => { {'id': 'T:' + t, 'descriptor': t + ' (' + ts.filter(x => { x == t }).size() + ')'} }) %>",
                   "searchEndPoint": "<% endpoints.auSearch %>",
                   "searchResultValues": "<% empty(auSearch.data) ? [] : auSearch.data.map(o => { {'id': o.workdayID, 'descriptor': o.academicUnit.descriptor} }) %>",
                   "onChange": "<%\n            if (!empty(self.value) && !empty(fuhPicker.value)) {\n              self.setError('Cannot select both Academic Unit and Functional Unit Hierarchy.');\n            } else {\n              self.clearError();\n              fuhPicker.clearError();\n            }\n            enabledForWidBinding.setValue(!empty(fuhPicker.value) ? fuhPicker.value[0] : (!empty(self.value) ? self.value[0] : ''));\n            enabledForDisplay.setValue(\n              !empty(fuhPicker.value) ? fuhPicker.selectedEntries[0].descriptor :\n              (!empty(self.value) ? self.selectedEntries[0].descriptor : 'Academic Unit - University of British Columbia')\n            );\n          %>",
                   "multiSelect": false,
+                  "dynamicMonikerLevels": "<%\n  const sel = self.promptSelections;\n  const t = sel[0].substring(2);\n  const items = (auTreeAll.data ?? []).filter(o => { (empty(o.academicUnitSubtype) ? '(No subtype)' : (o.academicUnitSubtype.descriptor ?? '(No subtype)')) == t }).map(o => { {'id': o.workdayID, 'descriptor': (empty(o.academicUnit) ? '' : (o.academicUnit.descriptor ?? ''))} });\n  const first = items.map(o => { (o.descriptor + ' ').substring(0, 1).upperCase() });\n  if (sel.size() == 1 && items.size() > 40) {\n    return [first.distinct().sort().map(l => { {'id': 'L:' + l, 'descriptor': l + ' (' + first.filter(x => { x == l }).size() + ')'} }), true];\n  }\n  const l = sel.size() > 1 ? sel[1].substring(2) : '';\n  return [list:sort(items.filter(o => { l == '' || (o.descriptor + ' ').substring(0, 1).upperCase() == l }), 'descriptor', true), false];\n%>",
+                  "helpText": "Click to browse by type, or type a name to search.",
                   "visible": "<% ((!empty(enabledForTypeDropdown.value)) ? enabledForTypeDropdown.selectedEntries[0].id : '') == 'AU' %>"
                 },
                 {
