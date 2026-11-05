@@ -1871,6 +1871,18 @@ async function promptsProbe(token) {
   const rel = leaves.filter((l) => /position|organi|academic|unit|role|supervisory/i.test(l.split('.').pop()));
   console.log(`   prompt ID fields under them: ${leaves.length}; about positions/organizations/academic units/roles: ${rel.length}`);
   rel.slice(0, 80).forEach((l) => console.log(`   FIELD ${l}`));
+  console.log(`   all mutations with prompts: ${root.fields.map((f) => f.name).join(', ')}`);
+  // Baseline: the app's current searches (the WQL the pages send), median of 3, with realistic search text
+  const med = async (label, f) => {
+    const ms = []; let info = '';
+    for (let i = 0; i < 3; i++) { const t0 = Date.now(); try { info = await f(); } catch (e) { info = 'ERROR ' + e.message.slice(0, 120); } ms.push(Date.now() - t0); }
+    console.log(`   TIME ${label}: median ${ms.slice().sort((a, b) => a - b)[1]} ms (${ms.join(', ')}) · ${info}`);
+  };
+  const n = (r) => `${(r.data || []).length} rows`;
+  await med('FUH search "X:B"', async () => n(await wql(token, "SELECT workdayID, organization1, code FROM customOrganizations WHERE type1 in (b40d8b016367100175b147f364840000) AND code contains 'X:B'", 100)));
+  await med('Academic Unit search "Math"', async () => n(await wql(token, "SELECT workdayID, academicUnit, academicUnitName FROM academicUnits WHERE inactive = false AND academicUnitName contains 'Math'", 100)));
+  await med('Position search "Manager"', async () => n(await wql(token, "SELECT cf_PositionID, workdayID, position_PositionManagement, cf_PositionIsFilled, cf_PositionText FROM allPositions WHERE supervisoryOrganization is not empty AND cf_PositionText contains 'Manager'", 100)));
+  await med('REST values supervisoryOrganization (no search; top level)', async () => { const r = await request('GET', `${API}/staffing/v6/values/jobChangesGroup/supervisoryOrganization/`, token); return `${(r.data || []).length} entries${(r.data || [])[0] ? ', first: ' + (r.data[0].descriptor || '') : ''}`; });
   pass('Prompts.probe', `${root.fields.length} mutations with prompts, ${hits.length} on the app's subjects, ${rel.length} matching ID fields`);
 }
 
