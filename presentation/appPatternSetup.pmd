@@ -4,7 +4,8 @@
     "ManageCOMSApplicationSetup"
   ],
   "include": [
-    "comsAppSetup.script"
+    "comsAppSetup.script",
+    "comsPatterns.script"
   ],
   "endPoints": [
     {
@@ -119,81 +120,90 @@
                   "label": "Application Pattern Formats",
                   "rowVariableName": "ap",
                   "readOnly": true,
-                  "rows": "<% list:sort((comsApplications.data ?? []).filter(a => { !empty(a.appId) }), 'appId', true) %>",
+                  "rows": "<% list:sort((comsApplications.data ?? []).filter(a => { !empty(a.appId) }), 'appId', true).map(a => { {'appCode': a.appId, 'rec': a} }) %>",
                   "columns": [
                     {
                       "type": "column",
                       "columnId": "colAppId",
                       "label": "Application ID",
-                      "sortableAndFilterable": "true",
                       "cellTemplate": {
-                        "type": "text",
-                        "id": "colAppIdText",
-                        "enabled": false,
-                        "value": "<% ap.appId ?? '' %>"
+                        "type": "button",
+                        "id": "appIdLinkButton",
+                        "action": "LINK",
+                        "label": "<% ap.appCode ?? '' %>",
+                        "suppressDiscardDialog": true,
+                        "taskReference": {
+                          "taskId": "editAppPattern",
+                          "parameterBindings": {
+                            "recordId": "<% ap.rec.id %>"
+                          }
+                        }
+                      },
+                      "excel": {
+                        "enabled": false
                       }
                     },
                     {
                       "type": "column",
-                      "columnId": "colAppName",
+                      "columnId": "colAppTitle",
                       "label": "Name",
-                      "sortableAndFilterable": "true",
                       "cellTemplate": {
                         "type": "text",
-                        "id": "colAppNameText",
+                        "id": "appTitleText",
                         "enabled": false,
-                        "value": "<% ap.name ?? '' %>"
+                        "value": "<% (comsPatterns.recordFor(comsApplications.data, ap.appCode) ?? {'name': ''}).name ?? '' %>"
                       }
                     },
                     {
                       "type": "column",
-                      "columnId": "colFormat",
+                      "columnId": "colAppFormat",
                       "label": "Pattern Format",
-                      "sortableAndFilterable": "true",
                       "cellTemplate": {
                         "type": "text",
-                        "id": "colFormatText",
+                        "id": "appFormatText",
                         "enabled": false,
-                        "value": "<% comsAppSetup.summary(ap) %>"
+                        "value": "<% comsPatterns.summary(comsApplications.data, ap.appCode) %>"
                       }
                     },
                     {
                       "type": "column",
                       "columnId": "colExample",
                       "label": "Example",
-                      "sortableAndFilterable": "true",
                       "cellTemplate": {
                         "type": "text",
                         "id": "colExampleText",
                         "enabled": false,
-                        "value": "<% comsAppSetup.exampleOf(ap.appId, ap) %>"
+                        "value": "<% comsAppSetup.exampleOf(ap.appCode, ap.rec) %>"
                       }
                     },
                     {
                       "type": "column",
                       "columnId": "colActive",
                       "label": "Status",
-                      "sortableAndFilterable": "true",
+                      "excel": {
+                        "value": "<% ap.rec.active == false ? 'Inactive' : 'Active' %>"
+                      },
                       "cellTemplate": {
-                        "type": "text",
-                        "id": "colActiveText",
+                        "type": "richText",
+                        "id": "colActiveRichText",
                         "enabled": false,
-                        "value": "<% ap.active == false ? 'Inactive' : 'Active' %>"
+                        "value": "<% ap.rec.active == false ? '<span style=\"color:#6b7280;font-weight:600;font-size:12px\">○ Inactive</span>' : '<span style=\"color:#065f46;font-weight:600;font-size:12px\">✓ Active</span>' %>"
                       }
                     },
                     {
                       "type": "column",
-                      "columnId": "colEdit",
+                      "columnId": "colAppAction",
                       "label": "Edit",
                       "cellTemplate": {
                         "type": "button",
-                        "id": "editAppButton",
+                        "id": "appActionButton",
                         "label": "Edit",
                         "action": "AUXILIARY",
+                        "suppressDiscardDialog": true,
                         "taskReference": {
                           "taskId": "editAppPattern",
                           "parameterBindings": {
-                            "recordId": "<% ap.id %>"
+                            "recordId": "<% ap.rec.id %>"
                           }
                         }
                       },

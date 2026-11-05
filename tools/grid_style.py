@@ -15,7 +15,7 @@ import glob, json, os
 ROOT = os.path.join(os.path.dirname(__file__), '..', 'presentation')
 EDITABLE = {('bulkRoleGrid', 'currentGrid'), ('bulkRoleGrid', 'addGrid'), ('editAppPattern', 'fieldsGrid')}   # users tick / add rows here
 # Application lists (about 15 rows): no sorting, so the button column header lines up (product owner 2026-11-02)
-SHORT_LISTS = {'appPickGrid', 'appsGrid'}
+SHORT_LISTS = {'appPickGrid', 'appsGrid', 'appPatternsGrid'}
 changed = []
 
 

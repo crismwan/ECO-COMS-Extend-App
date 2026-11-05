@@ -20,7 +20,9 @@ Validation (onSubmit, plus live checks and a live example name):
 Server side, AddShellOrgPattern re-checks prefix, field count, upper case and spaces against the saved record.
 Secured by Manage: COMS Application Setup (the record's own domain). Idempotent.
 """
-import json, os
+import json, os, sys
+sys.path.insert(0, os.path.dirname(__file__))
+from app_grid import app_columns
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'presentation')
 FOS = lambda codes: [{"code": c} for c in codes]
@@ -176,7 +178,7 @@ txt = lambda cid, label, value: {"type": "column", "columnId": cid, "label": lab
                                  "cellTemplate": {"type": "text", "id": cid + "Text", "enabled": False, "value": value}}
 
 # ---- list page ----
-setup = {"id": "appPatternSetup", "securityDomains": [DOMAIN], "include": ["comsAppSetup.script"],
+setup = {"id": "appPatternSetup", "securityDomains": [DOMAIN], "include": ["comsAppSetup.script", "comsPatterns.script"],
   "endPoints": [APPS_EP],
   "presentation": {"pageType": "VIEW", "headerSize": "STANDARD", "title": {"type": "title", "label": "ECO-COMS: Maintain Application Pattern"},
     "body": {"type": "basicFormLayout", "id": "appPatternSetupForm", "sections": [
@@ -194,17 +196,18 @@ setup = {"id": "appPatternSetup", "securityDomains": [DOMAIN], "include": ["coms
         # every add and edit is in the Audit Log as Change Type "Application Pattern" (product owner 2026-11-05)
         {"type": "button", "id": "changeHistoryButton", "label": "View Change History", "action": "AUXILIARY",
          "taskReference": {"taskId": "auditLogViewer", "parameterBindings": {"changeType": "Application Pattern"}}},
+        # Same columns as every other application grid (tools/app_grid.py; product owner 2026-11-02 and 2026-11-05: grids
+        # in one format): Application ID as a link, Name, Pattern Format, this page's Example and Status, then the action.
         {"type": "grid", "id": "appPatternsGrid", "label": "Application Pattern Formats", "rowVariableName": "ap", "readOnly": True,
-         "rows": "<% list:sort((comsApplications.data ?? []).filter(a => { !empty(a.appId) }), 'appId', true) %>",
-         "columns": [
-           txt("colAppId", "Application ID", "<% ap.appId ?? '' %>"),
-           txt("colAppName", "Name", "<% ap.name ?? '' %>"),
-           txt("colFormat", "Pattern Format", "<% comsAppSetup.summary(ap) %>"),
-           txt("colExample", "Example", "<% comsAppSetup.exampleOf(ap.appId, ap) %>"),
-           txt("colActive", "Status", "<% ap.active == false ? 'Inactive' : 'Active' %>"),
-           {"type": "column", "columnId": "colEdit", "label": "Edit", "cellTemplate": {
-             "type": "button", "id": "editAppButton", "label": "Edit", "action": "AUXILIARY",
-             "taskReference": {"taskId": "editAppPattern", "parameterBindings": {"recordId": "<% ap.id %>"}}}}]}]}]}]},
+         "rows": "<% list:sort((comsApplications.data ?? []).filter(a => { !empty(a.appId) }), 'appId', true).map(a => { {'appCode': a.appId, 'rec': a} }) %>",
+         "columns": (lambda cols: cols[:-1] + [
+           {"type": "column", "columnId": "colExample", "label": "Example", "cellTemplate": {"type": "text", "id": "colExampleText", "enabled": False,
+            "value": "<% comsAppSetup.exampleOf(ap.appCode, ap.rec) %>"}},
+           # Status drawn as on Shell Org Manager's status columns
+           {"type": "column", "columnId": "colActive", "label": "Status", "excel": {"value": "<% ap.rec.active == false ? 'Inactive' : 'Active' %>"},
+            "cellTemplate": {"type": "richText", "id": "colActiveRichText", "enabled": False, "value":
+              "<% ap.rec.active == false ? '<span style=\"color:#6b7280;font-weight:600;font-size:12px\">\u25cb Inactive</span>' : '<span style=\"color:#065f46;font-weight:600;font-size:12px\">\u2713 Active</span>' %>"}},
+           cols[-1]])(app_columns("ap", "editAppPattern", {"recordId": "<% ap.rec.id %>"}, "Edit"))}]}]}]},
     "footer": FOOT}}
 save('appPatternSetup.pmd', setup)
 
