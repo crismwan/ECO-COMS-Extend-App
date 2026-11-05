@@ -679,3 +679,8 @@ Asked: instead of an empty position picker until you type, let users drill down 
   to ubuntu-24.04, after GitHub's Node 20 and ubuntu-latest → Ubuntu 26 warnings.
 - A new session clones the repo with the old lowercase address, so git prints "This repository moved" again;
   pushes still work. `git remote set-url origin https://github.com/crismwan/ECO-COMS-Extend-App.git` silences it.
+- **Data check noise removed (2026-11-05):** the 58 Data.gaps warnings all came from 36 closed (Approved/Denied)
+  October test requests (TESTROLE / TEST: names) made before denialReason, enabledForOrganizationTypes and
+  positionNames existed. They can't be deleted (linked to BP events), so datacheck now counts closed test requests
+  (46, including ones without gaps) instead of listing them. Result: 5 passed, 0 warnings; the 3 other requests,
+  11 audit records have every displayed field filled.
