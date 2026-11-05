@@ -2046,6 +2046,13 @@ async function orgTreeProbe(token) {
     } catch (e) { console.log(`   AU2 ${f}: ${e.message.slice(0, 140)}`); }
   }
   try { const h = await wql(token, 'SELECT workdayID, academicUnitHierarchy FROM academicUnitHierarchies', 10000); console.log(`   AUH2 rows ${(h.data || []).length}: ${(h.data || []).slice(0, 5).map((x) => show(x.academicUnitHierarchy)).join(' | ')}`); } catch (e) { console.log('   AUH2 ' + e.message.slice(0, 160)); }
+  try {
+    const r = await wql(token, 'SELECT workdayID, organization1, subtype FROM customOrganizations WHERE type1 in (b40d8b016367100175b147f364840000)', 10000); const d = r.data || [];
+    const dep = d.filter((o) => (o.subtype?.descriptor || '') === '07 Department');
+    const first = {}; dep.forEach((o) => { const n = o.organization1?.descriptor; const k = n === undefined ? 'UNDEF' : (n === '' ? 'EMPTY' : JSON.stringify(n[0])); first[k] = (first[k] || 0) + 1; });
+    console.log(`   DEPT rows ${dep.length}; first chars ${JSON.stringify(first)}; samples ${dep.slice(0, 5).map((o) => JSON.stringify(o.organization1)).join(' ; ')}`);
+    const ids = new Set(); let dup = 0; d.forEach((o) => { if (ids.has(o.workdayID)) dup++; ids.add(o.workdayID); }); console.log(`   FUH distinct WIDs ${ids.size} of ${d.length} rows (dup ${dup})`);
+  } catch (e) { console.log('   DEPT error ' + e.message.slice(0, 150)); }
   pass('OrgTree.probe', 'see lines above');
 }
 
