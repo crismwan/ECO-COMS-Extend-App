@@ -481,7 +481,7 @@ function staticSuite() {
     const ids = {}; walk(d.presentation || {}, (n) => { if (n && n.id) ids[n.id] = n; });
     for (const t of new Set([...sub.matchAll(/(\w+)\.setError\(/g)].map((m) => m[1]))) {
       const w = ids[t]; if (!w || w.enabled === false || w.enabled === 'false') continue;
-      const oc = String(w.onChange || '');
+      const oc = String((w.type === 'fileUploader' ? w.onFileAdd : w.onChange) || '');
       if (oc.includes('self.clearError()') || oc.includes(`${t}.clearError()`) || oc.includes('self.setError')) continue;
       warn('Static.clearOnChange', `${f}: OK can flag ${t}, but changing it doesn't clear the error (add the page to tools/clear_on_change.py)`);
     }

@@ -135,11 +135,23 @@ for page, task, label in [('assignableRoleManagerView.pmd', 'assignableRoleManag
 
 # ---- 5. Bulk Edit change counter ----
 d = load('bulkRoleGrid.pmd')
+# Additions count only rows that can be applied: role/org and position set, not already held, no repeat
+# (regression 2026-11-05: a row with the "already holds" error still showed "1 addition ready"); the rest are
+# "to fix". HELD is OK's own already-holds list, copied from onSubmit so the two can't drift.
+_sub = d['onSubmit']
+_a = _sub.index('(list:flatten(list:flatten((shellRoles.data')
+_m = ".map(x => { x.roleWid + '|' + x.orgWid + '|' + x.positionId })"
+HELD = _sub[_a:_sub.index(_m, _a) + len(_m)]
 COUNT = ("let removals = currentGrid.rows.filter(r => { r.childrenMap.colRemove.value == true }).size(); "
-         "let additions = addGrid.rows.filter(r => { !empty(r.childrenMap.colPositionAdd.value) }).size(); "
-         "changesReadOnlyText.setValue((removals + additions == 0) ? 'No changes yet. Up to 50 per submit.' : "
+         "let addRows = addGrid.rows.filter(r => { !empty(r.childrenMap.colPositionAdd.value) }); "
+         "let keys = addRows.filter(r => { !empty(r.childrenMap.colRoleOrg.value) }).map(r => { (r.childrenMap.colRoleOrg.selectedEntries[0].id + '|' + r.childrenMap.colPositionAdd.value[0]) }); "
+         "let held = keys.size() == 0 ? [] : " + HELD + "; "
+         "let additions = keys.filter(k => { !held.contains(k) }).distinct().size(); "
+         "let toFix = addRows.size() - additions; "
+         "changesReadOnlyText.setValue((removals + addRows.size() == 0) ? 'No changes yet. Up to 50 per submit.' : "
          "('' + removals + ' removal' + (removals == 1 ? '' : 's') + ' and ' + additions + ' addition' + (additions == 1 ? '' : 's') + ' ready'"
-         " + ((removals + additions) > 50 ? ': over the limit of 50 per submit' : ' (up to 50 per submit)')));")
+         " + (toFix > 0 ? ', ' + toFix + ' row' + (toFix == 1 ? '' : 's') + ' to fix' : '')"
+         " + ((removals + addRows.size()) > 50 ? ': over the limit of 50 per submit' : ' (up to 50 per submit)')));")
 holder = []
 walk(d, lambda n: holder.append(n) if any(isinstance(c, dict) and c.get('id') in ('changesText', 'changesReadOnlyText') for c in n.get('children', [])) else None)
 if holder:
@@ -162,6 +174,7 @@ if holder:
     d['onSubmit'] = d['onSubmit'].replace('changesText.clearError();\n', '').replace('changesText.setError(', 'effectiveDate.setError(')
     hook(find(d, 'removeCheckBox'), 'onChange')
     hook(find(d, 'positionAddList'), 'onChange')
+    hook(find(d, 'roleOrgDropdown'), 'onChange')
     hook(find(d, 'addGrid'), 'onRowRemove')
     save('bulkRoleGrid.pmd', d)
     done.append('bulk change counter')

@@ -164,7 +164,8 @@
                   "id": "confirmStatusChange",
                   "label": "<% queryParams.currentStatus == 'Active' ? 'I confirm this organization should be inactivated and I have verified no active role assignments depend on it.' : 'I confirm I want to reactivate this organization and make it available for role assignments.' %>",
                   "required": true,
-                  "helpText": "You must acknowledge before submitting this status change."
+                  "helpText": "You must acknowledge before submitting this status change.",
+                  "onChange": "<% self.clearError(); %>"
                 }
               ]
             }

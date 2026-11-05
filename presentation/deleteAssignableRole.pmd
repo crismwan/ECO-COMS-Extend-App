@@ -452,7 +452,8 @@
                   "label": "I confirm I want to withdraw this request.",
                   "required": true,
                   "visible": "<% !empty(queryParams.roleId) %>",
-                  "helpText": "You must confirm before the withdrawal can be submitted."
+                  "helpText": "You must confirm before the withdrawal can be submitted.",
+                  "onChange": "<% self.clearError(); %>"
                 }
               ],
               "title": "Confirm Withdrawal"
