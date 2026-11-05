@@ -547,6 +547,23 @@
                   ]
                 },
                 {
+                  "type": "dropdown",
+                  "id": "enabledForTypeDropdown",
+                  "label": "Enabled For",
+                  "instanceList": [
+                    {
+                      "id": "FUH",
+                      "descriptor": "Functional Unit Hierarchy"
+                    },
+                    {
+                      "id": "AU",
+                      "descriptor": "Academic Unit"
+                    }
+                  ],
+                  "helpText": "Pick what the role is enabled for, then search for it below. Leave blank for the whole university (Academic Unit - University of British Columbia).",
+                  "onChange": "<%\n  let t = ((!empty(self.value)) ? self.selectedEntries[0].id : '');\n  fuhPicker.setVisible(t == 'FUH');\n  academicUnitPicker.setVisible(t == 'AU');\n  if (t != 'FUH') { fuhPicker.setValue([]); }\n  if (t != 'AU') { academicUnitPicker.setValue([]); }\n  fuhPicker.clearError();\n  academicUnitPicker.clearError();\n  let keepFuh = t == 'FUH' && !empty(fuhPicker.value);\n  let keepAu = t == 'AU' && !empty(academicUnitPicker.value);\n  enabledForWidBinding.setValue(keepFuh ? fuhPicker.value[0] : (keepAu ? academicUnitPicker.value[0] : ''));\n  enabledForDisplay.setValue(keepFuh ? fuhPicker.selectedEntries[0].descriptor : (keepAu ? academicUnitPicker.selectedEntries[0].descriptor : 'Academic Unit - University of British Columbia'));\n%>"
+                },
+                {
                   "type": "instanceList",
                   "id": "fuhPicker",
                   "label": "Functional Unit Hierarchy",
@@ -555,7 +572,8 @@
                   "searchEndPoint": "<% endpoints.fuhSearch %>",
                   "searchResultValues": "<% empty(fuhSearch.data) ? [] : fuhSearch.data.map(o => { {'id': o.workdayID, 'descriptor': o.organization1.descriptor} }) %>",
                   "onChange": "<%\n            if (!empty(self.value) && !empty(academicUnitPicker.value)) {\n              self.setError('Cannot select both Functional Unit Hierarchy and Academic Unit.');\n            } else {\n              self.clearError();\n              academicUnitPicker.clearError();\n            }\n            enabledForWidBinding.setValue(!empty(self.value) ? self.value[0] : (!empty(academicUnitPicker.value) ? academicUnitPicker.value[0] : ''));\n            enabledForDisplay.setValue(\n              !empty(self.value) ? self.selectedEntries[0].descriptor :\n              (!empty(academicUnitPicker.value) ? academicUnitPicker.selectedEntries[0].descriptor : 'Academic Unit - University of British Columbia')\n            );\n          %>",
-                  "multiSelect": false
+                  "multiSelect": false,
+                  "visible": "<% ((!empty(enabledForTypeDropdown.value)) ? enabledForTypeDropdown.selectedEntries[0].id : '') == 'FUH' %>"
                 },
                 {
                   "type": "instanceList",
@@ -566,7 +584,8 @@
                   "searchEndPoint": "<% endpoints.auSearch %>",
                   "searchResultValues": "<% empty(auSearch.data) ? [] : auSearch.data.map(o => { {'id': o.workdayID, 'descriptor': o.academicUnit.descriptor} }) %>",
                   "onChange": "<%\n            if (!empty(self.value) && !empty(fuhPicker.value)) {\n              self.setError('Cannot select both Academic Unit and Functional Unit Hierarchy.');\n            } else {\n              self.clearError();\n              fuhPicker.clearError();\n            }\n            enabledForWidBinding.setValue(!empty(fuhPicker.value) ? fuhPicker.value[0] : (!empty(self.value) ? self.value[0] : ''));\n            enabledForDisplay.setValue(\n              !empty(fuhPicker.value) ? fuhPicker.selectedEntries[0].descriptor :\n              (!empty(self.value) ? self.selectedEntries[0].descriptor : 'Academic Unit - University of British Columbia')\n            );\n          %>",
-                  "multiSelect": false
+                  "multiSelect": false,
+                  "visible": "<% ((!empty(enabledForTypeDropdown.value)) ? enabledForTypeDropdown.selectedEntries[0].id : '') == 'AU' %>"
                 },
                 {
                   "type": "text",
@@ -630,5 +649,5 @@
   "include": [
     "comsValidations.script"
   ],
-  "onSubmit": "<%\n  generatedRoleName.clearError();\n  positionsList.clearError();\n  roleName.clearError();\n  selectedShellOrgId.clearError();\n  let valid = true;\n  if (empty(selectedShellOrgId.value)) {\n    selectedShellOrgId.setError('Please select a Custom Organization.');\n    valid = false;\n  }\n  if (empty(delegatedRoles.value) && empty(roleName.value)) {\n    roleName.setError('Enter a new delegated role name or select an existing role from the Delegated Roles list.');\n    valid = false;\n  }\n  if (empty(generatedRoleName.value)) {\n    generatedRoleName.setError('Generated Workday Role Name is required. Select an org, then select or enter a role.');\n    valid = false;\n  }\n  if (empty(positionsList.value)) {\n    positionsList.setError('At least one Position is required.');\n    valid = false;\n  }\n  valid;\n%>"
+  "onSubmit": "<%\n  academicUnitPicker.clearError();\n  fuhPicker.clearError();\n  generatedRoleName.clearError();\n  positionsList.clearError();\n  roleName.clearError();\n  selectedShellOrgId.clearError();\n  let valid = true;\n  if (empty(selectedShellOrgId.value)) {\n    selectedShellOrgId.setError('Please select a Custom Organization.');\n    valid = false;\n  }\n  if (empty(delegatedRoles.value) && empty(roleName.value)) {\n    roleName.setError('Enter a new delegated role name or select an existing role from the Delegated Roles list.');\n    valid = false;\n  }\n  if (empty(generatedRoleName.value)) {\n    generatedRoleName.setError('Generated Workday Role Name is required. Select an org, then select or enter a role.');\n    valid = false;\n  }\n  if (empty(positionsList.value)) {\n    positionsList.setError('At least one Position is required.');\n    valid = false;\n  }\n  /* enabled-for choice */\n  if (((!empty(enabledForTypeDropdown.value)) ? enabledForTypeDropdown.selectedEntries[0].id : '') == 'FUH' && empty(fuhPicker.value)) {\n    fuhPicker.setError('Search for and pick a Functional Unit Hierarchy, or clear Enabled For to use the whole university.');\n    valid = false;\n  }\n  if (((!empty(enabledForTypeDropdown.value)) ? enabledForTypeDropdown.selectedEntries[0].id : '') == 'AU' && empty(academicUnitPicker.value)) {\n    academicUnitPicker.setError('Search for and pick an Academic Unit, or clear Enabled For to use the whole university.');\n    valid = false;\n  }\n  /* enabled-for choice end */\n  valid;\n%>"
 }
