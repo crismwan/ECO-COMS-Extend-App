@@ -508,3 +508,10 @@ DenyRoleRequest: `actorWid = bp.initiatingPerson().getIDValues("WID").get(0)` (a
 - Built by `tools/extract_subflows.py` (`share_audit`, runs last; `--restore` brings back the full parents from `tools/subflow_src/`). Static checks: `subflow` (ids and inputs) and `templateIf` (`{{#if}}` needs a Boolean).
 - Verified live 2026-11-05 after deploy b2ce8b6: App Hub holds the 4 sub-orchestrations identical to the repo; suites subflows, pattern-guard, eventlinks (top-level caller), bulkvalidate and the new **bulkapply** (bulk edit adds then removes P-00001 on the test role: the nested call ProcessBulkRoleRow → WriteAuditRecord) all pass.
 - Not run live: the success paths of CreateShellOrganization and StartRequestReview, and ManageShellOrgStatus, because each leaves permanent data (new org, BP-linked request, org status events). Planned with the post-demo cleanup.
+
+## Application Patterns pages: layout review (2026-11-05)
+
+- Edit/Add: Application section holds ID, Name and Active (then the X:META setup note on Add); Pattern Format holds Copy from, Prefixes, the fields grid, then the Example Pattern Name it produces. Grid column "Blank = any (*)".
+- Both pages follow the long-page standard (About text over 350 characters): About box starts closed (`tools/collapse_about.py`), one-line summary under the title (`tools/ux_improvements.py --tiles`).
+- Checked live after deploy: list page; X:CLW edit (preview updates; an example that doesn't match its format is refused at OK with "Field 3: the example ABC does not match the format ..." and the error clears once fixed; Cancel saves nothing); Add Application (3 required-field errors on an empty OK); X:ADM saved unchanged returns to the list; Add Shell Org Pattern for X:CLW reads the format. Smoke: 15 formats valid.
+- The list's Edit header sits a little lower than the sortable headers, as on the other list grids with a button column (Access Review, Insights).
