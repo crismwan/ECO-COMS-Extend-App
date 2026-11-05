@@ -611,3 +611,30 @@ Asked: instead of an empty position picker until you type, let users drill down 
   record isn't flagged inactive in Workday. Same as the typed search.
 - If the production tenant has real FUH / Academic Unit hierarchies, the tree should follow them instead
   (superiorOrganization / academicUnitHierarchies.directSubordinates); re-run `orgtree` there first.
+
+### Tests and negative tests of the edited pages (2026-11-05)
+- **Static:** new `Static.treePickers` (every browse picker saves the same id as its typed search, reads real
+  endpoints, invokes only deferred ones; every position picker has a tree; mutation-tested: a WID/Position ID mix-up
+  and a misspelt list both fail) and `Static.clearOnChange` (below). 10 passed.
+- **Live suites:** smoke 31/31, org-guard (Add Shell Org) 22/22, timing (fuhTreeAll 0.37 s runs beside the existing
+  0.55 s customOrganizations list, so no slower load).
+- **Bug fixed (tools/clear_on_change.py):** Edit Role Assignment, OK with no positions then picking one left "Select
+  at least one position to add or remove." showing, so OK stayed refused until a reload. Every field an OK check
+  flags now clears its error when changed (Positions to Remove clears the shared add-or-remove error too); same fix
+  for Custom Organization (Submit Assignable Role Request), Application and Effective Date (AAA Role Request) and
+  the Bulk Edit real-run checkbox. Retested live: the error clears the moment a position is picked from the tree.
+  Not edited this week, still flagged by the static check: bulkRoleChanges (file uploader), deleteAssignableRole
+  and manageShellOrgStatus (confirmation checkboxes).
+- **Passed live:** OK with nothing / no date (Workday's required-field errors, then the page's own); Positions
+  required error clears on a tree pick; Enabled For switching clears the other picker and back gives an empty
+  picker; AAA role name follows a tree pick "(ADHC, Academic Unit)" and drops the scope when the unit is removed;
+  Bulk Edit duplicate check fires for a browsed position (P-00011 already holds ADVISORS) and clears when the role
+  changes to STAFF.
+- **Not run live, on purpose:** OK paths that would pass validation (they create real requests / role changes).
+  Workday's own required-field checks run before onSubmit, so the scripted "Enabled For chosen but nothing picked"
+  check can only be reached with a complete form.
+- **Open finding (product decision):** AAA Role Request builds the role name from the application's inner code
+  ("...(COMS)") while the two existing AAA roles are "...(X:BPMS(COMS))" and "...(X:BPMS(ODMT))", so the duplicate
+  check (exact name) would not stop a second admin role for COMS / ODMT.
+- Minor: Bulk Edit's change counter counts a row that has the duplicate error ("1 addition ready"); OK is still
+  refused while the error shows.
