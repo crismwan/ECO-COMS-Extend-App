@@ -175,8 +175,7 @@
                   "singular": true,
                   "fileTypesErrorMessage": "Upload a .csv file. In the Excel template, open the Role Changes sheet, then File → Save As → CSV (Comma delimited), and upload that file.",
                   "metadata": "<% { 'status': 'Uploaded' } %>",
-                  "valueOutBinding": "uploadBulkFile:comsBulkUploads",
-                  "onFileAdd": "<% bulkFileUploader.clearError(); %>"
+                  "valueOutBinding": "uploadBulkFile:comsBulkUploads"
                 },
                 {
                   "type": "date",
