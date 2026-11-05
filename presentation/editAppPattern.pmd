@@ -359,7 +359,7 @@
                 {
                   "type": "text",
                   "id": "fieldsCheckText",
-                  "label": "Fields",
+                  "label": "Field rules",
                   "enabled": false,
                   "value": "<% 'Up to 7 fields, in the order they appear in the name. Add a row with +.' %>"
                 },

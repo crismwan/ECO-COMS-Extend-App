@@ -315,7 +315,7 @@ edit = {"id": "editAppPattern", "securityDomains": [DOMAIN], "include": ["comsAp
         {"type": "text", "id": "prefixesText", "label": "Prefixes", "required": True, "placeholder": "e.g. ORG, or CP, PRIV for several",
          "value": f"<% comsAppSetup.prefixText({REC}) %>",
          "onChange": f"<%\n  let e = comsAppSetup.prefixError(self.value ?? '');\n  if (e != '') {{ self.setError(e); }} else {{ self.clearError(); }}\n  {PREVIEW}\n%>"},
-        {"type": "text", "id": "fieldsCheckText", "label": "Fields", "enabled": False,
+        {"type": "text", "id": "fieldsCheckText", "label": "Field rules", "enabled": False,
          "value": f"<% 'Up to {MAX_FIELDS} fields, in the order they appear in the name. Add a row with +.' %>"},
         {"type": "grid", "id": "fieldsGrid", "label": "Fields", "rowVariableName": "fr",
          "onRowAdd": "<% " + FIELDS_TOUCHED + " %>", "onRowRemove": "<% " + FIELDS_TOUCHED + " %>",
