@@ -289,7 +289,7 @@ Compare a Date against another **widget's** value, not a raw inbound string — 
 
 ### Widget scripting — confirmed platform limitations (editWizard context)
 
-**`setValue()` on `text` widgets is silently ignored** — calling `someText.setValue(...)` from an `onChange` handler produces no visible update. This is a confirmed platform limitation, not a coding error.
+**`setValue()` on `text` widgets is silently ignored** — calling `someText.setValue(...)` from an `onChange` handler produces no visible update. This is a confirmed platform limitation, not a coding error. **That's the editWizard step only:** on a plain EDIT page, a dropdown's `onChange` calling `someText.setValue(...)` updated the text boxes (live 2026-11-04, a "Copy from" picker).
 
 **`setLabel()` on `text` widgets does NOT update reactively** in `editWizard` step context — confirmed via live UI testing (2026-10-29). Even with real keyboard input triggering `onChange`, `setLabel()` calls execute without error but the label in the DOM never changes. The platform appears to render the label once at page load and ignore subsequent `setLabel()` calls on `text` widgets.
 
