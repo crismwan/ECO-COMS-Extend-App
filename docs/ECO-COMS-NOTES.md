@@ -501,3 +501,10 @@ DenyRoleRequest: `actorWid = bp.initiatingPerson().getIDValues("WID").get(0)` (a
   - `StartRequestReview` ← StartRoleRequestReview + StartAAARequestReview (everything after GetInputParams; the parents remain only for their two security domains; audit wording via requestLabel/showOrg/showEffective).
   - Test `subflows`: launches each parent with input only Workday rejects (impossible effective date, unknown request) and requires the error to name the sub-orchestration's step; nothing is created. The success path of the review start (event initiated as the requester) is covered by the `full` write suite, not run yet (it leaves TEST orgs and requests).
 
+
+## Shared audit-record step (2026-11-05)
+
+- `WriteAuditRecord.suborchestration` holds the one comsAuditLogs template. Callers: AssignRolePositions, ManageShellOrgStatus and the ProcessBulkRoleRow, CreateShellOrganization and StartRequestReview sub-orchestrations. DenyRoleRequest (BP-triggered) keeps its own step.
+- Built by `tools/extract_subflows.py` (`share_audit`, runs last; `--restore` brings back the full parents from `tools/subflow_src/`). Static checks: `subflow` (ids and inputs) and `templateIf` (`{{#if}}` needs a Boolean).
+- Verified live 2026-11-05 after deploy b2ce8b6: App Hub holds the 4 sub-orchestrations identical to the repo; suites subflows, pattern-guard, eventlinks (top-level caller), bulkvalidate and the new **bulkapply** (bulk edit adds then removes P-00001 on the test role: the nested call ProcessBulkRoleRow → WriteAuditRecord) all pass.
+- Not run live: the success paths of CreateShellOrganization and StartRequestReview, and ManageShellOrgStatus, because each leaves permanent data (new org, BP-linked request, org status events). Planned with the post-demo cleanup.
