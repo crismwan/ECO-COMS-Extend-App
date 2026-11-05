@@ -1745,27 +1745,38 @@ async function orgGuard(token, me) {
   // mirrored here: with an application, the name starts with its ID once (typed part or full name); without one (X:META)
   // the code is the whole name and the type. Each launch must pass CheckOrgName and reach Workday with exactly that name.
   await test('OrgGuard.pageMirror', async () => {
-    const src = JSON.parse(fs.readFileSync(path.join(ROOT, 'presentation/newShellOrg.pmd'), 'utf8')).onSubmit;
-    for (const line of ["let lname = ac != '' ? (oc.startsWith(ac + ':') ? oc : (ac + ':' + oc)) : oc;", "let lot = ac != '' ? ac : oc;",
-      "let lcode = ac != '' ? lname.substringAfter(ac + ':') : oc;", "'ot': lot.urlEncode()", "'on': lname.urlEncode()", "'oc': lcode.urlEncode()"]) {
+    const page = JSON.parse(fs.readFileSync(path.join(ROOT, 'presentation/newShellOrg.pmd'), 'utf8'));
+    const src = page.onSubmit;
+    for (const line of ["let lname = comsShellOrg.orgName(ac, oc, meta);", "let lot = comsShellOrg.orgType(ac, oc, meta);",
+      "let lcode = comsShellOrg.orgCode(ac, oc, meta);", "'ot': lot.urlEncode()", "'on': lname.urlEncode()", "'oc': lcode.urlEncode()"]) {
       if (!src.includes(line)) throw new Error(`the page's launch changed, update this mirror: missing ${line}`);
     }
-    pass('OrgGuard.pageMirror', 'the mirror matches the page');
+    const ep = page.endPoints.find((e) => e.name === 'launchAddShellOrg').url;
+    if (ep.includes('comsAppId')) throw new Error('the launch sends comsAppId again; update the mirror');
+    const script = fs.readFileSync(path.join(ROOT, 'presentation/scripts/comsShellOrg.script'), 'utf8');
+    for (const line of ["baseOf(a) + '(' + subOf(a, c) + ')'", "(a == '' || meta) ? orgName(a, code, meta) : a",
+      "(a == '' || meta) ? orgName(a, code, meta) : orgName(a, code, meta).substringAfter(a + ':')"]) {
+      if (!script.includes(line)) throw new Error(`comsShellOrg.script changed, update this mirror: missing ${line}`);
+    }
+    pass('OrgGuard.pageMirror', 'the mirror matches the page and comsShellOrg.script');
   });
+  // comsShellOrg.script, mirrored
+  const baseOf = (a) => (a.includes('(') ? a.slice(0, a.indexOf('(')) : a);
+  const subOf = (a, c) => { const b = baseOf(a); let x = c.startsWith(b + '(') ? c.slice(b.length + 1) : (c.startsWith('(') ? c.slice(1) : c); return x.endsWith(')') ? x.slice(0, -1) : x; };
+  const orgName = (a, c, meta) => (!a ? c : meta ? `${baseOf(a)}(${subOf(a, c)})` : c.startsWith(a + ':') ? c : `${a}:${c}`);
   const pageParams = (subtype, ac, typed) => {
-    const oc = typed.trim();
-    const lname = ac ? (oc.startsWith(ac + ':') ? oc : `${ac}:${oc}`) : oc;
-    const lot = ac || oc;
-    const lcode = ac ? lname.slice(ac.length + 1) : oc;
-    return { comsAppId: lot, orgType: lot, organizationName: lname, organizationCode: lcode, orgSubtype: subtype };
+    const meta = subtype === 'X:META'; const oc = typed.trim(); const n = orgName(ac, oc, meta);
+    const lot = (!ac || meta) ? n : ac; const lcode = (!ac || meta) ? n : n.slice(ac.length + 1);
+    return { orgType: lot, organizationName: n, organizationCode: lcode, orgSubtype: subtype };
   };
   const pageCases = [
     ['X:SHELL', 'X:ADM', 'TEST:GUARDPAGE', 'X:ADM:TEST:GUARDPAGE', 'TEST:GUARDPAGE', 'shell, part after the application'],
     ['X:SHELL', 'X:ADM', 'X:ADM:TEST:GUARDPAGE', 'X:ADM:TEST:GUARDPAGE', 'TEST:GUARDPAGE', 'shell, full name typed'],
-    ['X:META', 'X:ADM', 'TEST:GUARDPAGEM', 'X:ADM:TEST:GUARDPAGEM', 'TEST:GUARDPAGEM', 'meta, existing application'],
-    ['X:META', 'X:ADM', 'X:ADM:TEST:GUARDPAGEM', 'X:ADM:TEST:GUARDPAGEM', 'TEST:GUARDPAGEM', 'meta, existing application, full name'],
+    ['X:META', 'X:LLIS', 'TSTGUARD', 'X:LLIS(TSTGUARD)', 'X:LLIS(TSTGUARD)', 'meta under an application, brackets'],
+    ['X:META', 'X:LLIS', 'X:LLIS(TSTGUARD)', 'X:LLIS(TSTGUARD)', 'X:LLIS(TSTGUARD)', 'meta under an application, full name'],
+    ['X:META', 'X:BPMS(AOC)', 'TSTGUARD', 'X:BPMS(TSTGUARD)', 'X:BPMS(TSTGUARD)', 'meta under a bracketed application'],
     ['X:META', '', 'X:TSTGUARDPAGE', 'X:TSTGUARDPAGE', 'X:TSTGUARDPAGE', 'meta, new application'],
-    ['X:SHELL', 'X:BPMS(AOC)', 'TEST:GUARDPAGE', 'X:BPMS(AOC):TEST:GUARDPAGE', 'TEST:GUARDPAGE', 'application with brackets'],
+    ['X:SHELL', 'X:BPMS(AOC)', 'TEST:GUARDPAGE', 'X:BPMS(AOC):TEST:GUARDPAGE', 'TEST:GUARDPAGE', 'shell under a bracketed application'],
   ];
   for (const [subtype, ac, typed, wantName, wantCode, label] of pageCases) {
     await test(`OrgGuard.page ${label}`, async () => {

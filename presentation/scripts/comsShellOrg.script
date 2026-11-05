@@ -1,0 +1,89 @@
+/* Add New Shell Organization naming (tools/new_shell_org_meta.py; product owner 2026-11-05). Pure functions.
+   app = the selected application ID ('' for none), code = what was typed, meta = subtype X:META.
+   - X:SHELL (application required): APP:CODE. The full name APP:CODE may be typed too; another X: prefix is refused.
+   - X:META with an application: APP(CODE), like X:LLIS(CPE) and X:BPMS(AOC). A bracketed application (X:BPMS(AOC))
+     gives its base (X:BPMS(NEW)). NEW, (NEW) or X:BPMS(NEW) may be typed.
+   - X:META without an application (a new application): the code is the whole name, X: plus one part (X:NEWAPP).
+   In Workday every application-level organization has an organization type of the same name (probe 2026-11-05),
+   so for X:META the name is also the organization type. */
+var baseOf = function(app) {
+  let a = app ?? '';
+  a.contains('(') ? a.substringBefore('(') : a;
+};
+
+var subOf = function(app, code) {
+  let b = baseOf(app);
+  let c = (code ?? '').trim();
+  let s = c.startsWith(b + '(') ? c.substringAfter(b + '(') : (c.startsWith('(') ? c.substring(1) : c);
+  s.endsWith(')') ? s.substring(0, s.length() - 1) : s;
+};
+
+var orgName = function(app, code, meta) {
+  let a = app ?? '';
+  let c = (code ?? '').trim();
+  if (a == '') {
+    c;
+  } else if (meta) {
+    baseOf(a) + '(' + subOf(a, c) + ')';
+  } else if (c.startsWith(a + ':')) {
+    c;
+  } else {
+    a + ':' + c;
+  }
+};
+
+var orgType = function(app, code, meta) {
+  let a = app ?? '';
+  (a == '' || meta) ? orgName(a, code, meta) : a;
+};
+
+var orgCode = function(app, code, meta) {
+  let a = app ?? '';
+  (a == '' || meta) ? orgName(a, code, meta) : orgName(a, code, meta).substringAfter(a + ':');
+};
+
+var codeError = function(app, code, meta) {
+  let a = app ?? '';
+  let c = (code ?? '').trim();
+  if (c == '') {
+    'Organization Code is required.';
+  } else if (c.contains(' ')) {
+    'The code must not contain spaces.';
+  } else if (a == '' && !meta) {
+    '';
+  } else if (a == '') {
+    !c.startsWith('X:') ? 'A new application code starts with X:, e.g. X:NEWAPP.' :
+      ((c.substring(2) == '' || c.substring(2).contains(':')) ? 'Use X: plus one part, e.g. X:NEWAPP.' :
+        (c.upperCase() != c ? 'Use upper case, e.g. X:NEWAPP.' : ''));
+  } else if (meta) {
+    let s = subOf(a, c);
+    s == '' ? ('Enter the part that goes in brackets, e.g. NEW for ' + baseOf(a) + '(NEW).') :
+      ((s.contains(':') || s.contains('(') || s.contains(')')) ? ('Enter only the part in brackets, e.g. NEW for ' + baseOf(a) + '(NEW).') :
+        (s.upperCase() != s ? 'Use upper case, e.g. NEW.' : ''));
+  } else {
+    c == a + ':' ? ('Add the part after ' + a + ':, e.g. ORG:ANY.') :
+      ((c.startsWith('X:') && !c.startsWith(a + ':')) ? ('With ' + a + ' selected, the name must start with ' + a + ':. Enter the part after it (e.g. ORG:ANY) or the full name (e.g. ' + a + ':ORG:ANY).') : '');
+  }
+};
+
+var preview = function(app, code, meta) {
+  let a = app ?? '';
+  let c = (code ?? '').trim();
+  if (a == '' && !meta) {
+    'Select an application above';
+  } else if (c == '') {
+    a == '' ? 'Enter the new application code, e.g. X:NEWAPP' : (meta ? ('Enter the part in brackets, e.g. NEW for ' + baseOf(a) + '(NEW)') : (a + ':'));
+  } else {
+    orgName(a, c, meta);
+  }
+};
+
+{
+  "baseOf": baseOf,
+  "subOf": subOf,
+  "orgName": orgName,
+  "orgType": orgType,
+  "orgCode": orgCode,
+  "codeError": codeError,
+  "preview": preview
+}

@@ -1,19 +1,24 @@
 #!/usr/bin/env python3
-"""Add New Shell Organization: X:META organizations for a new application (product owner 2026-11-05:
-"Application ID should not be required for X:META org sub type because it could be a net new application.
-And the organization code should contain X: as the prefix"). Idempotent; runs after build_schema_pattern.py.
+"""Add New Shell Organization naming (product owner 2026-11-05). Idempotent; runs after build_schema_pattern.py.
 
+Requests:
+  "Application ID should not be required for X:META org sub type because it could be a net new application.
+   And the organization code should contain X: as the prefix"
+  "if an existing application is being selected when X:META is added, ensure the prefix is the application id.
+   For completely new one without application id selected then start with X:"
+  "if application id is used then the organization code should be enclosed in brackets after prefix similar to
+   some application id structures"
+
+Rules (one place: presentation/scripts/comsShellOrg.script, shared by the preview and OK):
 * Organization Subtype comes first, because it decides whether Application is needed.
-* X:SHELL: Application required.
-* With an application (either subtype), the name always starts with its ID (product owner 2026-11-05): the code
-  can be the part after it (ORG:ANY) or the full name (X:CLW:ORG:ANY); another X: prefix is refused.
-* X:META: Application optional.
-    - picked: as before, <application>:<code>.
-    - left blank (a new application): the Organization Code is the whole name and must be X: plus one
-      part, upper case, no spaces (e.g. X:NEWAPP). The code is also sent as the organization type
-      (orgType), because each application has its own organization type named after its code; Workday
-      rejects the request if that type doesn't exist yet.
-* AddShellOrg re-checks the same rules (tools/patch_pattern_orchestrations.py, CheckOrgName).
+* X:SHELL: Application required; name APP:CODE (the full name APP:CODE may be typed; another X: prefix is refused).
+* X:META with an application: name APP(CODE), like X:LLIS(CPE) (a bracketed application gives its base: X:BPMS(AOC)
+  -> X:BPMS(NEW)). X:META without an application: X: plus one part (X:NEWAPP).
+* For X:META the name is also the organization type: every application-level organization in Workday has an
+  organization type of the same name (probe 2026-11-05), which must exist before the create.
+* AddShellOrg's CheckOrgName re-checks the same rules (tools/patch_pattern_orchestrations.py).
+* The launch no longer sends comsAppId (AddShellOrg doesn't use it), so the bracketed application ID isn't repeated
+  in the query string the API gateway scores.
 """
 import json, os
 
@@ -22,18 +27,7 @@ d = json.load(open(P))
 
 META = "((!empty(orgSubtypeDropdown.value)) ? (orgSubtypeDropdown.selectedEntries[0].id == 'X:META') : false)"
 APP = "((!empty(selectedApplicationId.value)) ? (selectedApplicationId.selectedEntries[0].descriptor ?? '') : '')"
-PREVIEW = (f"let pa = {APP};\n  let pc = (organizationCode.value ?? '').trim();\n"
-           f"  orgNamePreview.setValue(pa != '' ? (pc.startsWith(pa + ':') ? pc : (pa + ':' + pc)) : "
-           f"({META} ? (pc != '' ? pc : 'Enter the new application code, e.g. X:NEWAPP') : 'Select an application above'));")
-# error for a code under an existing application ('' when fine): the name must start with the application ID
-APP_CODE_ERR = ("(oc == ac + ':' ? ('Add the part after ' + ac + ':, e.g. ORG:ANY.') : "
-                "((oc.startsWith('X:') && !oc.startsWith(ac + ':')) ? ('With ' + ac + ' selected, the name must start with ' + ac + ':. Enter the part after it (e.g. ORG:ANY) or the full name (e.g. ' + ac + ':ORG:ANY).') : "
-                "(oc.contains(' ') ? 'The code can\\'t contain spaces.' : '')))")
-# error for a new application's code ('' when fine)
-NEW_CODE_ERR = ("(!oc.startsWith('X:') ? 'A new application\\'s code starts with X:, e.g. X:NEWAPP.' : "
-                "(oc.substring(2) == '' || oc.substring(2).contains(':') ? 'Use X: plus one part, e.g. X:NEWAPP.' : "
-                "(oc.contains(' ') ? 'The code can\\'t contain spaces.' : "
-                "(oc.upperCase() != oc ? 'Use upper case, e.g. X:NEWAPP.' : ''))))")
+PREVIEW = f"orgNamePreview.setValue(comsShellOrg.preview({APP}, organizationCode.value ?? '', {META}));"
 
 
 def find(n, wid):
@@ -61,6 +55,14 @@ def holder(n, wid):
             if r is not None: return r
 
 
+if 'comsShellOrg.script' not in d['include']:
+    d['include'].append('comsShellOrg.script')
+
+# launch URL: no comsAppId
+for e in d['endPoints']:
+    if e['name'] == 'launchAddShellOrg':
+        e['url'] = e['url'].replace("'/AddShellOrg/launch?comsAppId=' + ac + '&orgType=' + ot", "'/AddShellOrg/launch?orgType=' + ot")
+
 # 1. subtype first
 kids = holder(d['presentation'], 'selectedApplicationId')
 ids = [k.get('id') for k in kids]
@@ -69,8 +71,8 @@ if ids.index('orgSubtypeDropdown') > ids.index('selectedApplicationId'):
     kids.insert(ids.index('selectedApplicationId'), st)
 
 st = find(d, 'orgSubtypeDropdown')
-st['helpText'] = ("X:META for an application's meta organization (e.g. X:CLW), including a new application's. "
-                  "X:SHELL for a shell organization roles are assigned on.")
+st['helpText'] = ("X:META for an application-level organization: under an application it is APP(CODE), e.g. X:LLIS(CPE); "
+                  "without one, a new application (X:NEWAPP). X:SHELL for a shell organization roles are assigned on (APP:CODE).")
 st['onChange'] = ("<%\n  self.clearError();\n  organizationCode.clearError();\n"
                   f"  selectedApplicationId.setRequired(!{META});\n"
                   f"  if ({META}) {{ selectedApplicationId.clearError(); }}\n  {PREVIEW}\n%>")
@@ -78,40 +80,41 @@ st['onChange'] = ("<%\n  self.clearError();\n  organizationCode.clearError();\n"
 app = find(d, 'selectedApplicationId')
 app['required'] = f"<% !{META} %>"
 app['helpText'] = ("Select the application this organization belongs to. "
-                   "For X:META, leave it blank to add a new application's organization.")
+                   "For X:META, leave it blank to add a new application.")
 app['onChange'] = f"<%\n  selectedApplicationId.clearError();\n  organizationCode.clearError();\n  {PREVIEW}\n%>"
 
 code = find(d, 'organizationCode')
-code['placeholder'] = "e.g. ORG:ANY, or X:NEWAPP for a new application"
-code['helpText'] = ("With an application, the name starts with its ID: enter the part after it (ORG:ANY) or the full name (X:CLW:ORG:ANY). "
-                    "X:META without an application: the new application's code, starting with X: (e.g. X:NEWAPP).")
-code['guide']['text'] = ("With an application, the name always starts with its ID: enter the part after it or the full name "
-                         "(ORG:ANY or X:CLW:ORG:ANY both give X:CLW:ORG:ANY). For a new application (subtype X:META, no application), enter its code "
-                         "starting with X: (e.g. X:NEWAPP); its organization type of the same name must already exist in Workday. "
-                         "No spaces. Must be unique.")
+code['placeholder'] = "e.g. ORG:ANY, NEW, or X:NEWAPP"
+code['helpText'] = ("X:SHELL: the part after the application (ORG:ANY gives X:CLW:ORG:ANY). "
+                    "X:META with an application: the part in brackets (NEW gives X:LLIS(NEW)). "
+                    "X:META without one: the new application code, starting with X: (X:NEWAPP).")
+code['guide']['text'] = ("X:SHELL: enter the part after the application, or the full name (ORG:ANY or X:CLW:ORG:ANY both give "
+                         "X:CLW:ORG:ANY). X:META with an application: enter the part that goes in brackets (NEW gives X:LLIS(NEW)). "
+                         "X:META without an application: enter the new application code starting with X: (X:NEWAPP). "
+                         "For X:META the organization type of the same name must already exist in Workday. No spaces. Must be unique.")
 code['onChange'] = f"<%\n  self.clearError();\n  {PREVIEW}\n%>"
 
 prev = find(d, 'orgNamePreview')
-prev['value'] = (f"<% {APP} != '' ? ({APP} + ':' + (organizationCode.value ?? '')) : "
-                 f"({META} ? 'Enter the new application code, e.g. X:NEWAPP' : 'Select an application above') %>")
+prev['value'] = f"<% comsShellOrg.preview({APP}, organizationCode.value ?? '', {META}) %>"
 
-# 2. About text
+# 2. About text (match the original wording and every later version)
 about = None
 def walk(n):
     global about
     if isinstance(n, dict):
-        if isinstance(n.get('value'), str) and 'Add a new Shell Organization to Workday.' in n['value']: about = n
-        for v in n.values(): walk(v)
+        v = n.get('value')
+        if isinstance(v, str) and ('Add a new Shell Organization to Workday.' in v or 'Add a new organization to Workday.' in v): about = n
+        for x in n.values(): walk(x)
     elif isinstance(n, list):
-        for v in n: walk(v)
+        for x in n: walk(x)
 walk(d['presentation'])
 if about:
     about['value'] = ('<span style="color:#0055B7;font-size:12px;font-weight:700">ⓘ </span><span style="color:#374151;font-size:12px">'
-                      'Add a new organization to Workday. Pick the subtype, the application and the Organization Code: the name is '
-                      '<b>ApplicationCode:OrganizationCode</b>: with an application selected the name always starts with its ID '
-                      '(enter ORG:ANY or X:CLW:ORG:ANY). For a <b>new application</b>, pick X:META, '
-                      'leave Application blank and enter its code starting with <b>X:</b> (e.g. X:NEWAPP). Its organization type '
-                      'of the same name must already exist in Workday.</span>')
+                      'Add a new organization to Workday. Pick the subtype first. <b>X:SHELL</b>: pick the application; the name is '
+                      '<b>Application:Code</b> (e.g. X:CLW:ORG:ANY). <b>X:META</b> with an application: the name is '
+                      '<b>Application(Code)</b> (e.g. X:LLIS(CPE)). <b>X:META</b> without an application (a new application): enter its '
+                      'code starting with <b>X:</b> (e.g. X:NEWAPP). For X:META, an organization type of the same name must already '
+                      'exist in Workday.</span>')
 
 # 3. OK checks and launch
 d['onSubmit'] = f"""<%
@@ -131,21 +134,16 @@ d['onSubmit'] = f"""<%
     selectedApplicationId.setError('Please select an application. Only X:META can be added without one (a new application).');
     valid = false;
   }}
-  if (oc == '') {{
-    organizationCode.setError('Organization Code is required.');
+  let codeErr = comsShellOrg.codeError(ac, oc, meta);
+  let orgName = comsShellOrg.orgName(ac, oc, meta);
+  let dupes = (existingOrgs.data ?? []).filter(o => {{ o.code == orgName }});
+  if (codeErr != '') {{
+    organizationCode.setError(codeErr);
     valid = false;
-  }} else {{
-    let codeErr = ac != '' ? {APP_CODE_ERR} : (meta ? {NEW_CODE_ERR} : '');
-    let orgName = ac != '' ? (oc.startsWith(ac + ':') ? oc : (ac + ':' + oc)) : oc;
-    let dupes = (existingOrgs.data ?? []).filter(o => {{ o.code == orgName }});
-    if (codeErr != '') {{
-      organizationCode.setError(codeErr);
-      valid = false;
-    }} else if (dupes.size() > 0) {{
-      let dupeName = (!empty(dupes[0].organizationByName)) ? (dupes[0].organizationByName.descriptor ?? orgName) : orgName;
-      organizationCode.setError('An organization with this code already exists: ' + dupeName);
-      valid = false;
-    }}
+  }} else if (dupes.size() > 0) {{
+    let dupeName = (!empty(dupes[0].organizationByName)) ? (dupes[0].organizationByName.descriptor ?? orgName) : orgName;
+    organizationCode.setError('An organization with this code already exists: ' + dupeName);
+    valid = false;
   }}
   if (empty(effectiveDate.value)) {{
     effectiveDate.setError('Effective Date is required.');
@@ -160,13 +158,13 @@ d['onSubmit'] = f"""<%
     }}
   }}
   if (valid) {{
-    let lname = ac != '' ? (oc.startsWith(ac + ':') ? oc : (ac + ':' + oc)) : oc;
-    let lot = ac != '' ? ac : oc;
-    let lcode = ac != '' ? lname.substringAfter(ac + ':') : oc;
-    launchAddShellOrg.invoke({{'cbw': selectedWorker.id ?? '', 'cb': (selectedWorker.descriptor ?? '').urlEncode(), 'ts': date:now().format("yyyy-MM-dd'T'HH:mm:ss'Z'").urlEncode(), 'ac': lot.urlEncode(), 'ot': lot.urlEncode(), 'st': orgSubtypeDropdown.selectedEntries[0].id, 'on': lname.urlEncode(), 'oc': lcode.urlEncode(), 'wid': selectedWorker.id ?? '', 'ed': effectiveDate.value.format('yyyy-MM-dd')}});
+    let lname = comsShellOrg.orgName(ac, oc, meta);
+    let lot = comsShellOrg.orgType(ac, oc, meta);
+    let lcode = comsShellOrg.orgCode(ac, oc, meta);
+    launchAddShellOrg.invoke({{'cbw': selectedWorker.id ?? '', 'cb': (selectedWorker.descriptor ?? '').urlEncode(), 'ts': date:now().format("yyyy-MM-dd'T'HH:mm:ss'Z'").urlEncode(), 'ot': lot.urlEncode(), 'st': orgSubtypeDropdown.selectedEntries[0].id, 'on': lname.urlEncode(), 'oc': lcode.urlEncode(), 'wid': selectedWorker.id ?? '', 'ed': effectiveDate.value.format('yyyy-MM-dd')}});
     let created = (verifyShellOrg.invoke({{'lim': '10000'}}).data ?? []).filter(o => {{ o.code == lname }}).size() > 0;
     if (!created) {{
-      organizationCode.setError((ac == '' && meta) ? ('Workday rejected this request, so nothing was created. For a new application, check that the organization type ' + oc + ' exists in Workday.') : 'Workday rejected this request, so nothing was created. Check the values and try again.');
+      organizationCode.setError(meta ? ('Workday rejected this request, so nothing was created. Check that the organization type ' + lot + ' exists in Workday.') : 'Workday rejected this request, so nothing was created. Check the values and try again.');
       valid = false;
     }}
   }}
@@ -174,4 +172,4 @@ d['onSubmit'] = f"""<%
 %>"""
 
 open(P, 'w').write(json.dumps(d, indent=2, ensure_ascii=False) + '\n')
-print('newShellOrg: subtype first; X:META may leave Application blank (code = X:NEWAPP, the whole name and type)')
+print('newShellOrg: subtype first; X:SHELL APP:CODE, X:META APP(CODE) or X:NEWAPP (comsShellOrg.script)')
