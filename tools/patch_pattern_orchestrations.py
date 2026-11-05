@@ -72,6 +72,21 @@ ASSERTIONS = [
 ]
 
 
+# Add Shell Org (product owner 2026-11-05): an X:META organization may be a new application's own
+# organization, named exactly as its organization type (X:NEWAPP). The page checks the same rules.
+N = 'data.GetInputParams.organizationName'
+T = 'data.GetInputParams.orgType'
+ST = 'data.GetInputParams.orgSubtype'
+ORG_ASSERTIONS = [
+    (f'{T}.startsWith("X:")', f'"Organization type must start with X:, got " + {T}'),
+    (f'{T}.substringAfter("X:").isEmpty().not()', f'"Organization type must be X: plus one part, got " + {T}'),
+    (f'{T}.substringAfter("X:").contains(":").not()', f'"Organization type must be X: plus one part, got " + {T}'),
+    (f'{N}.equals({T}).or({N}.startsWith({T}.append(":")))', f'"Organization name must be " + {T} + " or start with " + {T} + ":, got " + {N}'),
+    (f'(if ({N}.equals({T})) {ST}.equals("X:META") else true)', f'"A new application organization (" + {N} + ") must have subtype X:META"'),
+    (f'{N}.contains(" ").not()', f'"Organization name must not contain spaces: " + {N}'),
+]
+
+
 def main():
     # Add Shell Org: the page picks X:META or X:SHELL; anything else becomes X:META (never free text)
     d = set_subtype(load('AddShellOrg'), '{{data.GetInputParams.orgSubtype}}')
@@ -83,6 +98,26 @@ def main():
         a['_value']['expr']['_value']['source']['_value'] = (
             '(if (data("start", "queryParams").getParam("orgSubtype", "X:META").equals("X:SHELL")) "X:SHELL" else "X:META")')
         gip.insert(gip.index(proto) + 1, a)
+    # CheckOrgName right after GetInputParams (cloned from AddShellOrgPattern's CheckPatternName)
+    nodes = d['_value']['nodes']['_value']
+    names = [n['_value']['name']['_value'] for n in nodes]
+    proto_node = find(load('AddShellOrgPattern'), 'CheckPatternName')
+    chk = copy.deepcopy(proto_node)
+    chk['_value']['name']['_value'] = 'CheckOrgName'
+    pa = chk['_value']['assertions']['_value'][0]
+    chk['_value']['assertions']['_value'] = []
+    for cond, msg in ORG_ASSERTIONS:
+        a = copy.deepcopy(pa)
+        a['_value']['assertion']['_value']['source']['_value'] = cond
+        a['_value']['message']['_value']['source']['_value'] = msg
+        chk['_value']['assertions']['_value'].append(a)
+    chk['_value']['notes']['_value'][0]['_value']['value']['_value'] = (
+        "Guard: organization type is X: plus one part; the name is the type itself (a new application's X:META "
+        "organization) or starts with the type and ':'; no spaces")
+    if 'CheckOrgName' in names:
+        nodes[names.index('CheckOrgName')] = chk
+    else:
+        nodes.insert(names.index('GetInputParams') + 1, chk)
     save('AddShellOrg', d)
 
     d = set_subtype(load('AddShellOrgPattern'), 'X:SHELL')

@@ -26,6 +26,7 @@ run tools/build_org_detail.py           # shellOrgDetail + Details buttons in Sh
 run tools/build_request_lists.py        # My Assignable Role Requests, AAA Role Requests
 run tools/build_filter_pills.py         # pill filters, Home action cards, SOM summary, error page
 run tools/build_schema_pattern.py      # Add Shell Org Pattern for any application (schema-driven)
+run tools/new_shell_org_meta.py        # Add Shell Org: X:META without an application (a new application, code X:NEWAPP)
 run tools/build_insights.py             # Insights page across the business objects + lean reports
 run tools/build_access_review.py        # Access Review page + hub card (role assignments still needed?)
 run tools/build_app_patterns.py         # Application Patterns setup: list + edit page for each application's pattern format
