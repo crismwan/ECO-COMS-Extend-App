@@ -511,7 +511,7 @@ DenyRoleRequest: `actorWid = bp.initiatingPerson().getIDValues("WID").get(0)` (a
 
 ## Application Patterns pages: layout review (2026-11-05)
 
-- Edit/Add: Application section holds ID, Name and Active (then the X:META setup note on Add); Pattern Format holds Copy from, Prefixes, the fields grid, then the Example Pattern Name it produces. Grid column "Blank = any (*)".
+- Edit/Add: Application section holds ID, Name and Active (then the X:META setup note on Add); Pattern Format holds Copy from, Prefixes, the fields grid, then the Example Pattern Name it produces. Grid column "Blank = any (*)". The help line above the grid is "Field rules"; field errors show under it.
 - Both pages follow the long-page standard (About text over 350 characters): About box starts closed (`tools/collapse_about.py`), one-line summary under the title (`tools/ux_improvements.py --tiles`).
 - Checked live after deploy: list page; X:CLW edit (preview updates; an example that doesn't match its format is refused at OK with "Field 3: the example ABC does not match the format ..." and the error clears once fixed; Cancel saves nothing); Add Application (3 required-field errors on an empty OK); X:ADM saved unchanged returns to the list; Add Shell Org Pattern for X:CLW reads the format. Smoke: 15 formats valid.
 - The list's Edit header sits a little lower than the sortable headers, as on the other list grids with a button column (Access Review, Insights).
