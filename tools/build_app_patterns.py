@@ -273,7 +273,7 @@ edit = {"id": "editAppPattern", "securityDomains": [DOMAIN], "include": ["comsAp
           "A pattern name is <b>APPLICATION:PREFIX:field:field:…</b>. Set the prefixes the application may use, then its fields "
           "in order (up to 7). Each field has a label (shown on the Add Pattern form), a format (a regular expression the value "
           "must match, e.g. <b>[A-Z]{2,4}</b>), a hint shown when a value doesn't match, and an example that matches the format. "
-          "Tick <b>Blank means any</b> when a field may be left empty (it becomes *). <b>Copy from</b> fills the prefixes and "
+          "Tick <b>Blank = any</b> when a field may be left empty (it becomes *). <b>Copy from</b> fills the prefixes and "
           "fields from another application. Existing patterns keep their names. An <b>inactive</b> application takes no new patterns.")}]}]},
       {"type": "layoutSection", "id": "appSection", "children": [{"type": "fieldSet", "id": "appFieldSet", "title": "Application", "children": [
         # an existing application's ID and name are shown, not edited (patterns are named after the ID)
@@ -283,6 +283,13 @@ edit = {"id": "editAppPattern", "securityDomains": [DOMAIN], "include": ["comsAp
          "helpText": "Applications in Workday that aren't set up here yet.",
          "values": "<% comsAppSetup.newAppOptions(existingOrgs.data, comsApplications.data) %>",
          "onChange": f"<%\n  let e = comsAppSetup.appIdError({CHOSEN}, comsApplications.data, {NEW});\n  if (e != '') {{ self.setError(e); }} else {{ self.clearError(); }}\n  {PREVIEW}\n%>"},
+        {"type": "text", "id": "appNameText", "label": "Name", "required": f"<% {NEW} %>", "enabled": f"<% {NEW} %>",
+         "value": f"<% ({REC} ?? {{'name': ''}}).name ?? '' %>",
+         "onChange": "<%\n  let e = comsAppSetup.nameError((self.value ?? '').trim());\n  if (e != '') { self.setError(e); } else { self.clearError(); }\n%>"},
+        # product owner 2026-11-04: where to reactivate (X:CLW was inactive by default: a yes/no field left unset is stored as no)
+        {"type": "checkBox", "id": "appActiveCheckBox", "label": "Active",
+         "helpText": "Untick to stop new patterns for this application (existing ones stay). Inactive applications are hidden from Add Pattern.",
+         "value": f"<% ({REC} ?? {{'active': true}}).active != false %>"},
         # Add only: the list comes from Workday's X: application organizations, so a missing one is created in Workday first
         # (product owner 2026-11-04: "create a shell organization with X:META sub org type"). Add Shell Org can't do it:
         # it only adds <existing application>:<code> organizations, and the new one needs its own organization type.
@@ -295,15 +302,8 @@ edit = {"id": "editAppPattern", "securityDomains": [DOMAIN], "include": ["comsAp
           '<b>2.</b> Its organization: <b>Create Custom Organization</b> with that type, code <b>X:NEWAPP</b> and '
           'organization subtype <b>X:META</b>.<br>'
           'Then reopen <b>Add Application</b> and pick it. (Add Shell Org adds organizations under an application '
-          'that already exists, so it can\'t create this one.)</span>')},
-        {"type": "text", "id": "appNameText", "label": "Name", "required": f"<% {NEW} %>", "enabled": f"<% {NEW} %>",
-         "value": f"<% ({REC} ?? {{'name': ''}}).name ?? '' %>",
-         "onChange": "<%\n  let e = comsAppSetup.nameError((self.value ?? '').trim());\n  if (e != '') { self.setError(e); } else { self.clearError(); }\n%>"}]}]},
+          'that already exists, so it can\'t create this one.)</span>')}]}]},
       {"type": "layoutSection", "id": "formatSection", "children": [{"type": "fieldSet", "id": "formatFieldSet", "title": "Pattern Format", "children": [
-        # product owner 2026-11-04: where to reactivate (X:CLW was inactive by default: a yes/no field left unset is stored as no)
-        {"type": "checkBox", "id": "appActiveCheckBox", "label": "Active",
-         "helpText": "Untick to stop new patterns for this application (existing ones stay). Inactive applications are hidden from Add Pattern.",
-         "value": f"<% ({REC} ?? {{'active': true}}).active != false %>"},
         {"type": "dropdown", "id": "copyFromDropdown", "label": "Copy from",
          "helpText": "Fills the prefixes and fields below from another application. You can still change them.",
          "values": f"<% comsAppSetup.copyOptions(comsApplications.data, {APPID}) %>",
@@ -315,9 +315,6 @@ edit = {"id": "editAppPattern", "securityDomains": [DOMAIN], "include": ["comsAp
         {"type": "text", "id": "prefixesText", "label": "Prefixes", "required": True, "placeholder": "e.g. ORG, or CP, PRIV for several",
          "value": f"<% comsAppSetup.prefixText({REC}) %>",
          "onChange": f"<%\n  let e = comsAppSetup.prefixError(self.value ?? '');\n  if (e != '') {{ self.setError(e); }} else {{ self.clearError(); }}\n  {PREVIEW}\n%>"},
-        {"type": "readOnlyText", "id": "exampleNameText", "label": "Example Pattern Name",
-         # page-load value from the saved record; fields are declared below, so they can't be read here yet
-         "value": f"<% let s = comsAppSetup.schemaOf({REC}); empty(s) ? '' : comsAppSetup.exampleName(({REC}).appId, s.prefixes.join(','), s.fields) %>"},
         {"type": "text", "id": "fieldsCheckText", "label": "Fields", "enabled": False,
          "value": f"<% 'Up to {MAX_FIELDS} fields, in the order they appear in the name. Add a row with +.' %>"},
         {"type": "grid", "id": "fieldsGrid", "label": "Fields", "rowVariableName": "fr",
@@ -328,7 +325,10 @@ edit = {"id": "editAppPattern", "securityDomains": [DOMAIN], "include": ["comsAp
            cell("colRegex", "Format (regular expression)", "regex"),
            cell("colHint", "Hint", "hint"),
            cell("colExample", "Example", "example"),
-           cell("colBlank", "Blank means any (*)", "blankIsWildcard", "checkBox")]}]}]}]},
+           cell("colBlank", "Blank = any (*)", "blankIsWildcard", "checkBox")]},
+        {"type": "readOnlyText", "id": "exampleNameText", "label": "Example Pattern Name",
+         # page-load value from the saved record (the grid's rows aren't built yet at load); PREVIEW updates it as fields change
+         "value": f"<% let s = comsAppSetup.schemaOf({REC}); empty(s) ? 'Appears here as you fill in the prefixes and fields.' : comsAppSetup.exampleName(({REC}).appId, s.prefixes.join(','), s.fields) %>"}]}]}]},
     "footer": FOOT}}
 save('editAppPattern.pmd', edit)
 

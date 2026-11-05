@@ -268,7 +268,7 @@
                   "type": "richText",
                   "id": "aboutRichText",
                   "enabled": false,
-                  "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">A pattern name is <b>APPLICATION:PREFIX:field:field:…</b>. Set the prefixes the application may use, then its fields in order (up to 7). Each field has a label (shown on the Add Pattern form), a format (a regular expression the value must match, e.g. <b>[A-Z]{2,4}</b>), a hint shown when a value doesn't match, and an example that matches the format. Tick <b>Blank means any</b> when a field may be left empty (it becomes *). <b>Copy from</b> fills the prefixes and fields from another application. Existing patterns keep their names. An <b>inactive</b> application takes no new patterns.</span>"
+                  "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">A pattern name is <b>APPLICATION:PREFIX:field:field:…</b>. Set the prefixes the application may use, then its fields in order (up to 7). Each field has a label (shown on the Add Pattern form), a format (a regular expression the value must match, e.g. <b>[A-Z]{2,4}</b>), a hint shown when a value doesn't match, and an example that matches the format. Tick <b>Blank = any</b> when a field may be left empty (it becomes *). <b>Copy from</b> fills the prefixes and fields from another application. Existing patterns keep their names. An <b>inactive</b> application takes no new patterns.</span>"
                 }
               ]
             }
@@ -302,13 +302,6 @@
                   "onChange": "<%\n  let e = comsAppSetup.appIdError((empty(appIdDropdown.value) ? '' : appIdDropdown.selectedEntries[0].id), comsApplications.data, empty(queryParams.recordId));\n  if (e != '') { self.setError(e); } else { self.clearError(); }\n  exampleNameText.setValue(comsAppSetup.exampleName((empty(queryParams.recordId) ? (empty(appIdDropdown.value) ? '' : appIdDropdown.selectedEntries[0].id) : (comsAppSetup.recordById(comsApplications.data, queryParams.recordId) ?? {'appId': ''}).appId), prefixesText.value ?? '', fieldsGrid.rows.map(r => { { 'fieldLabel': (r.childrenMap.colFieldLabel.value ?? '').trim(), 'regex': (r.childrenMap.colRegex.value ?? '').trim(), 'hint': (r.childrenMap.colHint.value ?? '').trim(), 'example': (r.childrenMap.colExample.value ?? '').trim(), 'blankIsWildcard': r.childrenMap.colBlank.value == true } })));\n%>"
                 },
                 {
-                  "type": "richText",
-                  "id": "missingAppRichText",
-                  "enabled": false,
-                  "render": "<% empty(queryParams.recordId) %>",
-                  "value": "<span style=\"color:#B45309;font-size:12px;font-weight:700\">⚠ Application not in the list? </span><span style=\"color:#374151;font-size:12px\">The list shows applications that already have an organization in Workday and no pattern format here yet. For a new application, first set it up in Workday:<br><b>1.</b> An organization type named after the application ID (e.g. <b>X:NEWAPP</b>), added by the Workday configuration team.<br><b>2.</b> Its organization: <b>Create Custom Organization</b> with that type, code <b>X:NEWAPP</b> and organization subtype <b>X:META</b>.<br>Then reopen <b>Add Application</b> and pick it. (Add Shell Org adds organizations under an application that already exists, so it can't create this one.)</span>"
-                },
-                {
                   "type": "text",
                   "id": "appNameText",
                   "label": "Name",
@@ -316,6 +309,20 @@
                   "enabled": "<% empty(queryParams.recordId) %>",
                   "value": "<% (comsAppSetup.recordById(comsApplications.data, queryParams.recordId) ?? {'name': ''}).name ?? '' %>",
                   "onChange": "<%\n  let e = comsAppSetup.nameError((self.value ?? '').trim());\n  if (e != '') { self.setError(e); } else { self.clearError(); }\n%>"
+                },
+                {
+                  "type": "checkBox",
+                  "id": "appActiveCheckBox",
+                  "label": "Active",
+                  "helpText": "Untick to stop new patterns for this application (existing ones stay). Inactive applications are hidden from Add Pattern.",
+                  "value": "<% (comsAppSetup.recordById(comsApplications.data, queryParams.recordId) ?? {'active': true}).active != false %>"
+                },
+                {
+                  "type": "richText",
+                  "id": "missingAppRichText",
+                  "enabled": false,
+                  "render": "<% empty(queryParams.recordId) %>",
+                  "value": "<span style=\"color:#B45309;font-size:12px;font-weight:700\">⚠ Application not in the list? </span><span style=\"color:#374151;font-size:12px\">The list shows applications that already have an organization in Workday and no pattern format here yet. For a new application, first set it up in Workday:<br><b>1.</b> An organization type named after the application ID (e.g. <b>X:NEWAPP</b>), added by the Workday configuration team.<br><b>2.</b> Its organization: <b>Create Custom Organization</b> with that type, code <b>X:NEWAPP</b> and organization subtype <b>X:META</b>.<br>Then reopen <b>Add Application</b> and pick it. (Add Shell Org adds organizations under an application that already exists, so it can't create this one.)</span>"
                 }
               ]
             }
@@ -330,13 +337,6 @@
               "id": "formatFieldSet",
               "title": "Pattern Format",
               "children": [
-                {
-                  "type": "checkBox",
-                  "id": "appActiveCheckBox",
-                  "label": "Active",
-                  "helpText": "Untick to stop new patterns for this application (existing ones stay). Inactive applications are hidden from Add Pattern.",
-                  "value": "<% (comsAppSetup.recordById(comsApplications.data, queryParams.recordId) ?? {'active': true}).active != false %>"
-                },
                 {
                   "type": "dropdown",
                   "id": "copyFromDropdown",
@@ -353,12 +353,6 @@
                   "placeholder": "e.g. ORG, or CP, PRIV for several",
                   "value": "<% comsAppSetup.prefixText(comsAppSetup.recordById(comsApplications.data, queryParams.recordId)) %>",
                   "onChange": "<%\n  let e = comsAppSetup.prefixError(self.value ?? '');\n  if (e != '') { self.setError(e); } else { self.clearError(); }\n  exampleNameText.setValue(comsAppSetup.exampleName((empty(queryParams.recordId) ? (empty(appIdDropdown.value) ? '' : appIdDropdown.selectedEntries[0].id) : (comsAppSetup.recordById(comsApplications.data, queryParams.recordId) ?? {'appId': ''}).appId), prefixesText.value ?? '', fieldsGrid.rows.map(r => { { 'fieldLabel': (r.childrenMap.colFieldLabel.value ?? '').trim(), 'regex': (r.childrenMap.colRegex.value ?? '').trim(), 'hint': (r.childrenMap.colHint.value ?? '').trim(), 'example': (r.childrenMap.colExample.value ?? '').trim(), 'blankIsWildcard': r.childrenMap.colBlank.value == true } })));\n%>"
-                },
-                {
-                  "type": "readOnlyText",
-                  "id": "exampleNameText",
-                  "label": "Example Pattern Name",
-                  "value": "<% let s = comsAppSetup.schemaOf(comsAppSetup.recordById(comsApplications.data, queryParams.recordId)); empty(s) ? '' : comsAppSetup.exampleName((comsAppSetup.recordById(comsApplications.data, queryParams.recordId)).appId, s.prefixes.join(','), s.fields) %>"
                 },
                 {
                   "type": "text",
@@ -423,7 +417,7 @@
                     {
                       "type": "column",
                       "columnId": "colBlank",
-                      "label": "Blank means any (*)",
+                      "label": "Blank = any (*)",
                       "cellTemplate": {
                         "type": "checkBox",
                         "id": "colBlankCheckBox",
@@ -434,6 +428,12 @@
                   ],
                   "gridType": "LIST",
                   "multiViewStylingEnabled": true
+                },
+                {
+                  "type": "readOnlyText",
+                  "id": "exampleNameText",
+                  "label": "Example Pattern Name",
+                  "value": "<% let s = comsAppSetup.schemaOf(comsAppSetup.recordById(comsApplications.data, queryParams.recordId)); empty(s) ? 'Appears here as you fill in the prefixes and fields.' : comsAppSetup.exampleName((comsAppSetup.recordById(comsApplications.data, queryParams.recordId)).appId, s.prefixes.join(','), s.fields) %>"
                 }
               ]
             }
