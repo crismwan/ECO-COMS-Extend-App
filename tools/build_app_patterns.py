@@ -30,7 +30,8 @@ MAX_FIELDS = 7
 load = lambda n: json.load(open(os.path.join(ROOT, n), encoding='utf-8'))
 def save(n, d): open(os.path.join(ROOT, n), 'w', encoding='utf-8').write(json.dumps(d, indent=2, ensure_ascii=False) + '\n')
 
-SCRIPT = '''/* Application Patterns setup (tools/build_app_patterns.py). Pure functions; each check returns '' or an error. */
+SCRIPT = '''/* Application Patterns setup (tools/build_app_patterns.py). Pure functions; each check returns '' or an error.
+   A format is written as on the list: PREFIX / PREFIX: Field, Field. An example is a full name: APP:PREFIX:value:value. */
 var recordById = function(apps, id) {
   let m = (apps ?? []).filter(a => { a.id == id });
   empty(id) || empty(m) ? null : m[0];
@@ -40,25 +41,58 @@ var schemaOf = function(rec) {
   (empty(rec) || empty(rec.patternSchema)) ? null : json:parse(rec.patternSchema);
 };
 
-var fieldRows = function(rec) {
+var parts = function(text, sep) {
+  empty(text) ? [] : text.split(sep).map(p => { p.trim() }).filter(p => { !empty(p) });
+};
+
+var prefixesOf = function(formatText) {
+  let t = (formatText ?? '').trim();
+  t.contains(':') ? parts(t.substringBefore(':'), '/') : [];
+};
+
+var labelsOf = function(formatText) {
+  let t = (formatText ?? '').trim();
+  t.contains(':') ? parts(t.substringAfter(':'), ',') : [];
+};
+
+var summary = function(rec) {
   let s = schemaOf(rec);
-  empty(s) ? [{ 'fieldLabel': '', 'regex': '', 'hint': '', 'example': '', 'blankIsWildcard': false }] : s.fields;
+  empty(s) ? '' : (s.prefixes.join(' / ') + ': ' + s.fields.map(f => { f.fieldLabel }).join(', '));
 };
 
-var prefixText = function(rec) {
+var exampleName = function(appId, rec) {
   let s = schemaOf(rec);
-  empty(s) ? (empty(rec) ? '' : (rec.namePrefix ?? '')) : s.prefixes.join(', ');
+  empty(s) ? '' : (empty(s.example) ? ((appId ?? '') + ':' + s.prefixes[0] + ':' + s.fields.map(f => { empty(f.example) ? '*' : f.example }).join(':')) : s.example);
 };
 
-var prefixList = function(text) {
-  empty(text) ? [] : text.split(',').map(p => { p.trim() }).filter(p => { !empty(p) });
+/* The same example with another application's ID in front (Copy from). */
+var exampleFor = function(appId, src) {
+  let ex = exampleName(src.appId, src);
+  (empty(appId) || empty(ex)) ? ex : (appId + ':' + ex.substringAfter(src.appId + ':'));
 };
 
-/* Application codes from Workday's X: organizations (as on Add Shell Org) that have no record here yet. */
+/* Applications in Workday (X: organization codes, as on Add Shell Org) without a record here yet. */
 var newAppOptions = function(orgs, apps) {
   let have = (apps ?? []).map(a => { a.appId ?? '' });
   (orgs ?? []).map(o => { let c = o.code ?? ''; c.substringAfter(':').contains(':') ? (c.substringBefore(':') + ':' + c.substringAfter(':').substringBefore(':')) : c })
     .filter(c => { c.startsWith('X:') && !have.contains(c) }).distinct().sort().map(c => { { 'id': c, 'descriptor': c } });
+};
+
+var copyOptions = function(apps, appId) {
+  list:sort((apps ?? []).filter(a => { !empty(a.patternSchema) && a.appId != appId }), 'appId', true)
+    .map(a => { { 'id': a.id, 'descriptor': a.appId + ' · ' + summary(a) } });
+};
+
+/* A field's rules (format, hint, blank means any): this record's field of that name, else any application's,
+   else the standard Role Name rule. */
+var knownField = function(label, apps, rec) {
+  let own = schemaOf(rec);
+  let mine = empty(own) ? [] : own.fields.filter(f => { f.fieldLabel == label });
+  let others = list:flatten((apps ?? []).filter(a => { !empty(a.patternSchema) }).map(a => { json:parse(a.patternSchema).fields }))
+    .filter(f => { f.fieldLabel == label });
+  let std = { 'fieldLabel': label, 'regex': '[*]|[A-Z0-9][A-Z0-9_-]{0,29}[*]?', 'example': 'ANY', 'blankIsWildcard': true,
+              'hint': 'Capital letters, digits, _ or - (up to 30), optionally ending in * (e.g. ANY). Leave blank for any (*).' };
+  !empty(mine) ? mine[0] : (!empty(others) ? others[0] : std);
 };
 
 var appIdError = function(appId, apps, isNew) {
@@ -77,80 +111,96 @@ var nameError = function(name) {
   empty(name) ? 'Name is required.' : (name.length() > 100 ? 'Keep the name to 100 characters or fewer.' : '');
 };
 
-var prefixError = function(text) {
-  let ps = prefixList(text);
-  if (ps.size() == 0) {
-    'Add at least one prefix, e.g. ORG. Separate several with commas.';
+var formatError = function(formatText) {
+  let t = (formatText ?? '').trim();
+  let ps = prefixesOf(t);
+  let ls = labelsOf(t);
+  if (empty(t)) {
+    'Enter the pattern format, e.g. ORG: Role Name.';
+  } else if (!t.contains(':')) {
+    'Put a colon between the prefixes and the fields, e.g. ORG: Role Name.';
+  } else if (t.substringAfter(':').contains(':')) {
+    'Use one colon only: prefixes before it, fields after it.';
+  } else if (ps.size() == 0) {
+    'Add a prefix before the colon, e.g. ORG. Separate several with /.';
   } else if (ps.filter(p => { !validate:match('[A-Z0-9_]+', p) }).size() > 0) {
     'Prefixes use capital letters, digits and _ only (e.g. ORG, CP, PATTERN).';
   } else if (ps.distinct().size() != ps.size()) {
     'Each prefix can appear only once.';
-  } else {
-    '';
-  }
-};
-
-var rowError = function(r, n) {
-  let where = 'Field ' + n + ': ';
-  if (empty(r.fieldLabel)) {
-    where + 'a label is required.';
-  } else if (r.fieldLabel.contains(':')) {
-    where + 'the label cannot contain a colon.';
-  } else if (empty(r.regex)) {
-    where + 'a format is required (a regular expression, e.g. [A-Z]{2,4}).';
-  } else if (empty(r.example)) {
-    where + 'an example value is required.';
-  } else if (r.example.contains(':') || r.example.contains(' ')) {
-    where + 'the example cannot contain a colon or spaces.';
-  } else if (!validate:match(r.regex, r.example)) {
-    where + 'the example ' + r.example + ' does not match the format ' + r.regex + '.';
-  } else {
-    '';
-  }
-};
-
-var fieldsError = function(rows) {
-  if (rows.size() == 0) {
-    'Add at least one field.';
-  } else if (rows.size() > 7) {
+  } else if (ls.size() == 0) {
+    'Add a field after the colon, e.g. Role Name. Separate several with commas.';
+  } else if (ls.size() > 7) {
     'At most 7 fields: the Add Pattern form has 7 boxes.';
-  } else if (rows.map(r => { r.fieldLabel }).distinct().size() != rows.size()) {
-    'Each field needs its own label.';
+  } else if (ls.distinct().size() != ls.size()) {
+    'Each field needs its own name.';
+  } else if (ls.filter(l => { l.length() > 40 }).size() > 0) {
+    'Keep each field name to 40 characters or fewer.';
   } else {
-    let errs = rows.map((r, i) => { rowError(r, i + 1) }).filter(e => { e != '' });
-    errs.size() == 0 ? '' : errs[0];
+    '';
   }
 };
 
-var schemaJson = function(prefixTextValue, rows) {
-  json:stringify({ 'prefixes': prefixList(prefixTextValue), 'fields': rows });
+var valuesOf = function(appId, example) {
+  let rest = (example ?? '').trim().substringAfter(appId + ':');
+  rest.contains(':') ? rest.substringAfter(':').split(':') : [];
 };
 
-var exampleName = function(appId, prefixTextValue, rows) {
-  let ps = prefixList(prefixTextValue);
-  (empty(appId) ? 'X:APP' : appId) + ':' + (ps.size() == 0 ? 'PREFIX' : ps[0]) + ':' + rows.map(r => { empty(r.example) ? '*' : r.example }).join(':');
+var exampleError = function(appId, example, formatText, apps, rec) {
+  let ex = (example ?? '').trim();
+  let ps = prefixesOf(formatText);
+  let ls = labelsOf(formatText);
+  if (empty(ex)) {
+    'Enter an example pattern name, e.g. ' + (empty(appId) ? 'X:APP' : appId) + ':ORG:ANY.';
+  } else if (ex.contains(' ')) {
+    'The example cannot contain spaces.';
+  } else if (empty(appId) || formatError(formatText) != '') {
+    '';
+  } else if (!ex.startsWith(appId + ':')) {
+    'The example must start with ' + appId + ':';
+  } else {
+    let pre = ex.substringAfter(appId + ':').substringBefore(':');
+    let vals = valuesOf(appId, ex);
+    let bad = ls.filter((l, i) => { i < vals.size() && !validate:match(knownField(l, apps, rec).regex, vals[i]) });
+    if (!ps.contains(pre)) {
+      'After ' + appId + ': the example needs one of the prefixes (' + ps.join(', ') + '), not ' + pre + '.';
+    } else if (vals.size() != ls.size()) {
+      'The example needs ' + ls.size() + ' value(s) after ' + pre + ', one for each field (' + ls.join(', ') + '). Use * for any. It has ' + vals.size() + '.';
+    } else if (bad.size() > 0) {
+      bad[0] + ': ' + knownField(bad[0], apps, rec).hint;
+    } else {
+      '';
+    }
+  }
 };
 
-var summary = function(rec) {
-  let s = schemaOf(rec);
-  empty(s) ? 'No pattern format yet' : (s.prefixes.join(' / ') + ': ' + s.fields.map(f => { f.fieldLabel }).join(', '));
+var fieldFor = function(label, value, apps, rec) {
+  let k = knownField(label, apps, rec);
+  let f = { 'fieldLabel': label, 'regex': k.regex, 'hint': k.hint, 'example': empty(value) ? k.example : value, 'blankIsWildcard': k.blankIsWildcard == true };
+  f;
+};
+
+var schemaJson = function(appId, formatText, example, apps, rec) {
+  let vals = valuesOf(appId, example);
+  let fields = labelsOf(formatText).map((l, i) => { fieldFor(l, i < vals.size() ? vals[i] : '', apps, rec) });
+  json:stringify({ 'prefixes': prefixesOf(formatText), 'fields': fields, 'example': (example ?? '').trim() });
 };
 
 {
   "recordById": recordById,
   "schemaOf": schemaOf,
-  "fieldRows": fieldRows,
-  "prefixText": prefixText,
-  "prefixList": prefixList,
+  "prefixesOf": prefixesOf,
+  "labelsOf": labelsOf,
+  "summary": summary,
+  "exampleName": exampleName,
+  "exampleFor": exampleFor,
   "newAppOptions": newAppOptions,
+  "copyOptions": copyOptions,
+  "knownField": knownField,
   "appIdError": appIdError,
   "nameError": nameError,
-  "prefixError": prefixError,
-  "rowError": rowError,
-  "fieldsError": fieldsError,
-  "schemaJson": schemaJson,
-  "exampleName": exampleName,
-  "summary": summary
+  "formatError": formatError,
+  "exampleError": exampleError,
+  "schemaJson": schemaJson
 }
 '''
 open(os.path.join(ROOT, 'scripts', 'comsAppSetup.script'), 'w', encoding='utf-8').write(SCRIPT)
@@ -172,7 +222,7 @@ setup = {"id": "appPatternSetup", "securityDomains": [DOMAIN], "include": ["coms
         {"type": "richText", "id": "aboutRichText", "enabled": False, "value": INFO(
           "Each application's shell org pattern format: its prefixes and its fields. The <b>Add Shell Org Pattern</b> form reads "
           "these, so a change here shows up there straight away. <b>Edit</b> changes an application's format; "
-          "<b>Add Application</b> sets up a new one. Existing patterns keep their names; a new format only applies to new patterns.")}]}]},
+          "<b>Add Application</b> sets up one that isn't listed yet. Existing patterns keep their names; a new format only applies to new patterns.")}]}]},
       {"type": "layoutSection", "id": "appsSection", "children": [{"type": "fieldSet", "id": "appsFieldSet", "title": "Applications", "children": [
         {"type": "button", "id": "addApplicationButton", "label": "Add Application", "action": "PRIMARY",
          "taskReference": {"taskId": "editAppPattern"}},
@@ -182,7 +232,7 @@ setup = {"id": "appPatternSetup", "securityDomains": [DOMAIN], "include": ["coms
            txt("colAppId", "Application ID", "<% ap.appId ?? '' %>"),
            txt("colAppName", "Name", "<% ap.name ?? '' %>"),
            txt("colFormat", "Pattern Format", "<% comsAppSetup.summary(ap) %>"),
-           txt("colExample", "Example", "<% let s = comsAppSetup.schemaOf(ap); empty(s) ? '' : comsAppSetup.exampleName(ap.appId, s.prefixes.join(','), s.fields) %>"),
+           txt("colExample", "Example", "<% comsAppSetup.exampleName(ap.appId, ap) %>"),
            txt("colActive", "Status", "<% ap.active == false ? 'Inactive' : 'Active' %>"),
            {"type": "column", "columnId": "colEdit", "label": "Edit", "cellTemplate": {
              "type": "button", "id": "editAppButton", "label": "Edit", "action": "AUXILIARY",
@@ -190,36 +240,33 @@ setup = {"id": "appPatternSetup", "securityDomains": [DOMAIN], "include": ["coms
     "footer": FOOT}}
 save('appPatternSetup.pmd', setup)
 
-# ---- edit page ----
+# ---- edit page: only the pattern format and its example change (product owner 2026-11-04) ----
 REC = "comsAppSetup.recordById(comsApplications.data, queryParams.recordId)"
 NEW = "empty(queryParams.recordId)"
 CHOSEN = "(empty(appIdDropdown.value) ? '' : appIdDropdown.selectedEntries[0].id)"
 APPID = f"({NEW} ? {CHOSEN} : ({REC} ?? {{'appId': ''}}).appId)"
-ROWS = ("fieldsGrid.rows.map(r => { { 'fieldLabel': (r.childrenMap.colFieldLabel.value ?? '').trim(), "
-        "'regex': (r.childrenMap.colRegex.value ?? '').trim(), 'hint': (r.childrenMap.colHint.value ?? '').trim(), "
-        "'example': (r.childrenMap.colExample.value ?? '').trim(), 'blankIsWildcard': r.childrenMap.colBlank.value == true } })")
-# An error OK puts on the Fields line has no box of its own to clear it, and Workday refuses OK while any error shows
-# (live 2026-11-04: the page stayed stuck after the row was fixed), so every table edit clears it; OK re-checks.
-PREVIEW = f"exampleNameText.setValue(comsAppSetup.exampleName({APPID}, prefixesText.value ?? '', {ROWS}));"
-FIELDS_TOUCHED = "fieldsCheckText.clearError(); " + PREVIEW
-cell = lambda cid, label, key, kind="text": {"type": "column", "columnId": cid, "label": label, "cellTemplate": {
-    "type": kind, "id": cid + ("CheckBox" if kind == "checkBox" else "Text"),
-    "value": f"<% fr.{key} ?? {'false' if kind == 'checkBox' else chr(39) * 2} %>", "onChange": "<% " + FIELDS_TOUCHED + " %>"}}
+FMT = "(formatText.value ?? '')"
+EX = "(exampleText.value ?? '')"
+SRC = "comsAppSetup.recordById(comsApplications.data, copyFromDropdown.selectedEntries[0].id)"
+# Cross-field: the example is checked against the format and the ID, so every box that feeds it rechecks it.
+CHECK_FMT = f"let ef = comsAppSetup.formatError({FMT}); if (ef != '') {{ formatText.setError(ef); }} else {{ formatText.clearError(); }}"
+CHECK_EX = (f"let ee = comsAppSetup.exampleError({APPID}, {EX}, {FMT}, comsApplications.data, {REC}); "
+            "if (ee != '') { exampleText.setError(ee); } else { exampleText.clearError(); }")
 OUT = lambda path, value: {"outboundPath": path, "value": value}
-SCHEMA = f"comsAppSetup.schemaJson(prefixesText.value ?? '', {ROWS})"
-PREFIXES = "comsAppSetup.prefixList(prefixesText.value ?? '').join(',')"
+SCHEMA = f"comsAppSetup.schemaJson({APPID}, {FMT}, {EX}, comsApplications.data, {REC})"
+PREFIXES = f"comsAppSetup.prefixesOf({FMT}).join(',')"
 STAMP = "date:now().format(\"yyyy-MM-dd'T'HH:mm:ss'Z'\")"
 submit = ("<%\n"
-          "  appIdDropdown.clearError();\n  appNameText.clearError();\n  prefixesText.clearError();\n  fieldsCheckText.clearError();\n"
+          "  appIdDropdown.clearError();\n  appNameText.clearError();\n  formatText.clearError();\n  exampleText.clearError();\n"
           "  let valid = true;\n"
           f"  let e1 = comsAppSetup.appIdError({CHOSEN}, comsApplications.data, {NEW});\n"
           "  if (e1 != '') { appIdDropdown.setError(e1); valid = false; }\n"
-          "  let e2 = comsAppSetup.nameError((appNameText.value ?? '').trim());\n"
+          f"  let e2 = {NEW} ? comsAppSetup.nameError((appNameText.value ?? '').trim()) : '';\n"
           "  if (e2 != '') { appNameText.setError(e2); valid = false; }\n"
-          "  let e3 = comsAppSetup.prefixError(prefixesText.value ?? '');\n"
-          "  if (e3 != '') { prefixesText.setError(e3); valid = false; }\n"
-          f"  let e4 = comsAppSetup.fieldsError({ROWS});\n"
-          "  if (e4 != '') { fieldsCheckText.setError(e4); valid = false; }\n"
+          f"  let e3 = comsAppSetup.formatError({FMT});\n"
+          "  if (e3 != '') { formatText.setError(e3); valid = false; }\n"
+          f"  let e4 = comsAppSetup.exampleError({APPID}, {EX}, {FMT}, comsApplications.data, {REC});\n"
+          "  if (e4 != '') { exampleText.setError(e4); valid = false; }\n"
           "  valid;\n%>")
 edit = {"id": "editAppPattern", "securityDomains": [DOMAIN], "include": ["comsAppSetup.script"],
   "endPoints": [APPS_EP,
@@ -230,22 +277,18 @@ edit = {"id": "editAppPattern", "securityDomains": [DOMAIN], "include": ["comsAp
     {"name": "postApplication", "baseUrlType": "BUSINESS-OBJECT", "url": "/comsApplications", "httpMethod": "POST", "authType": "sso",
      "exclude": f"<% !{NEW} %>", "failOnStatusCodes": FOS([400, 403, 429, 500]), "values": [
        OUT("appId", f"<% {CHOSEN} %>"), OUT("name", "<% (appNameText.value ?? '').trim() %>"),
-       OUT("description", "<% (appDescriptionText.value ?? '').trim() %>"),
        OUT("orgType", f"<% {CHOSEN} %>"), OUT("orgSubtype", "X:SHELL"),
-       OUT("namePrefix", f"<% {PREFIXES} %>"), OUT("patternSchema", f"<% {SCHEMA} %>"),
-       OUT("active", "<% appActiveCheckBox.value == true %>")]},
+       OUT("namePrefix", f"<% {PREFIXES} %>"), OUT("patternSchema", f"<% {SCHEMA} %>"), OUT("active", "<% true %>")]},
     {"name": "patchApplication", "baseUrlType": "BUSINESS-OBJECT", "url": "<% '/comsApplications/' + (queryParams.recordId ?? '') %>",
      "httpMethod": "PATCH", "authType": "sso", "exclude": f"<% {NEW} %>", "failOnStatusCodes": FOS([400, 403, 404, 429, 500]), "values": [
-       OUT("name", "<% (appNameText.value ?? '').trim() %>"), OUT("description", "<% (appDescriptionText.value ?? '').trim() %>"),
-       OUT("namePrefix", f"<% {PREFIXES} %>"), OUT("patternSchema", f"<% {SCHEMA} %>"),
-       OUT("active", "<% appActiveCheckBox.value == true %>")]},
+       OUT("namePrefix", f"<% {PREFIXES} %>"), OUT("patternSchema", f"<% {SCHEMA} %>")]},
     {"name": "postAudit", "baseUrlType": "BUSINESS-OBJECT", "url": "/comsAuditLogs", "httpMethod": "POST", "authType": "sso",
      "failOnStatusCodes": FOS([400, 403, 429, 500]), "values": [
        OUT("timestamp", f"<% {STAMP} %>"), OUT("objectType", "Application Pattern"),
        OUT("action", f"<% {NEW} ? 'ADD' : 'UPDATE' %>"),
        OUT("coReferenceId", f"<% {APPID} %>"), OUT("coName", f"<% {APPID} %>"),
        OUT("triggeredBy", "<% selectedWorker.descriptor ?? '' %>"), OUT("changedByWid", "<% selectedWorker.id ?? '' %>"),
-       OUT("details", f"<% 'Pattern format for ' + {APPID} + ': ' + {PREFIXES}.replace(',', ' / ') + ' + ' + {ROWS}.map(r => {{ r.fieldLabel }}).join(', ') + (appActiveCheckBox.value == true ? '' : ' (inactive)') %>")]}]},
+       OUT("details", f"<% 'Pattern format for ' + {APPID} + ': ' + {FMT}.trim() + ' (example ' + {EX}.trim() + ')' %>")]}]},
   "onSubmit": submit,
   "presentation": {"pageType": "EDIT", "headerSize": "STANDARD",
     "title": {"type": "title", "label": f"<% {NEW} ? 'ECO-COMS: Add Application' : ('ECO-COMS: Edit Pattern Format · ' + ({REC} ?? {{'appId': ''}}).appId) %>"},
@@ -253,42 +296,34 @@ edit = {"id": "editAppPattern", "securityDomains": [DOMAIN], "include": ["comsAp
     "body": {"type": "basicFormLayout", "id": "editAppPatternForm", "sections": [
       {"type": "layoutSection", "id": "aboutSection", "children": [{"type": "fieldSet", "id": "aboutFieldSet", "title": "About This Page", "children": [
         {"type": "richText", "id": "aboutRichText", "enabled": False, "value": INFO(
-          "A pattern name is <b>APPLICATION:PREFIX:field:field:…</b>. Set the prefixes the application may use and its fields, "
-          "in order. Each field has a label (shown on the Add Pattern form), a format (a regular expression the value must match, "
-          "e.g. <b>[A-Z]{2,4}</b>), a hint shown when a value doesn't match, and an example that matches the format. "
-          "Tick <b>Blank means any</b> when a field may be left empty (it becomes *). Existing patterns keep their names. "
-          "A new application also needs an organization type of the same name in Workday before its patterns can be created.")}]}]},
+          "Write the format as on the list: the prefixes, a colon, then the fields in order, e.g. <b>CP: Subject, Course</b> "
+          "(several prefixes: <b>COMM / PRIV: Role Name</b>). The example is a full pattern name with one value per field, "
+          "e.g. <b>X:BPMS(AOC):CP:MECH_V:1*</b>; use * for any. <b>Copy from</b> fills both from another application. "
+          "A field keeps its rules (allowed characters, hint) from a field of the same name; a new field name gets the "
+          "Role Name rules. Existing patterns keep their names.")}]}]},
       {"type": "layoutSection", "id": "appSection", "children": [{"type": "fieldSet", "id": "appFieldSet", "title": "Application", "children": [
-        # a new application gets an editable ID; an existing one shows it read-only (the ID can't change: patterns are named after it)
+        # an existing application's ID and name are shown, not edited (patterns are named after the ID)
         {"type": "text", "id": "appIdShownText", "label": "Application ID", "enabled": False, "visible": f"<% !{NEW} %>",
          "value": f"<% ({REC} ?? {{'appId': ''}}).appId ?? '' %>"},
-        {"type": "dropdown", "id": "appIdDropdown", "label": "Application ID", "visible": f"<% {NEW} %>",
-         "helpText": "Applications in Workday that don't have a pattern format here yet.",
+        {"type": "dropdown", "id": "appIdDropdown", "label": "Application ID", "visible": f"<% {NEW} %>", "required": True,
+         "helpText": "Applications in Workday that aren't set up here yet.",
          "values": "<% comsAppSetup.newAppOptions(existingOrgs.data, comsApplications.data) %>",
-         "onChange": f"<%\n  let e = comsAppSetup.appIdError({CHOSEN}, comsApplications.data, {NEW});\n  if (e != '') {{ self.setError(e); }} else {{ self.clearError(); }}\n  {PREVIEW}\n%>"},
-        {"type": "text", "id": "appNameText", "label": "Name", "required": True, "value": f"<% ({REC} ?? {{'name': ''}}).name ?? '' %>",
-         "onChange": "<%\n  let e = comsAppSetup.nameError((self.value ?? '').trim());\n  if (e != '') { self.setError(e); } else { self.clearError(); }\n%>"},
-        {"type": "text", "id": "appDescriptionText", "label": "Description", "value": f"<% ({REC} ?? {{'description': ''}}).description ?? '' %>"},
-        {"type": "checkBox", "id": "appActiveCheckBox", "label": "Active (shown on the Add Pattern form)",
-         "value": f"<% ({REC} ?? {{'active': true}}).active != false %>"}]}]},
+         "onChange": f"<%\n  let e = comsAppSetup.appIdError({CHOSEN}, comsApplications.data, {NEW});\n  if (e != '') {{ self.setError(e); }} else {{ self.clearError(); }}\n  {CHECK_EX}\n%>"},
+        {"type": "text", "id": "appNameText", "label": "Name", "required": f"<% {NEW} %>", "enabled": f"<% {NEW} %>",
+         "value": f"<% ({REC} ?? {{'name': ''}}).name ?? '' %>",
+         "onChange": "<%\n  let e = comsAppSetup.nameError((self.value ?? '').trim());\n  if (e != '') { self.setError(e); } else { self.clearError(); }\n%>"}]}]},
       {"type": "layoutSection", "id": "formatSection", "children": [{"type": "fieldSet", "id": "formatFieldSet", "title": "Pattern Format", "children": [
-        {"type": "text", "id": "prefixesText", "label": "Prefixes", "required": True, "placeholder": "e.g. ORG, or CP, PRIV for several",
-         "value": f"<% comsAppSetup.prefixText({REC}) %>",
-         "onChange": f"<%\n  let e = comsAppSetup.prefixError(self.value ?? '');\n  if (e != '') {{ self.setError(e); }} else {{ self.clearError(); }}\n  {PREVIEW}\n%>"},
-        {"type": "readOnlyText", "id": "exampleNameText", "label": "Example Pattern Name",
-         # page-load value from the saved record; fields are declared below, so they can't be read here yet
-         "value": f"<% let s = comsAppSetup.schemaOf({REC}); empty(s) ? '' : comsAppSetup.exampleName(({REC}).appId, s.prefixes.join(','), s.fields) %>"},
-        {"type": "text", "id": "fieldsCheckText", "label": "Fields", "enabled": False,
-         "value": f"<% 'Up to {MAX_FIELDS} fields, in the order they appear in the name. Add a row with +.' %>"},
-        {"type": "grid", "id": "fieldsGrid", "label": "Fields", "rowVariableName": "fr",
-         "onRowAdd": "<% " + FIELDS_TOUCHED + " %>", "onRowRemove": "<% " + FIELDS_TOUCHED + " %>",
-         "rows": f"<% comsAppSetup.fieldRows({REC}) %>",
-         "columns": [
-           cell("colFieldLabel", "Label", "fieldLabel"),
-           cell("colRegex", "Format (regular expression)", "regex"),
-           cell("colHint", "Hint", "hint"),
-           cell("colExample", "Example", "example"),
-           cell("colBlank", "Blank means any (*)", "blankIsWildcard", "checkBox")]}]}]}]},
+        {"type": "dropdown", "id": "copyFromDropdown", "label": "Copy from",
+         "helpText": "Fills the format and example from another application. You can still change them.",
+         "values": f"<% comsAppSetup.copyOptions(comsApplications.data, {APPID}) %>",
+         "onChange": (f"<%\n  if (!empty(self.value)) {{\n    formatText.setValue(comsAppSetup.summary({SRC}));\n"
+                      f"    exampleText.setValue(comsAppSetup.exampleFor({APPID}, {SRC}));\n  }}\n  {CHECK_FMT}\n  {CHECK_EX}\n%>")},
+        {"type": "text", "id": "formatText", "label": "Pattern Format", "required": True, "placeholder": "e.g. CP: Subject, Course",
+         "value": f"<% comsAppSetup.summary({REC}) %>",
+         "onChange": f"<%\n  {CHECK_FMT}\n  {CHECK_EX}\n%>"},
+        {"type": "text", "id": "exampleText", "label": "Example", "required": True, "placeholder": "e.g. X:BPMS(AOC):CP:MECH_V:1*",
+         "value": f"<% let r = {REC}; empty(r) ? '' : comsAppSetup.exampleName(r.appId, r) %>",
+         "onChange": f"<%\n  {CHECK_EX}\n%>"}]}]}]},
     "footer": FOOT}}
 save('editAppPattern.pmd', edit)
 
