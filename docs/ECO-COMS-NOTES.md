@@ -584,3 +584,13 @@ Asked: instead of an empty position picker until you type, let users drill down 
 - Widget: multilevel instanceList (`dynamicMonikerLevels`, developer.workday.com "Concept: Multilevel Lists"), last
   level = the positions WQL. Unverified: multilevel together with `multiSelect` and `searchEndPoint`, inside a grid
   (Bulk Edit), and REST tree hrefs called from a page endpoint. Pilot candidate: Edit Role Assignment, as a build step with `--off`.
+
+### Pilot built: Edit Role Assignment, Positions to Add (2026-11-05, `tools/pos_tree.py`, `--off` rolls back)
+- Clicking the picker shows My Favorites, My Organizations, Supervisory Organizations by Manager (manager -> orgs) and
+  Supervisory Organization (A-Z, 139 orgs over two REST pages). An organization opens to its positions (same Position ID
+  + label as a search result, so OK / AssignRole / audit are unchanged). Typing still searches (first 50).
+- Live check: by Manager -> Alain DuBois -> Global Support - Canada Group -> 13 positions; ticked several; a position
+  found by typing (P-00010) showed already ticked inside its org (My Organizations -> HR Services Department), and one
+  picked by search plus one picked by browsing both ended up selected (2 items). No submit was made (test role/org).
+- Not yet done: Submit Assignable Role Request and AAA Role Request (same change: add them to PAGES), Bulk Edit (grid
+  cell, untested), the two "... by Hierarchy" folders (nest to any depth).

@@ -570,6 +570,14 @@ Workday can hand a page the same options its own prompts show, instead of a hand
 - **Coverage is narrow (one tenant, 2026-11-05):** `Mutation_Prompts` had only 5 mutations (createReferenceLetterForWorker, referACandidate, startPerformanceReview, submitAccountingJournal, submitSupplier), none for positions, organizations or roles. Introspect `__type(name: "Mutation_Prompts")` before planning around them.
 - **Trade-offs:** prompt values return only id + descriptor (no extra columns such as Position ID or filled status), follow the user's own security, and exist only where Workday defines a prompt for that field. WQL stays the tool when you need other fields or your own filter.
 
+### Multilevel lists: confirmed live (2026-11-05, one dev tenant)
+
+- `dynamicMonikerLevels` works together with `multiSelect: true` and `searchEndPoint`/`searchResultValues` on the same instanceList: clicking shows the root `values` as folders, typing runs the search, and selections from both stay selected (the same id ticked in either place).
+- The script returns `[list, true]` when the items open to another level and `[list, false]` when they are the selectable leaves. `self.promptSelections` holds the chosen id at each level; `return` and `const` work in it, as in Workday's sample.
+- Deferred endpoints called with `.invoke()` from the script work for each level, including an absolute `href` from a REST `values` list as the URL and a plain-GET WQL URL. `.total` on the invoke result lets a level fetch a second page (REST `values` lists return 100 at most).
+- Workday's supervisory organization prompt (`staffing/v6/values/jobChangesGroup/supervisoryOrganization/`) returns org WIDs as ids. Its "... by Hierarchy" folders nest "Selectable Values" to any depth, so they need a recursive design.
+- Browser automation: the open list renders only a few rows in the DOM. Open a folder by its `find` ref or with the arrow keys plus Right, and read a level from the `w/prompt/context` response (`items[].text`; leaves have no `nextLevelPrompt`). Typing in the box returns to the root level.
+
 ### Persisting
 
 `valueOutBinding` binds the selected ID to one outbound field; `valuesOut` binds to several. A map-returning endpoint must be wrapped as a list: `"values": "<% [worker] %>"`.
