@@ -1995,6 +1995,38 @@ async function orgTreeProbe(token) {
   }
   try { const r = await wql(token, 'SELECT workdayID, academicUnit, academicUnitName FROM academicUnits WHERE inactive = false', 10000); console.log(`   AU active count ${(r.data || []).length}`); } catch (e) { console.log('   AU count error ' + e.message.slice(0, 150)); }
   try { const r = await wql(token, 'SELECT workdayID, organization1, code FROM customOrganizations WHERE type1 in (b40d8b016367100175b147f364840000)', 10000); const d = r.data || []; console.log(`   FUH count ${d.length}; sample codes: ${d.slice(0, 8).map((x) => x.code).join(' | ')}`); } catch (e) { console.log('   FUH count error ' + e.message.slice(0, 150)); }
+  // second pass: custom organization parent fields (not cf_), and the shape of both trees
+  try {
+    const ds = await request('GET', `${API}/wql/v1/dataSources?alias=customOrganizations`, token); const id = (ds.data || [])[0]?.id;
+    let all = []; for (let off = 0; off < 3000; off += 100) { const page = (await request('GET', `${API}/wql/v1/dataSources/${id}/fields?limit=100&offset=${off}`, token)).data || []; all = all.concat(page); if (page.length < 100) break; }
+    all.filter((x) => !/^cf_/.test(x.alias) && /superior|parent|subordinate|hierarch|top|level|included|inactive/i.test(`${x.alias} ${x.descriptor}`)).forEach((x) => console.log(`     CFIELD ${x.alias} | ${x.descriptor} | ${x.type || ''}`));
+  } catch (e) { console.log('   CFIELD error ' + e.message.slice(0, 150)); }
+  for (const f of ['superiorOrganization', 'superiorCustomOrganization', 'hierarchicParents', 'directSuperiors', 'organizationHierarchy']) {
+    try {
+      const r = await wql(token, `SELECT workdayID, organization1, code, ${f} FROM customOrganizations WHERE type1 in (b40d8b016367100175b147f364840000)`, 10000); const d = r.data || [];
+      const parentOf = (o) => { const v = o[f]; return Array.isArray(v) ? (v[0] && v[0].id) : (v && v.id); };
+      const ids = new Set(d.map((o) => o.workdayID)); const kids = {};
+      d.forEach((o) => { const p = parentOf(o) || 'ROOT'; (kids[ids.has(p) ? p : (p === 'ROOT' ? 'ROOT' : 'OUTSIDE:' + p)] = kids[ids.has(p) ? p : (p === 'ROOT' ? 'ROOT' : 'OUTSIDE:' + p)] || []).push(o); });
+      const depth = (wid) => { let n = 0; let cur = d.find((o) => o.workdayID === wid); while (cur && parentOf(cur) && ids.has(parentOf(cur)) && n < 30) { n++; cur = d.find((o) => o.workdayID === parentOf(cur)); } return n; };
+      const roots = Object.keys(kids).filter((k) => k === 'ROOT' || k.startsWith('OUTSIDE:'));
+      const sizes = Object.entries(kids).filter(([k]) => ids.has(k)).map(([, v]) => v.length).sort((a, b) => a - b);
+      console.log(`   FUH via ${f}: rows ${d.length}; root groups ${roots.map((k) => k.slice(0, 40) + '=' + kids[k].length).join(', ')}; parents with children ${sizes.length}, max children ${sizes[sizes.length - 1]}, max depth ${Math.max(...d.map((o) => depth(o.workdayID)))}`);
+      console.log(`     sample: ${d.slice(0, 4).map((o) => `${o.code}<-${JSON.stringify(o[f]).slice(0, 70)}`).join(' ; ')}`);
+      roots.forEach((k) => console.log(`     ROOT ${k.slice(0, 50)}: ${kids[k].slice(0, 6).map((o) => o.code + ' ' + (o.organization1?.descriptor || '')).join(' | ')}`));
+      break;
+    } catch (e) { console.log(`   FUH via ${f}: ${e.message.slice(0, 160)}`); }
+  }
+  try {
+    const h = await wql(token, 'SELECT workdayID, academicUnitHierarchy, directSuperiors, directSubordinates FROM academicUnitHierarchies', 10000);
+    const d = h.data || []; const top = d.filter((x) => !(x.directSuperiors || []).length);
+    console.log(`   AUH rows ${d.length}; top ${top.length}: ${top.slice(0, 6).map((x) => x.academicUnitHierarchy?.descriptor + '(' + (x.directSubordinates || []).length + ')').join(' | ')}; sample ${JSON.stringify(d[0]).slice(0, 220)}`);
+  } catch (e) { console.log('   AUH error ' + e.message.slice(0, 200)); }
+  try {
+    const u = await wql(token, 'SELECT workdayID, academicUnit, hierarchicParents, academicUnitIsTopNode FROM academicUnits WHERE inactive = false', 10000);
+    const d = u.data || []; const noParent = d.filter((x) => !(x.hierarchicParents || []).length);
+    const per = {}; d.forEach((x) => (x.hierarchicParents || []).forEach((p) => { per[p.descriptor] = (per[p.descriptor] || 0) + 1; }));
+    console.log(`   AU rows ${d.length}; without hierarchy ${noParent.length}; topNode ${d.filter((x) => x.academicUnitIsTopNode).length}; per hierarchy (top 8): ${Object.entries(per).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([k, v]) => k + '=' + v).join(' | ')}; sample ${JSON.stringify(d[0]).slice(0, 200)}`);
+  } catch (e) { console.log('   AU parents error ' + e.message.slice(0, 200)); }
   pass('OrgTree.probe', 'see lines above');
 }
 
