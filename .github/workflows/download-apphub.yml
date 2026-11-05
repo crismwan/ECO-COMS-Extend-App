@@ -5,12 +5,12 @@ on:
   workflow_dispatch: {}
 jobs:
   download:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
     - name: Install WDCLI from GitHub Release
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -80,7 +80,7 @@ jobs:
         for f in /tmp/apphub/orchestration/*.suborchestration; do [ -f "$f" ] && { echo "=== $f"; cat "$f"; echo; }; done
         if cmp -s /tmp/apphub/appManifest.json appManifest.json; then echo "appManifest.json: same as repo"; else echo "appManifest.json differs:"; diff <(python3 -m json.tool appManifest.json) <(python3 -m json.tool /tmp/apphub/appManifest.json) | head -40; fi
     - name: Keep the download as an artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: apphub-source
         path: /tmp/apphub

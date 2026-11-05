@@ -603,12 +603,24 @@ function staticSuite() {
     if (forbidden.test(fs.readFileSync(path.join(ROOT, f), 'utf8'))) err('testText', `${f}: contains forbidden test text`);
   }
 
-  // 9. Inbound endpoints should fail loudly (warning only)
+  // 9. Inbound endpoints should fail loudly (warning only). Exception, decided 2026-11-05: the browse-tree lists are
+  // extras beside the typed search, so a failure must leave an empty tree, not a broken page. They must stay
+  // bestEffort and keep no failOnStatusCodes (CLAUDE.md "failOnStatusCodes": be deliberate on side lists).
+  const QUIET_OK = new Set(['posTreeRoot', 'fuhTreeAll', 'auTreeAll']);
   let quiet = 0;
-  for (const d of Object.values(pmds)) {
-    walk(d, (node, pk) => { if (pk === 'endPoints' && 'baseUrlType' in node && !('failOnStatusCodes' in node) && !node.deferred) quiet++; });
+  for (const [f, d] of Object.entries(pmds)) {
+    walk(d, (node, pk) => {
+      if (pk !== 'endPoints' || !('baseUrlType' in node) || node.deferred) return;
+      if (QUIET_OK.has(node.name)) {
+        if (!(node.bestEffort === true || node.bestEffort === 'true')) fail('Static.failOnStatusCodes', `${f}: ${node.name} is an optional browse list and must be bestEffort`);
+        if ('failOnStatusCodes' in node) warn('Static.failOnStatusCodes', `${f}: ${node.name} is an optional browse list; a listed code would fail the whole page`);
+        return;
+      }
+      if (!('failOnStatusCodes' in node)) quiet++;
+    });
   }
   if (quiet) warn('Static.failOnStatusCodes', `${quiet} inbound endpoint(s) have no failOnStatusCodes (errors are swallowed)`);
+  else pass('Static.failOnStatusCodes', 'every eager endpoint fails loudly, apart from the optional browse lists');
 
   // 9b. Widget method calls name a widget on the page (an unknown id fails the page at run time:
   //     "Unknown Variable found: changesText", Bulk Edit, 2026-11-03)

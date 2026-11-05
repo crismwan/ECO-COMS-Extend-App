@@ -13,14 +13,14 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
       actions: write
       issues: write
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Static checks (block upload on known platform pitfalls; no tenant access)
         run: node test/run-tests.js static
@@ -470,7 +470,7 @@ jobs:
 
       - name: Upload e2e results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: e2e-results
           path: test/results.json
