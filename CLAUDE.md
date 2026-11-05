@@ -2494,13 +2494,15 @@ Source: developer.workday.com "Concept: fileUploader", "fileUploaderRow", "attac
 - Reports: one report can take several `defaultSecurityDomains`. Delete unused WQL components and reports as you go: apps have tight limits.
 
 
-### Sub-orchestrations (partly confirmed, 2026-11-04)
+### Sub-orchestrations (confirmed live 2026-11-04)
 
-- Created in Orchestration Builder: an open orchestration's left panel → **Suborchestrations +** → Start from Scratch (or Import Existing Orchestration). The parent adds it from Components → Suborchestrations → **Call <name>** (drag only; automated drags don't register).
-- Source view of a new one (flowVersion 3.7.0): flow type `.maya.FlowSubflow`; start `StartSubflow` {`parameters`: List<`ExprParameter` {name Identifier, type Type, expr Opt<Expr<Opt<Any>>>}>}; end `EndSubflow` {`exports`: List<`Assignment`>}; `securityDomains` null; default credential `AccessTokenFromInitiatingUser`.
-- The call step, from the builder's own type schema: `CallSubflow` {name, isDisabled, errorHandler, `subflowId` String, `parameters` List<Assignment>, `executionDelay` Opt<`SubflowExecutionDelay` {delayMinutes Expr Number}>}. The builder fills `subflowId` from its sub-orchestration list's `id`.
-- **A hand-written `.maya.FlowSubflow` file in `orchestration/` is not picked up by App Hub** (build: "no orchestration with name: ProbeEcho found"), and a call to it fails ("Invalid Subflow Reference ID"). How App Hub stores sub-orchestrations (folder, file name, registration, what `subflowId` holds) is still unknown: save one from Orchestration Builder to App Hub (ask first), then read the app's source.
-- Still unverified: how start inputs and call outputs are referenced (guessed `data.start.<input>` and `data.<callStep>.<export>`).
+- **File:** `orchestration/<Name>.suborchestration` (App Hub's own extension, seen by saving one in Orchestration Builder and downloading the app with `wdcli app download`). Nothing else registers it. The same JSON saved as `.orchestration` is ignored ("no orchestration with name: X found").
+- **Shape** (flowVersion 3.7.0): flow type `.maya.FlowSubflow`; start `StartSubflow` {`parameters`: List<`ExprParameter` {name Identifier, type Type, expr Opt<Expr<Opt<Any>>> = null}>}; end `EndSubflow` {`exports`: List<`Assignment`>} (may be empty); `securityDomains` null (the callers carry the domain); default credential `AccessTokenFromInitiatingUser`.
+- **Inside**, an input is `data.start.<input>`.
+- **The call step:** `CallSubflow` {name, isDisabled, errorHandler, `subflowId`, `parameters` List<Assignment> (one per input, same name and type), `executionDelay` Opt<`SubflowExecutionDelay`> = null}. **`subflowId` is the sub-orchestration's 32-hex `id`**; its name is rejected ("Invalid Subflow Reference ID"). An output is `data.<callStep>.<export>`. A call inside a Loop works.
+- Proven with a probe: caller passed `text = "hello"`, the sub exported `"echo:".append(data.start.text)`, the caller returned `{"echo": "echo:hello"}`.
+- In the builder: an open orchestration's left panel → **Suborchestrations +**; the caller gets it from Components → Suborchestrations → **Call <name>** (drag only; automated drags don't register). Docs: doc.workday.com "Modular Orchestration Design" (no Trigger Business Process or RaaS steps inside).
+- Repo pattern: a final build step (`tools/extract_subflows.py` in one app) that moves a block two orchestrations share into the sub-orchestration, turns everything the block reads from outside into inputs, and replaces the block in each parent with the call; a static check that every `subflowId` matches a `.suborchestration` id and the inputs match.
 
 ## Orchestrations — synchronous page limit is 25 seconds
 

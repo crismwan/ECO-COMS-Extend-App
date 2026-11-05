@@ -123,7 +123,7 @@ function staticSuite() {
     ...listFiles('presentation/pods').filter((f) => f.endsWith('.pod')),
     ...listFiles('presentation/cards').filter((f) => f.endsWith('.card')),
     ...listFiles('model'),
-    ...listFiles('orchestration').filter((f) => f.endsWith('.orchestration')),
+    ...listFiles('orchestration').filter((f) => /\.(orchestration|suborchestration)$/.test(f)),
     ...listFiles('presentation', true).filter((f) => f.endsWith('.wqlquery')),
   ]);
   const docs = {};
@@ -221,6 +221,30 @@ function staticSuite() {
       if (!domains[n]) err('orchSecurity', `${path.basename(f)}: security domain '${n}' is not defined in model/`);
       else if (domains[n].enabledForOrchestrationSecurity !== true) err('orchSecurity', `${path.basename(f)}: domain '${n}' needs "enabledForOrchestrationSecurity": true`);
     }
+  }
+
+  // 5c. Sub-orchestrations (orchestration/<Name>.suborchestration, App Hub's own extension; 2026-11-04): each is a
+  // FlowSubflow, and every CallSubflow names one by its 32-hex id (the name is rejected: "Invalid Subflow Reference ID")
+  // with exactly the inputs its StartSubflow declares.
+  const subs = {};
+  for (const f of listFiles('orchestration').filter((x) => x.endsWith('.suborchestration'))) {
+    const v = (docs[f] || {})._value || {};
+    if (v.type?._value !== '.maya.FlowSubflow') err('subflow', `${path.basename(f)}: a .suborchestration must be type .maya.FlowSubflow (is ${v.type?._value})`);
+    const ins = ((v.start?._value?.parameters || {})._value || []).map((p) => p._value?.name?._value);
+    subs[v.id?._value] = { name: v.name?._value, ins };
+  }
+  for (const f of listFiles('orchestration').filter((x) => /\.(orchestration|suborchestration)$/.test(x))) {
+    if (((docs[f] || {})._value || {}).type?._value === '.maya.FlowSubflow' && f.endsWith('.orchestration'))
+      err('subflow', `${path.basename(f)}: a FlowSubflow must be saved as .suborchestration (App Hub ignores it as .orchestration)`);
+    walk(docs[f] || {}, (node) => {
+      if (node._type !== 'CallSubflow') return;
+      const c = node._value || {}; const id = c.subflowId?._value; const step = c.name?._value;
+      const sub = subs[id];
+      if (!sub) { err('subflow', `${path.basename(f)}: step ${step} calls subflowId '${id}', which is no .suborchestration's id`); return; }
+      const args = ((c.parameters || {})._value || []).map((a) => a._value?.param?._value?.name?._value);
+      const miss = sub.ins.filter((n) => !args.includes(n)), extra = args.filter((n) => !sub.ins.includes(n));
+      if (miss.length || extra.length) err('subflow', `${path.basename(f)}: ${step} -> ${sub.name}: missing inputs [${miss}] extra [${extra}]`);
+    });
   }
 
   // 6. Business process routes have matching AMD tasks

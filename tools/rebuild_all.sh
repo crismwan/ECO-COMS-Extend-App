@@ -55,6 +55,7 @@ run tools/audit_filters_more.py      # Audit Log Changed By + Organization filte
 run tools/excel_export_values.py     # fieldSet columns get an Excel export value (else the export fails)
 run tools/clear_submit_errors.py      # every OK check clears its own earlier errors first
 run tools/apply_icons.py              # every icon from one table (CLAUDE.md "Icons" framework)
+run tools/extract_subflows.py         # shared logic moved into sub-orchestrations (runs last, after every patch)
 
 if [[ "${1:-}" == "--check" ]]; then
   changed="$(git status --porcelain -- presentation orchestration model)"
