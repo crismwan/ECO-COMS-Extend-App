@@ -2053,6 +2053,11 @@ async function orgTreeProbe(token) {
     console.log(`   DEPT rows ${dep.length}; first chars ${JSON.stringify(first)}; samples ${dep.slice(0, 5).map((o) => JSON.stringify(o.organization1)).join(' ; ')}`);
     const ids = new Set(); let dup = 0; d.forEach((o) => { if (ids.has(o.workdayID)) dup++; ids.add(o.workdayID); }); console.log(`   FUH distinct WIDs ${ids.size} of ${d.length} rows (dup ${dup})`);
   } catch (e) { console.log('   DEPT error ' + e.message.slice(0, 150)); }
+  for (const [n, q] of [['fuhTreeAll', 'SELECT workdayID, organization1, subtype FROM customOrganizations WHERE type1 in (b40d8b016367100175b147f364840000)'], ['auTreeAll', 'SELECT workdayID, academicUnit, academicUnitSubtype FROM academicUnits WHERE inactive = false']]) {
+    const ms = []; let bytes = 0;
+    for (let i = 0; i < 5; i++) { const t = Date.now(); const r = await wql(token, q, 10000); ms.push(Date.now() - t); bytes = JSON.stringify(r).length; }
+    ms.sort((a, b) => a - b); console.log(`   TIME ${n}: median ${ms[2]} ms (${ms.join(', ')}), ${Math.round(bytes / 1024)} KB`);
+  }
   pass('OrgTree.probe', 'see lines above');
 }
 
