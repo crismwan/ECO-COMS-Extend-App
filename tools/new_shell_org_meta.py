@@ -86,10 +86,10 @@ app['onChange'] = f"<%\n  selectedApplicationId.clearError();\n  organizationCod
 code = find(d, 'organizationCode')
 code['placeholder'] = "e.g. ORG:ANY, NEW, or X:NEWAPP"
 code['helpText'] = ("X:SHELL: the part after the application (ORG:ANY gives X:CLW:ORG:ANY). "
-                    "X:META with an application: the part in brackets (NEW gives X:LLIS(NEW)). "
+                    "X:META with an application: the part in brackets, so NEW gives X:LLIS(NEW). "
                     "X:META without one: the new application code, starting with X: (X:NEWAPP).")
 code['guide']['text'] = ("X:SHELL: enter the part after the application, or the full name (ORG:ANY or X:CLW:ORG:ANY both give "
-                         "X:CLW:ORG:ANY). X:META with an application: enter the part that goes in brackets (NEW gives X:LLIS(NEW)). "
+                         "X:CLW:ORG:ANY). X:META with an application: enter the part that goes in brackets, so NEW gives X:LLIS(NEW). "
                          "X:META without an application: enter the new application code starting with X: (X:NEWAPP). "
                          "For X:META the organization type of the same name must already exist in Workday. No spaces. Must be unique.")
 code['onChange'] = f"<%\n  self.clearError();\n  {PREVIEW}\n%>"
@@ -112,7 +112,7 @@ if about:
     about['value'] = ('<span style="color:#0055B7;font-size:12px;font-weight:700">ⓘ </span><span style="color:#374151;font-size:12px">'
                       'Add a new organization to Workday. Pick the subtype first. <b>X:SHELL</b>: pick the application; the name is '
                       '<b>Application:Code</b> (e.g. X:CLW:ORG:ANY). <b>X:META</b> with an application: the name is '
-                      '<b>Application(Code)</b> (e.g. X:LLIS(CPE)). <b>X:META</b> without an application (a new application): enter its '
+                      '<b>Application(Code)</b>, for example X:LLIS(CPE). <b>X:META</b> without an application (a new application): enter its '
                       'code starting with <b>X:</b> (e.g. X:NEWAPP). For X:META, an organization type of the same name must already '
                       'exist in Workday.</span>')
 
