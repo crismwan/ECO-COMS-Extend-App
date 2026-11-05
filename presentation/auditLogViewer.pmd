@@ -327,7 +327,7 @@
                       "id": "organizationText",
                       "enabled": false,
                       "visible": "<% !(!empty(logEntry.orgWid) || (logEntry.objectType == 'Application Pattern' ? list:filter(auditApplications.data ?? [], 'appId', logEntry.coReferenceId ?? '') : []).size() > 0) %>",
-                      "value": "<% logEntry.coName ?? '' %>"
+                      "value": "<% (logEntry.coName ?? '') + (logEntry.objectType == 'Application Pattern' ? (' [DEBUG apps=' + (auditApplications.data ?? []).size() + ' match=' + list:filter(auditApplications.data ?? [], 'appId', logEntry.coReferenceId ?? '').size() + ']') : '') %>"
                     }
                   ]
                 },

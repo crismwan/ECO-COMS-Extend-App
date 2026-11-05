@@ -35,6 +35,7 @@ def walk(n):
                     c['visible'] = f"<% {HAS} %>"
                 elif c.get('id') == 'organizationText':
                     c['visible'] = f"<% !{HAS} %>"
+                    c['value'] = "<% (logEntry.coName ?? '') + (logEntry.objectType == 'Application Pattern' ? (' [DEBUG apps=' + (auditApplications.data ?? []).size() + ' match=' + list:filter(auditApplications.data ?? [], 'appId', logEntry.coReferenceId ?? '').size() + ']') : '') %>"
             done.append('columnOrganization')
         for v in n.values(): walk(v)
     elif isinstance(n, list):
