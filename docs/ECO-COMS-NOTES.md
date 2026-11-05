@@ -656,3 +656,13 @@ Asked: instead of an empty position picker until you type, let users drill down 
   Edit Role Assignment on ODMT STAFF (empty OK error, cleared from Positions to Remove); AAA Role Requests and ISC
   Queue views load; FUH typed search (CPDK); AAA full-ID names; Bulk Edit required date -> calendar pick clears it,
   then "No changes yet".
+
+### Follow-ups after the regression hour (2026-11-05, product owner: "proceed")
+- **Stuck errors on three more pages** (`clear_on_change.py`): Bulk Role Changes (the CSV uploader clears its
+  "Choose the CSV file" error in `onFileAdd`: a fileUploader has no onChange, developer.workday.com "fileUploader"),
+  Withdraw Assignable Role and Manage Shell Org Status (confirmation checkboxes). Static.clearOnChange now flags no
+  page. Not yet retested in the browser (the linked computer was offline).
+- **Bulk Edit counter** (`ux_improvements.py` step 5): counts as "ready" only additions that OK would accept (role/org
+  and position set, not already held, no repeat); the others show as "N rows to fix". It uses OK's own already-holds
+  list, copied from onSubmit at build time. Changing a row's role/org now updates it too. Not yet retested live.
+- `origin` now points at github.com/crismwan/ECO-COMS-Extend-App (GitHub had reported the repository moved).
