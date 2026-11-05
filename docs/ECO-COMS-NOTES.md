@@ -572,3 +572,15 @@ Current typed-search prompts (all `searchEndPoint`/`onSearch` + WQL `contains`, 
 
 - **Enabled For** (Submit Assignable Role Request, AAA Role Request; `tools/enabled_for_choice.py`, `--off` rolls back): a dropdown (Functional Unit Hierarchy / Academic Unit; blank = whole university) shows only the matching picker; switching clears the other (`setValue([])` on an instanceList clears it, live 2026-11-05) and resets Applies To and the AAA role name. The read-only result field is now labelled **Applies To**. Saved fields are unchanged. OK refuses a type with nothing picked. Live-checked on AAA Role Request: switch shows/hides, a picked Academic Unit (Department of Mathematics) cleared on switching.
 - **Position search** (`tools/pos_search_limit.py`, `--off` rolls back; e2e `possearch`, median of 5): every position search takes ~1 s on the server whatever the limit or columns (the text scan). Without a limit broad terms returned everything ("a": 804 rows, 247 KB, 1.2 s; "P-00": 783 rows, 240 KB, 1.4 s); with `limit=50`: ~1.0 s, 15 KB. Dropping cf_PositionIsFilled gained nothing. Now the first 50 matches on all four pages, with a hint to type more.
+
+## Research: browsing positions by supervisory organization (2026-11-05, e2e `postree`, read-only; nothing built)
+
+Asked: instead of an empty position picker until you type, let users drill down (supervisory org → position).
+- Data: 829 positions sit in 129 supervisory orgs; per org median 5, 90th pct 13, max 41 (IT Services Group).
+  Positions in one org load in ~0.33 s (WQL `allPositions WHERE supervisoryOrganization in ('<wid>')`).
+- Workday's own tree, `GET staffing/v6/values/jobChangesGroup/supervisoryOrganization/` (75 ms), has roots
+  My Favorites, My Organizations, Supervisory Organizations by Manager (108 managers, deeper levels),
+  by Manager Hierarchy, Supervisory Organization, Active Supervisory Organizations by Hierarchy. Trimmed to the user's security.
+- Widget: multilevel instanceList (`dynamicMonikerLevels`, developer.workday.com "Concept: Multilevel Lists"), last
+  level = the positions WQL. Unverified: multilevel together with `multiSelect` and `searchEndPoint`, inside a grid
+  (Bulk Edit), and REST tree hrefs called from a page endpoint. Pilot candidate: Edit Role Assignment, as a build step with `--off`.
