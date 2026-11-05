@@ -684,3 +684,7 @@ Asked: instead of an empty position picker until you type, let users drill down 
   positionNames existed. They can't be deleted (linked to BP events), so datacheck now counts closed test requests
   (46, including ones without gaps) instead of listing them. Result: 5 passed, 0 warnings; the 3 other requests,
   11 audit records have every displayed field filled.
+- **Live demo, 5 Nov edition:** the 3 Nov stops updated plus this week's changes (X:META/X:SHELL naming, browse
+  pickers, full AAA role names, Bulk Edit counter), 9 stops, 8:54 of narration in an offline voice (Kokoro; the
+  3 Nov voice service isn't reachable from the cloud workspace). Source in `docs/demo/`. A video from page captures
+  wasn't possible: loading a rendering library into the Workday page was refused by a safety check.
