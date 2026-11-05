@@ -318,16 +318,16 @@
                       "view": true,
                       "relatedTask": true,
                       "enabled": false,
-                      "visible": "<% (!empty(logEntry.orgWid) || (logEntry.objectType == 'Application Pattern' ? list:filter(auditApplications.data ?? [], 'appId', logEntry.coReferenceId ?? '') : []).size() > 0) %>",
-                      "values": "<% let o = (empty(logEntry.orgWid) ? [] : [{'id': logEntry.orgWid, 'descriptor': logEntry.coName ?? ''}]); o.size() > 0 ? o : (logEntry.objectType == 'Application Pattern' ? list:filter(auditApplications.data ?? [], 'appId', logEntry.coReferenceId ?? '') : []).map(a => { {'id': a.id, 'descriptor': (logEntry.coName ?? '') + ' (application pattern)'} }) %>",
+                      "visible": "<% (!empty(logEntry.orgWid) || ((logEntry.objectType == 'Application Pattern' && (auditApplications.data ?? []).map(a => { a.appId }).indexOf(logEntry.coName ?? '') >= 0) ? [(auditApplications.data ?? []).get((auditApplications.data ?? []).map(a => { a.appId }).indexOf(logEntry.coName ?? ''))] : []).size() > 0) %>",
+                      "values": "<% let o = (empty(logEntry.orgWid) ? [] : [{'id': logEntry.orgWid, 'descriptor': logEntry.coName ?? ''}]); o.size() > 0 ? o : ((logEntry.objectType == 'Application Pattern' && (auditApplications.data ?? []).map(a => { a.appId }).indexOf(logEntry.coName ?? '') >= 0) ? [(auditApplications.data ?? []).get((auditApplications.data ?? []).map(a => { a.appId }).indexOf(logEntry.coName ?? ''))] : []).map(a => { {'id': a.id, 'descriptor': (logEntry.coName ?? '') + ' (application pattern)'} }) %>",
                       "widKey": "id"
                     },
                     {
                       "type": "text",
                       "id": "organizationText",
                       "enabled": false,
-                      "visible": "<% !(!empty(logEntry.orgWid) || (logEntry.objectType == 'Application Pattern' ? list:filter(auditApplications.data ?? [], 'appId', logEntry.coReferenceId ?? '') : []).size() > 0) %>",
-                      "value": "<% (logEntry.coName ?? '') + (logEntry.objectType == 'Application Pattern' ? (' [DEBUG apps=' + (auditApplications.data ?? []).size() + ' match=' + list:filter(auditApplications.data ?? [], 'appId', logEntry.coReferenceId ?? '').size() + ']') : '') %>"
+                      "visible": "<% !(!empty(logEntry.orgWid) || ((logEntry.objectType == 'Application Pattern' && (auditApplications.data ?? []).map(a => { a.appId }).indexOf(logEntry.coName ?? '') >= 0) ? [(auditApplications.data ?? []).get((auditApplications.data ?? []).map(a => { a.appId }).indexOf(logEntry.coName ?? ''))] : []).size() > 0) %>",
+                      "value": "<% (logEntry.coName ?? '') + (logEntry.objectType == 'Application Pattern' ? (' [DEBUG apps=' + (auditApplications.data ?? []).size() + ' match=' + ((auditApplications.data ?? []).map(a => { a.appId }).indexOf(logEntry.coName ?? '')) + ']') : '') %>"
                     }
                   ]
                 },

@@ -17,10 +17,12 @@ EP = {"name": "auditApplications", "baseUrlType": "BUSINESS-OBJECT", "url": "/co
       "isCollection": True, "bestEffort": "true", "failOnStatusCodes": [{"code": 400}, {"code": 429}]}
 d['endPoints'] = [e for e in d['endPoints'] if e.get('name') != 'auditApplications'] + [EP]
 
-# list:filter(list, key, value), not a closure: a closure inside a grid cell didn't see the row variable (live
-# 2026-11-05: every row fell back to text)
-APP = ("(logEntry.objectType == 'Application Pattern' ? "
-       "list:filter(auditApplications.data ?? [], 'appId', logEntry.coReferenceId ?? '') : [])")
+# Lookup by position, with no closure and no list:filter on the row's value: both found nothing inside a grid cell
+# (live 2026-11-05: 15 records loaded, 0 matches), while indexOf on a plain list of IDs works (as in the
+# script's counting helpers).
+IDX = "(auditApplications.data ?? []).map(a => { a.appId }).indexOf(logEntry.coName ?? '')"
+APP = (f"((logEntry.objectType == 'Application Pattern' && {IDX} >= 0) ? "
+       f"[(auditApplications.data ?? []).get({IDX})] : [])")
 ORG = "(empty(logEntry.orgWid) ? [] : [{'id': logEntry.orgWid, 'descriptor': logEntry.coName ?? ''}])"
 VALUES = f"<% let o = {ORG}; o.size() > 0 ? o : {APP}.map(a => {{ {{'id': a.id, 'descriptor': (logEntry.coName ?? '') + ' (application pattern)'}} }}) %>"
 HAS = f"(!empty(logEntry.orgWid) || {APP}.size() > 0)"
@@ -35,7 +37,7 @@ def walk(n):
                     c['visible'] = f"<% {HAS} %>"
                 elif c.get('id') == 'organizationText':
                     c['visible'] = f"<% !{HAS} %>"
-                    c['value'] = "<% (logEntry.coName ?? '') + (logEntry.objectType == 'Application Pattern' ? (' [DEBUG apps=' + (auditApplications.data ?? []).size() + ' match=' + list:filter(auditApplications.data ?? [], 'appId', logEntry.coReferenceId ?? '').size() + ']') : '') %>"
+                    c['value'] = "<% (logEntry.coName ?? '') + (logEntry.objectType == 'Application Pattern' ? (' [DEBUG apps=' + (auditApplications.data ?? []).size() + ' match=' + ((auditApplications.data ?? []).map(a => { a.appId }).indexOf(logEntry.coName ?? '')) + ']') : '') %>"
             done.append('columnOrganization')
         for v in n.values(): walk(v)
     elif isinstance(n, list):
