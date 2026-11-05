@@ -1699,7 +1699,7 @@ async function patternGuard(token, me) {
   }
   await sleep(20000);
   const created = ((await wql(token, "SELECT code FROM topLevelOrganizations WHERE code contains 'X:'", 10000)).data || []).map((o) => o.code);
-  const leaked = cases.map((c) => c[2]).filter((n) => created.includes(n));
+  const leaked = [...cases.map((c) => c[2]), ...pageCases.map((c) => c[3])].filter((n) => created.includes(n));
   if (leaked.length) fail('Guard.nothingCreated', `created: ${leaked.join(', ')}`);
   else pass('Guard.nothingCreated', `${cases.length} launches, no new organization (check CheckPatternName per launch in the app Logs)`);
 }
@@ -1739,12 +1739,50 @@ async function orgGuard(token, me) {
     });
     await sleep(1500);
   }
+
+  // What the Add Shell Org page sends (presentation/newShellOrg.pmd onSubmit, built by tools/new_shell_org_meta.py),
+  // mirrored here: with an application, the name starts with its ID once (typed part or full name); without one (X:META)
+  // the code is the whole name and the type. Each launch must pass CheckOrgName and reach Workday with exactly that name.
+  await test('OrgGuard.pageMirror', async () => {
+    const src = JSON.parse(fs.readFileSync(path.join(ROOT, 'presentation/newShellOrg.pmd'), 'utf8')).onSubmit;
+    for (const line of ["let lname = ac != '' ? (oc.startsWith(ac + ':') ? oc : (ac + ':' + oc)) : oc;", "let lot = ac != '' ? ac : oc;",
+      "let lcode = ac != '' ? lname.substringAfter(ac + ':') : oc;", "'ot': lot.urlEncode()", "'on': lname.urlEncode()", "'oc': lcode.urlEncode()"]) {
+      if (!src.includes(line)) throw new Error(`the page's launch changed, update this mirror: missing ${line}`);
+    }
+    pass('OrgGuard.pageMirror', 'the mirror matches the page');
+  });
+  const pageParams = (subtype, ac, typed) => {
+    const oc = typed.trim();
+    const lname = ac ? (oc.startsWith(ac + ':') ? oc : `${ac}:${oc}`) : oc;
+    const lot = ac || oc;
+    const lcode = ac ? lname.slice(ac.length + 1) : oc;
+    return { comsAppId: lot, orgType: lot, organizationName: lname, organizationCode: lcode, orgSubtype: subtype };
+  };
+  const pageCases = [
+    ['X:SHELL', 'X:ADM', 'TEST:GUARDPAGE', 'X:ADM:TEST:GUARDPAGE', 'TEST:GUARDPAGE', 'shell, part after the application'],
+    ['X:SHELL', 'X:ADM', 'X:ADM:TEST:GUARDPAGE', 'X:ADM:TEST:GUARDPAGE', 'TEST:GUARDPAGE', 'shell, full name typed'],
+    ['X:META', 'X:ADM', 'TEST:GUARDPAGEM', 'X:ADM:TEST:GUARDPAGEM', 'TEST:GUARDPAGEM', 'meta, existing application'],
+    ['X:META', 'X:ADM', 'X:ADM:TEST:GUARDPAGEM', 'X:ADM:TEST:GUARDPAGEM', 'TEST:GUARDPAGEM', 'meta, existing application, full name'],
+    ['X:META', '', 'X:TSTGUARDPAGE', 'X:TSTGUARDPAGE', 'X:TSTGUARDPAGE', 'meta, new application'],
+    ['X:SHELL', 'X:BPMS(AOC)', 'TEST:GUARDPAGE', 'X:BPMS(AOC):TEST:GUARDPAGE', 'TEST:GUARDPAGE', 'application with brackets'],
+  ];
+  for (const [subtype, ac, typed, wantName, wantCode, label] of pageCases) {
+    await test(`OrgGuard.page ${label}`, async () => {
+      const prm = pageParams(subtype, ac, typed);
+      if (prm.organizationName !== wantName || prm.organizationCode !== wantCode) throw new Error(`page would send ${JSON.stringify(prm)}`);
+      const r = txt(await launch(token, 'AddShellOrg', { ...prm, workerId: me.id, effectiveDate: 'NOTADATE', ...who() }));
+      if (GUARD.test(r)) throw new Error(`CheckOrgName refused what the page sends: ${r.slice(0, 300)}`);
+      if (!r.includes(`Workday rejected the request for ${wantName} @`)) throw new Error(`expected Workday to get ${wantName}, got: ${r.slice(0, 300)}`);
+      pass(`OrgGuard.page ${label}`, `type ${prm.orgType}, name ${prm.organizationName}, code ${prm.organizationCode}: reached Workday intact`);
+    });
+    await sleep(1500);
+  }
   await sleep(5000);
   const after = await auditTotal();
   if (after !== before) fail('OrgGuard.noAudit', `${after - before} audit record(s) written`);
-  else pass('OrgGuard.noAudit', `${cases.length} launches, no audit record`);
+  else pass('OrgGuard.noAudit', `${cases.length + pageCases.length} launches, no audit record`);
   const created = await orgCodes();
-  const leaked = cases.map((c) => c[2]).filter((n) => created.includes(n) && !existed.has(n));
+  const leaked = [...cases.map((c) => c[2]), ...pageCases.map((c) => c[3])].filter((n) => created.includes(n) && !existed.has(n));
   if (leaked.length) fail('OrgGuard.nothingCreated', `created: ${leaked.join(', ')}`);
   else pass('OrgGuard.nothingCreated', 'no new organization');
 
