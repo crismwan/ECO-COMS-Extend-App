@@ -4,7 +4,9 @@
 And the organization code should contain X: as the prefix"). Idempotent; runs after build_schema_pattern.py.
 
 * Organization Subtype comes first, because it decides whether Application is needed.
-* X:SHELL: Application required, name = <application>:<code> (as before).
+* X:SHELL: Application required.
+* With an application (either subtype), the name always starts with its ID (product owner 2026-11-05): the code
+  can be the part after it (ORG:ANY) or the full name (X:CLW:ORG:ANY); another X: prefix is refused.
 * X:META: Application optional.
     - picked: as before, <application>:<code>.
     - left blank (a new application): the Organization Code is the whole name and must be X: plus one
@@ -20,9 +22,13 @@ d = json.load(open(P))
 
 META = "((!empty(orgSubtypeDropdown.value)) ? (orgSubtypeDropdown.selectedEntries[0].id == 'X:META') : false)"
 APP = "((!empty(selectedApplicationId.value)) ? (selectedApplicationId.selectedEntries[0].descriptor ?? '') : '')"
-PREVIEW = (f"orgNamePreview.setValue({APP} != '' ? ({APP} + ':' + (organizationCode.value ?? '')) : "
-           f"({META} ? ((organizationCode.value ?? '') != '' ? (organizationCode.value ?? '') : 'Enter the new application code, e.g. X:NEWAPP') "
-           f": 'Select an application above'));")
+PREVIEW = (f"let pa = {APP};\n  let pc = (organizationCode.value ?? '').trim();\n"
+           f"  orgNamePreview.setValue(pa != '' ? (pc.startsWith(pa + ':') ? pc : (pa + ':' + pc)) : "
+           f"({META} ? (pc != '' ? pc : 'Enter the new application code, e.g. X:NEWAPP') : 'Select an application above'));")
+# error for a code under an existing application ('' when fine): the name must start with the application ID
+APP_CODE_ERR = ("(oc == ac + ':' ? ('Add the part after ' + ac + ':, e.g. ORG:ANY.') : "
+                "((oc.startsWith('X:') && !oc.startsWith(ac + ':')) ? ('With ' + ac + ' selected, the name must start with ' + ac + ':. Enter the part after it (e.g. ORG:ANY) or the full name (e.g. ' + ac + ':ORG:ANY).') : "
+                "(oc.contains(' ') ? 'The code can\\'t contain spaces.' : '')))")
 # error for a new application's code ('' when fine)
 NEW_CODE_ERR = ("(!oc.startsWith('X:') ? 'A new application\\'s code starts with X:, e.g. X:NEWAPP.' : "
                 "(oc.substring(2) == '' || oc.substring(2).contains(':') ? 'Use X: plus one part, e.g. X:NEWAPP.' : "
@@ -77,10 +83,10 @@ app['onChange'] = f"<%\n  selectedApplicationId.clearError();\n  organizationCod
 
 code = find(d, 'organizationCode')
 code['placeholder'] = "e.g. ORG:ANY, or X:NEWAPP for a new application"
-code['helpText'] = ("With an application: the part after it (name = Application:Code). "
+code['helpText'] = ("With an application, the name starts with its ID: enter the part after it (ORG:ANY) or the full name (X:CLW:ORG:ANY). "
                     "X:META without an application: the new application's code, starting with X: (e.g. X:NEWAPP).")
-code['guide']['text'] = ("With an application, enter the part after it: the full name is ApplicationCode:OrganizationCode "
-                         "(e.g. X:CLW:ORG:ANY). For a new application (subtype X:META, no application), enter its code "
+code['guide']['text'] = ("With an application, the name always starts with its ID: enter the part after it or the full name "
+                         "(ORG:ANY or X:CLW:ORG:ANY both give X:CLW:ORG:ANY). For a new application (subtype X:META, no application), enter its code "
                          "starting with X: (e.g. X:NEWAPP); its organization type of the same name must already exist in Workday. "
                          "No spaces. Must be unique.")
 code['onChange'] = f"<%\n  self.clearError();\n  {PREVIEW}\n%>"
@@ -102,7 +108,8 @@ walk(d['presentation'])
 if about:
     about['value'] = ('<span style="color:#0055B7;font-size:12px;font-weight:700">ⓘ </span><span style="color:#374151;font-size:12px">'
                       'Add a new organization to Workday. Pick the subtype, the application and the Organization Code: the name is '
-                      '<b>ApplicationCode:OrganizationCode</b> (e.g. X:CLW:ORG:ANY). For a <b>new application</b>, pick X:META, '
+                      '<b>ApplicationCode:OrganizationCode</b>: with an application selected the name always starts with its ID '
+                      '(enter ORG:ANY or X:CLW:ORG:ANY). For a <b>new application</b>, pick X:META, '
                       'leave Application blank and enter its code starting with <b>X:</b> (e.g. X:NEWAPP). Its organization type '
                       'of the same name must already exist in Workday.</span>')
 
@@ -128,8 +135,8 @@ d['onSubmit'] = f"""<%
     organizationCode.setError('Organization Code is required.');
     valid = false;
   }} else {{
-    let codeErr = (ac == '' && meta) ? {NEW_CODE_ERR} : '';
-    let orgName = ac != '' ? (ac + ':' + oc) : oc;
+    let codeErr = ac != '' ? {APP_CODE_ERR} : (meta ? {NEW_CODE_ERR} : '');
+    let orgName = ac != '' ? (oc.startsWith(ac + ':') ? oc : (ac + ':' + oc)) : oc;
     let dupes = (existingOrgs.data ?? []).filter(o => {{ o.code == orgName }});
     if (codeErr != '') {{
       organizationCode.setError(codeErr);
@@ -153,9 +160,10 @@ d['onSubmit'] = f"""<%
     }}
   }}
   if (valid) {{
-    let lname = ac != '' ? (ac + ':' + oc) : oc;
+    let lname = ac != '' ? (oc.startsWith(ac + ':') ? oc : (ac + ':' + oc)) : oc;
     let lot = ac != '' ? ac : oc;
-    launchAddShellOrg.invoke({{'cbw': selectedWorker.id ?? '', 'cb': (selectedWorker.descriptor ?? '').urlEncode(), 'ts': date:now().format("yyyy-MM-dd'T'HH:mm:ss'Z'").urlEncode(), 'ac': lot.urlEncode(), 'ot': lot.urlEncode(), 'st': orgSubtypeDropdown.selectedEntries[0].id, 'on': lname.urlEncode(), 'oc': oc.urlEncode(), 'wid': selectedWorker.id ?? '', 'ed': effectiveDate.value.format('yyyy-MM-dd')}});
+    let lcode = ac != '' ? lname.substringAfter(ac + ':') : oc;
+    launchAddShellOrg.invoke({{'cbw': selectedWorker.id ?? '', 'cb': (selectedWorker.descriptor ?? '').urlEncode(), 'ts': date:now().format("yyyy-MM-dd'T'HH:mm:ss'Z'").urlEncode(), 'ac': lot.urlEncode(), 'ot': lot.urlEncode(), 'st': orgSubtypeDropdown.selectedEntries[0].id, 'on': lname.urlEncode(), 'oc': lcode.urlEncode(), 'wid': selectedWorker.id ?? '', 'ed': effectiveDate.value.format('yyyy-MM-dd')}});
     let created = (verifyShellOrg.invoke({{'lim': '10000'}}).data ?? []).filter(o => {{ o.code == lname }}).size() > 0;
     if (!created) {{
       organizationCode.setError((ac == '' && meta) ? ('Workday rejected this request, so nothing was created. For a new application, check that the organization type ' + oc + ' exists in Workday.') : 'Workday rejected this request, so nothing was created. Check the values and try again.');
