@@ -46,7 +46,7 @@ const ORCH = `${API}/orchestrate/v1/apps/${APP_ID}/orchestrations`;
 const argv = process.argv.slice(2);
 const arg = (name) => { const i = argv.indexOf(name); return i === -1 ? null : argv[i + 1]; };
 const VERBOSE = argv.includes('--verbose');
-const SUITES_ALL = ['static', 'smoke', 'full', 'cleanup', 'isu', 'repair', 'seconduser', 'purge', 'demoseed', 'datacheck', 'probe', 'bulkvalidate', 'subflows', 'seedapps', 'patternguard', 'orgguard', 'graphql', 'eventlinks', 'timing', 'bulkapply'];
+const SUITES_ALL = ['static', 'smoke', 'full', 'cleanup', 'isu', 'repair', 'seconduser', 'purge', 'demoseed', 'datacheck', 'probe', 'bulkvalidate', 'subflows', 'seedapps', 'patternguard', 'orgguard', 'gateway', 'graphql', 'eventlinks', 'timing', 'bulkapply'];
 const suiteArg = arg('--suite') || argv.find((a) => !a.startsWith('--') && SUITES_ALL.some((s) => a.split(',').includes(s))) || 'smoke';
 const SUITES = suiteArg.split(',').map((s) => s.trim()).filter(Boolean);
 for (const s of SUITES) if (!SUITES_ALL.includes(s)) { console.error(`Unknown suite "${s}". Use: ${SUITES_ALL.join(', ')}`); process.exit(2); }
@@ -1815,6 +1815,34 @@ async function orgGuard(token, me) {
   });
 }
 
+// ═══ Gateway probe: which AddShellOrg launches the API gateway refuses (HTML 403) before the orchestration runs ═══
+// Every launch has effective date NOTADATE, so nothing can be created. Reports only (no failures).
+async function gatewayProbe(token, me) {
+  console.log('\n-- Gateway probe (AddShellOrg, effective date NOTADATE) --');
+  const ts = new Date().toISOString().replace(/\.\d+Z$/, 'Z');
+  const base = (type, name, code, sub) => ({ orgType: type, orgSubtype: sub, organizationName: name, organizationCode: code, workerId: me.id,
+    effectiveDate: 'NOTADATE', changedBy: me.descriptor, timestamp: ts, changedByWid: me.id });
+  const variants = [
+    ['shell AOC as page', base('X:BPMS(AOC)', 'X:BPMS(AOC):TEST:GUARDPAGE', 'TEST:GUARDPAGE', 'X:SHELL')],
+    ['shell AOC ORG:TST', base('X:BPMS(AOC)', 'X:BPMS(AOC):ORG:TST', 'ORG:TST', 'X:SHELL')],
+    ['shell CRSS', base('X:BPMS(CRSS)', 'X:BPMS(CRSS):ORG:TST', 'ORG:TST', 'X:SHELL')],
+    ['shell LLIS(CPE)', base('X:LLIS(CPE)', 'X:LLIS(CPE):ORG:TST', 'ORG:TST', 'X:SHELL')],
+    ['shell AOC no changedBy', { ...base('X:BPMS(AOC)', 'X:BPMS(AOC):ORG:TST', 'ORG:TST', 'X:SHELL'), changedBy: '' }],
+    ['shell AOC no code', { ...base('X:BPMS(AOC)', 'X:BPMS(AOC):ORG:TST', '', 'X:SHELL') }],
+    ['shell AOC no workerId', { ...base('X:BPMS(AOC)', 'X:BPMS(AOC):ORG:TST', 'ORG:TST', 'X:SHELL'), workerId: '' }],
+    ['meta LLIS(TST)', base('X:LLIS(TST)', 'X:LLIS(TST)', 'X:LLIS(TST)', 'X:META')],
+    ['shell ADM (no brackets)', base('X:ADM', 'X:ADM:ORG:TST', 'ORG:TST', 'X:SHELL')],
+  ];
+  for (const [label, prm] of variants) {
+    let out;
+    try { out = String(typeof (await launch(token, 'AddShellOrg', prm)) === 'string' ? 'reached the orchestration' : 'reached the orchestration'); }
+    catch (e) { out = /HTTP 403/.test(e.message) ? 'GATEWAY 403' : e.message.slice(0, 120); }
+    console.log(`   ${out.padEnd(26)} ${label}`);
+    await sleep(1500);
+  }
+  pass('Gateway.probe', 'see the lines above');
+}
+
 // ═══ Probe: read-only facts for building application pattern schemas ═══
 // ═══ Bulk validate: one TEST batch through BulkRoleGridApply in VALIDATE mode (no role changes) ═══
 // Proves the per-row sub-orchestration (ProcessBulkRoleRow, tools/extract_subflows.py) runs: the run must finish as
@@ -2435,6 +2463,7 @@ async function demoSeed(token, me) {
         if (live.includes('seedapps')) await seedApps(token);
         if (live.includes('patternguard')) await patternGuard(token, me);
         if (live.includes('orgguard')) await orgGuard(token, me);
+        if (live.includes('gateway')) await gatewayProbe(token, me);
       }
     }
   }
