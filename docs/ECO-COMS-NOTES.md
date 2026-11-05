@@ -661,8 +661,8 @@ Asked: instead of an empty position picker until you type, let users drill down 
 - **Stuck errors on three more pages** (`clear_on_change.py`): Bulk Role Changes (the CSV uploader clears its
   "Choose the CSV file" error in `onFileAdd`: a fileUploader has no onChange, developer.workday.com "fileUploader"),
   Withdraw Assignable Role and Manage Shell Org Status (confirmation checkboxes). Static.clearOnChange now flags no
-  page. App Hub accepted `onFileAdd` with `<uploader>.clearError()` (build 2026-11-05); the clearing itself isn't
-  tried live (it needs a real file upload).
+  page. App Hub accepted `onFileAdd` with `<uploader>.clearError()`. Live: OK with no file gave "Choose the CSV
+  file..."; adding a header-only CSV (set on the page's file input) cleared it. Left without OK, nothing saved.
 - **Bulk Edit counter** (`ux_improvements.py` step 5): counts as "ready" only additions that OK would accept (role/org
   and position set, not already held, no repeat); the others show as "N rows to fix". It uses OK's own already-holds
   list, copied from onSubmit at build time. Changing a row's role/org now updates it too. Live after deploy (ODMT):
@@ -672,3 +672,10 @@ Asked: instead of an empty position picker until you type, let users drill down 
 - **Build failure on the way (fixed):** the first counter build failed App Hub with "PMD Scripting syntax error"
   (the copied already-holds list lacked one `)`). Found with CI's new build-log step (deploy.yml runs
   `wdcli app builds logs` after a failed upload). Static.scriptBrackets now fails on unbalanced script brackets.
+- **Browse lists and failOnStatusCodes (decided 2026-11-05):** posTreeRoot, fuhTreeAll and auTreeAll stay quiet
+  on purpose: they're extras beside the typed search, so a failure leaves an empty tree instead of breaking the
+  page. Static.failOnStatusCodes lists them as an exception and fails if one loses bestEffort.
+- **CI:** actions/checkout v5 and upload-artifact v6 (both node24, read from their action.yml) and runner pinned
+  to ubuntu-24.04, after GitHub's Node 20 and ubuntu-latest → Ubuntu 26 warnings.
+- A new session clones the repo with the old lowercase address, so git prints "This repository moved" again;
+  pushes still work. `git remote set-url origin https://github.com/crismwan/ECO-COMS-Extend-App.git` silences it.
