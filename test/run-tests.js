@@ -1727,16 +1727,16 @@ async function subflowsSuite(token, me) {
   };
   await test('Subflow.createShellOrg', () => expectRejected('AddShellOrg', 'Subflow.createShellOrg', {
     comsAppId: '', orgType: 'X:ADM', organizationName: 'X:ADM:TEST:SUBFLOW', organizationCode: 'X:ADM:TEST:SUBFLOW',
-    orgSubtype: 'X:SHELL', workerId: me.id, effectiveDate: 'NOTADATE', ...who() }, /rejected the request for X:ADM:TEST:SUBFLOW/));
+    orgSubtype: 'X:SHELL', workerId: me.id, effectiveDate: 'NOTADATE', ...who() }, /rejected the request for X:ADM:TEST:SUBFLOW[\s\S]*CreateShellOrganization/));
   await test('Subflow.createShellOrgPattern', async () => {
     const app = ((await request('GET', `${BO}/comsApplications?limit=100`, token)).data || []).find((a) => a.appId === 'X:CLW');
     if (!app) return skip('Subflow.createShellOrgPattern', 'no X:CLW record');
     const pname = 'X:CLW:PATTERN:TEST:TEST:999:900:2026W1';
     await expectRejected('AddShellOrgPattern', 'Subflow.createShellOrgPattern', { comsAppId: app.id, patternName: pname, workerId: me.id,
       attribute1: 'TEST', attribute2: 'TEST', attribute3: '999', attribute4: '900', attribute5: '2026W1', effectiveDate: 'NOTADATE', ...who() },
-      new RegExp('rejected the request for ' + pname.replace(/[()]/g, '\\$&')));
+      new RegExp('rejected the request for ' + pname.replace(/[()]/g, '\\$&') + '[\\s\\S]*CreateShellOrganization'));
   });
-  await test('Subflow.startReview', () => expectRejected('StartRoleRequestReview', 'Subflow.startReview', { ref: 'TEST-NO-SUCH-REQUEST' }, null));
+  await test('Subflow.startReview', () => expectRejected('StartRoleRequestReview', 'Subflow.startReview', { ref: 'TEST-NO-SUCH-REQUEST' }, /StartRequestReview/));
 }
 
 async function probe(token) {
