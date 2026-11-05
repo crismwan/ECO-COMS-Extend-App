@@ -46,7 +46,7 @@ const ORCH = `${API}/orchestrate/v1/apps/${APP_ID}/orchestrations`;
 const argv = process.argv.slice(2);
 const arg = (name) => { const i = argv.indexOf(name); return i === -1 ? null : argv[i + 1]; };
 const VERBOSE = argv.includes('--verbose');
-const SUITES_ALL = ['static', 'smoke', 'full', 'cleanup', 'isu', 'repair', 'seconduser', 'purge', 'demoseed', 'datacheck', 'probe', 'bulkvalidate', 'subflows', 'seedapps', 'patternguard', 'graphql', 'eventlinks', 'timing'];
+const SUITES_ALL = ['static', 'smoke', 'full', 'cleanup', 'isu', 'repair', 'seconduser', 'purge', 'demoseed', 'datacheck', 'probe', 'bulkvalidate', 'subflows', 'seedapps', 'patternguard', 'graphql', 'eventlinks', 'timing', 'bulkapply'];
 const suiteArg = arg('--suite') || argv.find((a) => !a.startsWith('--') && SUITES_ALL.some((s) => a.split(',').includes(s))) || 'smoke';
 const SUITES = suiteArg.split(',').map((s) => s.trim()).filter(Boolean);
 for (const s of SUITES) if (!SUITES_ALL.includes(s)) { console.error(`Unknown suite "${s}". Use: ${SUITES_ALL.join(', ')}`); process.exit(2); }
@@ -1726,6 +1726,74 @@ async function bulkValidate(token, me) {
   });
 }
 
+// ═══ Bulk apply: one position added to the test role and removed again through the bulk-edit orchestration ═══
+// BulkRoleGridApply → ProcessBulkRoleRow (sub-orchestration) → WriteAuditRecord (sub-orchestration called by a
+// sub-orchestration, 2026-11-05). Checks both audit records and that the role ends as it started. Net change: none;
+// leaves two TEST bulk runs and their row records (cleared by the purge suite), like bulkvalidate.
+async function bulkApply(token, me) {
+  console.log('\n-- Bulk apply (adds one position to the test role, then removes it) --');
+  await test('Bulk.applyAddRemove', async () => {
+    const today = tenantDate();
+    const readRole = async () => {
+      const r = await wql(token, `SELECT role, roleAssignments{organization, cf_ZCF_EE_RoleAssignedToAsPositionRestrictions} as roleAssignments FROM assignableRoles WHERE roleName = '${TEST_ROLE}'`, 5);
+      const row = (r.data || [])[0];
+      const ra = (row?.roleAssignments || []).find((x) => String(x.organization?.descriptor || '').startsWith('X:'));
+      return row && ra ? { role: row.role, org: ra.organization, positions: ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions || [] } : null;
+    };
+    const cur = await readRole();
+    if (!cur) return skip('Bulk.applyAddRemove', `test role ${TEST_ROLE} has no X: organization assignment`);
+    const assigned = cur.positions.map((p) => String(p.descriptor || ''));
+    const pos = ((await wql(token, 'SELECT cf_PositionID, workdayID, position_PositionManagement, cf_PositionText, cf_PositionIsFilled FROM allPositions WHERE supervisoryOrganization is not empty', 300)).data || [])
+      .filter((p) => p.cf_PositionID && p.cf_PositionIsFilled !== false && !assigned.some((d) => d.includes(p.cf_PositionID)))[0];
+    if (!pos) return skip('Bulk.applyAddRemove', `no unassigned position found for ${TEST_ROLE}`);
+    const posName = pos.position_PositionManagement?.descriptor || pos.cf_PositionText || pos.cf_PositionID;
+    const runOne = async (tag, row) => {
+      const ref = 'TEST' + tag + new Date().toISOString().replace(/\D/g, '').slice(0, 14);
+      const stamp = new Date().toISOString().replace(/\.\d+Z$/, 'Z');
+      await request('POST', `${BO}/comsBulkRuns`, token, { batchRef: ref, source: 'Grid', runMode: 'APPLY', status: 'Uploaded',
+        effectiveDate: today, uploadedByName: me.descriptor, uploadedByWid: me.id, uploadedAt: stamp, changeCount: '1', summary: 'TEST apply run' });
+      await request('POST', `${BO}/comsBulkRowResults`, token, { batchRef: ref + '-DRAFT', runMode: 'APPLY', result: 'DRAFT',
+        roleName: TEST_ROLE, roleWid: cur.role.id, orgName: cur.org.descriptor || '', orgWid: cur.org.id, timestamp: stamp, ...row });
+      const r = await launch(token, 'BulkRoleGridApply', { ref, mode: 'APPLY', effectiveDate: today, changedBy: me.descriptor, changedByWid: me.id });
+      console.log(`   ${tag} launch: ` + String(typeof r === 'string' ? r : JSON.stringify(r)).slice(0, 200));
+      let run, audit;
+      for (let i = 0; i < 30 && !(run && audit); i++) {
+        await sleep(4000);
+        run = ((await request('GET', `${BO}/comsBulkRuns?limit=100&batchRef=${encodeURIComponent(ref)}`, token)).data || [])[0];
+        if (run && /Rejected|Failed/.test(run.status || '')) throw new Error(`${ref}: run ${run.status}: ${run.statusMessage || ''}`);
+        if (run?.status === 'Completed') audit = (await readAll(token, 'comsAuditLogs')).filter((a) => (a.details || '').includes(ref)).pop();
+      }
+      if (!run || run.status !== 'Completed') throw new Error(`${ref}: run status ${run?.status} after 2 minutes`);
+      if (!audit) throw new Error(`${ref}: Completed but no audit record mentions it (WriteAuditRecord inside ProcessBulkRoleRow didn't write)`);
+      return { ref, audit };
+    };
+    const check = (a, action) => {
+      const miss = ['timestamp', 'runId', 'roleName', 'positionName', 'changedByWid', 'orgWid', 'roleWid', 'positionWid', 'triggeredBy']
+        .filter((k) => !String(a[k] || '').trim());
+      if (a.objectType !== 'Role Assignment' || a.action !== action) throw new Error(`audit record is ${a.objectType}/${a.action}, expected Role Assignment/${action}`);
+      if (miss.length) throw new Error(`${action} audit record lacks ${miss.join(', ')}`);
+      if (!/^Bulk edit /.test(a.details || '')) throw new Error(`${action} details don't start with "Bulk edit": ${a.details}`);
+    };
+    const add = await runOne('BA', { rowAction: 'ADD', positionId: pos.cf_PositionID, positionName: posName, assigneeWid: '' });
+    check(add.audit, 'ASSIGN POSITION');
+    let added = null;
+    for (let i = 0; i < 18 && !added; i++) {
+      added = ((await readRole())?.positions || []).find((p) => !cur.positions.some((q) => q.id === p.id));
+      if (!added) await sleep(5000);
+    }
+    if (!added) throw new Error(`${pos.cf_PositionID} was audited as added by ${add.ref} but did not appear on ${TEST_ROLE} within 90 s; it is probably still assigned: remove it in Manage Role Assignments`);
+    const rem = await runOne('BR', { rowAction: 'REMOVE', positionId: pos.cf_PositionID, positionName: added.descriptor || posName, assigneeWid: added.id });
+    check(rem.audit, 'REMOVE POSITION');
+    let gone = false;
+    for (let i = 0; i < 18 && !gone; i++) {
+      gone = !((await readRole())?.positions || []).some((p) => p.id === added.id);
+      if (!gone) await sleep(5000);
+    }
+    if (!gone) throw new Error(`${pos.cf_PositionID} is still on ${TEST_ROLE} after ${rem.ref}: remove it in Manage Role Assignments`);
+    pass('Bulk.applyAddRemove', `${pos.cf_PositionID} added (${add.ref}) and removed (${rem.ref}) on ${TEST_ROLE}; both audit records written by WriteAuditRecord inside ProcessBulkRoleRow ("${add.audit.details}")`);
+  });
+}
+
 // ═══ Sub-orchestrations (tools/extract_subflows.py): each parent → its sub-orchestration → Workday, leaving nothing ═══
 // Each call gets input only Workday rejects (an impossible effective date, an unknown request), so the error comes from
 // inside the sub-orchestration's own steps and nothing is created. ProcessBulkRoleRow's success path: suite bulkvalidate.
@@ -2215,6 +2283,7 @@ async function demoSeed(token, me) {
         if (live.includes('datacheck')) await dataCheck(token);
         if (live.includes('probe')) await probe(token);
         if (live.includes('bulkvalidate')) await bulkValidate(token, me);
+        if (live.includes('bulkapply')) await bulkApply(token, me);
         if (live.includes('subflows')) await subflowsSuite(token, me);
         if (live.includes('graphql')) await graphqlSuite(token);
         if (live.includes('eventlinks')) await eventLinks(token, me);

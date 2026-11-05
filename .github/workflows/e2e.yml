@@ -8,7 +8,7 @@ on:
       task:
         description: "static = repo checks; smoke = read-only; full = smoke + write tests; isu = ISU lockdown (only once ISU writes are live); cleanup-dry-run / cleanup-apply = list / remove TEST data; repair-dry-run / repair-apply = one-off data fixes; publish-template = rebuild the pre-filled Excel template from Workday and publish it to Download Template"
         type: choice
-        options: [static, smoke, full, isu, seconduser, cleanup-dry-run, cleanup-apply, repair-dry-run, repair-apply, purge-dry-run, purge-apply, demo-seed, datacheck, probe, bulkvalidate, subflows, graphql, eventlinks, timing, seed-apps-dry-run, seed-apps-apply, pattern-guard, publish-template]
+        options: [static, smoke, full, isu, seconduser, cleanup-dry-run, cleanup-apply, repair-dry-run, repair-apply, purge-dry-run, purge-apply, demo-seed, datacheck, probe, bulkvalidate, bulkapply, subflows, graphql, eventlinks, timing, seed-apps-dry-run, seed-apps-apply, pattern-guard, publish-template]
         default: smoke
       also:
         description: "cleanup only: extra record ids (comma-separated) to treat as test data"
@@ -56,7 +56,7 @@ jobs:
           # Secrets pasted from config.json can carry the JSON quotes or a newline; a JWT has neither, so drop them.
           for v in WD_DEV_TOKEN WD_WCP_TOKEN WDCLI_TENANT_TOKEN; do if [ -n "${!v:-}" ]; then export "$v=$(printf '%s' "${!v}" | tr -d '[:space:]\"')"; fi; done
           case "${TASK}" in
-            static|smoke|full|isu|seconduser|datacheck|probe|bulkvalidate|subflows|graphql|eventlinks|timing) node test/run-tests.js "${TASK}" ;;
+            static|smoke|full|isu|seconduser|datacheck|probe|bulkvalidate|bulkapply|subflows|graphql|eventlinks|timing) node test/run-tests.js "${TASK}" ;;
             cleanup-dry-run) node test/run-tests.js cleanup --also "${ALSO}" ;;
             cleanup-apply)   node test/run-tests.js cleanup --apply --also "${ALSO}" ${EFFECTIVE:+--effective "$EFFECTIVE"} ${ONLY:+--only "$ONLY"} ;;
             repair-dry-run)  node test/run-tests.js repair ${{ github.event.inputs.repair_flags }} ${UNASSIGN:+--unassign "$UNASSIGN"} ${ONLY:+--drop-audit "$ONLY"} ;;
