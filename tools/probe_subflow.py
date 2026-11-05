@@ -46,7 +46,7 @@ card = next(n for n in pv['nodes']['_value'] if n['_value']['name']['_value'] ==
 card['_value']['message']['_value'] = '{"echo": "{{data.CallEcho.echo}}"}'
 call = {"_type": "CallSubflow", "_value": {
   "name": I("CallEcho"), "isDisabled": B(False), "errorHandler": {"_type": ["Opt", "ErrorHandler"], "_value": None},
-  "subflowId": S("ProbeEcho"),
+  "subflowId": S("5ab7e0c2d3f14a6b9c8e7f6a5b4c3d21"),
   "parameters": {"_type": ["List", "Assignment"], "_value": [ASSIGN("text", '"hello"')]},
   "executionDelay": {"_type": ["Opt", "SubflowExecutionDelay"], "_value": None}}}
 pv['nodes']['_value'] = [call, card]
