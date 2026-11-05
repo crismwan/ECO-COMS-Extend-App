@@ -41,7 +41,7 @@
               "type": "richText",
               "id": "titleBannerRichText",
               "enabled": false,
-              "value": "<span style=\"color:#0055B3;font-size:24px\"><b>ECO-COMS: Application Patterns</b></span>"
+              "value": "<span style=\"color:#0055B3;font-size:24px\"><b>ECO-COMS: Application Patterns</b></span><br><span style=\"color:#374151;font-size:13px\">Each application&#39;s pattern format: the prefixes and fields the Add Shell Org Pattern form uses.</span>"
             }
           ]
         },
@@ -77,7 +77,9 @@
                   "enabled": false,
                   "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">Each application's shell org pattern format: its prefixes and its fields. The <b>Add Shell Org Pattern</b> form reads these, so a change here shows up there straight away. <b>Edit</b> changes an application's format; <b>Add Application</b> sets up one that isn't listed yet. Existing patterns keep their names; a new format only applies to new patterns.</span>"
                 }
-              ]
+              ],
+              "collapsible": true,
+              "initializeCollapsed": true
             }
           ]
         },

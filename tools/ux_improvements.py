@@ -57,6 +57,8 @@ SUMMARY = {
     'bulkTemplateUpload': 'Publish a new version of the bulk role change template.',
     'adminProvisioningView': 'AAA role requests: who can manage shell orgs and submit role requests.',
     'accessReview': 'Vacant positions that still hold a shell role. Keep or remove each one.',
+    'appPatternSetup': 'Each application\'s pattern format: the prefixes and fields the Add Shell Org Pattern form uses.',
+    'editAppPattern': 'Set the application\'s prefixes and fields. Add Shell Org Pattern follows them straight away.',
 }
 SUB = '<br><span style="color:#374151;font-size:13px">{}</span>'
 if '--tiles' in sys.argv:

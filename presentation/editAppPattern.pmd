@@ -231,7 +231,7 @@
               "type": "richText",
               "id": "titleBannerRichText",
               "enabled": false,
-              "value": "<% '<span style=\"color:#0055B3;font-size:24px\"><b>' + (empty(queryParams.recordId) ? 'ECO-COMS: Add Application' : ('ECO-COMS: Edit Pattern Format · ' + (comsAppSetup.recordById(comsApplications.data, queryParams.recordId) ?? {'appId': ''}).appId)).replace('<', '&lt;') + '</b></span>' %>"
+              "value": "<% '<span style=\"color:#0055B3;font-size:24px\"><b>' + (empty(queryParams.recordId) ? 'ECO-COMS: Add Application' : ('ECO-COMS: Edit Pattern Format · ' + (comsAppSetup.recordById(comsApplications.data, queryParams.recordId) ?? {'appId': ''}).appId)).replace('<', '&lt;') + '</b></span>' + '<br><span style=\"color:#374151;font-size:13px\">Set the application&#39;s prefixes and fields. Add Shell Org Pattern follows them straight away.</span>' %>"
             }
           ]
         },
@@ -270,7 +270,9 @@
                   "enabled": false,
                   "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">A pattern name is <b>APPLICATION:PREFIX:field:field:…</b>. Set the prefixes the application may use, then its fields in order (up to 7). Each field has a label (shown on the Add Pattern form), a format (a regular expression the value must match, e.g. <b>[A-Z]{2,4}</b>), a hint shown when a value doesn't match, and an example that matches the format. Tick <b>Blank = any</b> when a field may be left empty (it becomes *). <b>Copy from</b> fills the prefixes and fields from another application. Existing patterns keep their names. An <b>inactive</b> application takes no new patterns.</span>"
                 }
-              ]
+              ],
+              "collapsible": true,
+              "initializeCollapsed": true
             }
           ]
         },
