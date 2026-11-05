@@ -526,3 +526,21 @@ DenyRoleRequest: `actorWid = bp.initiatingPerson().getIDValues("WID").get(0)` (a
 - **Security (tenant, administrator):** the pages, the related action and the COMSApplication records are all on **Manage: COMS Application Setup**; Add Shell Org Pattern is on Manage: COMS Shell Organizations but reads COMSApplication. Policy: pattern maintainers View + Modify (pages and task) and Get + Put (records); pattern adders Get only (Add Pattern reads the formats; no access to the maintain pages, no writes). Then Activate Pending Security Policy Changes. Get-only behaviour not yet checked with a second user **(unverified)**.
 - Full write suite 2026-11-05 (run 42057373245): 46/46, including the success paths of CreateShellOrganization, ManageShellOrgStatus, StartRequestReview and DenyRoleRequest through the shared WriteAuditRecord step.
 - Cleanup 2026-11-05 (product owner: keep only demo data): kept the 3 demo setup records, the CPSC_V:110 rehearsal orgs, P-00030 on STAFF/DEPTSTAFF (Access Review demo data), the 4 Application Pattern update records and the two 10-30 pending requests (KEYCLOAK COORDINATOR, AOC administrator).
+
+## Recommendation: Workday prompt values in the instanceList prompts (2026-11-05, not yet built)
+
+Source: developer.workday.com "Input Prompt Values for Mutations", "Concept: instanceList", "Concept: Multilevel Lists". General notes are in CLAUDE.md (instanceList → Prompt values from Workday).
+
+Current typed-search prompts (all `searchEndPoint`/`onSearch` + WQL `contains`, quotes stripped):
+
+| Page | Prompt | Source | Keeps |
+|---|---|---|---|
+| adminProvisioning, assignableRoleManager | `fuhPicker` (Functional Unit Hierarchy) | `customOrganizations` of one type, `code contains` | WID + descriptor |
+| adminProvisioning, assignableRoleManager | `academicUnitPicker` | `academicUnits` (active), `academicUnitName contains` | WID + descriptor |
+| adminProvisioning, assignableRoleManager, editRoleAssignment | `positionsList` / `positionsToAddInstanceList` | `allPositions`, `cf_PositionText contains` | WIDs + names, filled flag shown |
+| bulkRoleGrid (grid) | `positionAddList` (`onSearch`) | same position WQL | WID + name |
+
+1. **Positions: keep WQL.** The pickers show the Position ID and whether the position is filled, and filter to positions with a supervisory organization; prompt values give only id + descriptor and a different (security-trimmed) set. The Assign_Roles call also needs Position IDs, not WIDs. Revisit only if users find matches the current `contains` misses.
+2. **FUH and Academic Unit: candidate for one multilevel prompt.** The two pickers are "one or the other" (each `onChange` errors if both are filled). A single instanceList with root values "Functional Unit Hierarchies" and "Academic Units" and `dynamicMonikerLevels` returning the matching list would remove that cross-field error and the stale-error risk. The level data can stay WQL; whether it should come from prompt values depends on step 3.
+3. **First step before any build: a read-only probe** (e2e `probe`, developer token): introspect `Mutation_Prompts` and list mutation ID fields for organizations, academic units, positions and roles, then run one `search` query to compare its matches with the WQL `contains` results. Introspection works with a normal user token (CLAUDE.md, Graph notes).
+4. **Bonus if prompt `search` is adopted:** the search text is a GraphQL variable, not text concatenated into WQL, so the quote-stripping (and its static check) would no longer be needed for that prompt.

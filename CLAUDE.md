@@ -561,6 +561,14 @@ An `instanceList` presents Workday instances (`{ id, descriptor }`) for display 
 
 ```
 
+### Prompt values from Workday ("input prompt values"; developer.workday.com, read 2026-11-05, not yet tried live)
+
+Workday can hand a page the same options its own prompts show, instead of a hand-built WQL list:
+- **Graph API `prompts` query** ("Input Prompt Values for Mutations"): `prompts { mutation { <mutation> { <inputField> { <idField>(search: "...") { total data { id descriptor isFinalResult } } } } } }`. Only for ID fields of a Graph **mutation's** input (find them in Graph API Explorer → Documentation Explorer → `Mutation_Prompts.<mutation>`, or by introspection). `search` matches descriptors at every level, word by word like Workday's prompt ("gms ireland" found "Global Modern Services Ltd. (Ireland)"); `promptPath: [<category id>, ...]` walks levels. `isFinalResult: false` means the id is a category with values under it. The `...Reference` fields return WIDs, not reference IDs. If both arguments are given, `search` wins.
+- **REST `values` endpoints:** many services have `GET /values/<group>/<field>/` ("Retrieves instances that can be used as values for other endpoint parameters", e.g. staffing `/v6/values/jobChangesGroup/supervisoryOrganization/`, skill `/values/skills/prompt/`). A category's `href` returns its next level.
+- **On a page:** a list of `{id, descriptor}` goes straight into `values` / `searchResultValues`. Categories map to a multilevel instanceList ("Concept: Multilevel Lists"): `monikerLevels` (leaves all at one depth; each `monikerLevel` has `levelValues` + a deferred `endPoint` that reads `<list>.promptSelections[n]`), or `dynamicMonikerLevels` (a script on `self.promptSelections` that returns `[levelData, <boolean>]`; in Workday's sample `true` came back for a level with more under it). `searchValues` gives local search across levels.
+- **Trade-offs:** prompt values return only id + descriptor (no extra columns such as Position ID or filled status), follow the user's own security, and exist only where Workday defines a prompt for that field. WQL stays the tool when you need other fields or your own filter.
+
 ### Persisting
 
 `valueOutBinding` binds the selected ID to one outbound field; `valuesOut` binds to several. A map-returning endpoint must be wrapped as a list: `"values": "<% [worker] %>"`.
