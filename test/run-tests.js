@@ -2610,7 +2610,13 @@ async function dataCheck(token) {
     if (miss.length) gaps.push(`${label}: missing ${miss.join(', ')}`);
   };
   const reqs = await readAll(token, 'comsAssignableRoles');
+  // Closed test requests from before these fields existed (October 2026: 36 records, 58 gaps, all TESTROLE /
+  // TEST: names, Approved or Denied). They can't be deleted (linked to BP events), so they're counted, not listed.
+  const oldTest = (r) => /^(Approved|Denied)$/.test(r.status || '') && /TESTROLE|(^|:)TEST:/.test(r.roleName || '');
+  const skipped = reqs.filter(oldTest).length;
+  if (skipped) pass('DataCheck.closedTestRequests', `${skipped} closed test request(s) not checked for gaps (made before the fields existed)`);
   for (const r of reqs) {
+    if (oldTest(r)) continue;
     const label = `request ${r.roleName} [${r.status}]`;
     need(label, r, ['referenceId', 'roleName', 'status', 'requestedBy', 'requestedDate', 'effectiveDate', 'enabledForOrganizationTypes', 'positionNames']);
     if (r.status === 'Pending ISC Review') need(label, r, ['reviewEventWid']);
