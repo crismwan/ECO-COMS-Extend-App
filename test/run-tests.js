@@ -433,6 +433,7 @@ function staticSuite() {
       const bt = String(e.baseUrlType || '');
       if (bt === 'BUSINESS-OBJECT' || bt === 'workday-graph' || /wql/i.test(bt) || bt === 'COMMON' || /orchestr|bp/i.test(bt)) continue;
       if (/limit=(\d{4,})/.test(String(e.url))) continue;
+      if (e.name === 'posTreeRoot') continue; // Workday's 6 supervisory-org folders (tools/pos_tree.py), never near the cap
       const re = new RegExp(`\\b${e.name}\\.data\\b[^%]{0,120}?\\.(filter|find)\\(`);
       const m = raw.match(re);
       if (m) {
@@ -441,6 +442,36 @@ function staticSuite() {
         if (!/Names\)\s*\?/.test(before)) warn('Static.cappedLookup', `${f}: ${e.name} (${bt} ${e.url}) is searched with filter/find; REST returns 20-100 rows, so matches beyond that come back blank`);
       }
     }
+  }
+
+  // 7g3. Browse pickers (tools/pos_tree.py, tools/unit_tree.py; 2026-11-05). A multilevel instanceList must:
+  // read only endpoints that exist, invoke only deferred ones, give its leaves the same id field as its typed search
+  // (a browsed pick must save exactly what a searched pick saves), have root values, and say it can be browsed.
+  // Every position picker (search over allPositions) should offer the tree.
+  for (const [f, d] of Object.entries(pmds)) {
+    const eps = new Map((d.endPoints || []).map((e) => [e.name, e]));
+    walk(d.presentation || {}, (n) => {
+      if (n.type !== 'instanceList') return;
+      const search = String(n.searchResultValues || n.onSearch || '');
+      const isPos = /posSearch|gridPosSearch/.test(search) || /posSearch|gridPosSearch/.test(String(n.searchEndPoint || ''));
+      const lv = n.dynamicMonikerLevels;
+      if (!lv) { if (isPos) fail('Static.treePickers', `${f}: position picker ${n.id} has no browse tree (add the page to tools/pos_tree.py)`); return; }
+      const label = `${f}: ${n.id}`;
+      let ok = true;
+      for (const m of String(lv + ' ' + (n.values || '')).matchAll(/\b([A-Za-z]\w*)\.(invoke|data)\b/g)) {
+        const e = eps.get(m[1]);
+        if (!e) { if (!['self', 'o', 'r', 'first', 'roots'].includes(m[1])) { fail('Static.treePickers', `${label} reads ${m[1]}.${m[2]}, which isn't an endpoint`); ok = false; } continue; }
+        if (m[2] === 'invoke' && !(e.deferred === true || e.deferred === 'true')) { fail('Static.treePickers', `${label} invokes ${m[1]}, which isn't deferred`); ok = false; }
+      }
+      const leaf = [...String(lv).matchAll(/'id': o\.(\w+)/g)].pop();
+      const srch = String(search).match(/'id': o\.(\w+)/);
+      if (!leaf || !srch) { fail('Static.treePickers', `${label}: can't find the leaf id (${leaf && leaf[1]}) or the search id (${srch && srch[1]})`); ok = false; }
+      else if (leaf[1] !== srch[1]) { fail('Static.treePickers', `${label}: browsed leaves use ${leaf[1]} but the typed search uses ${srch[1]}; the page would save different ids`); ok = false; }
+      if (/^<%\s*\[\]\s*%>$/.test(String(n.values || '').trim())) { fail('Static.treePickers', `${label}: has levels but empty root values`); ok = false; }
+      if (!/Click to browse/.test(String(n.helpText || ''))) { warn('Static.treePickers', `${label}: help text doesn't say it can be browsed`); }
+      if (!/return \[[^\]]*, false\]/.test(String(lv))) { fail('Static.treePickers', `${label}: no level returns [list, false] (no selectable leaves)`); ok = false; }
+      if (ok) pass('Static.treePickers', `${label}: leaves use ${leaf[1]} like the search; endpoints ok`);
+    });
   }
 
   // 7g2. Graph API endpoints (developer.workday.com "Run Graph API Queries on a Page"): POST, a
