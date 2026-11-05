@@ -666,3 +666,6 @@ Asked: instead of an empty position picker until you type, let users drill down 
   and position set, not already held, no repeat); the others show as "N rows to fix". It uses OK's own already-holds
   list, copied from onSubmit at build time. Changing a row's role/org now updates it too. Not yet retested live.
 - `origin` now points at github.com/crismwan/ECO-COMS-Extend-App (GitHub had reported the repository moved).
+- **Build failure on the way (fixed):** the first counter build failed App Hub with "PMD Scripting syntax error"
+  (the copied already-holds list lacked one `)`). Found with CI's new build-log step (deploy.yml runs
+  `wdcli app builds logs` after a failed upload). Static.scriptBrackets now fails on unbalanced script brackets.
