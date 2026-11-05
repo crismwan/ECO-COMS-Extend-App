@@ -2109,10 +2109,11 @@ async function orgTreeProbe(token) {
 // ═══ AAA role names use the full application ID (read-only; tools/aaa_full_app_id.py, 2026-11-05) ═══
 async function aaaNameCheck(token) {
   console.log('\n-- AAA role name: full application ID (read-only) --');
+  const check = (n, fn) => test(n, async () => pass(n, await fn()));
   const page = JSON.parse(fs.readFileSync(path.join(ROOT, 'presentation/adminProvisioning.pmd'), 'utf8'));
   const find = (n, id) => { if (!n || typeof n !== 'object') return null; if (n.id === id) return n; for (const v of Object.values(n)) { const r = find(v, id); if (r) return r; } return null; };
   const script = find(page.presentation, 'applicationDropdown').values;
-  await test('AAA.listUsesFullId', async () => { if (!script.includes("code.substringBefore(')') + ')'") || script.includes("code.substringAfter('(').substringBefore(')')")) throw new Error('application list still reduces bracketed IDs'); return 'page script keeps X:APP(CODE)'; });
+  await check('AAA.listUsesFullId', async () => { if (!script.includes("code.substringBefore(')') + ')'") || script.includes("code.substringAfter('(').substringBefore(')')")) throw new Error('application list still reduces bracketed IDs'); return 'page script keeps X:APP(CODE)'; });
   const wqlFile = (id) => JSON.parse(fs.readFileSync(path.join(ROOT, 'presentation/wqlQueries', id + '.wqlquery'), 'utf8')).query;
   const orgs = (await wql(token, wqlFile('customOrganizations'), 10000)).data || [];
   // the page's own rule, in JS
@@ -2120,12 +2121,12 @@ async function aaaNameCheck(token) {
   const apps = []; const seen = new Set(); orgs.forEach((o) => { const a = appOf(o.code || ''); if (!seen.has(a)) { seen.add(a); apps.push(a); } });
   console.log(`   ${orgs.length} orgs -> ${apps.length} applications; bracketed: ${apps.filter((a) => a.includes('(')).join(' | ')}`);
   const roles = ((await wql(token, wqlFile('allAAArolesinTenant'), 1000)).data || []).map((r) => r.role?.descriptor || '');
-  await test('AAA.duplicateCheckSeesExistingRoles', async () => {
+  await check('AAA.duplicateCheckSeesExistingRoles', async () => {
     const miss = roles.filter((r) => { const m = r.match(/^Organizations and Roles Assignment Administrator \((.*)\)$/); return !m || !apps.some((a) => `Organizations and Roles Assignment Administrator (${a})` === r || r.startsWith(`Organizations and Roles Assignment Administrator (${a},`)); });
     if (miss.length) throw new Error('no application in the list builds: ' + miss.join(' | '));
     return `${roles.length} existing AAA role(s) match a listed application exactly: ${roles.join(' | ')}`;
   });
-  await test('AAA.noEmptyOrBrokenIds', async () => {
+  await check('AAA.noEmptyOrBrokenIds', async () => {
     const bad = apps.filter((a) => !a || (a.includes('(') && !/^[^()]+\([^()]+\)$/.test(a)));
     if (bad.length) throw new Error('odd application IDs: ' + bad.join(' | '));
     return 'every bracketed ID is APP(CODE)';
