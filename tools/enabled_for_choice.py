@@ -22,6 +22,19 @@ UNI = 'Academic Unit - University of British Columbia'
 MARK = '/* enabled-for choice */'
 MARK_END = '/* enabled-for choice end */'
 
+HELP_OLD = '<b>Functional Unit Hierarchy</b>: Limits where the role applies to one Functional Unit Hierarchy. Pick either an FUH or an Academic Unit, not both. Leave both empty for the whole university (Academic Unit - University of British Columbia).<br/><b>Academic Unit</b>: Limits where the role applies to one Academic Unit. Pick either an Academic Unit or an FUH, not both. Leave both empty for the whole university.'
+HELP_NEW = '<b>Enabled For</b>: Limits where the role applies. Pick Functional Unit Hierarchy or Academic Unit, then search for one in the box that appears. Leave it blank for the whole university (Academic Unit - University of British Columbia).<br/><b>Applies To</b>: Shows where the role will apply.'
+
+
+def texts(n, a, b):
+    """Replace help text a with b in every string of the page (both directions, for --off)."""
+    if isinstance(n, dict):
+        for k, v in n.items():
+            if isinstance(v, str) and a in v: n[k] = v.replace(a, b)
+            else: texts(v, a, b)
+    elif isinstance(n, list):
+        for v in n: texts(v, a, b)
+
 
 def holder(n, wid):
     if isinstance(n, dict):
@@ -45,6 +58,10 @@ for page in PAGES:
     kids[:] = [k for k in kids if not (isinstance(k, dict) and k.get('id') == 'enabledForTypeDropdown')]
     for w in (fuh, au):
         w.pop('visible', None)
+    disp = byid.get('enabledForDisplay')
+    if disp is not None: disp['label'] = 'Enabled For' if OFF else 'Applies To'
+    if OFF: texts(d['presentation'], HELP_NEW, HELP_OLD)
+    else: texts(d['presentation'], HELP_OLD, HELP_NEW)
     # remove an earlier copy of the OK check (idempotent)
     d['onSubmit'] = re.sub(r'\n  ' + re.escape(MARK) + r'\n.*?' + re.escape(MARK_END) + r'\n', '\n', d['onSubmit'], flags=re.S)
     if not OFF:
