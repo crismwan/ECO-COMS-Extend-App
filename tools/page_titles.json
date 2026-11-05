@@ -17,7 +17,7 @@
   "comsInsightsApps": "ECO-COMS: Applications at a Glance",
   "confirmAccessReview": "ECO-COMS: Review All Positions",
   "deleteAssignableRole": "<% 'ECO-COMS: Withdraw ' + (queryParams.view == 'aaa' ? 'AAA ' : (queryParams.view == 'assignable' ? 'Assignable ' : '')) + 'Role Request' %>",
-  "editAppPattern": "<% empty(queryParams.recordId) ? 'ECO-COMS: Add Application' : ('ECO-COMS: Edit Pattern Format · ' + (comsAppSetup.recordById(comsApplications.data, queryParams.recordId) ?? {'appId': ''}).appId) %>",
+  "editAppPattern": "<% empty((queryParams.recordId ?? queryParams.taskObjectId ?? '')) ? 'ECO-COMS: Add Application' : ('ECO-COMS: Edit Pattern Format · ' + (comsAppSetup.recordById(comsApplications.data, (queryParams.recordId ?? queryParams.taskObjectId ?? '')) ?? {'appId': ''}).appId) %>",
   "editRoleAssignment": "<% 'ECO-COMS: Manage Role Assignment – ' + (queryParams.roleName ?? 'Role') %>",
   "errorPage": "ECO-COMS: Something went wrong",
   "fuhLandingPage": "ECO-COMS: Functional Unit Hierarchy Administration",

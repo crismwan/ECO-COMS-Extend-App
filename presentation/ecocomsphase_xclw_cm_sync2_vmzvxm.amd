@@ -505,7 +505,7 @@
     },
     {
       "id": "editAppPatternRecord",
-      "routingPattern": "/editAppPattern/{recordId}",
+      "routingPattern": "/editAppPattern/{taskObjectId}",
       "page": {
         "id": "editAppPattern"
       }

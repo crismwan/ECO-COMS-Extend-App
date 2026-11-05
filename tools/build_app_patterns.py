@@ -212,8 +212,11 @@ setup = {"id": "appPatternSetup", "securityDomains": [DOMAIN], "include": ["coms
 save('appPatternSetup.pmd', setup)
 
 # ---- edit page: only the pattern format and its example change (product owner 2026-11-04) ----
-REC = "comsAppSetup.recordById(comsApplications.data, queryParams.recordId)"
-NEW = "empty(queryParams.recordId)"
+# the record arrives as recordId (Edit buttons, links) or taskObjectId (the record's related action, whose route
+# App Builder only accepts when the parameter has the task's own name: "/editAppPattern/{taskObjectId}")
+RID = "(queryParams.recordId ?? queryParams.taskObjectId ?? '')"
+REC = f"comsAppSetup.recordById(comsApplications.data, {RID})"
+NEW = f"empty({RID})"
 CHOSEN = "(empty(appIdDropdown.value) ? '' : appIdDropdown.selectedEntries[0].id)"
 APPID = f"({NEW} ? {CHOSEN} : ({REC} ?? {{'appId': ''}}).appId)"
 ROWS = ("fieldsGrid.rows.map(r => { { 'fieldLabel': (r.childrenMap.colFieldLabel.value ?? '').trim(), "
@@ -254,7 +257,7 @@ edit = {"id": "editAppPattern", "securityDomains": [DOMAIN], "include": ["comsAp
        OUT("appId", f"<% {CHOSEN} %>"), OUT("name", "<% (appNameText.value ?? '').trim() %>"),
        OUT("orgType", f"<% {CHOSEN} %>"), OUT("orgSubtype", "X:SHELL"),
        OUT("namePrefix", f"<% {PREFIXES} %>"), OUT("patternSchema", f"<% {SCHEMA} %>"), OUT("active", "<% appActiveCheckBox.value == true %>")]},
-    {"name": "patchApplication", "baseUrlType": "BUSINESS-OBJECT", "url": "<% '/comsApplications/' + (queryParams.recordId ?? '') %>",
+    {"name": "patchApplication", "baseUrlType": "BUSINESS-OBJECT", "url": f"<% '/comsApplications/' + {RID} %>",
      "httpMethod": "PATCH", "authType": "sso", "exclude": f"<% {NEW} %>", "failOnStatusCodes": FOS([400, 403, 404, 429, 500]), "values": [
        OUT("namePrefix", f"<% {PREFIXES} %>"), OUT("patternSchema", f"<% {SCHEMA} %>"), OUT("active", "<% appActiveCheckBox.value == true %>")]},
     {"name": "postAudit", "baseUrlType": "BUSINESS-OBJECT", "url": "/comsAuditLogs", "httpMethod": "POST", "authType": "sso",
@@ -346,10 +349,10 @@ for tid in ('appPatternSetup', 'editAppPattern'):
         amd['tasks'].append({"id": tid, "routingPattern": "/" + tid, "page": {"id": tid}})
 # Related action "Maintain Application Pattern" on each application record (model/MaintainApplicationPattern.task):
 # its routePath /editAppPattern/{taskObjectId} gets the record's WID, which this route hands the page as
-# queryParams.recordId (developer.workday.com "Add Tasks with Business Object Context"; Workday's
+# queryParams.taskObjectId (same name as the task's, so App Builder's Page Route picker accepts it) (developer.workday.com "Add Tasks with Business Object Context"; Workday's
 # capitalProjectPlanning sample uses the same two-route pattern).
-if not any(t['id'] == 'editAppPatternRecord' for t in amd['tasks']):
-    amd['tasks'].append({"id": "editAppPatternRecord", "routingPattern": "/editAppPattern/{recordId}", "page": {"id": "editAppPattern"}})
+amd['tasks'] = [t for t in amd['tasks'] if t['id'] != 'editAppPatternRecord'] + [
+    {"id": "editAppPatternRecord", "routingPattern": "/editAppPattern/{taskObjectId}", "page": {"id": "editAppPattern"}}]
 amd['flowDefinitions'] = [f for f in amd.get('flowDefinitions', []) if f['id'] != 'editAppPatternFlow'] + [{"id": "editAppPatternFlow", "flowSteps": [
     {"id": "editAppPatternStep", "taskId": "editAppPattern", "startsFlow": True, "transitions": [{"order": "a", "value": "appPatternSetupStep", "condition": "true"}]},
     {"id": "appPatternSetupStep", "taskId": "appPatternSetup", "endsFlow": True}]}]
