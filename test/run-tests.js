@@ -46,7 +46,7 @@ const ORCH = `${API}/orchestrate/v1/apps/${APP_ID}/orchestrations`;
 const argv = process.argv.slice(2);
 const arg = (name) => { const i = argv.indexOf(name); return i === -1 ? null : argv[i + 1]; };
 const VERBOSE = argv.includes('--verbose');
-const SUITES_ALL = ['static', 'smoke', 'full', 'cleanup', 'isu', 'repair', 'seconduser', 'purge', 'demoseed', 'datacheck', 'probe', 'bulkvalidate', 'subflows', 'seedapps', 'patternguard', 'graphql', 'eventlinks', 'timing', 'bulkapply'];
+const SUITES_ALL = ['static', 'smoke', 'full', 'cleanup', 'isu', 'repair', 'seconduser', 'purge', 'demoseed', 'datacheck', 'probe', 'bulkvalidate', 'subflows', 'seedapps', 'patternguard', 'orgguard', 'graphql', 'eventlinks', 'timing', 'bulkapply'];
 const suiteArg = arg('--suite') || argv.find((a) => !a.startsWith('--') && SUITES_ALL.some((s) => a.split(',').includes(s))) || 'smoke';
 const SUITES = suiteArg.split(',').map((s) => s.trim()).filter(Boolean);
 for (const s of SUITES) if (!SUITES_ALL.includes(s)) { console.error(`Unknown suite "${s}". Use: ${SUITES_ALL.join(', ')}`); process.exit(2); }
@@ -1704,6 +1704,49 @@ async function patternGuard(token, me) {
   else pass('Guard.nothingCreated', `${cases.length} launches, no new organization (check CheckPatternName per launch in the app Logs)`);
 }
 
+// ═══ Org guard: AddShellOrg's CheckOrgName (2026-11-05: X:META for a new application) ═══
+// Every launch has an impossible effective date, so even a launch that passes the guard is rejected by Workday
+// inside CreateShellOrganization and nothing is created. Bad input must stop at CheckOrgName, before any Workday call.
+async function orgGuard(token, me) {
+  console.log('\n-- Org guard launches (effective date NOTADATE: nothing can be created) --');
+  const who = () => ({ changedBy: me.descriptor, changedByWid: me.id, timestamp: new Date().toISOString().replace(/\.\d+Z$/, 'Z') });
+  const txt = (r) => (typeof r === 'string' ? r : JSON.stringify(r));
+  const GUARD = /AddShellOrg\.CheckOrgName/;
+  const WORKDAY = /CreateShellOrganization/;
+  const cases = [
+    ['guard',   'NEWAPP',    'NEWAPP',             'X:META',  'type without X:'],
+    ['guard',   'X:',        'X:',                 'X:META',  'type X: alone'],
+    ['guard',   'X:TST:ONE', 'X:TST:ONE',          'X:META',  'type with two parts'],
+    ['guard',   'X:ADM',     'X:CLW:ORG:ANY',      'X:SHELL', 'name not under its type'],
+    ['guard',   'X:TSTGUARD','X:TSTGUARD',         'X:SHELL', 'new application as X:SHELL'],
+    ['guard',   'X:ADM',     'X:ADM:TEST GUARD',   'X:SHELL', 'space in name'],
+    ['workday', 'X:TSTGUARD','X:TSTGUARD',         'X:META',  'new application, X:META'],
+    ['workday', 'X:ADM',     'X:ADM:TEST:GUARD',   'X:SHELL', 'under an application'],
+    ['workday', 'X:ADM',     'X:ADM:TEST:GUARDMETA','X:META', 'X:META under an application'],
+  ];
+  const auditTotal = async () => (await request('GET', `${BO}/comsAuditLogs?limit=1`, token)).total;
+  const before = await auditTotal();
+  for (const [want, type, name, subtype, label] of cases) {
+    await test(`OrgGuard.${label}`, async () => {
+      const r = txt(await launch(token, 'AddShellOrg', { comsAppId: type, orgType: type, organizationName: name, organizationCode: name,
+        orgSubtype: subtype, workerId: me.id, effectiveDate: 'NOTADATE', ...who() }));
+      if (!/Completed with error/.test(r)) throw new Error(`expected a rejected run, got: ${r.slice(0, 300)}`);
+      if (want === 'guard' && !GUARD.test(r)) throw new Error(`expected CheckOrgName to stop it, got: ${r.slice(0, 300)}`);
+      if (want === 'workday' && (GUARD.test(r) || !WORKDAY.test(r))) throw new Error(`expected it to pass CheckOrgName and reach Workday, got: ${r.slice(0, 300)}`);
+      pass(`OrgGuard.${label}`, `${want === 'guard' ? 'stopped by CheckOrgName' : 'passed the guard, Workday rejected the date'}: ${r.slice(0, 160)}`);
+    });
+    await sleep(1500);
+  }
+  await sleep(5000);
+  const after = await auditTotal();
+  if (after !== before) fail('OrgGuard.noAudit', `${after - before} audit record(s) written`);
+  else pass('OrgGuard.noAudit', `${cases.length} launches, no audit record`);
+  const created = ((await wql(token, "SELECT code FROM topLevelOrganizations WHERE code contains 'X:'", 10000)).data || []).map((o) => o.code);
+  const leaked = cases.map((c) => c[2]).filter((n) => created.includes(n));
+  if (leaked.length) fail('OrgGuard.nothingCreated', `created: ${leaked.join(', ')}`);
+  else pass('OrgGuard.nothingCreated', 'no new organization');
+}
+
 // ═══ Probe: read-only facts for building application pattern schemas ═══
 // ═══ Bulk validate: one TEST batch through BulkRoleGridApply in VALIDATE mode (no role changes) ═══
 // Proves the per-row sub-orchestration (ProcessBulkRoleRow, tools/extract_subflows.py) runs: the run must finish as
@@ -2309,6 +2352,7 @@ async function demoSeed(token, me) {
         if (live.includes('timing')) await timingSuite(token);
         if (live.includes('seedapps')) await seedApps(token);
         if (live.includes('patternguard')) await patternGuard(token, me);
+        if (live.includes('orgguard')) await orgGuard(token, me);
       }
     }
   }
