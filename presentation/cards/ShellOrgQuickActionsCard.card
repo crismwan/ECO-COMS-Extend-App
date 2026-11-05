@@ -30,7 +30,7 @@
         }
       },
       {
-        "label": "Application Patterns",
+        "label": "Maintain Application Pattern",
         "taskReference": {
           "taskId": "appPatternSetup"
         }

@@ -17,7 +17,8 @@ period_card = {"id": "AuditPeriodPillCard", "parameters": ["period", "changeType
     pill(lbl, ('empty(period) || period == "all"' if key == "all" else 'period == "' + key + '"'), "auditLogViewer",
          {"period": key, "changeType": '<% changeType ?? "" %>'}) for lbl, key in PERIODS]}}
 TYPES = [("All types", ""), ("Shell Org", "Shell Org"), ("Pattern", "Shell Org Pattern"), ("Org Status", "Org Status"),
-         ("Role Assignment", "Role Assignment"), ("Assignable Role", "Assignable Role")]
+         ("Role Assignment", "Role Assignment"), ("Assignable Role", "Assignable Role"),
+         ("Application Pattern", "Application Pattern")]
 type_card = {"id": "AuditTypePillCard", "parameters": ["period", "changeType"],
   "header": {"title": "Change Type", "icon": "wd-accent-clipboard-checklist"},
   "body": {"type": "pillCard", "pills": [

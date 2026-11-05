@@ -242,7 +242,7 @@
             {
               "type": "button",
               "id": "appPatternsBackButton",
-              "label": "← Application Patterns",
+              "label": "← Maintain Application Pattern",
               "action": "LINK",
               "suppressDiscardDialog": true,
               "taskReference": {

@@ -34,7 +34,8 @@ def pill(label, cond, **over):
 
 PERIODS = [("All time", "all"), ("Last 24 hours", "24h"), ("Last 7 days", "7d"), ("Last 30 days", "30d")]
 TYPES = [("All types", ""), ("Shell Org", "Shell Org"), ("Pattern", "Shell Org Pattern"), ("Org Status", "Org Status"),
-         ("Role Assignment", "Role Assignment"), ("Assignable Role", "Assignable Role")]
+         ("Role Assignment", "Role Assignment"), ("Assignable Role", "Assignable Role"),
+         ("Application Pattern", "Application Pattern")]
 ORG_SET = '(!empty(orgId) || !empty(orgCode) || !empty(orgName))'
 cards = {
     "AuditPeriodPillCard": {"id": "AuditPeriodPillCard", "parameters": KEYS,

@@ -41,7 +41,7 @@
               "type": "richText",
               "id": "titleBannerRichText",
               "enabled": false,
-              "value": "<span style=\"color:#0055B3;font-size:24px\"><b>ECO-COMS: Application Patterns</b></span><br><span style=\"color:#374151;font-size:13px\">Each application&#39;s pattern format: the prefixes and fields the Add Shell Org Pattern form uses.</span>"
+              "value": "<span style=\"color:#0055B3;font-size:24px\"><b>ECO-COMS: Maintain Application Pattern</b></span><br><span style=\"color:#374151;font-size:13px\">Each application&#39;s pattern format: the prefixes and fields the Add Shell Org Pattern form uses.</span>"
             }
           ]
         },
@@ -99,6 +99,18 @@
                   "action": "PRIMARY",
                   "taskReference": {
                     "taskId": "editAppPattern"
+                  }
+                },
+                {
+                  "type": "button",
+                  "id": "changeHistoryButton",
+                  "label": "View Change History",
+                  "action": "AUXILIARY",
+                  "taskReference": {
+                    "taskId": "auditLogViewer",
+                    "parameterBindings": {
+                      "changeType": "Application Pattern"
+                    }
                   }
                 },
                 {

@@ -53,6 +53,7 @@ run tools/audit_speed.py            # Audit Log: no lookup lists, empty Graph pa
 run tools/som_speed.py              # Shell Org Manager: one organization list, not two
 run tools/arm_speed.py              # Assignable Role Manager: unused position lists dropped
 run tools/audit_filters_more.py      # Audit Log Changed By + Organization filters, Shell Org Detail link
+run tools/app_pattern_audit.py       # Audit Log: Application Pattern rows link to their application record
 run tools/excel_export_values.py     # fieldSet columns get an Excel export value (else the export fails)
 run tools/clear_submit_errors.py      # every OK check clears its own earlier errors first
 run tools/apply_icons.py              # every icon from one table (CLAUDE.md "Icons" framework)

@@ -142,7 +142,7 @@ page = {"id": "newSchemaPattern", "securityDomains": ["ManageCOMSShellOrgs"], "i
       {"type": "layoutSection", "id": "inactiveSection", "render": f"<% !empty(queryParams.appCode) && {INACTIVE} %>", "children": [
         {"type": "fieldSet", "id": "inactiveFieldSet", "title": "Application Inactive", "children": [
           {"type": "text", "id": "inactiveText", "label": "Status", "enabled": False,
-           "value": f"<% (queryParams.appCode ?? '') + ' is inactive, so it takes no new patterns. Reactivate it on Application Patterns (Edit, Active) to add one.' %>"}]}]},
+           "value": f"<% (queryParams.appCode ?? '') + ' is inactive, so it takes no new patterns. Reactivate it on Maintain Application Pattern (Edit, Active) to add one.' %>"}]}]},
       {"type": "layoutSection", "id": "noSchemaSection", "render": f"<% !empty(queryParams.appCode) && empty({SCH}) && !{INACTIVE} %>", "children": [
         {"type": "fieldSet", "id": "noSchemaFieldSet", "title": "No Pattern Format", "children": [
           {"type": "text", "id": "noSchemaText", "label": "Pattern Format", "enabled": False,

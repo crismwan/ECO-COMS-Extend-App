@@ -119,6 +119,22 @@
         }
       },
       "exclude": "<% ((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) <= 400 %>"
+    },
+    {
+      "name": "auditApplications",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "url": "/comsApplications?limit=100",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 429
+        }
+      ]
     }
   ],
   "presentation": {
@@ -302,15 +318,15 @@
                       "view": true,
                       "relatedTask": true,
                       "enabled": false,
-                      "visible": "<% !empty(logEntry.orgWid) %>",
-                      "values": "<% empty(logEntry.orgWid) ? [] : [{'id': logEntry.orgWid, 'descriptor': logEntry.coName ?? ''}] %>",
+                      "visible": "<% (!empty(logEntry.orgWid) || (logEntry.objectType == 'Application Pattern' ? (auditApplications.data ?? []).filter(a => { a.appId == (logEntry.coReferenceId ?? '') }) : []).size() > 0) %>",
+                      "values": "<% let o = (empty(logEntry.orgWid) ? [] : [{'id': logEntry.orgWid, 'descriptor': logEntry.coName ?? ''}]); o.size() > 0 ? o : (logEntry.objectType == 'Application Pattern' ? (auditApplications.data ?? []).filter(a => { a.appId == (logEntry.coReferenceId ?? '') }) : []).map(a => { {'id': a.id, 'descriptor': (logEntry.coName ?? '') + ' (application pattern)'} }) %>",
                       "widKey": "id"
                     },
                     {
                       "type": "text",
                       "id": "organizationText",
                       "enabled": false,
-                      "visible": "<% empty(logEntry.orgWid) %>",
+                      "visible": "<% !(!empty(logEntry.orgWid) || (logEntry.objectType == 'Application Pattern' ? (auditApplications.data ?? []).filter(a => { a.appId == (logEntry.coReferenceId ?? '') }) : []).size() > 0) %>",
                       "value": "<% logEntry.coName ?? '' %>"
                     }
                   ]

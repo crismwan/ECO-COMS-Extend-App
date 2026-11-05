@@ -198,6 +198,28 @@
           "endsFlow": true
         }
       ]
+    },
+    {
+      "id": "editAppPatternRecordFlow",
+      "flowSteps": [
+        {
+          "id": "editAppPatternRecordStep",
+          "taskId": "editAppPatternRecord",
+          "startsFlow": true,
+          "transitions": [
+            {
+              "order": "a",
+              "value": "appPatternSetupRecordStep",
+              "condition": "true"
+            }
+          ]
+        },
+        {
+          "id": "appPatternSetupRecordStep",
+          "taskId": "appPatternSetup",
+          "endsFlow": true
+        }
+      ]
     }
   ],
   "tasks": [
@@ -477,6 +499,13 @@
     {
       "id": "editAppPattern",
       "routingPattern": "/editAppPattern",
+      "page": {
+        "id": "editAppPattern"
+      }
+    },
+    {
+      "id": "editAppPatternRecord",
+      "routingPattern": "/editAppPattern/{recordId}",
       "page": {
         "id": "editAppPattern"
       }

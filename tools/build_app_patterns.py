@@ -178,7 +178,7 @@ txt = lambda cid, label, value: {"type": "column", "columnId": cid, "label": lab
 # ---- list page ----
 setup = {"id": "appPatternSetup", "securityDomains": [DOMAIN], "include": ["comsAppSetup.script"],
   "endPoints": [APPS_EP],
-  "presentation": {"pageType": "VIEW", "headerSize": "STANDARD", "title": {"type": "title", "label": "ECO-COMS: Application Patterns"},
+  "presentation": {"pageType": "VIEW", "headerSize": "STANDARD", "title": {"type": "title", "label": "ECO-COMS: Maintain Application Pattern"},
     "body": {"type": "basicFormLayout", "id": "appPatternSetupForm", "sections": [
       {"type": "layoutSection", "id": "navSection", "children": [
         {"type": "button", "label": "← Home", "taskReference": {"taskId": "home"}, "action": "LINK"},
@@ -191,6 +191,9 @@ setup = {"id": "appPatternSetup", "securityDomains": [DOMAIN], "include": ["coms
       {"type": "layoutSection", "id": "appsSection", "children": [{"type": "fieldSet", "id": "appsFieldSet", "title": "Applications", "children": [
         {"type": "button", "id": "addApplicationButton", "label": "Add Application", "action": "PRIMARY",
          "taskReference": {"taskId": "editAppPattern"}},
+        # every add and edit is in the Audit Log as Change Type "Application Pattern" (product owner 2026-11-05)
+        {"type": "button", "id": "changeHistoryButton", "label": "View Change History", "action": "AUXILIARY",
+         "taskReference": {"taskId": "auditLogViewer", "parameterBindings": {"changeType": "Application Pattern"}}},
         {"type": "grid", "id": "appPatternsGrid", "label": "Application Pattern Formats", "rowVariableName": "ap", "readOnly": True,
          "rows": "<% list:sort((comsApplications.data ?? []).filter(a => { !empty(a.appId) }), 'appId', true) %>",
          "columns": [
@@ -264,7 +267,7 @@ edit = {"id": "editAppPattern", "securityDomains": [DOMAIN], "include": ["comsAp
     "cancelOverride": {"taskId": "appPatternSetup"},
     "body": {"type": "basicFormLayout", "id": "editAppPatternForm", "sections": [
       {"type": "layoutSection", "id": "navSection", "children": [
-        {"type": "button", "id": "appPatternsBackButton", "label": "← Application Patterns", "action": "LINK", "suppressDiscardDialog": True,
+        {"type": "button", "id": "appPatternsBackButton", "label": "← Maintain Application Pattern", "action": "LINK", "suppressDiscardDialog": True,
          "taskReference": {"taskId": "appPatternSetup"}},
         {"type": "button", "id": "shellOrgManagerBackButton", "label": "← Shell Org Manager", "action": "LINK", "suppressDiscardDialog": True,
          "taskReference": {"taskId": "shellOrgManager"}}]},
@@ -338,10 +341,22 @@ amd = load(amd_name)
 for tid in ('appPatternSetup', 'editAppPattern'):
     if not any(t['id'] == tid for t in amd['tasks']):
         amd['tasks'].append({"id": tid, "routingPattern": "/" + tid, "page": {"id": tid}})
+# Related action "Maintain Application Pattern" on each application record (model/MaintainApplicationPattern.task):
+# its routePath /editAppPattern/{taskObjectId} gets the record's WID, which this route hands the page as
+# queryParams.recordId (developer.workday.com "Add Tasks with Business Object Context"; Workday's
+# capitalProjectPlanning sample uses the same two-route pattern).
+if not any(t['id'] == 'editAppPatternRecord' for t in amd['tasks']):
+    amd['tasks'].append({"id": "editAppPatternRecord", "routingPattern": "/editAppPattern/{recordId}", "page": {"id": "editAppPattern"}})
 amd['flowDefinitions'] = [f for f in amd.get('flowDefinitions', []) if f['id'] != 'editAppPatternFlow'] + [{"id": "editAppPatternFlow", "flowSteps": [
     {"id": "editAppPatternStep", "taskId": "editAppPattern", "startsFlow": True, "transitions": [{"order": "a", "value": "appPatternSetupStep", "condition": "true"}]},
     {"id": "appPatternSetupStep", "taskId": "appPatternSetup", "endsFlow": True}]}]
+amd['flowDefinitions'] = [f for f in amd['flowDefinitions'] if f['id'] != 'editAppPatternRecordFlow'] + [{"id": "editAppPatternRecordFlow", "flowSteps": [
+    {"id": "editAppPatternRecordStep", "taskId": "editAppPatternRecord", "startsFlow": True, "transitions": [{"order": "a", "value": "appPatternSetupRecordStep", "condition": "true"}]},
+    {"id": "appPatternSetupRecordStep", "taskId": "appPatternSetup", "endsFlow": True}]}]
 save(amd_name, amd)
+task = {"id": 15, "name": "MaintainApplicationPattern", "label": "Maintain Application Pattern",
+        "securityDomains": [DOMAIN], "routePath": "/editAppPattern/{taskObjectId}", "businessObject": "COMSApplication"}
+open(os.path.join(os.path.dirname(__file__), '..', 'model', 'MaintainApplicationPattern.task'), 'w').write(json.dumps(task, indent=2) + '\n')
 
 # ---- entry points: a pill on the hub's Shell Organizations card and on Shell Org Manager's Quick Actions ----
 for card in ('HomeShellOrgActionsCard.card', 'ShellOrgQuickActionsCard.card'):
@@ -349,7 +364,9 @@ for card in ('HomeShellOrgActionsCard.card', 'ShellOrgQuickActionsCard.card'):
     d = load(p)
     pills = d['body']['pills']
     if not any(x.get('taskReference', {}).get('taskId') == 'appPatternSetup' for x in pills):
-        pills.append({"label": "Application Patterns", "taskReference": {"taskId": "appPatternSetup"}})
+        pills.append({"label": "Maintain Application Pattern", "taskReference": {"taskId": "appPatternSetup"}})
+    for x in pills:
+        if x.get('taskReference', {}).get('taskId') == 'appPatternSetup': x['label'] = "Maintain Application Pattern"
     save(p, d)
 
 print('Application Patterns pages written')

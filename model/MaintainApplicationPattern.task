@@ -1,0 +1,10 @@
+{
+  "id": 15,
+  "name": "MaintainApplicationPattern",
+  "label": "Maintain Application Pattern",
+  "securityDomains": [
+    "ManageCOMSApplicationSetup"
+  ],
+  "routePath": "/editAppPattern/{taskObjectId}",
+  "businessObject": "COMSApplication"
+}

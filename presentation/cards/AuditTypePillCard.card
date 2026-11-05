@@ -98,6 +98,20 @@
             "orgName": "<% orgName ?? \"\" %>"
           }
         }
+      },
+      {
+        "label": "<% (changeType == \"Application Pattern\") ? \"✓ Application Pattern\" : \"Application Pattern\" %>",
+        "taskReference": {
+          "taskId": "auditLogViewer",
+          "parameterBindings": {
+            "period": "<% period ?? \"\" %>",
+            "changeType": "Application Pattern",
+            "by": "<% by ?? \"\" %>",
+            "orgId": "<% orgId ?? \"\" %>",
+            "orgCode": "<% orgCode ?? \"\" %>",
+            "orgName": "<% orgName ?? \"\" %>"
+          }
+        }
       }
     ]
   }

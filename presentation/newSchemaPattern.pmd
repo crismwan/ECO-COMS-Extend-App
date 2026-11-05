@@ -190,7 +190,7 @@
                   "id": "inactiveText",
                   "label": "Status",
                   "enabled": false,
-                  "value": "<% (queryParams.appCode ?? '') + ' is inactive, so it takes no new patterns. Reactivate it on Application Patterns (Edit, Active) to add one.' %>"
+                  "value": "<% (queryParams.appCode ?? '') + ' is inactive, so it takes no new patterns. Reactivate it on Maintain Application Pattern (Edit, Active) to add one.' %>"
                 }
               ]
             }
