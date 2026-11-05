@@ -71,17 +71,14 @@ jobs:
 
         '
     - name: Download the app from App Hub (latest version)
-      run: 'set -uo pipefail
-
+      shell: bash
+      run: |
+        set -uo pipefail
         mkdir -p /tmp/apphub
-
         wdcli app download "${APP_REF_ID:-ecocomsphase_xclw_cm_sync2_vmzvxm}" -d /tmp/apphub --latest-version --overwrite --ci 2>&1 | tail -20
-
         find /tmp/apphub -maxdepth 3 | sort | head -200
-for f in /tmp/apphub/orchestration/*.suborchestration; do [ -f "$f" ] && { echo "=== $f"; cat "$f"; echo; }; done
-for f in appManifest.json; do cmp -s "/tmp/apphub/$f" "$f" && echo "$f: same as repo" || { echo "$f differs:"; diff <(python3 -m json.tool "$f") <(python3 -m json.tool "/tmp/apphub/$f") | head -40; }; done
-
-        '
+        for f in /tmp/apphub/orchestration/*.suborchestration; do [ -f "$f" ] && { echo "=== $f"; cat "$f"; echo; }; done
+        if cmp -s /tmp/apphub/appManifest.json appManifest.json; then echo "appManifest.json: same as repo"; else echo "appManifest.json differs:"; diff <(python3 -m json.tool appManifest.json) <(python3 -m json.tool /tmp/apphub/appManifest.json) | head -40; fi
     - name: Keep the download as an artifact
       uses: actions/upload-artifact@v4
       with:
