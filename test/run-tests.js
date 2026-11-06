@@ -1826,9 +1826,9 @@ async function orgGuard(token, me) {
   const GUARD = /IORC_0037_XFD_SEC_Create_Application_Shell_Org\.CheckOrgName/;
   const WORKDAY = /IORC_0037_XFD_SEC_Sub_Create_Shell_Organization/;
   const cases = [
-    ['guard',   'NEWAPP',    'NEWAPP',             'X:META',  'type without X:'],
-    ['guard',   'X:',        'X:',                 'X:META',  'type X: alone'],
-    ['guard',   'X:TST:ONE', 'X:TST:ONE',          'X:META',  'type with two parts'],
+    ['workday', 'TSTGUARD',  'TSTGUARD',           'X:META',  'new application code without X: (allowed since 2026-11-06)'],
+    ['guard',   'X:TST',     'X:ADM:TEST:GUARD',   'X:SHELL', 'name not under its type (type X:TST)'],
+    ['guard',   'X:TST:ONE', 'X:TST:ONE:GUARD',    'X:SHELL', 'application type with two parts'],
     ['guard',   'X:ADM',     'X:CLW:TEST:GUARD',   'X:SHELL', 'name not under its type'],
     ['guard',   'X:TSTGUARD','X:TSTGUARD',         'X:SHELL', 'new application as X:SHELL'],
     ['guard',   'X:ADM',     'X:ADM:TEST GUARD',   'X:SHELL', 'space in name'],
@@ -1888,6 +1888,7 @@ async function orgGuard(token, me) {
     ['X:META', 'X:LLIS', 'X:LLIS(TSTGUARD)', 'X:LLIS(TSTGUARD)', 'X:LLIS(TSTGUARD)', 'meta under an application, full name'],
     ['X:META', 'X:BPMS(AOC)', 'TSTGUARD', 'X:BPMS(TSTGUARD)', 'X:BPMS(TSTGUARD)', 'meta under a bracketed application'],
     ['X:META', '', 'X:TSTGUARDPAGE', 'X:TSTGUARDPAGE', 'X:TSTGUARDPAGE', 'meta, new application'],
+    ['X:META', '', 'TSTGUARDPAGE', 'TSTGUARDPAGE', 'TSTGUARDPAGE', 'meta, new application code without X:'],
     ['X:SHELL', 'X:BPMS(AOC)', 'ORG:TST', 'X:BPMS(AOC):ORG:TST', 'ORG:TST', 'shell under a bracketed application'],
   ];
   for (const [subtype, ac, typed, wantName, wantCode, label] of pageCases) {

@@ -3,7 +3,8 @@
    - X:SHELL (application required): APP:CODE. The full name APP:CODE may be typed too; another X: prefix is refused.
    - X:META with an application: APP(CODE), like X:LLIS(CPE) and X:BPMS(AOC). A bracketed application (X:BPMS(AOC))
      gives its base (X:BPMS(NEW)). NEW, (NEW) or X:BPMS(NEW) may be typed.
-   - X:META without an application (a new application): the code is the whole name, X: plus one part (X:NEWAPP).
+   - X:META without an application (a new application): the code is the whole name, exactly as typed (product owner
+     2026-11-06: any code, X: not required; only no spaces).
    In Workday every application-level organization has an organization type of the same name (probe 2026-11-05),
    so for X:META the name is also the organization type. */
 var baseOf = function(app) {
@@ -52,9 +53,7 @@ var codeError = function(app, code, meta) {
   } else if (a == '' && !meta) {
     '';
   } else if (a == '') {
-    !c.startsWith('X:') ? 'A new application code starts with X:, e.g. X:NEWAPP.' :
-      ((c.substring(2) == '' || c.substring(2).contains(':')) ? 'Use X: plus one part, e.g. X:NEWAPP.' :
-        (c.upperCase() != c ? 'Use upper case, e.g. X:NEWAPP.' : ''));
+    '';
   } else if (meta) {
     let s = subOf(a, c);
     s == '' ? ('Enter the part that goes in brackets, e.g. NEW for ' + baseOf(a) + '(NEW).') :
@@ -72,7 +71,7 @@ var preview = function(app, code, meta) {
   if (a == '' && !meta) {
     'Select an application above';
   } else if (c == '') {
-    a == '' ? 'Enter the new application code, e.g. X:NEWAPP' : (meta ? ('Enter the part in brackets, e.g. NEW for ' + baseOf(a) + '(NEW)') : (a + ':'));
+    a == '' ? 'Enter the new application code' : (meta ? ('Enter the part in brackets, e.g. NEW for ' + baseOf(a) + '(NEW)') : (a + ':'));
   } else {
     orgName(a, c, meta);
   }

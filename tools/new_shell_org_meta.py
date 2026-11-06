@@ -13,7 +13,7 @@ Rules (one place: presentation/scripts/comsShellOrg.script, shared by the previe
 * Organization Subtype comes first, because it decides whether Application is needed.
 * X:SHELL: Application required; name APP:CODE (the full name APP:CODE may be typed; another X: prefix is refused).
 * X:META with an application: name APP(CODE), like X:LLIS(CPE) (a bracketed application gives its base: X:BPMS(AOC)
-  -> X:BPMS(NEW)). X:META without an application: X: plus one part (X:NEWAPP).
+  -> X:BPMS(NEW)). X:META without an application: the code as typed (any code, no spaces; 2026-11-06).
 * For X:META the name is also the organization type: every application-level organization in Workday has an
   organization type of the same name (probe 2026-11-05), which must exist before the create.
 * IORC_0037_XFD_SEC_Create_Application_Shell_Org's CheckOrgName re-checks the same rules (tools/patch_pattern_orchestrations.py).
@@ -72,7 +72,7 @@ if ids.index('orgSubtypeDropdown') > ids.index('selectedApplicationId'):
 
 st = find(d, 'orgSubtypeDropdown')
 st['helpText'] = ("X:META for an application-level organization: under an application it is APP(CODE), e.g. X:LLIS(CPE); "
-                  "without one, a new application (X:NEWAPP). X:SHELL for a shell organization roles are assigned on (APP:CODE).")
+                  "without one, a new application named by its code. X:SHELL for a shell organization roles are assigned on (APP:CODE).")
 st['onChange'] = ("<%\n  self.clearError();\n  organizationCode.clearError();\n"
                   f"  selectedApplicationId.setRequired(!{META});\n"
                   f"  if ({META}) {{ selectedApplicationId.clearError(); }}\n  {PREVIEW}\n%>")
@@ -84,13 +84,13 @@ app['helpText'] = ("Select the application this organization belongs to. "
 app['onChange'] = f"<%\n  selectedApplicationId.clearError();\n  organizationCode.clearError();\n  {PREVIEW}\n%>"
 
 code = find(d, 'organizationCode')
-code['placeholder'] = "e.g. ORG:ANY, NEW, or X:NEWAPP"
+code['placeholder'] = "e.g. ORG:ANY, NEW, or NEWAPP"
 code['helpText'] = ("X:SHELL: the part after the application (ORG:ANY gives X:CLW:ORG:ANY). "
                     "X:META with an application: the part in brackets, so NEW gives X:LLIS(NEW). "
-                    "X:META without one: the new application code, starting with X: (X:NEWAPP).")
+                    "X:META without one: the new application code, used as typed.")
 code['guide']['text'] = ("X:SHELL: enter the part after the application, or the full name (ORG:ANY or X:CLW:ORG:ANY both give "
                          "X:CLW:ORG:ANY). X:META with an application: enter the part that goes in brackets, so NEW gives X:LLIS(NEW). "
-                         "X:META without an application: enter the new application code starting with X: (X:NEWAPP). "
+                         "X:META without an application: enter the new application code; it is used exactly as typed. "
                          "For X:META the organization type of the same name must already exist in Workday. No spaces. Must be unique.")
 code['onChange'] = f"<%\n  self.clearError();\n  {PREVIEW}\n%>"
 
@@ -113,7 +113,7 @@ if about:
                       'Add a new organization to Workday. Pick the subtype first. <b>X:SHELL</b>: pick the application; the name is '
                       '<b>Application:Code</b> (e.g. X:CLW:ORG:ANY). <b>X:META</b> with an application: the name is '
                       '<b>Application(Code)</b>, for example X:LLIS(CPE). <b>X:META</b> without an application (a new application): enter its '
-                      'code starting with <b>X:</b> (e.g. X:NEWAPP). For X:META, an organization type of the same name must already '
+                      'code; it is used exactly as typed. For X:META, an organization type of the same name must already '
                       'exist in Workday.</span>')
 
 # 3. OK checks and launch
@@ -172,4 +172,4 @@ d['onSubmit'] = f"""<%
 %>"""
 
 open(P, 'w').write(json.dumps(d, indent=2, ensure_ascii=False) + '\n')
-print('newShellOrg: subtype first; X:SHELL APP:CODE, X:META APP(CODE) or X:NEWAPP (comsShellOrg.script)')
+print('newShellOrg: subtype first; X:SHELL APP:CODE, X:META APP(CODE) or a new application code as typed (comsShellOrg.script)')
