@@ -740,3 +740,10 @@ Product owner: "these formats help guide nuances". A field may be `optionalField
 - Formats: X:BPMS(ASMT) and X:BPMS(ADHC) get Role Name + optional Sub-unit; X:BPMS(ADHC) also takes prefix ORG (its 12 ORG:SAO:... organizations). Pushed with `seed-apps-apply` and `only=X:BPMS(ASMT),X:BPMS(ADHC)` (the new `--only` replaces just those records' formats).
 - Left as is: X:CLW:PATTERN:CPSC:CPSC:21:300:2026W2 (course 21 is most likely a typo for a 3-digit course; widening Course would let typos through).
 - **Build trap:** files that tools/subtype_apps.py rewrites (listed in tools/subtype_src/) are restored from that folder at the start of every build, so hand edits go into the copy in tools/subtype_src/, not presentation/.
+
+### Test pass of the 2026-11-06 changes
+
+- Full live suite: 44 passed, 0 failed. It covers create / inactivate / reactivate a shell org (new subtype guard), add a pattern, add and remove a role position, and a review event cancelled into Denied. That last one confirms the renamed IORC_0037_XFD_SEC_Close_Denied_Role_Request launch configuration fires (Denial Reason copied, DENY audit).
+- Pattern guard: 15 passed, including the optional-field cases. Every app page loads without a page error (40 tasks swept in the browser; `home.htmld` isn't a route, the app root is).
+- Gaps fixed: the Assignable Role Request page still parsed the application from the code (bracketed apps became COMS); it now uses the organization type. The tests read organizations by subtype and now run the role query with the application types instead of skipping it.
+- Not changed (older design): Shell Org Manager's Patterns count only counts `:PATTERN` codes (Clockwork's), so other applications show 0 patterns even when they have a pattern format; their pattern organizations are counted as shell organizations.
