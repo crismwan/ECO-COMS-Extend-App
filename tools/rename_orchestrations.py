@@ -18,7 +18,7 @@ from orch_names import MAP  # noqa: E402
 RX = re.compile(r'(?<![A-Za-z0-9_])(' + '|'.join(sorted(MAP, key=len, reverse=True)) + r')(?![A-Za-z0-9_])')
 TEXT = ('.orchestration', '.suborchestration', '.pmd', '.amd', '.smd', '.py', '.js', '.json', '.md', '.mmd',
         '.sh', '.yml', '.yaml', '.txt', '.script', '.card', '.carddefinition')
-SKIP_DIRS = {'.git', 'node_modules', 'brand-assets'}
+SKIP_DIRS = {'.git', 'node_modules'}
 SKIP_FILES = {'CLAUDE.md', 'tools/rename_orchestrations.py', 'tools/orch_names.py'}
 
 root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
