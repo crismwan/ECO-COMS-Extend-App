@@ -1806,12 +1806,22 @@ async function patternGuard(token, me) {
     ['reject', 'X:ADM', 'X:ADM:ORG:ANY'],
     ['reject', 'X:ADM', 'X:ADM:AAP:A:B'],
     ['reject', 'X:CLW', 'X:CLW:ORG:MATH'],
+    // optional trailing fields (2026-11-06): Role Name + optional Sub-unit
+    ['accept', 'X:BPMS(ASMT)', 'X:BPMS(ASMT):ORG:ZZGUARD'],
+    ['accept', 'X:BPMS(ASMT)', 'X:BPMS(ASMT):ORG:ZZGUARD:ZZSUB'],
+    ['reject', 'X:BPMS(ASMT)', 'X:BPMS(ASMT):ORG:ZZGUARD:ZZSUB:ZZMORE'],
+    ['accept', 'X:BPMS(ADHC)', 'X:BPMS(ADHC):ORG:ZZGUARD:ZZSUB'],
   ];
+  const txt = (r) => (typeof r === 'string' ? r : JSON.stringify(r));
   for (const [want, app, name] of cases) {
     if (!id(app)) { warn(`Guard.${name}`, `no record for ${app}`); continue; }
-    await launch(token, 'IORC_0037_XFD_SEC_Create_Pattern_Shell_Org', { comsAppId: id(app), patternName: name, workerId: me.id, attribute1: '', attribute2: '', attribute3: '', attribute5: '',
-      effectiveDate: '2026-02-30', changedBy: me.descriptor, changedByWid: me.id, timestamp: new Date().toISOString().replace(/\.\d+Z$/, 'Z') });
-    console.log(`   launched  expect ${want}  ${name}`);
+    await test(`Guard.${name}`, async () => {
+      const r = txt(await launch(token, 'IORC_0037_XFD_SEC_Create_Pattern_Shell_Org', { comsAppId: id(app), patternName: name, workerId: me.id, attribute1: '', attribute2: '', attribute3: '', attribute5: '',
+        effectiveDate: '2026-02-30', changedBy: me.descriptor, changedByWid: me.id, timestamp: new Date().toISOString().replace(/\.\d+Z$/, 'Z') }));
+      const stopped = /CheckPatternName/.test(r);
+      if ((want === 'reject') !== stopped) throw new Error(`expected ${want}, got: ${r.slice(0, 300)}`);
+      pass(`Guard.${name}`, `${stopped ? 'stopped by CheckPatternName' : 'passed the guard'}: ${r.slice(0, 160)}`);
+    });
     await sleep(1500);
   }
   await sleep(20000);
