@@ -46,7 +46,7 @@ const ORCH = `${API}/orchestrate/v1/apps/${APP_ID}/orchestrations`;
 const argv = process.argv.slice(2);
 const arg = (name) => { const i = argv.indexOf(name); return i === -1 ? null : argv[i + 1]; };
 const VERBOSE = argv.includes('--verbose');
-const SUITES_ALL = ['static', 'smoke', 'full', 'cleanup', 'isu', 'repair', 'seconduser', 'purge', 'demoseed', 'datacheck', 'probe', 'bulkvalidate', 'subflows', 'seedapps', 'patternguard', 'orgguard', 'gateway', 'prompts', 'possearch', 'postree', 'orgtree', 'aaaname', 'graphql', 'eventlinks', 'timing', 'bulkapply'];
+const SUITES_ALL = ['static', 'smoke', 'full', 'cleanup', 'isu', 'repair', 'seconduser', 'purge', 'demoseed', 'datacheck', 'probe', 'bulkvalidate', 'subflows', 'seedapps', 'patternguard', 'orgguard', 'gateway', 'prompts', 'possearch', 'postree', 'orgtree', 'aaaname', 'appsummary', 'graphql', 'eventlinks', 'timing', 'bulkapply'];
 const suiteArg = arg('--suite') || argv.find((a) => !a.startsWith('--') && SUITES_ALL.some((s) => a.split(',').includes(s))) || 'smoke';
 const SUITES = suiteArg.split(',').map((s) => s.trim()).filter(Boolean);
 for (const s of SUITES) if (!SUITES_ALL.includes(s)) { console.error(`Unknown suite "${s}". Use: ${SUITES_ALL.join(', ')}`); process.exit(2); }
@@ -2135,6 +2135,32 @@ async function orgTreeProbe(token) {
 }
 
 // ═══ AAA role names use the full application ID (read-only; tools/aaa_full_app_id.py, 2026-11-05) ═══
+// Read-only: every application (same rule as Add Shell Org / AAA), with counts, for the Shell Org Manager
+// application-filter design (2026-11-05). Prints one APPSUMMARY JSON line.
+async function appSummary(token) {
+  console.log('\n-- Application summary (read-only) --');
+  const wqlFile = (id) => JSON.parse(fs.readFileSync(path.join(ROOT, 'presentation/wqlQueries', id + '.wqlquery'), 'utf8')).query;
+  const appOf = (code) => code.includes('(') ? code.split(')')[0] + ')' : (code.split(':').slice(1).join(':').includes(':') ? code.split(':')[0] + ':' + code.split(':')[1] : code);
+  const familyOf = (a) => a.includes('(') ? a.split('(')[0] : 'Standalone';
+  const orgs = (await wql(token, wqlFile('allShellOrgs'), 10000)).data || [];
+  const roles = (await wql(token, wqlFile('allShellAssignableRolesinTenant'), 10000)).data || [];
+  const recs = await readAll(token, 'comsApplications');
+  const reqs = await readAll(token, 'comsAssignableRoles');
+  const audits = await readAll(token, 'comsAuditLogs');
+  const apps = {};
+  const get = (a) => (apps[a] = apps[a] || { id: a, family: familyOf(a), name: '', orgs: 0, active: 0, patterns: 0, roles: 0, assignments: 0, positions: 0, pending: 0, lastChange: '', hasRecord: false, recordActive: null });
+  for (const o of orgs) { const a = get(appOf(o.code || '')); a.orgs++; if (o.cf_active1 !== false && o.cf_active1 !== 'false') a.active++; if ((o.code || '').includes('PATTERN')) a.patterns++; if ((o.code || '') === a.id) a.name = (o.organizationByName?.descriptor || o.organizationByName || '').toString(); }
+  for (const r of roles) { const rn = (r.role?.descriptor || '').toString(); const m = rn.match(/^(X:[^:]+(?:\([^)]*\))?(?::[^:(]+)?)/); const app = m ? appOf(rn.split(':ROLE')[0]) : null; if (!app) continue; const a = get(app); a.roles++; const ras = r.roleAssignments || []; a.assignments += ras.length; a.positions += ras.reduce((n, x) => n + ((x.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions || []).length || 0), 0); }
+  for (const r of recs) { const a = get(r.appId || ''); a.hasRecord = true; a.recordActive = r.active; if (!a.name) a.name = r.name || ''; }
+  for (const r of reqs) if (/Pending/i.test(r.status || '')) { const a = apps[r.application] || apps[appOf(r.shellOrgCode || '')]; if (a) a.pending++; }
+  for (const x of audits) { const a = apps[x.application] || apps[appOf(x.coName || '')]; if (a && (x.timestamp || '') > a.lastChange) a.lastChange = x.timestamp || ''; }
+  const list = Object.values(apps).filter((a) => a.id.startsWith('X:')).sort((a, b) => a.id.localeCompare(b.id));
+  const fams = {}; list.forEach((a) => { fams[a.family] = (fams[a.family] || 0) + 1; });
+  console.log(`   ${orgs.length} orgs, ${roles.length} shell roles, ${recs.length} pattern records -> ${list.length} applications; families ${JSON.stringify(fams)}`);
+  console.log('APPSUMMARY ' + JSON.stringify(list));
+  pass('Apps.summary', `${list.length} applications`);
+}
+
 async function aaaNameCheck(token) {
   console.log('\n-- AAA role name: full application ID (read-only) --');
   const check = (n, fn) => test(n, async () => pass(n, await fn()));
@@ -2793,6 +2819,7 @@ async function demoSeed(token, me) {
         if (live.includes('postree')) await posTreeProbe(token);
         if (live.includes('orgtree')) await orgTreeProbe(token);
         if (live.includes('aaaname')) await aaaNameCheck(token);
+        if (live.includes('appsummary')) await appSummary(token);
       }
     }
   }
