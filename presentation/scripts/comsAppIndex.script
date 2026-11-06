@@ -1,3 +1,7 @@
+var plural = function(n, word) {
+  '' + n + ' ' + word + (n == 1 ? '' : 's');
+};
+
 var appOf = function(code) {
   code.contains('(') ? (code.substringBefore(')') + ')') : (code.substringAfter(':').contains(':') ? (code.substringBefore(':') + ':' + code.substringAfter(':').substringBefore(':')) : code);
 };
@@ -60,8 +64,9 @@ var sumOrgs = function(apps) {
 
 var barAll = function(orgs, recs, pick) {
   let idx = index(orgs, recs);
-  let total = (orgs ?? []).filter(o => { (o.code ?? '').startsWith('X:') }).size();
-  let m = { 'subtitleText': '' + idx.size() + ' applications · ' + total + ' shell organizations',
+  let xs = (orgs ?? []).filter(o => { (o.code ?? '').startsWith('X:') });
+  let pats = xs.filter(o => { (o.code ?? '').contains(':PATTERN') }).size();
+  let m = { 'subtitleText': plural(idx.size(), 'application') + ' · ' + plural(xs.size() - pats, 'shell organization') + ' · ' + plural(pats, 'pattern'),
     'bodyText': pick == '1' ? 'Pick a family below, then an application. The page reloads narrowed to it.' : 'Showing every application. Narrow down to see one application’s patterns, organizations and roles.',
     'actionLabel': pick == '1' ? 'Close' : 'Narrow down',
     'pickParam': pick == '1' ? '' : '1' };
@@ -79,7 +84,7 @@ var barNarrowed = function(orgs, recs, app, pick) {
   let next = i < n - 1 ? ids.get(i + 1) : ids.get(0);
   let m = { 'appTitle': 'Application: ' + app,
     'subtitleText': ((empty(a) || empty(a.name)) ? '' : a.name + ' · ') + (fam == 'Standalone' ? 'standalone application' : 'in the ' + fam + ' family'),
-    'bodyText': empty(a) ? 'No shell organizations found for this application.' : ('' + a.orgs + ' shell organizations (' + a.active + ' active) · ' + a.patterns + ' patterns · ' + (a.ready ? 'pattern format set' : 'no pattern format yet')),
+    'bodyText': empty(a) ? 'No shell organizations found for this application.' : (plural(a.orgs, 'shell organization') + ' (' + a.active + ' active) · ' + plural(a.patterns, 'pattern') + ' · ' + (a.ready ? 'pattern format set' : 'no pattern format yet')),
     'changeLabel': pick == '1' ? 'Close' : 'Change application',
     'changePick': pick == '1' ? '' : '1',
     'family': fam,
@@ -95,7 +100,7 @@ var familyCards = function(orgs, recs, pick, current, app) {
   let idx = index(orgs, recs);
   pick != '1' ? [] : familyNames(idx).map(f => { {
     'familyName': f == 'Standalone' ? 'Standalone applications' : f + ' family',
-    'subtitleText': '' + inFamily(idx, f).size() + ' applications · ' + sumOrgs(inFamily(idx, f)) + ' shell organizations',
+    'subtitleText': plural(inFamily(idx, f).size(), 'application') + ' · ' + plural(sumOrgs(inFamily(idx, f)), 'shell organization'),
     'bodyText': (inFamily(idx, f).size() > 8 ? inFamily(idx, f).subList(0, 8) : inFamily(idx, f)).map(x => { x.short }).join(', ') + (inFamily(idx, f).size() > 8 ? ' …' : ''),
     'indicatorLabel': f == current ? 'Selected' : (inFamily(idx, f).filter(x => { !x.ready }).size() == 0 ? 'All patterns ready' : ('' + inFamily(idx, f).filter(x => { !x.ready }).size() + ' need a pattern')),
     'indicatorColor': f == current ? 'blue' : (inFamily(idx, f).filter(x => { !x.ready }).size() == 0 ? 'green' : 'orange'),
@@ -108,7 +113,7 @@ var appCards = function(orgs, recs, pick, fam, app) {
   (pick != '1' || empty(fam)) ? [] : inFamily(idx, fam).map(a => { {
     'appId': a.id,
     'subtitleText': empty(a.name) ? (a.ready ? 'Pattern format set' : 'No pattern record yet') : a.name,
-    'bodyText': '' + a.orgs + ' shell organizations · ' + a.patterns + ' patterns',
+    'bodyText': plural(a.orgs, 'shell organization') + ' · ' + plural(a.patterns, 'pattern'),
     'indicatorLabel': a.id == app ? 'Showing now' : (a.ready ? 'Pattern ready' : 'No pattern yet'),
     'indicatorColor': a.id == app ? 'blue' : (a.ready ? 'green' : 'orange') } });
 };
@@ -118,6 +123,7 @@ var appIds = function(orgs, recs) {
 };
 
 {
+  "plural": plural,
   "appOf": appOf,
   "shortOf": shortOf,
   "familyOf": familyOf,

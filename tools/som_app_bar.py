@@ -39,7 +39,14 @@ OLD_ADD = "(comsApplications.data ?? []).filter(a => { a.appId == (queryParams.a
 NEW_ADD = "(comsApplications.data ?? []).filter(a => { a.appId == (queryParams.appCode ?? '') && a.active != false }).size() > 0"
 OLD_WARN = "You selected <b><% queryParams.appCode ?? '' %></b> from the Application Patterns tab. Only shell organizations matching this application are shown below. <a href=\"javascript:void(0)\" style=\"color:#0055B7\">View all organizations</a> by navigating to Shell Org Manager without an application selected."
 NEW_WARN = "Narrowed to <b><% queryParams.appCode ?? '' %></b>: only its shell organizations are shown below. Use Show all applications on the Application card above to see every organization."
-SWAPS = [(OLD_RA, NEW_RA), (OLD_ROWS, NEW_ROWS), (OLD_FMT, NEW_FMT), (OLD_ADD, NEW_ADD), (OLD_WARN, NEW_WARN)]
+OLD_EMPTY = "No shell org patterns found for this application. Use the Add Pattern button above to create one."
+REC = "(comsApplications.data ?? []).filter(a => { a.appId == (queryParams.appCode ?? '')"
+NEW_EMPTY = ("<% " + REC + " }).size() == 0"
+             " ? 'No pattern format is set up for this application yet. Use Set Up Pattern Format above first, then add patterns.'"
+             " : (" + REC + " && a.active != false }).size() == 0"
+             " ? 'The pattern format for this application is inactive. Reactivate it in Maintain Application Pattern to add patterns.'"
+             " : '" + OLD_EMPTY + "') %>")
+SWAPS = [(OLD_EMPTY, NEW_EMPTY), (OLD_RA, NEW_RA), (OLD_ROWS, NEW_ROWS), (OLD_FMT, NEW_FMT), (OLD_ADD, NEW_ADD), (OLD_WARN, NEW_WARN)]
 
 
 def containers():

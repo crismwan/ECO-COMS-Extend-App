@@ -342,7 +342,7 @@
                 "enabled": false,
                 "label": "ⓘ Nothing to show",
                 "visible": "<% !empty(queryParams.appCode) && size((empty(queryParams.appCode) ? [] : ((queryParams.appCode == 'X:CLW') ? (allShellOrgs.data ?? []).filter(p => { (p.code ?? '').startsWith('X:') && (p.code ?? '').contains(':PATTERN:') }).filter(p => { p.code.startsWith((queryParams.appCode ?? '') + ':PATTERN') }) : (allShellOrgs.data ?? []).filter(o => { ((comsApplications.data ?? []).filter(a => { a.appId == (queryParams.appCode ?? '') }).map(a => { a.namePrefix ?? '' }).join(',')).split(',').filter(pf => { !empty(pf) && (o.code ?? '').startsWith((queryParams.appCode ?? '') + ':' + pf + ':') }).size() > 0 })))) == 0 %>",
-                "value": "No shell org patterns found for this application. Use the Add Pattern button above to create one."
+                "value": "<% (comsApplications.data ?? []).filter(a => { a.appId == (queryParams.appCode ?? '') }).size() == 0 ? 'No pattern format is set up for this application yet. Use Set Up Pattern Format above first, then add patterns.' : ((comsApplications.data ?? []).filter(a => { a.appId == (queryParams.appCode ?? '') && a.active != false }).size() == 0 ? 'The pattern format for this application is inactive. Reactivate it in Maintain Application Pattern to add patterns.' : 'No shell org patterns found for this application. Use the Add Pattern button above to create one.') %>"
               },
               {
                 "type": "grid",
