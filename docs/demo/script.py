@@ -36,7 +36,7 @@ STOPS = [
   ('say', "Fix it, and the error clears straight away. The preview now reads X:BPMS(TST)."),
   ('do', "PICK subtype X:SHELL"),
   ('say', "Switch to X:SHELL, and the application becomes required and the name becomes the application, a colon, then the code. The same rules are checked again on the server, so nobody can get around them."),
-  ('safe', "Don't click OK: it would create a real organization in Workday."),
+  ('safe', "Click OK only while the code is lower case (it is refused); never with a valid name, which creates a real organization in Workday."),
  ]),
  dict(n=4, title="Shell Org Manager and one role assignment, with the new browse picker", time="2:50 – 4:00",
       open="Shell Org Manager → Application Patterns → Manage on X:CLW, then a role's Manage Role Assignment", items=[
@@ -50,7 +50,7 @@ STOPS = [
   ('say', "If I click OK without picking anyone, it tells me to pick at least one position."),
   ('do', "CLICK into Positions to Add, open My Organizations → HR Services Department"),
   ('say', "New this week: I don't have to know a position's name or ID any more. I can browse, the way Workday's own prompts work: my favourites, my organizations, organizations by manager, or every supervisory organization from A to Z. Each one opens to its positions. And the moment I pick one, the error clears. Typing still searches, too."),
-  ('safe', "Leave the page without clicking OK."),
+  ('safe', "Click OK only with nothing picked (it is refused); leave the page without clicking OK once a position is picked."),
  ]),
  dict(n=5, title="Bulk edit in a grid, like an EIB (the wow)", time="4:00 – 5:50",
       open="Home → Bulk Role Changes → Edit in the app → X:BPMS(ODMT)", items=[
