@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Builds orchestration/BulkRoleApply.orchestration and BulkRoleGridApply.orchestration by cloning node prototypes from the
+"""Builds orchestration/IORC_0037_XFD_SEC_Bulk_Role_Changes_From_CSV.orchestration and IORC_0037_XFD_SEC_Bulk_Role_Changes_From_Grid.orchestration by cloning node prototypes from the
 orchestrations already in this repo (CLAUDE.md: don't hand-type orchestration JSON).
 Re-run after editing this script: python3 tools/build_bulk_orchestration.py"""
 import json, copy, os
 ROOT = os.path.join(os.path.dirname(__file__), '..')
 O = lambda n: json.load(open(os.path.join(ROOT, 'orchestration', n + '.orchestration')))
-arp, deny = O('AssignRolePositions'), O('DenyRoleRequest')
+arp, deny = O('IORC_0037_XFD_SEC_Assign_Remove_Role_Positions'), O('IORC_0037_XFD_SEC_Close_Denied_Role_Request')
 def node(src, name):
     return copy.deepcopy([n for n in src['_value']['nodes']['_value'] if n['_value']['name']['_value'] == name][0])
 def rename(n, name):
@@ -97,8 +97,8 @@ FIELDS = ['rowAction', 'roleName', 'roleWid', 'orgName', 'orgWid', 'positionName
 jcol = lambda i: 'data.ProcessRows.item.stringAtJsonPathWithDefault("$.%s", "").trim()' % FIELDS[i]
 
 def build(GRID):
-    """GRID=False: BulkRoleApply (rows from an uploaded CSV, COMSBulkUpload).
-    GRID=True: BulkRoleGridApply (rows the Bulk Edit grid wrote to comsBulkRowResults as batchRef <ref>-DRAFT,
+    """GRID=False: IORC_0037_XFD_SEC_Bulk_Role_Changes_From_CSV (rows from an uploaded CSV, COMSBulkUpload).
+    GRID=True: IORC_0037_XFD_SEC_Bulk_Role_Changes_From_Grid (rows the Bulk Edit grid wrote to comsBulkRowResults as batchRef <ref>-DRAFT,
     status record COMSBulkRun). Everything else (checks, Assign_Roles call, results, audit) is shared."""
     nodes = []
     nodes.append(create_values('GetInputParams', [
@@ -230,7 +230,7 @@ def build(GRID):
 
     flow = json.load(open(os.path.join(ROOT, 'tools', 'orchestration_async_skeleton.json')))
     v = flow['_value']
-    NAME = 'BulkRoleGridApply' if GRID else 'BulkRoleApply'
+    NAME = 'IORC_0037_XFD_SEC_Bulk_Role_Changes_From_Grid' if GRID else 'IORC_0037_XFD_SEC_Bulk_Role_Changes_From_CSV'
     v['id']['_value'] = 'bulkrolegridapply01' if GRID else 'bulkroleapply001'
     v['name']['_value'] = NAME
     v['nodes']['_value'] = nodes
@@ -238,7 +238,7 @@ def build(GRID):
     v['notes']['_value'] = [{"_type": "Note", "_value": {"key": {"_type": "String", "_value": "description"}, "value": {"_type": "String", "_value": "Bulk role changes from an uploaded CSV (COMSBulkUpload). Asynchronous: the launch returns at once. mode=VALIDATE checks every row and records VALID/INVALID; mode=APPLY calls Assign_Roles per valid row, records DONE/FAILED and writes an audit record per change. Built by tools/build_bulk_orchestration.py."}}}]
     if GRID:
         v['notes']['_value'][0]['_value']['value']['_value'] = ('Bulk role changes from the Bulk Edit grid page (COMSBulkRun). Asynchronous. '
-            'Reads the DRAFT rows the page wrote to comsBulkRowResults (batchRef <ref>-DRAFT) and processes them exactly like BulkRoleApply: '
+            'Reads the DRAFT rows the page wrote to comsBulkRowResults (batchRef <ref>-DRAFT) and processes them exactly like IORC_0037_XFD_SEC_Bulk_Role_Changes_From_CSV: '
             'mode=VALIDATE checks every row (VALID/INVALID), mode=APPLY calls Assign_Roles per row (DONE/FAILED) and writes the audit log.')
     open(os.path.join(ROOT, 'orchestration', NAME + '.orchestration'), 'w').write(json.dumps(flow, separators=(',', ':'), ensure_ascii=False))
     print('nodes:', [n['_value']['name']['_value'] for n in nodes])

@@ -3,9 +3,9 @@ flowchart TB
   R --> L{{For each row}}
   L --> V{VALIDATE or<br/>APPLY mode?}
   V -- validate --> C1[Check row: action, IDs,<br/>position exists, no duplicate] --> W1[Write row VALID / INVALID]
-  V -- apply --> C2[ProcessBulkRoleRow<br/>sub-orchestration] --> AR[Staffing Assign_Roles<br/>add or remove position]
+  V -- apply --> C2[IORC_0037_XFD_SEC_Sub_Process_Bulk_Role_Row<br/>sub-orchestration] --> AR[Staffing Assign_Roles<br/>add or remove position]
   AR --> OK{Accepted?}
-  OK -- yes --> AU[WriteAuditRecord<br/>ASSIGN / REMOVE POSITION] --> W2[Row DONE]
+  OK -- yes --> AU[IORC_0037_XFD_SEC_Sub_Write_Audit_Record<br/>ASSIGN / REMOVE POSITION] --> W2[Row DONE]
   OK -- no --> W3[Row FAILED<br/>with Workday's message]
   W1 --> L
   W2 --> L

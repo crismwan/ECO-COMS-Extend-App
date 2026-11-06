@@ -7,7 +7,7 @@ flowchart LR
   D -- pass --> E[Workday web service<br/>Organization_Add_Update ·<br/>Inactivate · Assign_Roles]
   E --> F{Accepted?<br/>2xx and no SOAP fault}
   F -- no --> F1[Run stops<br/>logged with Workday's reason]
-  F -- yes --> G[WriteAuditRecord<br/>with run ID and event link]
+  F -- yes --> G[IORC_0037_XFD_SEC_Sub_Write_Audit_Record<br/>with run ID and event link]
   G --> H[Page re-reads:<br/>org in WQL or audit total +1]
   D1 --> H
   F1 --> H

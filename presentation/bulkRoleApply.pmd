@@ -140,7 +140,7 @@
             "code": 429
           }
         ],
-        "url": "<% ((size(storedUpload.data ?? []) == 0 && size(storedRun.data ?? []) > 0) ? '/BulkRoleGridApply' : '/BulkRoleApply') + '/launch?ref=' + (queryParams.batch ?? '') + '&mode=APPLY&effectiveDate=' + ((size(storedUpload.data ?? []) > 0 ? storedUpload.data[0] : (size(storedRun.data ?? []) > 0 ? storedRun.data[0] : {})).effectiveDate ?? '') + '&changedBy=' + (selectedWorker.descriptor ?? '').urlEncode() + '&changedByWid=' + (selectedWorker.id ?? '') %>",
+        "url": "<% ((size(storedUpload.data ?? []) == 0 && size(storedRun.data ?? []) > 0) ? '/IORC_0037_XFD_SEC_Bulk_Role_Changes_From_Grid' : '/IORC_0037_XFD_SEC_Bulk_Role_Changes_From_CSV') + '/launch?ref=' + (queryParams.batch ?? '') + '&mode=APPLY&effectiveDate=' + ((size(storedUpload.data ?? []) > 0 ? storedUpload.data[0] : (size(storedRun.data ?? []) > 0 ? storedRun.data[0] : {})).effectiveDate ?? '') + '&changedBy=' + (selectedWorker.descriptor ?? '').urlEncode() + '&changedByWid=' + (selectedWorker.id ?? '') %>",
         "values": [
           {
             "outboundPath": "ref",

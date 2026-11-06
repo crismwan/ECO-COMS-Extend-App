@@ -3,13 +3,13 @@
 
 A Workday Home card is an orchestration of type "Workday Home Card" (developer.workday.com doc mwd1629844754304;
 available in WCP development tenants, and needs Workday Journeys elsewhere). This writes, from the same steps:
-  orchestration/MyRoleRequestsCardData.orchestration   synchronous; for the signed-in worker
-  orchestration/IscQueueCardData.orchestration         synchronous; for ISC reviewers
+  orchestration/IORC_0037_XFD_SEC_My_Role_Requests_Card_Data.orchestration   synchronous; for the signed-in worker
+  orchestration/IORC_0037_XFD_SEC_ISC_Queue_Card_Data.orchestration         synchronous; for ISC reviewers
 Each makes the same calls the Home card will make and returns the card content as JSON:
   {"title": ..., "subtitle": ..., "linkText": ..., "linkPath": "/<tenant>/d/wday/app/<app>/<app>/<task>.htmld"}
 They can be launched and tested like any synchronous orchestration (test suite: HomeCards.*).
-  orchestration/MyRoleRequestsHomeCard.orchestration   the same steps as a Workday Home Card orchestration
-  orchestration/IscQueueHomeCard.orchestration         (add with the tenant task Create External Card)
+  orchestration/IORC_0037_XFD_SEC_My_Role_Requests_Home_Card.orchestration   the same steps as a Workday Home Card orchestration
+  orchestration/IORC_0037_XFD_SEC_ISC_Queue_Home_Card.orchestration         (add with the tenant task Create External Card)
 Idempotent.
 """
 import copy, hashlib, json, os, sys
@@ -26,8 +26,8 @@ def S(s):
     return {"_type": ["Expr", "String"], "_value": {"type": {"_type": "Type", "_value": "String"}, "source": {"_type": "String", "_value": s}, "isAuto": {"_type": "Boolean", "_value": False}}}
 
 
-base = O('StartRoleRequestReview')          # FlowSync, StartBasic, EndSync, flowVersion 3.7.0
-deny = O('DenyRoleRequest')
+base = O('IORC_0037_XFD_SEC_Start_Role_Request_Review')          # FlowSync, StartBasic, EndSync, flowVersion 3.7.0
+deny = O('IORC_0037_XFD_SEC_Close_Denied_Role_Request')
 nodes = lambda f: f['_value']['nodes']['_value']
 find = lambda f, n: copy.deepcopy([x for x in nodes(f) if x['_value']['name']['_value'] == n][0])
 
@@ -119,7 +119,7 @@ FIRST_PENDING = lambda src, field: f'{src}.asJSON().stringAtJsonPathWithDefault(
 CARD = ('{"title": "{{data.Counts.title}}", "subtitle": "{{data.Counts.subtitle}}", '
         '"linkText": "{{data.Counts.linkText}}", "linkPath": "{{data.Counts.linkPath}}"}')
 
-my = flow('MyRoleRequestsCardData', 'ManageCOMSAssignableRoles', [
+my = flow('IORC_0037_XFD_SEC_My_Role_Requests_Card_Data', 'ManageCOMSAssignableRoles', [
     get('GetMe', '"/common/v1/workers/me"', 'The worker viewing the card'),
     values('Me', [('wid', 'data.GetMe.response.asJSON().stringAtJsonPath("$.id")')], 'Viewer WID'),
     get('GetMine', APP + '${"/v1/comsAssignableRoles?limit=100&requestedBy="}${data.Me.wid}"', "The viewer's own role requests (requestedBy is indexed)"),
@@ -138,7 +138,7 @@ my = flow('MyRoleRequestsCardData', 'ManageCOMSAssignableRoles', [
     template('Card', CARD, 'Home card content'),
 ], 'Data for the My Role Requests Workday Home card: the signed-in worker\'s pending and approved requests, and a link to My Assignable Role Requests.')
 
-isc = flow('IscQueueCardData', 'MaintainCOMSAssignableRoles', [
+isc = flow('IORC_0037_XFD_SEC_ISC_Queue_Card_Data', 'MaintainCOMSAssignableRoles', [
     get('GetRequests', APP + '${"/v1/comsAssignableRoles?limit=100"}"', 'Role requests (first 100; the collection returns oldest first, so the oldest pending are included)'),
     values('Counts', [
         ('text', 'data.GetRequests.response.asJSON().toString()'),
@@ -155,8 +155,8 @@ isc = flow('IscQueueCardData', 'MaintainCOMSAssignableRoles', [
     template('Card', CARD, 'Home card content'),
 ], 'Data for the ISC Queue Workday Home card: requests waiting for ISC review and the oldest request date, with a link to the ISC Queue.')
 
-save('MyRoleRequestsCardData', my)
-save('IscQueueCardData', isc)
+save('IORC_0037_XFD_SEC_My_Role_Requests_Card_Data', my)
+save('IORC_0037_XFD_SEC_ISC_Queue_Card_Data', isc)
 
 # the ISC orchestration is secured by Maintain: COMS Assignable Roles, which must allow orchestration security
 p = os.path.join(ROOT, 'model', 'MaintainCOMSAssignableRoles.securitydomain')
@@ -214,8 +214,8 @@ def to_home_card(data_flow, name, description):
     return f
 
 
-save('MyRoleRequestsHomeCard', to_home_card(my, 'MyRoleRequestsHomeCard',
+save('IORC_0037_XFD_SEC_My_Role_Requests_Home_Card', to_home_card(my, 'IORC_0037_XFD_SEC_My_Role_Requests_Home_Card',
      'Workday Home card: the viewer\'s pending and approved role requests, linking to My Assignable Role Requests.'))
-save('IscQueueHomeCard', to_home_card(isc, 'IscQueueHomeCard',
+save('IORC_0037_XFD_SEC_ISC_Queue_Home_Card', to_home_card(isc, 'IORC_0037_XFD_SEC_ISC_Queue_Home_Card',
      'Workday Home card: requests waiting for ISC review and the oldest request date, linking to the ISC Queue.'))
 print('home card data + Workday Home Card orchestrations written')

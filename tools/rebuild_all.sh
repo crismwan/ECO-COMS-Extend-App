@@ -19,7 +19,7 @@ run() { echo "== $*"; python3 "$@" | sed 's/^/   /'; }
 run tools/title_banner.py --restore    # put Workday titles back so every builder sees ordinary pages
 run tools/merge_nav_about.py --restore  # back links in their own navSection again
 run tools/extract_subflows.py --restore # full orchestrations back, so the patch steps find their steps (re-extracted last)
-run tools/build_bulk_orchestration.py   # orchestration/BulkRoleApply.orchestration
+run tools/build_bulk_orchestration.py   # orchestration/IORC_0037_XFD_SEC_Bulk_Role_Changes_From_CSV.orchestration
 run tools/build_bulk_pages.py           # bulk template / upload / results / apply pages (+ empty messages)
 run tools/build_bulk_grid.py            # Bulk Edit Role Assignments (in-app grid)
 run tools/build_org_detail.py           # shellOrgDetail + Details buttons in Shell Org Manager

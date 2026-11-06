@@ -7,7 +7,7 @@ How a sub-orchestration works (confirmed against App Hub builds 2026-11-04, see 
   - StartSubflow lists typed inputs (ExprParameter), read inside as data.start.<input>
   - the caller's step is CallSubflow; its subflowId is the sub-orchestration's 32-hex `id`, not its name
 
-ProcessBulkRoleRow: BulkRoleApply and BulkRoleGridApply each loop over rows as `Row` (CSV vs grid JSON) then
+IORC_0037_XFD_SEC_Sub_Process_Bulk_Role_Row: IORC_0037_XFD_SEC_Bulk_Role_Changes_From_CSV and IORC_0037_XFD_SEC_Bulk_Role_Changes_From_Grid each loop over rows as `Row` (CSV vs grid JSON) then
 `ActionBranch` (look up position, check, Assign_Roles, result record, audit record). ActionBranch is identical in both
 apart from the audit wording, so it moves into the sub-orchestration with every value it reads passed in, and each
 loop becomes Row -> CallProcessRow. Idempotent: a parent that already calls the sub is left alone."""
@@ -180,11 +180,11 @@ def extract(sub_name, parents, steps, sources, call_name, norm=None, args=None, 
 
 
 # Bulk pair: the per-row work (look up position, check, Assign_Roles, result record, audit record).
-extract('ProcessBulkRoleRow', ['BulkRoleApply', 'BulkRoleGridApply'], ['ActionBranch'], ['GetInputParams', 'Row'], 'CallProcessRow',
-        norm={'BulkRoleApply': [('Bulk upload {{data.GetInputParams.ref}}', '{{data.GetInputParams.sourceLabel}} {{data.GetInputParams.ref}}')],
-              'BulkRoleGridApply': [('Bulk edit {{data.GetInputParams.ref}}', '{{data.GetInputParams.sourceLabel}} {{data.GetInputParams.ref}}')]},
-        args={'BulkRoleApply': {'sourceLabel': '"Bulk upload"'}, 'BulkRoleGridApply': {'sourceLabel': '"Bulk edit"'}},
-        notes=("Shared by BulkRoleApply and BulkRoleGridApply: ActionBranch for one row. Built by tools/extract_subflows.py.",
+extract('IORC_0037_XFD_SEC_Sub_Process_Bulk_Role_Row', ['IORC_0037_XFD_SEC_Bulk_Role_Changes_From_CSV', 'IORC_0037_XFD_SEC_Bulk_Role_Changes_From_Grid'], ['ActionBranch'], ['GetInputParams', 'Row'], 'CallProcessRow',
+        norm={'IORC_0037_XFD_SEC_Bulk_Role_Changes_From_CSV': [('Bulk upload {{data.GetInputParams.ref}}', '{{data.GetInputParams.sourceLabel}} {{data.GetInputParams.ref}}')],
+              'IORC_0037_XFD_SEC_Bulk_Role_Changes_From_Grid': [('Bulk edit {{data.GetInputParams.ref}}', '{{data.GetInputParams.sourceLabel}} {{data.GetInputParams.ref}}')]},
+        args={'IORC_0037_XFD_SEC_Bulk_Role_Changes_From_CSV': {'sourceLabel': '"Bulk upload"'}, 'IORC_0037_XFD_SEC_Bulk_Role_Changes_From_Grid': {'sourceLabel': '"Bulk edit"'}},
+        notes=("Shared by IORC_0037_XFD_SEC_Bulk_Role_Changes_From_CSV and IORC_0037_XFD_SEC_Bulk_Role_Changes_From_Grid: ActionBranch for one row. Built by tools/extract_subflows.py.",
                "One row's values plus the run's: ", "No outputs: the row's result and audit records are written here."))
 
 # Shell org pair: the Workday add-organization call, the "was it accepted" check, and the result branch (log + audit record).
@@ -193,10 +193,10 @@ SHELL_NORM = [
     ('Call Workday Add_Update_Organization WWS to create the Custom Organization shell org pattern in Workday',
      'Call Workday Add_Update_Organization WWS to create the Shell Organization in Workday'),
 ]
-extract('CreateShellOrganization', ['AddShellOrg', 'AddShellOrgPattern'],
+extract('IORC_0037_XFD_SEC_Sub_Create_Shell_Organization', ['IORC_0037_XFD_SEC_Create_Application_Shell_Org', 'IORC_0037_XFD_SEC_Create_Pattern_Shell_Org'],
         ['CallAddUpdateOrganization', 'CheckWWSAccepted', 'CheckWWSResult'], ['GetInputParams', 'ExtractOrgType'], 'CallCreateShellOrg',
         norm={
-          'AddShellOrg': SHELL_NORM + [
+          'IORC_0037_XFD_SEC_Create_Application_Shell_Org': SHELL_NORM + [
             ('data.GetInputParams.organizationName', 'data.GetInputParams.orgName'),
             ('{{data.GetInputParams.organizationCode}}', '{{data.GetInputParams.orgCode}}'),
             ('"objectType": "Shell Org",', '"objectType": "{{data.GetInputParams.objectType}}",'),
@@ -204,7 +204,7 @@ extract('CreateShellOrganization', ['AddShellOrg', 'AddShellOrgPattern'],
             ('"Shell Org created successfully in Workday: "', 'data.GetInputParams.objectType + " created successfully in Workday: "'),
             ('"Add_Update_Organization WWS call failed for org: "', '"Add_Update_Organization WWS call failed for " + data.GetInputParams.objectLabel + ": "'),
           ],
-          'AddShellOrgPattern': SHELL_NORM + [
+          'IORC_0037_XFD_SEC_Create_Pattern_Shell_Org': SHELL_NORM + [
             ('"coReferenceId": "{{data.GetInputParams.patternName}}"', '"coReferenceId": "{{data.GetInputParams.orgCode}}"'),
             ('data.GetInputParams.patternName', 'data.GetInputParams.orgName'),
             ('X:SHELL</bsvc:Organization_Subtype_Name>', '{{data.GetInputParams.orgSubtype}}</bsvc:Organization_Subtype_Name>'),
@@ -214,11 +214,11 @@ extract('CreateShellOrganization', ['AddShellOrg', 'AddShellOrgPattern'],
             ('"Add_Update_Organization WWS call failed for pattern: "', '"Add_Update_Organization WWS call failed for " + data.GetInputParams.objectLabel + ": "'),
           ]},
         args={
-          'AddShellOrg': {'orgName': 'data.GetInputParams.organizationName', 'orgCode': 'data.GetInputParams.organizationCode',
+          'IORC_0037_XFD_SEC_Create_Application_Shell_Org': {'orgName': 'data.GetInputParams.organizationName', 'orgCode': 'data.GetInputParams.organizationCode',
                           'objectType': '"Shell Org"', 'objectLabel': '"Shell org"'},
-          'AddShellOrgPattern': {'orgName': 'data.GetInputParams.patternName', 'orgCode': 'data.GetInputParams.patternName',
+          'IORC_0037_XFD_SEC_Create_Pattern_Shell_Org': {'orgName': 'data.GetInputParams.patternName', 'orgCode': 'data.GetInputParams.patternName',
                                  'orgSubtype': '"X:SHELL"', 'objectType': '"Shell Org Pattern"', 'objectLabel': '"Shell org pattern"'}},
-        notes=("Shared by AddShellOrg and AddShellOrgPattern: create the organization in Workday (Organization_Add_Update), "
+        notes=("Shared by IORC_0037_XFD_SEC_Create_Application_Shell_Org and IORC_0037_XFD_SEC_Create_Pattern_Shell_Org: create the organization in Workday (Organization_Add_Update), "
                "stop if Workday rejects it, then log and write the audit record. Built by tools/extract_subflows.py.",
                "The organization to create and the audit wording: ", "No outputs: the audit record is written here."))
 
@@ -227,34 +227,34 @@ extract('CreateShellOrganization', ['AddShellOrg', 'AddShellOrgPattern'],
 REVIEW_DETAILS = ('"details": "{{data.GetInputParams.requestLabel}} request submitted: {{data.ExtractRequest.roleName}}'
                   '{{#if data.GetInputParams.showOrg}} for org {{data.AuditValues.coName}}{{/if}}'
                   '{{#if data.GetInputParams.showEffective}} effective {{data.AuditValues.effectiveDate}}{{/if}}"')
-extract('StartRequestReview', ['StartRoleRequestReview', 'StartAAARequestReview'],
+extract('IORC_0037_XFD_SEC_Sub_Start_Request_Review', ['IORC_0037_XFD_SEC_Start_Role_Request_Review', 'IORC_0037_XFD_SEC_Start_Admin_Request_Review'],
         ['FindRequest', 'ExtractRequest', 'StartReview', 'ExtractEvent', 'SaveEventOnRequest', 'AuditValues', 'WriteAuditLog', 'LogStarted'],
         ['GetInputParams'], 'CallStartReview',
-        norm={'StartRoleRequestReview': [('"details": "Assignable role request submitted: {{data.ExtractRequest.roleName}} for org {{data.AuditValues.coName}}"', REVIEW_DETAILS)],
-              'StartAAARequestReview': [('"details": "AAA role request submitted: {{data.ExtractRequest.roleName}} effective {{data.AuditValues.effectiveDate}}"', REVIEW_DETAILS)]},
-        args={'StartRoleRequestReview': {'requestLabel': '"Assignable role"', 'showOrg': ('true', 'Boolean'), 'showEffective': ('false', 'Boolean')},
-              'StartAAARequestReview': {'requestLabel': '"AAA role"', 'showOrg': ('false', 'Boolean'), 'showEffective': ('true', 'Boolean')}},
-        notes=("Shared by StartRoleRequestReview and StartAAARequestReview (two copies only for their different security domains): "
+        norm={'IORC_0037_XFD_SEC_Start_Role_Request_Review': [('"details": "Assignable role request submitted: {{data.ExtractRequest.roleName}} for org {{data.AuditValues.coName}}"', REVIEW_DETAILS)],
+              'IORC_0037_XFD_SEC_Start_Admin_Request_Review': [('"details": "AAA role request submitted: {{data.ExtractRequest.roleName}} effective {{data.AuditValues.effectiveDate}}"', REVIEW_DETAILS)]},
+        args={'IORC_0037_XFD_SEC_Start_Role_Request_Review': {'requestLabel': '"Assignable role"', 'showOrg': ('true', 'Boolean'), 'showEffective': ('false', 'Boolean')},
+              'IORC_0037_XFD_SEC_Start_Admin_Request_Review': {'requestLabel': '"AAA role"', 'showOrg': ('false', 'Boolean'), 'showEffective': ('true', 'Boolean')}},
+        notes=("Shared by IORC_0037_XFD_SEC_Start_Role_Request_Review and IORC_0037_XFD_SEC_Start_Admin_Request_Review (two copies only for their different security domains): "
                "start the review event for one request, save it on the request, write the REQUEST audit record. Built by tools/extract_subflows.py.",
                "The request and the audit wording: ", "No outputs: the event is saved on the request and the audit record is written here."))
 
 
 # ---------------------------------------------------------------------------------------------------------------
-# Shared audit record: every comsAuditLogs POST (WriteAuditLog) in these files becomes a call to WriteAuditRecord,
+# Shared audit record: every comsAuditLogs POST (WriteAuditLog) in these files becomes a call to IORC_0037_XFD_SEC_Sub_Write_Audit_Record,
 # which holds the one record template. Sub-orchestrations may call sub-orchestrations (doc.workday.com "Modular
 # Orchestration Design": "You can also call suborchestrations from other suborchestrations"), so the three subs above
-# are included. Left out: DenyRoleRequest (business-process triggered; whether those can call a sub isn't documented,
+# are included. Left out: IORC_0037_XFD_SEC_Close_Denied_Role_Request (business-process triggered; whether those can call a sub isn't documented,
 # and a Deny can't be launched from a test).
 # Each parent passes one String per field; template wording such as {{#if isAdd}}Assigned{{/if}} becomes an
 # (if (c) "..." else "") expression. Fields only some writers set are left out of the record when empty, as before.
-AUDIT_SUB = 'WriteAuditRecord'
+AUDIT_SUB = 'IORC_0037_XFD_SEC_Sub_Write_Audit_Record'
 AUDIT_FIELDS = ['timestamp', 'runId', 'eventWid', 'objectType', 'action', 'coReferenceId', 'coName', 'roleName',
                 'positionName', 'effectiveDate', 'changedByWid', 'orgWid', 'roleWid', 'positionWid', 'triggeredBy', 'details']
 AUDIT_ALWAYS = {'timestamp', 'runId', 'objectType', 'action', 'coReferenceId', 'coName', 'effectiveDate',
                 'changedByWid', 'triggeredBy', 'details'}
-AUDIT_WRITERS = [('AssignRolePositions', '.orchestration'), ('ManageShellOrgStatus', '.orchestration'),
-                 ('ProcessBulkRoleRow', '.suborchestration'), ('CreateShellOrganization', '.suborchestration'),
-                 ('StartRequestReview', '.suborchestration')]
+AUDIT_WRITERS = [('IORC_0037_XFD_SEC_Assign_Remove_Role_Positions', '.orchestration'), ('IORC_0037_XFD_SEC_Change_Shell_Org_Status', '.orchestration'),
+                 ('IORC_0037_XFD_SEC_Sub_Process_Bulk_Role_Row', '.suborchestration'), ('IORC_0037_XFD_SEC_Sub_Create_Shell_Organization', '.suborchestration'),
+                 ('IORC_0037_XFD_SEC_Sub_Start_Request_Review', '.suborchestration')]
 
 def template_expr(t):
     """'{{#if c}}Assigned{{/if}} position {{x}}' -> '(if (c) "Assigned" else "") + " position " + x'."""
@@ -337,7 +337,7 @@ def share_audit():
                                                   "notes": NOTES('No outputs.')}},
         "nodes": {"_type": ["List", "Node"], "_value": [flags, body]},
         "notes": NOTES('The one audit-record template, called by every orchestration that writes comsAuditLogs (except the '
-                       'business-process-triggered DenyRoleRequest). Built by tools/extract_subflows.py.'),
+                       'business-process-triggered IORC_0037_XFD_SEC_Close_Denied_Role_Request). Built by tools/extract_subflows.py.'),
         "resources": copy.deepcopy(src['resources']),
         "defaultWorkdayCredentialRef": copy.deepcopy(src['defaultWorkdayCredentialRef']),
         "defaultTlsConfigRef": copy.deepcopy(src['defaultTlsConfigRef']),

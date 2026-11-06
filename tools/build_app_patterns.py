@@ -17,7 +17,7 @@ Validation (onSubmit, plus live checks and a live example name):
   - Prefixes: at least one; capitals, digits and _ only; no repeats
   - Fields: 1 to 7 rows (the Add Pattern form has 7 boxes); each needs a label (unique, no ':'), a format (regex) and an
     example; the example must match the format and have no ':' or spaces
-Server side, AddShellOrgPattern re-checks prefix, field count, upper case and spaces against the saved record.
+Server side, IORC_0037_XFD_SEC_Create_Pattern_Shell_Org re-checks prefix, field count, upper case and spaces against the saved record.
 Secured by Manage: COMS Application Setup (the record's own domain). Idempotent.
 """
 import json, os, sys

@@ -3,21 +3,21 @@
 
 The Audit Log turns it into an event link with related actions (instanceList + widKey, VIEW page).
 Where each writer gets the event:
-- Role assignment changes (AssignRolePositions, BulkRoleApply, BulkRoleGridApply): the
+- Role assignment changes (IORC_0037_XFD_SEC_Assign_Remove_Role_Positions, IORC_0037_XFD_SEC_Bulk_Role_Changes_From_CSV, IORC_0037_XFD_SEC_Bulk_Role_Changes_From_Grid): the
   Assign_Roles_Event_Reference WID in the Staffing SOAP response, read as text like the bulk
   orchestrations already read faultstring: response.toString().substringAfter(...).substringBefore("<").
   An ExtractEvent CreateValues node is added right before WriteAuditLog.
-- DENY (DenyRoleRequest): the request's reviewEventWid (ExtractRequest already reads it).
+- DENY (IORC_0037_XFD_SEC_Close_Denied_Role_Request): the request's reviewEventWid (ExtractRequest already reads it).
 - APPROVE (reviewRoleRequestAssignableRole page): the step's event, bpStep.event.id.
 - Withdraw (deleteAssignableRole page): the event the page cancels.
-- REQUEST: none. The page writes the record before StartRoleRequestReview creates the event.
+- REQUEST: none. The page writes the record before IORC_0037_XFD_SEC_Start_Role_Request_Review creates the event.
 """
 import copy, json, os
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 RUN = '"runId": "{{data.GetInputParams.runId}}",'
-ROLE_CALLS = {'AssignRolePositions': 'CallOrganizationUpdate', 'BulkRoleApply': 'CallAssignRoles',
-              'BulkRoleGridApply': 'CallAssignRoles'}
+ROLE_CALLS = {'IORC_0037_XFD_SEC_Assign_Remove_Role_Positions': 'CallOrganizationUpdate', 'IORC_0037_XFD_SEC_Bulk_Role_Changes_From_CSV': 'CallAssignRoles',
+              'IORC_0037_XFD_SEC_Bulk_Role_Changes_From_Grid': 'CallAssignRoles'}
 EVENT_EXPR = ('data.{call}.response.toString().substringAfter("Assign_Roles_Event_Reference")'
               '.substringAfter("type=\\"WID\\">").substringBefore("<").trim()')
 
@@ -85,7 +85,7 @@ def patch_role_orchestration(name, call):
 
 
 def patch_deny():
-    p = os.path.join(ROOT, 'orchestration', 'DenyRoleRequest.orchestration')
+    p = os.path.join(ROOT, 'orchestration', 'IORC_0037_XFD_SEC_Close_Denied_Role_Request.orchestration')
     raw = open(p, encoding='utf-8').read()
     d = json.loads(raw)
     t = add_template(d, 'data.ExtractRequest.reviewEventWid')
@@ -136,7 +136,7 @@ def main():
     for name, call in ROLE_CALLS.items():
         a, t = patch_role_orchestration(name, call)
         out.append(f"{name}: +{a} node, +{t} template")
-    out.append(f"DenyRoleRequest: +{patch_deny()} template")
+    out.append(f"IORC_0037_XFD_SEC_Close_Denied_Role_Request: +{patch_deny()} template")
     out.append(f"approve page: {patch_page('reviewRoleRequestAssignableRole', lambda eps: "<% (!empty(bpStep.event)) ? (bpStep.event.id ?? '') : '' %>")}")
     out.append(f"withdraw page: {patch_page('deleteAssignableRole', withdraw_event)}")
     print('audit_event_ref: ' + '; '.join(out))

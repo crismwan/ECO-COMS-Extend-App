@@ -50,9 +50,9 @@ for col in cards.find_all('col')[:2]:
 insert_before(s, cards.find('tr').find('td').find('p'), '<p>✓ <strong>Selected</strong></p>')
 attr = T(s, 'Attribute', 0)
 kv(s, attr, 'Solution type', 'Extend')
-kv(s, attr, 'Delivery pattern', 'In-tenant UI (one event-driven step: DenyRoleRequest runs when the review process is denied or cancelled)')
+kv(s, attr, 'Delivery pattern', 'In-tenant UI (one event-driven step: IORC_0037_XFD_SEC_Close_Denied_Role_Request runs when the review process is denied or cancelled)')
 kv(s, attr, 'Trigger', 'User task; business process event (Deny / Cancel); Workday Home card refresh')
-kv(s, attr, 'Runs as', 'Initiating user (pages, all user-launched orchestrations, review start so the requester is the initiator). Exception, planned: an ISU writes audit and request records (§6.9). The BP-triggered DenyRoleRequest runs as the tenant\'s orchestration launch user.')
+kv(s, attr, 'Runs as', 'Initiating user (pages, all user-launched orchestrations, review start so the requester is the initiator). Exception, planned: an ISU writes audit and request records (§6.9). The BP-triggered IORC_0037_XFD_SEC_Close_Denied_Role_Request runs as the tenant\'s orchestration launch user.')
 kv(s, attr, 'Interacts with external systems?', 'No. All calls stay inside the Workday tenant (Workday web services, REST, WQL, Graph). AccessUBC reads Workday through its existing extract.')
 kv(s, attr, 'Mobile required?', 'No')
 
@@ -68,7 +68,7 @@ kv(s, a2, 'Entry point', 'Worklet / task (Workday search: Shell Org Manager, Aud
 kv(s, a2, 'External systems', 'None')
 kv(s, a2, 'Persistence', 'Extend business objects: COMS Application, COMS Assignable Role (requests), COMS Audit Log, COMS Bulk Run, COMS Bulk Row Result; attachment objects COMS Bulk Upload, COMS Bulk Template. Workday custom organizations and role assignments hold the real data.')
 kv(s, a2, 'Reusable components consumed', 'Workday web services (Human_Resources v42.2, Staffing v42.2), Business Process REST API, WQL data sources (customOrganizations, topLevelOrganizations, allPositions, assignableRoles, academicUnits), Staffing v6 supervisory organization prompt values')
-kv(s, a2, 'Reusable components produced', 'Sub-orchestrations CreateShellOrganization, ProcessBulkRoleRow, StartRequestReview, WriteAuditRecord; schema-driven pattern engine (comsPatterns.script); application index (comsAppIndex.script); browse-by-supervisory-organization position picker pattern; static test suite of Extend pitfalls')
+kv(s, a2, 'Reusable components produced', 'Sub-orchestrations IORC_0037_XFD_SEC_Sub_Create_Shell_Organization, IORC_0037_XFD_SEC_Sub_Process_Bulk_Role_Row, IORC_0037_XFD_SEC_Sub_Start_Request_Review, IORC_0037_XFD_SEC_Sub_Write_Audit_Record; schema-driven pattern engine (comsPatterns.script); application index (comsAppIndex.script); browse-by-supervisory-organization position picker pattern; static test suite of Extend pitfalls')
 diagram_after('Diagram — Solution architecture', 'img/solution-architecture.png', 'Solution architecture: users reach the Extend app through SSO; orchestrations call Workday web services inside the tenant; AccessUBC reads Workday through its existing extract (the only boundary crossing, unchanged)')
 
 # ---------------------------------------------------------------- 3. decision log
@@ -79,9 +79,9 @@ set_rows(s, T(s, 'ID', 0), [
     ['DD-04', 'One schema-driven pattern form for every application', 'Clockwork-only form (as in Appian); one form per app; schema per app', 'Formats are data on the COMS Application record (prefixes, up to 7 fields, rules, examples), edited in the app; a new application needs no release', 'Field rules are checked on the page; the server checks prefix, field count and case (no regex in Orchestrate)', 'Solution architect / product owner', '2026-11-02, 11-04'],
     ['DD-05', 'Verify every change after the call (run-and-verify)', 'Trust the launch response; poll', 'An orchestration launch returns HTTP 200 even when it fails, so pages re-read Workday (organization in WQL, or audit count +1 written only after success) and block OK on failure', 'An extra read per submit', 'Developer', '2026-10-30'],
     ['DD-06', 'Organizations are add and inactivate/reactivate only', 'Allow rename/delete', 'A role assignment\'s meaning must never change; Workday cannot delete organizations anyway', 'Mistakes are fixed by inactivating', 'Solution architect', '2026-11-01'],
-    ['DD-07', 'Bulk engine: asynchronous orchestration, CSV, row limits', 'Synchronous; Excel parsing; EIB', 'Page-launched synchronous calls stop at 25 s; Orchestrate reads CSV, not Excel. One engine (ProcessBulkRoleRow) behind the grid (50 rows) and the file (1,000 rows); validate first, then apply', 'Results arrive after a minute or two', 'Product owner', '2026-10-31'],
+    ['DD-07', 'Bulk engine: asynchronous orchestration, CSV, row limits', 'Synchronous; Excel parsing; EIB', 'Page-launched synchronous calls stop at 25 s; Orchestrate reads CSV, not Excel. One engine (IORC_0037_XFD_SEC_Sub_Process_Bulk_Role_Row) behind the grid (50 rows) and the file (1,000 rows); validate first, then apply', 'Results arrive after a minute or two', 'Product owner', '2026-10-31'],
     ['DD-08', 'Role requests through a Workday business process', 'Status field only; email; BP', 'Approvals, inbox, delegation, Exclude Initiator, reminders and history come from Workday', 'BP definition is tenant configuration, set up per tenant', 'ISC / product owner', '2026-10-30'],
-    ['DD-09', 'Shared sub-orchestrations', 'Copy steps into each orchestration', 'CreateShellOrganization, ProcessBulkRoleRow, StartRequestReview and WriteAuditRecord exist once, so a fix is made once', 'A build step extracts them; sub-orchestration IDs must match', 'Developer', '2026-11-04'],
+    ['DD-09', 'Shared sub-orchestrations', 'Copy steps into each orchestration', 'IORC_0037_XFD_SEC_Sub_Create_Shell_Organization, IORC_0037_XFD_SEC_Sub_Process_Bulk_Role_Row, IORC_0037_XFD_SEC_Sub_Start_Request_Review and IORC_0037_XFD_SEC_Sub_Write_Audit_Record exist once, so a fix is made once', 'A build step extracts them; sub-orchestration IDs must match', 'Developer', '2026-11-04'],
     ['DD-10', 'Graph API for the audit log', 'REST count + offset pages', 'Server-side sort (newest first) and filters on any field', 'Graph offsets need a first request; hub stays on REST (faster there)', 'Developer', '2026-11-04'],
     ['DD-11', 'Shell Org Manager application bar as pill cards', 'Search bar; drop-down; family/app cards (Option D)', 'Every application derived from Workday; two clicks to narrow; all actions visible (Option E on the design canvas)', 'Pill cards hold 10 pills; one card file per pill count', 'Product owner', '2026-11-05'],
     ['DD-12', 'Position picker browses supervisory organizations', 'Workday Graph prompt values; type-ahead only', 'Workday\'s own prompt values (Staffing v6) give the same browse experience as Workday; Graph prompt values don\'t cover positions', 'Several calls per level opened', 'Product owner', '2026-11-05'],
@@ -91,25 +91,25 @@ set_rows(s, T(s, 'ID', 0), [
 TR = [
     ['FR-001', 'Every application listed, derived from Workday', 'comsAppIndex.script; shellOrgManager bar; WQL allShellOrgs', '§5.3, §6.7', 'TC-001'],
     ['FR-002', 'Narrow Shell Org Manager to one application', 'shellOrgManager (UX-002), SomPills cards, exact role match', '§5.5, §7.1', 'TC-002'],
-    ['FR-003', 'Create shell organization (X:META / X:SHELL)', 'createShellOrgWizard/newShellOrg (UX-004); AddShellOrg → CreateShellOrganization', '§6.6 INT-01, §6.7', 'TC-003'],
-    ['FR-004', 'Naming rules page + server', 'comsShellOrg.script; AddShellOrg guard', '§5.6', 'TC-004'],
+    ['FR-003', 'Create shell organization (X:META / X:SHELL)', 'createShellOrgWizard/newShellOrg (UX-004); IORC_0037_XFD_SEC_Create_Application_Shell_Org → IORC_0037_XFD_SEC_Sub_Create_Shell_Organization', '§6.6 INT-01, §6.7', 'TC-003'],
+    ['FR-004', 'Naming rules page + server', 'comsShellOrg.script; IORC_0037_XFD_SEC_Create_Application_Shell_Org guard', '§5.6', 'TC-004'],
     ['FR-005', 'Schema-driven pattern form with preview', 'newSchemaPattern (UX-006); comsPatterns.script; COMSApplication.patternSchema', '§5.6, §6.4', 'TC-005'],
-    ['FR-006', 'Duplicate / prefix check', 'newSchemaPattern onSubmit; AddShellOrgPattern CheckPatternName', '§5.6, §6.7', 'TC-006'],
-    ['FR-007', 'Only the application\'s own org type', 'AddShellOrg / AddShellOrgPattern (org type = application code)', '§6.9', 'TC-007'],
+    ['FR-006', 'Duplicate / prefix check', 'newSchemaPattern onSubmit; IORC_0037_XFD_SEC_Create_Pattern_Shell_Org CheckPatternName', '§5.6, §6.7', 'TC-006'],
+    ['FR-007', 'Only the application\'s own org type', 'IORC_0037_XFD_SEC_Create_Application_Shell_Org / IORC_0037_XFD_SEC_Create_Pattern_Shell_Org (org type = application code)', '§6.9', 'TC-007'],
     ['FR-008', 'No rename / delete', 'No such page or call exists', '§3 DD-06', 'TC-008'],
-    ['FR-009', 'Inactivate / reactivate', 'manageShellOrgStatus (UX-007); ManageShellOrgStatus (CheckInputs)', '§6.6 INT-02/03', 'TC-009'],
-    ['FR-010', 'Add / remove positions; browse picker', 'editRoleAssignment (UX-008); AssignRolePositions', '§6.6 INT-04', 'TC-010'],
+    ['FR-009', 'Inactivate / reactivate', 'manageShellOrgStatus (UX-007); IORC_0037_XFD_SEC_Change_Shell_Org_Status (CheckInputs)', '§6.6 INT-02/03', 'TC-009'],
+    ['FR-010', 'Add / remove positions; browse picker', 'editRoleAssignment (UX-008); IORC_0037_XFD_SEC_Assign_Remove_Role_Positions', '§6.6 INT-04', 'TC-010'],
     ['FR-011', 'Only X: shell roles', 'WQL allShellAssignableRolesinTenant filter X:', '§6.9', 'TC-011'],
-    ['FR-012', 'Bulk grid (50) and file (1,000), validate then apply', 'bulkRoleGrid, bulkRoleChanges, bulkRoleResults, bulkRoleApply; BulkRoleGridApply / BulkRoleApply → ProcessBulkRoleRow', '§6.7, §6.11', 'TC-012'],
+    ['FR-012', 'Bulk grid (50) and file (1,000), validate then apply', 'bulkRoleGrid, bulkRoleChanges, bulkRoleResults, bulkRoleApply; IORC_0037_XFD_SEC_Bulk_Role_Changes_From_Grid / IORC_0037_XFD_SEC_Bulk_Role_Changes_From_CSV → IORC_0037_XFD_SEC_Sub_Process_Bulk_Role_Row', '§6.7, §6.11', 'TC-012'],
     ['FR-013', 'Pre-filled Excel template', 'bulkRoleTemplate (UX-015); COMS Bulk Template; CI build step', '§6.4', 'TC-013'],
-    ['FR-014', 'Assignable role request', 'assignableRoleManager (UX-018); StartRoleRequestReview → StartRequestReview', '§6.8', 'TC-014'],
-    ['FR-015', 'AAA role request, duplicate check', 'adminProvisioning (UX-019); WQL allAAArolesinTenant; StartAAARequestReview', '§5.6, §6.8', 'TC-015'],
+    ['FR-014', 'Assignable role request', 'assignableRoleManager (UX-018); IORC_0037_XFD_SEC_Start_Role_Request_Review → IORC_0037_XFD_SEC_Sub_Start_Request_Review', '§6.8', 'TC-014'],
+    ['FR-015', 'AAA role request, duplicate check', 'adminProvisioning (UX-019); WQL allAAArolesinTenant; IORC_0037_XFD_SEC_Start_Admin_Request_Review', '§5.6, §6.8', 'TC-015'],
     ['FR-016', 'Review BP with Exclude Initiator', 'Review COMS Assignable Role Request BP; review step pages (UX-022)', '§6.8', 'TC-016'],
-    ['FR-017', 'Denied / withdrawn handling', 'DenyRoleRequest (BP-triggered); deleteAssignableRole (UX-018b)', '§6.8, §6.10', 'TC-017'],
+    ['FR-017', 'Denied / withdrawn handling', 'IORC_0037_XFD_SEC_Close_Denied_Role_Request (BP-triggered); deleteAssignableRole (UX-018b)', '§6.8, §6.10', 'TC-017'],
     ['FR-018', 'ISC queue, overdue, reminder', 'iscRoleRequestsView (UX-021); comsRequestStats.script; BP delayed notification', '§6.8', 'TC-018'],
     ['FR-019', 'Maintain pattern format', 'appPatternSetup, editAppPattern (UX-009/010); comsAppSetup.script', '§5.6', 'TC-019'],
     ['FR-020', 'Inactive format takes no patterns', 'newSchemaPattern / Shell Org Manager checks on COMSApplication.active', '§7.1', 'TC-020'],
-    ['FR-021', 'Audit after success, linked to event', 'WriteAuditRecord sub-orchestration; COMS Audit Log (runId, eventWid)', '§6.4, §6.7', 'TC-021'],
+    ['FR-021', 'Audit after success, linked to event', 'IORC_0037_XFD_SEC_Sub_Write_Audit_Record sub-orchestration; COMS Audit Log (runId, eventWid)', '§6.4, §6.7', 'TC-021'],
     ['FR-022', 'Audit log filters and export', 'auditLogViewer (UX-016); Graph auditLogsNewest; comsAuditFilters.script', '§5.5', 'TC-022'],
     ['FR-023', 'Plain rejection message, no false success', 'Run-and-verify in onSubmit', '§5.7, §6.10', 'TC-023'],
     ['FR-024', 'Shell roles on vacant positions', 'accessReview, confirmAccessReview (UX-017)', '§5.3', 'TC-024'],
@@ -137,7 +137,7 @@ set_rows(s, T(s, 'Question', 0), [
 
 # ---------------------------------------------------------------- 5.2 entry points
 set_rows(s, T(s, 'Entry point'), [
-    ['Worklet / app card on the home page', 'Workday Home Card orchestrations (MyRoleRequestsHomeCard, IscQueueHomeCard), placed with Create External Card', '"ECO-COMS: My Role Requests" · "ECO-COMS: ISC Queue"', 'Requesters; ISC reviewers', 'Run as the viewer; cached 1 hour'],
+    ['Worklet / app card on the home page', 'Workday Home Card orchestrations (IORC_0037_XFD_SEC_My_Role_Requests_Home_Card, IORC_0037_XFD_SEC_ISC_Queue_Home_Card), placed with Create External Card', '"ECO-COMS: My Role Requests" · "ECO-COMS: ISC Queue"', 'Requesters; ISC reviewers', 'Run as the viewer; cached 1 hour'],
     ['Workday search', 'Tasks', 'Shell Org Manager · Audit Log Viewer · ISC Queue · Submit Assignable Role Request · Submit AAA Role Request · Withdraw Role Request · Add Shell Org Pattern', 'By task domain', 'Renamed 2026-11-01 to match how people ask for them'],
     ['Related action on a business object', 'Task with BO context (COMSApplication)', 'Maintain Application Pattern', SET, 'Shown on every application record (e.g. from the Audit Log)'],
     ['Business process step / Inbox', 'Review COMS Assignable Role Request definition', '"Review COMS Assignable Role Request: «role name»"', 'Approval group; ISC / HR administrators', 'Steps 1, 2 and 5 open ECO-COMS pages with "Step N of 5" banners'],
@@ -297,10 +297,10 @@ insert_after(s, heading(s, 'In a technical context', tags=('p',)), para(
     '• The page loads Workday data with the user\'s token: WQL (custom and top-level organizations, positions, assignable roles, academic units), REST (app business objects, /workers/me), Graph (audit records).\n'
     '• The user fills the form; scripts check each field against the rules (for patterns, the application\'s schema JSON on its COMS Application record).\n'
     '• On OK, onSubmit launches the orchestration through a deferred inbound endpoint (launch URL with URL-encoded parameters) as the user.\n'
-    '• The orchestration re-checks every input that decides what changes (CheckInputs / CheckPatternName / CheckMode), calls the Workday web service (Organization_Add_Update, Organization_Inactivate, Reactivate_Organization, Assign_Roles), stops if the response is not 2xx or is a SOAP fault (CheckWWSAccepted), extracts the Workday event reference, and calls WriteAuditRecord with the run ID.\n'
+    '• The orchestration re-checks every input that decides what changes (CheckInputs / CheckPatternName / CheckMode), calls the Workday web service (Organization_Add_Update, Organization_Inactivate, Reactivate_Organization, Assign_Roles), stops if the response is not 2xx or is a SOAP fault (CheckWWSAccepted), extracts the Workday event reference, and calls IORC_0037_XFD_SEC_Sub_Write_Audit_Record with the run ID.\n'
     '• The page re-reads Workday (the new code in WQL, or the audit record count +1) and either shows the receipt or blocks OK with "Workday rejected …".\n'
-    'Bulk changes: the grid writes its rows to COMS Bulk Row Result, the file upload stores a CSV in COMS Bulk Upload; an asynchronous orchestration (BulkRoleGridApply / BulkRoleApply) runs ProcessBulkRoleRow per row in VALIDATE or APPLY mode and updates COMS Bulk Run.\n'
-    'Role requests: the request is saved in COMS Assignable Role; StartRoleRequestReview / StartAAARequestReview (→ StartRequestReview) starts the Review COMS Assignable Role Request event as the requester and stores its WID; review step pages complete the steps; DenyRoleRequest runs on Deny or Cancel.\n'
+    'Bulk changes: the grid writes its rows to COMS Bulk Row Result, the file upload stores a CSV in COMS Bulk Upload; an asynchronous orchestration (IORC_0037_XFD_SEC_Bulk_Role_Changes_From_Grid / IORC_0037_XFD_SEC_Bulk_Role_Changes_From_CSV) runs IORC_0037_XFD_SEC_Sub_Process_Bulk_Role_Row per row in VALIDATE or APPLY mode and updates COMS Bulk Run.\n'
+    'Role requests: the request is saved in COMS Assignable Role; IORC_0037_XFD_SEC_Start_Role_Request_Review / IORC_0037_XFD_SEC_Start_Admin_Request_Review (→ IORC_0037_XFD_SEC_Sub_Start_Request_Review) starts the Review COMS Assignable Role Request event as the requester and stores its WID; review step pages complete the steps; IORC_0037_XFD_SEC_Close_Denied_Role_Request runs on Deny or Cancel.\n'
     'Reports: four model report data sources (ECO-COMS Role Requests, Audit Trail, Bulk Runs, Applications) for Workday custom reports.'))
 set_rows(s, T(s, 'Question', 1), [
     ['Is this a workaround for a platform constraint?', 'Partly: Workday has no delegated, bounded way to create custom organizations or a schema for their names; ECO-COMS provides it with guarded calls.'],
@@ -320,8 +320,8 @@ set_rows(s, T(s, 'Name'), [
     ['appCode / orgType', 'Text', 'X:BPMS(AOC)', 'Yes', 'none', 'Organization type the new organization goes under; must equal the application code'],
     ['orgName / orgCode / orgSubtype', 'Text', 'X:BPMS(AOC):TST / X:SHELL', 'Yes', 'X:META', 'New organization; code = name'],
     ['patternName', 'Text', 'X:CLW:PATTERN:CPSC:CPSC_V:110:101:2026W2', 'Yes', 'none', 'Must start with «app»:«prefix»: and match the field count'],
-    ['inactivate', 'Boolean', 'true', 'Yes', 'none', 'ManageShellOrgStatus; must agree with the action written to the audit record'],
-    ['mode, roleWid, orgWid, positionIds', 'Text', 'ADD / REMOVE, P-00009', 'Yes', 'none', 'AssignRolePositions; mode checked against allowed values'],
+    ['inactivate', 'Boolean', 'true', 'Yes', 'none', 'IORC_0037_XFD_SEC_Change_Shell_Org_Status; must agree with the action written to the audit record'],
+    ['mode, roleWid, orgWid, positionIds', 'Text', 'ADD / REMOVE, P-00009', 'Yes', 'none', 'IORC_0037_XFD_SEC_Assign_Remove_Role_Positions; mode checked against allowed values'],
     ['changedBy, changedByWid, timestamp', 'Text', '«worker», WID, 2026-11-05T18:30:00Z', 'Yes', 'none', 'Written to the audit record (orchestrations have no other way to know who acted)'],
 ], keep=1)
 
@@ -405,23 +405,23 @@ set_rows(s, T(s, 'Field'), [
 # ---------------------------------------------------------------- 6.7 processing logic
 set_rows(s, T(s, 'Component', 1), [
     ['Assembly / Route / XSLT / ISA / Business Form Layout', 'Not applicable', 'Studio components; this is an Extend app', ''],
-    ['Orchestrations (user-launched, synchronous)', 'AddShellOrg, AddShellOrgPattern, ManageShellOrgStatus, AssignRolePositions, StartRoleRequestReview, StartAAARequestReview, MyRoleRequestsCardData, IscQueueCardData', 'One change each; guarded; secured by the launching page\'s domain', ''],
-    ['Orchestrations (asynchronous)', 'BulkRoleApply (file), BulkRoleGridApply (grid)', 'Bulk engine', ''],
-    ['Orchestration (BP-triggered)', 'DenyRoleRequest', 'Deny / Cancel on the review', 'Runs as the tenant launch user'],
-    ['Workday Home Card orchestrations', 'MyRoleRequestsHomeCard, IscQueueHomeCard', 'Cards on Workday Home', 'No security domain allowed on this type'],
-    ['Sub-orchestrations', 'CreateShellOrganization, ProcessBulkRoleRow, StartRequestReview, WriteAuditRecord', 'Shared steps', 'Callers pass "" for unused audit fields'],
+    ['Orchestrations (user-launched, synchronous)', 'IORC_0037_XFD_SEC_Create_Application_Shell_Org, IORC_0037_XFD_SEC_Create_Pattern_Shell_Org, IORC_0037_XFD_SEC_Change_Shell_Org_Status, IORC_0037_XFD_SEC_Assign_Remove_Role_Positions, IORC_0037_XFD_SEC_Start_Role_Request_Review, IORC_0037_XFD_SEC_Start_Admin_Request_Review, IORC_0037_XFD_SEC_My_Role_Requests_Card_Data, IORC_0037_XFD_SEC_ISC_Queue_Card_Data', 'One change each; guarded; secured by the launching page\'s domain', ''],
+    ['Orchestrations (asynchronous)', 'IORC_0037_XFD_SEC_Bulk_Role_Changes_From_CSV (file), IORC_0037_XFD_SEC_Bulk_Role_Changes_From_Grid (grid)', 'Bulk engine', ''],
+    ['Orchestration (BP-triggered)', 'IORC_0037_XFD_SEC_Close_Denied_Role_Request', 'Deny / Cancel on the review', 'Runs as the tenant launch user'],
+    ['Workday Home Card orchestrations', 'IORC_0037_XFD_SEC_My_Role_Requests_Home_Card, IORC_0037_XFD_SEC_ISC_Queue_Home_Card', 'Cards on Workday Home', 'No security domain allowed on this type'],
+    ['Sub-orchestrations', 'IORC_0037_XFD_SEC_Sub_Create_Shell_Organization, IORC_0037_XFD_SEC_Sub_Process_Bulk_Role_Row, IORC_0037_XFD_SEC_Sub_Start_Request_Review, IORC_0037_XFD_SEC_Sub_Write_Audit_Record', 'Shared steps', 'Callers pass "" for unused audit fields'],
 ], keep=1)
 set_rows(s, T(s, 'Step #'), [
-    ['1', 'Script (CreateValues)', 'GetInputParams', 'Launch query parameters', 'Typed values incl. runId = context.orchestrateId()', 'Fail', 'AssignRolePositions'],
+    ['1', 'Script (CreateValues)', 'GetInputParams', 'Launch query parameters', 'Typed values incl. runId = context.orchestrateId()', 'Fail', 'IORC_0037_XFD_SEC_Assign_Remove_Role_Positions'],
     ['2', 'Condition (Continue on Conditions)', 'CheckMode', 'mode', 'Continue only for ADD / REMOVE', 'Fail', 'Guard before any Workday call'],
     ['3', 'HTTP (SendWorkdayApiRequest)', 'CallOrganizationUpdate', 'SOAP Assign_Roles_Request', 'SOAP response', 'Continue to check', 'Staffing v42.2'],
     ['4', 'Condition', 'CheckWWSAccepted', 'Status code, SOAP fault', 'Continue if 2xx and no fault', 'Fail (logged)', 'Nothing is audited on failure'],
     ['5', 'Script', 'ExtractEvent', 'Response text', 'eventWid', 'Continue', 'Assign_Roles_Event_Reference'],
-    ['6', 'Sub-orchestration call', 'CallWriteAudit', 'Audit fields', 'COMS Audit Log record', 'Fail', 'WriteAuditRecord'],
+    ['6', 'Sub-orchestration call', 'CallWriteAudit', 'Audit fields', 'COMS Audit Log record', 'Fail', 'IORC_0037_XFD_SEC_Sub_Write_Audit_Record'],
     ['7', 'End', 'EndSync', '', 'Launch returns 200', '', 'Page verifies (audit total +1)'],
 ], keep=1)
 insert_after(s, wrap_of(T(s, 'Step #')), para(
-    'Other guards: ManageShellOrgStatus CheckInputs (code starts X:, is a real shell organization, action matches the inactivate flag); AddShellOrgPattern CheckPatternName (starts «app»:«prefix»:, field count, upper case, no spaces); BulkRoleApply CheckInputs / CheckUpload (mode, upload belongs to the run, row limit).\n'
+    'Other guards: IORC_0037_XFD_SEC_Change_Shell_Org_Status CheckInputs (code starts X:, is a real shell organization, action matches the inactivate flag); IORC_0037_XFD_SEC_Create_Pattern_Shell_Org CheckPatternName (starts «app»:«prefix»:, field count, upper case, no spaces); IORC_0037_XFD_SEC_Bulk_Role_Changes_From_CSV CheckInputs / CheckUpload (mode, upload belongs to the run, row limit).\n'
     'Expressions worth knowing: success = responseStatusCode.is2xxStatusCode() and not response.isSoapFault(); event WID read as text from the response (substringAfter "Assign_Roles_Event_Reference"); Orchestrate has no regex, so field formats are checked on the page.'))
 diagram_after('Diagram — Orchestration flow', 'img/orchestration-flow.png', 'Bulk engine: one sub-orchestration per row, VALIDATE or APPLY, failures recorded per row')
 set_rows(s, T(s, 'Page (UX ID)'), [
@@ -429,9 +429,9 @@ set_rows(s, T(s, 'Page (UX ID)'), [
     ['UX-004a', 'addShellOrg (deferred), verify (WQL)', 'POST / GET', 'OK (onSubmit)', 'Launch + verification', UT, 'Run-and-verify'],
     ['UX-006', 'addShellOrgPattern (deferred), existingPatterns', 'POST / GET', 'OK', 'Launch + verification', UT, ''],
     ['UX-008', 'assignRolePositions (deferred), audit count', 'POST / GET', 'OK', 'Launch + audit total', UT, 'Positions browse: Staffing v6 values (deferred, per level)'],
-    ['UX-013', 'Bulk rows (REST), BulkRoleGridApply launch', 'POST', 'OK', 'Run created', UT, 'Results page polls with Refresh'],
+    ['UX-013', 'Bulk rows (REST), IORC_0037_XFD_SEC_Bulk_Role_Changes_From_Grid launch', 'POST', 'OK', 'Run created', UT, 'Results page polls with Refresh'],
     ['UX-016', 'auditLogsNewest (Graph) pages 0–4', 'POST', 'Page load', 'Newest 500 audit records', UT, 'Pages 1–4 skipped when the total is smaller'],
-    ['UX-018 / UX-019', 'Request write (REST), StartRoleRequestReview / StartAAARequestReview launch', 'POST', 'OK', 'Request + review event', UT, 'Review started as the requester'],
+    ['UX-018 / UX-019', 'Request write (REST), IORC_0037_XFD_SEC_Start_Role_Request_Review / IORC_0037_XFD_SEC_Start_Admin_Request_Review launch', 'POST', 'OK', 'Request + review event', UT, 'Review started as the requester'],
 ], keep=1)
 set_rows(s, T(s, 'Script module'), [
     ['comsAppIndex', 'appOf, index, barCards, appIds', 'UX-002', 'Applications derived from organization codes; the application bar cards'],
@@ -522,7 +522,7 @@ insert_after(s, heading(s, 'A worked example', tags=('p',)), para(
     'Monday 3 Nov, Clockwork exam coordination needs access for CPSC 110 section 101 in 2026W2.\n'
     '1. The Clockwork administrator searches "Shell Org Manager", picks Standalone → CLW. The Ready card shows the format "PATTERN: Academic Unit, Subject, Course, Section, Academic Period".\n'
     '2. Add Pattern: CPSC · CPSC_V · 110 · 101 · 2026W2. Typing "cpsc_v" shows an error; corrected, the preview reads X:CLW:PATTERN:CPSC:CPSC_V:110:101:2026W2. Effective date: a weekday.\n'
-    '3. OK: AddShellOrgPattern checks the prefix and five fields, CreateShellOrganization calls Organization_Add_Update under type X:CLW, subtype X:SHELL; Workday accepts; an audit record is written; the page finds the new code in WQL and shows "Pattern Created". Elapsed: a few seconds.\n'
+    '3. OK: IORC_0037_XFD_SEC_Create_Pattern_Shell_Org checks the prefix and five fields, IORC_0037_XFD_SEC_Sub_Create_Shell_Organization calls Organization_Add_Update under type X:CLW, subtype X:SHELL; Workday accepts; an audit record is written; the page finds the new code in WQL and shows "Pattern Created". Elapsed: a few seconds.\n'
     '4. The administrator opens Manage Role Assignments for the Clockwork role on that organization, browses My Organizations → their department, picks the coordinator\'s position, OK. Assign_Roles runs; the audit record links to the Assign Roles event.\n'
     '5. Overnight, AccessUBC extracts the new organization and assignment; Clockwork grants access for that section. No ISC ticket was raised.\n'
     '6. In January the coordinator moves to another job. The position becomes vacant, so the next extract removes access; Access Review lists the shell role on the vacant position until someone confirms or removes it.\n'
@@ -537,7 +537,7 @@ set_rows(s, T(s, 'Object type'), [
     ['Security domain', '7 COMS domains', 'ManageCOMSShellOrgs, ManageCOMSAssignableRoles, ManageCOMSAdminProvisioning, MaintainCOMSAssignableRoles, ViewCOMSAuditLog, ManageCOMSApplicationSetup, ViewCOMSProfileGroup', 'Manage/Maintain/View: COMS …', 'Y'],
     ['Extend app ID', 'ECO-COMS', f'{APP} (dev). Production: [TBC]', 'Begins with a letter; a–z 0–9 _ only; never reusable', 'N (production ID to agree)'],
     ['Extend business object', '5 objects + 2 attachments', 'COMSApplication, COMSAssignableRole, COMSAuditLog, COMSBulkRun, COMSBulkRowResult, COMSBulkUpload, COMSBulkTemplate', 'COMS prefix; IDs never change', 'Y'],
-    ['Orchestration', '13 + 4 sub-orchestrations', 'AddShellOrg, AddShellOrgPattern, ManageShellOrgStatus, AssignRolePositions, BulkRoleApply, BulkRoleGridApply, StartRoleRequestReview, StartAAARequestReview, DenyRoleRequest, MyRoleRequestsCardData, IscQueueCardData, MyRoleRequestsHomeCard, IscQueueHomeCard; CreateShellOrganization, ProcessBulkRoleRow, StartRequestReview, WriteAuditRecord', 'PascalCase verb + object', 'Y'],
+    ['Orchestration', '13 + 4 sub-orchestrations', 'IORC_0037_XFD_SEC_Create_Application_Shell_Org, IORC_0037_XFD_SEC_Create_Pattern_Shell_Org, IORC_0037_XFD_SEC_Change_Shell_Org_Status, IORC_0037_XFD_SEC_Assign_Remove_Role_Positions, IORC_0037_XFD_SEC_Bulk_Role_Changes_From_CSV, IORC_0037_XFD_SEC_Bulk_Role_Changes_From_Grid, IORC_0037_XFD_SEC_Start_Role_Request_Review, IORC_0037_XFD_SEC_Start_Admin_Request_Review, IORC_0037_XFD_SEC_Close_Denied_Role_Request, IORC_0037_XFD_SEC_My_Role_Requests_Card_Data, IORC_0037_XFD_SEC_ISC_Queue_Card_Data, IORC_0037_XFD_SEC_My_Role_Requests_Home_Card, IORC_0037_XFD_SEC_ISC_Queue_Home_Card; IORC_0037_XFD_SEC_Sub_Create_Shell_Organization, IORC_0037_XFD_SEC_Sub_Process_Bulk_Role_Row, IORC_0037_XFD_SEC_Sub_Start_Request_Review, IORC_0037_XFD_SEC_Sub_Write_Audit_Record', 'PascalCase verb + object', 'Y'],
     ['Business process', 'Review COMS Assignable Role Request', 'ReviewCOMSAssignableRoleRequest', 'Extend model', 'Y'],
 ], keep=1)
 

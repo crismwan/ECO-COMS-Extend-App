@@ -247,6 +247,16 @@ function staticSuite() {
     });
   }
 
+  // 5c2. Naming standard (2026-11-06): IORC_0037_XFD_SEC_<Functional_Description>, sub-orchestrations ..._Sub_<...>.
+  // Underscores only: Orchestration Builder won't take a hyphen in a name (live 2026-11-06). The file is named after it.
+  for (const f of listFiles('orchestration').filter((x) => /\.(orchestration|suborchestration)$/.test(x))) {
+    const v = (docs[f] || {})._value || {}; const n = v.name?._value || '';
+    const sub = v.type?._value === '.maya.FlowSubflow';
+    if (!(sub ? /^IORC_0037_XFD_SEC_Sub_[A-Za-z0-9_]+$/ : /^IORC_0037_XFD_SEC_(?!Sub_)[A-Za-z0-9_]+$/).test(n))
+      err('orchName', `${path.basename(f)}: name '${n}' doesn't follow IORC_0037_XFD_SEC_${sub ? 'Sub_' : ''}<Description> (letters, digits, underscores)`);
+    if (path.basename(f).replace(/\.(sub)?orchestration$/, '') !== n) err('orchName', `${path.basename(f)}: file name differs from the orchestration name '${n}'`);
+  }
+
   // 5d. A template's {{#if x}} needs a Boolean x (App Hub build 2026-11-05: "Actual type of argument (StringType) is not
   // compatible with required type of argument (BooleanType)"). Checks values made by CreateValues steps and sub inputs.
   for (const f of listFiles('orchestration').filter((x) => /\.(orchestration|suborchestration)$/.test(x))) {
@@ -577,7 +587,7 @@ function staticSuite() {
 
   // 7h. Application pattern schemas (tools/pattern_schemas.json): regexes compile, spreadsheet examples
   // build the expected names and pass, invalid examples fail, and hints never contain the "fieldLabel"
-  // marker that AddShellOrgPattern counts to know the number of fields.
+  // marker that IORC_0037_XFD_SEC_Create_Pattern_Shell_Org counts to know the number of fields.
   try {
     const f = JSON.parse(fs.readFileSync(path.join(ROOT, 'tools', 'pattern_schemas.json'), 'utf8'));
     let n = 0;
@@ -783,7 +793,7 @@ async function readAll(token, collection, max = 3000) {
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const wql = (token, query, limit = 100) =>
   request('GET', `${WQL}?limit=${limit}&query=${encodeURIComponent(query)}`, token);
-// ManageShellOrgStatus picks inactivate vs reactivate from includeInactive ("true" = inactivate),
+// IORC_0037_XFD_SEC_Change_Shell_Org_Status picks inactivate vs reactivate from includeInactive ("true" = inactivate),
 // not from action; action is only written to the audit record. Send both, as the page does.
 // Encode like the pages' .urlEncode() (Java URLEncoder: space as +, only A-Z a-z 0-9 . - * _ left as is).
 // The API gateway refused (HTML 403) some test launches that the same change sent from a page passed.
@@ -808,7 +818,7 @@ async function launchAndVerify(token, name, params) {
   throw new Error(`${name}: no new audit record after 20 s (Workday rejected the call or the orchestration failed; check app Logs)`);
 }
 
-// The guard in ManageShellOrgStatus must reject the call: no audit record may appear.
+// The guard in IORC_0037_XFD_SEC_Change_Shell_Org_Status must reject the call: no audit record may appear.
 async function expectRejected(token, name, params) {
   const before = new Set((await readAll(token, 'comsAuditLogs')).map((a) => a.id));
   await launch(token, name, params);
@@ -957,7 +967,7 @@ async function smoke(token, me) {
   await test('Requests.deniedInactive', async () => {
     const bad = roles.filter((r) => r.status === 'Denied' && r.active !== false);
     if (bad.length) throw new Error(`${bad.length} Denied request(s) still active, e.g. ${bad[0].roleName}`);
-    pass('Requests.deniedInactive', 'every Denied request is inactive (DenyRoleRequest orchestration)');
+    pass('Requests.deniedInactive', 'every Denied request is inactive (IORC_0037_XFD_SEC_Close_Denied_Role_Request orchestration)');
   });
   await test('Requests.approvedHaveGroup', async () => {
     // TESTROLE1033 was approved before securityGroupName existed and can't be deleted (linked to its review event).
@@ -1053,7 +1063,7 @@ async function smoke(token, me) {
   };
   const first100 = roles.slice(0, 100);   // the orchestrations read ?limit=100 (oldest first)
   await test('HomeCards.myRequests', async () => {
-    const c = await card('MyRoleRequestsCardData');
+    const c = await card('IORC_0037_XFD_SEC_My_Role_Requests_Card_Data');
     const mine = roles.filter((r) => r.requestedBy?.id === me.id).slice(0, 100);
     const p = mine.filter((r) => r.status === 'Pending ISC Review').length, a = mine.filter((r) => r.status === 'Approved').length;
     const wantTitle = p ? `My Role Requests · ${p} pending` : 'My Role Requests';
@@ -1064,7 +1074,7 @@ async function smoke(token, me) {
     pass('HomeCards.myRequests', `${c.title} | ${c.subtitle} | ${c.linkText} → ${c.linkPath}`);
   });
   await test('HomeCards.iscQueue', async () => {
-    const c = await card('IscQueueCardData');
+    const c = await card('IORC_0037_XFD_SEC_ISC_Queue_Card_Data');
     const p = first100.filter((r) => r.status === 'Pending ISC Review');
     const wantTitle = p.length ? `ISC Queue · ${p.length} waiting` : 'ISC Queue';
     if (c.title !== wantTitle) throw new Error(`title "${c.title}", expected "${wantTitle}"`);
@@ -1102,7 +1112,7 @@ async function full(token, me) {
   // ── Shell org: add → inactivate today → reactivate → inactivate 45 days out ──
   let orgWid = null;
   await test('ShellOrg.add', async () => {
-    const a = await launchAndVerify(token, 'AddShellOrg', {
+    const a = await launchAndVerify(token, 'IORC_0037_XFD_SEC_Create_Application_Shell_Org', {
       comsAppId: '', orgType: 'X:ADM', organizationName: orgName, organizationCode: orgName,
       workerId: me.id, effectiveDate: today, ...who(),
     });
@@ -1114,20 +1124,20 @@ async function full(token, me) {
 
   await test('Guard.actionMismatch', async () => {
     if (!orgWid) return skip('Guard.actionMismatch', 'no org from ShellOrg.add');
-    await expectRejected(token, 'ManageShellOrgStatus', { ...status(orgWid, orgName, 'X:ADM', false, later), action: 'INACTIVATE' });
+    await expectRejected(token, 'IORC_0037_XFD_SEC_Change_Shell_Org_Status', { ...status(orgWid, orgName, 'X:ADM', false, later), action: 'INACTIVATE' });
     pass('Guard.actionMismatch', 'action that disagrees with includeInactive is rejected');
   });
 
   await test('Guard.notShellOrg', async () => {
     // orgId is a worker, not an X: shell org; validateOnly=true so nothing changes even if the guard failed.
-    await expectRejected(token, 'ManageShellOrgStatus', status(me.id, orgName, 'X:ADM', true, later, 'true'));
+    await expectRejected(token, 'IORC_0037_XFD_SEC_Change_Shell_Org_Status', status(me.id, orgName, 'X:ADM', true, later, 'true'));
     pass('Guard.notShellOrg', 'an orgId outside the X: shell orgs is rejected even with an X: orgCode');
   });
 
   let inactiveToday = false;
   await test('ShellOrg.inactivateToday', async () => {
     if (!orgWid) return skip('ShellOrg.inactivateToday', 'no org from ShellOrg.add');
-    const a = await launchAndVerify(token, 'ManageShellOrgStatus', status(orgWid, orgName, 'X:ADM', true, today));
+    const a = await launchAndVerify(token, 'IORC_0037_XFD_SEC_Change_Shell_Org_Status', status(orgWid, orgName, 'X:ADM', true, today));
     expectAudit(a, 'Org Status', 'INACTIVATE');
     inactiveToday = true;
     pass('ShellOrg.inactivateToday', `${orgName} inactivated effective ${today}`);
@@ -1135,14 +1145,14 @@ async function full(token, me) {
 
   await test('ShellOrg.reactivate', async () => {
     if (!inactiveToday) return skip('ShellOrg.reactivate', 'org was not inactivated today');
-    const a = await launchAndVerify(token, 'ManageShellOrgStatus', status(orgWid, orgName, 'X:ADM', false, today));
+    const a = await launchAndVerify(token, 'IORC_0037_XFD_SEC_Change_Shell_Org_Status', status(orgWid, orgName, 'X:ADM', false, today));
     expectAudit(a, 'Org Status', 'REACTIVATE');
     pass('ShellOrg.reactivate', `${orgName} reactivated`);
   });
 
   await test('ShellOrg.inactivate', async () => {
     if (!orgWid) return skip('ShellOrg.inactivate', 'no org from ShellOrg.add');
-    const a = await launchAndVerify(token, 'ManageShellOrgStatus', status(orgWid, orgName, 'X:ADM', true, later));
+    const a = await launchAndVerify(token, 'IORC_0037_XFD_SEC_Change_Shell_Org_Status', status(orgWid, orgName, 'X:ADM', true, later));
     expectAudit(a, 'Org Status', 'INACTIVATE');
     pass('ShellOrg.inactivate', `${orgName} inactivated effective ${later} (left for cleanup)`);
   });
@@ -1157,7 +1167,7 @@ async function full(token, me) {
     // Clockwork's five fields: Academic Unit, Subject, Course, Section, Academic Period
     const [a1, a2, a3, a4, a5] = ['TEST', 'TEST', run3, '900', `${now.getUTCFullYear()}W1`];
     const pname = `${appCode}:PATTERN:${a1}:${a2}:${a3}:${a4}:${a5}`;
-    const a = await launchAndVerify(token, 'AddShellOrgPattern', {
+    const a = await launchAndVerify(token, 'IORC_0037_XFD_SEC_Create_Pattern_Shell_Org', {
       comsAppId: app.id, patternName: pname, workerId: me.id, attribute1: a1, attribute2: a2, attribute3: a3,
       attribute4: a4, attribute5: a5, effectiveDate: today, ...who(),
     });
@@ -1165,7 +1175,7 @@ async function full(token, me) {
     const pwid = await findOrg(pname);
     if (!pwid) throw new Error(`${pname} not found by WQL after the audit record was written`);
     pattern = { code: pname, wid: pwid, appCode };
-    const b = await launchAndVerify(token, 'ManageShellOrgStatus', status(pwid, pname, appCode, true, later));
+    const b = await launchAndVerify(token, 'IORC_0037_XFD_SEC_Change_Shell_Org_Status', status(pwid, pname, appCode, true, later));
     expectAudit(b, 'Org Status', 'INACTIVATE');
     pass('Pattern.add', `${pname} created, audited and inactivated effective ${later}`);
   });
@@ -1174,7 +1184,7 @@ async function full(token, me) {
     const app = ((await request('GET', `${BO}/comsApplications?limit=1`, token)).data || [])[0];
     if (!app) return skip('Guard.patternName', 'no COMS application');
     // A name that doesn't start with the application code must be rejected (nothing created, no audit).
-    await expectRejected(token, 'AddShellOrgPattern', {
+    await expectRejected(token, 'IORC_0037_XFD_SEC_Create_Pattern_Shell_Org', {
       comsAppId: app.id, patternName: `TEST:PATTERN:TEST:TEST:${run3}:901:${now.getUTCFullYear()}W1`, workerId: me.id,
       attribute1: 'TEST', attribute2: `TEST:${run3}`, attribute3: '901', attribute5: `${now.getUTCFullYear()}W1`, effectiveDate: today, ...who(),
     });
@@ -1184,7 +1194,7 @@ async function full(token, me) {
   // ── Role assignment: add a position to the test role, then remove it (net no change) ──
   await test('RoleAssignment.addRemove', async () => { await roleAddRemove(token, me); });
 
-  // ── Role request: create → start review BP → cancel the event → DenyRoleRequest marks it Denied ──
+  // ── Role request: create → start review BP → cancel the event → IORC_0037_XFD_SEC_Close_Denied_Role_Request marks it Denied ──
   // Leaves one Denied TESTROLECI request: requests linked to a BP event can't be deleted.
   await test('Request.reviewCancelDeny', async () => {
     const roleName = `X:ADM:ROLE:TESTROLECIRUN${runNo}`;
@@ -1195,27 +1205,27 @@ async function full(token, me) {
     });
     const reqId = req.id;
     if (!reqId) throw new Error('request POST returned no id');
-    await launch(token, 'StartRoleRequestReview', { ref });
+    await launch(token, 'IORC_0037_XFD_SEC_Start_Role_Request_Review', { ref });
     let eventWid = null;
     for (let i = 0; i < 10 && !eventWid; i++) {
       await sleep(3000);
       eventWid = (await request('GET', `${BO}/comsAssignableRoles/${reqId}`, token)).reviewEventWid || null;
     }
-    if (!eventWid) throw new Error(`StartRoleRequestReview did not link a review event to ${roleName} within 30 s`);
+    if (!eventWid) throw new Error(`IORC_0037_XFD_SEC_Start_Role_Request_Review did not link a review event to ${roleName} within 30 s`);
     const ev = await request('GET', `${BP}/events/${eventWid}`, token);
     const st = String(ev?.status?.descriptor || ev?.overallStatus?.descriptor || '');
     if (/complete|terminat|cancel|denied/i.test(st)) throw new Error(`new review event is already "${st}"`);
     pass('Request.startReview', `${roleName} has an open review event ("${st || 'in progress'}")`);
 
     await request('POST', `${BP}/events/${eventWid}/cancel`, token, { comment: 'Automated test run: cancel test request' });
-    // Cancel is paired with DenyRoleRequest; BP-triggered orchestrations take ~2-3 min (up to 15).
+    // Cancel is paired with IORC_0037_XFD_SEC_Close_Denied_Role_Request; BP-triggered orchestrations take ~2-3 min (up to 15).
     let r = null;
     for (let i = 0; i < 40; i++) {
       await sleep(15000);
       r = await request('GET', `${BO}/comsAssignableRoles/${reqId}`, token);
       if (r.status === 'Denied') break;
     }
-    if (r?.status !== 'Denied') throw new Error(`${roleName} still "${r?.status}" 10 min after cancelling its review (DenyRoleRequest did not run)`);
+    if (r?.status !== 'Denied') throw new Error(`${roleName} still "${r?.status}" 10 min after cancelling its review (IORC_0037_XFD_SEC_Close_Denied_Role_Request did not run)`);
     if (r.active !== false) throw new Error(`${roleName} is Denied but active=${r.active}`);
     const audits = (await readAll(token, 'comsAuditLogs')).filter((a) => a.roleName === roleName && a.action === 'DENY');
     if (!audits.length) throw new Error(`${roleName} is Denied but has no DENY audit record`);
@@ -1225,14 +1235,14 @@ async function full(token, me) {
     if (by.triggeredBy !== me.descriptor || !by.changedByWid) {
       throw new Error(`DENY record shows Changed By "${by.triggeredBy}" (${by.changedByWid || 'no WID'}); expected ${me.descriptor}`);
     }
-    // DenyRoleRequest copies the event's comment (here the cancel comment) into Denial Reason.
+    // IORC_0037_XFD_SEC_Close_Denied_Role_Request copies the event's comment (here the cancel comment) into Denial Reason.
     if (!/Automated test run/.test(r.denialReason || '')) throw new Error(`${roleName} Denial Reason is "${r.denialReason || ''}", expected the cancel comment`);
     pass('Request.reviewCancelDeny', `${roleName}: cancelling the review marked it Denied, inactive, with the cancel comment as Denial Reason and a DENY audit naming ${me.descriptor}`);
   });
 
   // ── Two pending ISC requests, left open for review: one on the new shell org, one on the new pattern ──
   // Built the way the Assignable Role Manager page builds them (<org code>:ROLE:<name>, REQUEST audit,
-  // then StartRoleRequestReview). Cleanup cancels their reviews, which marks them Denied.
+  // then IORC_0037_XFD_SEC_Start_Role_Request_Review). Cleanup cancels their reviews, which marks them Denied.
   // One filled position, sent like the page's Positions field: WIDs in positions/positionWids, full names in positionNames.
   let testPos = null;
   const pickPosition = async () => {
@@ -1265,19 +1275,19 @@ async function full(token, me) {
       enabledForOrganizationTypes: unit.name, enabledForWid: unit.wid, academicUnitWid: unit.wid, academicUnitDescription: unit.name,
     });
     if (!req.id) throw new Error('request POST returned no id');
-    // StartRoleRequestReview writes the REQUEST audit record (with the event and run ID) since 2026-11-04.
-    await launch(token, 'StartRoleRequestReview', { ref });
+    // IORC_0037_XFD_SEC_Start_Role_Request_Review writes the REQUEST audit record (with the event and run ID) since 2026-11-04.
+    await launch(token, 'IORC_0037_XFD_SEC_Start_Role_Request_Review', { ref });
     let eventWid = null;
     for (let i = 0; i < 10 && !eventWid; i++) {
       await sleep(3000);
       eventWid = (await request('GET', `${BO}/comsAssignableRoles/${req.id}`, token)).reviewEventWid || null;
     }
-    if (!eventWid) throw new Error(`StartRoleRequestReview did not link a review event to ${roleName} within 30 s`);
+    if (!eventWid) throw new Error(`IORC_0037_XFD_SEC_Start_Role_Request_Review did not link a review event to ${roleName} within 30 s`);
     const ev = await request('GET', `${BP}/events/${eventWid}`, token);
     const st = String(ev?.status?.descriptor || ev?.overallStatus?.descriptor || '');
     if (/complete|terminat|cancel|denied/i.test(st)) throw new Error(`review event for ${roleName} is already "${st}"`);
     const reqAudit = (await readAll(token, 'comsAuditLogs')).find((a) => a.action === 'REQUEST' && a.roleName === roleName);
-    if (!reqAudit) throw new Error(`StartRoleRequestReview wrote no REQUEST audit record for ${roleName}`);
+    if (!reqAudit) throw new Error(`IORC_0037_XFD_SEC_Start_Role_Request_Review wrote no REQUEST audit record for ${roleName}`);
     if (reqAudit.eventWid !== eventWid || !reqAudit.runId) throw new Error(`REQUEST audit for ${roleName}: eventWid ${reqAudit.eventWid || '-'} (want ${eventWid}), runId ${reqAudit.runId || '-'}`);
     return { roleName, st, pos: pos.name, unit: unit.name };
   };
@@ -1336,7 +1346,7 @@ async function cleanup(token, me) {
   testRolesAll.filter((r) => r.reviewEventWid).forEach((r) =>
     console.log(`   keep (linked to review event, can't be deleted)  ${r.roleName}  [${r.status}]`));
   console.log(`\nRole requests: ${roles.length} total, ${testRoles.length} to delete:`);
-  // Pending test requests can't be deleted either; cancelling their review closes them (DenyRoleRequest
+  // Pending test requests can't be deleted either; cancelling their review closes them (IORC_0037_XFD_SEC_Close_Denied_Role_Request
   // then marks them Denied with a DENY audit, which step 3 removes).
   const pendingTest = testRolesAll.filter((r) => r.reviewEventWid && r.status === 'Pending ISC Review');
   pendingTest.forEach((r) => console.log(`   cancel review  ${r.roleName}  (event ${r.reviewEventWid})`));
@@ -1395,10 +1405,10 @@ async function cleanup(token, me) {
       // An org with another status change already dated today is rejected; try tomorrow instead.
       let eff = FIXED || today;
       try {
-        if (FIXED) await launchAndVerify(token, 'ManageShellOrgStatus', params(FIXED));
-        else try { await launchAndVerify(token, 'ManageShellOrgStatus', params(today)); } catch (e1) {
+        if (FIXED) await launchAndVerify(token, 'IORC_0037_XFD_SEC_Change_Shell_Org_Status', params(FIXED));
+        else try { await launchAndVerify(token, 'IORC_0037_XFD_SEC_Change_Shell_Org_Status', params(today)); } catch (e1) {
           eff = tomorrow;
-          try { await launchAndVerify(token, 'ManageShellOrgStatus', params(tomorrow)); } catch (e2) { throw new Error(`${today}: ${e1.message.slice(0, 160)} | ${tomorrow}: ${e2.message.slice(0, 160)}`); }
+          try { await launchAndVerify(token, 'IORC_0037_XFD_SEC_Change_Shell_Org_Status', params(tomorrow)); } catch (e2) { throw new Error(`${today}: ${e1.message.slice(0, 160)} | ${tomorrow}: ${e2.message.slice(0, 160)}`); }
         }
       } catch (e) {
         // Workday allows one pending status change: an org whose inactivation is already scheduled is rejected.
@@ -1415,7 +1425,7 @@ async function cleanup(token, me) {
     });
   }
   if (pendingTest.length) {
-    // Wait for DenyRoleRequest (usually 2-3 min) so its DENY audit records are cleared below.
+    // Wait for IORC_0037_XFD_SEC_Close_Denied_Role_Request (usually 2-3 min) so its DENY audit records are cleared below.
     await test('Cleanup.pendingClosed', async () => {
       const ids = pendingTest.map((r) => r.id);
       for (let i = 0; i < 24; i++) {
@@ -1424,7 +1434,7 @@ async function cleanup(token, me) {
           .filter((r) => ids.includes(r.id) && r.status !== 'Denied');
         if (!open.length) return pass('Cleanup.pendingClosed', `${ids.length} pending test request(s) now Denied`);
       }
-      throw new Error('some cancelled test requests are not Denied after 6 min (DenyRoleRequest may still be queued)');
+      throw new Error('some cancelled test requests are not Denied after 6 min (IORC_0037_XFD_SEC_Close_Denied_Role_Request may still be queued)');
     });
   }
   for (const r of testRoles) {
@@ -1446,7 +1456,7 @@ async function cleanup(token, me) {
 }
 
 // ═══ Repair suite: one-off data corrections (dry run unless --apply) ═══
-//   --unassign <P-id>  remove that position from the test role (--role), through AssignRolePositions,
+//   --unassign <P-id>  remove that position from the test role (--role), through IORC_0037_XFD_SEC_Assign_Remove_Role_Positions,
 //                      so the change gets the same REMOVE POSITION audit record as the page.
 //   always:            pending requests whose Enabled For holds a bare WID get the unit's name, looked
 //                      up in the same lists the request page's pickers search (FUH, academic units).
@@ -1508,7 +1518,7 @@ async function repair(token, me) {
       positionId: hit.id, positionIdType: 'WID', positionName: hit.descriptor, mode: 'REMOVE', positionWid: hit.id, ...who(),
     };
     if (!apply) return pass('Repair.unassign', `would remove "${hit.descriptor}" from ${TEST_ROLE} on ${cur.org.descriptor}`);
-    const rem = await launchAndVerify(token, 'AssignRolePositions', params);
+    const rem = await launchAndVerify(token, 'IORC_0037_XFD_SEC_Assign_Remove_Role_Positions', params);
     if (rem.objectType !== 'Role Assignment' || rem.action !== 'REMOVE POSITION') throw new Error(`audit is ${rem.objectType}/${rem.action}`);
     let gone = false;
     for (let i = 0; i < 18 && !gone; i++) {
@@ -1519,7 +1529,7 @@ async function repair(token, me) {
     pass('Repair.unassign', `removed "${hit.descriptor}" from ${TEST_ROLE} (audit ${rem.id})`);
   });
 
-  // Audit records with no action: written by test calls that reached AssignRolePositions with a
+  // Audit records with no action: written by test calls that reached IORC_0037_XFD_SEC_Assign_Remove_Role_Positions with a
   // mode other than ADD/REMOVE (before its mode guard existed). They describe no change.
   await test('Repair.auditNoAction', async () => {
     const all = await readAll(token, 'comsAuditLogs');
@@ -1638,7 +1648,7 @@ async function secondUserSuite(token, me) {
       referenceId: ref, roleName, application: 'X:ADM', status: 'Pending ISC Review', requestedDate: today,
       requestedBy: { id: who.id }, active: false, effectiveDate: today, workdayRoleId: roleName,
     });
-    await launch(tok, 'StartRoleRequestReview', { ref });
+    await launch(tok, 'IORC_0037_XFD_SEC_Start_Role_Request_Review', { ref });
     let ev = null;
     for (let i = 0; i < 10 && !ev; i++) { await sleep(3000); ev = (await request('GET', `${BO}/comsAssignableRoles/${req.id}`, tok)).reviewEventWid || null; }
     if (!ev) throw new Error(`no review event linked to ${roleName} within 30 s`);
@@ -1794,7 +1804,7 @@ async function patternGuard(token, me) {
   ];
   for (const [want, app, name] of cases) {
     if (!id(app)) { warn(`Guard.${name}`, `no record for ${app}`); continue; }
-    await launch(token, 'AddShellOrgPattern', { comsAppId: id(app), patternName: name, workerId: me.id, attribute1: '', attribute2: '', attribute3: '', attribute5: '',
+    await launch(token, 'IORC_0037_XFD_SEC_Create_Pattern_Shell_Org', { comsAppId: id(app), patternName: name, workerId: me.id, attribute1: '', attribute2: '', attribute3: '', attribute5: '',
       effectiveDate: '2026-02-30', changedBy: me.descriptor, changedByWid: me.id, timestamp: new Date().toISOString().replace(/\.\d+Z$/, 'Z') });
     console.log(`   launched  expect ${want}  ${name}`);
     await sleep(1500);
@@ -1806,15 +1816,15 @@ async function patternGuard(token, me) {
   else pass('Guard.nothingCreated', `${cases.length} launches, no new organization (check CheckPatternName per launch in the app Logs)`);
 }
 
-// ═══ Org guard: AddShellOrg's CheckOrgName (2026-11-05: X:META for a new application) ═══
+// ═══ Org guard: IORC_0037_XFD_SEC_Create_Application_Shell_Org's CheckOrgName (2026-11-05: X:META for a new application) ═══
 // Every launch has an impossible effective date, so even a launch that passes the guard is rejected by Workday
-// inside CreateShellOrganization and nothing is created. Bad input must stop at CheckOrgName, before any Workday call.
+// inside IORC_0037_XFD_SEC_Sub_Create_Shell_Organization and nothing is created. Bad input must stop at CheckOrgName, before any Workday call.
 async function orgGuard(token, me) {
   console.log('\n-- Org guard launches (effective date NOTADATE: nothing can be created) --');
   const who = () => ({ changedBy: me.descriptor, changedByWid: me.id, timestamp: new Date().toISOString().replace(/\.\d+Z$/, 'Z') });
   const txt = (r) => (typeof r === 'string' ? r : JSON.stringify(r));
-  const GUARD = /AddShellOrg\.CheckOrgName/;
-  const WORKDAY = /CreateShellOrganization/;
+  const GUARD = /IORC_0037_XFD_SEC_Create_Application_Shell_Org\.CheckOrgName/;
+  const WORKDAY = /IORC_0037_XFD_SEC_Sub_Create_Shell_Organization/;
   const cases = [
     ['guard',   'NEWAPP',    'NEWAPP',             'X:META',  'type without X:'],
     ['guard',   'X:',        'X:',                 'X:META',  'type X: alone'],
@@ -1833,7 +1843,7 @@ async function orgGuard(token, me) {
   const before = await auditTotal();
   for (const [want, type, name, subtype, label] of cases) {
     await test(`OrgGuard.${label}`, async () => {
-      const r = txt(await launch(token, 'AddShellOrg', { comsAppId: type, orgType: type, organizationName: name, organizationCode: name,
+      const r = txt(await launch(token, 'IORC_0037_XFD_SEC_Create_Application_Shell_Org', { comsAppId: type, orgType: type, organizationName: name, organizationCode: name,
         orgSubtype: subtype, workerId: me.id, effectiveDate: 'NOTADATE', ...who() }));
       if (!/Completed with error/.test(r)) throw new Error(`expected a rejected run, got: ${r.slice(0, 300)}`);
       if (want === 'guard' && !GUARD.test(r)) throw new Error(`expected CheckOrgName to stop it, got: ${r.slice(0, 300)}`);
@@ -1884,7 +1894,7 @@ async function orgGuard(token, me) {
     await test(`OrgGuard.page ${label}`, async () => {
       const prm = pageParams(subtype, ac, typed);
       if (prm.organizationName !== wantName || prm.organizationCode !== wantCode) throw new Error(`page would send ${JSON.stringify(prm)}`);
-      const r = txt(await launch(token, 'AddShellOrg', { ...prm, workerId: me.id, effectiveDate: 'NOTADATE', ...who() }));
+      const r = txt(await launch(token, 'IORC_0037_XFD_SEC_Create_Application_Shell_Org', { ...prm, workerId: me.id, effectiveDate: 'NOTADATE', ...who() }));
       if (GUARD.test(r)) throw new Error(`CheckOrgName refused what the page sends: ${r.slice(0, 300)}`);
       if (!r.includes(`Workday rejected the request for ${wantName} @`)) throw new Error(`expected Workday to get ${wantName}, got: ${r.slice(0, 300)}`);
       pass(`OrgGuard.page ${label}`, `type ${prm.orgType}, name ${prm.organizationName}, code ${prm.organizationCode}: reached Workday intact`);
@@ -1917,10 +1927,10 @@ async function orgGuard(token, me) {
   });
 }
 
-// ═══ Gateway probe: which AddShellOrg launches the API gateway refuses (HTML 403) before the orchestration runs ═══
+// ═══ Gateway probe: which IORC_0037_XFD_SEC_Create_Application_Shell_Org launches the API gateway refuses (HTML 403) before the orchestration runs ═══
 // Every launch has effective date NOTADATE, so nothing can be created. Reports only (no failures).
 async function gatewayProbe(token, me) {
-  console.log('\n-- Gateway probe (AddShellOrg, effective date NOTADATE) --');
+  console.log('\n-- Gateway probe (IORC_0037_XFD_SEC_Create_Application_Shell_Org, effective date NOTADATE) --');
   const ts = new Date().toISOString().replace(/\.\d+Z$/, 'Z');
   const base = (type, name, code, sub) => ({ orgType: type, orgSubtype: sub, organizationName: name, organizationCode: code, workerId: me.id,
     effectiveDate: 'NOTADATE', changedBy: me.descriptor, timestamp: ts, changedByWid: me.id });
@@ -1937,7 +1947,7 @@ async function gatewayProbe(token, me) {
   ];
   for (const [label, prm] of variants) {
     let out;
-    try { out = String(typeof (await launch(token, 'AddShellOrg', prm)) === 'string' ? 'reached the orchestration' : 'reached the orchestration'); }
+    try { out = String(typeof (await launch(token, 'IORC_0037_XFD_SEC_Create_Application_Shell_Org', prm)) === 'string' ? 'reached the orchestration' : 'reached the orchestration'); }
     catch (e) { out = /HTTP 403/.test(e.message) ? 'GATEWAY 403' : e.message.slice(0, 120); }
     console.log(`   ${out.padEnd(26)} ${label}`);
     await sleep(1500);
@@ -2218,8 +2228,8 @@ async function aaaNameCheck(token) {
 }
 
 // ═══ Probe: read-only facts for building application pattern schemas ═══
-// ═══ Bulk validate: one TEST batch through BulkRoleGridApply in VALIDATE mode (no role changes) ═══
-// Proves the per-row sub-orchestration (ProcessBulkRoleRow, tools/extract_subflows.py) runs: the run must finish as
+// ═══ Bulk validate: one TEST batch through IORC_0037_XFD_SEC_Bulk_Role_Changes_From_Grid in VALIDATE mode (no role changes) ═══
+// Proves the per-row sub-orchestration (IORC_0037_XFD_SEC_Sub_Process_Bulk_Role_Row, tools/extract_subflows.py) runs: the run must finish as
 // Validated, its row must get a VALID or INVALID result, and no Role Assignment audit record may appear for it.
 // Leaves a run record and two row records marked TEST<n> (bulk run data is cleared by the purge suite).
 async function bulkValidate(token, me) {
@@ -2237,7 +2247,7 @@ async function bulkValidate(token, me) {
       roleName: src.roleName || '', roleWid: src.roleWid, orgName: src.coName || '', orgWid: src.orgWid,
       positionId: src.coReferenceId, positionName: src.positionName || '', assigneeWid: '', timestamp: stamp });
     const auditsBefore = new Set(audits.map((a) => a.id));
-    const r = await launch(token, 'BulkRoleGridApply', { ref, mode: 'VALIDATE', effectiveDate: today, changedBy: me.descriptor, changedByWid: me.id });
+    const r = await launch(token, 'IORC_0037_XFD_SEC_Bulk_Role_Changes_From_Grid', { ref, mode: 'VALIDATE', effectiveDate: today, changedBy: me.descriptor, changedByWid: me.id });
     console.log('   launch: ' + String(typeof r === 'string' ? r : JSON.stringify(r)).slice(0, 200));
     let run, rows = [];
     for (let i = 0; i < 30; i++) {
@@ -2257,7 +2267,7 @@ async function bulkValidate(token, me) {
 }
 
 // ═══ Bulk apply: one position added to the test role and removed again through the bulk-edit orchestration ═══
-// BulkRoleGridApply → ProcessBulkRoleRow (sub-orchestration) → WriteAuditRecord (sub-orchestration called by a
+// IORC_0037_XFD_SEC_Bulk_Role_Changes_From_Grid → IORC_0037_XFD_SEC_Sub_Process_Bulk_Role_Row (sub-orchestration) → IORC_0037_XFD_SEC_Sub_Write_Audit_Record (sub-orchestration called by a
 // sub-orchestration, 2026-11-05). Checks both audit records and that the role ends as it started. Net change: none;
 // leaves two TEST bulk runs and their row records (cleared by the purge suite), like bulkvalidate.
 async function bulkApply(token, me) {
@@ -2284,7 +2294,7 @@ async function bulkApply(token, me) {
         effectiveDate: today, uploadedByName: me.descriptor, uploadedByWid: me.id, uploadedAt: stamp, changeCount: '1', summary: 'TEST apply run' });
       await request('POST', `${BO}/comsBulkRowResults`, token, { batchRef: ref + '-DRAFT', runMode: 'APPLY', result: 'DRAFT',
         roleName: TEST_ROLE, roleWid: cur.role.id, orgName: cur.org.descriptor || '', orgWid: cur.org.id, timestamp: stamp, ...row });
-      const r = await launch(token, 'BulkRoleGridApply', { ref, mode: 'APPLY', effectiveDate: today, changedBy: me.descriptor, changedByWid: me.id });
+      const r = await launch(token, 'IORC_0037_XFD_SEC_Bulk_Role_Changes_From_Grid', { ref, mode: 'APPLY', effectiveDate: today, changedBy: me.descriptor, changedByWid: me.id });
       console.log(`   ${tag} launch: ` + String(typeof r === 'string' ? r : JSON.stringify(r)).slice(0, 200));
       let run, audit;
       for (let i = 0; i < 30 && !(run && audit); i++) {
@@ -2294,7 +2304,7 @@ async function bulkApply(token, me) {
         if (run?.status === 'Completed') audit = (await readAll(token, 'comsAuditLogs')).filter((a) => (a.details || '').includes(ref)).pop();
       }
       if (!run || run.status !== 'Completed') throw new Error(`${ref}: run status ${run?.status} after 2 minutes`);
-      if (!audit) throw new Error(`${ref}: Completed but no audit record mentions it (WriteAuditRecord inside ProcessBulkRoleRow didn't write)`);
+      if (!audit) throw new Error(`${ref}: Completed but no audit record mentions it (IORC_0037_XFD_SEC_Sub_Write_Audit_Record inside IORC_0037_XFD_SEC_Sub_Process_Bulk_Role_Row didn't write)`);
       return { ref, audit };
     };
     const check = (a, action) => {
@@ -2320,13 +2330,13 @@ async function bulkApply(token, me) {
       if (!gone) await sleep(5000);
     }
     if (!gone) throw new Error(`${pos.cf_PositionID} is still on ${TEST_ROLE} after ${rem.ref}: remove it in Manage Role Assignments`);
-    pass('Bulk.applyAddRemove', `${pos.cf_PositionID} added (${add.ref}) and removed (${rem.ref}) on ${TEST_ROLE}; both audit records written by WriteAuditRecord inside ProcessBulkRoleRow ("${add.audit.details}")`);
+    pass('Bulk.applyAddRemove', `${pos.cf_PositionID} added (${add.ref}) and removed (${rem.ref}) on ${TEST_ROLE}; both audit records written by IORC_0037_XFD_SEC_Sub_Write_Audit_Record inside IORC_0037_XFD_SEC_Sub_Process_Bulk_Role_Row ("${add.audit.details}")`);
   });
 }
 
 // ═══ Sub-orchestrations (tools/extract_subflows.py): each parent → its sub-orchestration → Workday, leaving nothing ═══
 // Each call gets input only Workday rejects (an impossible effective date, an unknown request), so the error comes from
-// inside the sub-orchestration's own steps and nothing is created. ProcessBulkRoleRow's success path: suite bulkvalidate.
+// inside the sub-orchestration's own steps and nothing is created. IORC_0037_XFD_SEC_Sub_Process_Bulk_Role_Row's success path: suite bulkvalidate.
 async function subflowsSuite(token, me) {
   console.log('\n-- Sub-orchestrations (rejected calls only; nothing is created) --');
   const who = () => ({ changedBy: me.descriptor, changedByWid: me.id, timestamp: new Date().toISOString().replace(/\.\d+Z$/, 'Z') });
@@ -2342,18 +2352,18 @@ async function subflowsSuite(token, me) {
     if (after !== before) throw new Error(`${name}: ${after - before} audit record(s) written by a rejected run`);
     pass(step, r.slice(0, 220));
   };
-  await test('Subflow.createShellOrg', () => expectRejected('AddShellOrg', 'Subflow.createShellOrg', {
+  await test('Subflow.createShellOrg', () => expectRejected('IORC_0037_XFD_SEC_Create_Application_Shell_Org', 'Subflow.createShellOrg', {
     comsAppId: '', orgType: 'X:ADM', organizationName: 'X:ADM:TEST:SUBFLOW', organizationCode: 'X:ADM:TEST:SUBFLOW',
-    orgSubtype: 'X:SHELL', workerId: me.id, effectiveDate: 'NOTADATE', ...who() }, /rejected the request for X:ADM:TEST:SUBFLOW[\s\S]*CreateShellOrganization/));
+    orgSubtype: 'X:SHELL', workerId: me.id, effectiveDate: 'NOTADATE', ...who() }, /rejected the request for X:ADM:TEST:SUBFLOW[\s\S]*IORC_0037_XFD_SEC_Sub_Create_Shell_Organization/));
   await test('Subflow.createShellOrgPattern', async () => {
     const app = ((await request('GET', `${BO}/comsApplications?limit=100`, token)).data || []).find((a) => a.appId === 'X:CLW');
     if (!app) return skip('Subflow.createShellOrgPattern', 'no X:CLW record');
     const pname = 'X:CLW:PATTERN:TEST:TEST:999:900:2026W1';
-    await expectRejected('AddShellOrgPattern', 'Subflow.createShellOrgPattern', { comsAppId: app.id, patternName: pname, workerId: me.id,
+    await expectRejected('IORC_0037_XFD_SEC_Create_Pattern_Shell_Org', 'Subflow.createShellOrgPattern', { comsAppId: app.id, patternName: pname, workerId: me.id,
       attribute1: 'TEST', attribute2: 'TEST', attribute3: '999', attribute4: '900', attribute5: '2026W1', effectiveDate: 'NOTADATE', ...who() },
-      new RegExp('rejected the request for ' + pname.replace(/[()]/g, '\\$&') + '[\\s\\S]*CreateShellOrganization'));
+      new RegExp('rejected the request for ' + pname.replace(/[()]/g, '\\$&') + '[\\s\\S]*IORC_0037_XFD_SEC_Sub_Create_Shell_Organization'));
   });
-  await test('Subflow.startReview', () => expectRejected('StartRoleRequestReview', 'Subflow.startReview', { ref: 'TEST-NO-SUCH-REQUEST' }, /StartRequestReview/));
+  await test('Subflow.startReview', () => expectRejected('IORC_0037_XFD_SEC_Start_Role_Request_Review', 'Subflow.startReview', { ref: 'TEST-NO-SUCH-REQUEST' }, /IORC_0037_XFD_SEC_Sub_Start_Request_Review/));
 }
 
 async function probe(token) {
@@ -2428,11 +2438,11 @@ async function roleAddRemove(token, me) {
   // org's full name "X:...(...) ... (varies)"; dropping any one of several values let it through
   // (gatewayprobe, 2026-11-04). orgName only labels the audit record, so retry once with the org code.
   const launchRole = async (params) => {
-    try { return await launchAndVerify(token, 'AssignRolePositions', params); }
+    try { return await launchAndVerify(token, 'IORC_0037_XFD_SEC_Assign_Remove_Role_Positions', params); }
     catch (e) {
       if (!/HTTP 403 .*<!DOCTYPE|HTTP 403 .*<style/i.test(e.message)) throw e;
       console.log(`   gateway refused the launch (HTML 403); retrying with orgName "${String(params.orgName).split(' ')[0]}"`);
-      return launchAndVerify(token, 'AssignRolePositions', { ...params, orgName: String(params.orgName).split(' ')[0] });
+      return launchAndVerify(token, 'IORC_0037_XFD_SEC_Assign_Remove_Role_Positions', { ...params, orgName: String(params.orgName).split(' ')[0] });
     }
   };
   const expectAudit = (a, type, action) => {
@@ -2716,7 +2726,7 @@ async function demoSeed(token, me) {
     const app = apps.find((a) => a.appId === 'X:CLW');
     if (!app) throw new Error('no COMS application with appId X:CLW');
     if (await findOrg(PATTERN)) return pass('Demo.1 pattern', `${PATTERN} already exists`);
-    const a = await launchAndVerify(token, 'AddShellOrgPattern', {
+    const a = await launchAndVerify(token, 'IORC_0037_XFD_SEC_Create_Pattern_Shell_Org', {
       comsAppId: app.id, patternName: PATTERN, workerId: me.id, attribute1: 'CPSC', attribute2: 'CPSC_V',
       attribute3: '110', attribute4: '101', attribute5: '2026W2', effectiveDate: EFF, ...who(),
     });
@@ -2737,7 +2747,7 @@ async function demoSeed(token, me) {
     const pos = ((await wql(token, 'SELECT cf_PositionID, workdayID, position_PositionManagement, cf_PositionText, cf_PositionIsFilled FROM allPositions WHERE supervisoryOrganization is not empty', 300)).data || [])
       .filter((p) => p.cf_PositionID && p.cf_PositionID !== 'P-00009' && p.cf_PositionIsFilled !== false && !assigned.some((d) => d.includes(p.cf_PositionID)))[0];
     if (!pos) throw new Error(`no unassigned filled position for ${roleName}`);
-    const a = await launchAndVerify(token, 'AssignRolePositions', {
+    const a = await launchAndVerify(token, 'IORC_0037_XFD_SEC_Assign_Remove_Role_Positions', {
       roleId: row.role.id, roleName, orgId: ra.organization.id, orgName: ra.organization.descriptor, effectiveDate: EFF,
       positionId: pos.cf_PositionID, positionIdType: 'Position_ID', mode: 'ADD', positionWid: pos.workdayID?.id || pos.workdayID,
       positionName: pos.position_PositionManagement?.descriptor || pos.cf_PositionText || pos.cf_PositionID, ...who(),
@@ -2785,8 +2795,8 @@ async function demoSeed(token, me) {
       requestedDate: tenantDate(), requestedBy: { id: me.id }, active: false, effectiveDate: EFF, ...fields,
     });
     if (!req.id) throw new Error('request POST returned no id');
-    // StartRoleRequestReview writes the REQUEST audit record (with the event and run ID) since 2026-11-04.
-    await launch(token, 'StartRoleRequestReview', { ref });
+    // IORC_0037_XFD_SEC_Start_Role_Request_Review writes the REQUEST audit record (with the event and run ID) since 2026-11-04.
+    await launch(token, 'IORC_0037_XFD_SEC_Start_Role_Request_Review', { ref });
     let ev = null;
     for (let i = 0; i < 10 && !ev; i++) { await sleep(3000); ev = (await request('GET', `${BO}/comsAssignableRoles/${req.id}`, token)).reviewEventWid || null; }
     if (!ev) throw new Error(`request ${ref} saved but no review event within 30 s`);

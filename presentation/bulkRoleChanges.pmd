@@ -56,7 +56,7 @@
         "baseUrlType": "orchestration",
         "httpMethod": "POST",
         "authType": "sso",
-        "url": "<% '/BulkRoleApply/launch?ref=' + batchRefHidden.value + '&mode=' + (realRunCheckBox.value == true ? 'APPLY' : 'VALIDATE') + '&effectiveDate=' + effectiveDate.value.format('yyyy-MM-dd') + '&changedBy=' + (selectedWorker.descriptor ?? '').urlEncode() + '&changedByWid=' + (selectedWorker.id ?? '') %>",
+        "url": "<% '/IORC_0037_XFD_SEC_Bulk_Role_Changes_From_CSV/launch?ref=' + batchRefHidden.value + '&mode=' + (realRunCheckBox.value == true ? 'APPLY' : 'VALIDATE') + '&effectiveDate=' + effectiveDate.value.format('yyyy-MM-dd') + '&changedBy=' + (selectedWorker.descriptor ?? '').urlEncode() + '&changedByWid=' + (selectedWorker.id ?? '') %>",
         "values": [
           {
             "outboundPath": "ref",

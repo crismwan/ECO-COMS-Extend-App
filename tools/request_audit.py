@@ -3,7 +3,7 @@
 review event and the run ID like every other audit record (2026-11-04).
 
 Before: the request pages wrote the REQUEST record themselves, before the review event existed, so it
-had no event. Now StartRoleRequestReview / StartAAARequestReview write it after SaveEventOnRequest,
+had no event. Now IORC_0037_XFD_SEC_Start_Role_Request_Review / IORC_0037_XFD_SEC_Start_Admin_Request_Review write it after SaveEventOnRequest,
 from the request record they already read (FindRequest), and the pages no longer write it (one writer
 per change). Nodes are cloned from the same orchestration (SaveEventOnRequest, ExtractRequest) so the
 credential and wrappers stay as App Builder writes them. Idempotent.
@@ -12,9 +12,9 @@ import copy, json, os
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 FLOWS = {
-    'StartRoleRequestReview': ('assignableRoleManager',
+    'IORC_0037_XFD_SEC_Start_Role_Request_Review': ('assignableRoleManager',
         'Assignable role request submitted: {{data.ExtractRequest.roleName}} for org {{data.AuditValues.coName}}'),
-    'StartAAARequestReview': ('adminProvisioning',
+    'IORC_0037_XFD_SEC_Start_Admin_Request_Review': ('adminProvisioning',
         'AAA role request submitted: {{data.ExtractRequest.roleName}} effective {{data.AuditValues.effectiveDate}}'),
 }
 J = 'data.FindRequest.response.asJSON().stringAtJsonPathWithDefault("$.data[0].{f}", "")'

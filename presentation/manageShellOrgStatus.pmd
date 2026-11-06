@@ -27,7 +27,7 @@
       "baseUrlType": "orchestration",
       "authType": "sso",
       "deferred": "true",
-      "url": "<% '/ManageShellOrgStatus/launch?orgId=' + oid + '&action=' + act + '&orgCode=' + oc + '&orgName=' + on + '&includeInactive=' + inact + '&effectiveDate=' + ed + '&patternName=' + oc + '&orgType=' + ot + '&comsAppId=' + ot + '&validateOnly=' + vo + '&changedBy=' + cb + '&timestamp=' + ts + '&changedByWid=' + cbw %>"
+      "url": "<% '/IORC_0037_XFD_SEC_Change_Shell_Org_Status/launch?orgId=' + oid + '&action=' + act + '&orgCode=' + oc + '&orgName=' + on + '&includeInactive=' + inact + '&effectiveDate=' + ed + '&patternName=' + oc + '&orgType=' + ot + '&comsAppId=' + ot + '&validateOnly=' + vo + '&changedBy=' + cb + '&timestamp=' + ts + '&changedByWid=' + cbw %>"
     },
     {
       "name": "verifyOrgStatus",

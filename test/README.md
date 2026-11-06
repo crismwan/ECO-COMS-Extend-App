@@ -71,13 +71,13 @@ Without the secret the suite reports SKIP. Each run leaves 3 Denied TEST request
 
 | Flow | Static | Smoke (every deploy) | Full (manual run) | Manual checklist |
 |---|---|---|---|---|
-| Add shell org (wizard → AddShellOrg) | launch target exists | `allShellOrgs`, `customOrganizations` WQL run; shell orgs exist | add, verify by WQL, audit `Shell Org / ADD` | wizard UI and success page |
-| Add shell org pattern (AddShellOrgPattern) | launch target exists | `existingPatterns` WQL runs | add, verify by WQL, audit `Shell Org Pattern / ADD`, inactivate | wizard UI |
-| Inactivate / reactivate org (ManageShellOrgStatus) | launch target exists | none | inactivate today, reactivate, inactivate 45 days out (each audited); guard rejects a mismatched action and a non-shell org | page UI |
-| Role position assign / remove (AssignRolePositions) | launch target exists | WQL runs; every role assignment audit shows the full position name | add an unassigned position to the test role, confirm it's on the assignment, remove it; both audits show the same full position name | page UI |
-| Assignable role / AAA request (+ StartRoleRequestReview) | launch target exists | requests readable | create request, start review, confirm an open event; leave two pending requests (one on the run's shell org, one on its pattern) with REQUEST audits | page UI |
+| Add shell org (wizard → IORC_0037_XFD_SEC_Create_Application_Shell_Org) | launch target exists | `allShellOrgs`, `customOrganizations` WQL run; shell orgs exist | add, verify by WQL, audit `Shell Org / ADD` | wizard UI and success page |
+| Add shell org pattern (IORC_0037_XFD_SEC_Create_Pattern_Shell_Org) | launch target exists | `existingPatterns` WQL runs | add, verify by WQL, audit `Shell Org Pattern / ADD`, inactivate | wizard UI |
+| Inactivate / reactivate org (IORC_0037_XFD_SEC_Change_Shell_Org_Status) | launch target exists | none | inactivate today, reactivate, inactivate 45 days out (each audited); guard rejects a mismatched action and a non-shell org | page UI |
+| Role position assign / remove (IORC_0037_XFD_SEC_Assign_Remove_Role_Positions) | launch target exists | WQL runs; every role assignment audit shows the full position name | add an unassigned position to the test role, confirm it's on the assignment, remove it; both audits show the same full position name | page UI |
+| Assignable role / AAA request (+ IORC_0037_XFD_SEC_Start_Role_Request_Review) | launch target exists | requests readable | create request, start review, confirm an open event; leave two pending requests (one on the run's shell org, one on its pattern) with REQUEST audits | page UI |
 | ISC review BP: approve path | BP routes match AMD tasks | BP-approved requests have a security group; pending requests have an open event | none | yes (needs approver) |
-| ISC review BP: deny / cancel (DenyRoleRequest) | none | every Denied request is inactive; every closed request matches its review event | cancel the review event → request Denied, inactive, DENY audit | approver Deny |
+| ISC review BP: deny / cancel (IORC_0037_XFD_SEC_Close_Denied_Role_Request) | none | every Denied request is inactive; every closed request matches its review event | cancel the review event → request Denied, inactive, DENY audit | approver Deny |
 | Audit log viewer | page shape | audit readable; fixed vocabulary; required fields | every write is checked through its audit record | none |
 | BO data access | none | all 5 collections readable | none | none |
 | Completion notification, step help text | none | none | none | yes |

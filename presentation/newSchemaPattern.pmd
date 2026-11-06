@@ -69,7 +69,7 @@
       "baseUrlType": "orchestration",
       "authType": "sso",
       "deferred": "true",
-      "url": "<% '/AddShellOrgPattern/launch?comsAppId=' + aid + '&patternName=' + pn + '&workerId=' + wid + '&attribute1=' + a1 + '&attribute2=' + a2 + '&attribute3=' + a3 + '&attribute4=' + a4 + '&attribute5=' + a5 + '&effectiveDate=' + ed + '&changedBy=' + cb + '&timestamp=' + ts + '&changedByWid=' + cbw %>"
+      "url": "<% '/IORC_0037_XFD_SEC_Create_Pattern_Shell_Org/launch?comsAppId=' + aid + '&patternName=' + pn + '&workerId=' + wid + '&attribute1=' + a1 + '&attribute2=' + a2 + '&attribute3=' + a3 + '&attribute4=' + a4 + '&attribute5=' + a5 + '&effectiveDate=' + ed + '&changedBy=' + cb + '&timestamp=' + ts + '&changedByWid=' + cbw %>"
     },
     {
       "name": "verifyPattern",

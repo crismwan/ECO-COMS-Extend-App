@@ -9,7 +9,7 @@ How it works (product owner 2026-11-01: grid and Excel side by side; validate fi
 - "Positions to Add" (+ adds a row): pick the role and organization, then search the position. A position that
   already holds that role there is flagged as you pick it.
 - OK writes one DRAFT row per change to comsBulkRowResults (batchRef <ref>-DRAFT), a COMSBulkRun status
-  record, and launches BulkRoleGridApply (asynchronous), which validates or applies them exactly like a file
+  record, and launches IORC_0037_XFD_SEC_Bulk_Role_Changes_From_Grid (asynchronous), which validates or applies them exactly like a file
   upload. The flow then opens Results, where a validated run has an Apply button.
 - At most 50 changes per submit: each change is one request from the page, and the whole submit must finish
   within the 60-second page limit.
@@ -149,7 +149,7 @@ page = {"id": "bulkRoleGrid", "securityDomains": ["ManageCOMSShellOrgs"], "inclu
     draft_ep("removeDraft", "<% removeCheckBox.value != true %>"),
     draft_ep("addDraft", "<% empty(positionAddList.value) %>"),
     {"name": "launchGrid", "baseUrlType": "orchestration", "httpMethod": "POST", "authType": "sso", "failOnStatusCodes": FOS([400, 403, 429]),
-     "url": "<% '/BulkRoleGridApply/launch?ref=' + " + REF + " + '&mode=' + " + MODE + " + '&effectiveDate=' + effectiveDate.value.format('yyyy-MM-dd') + '&changedBy=' + (selectedWorker.descriptor ?? '').urlEncode() + '&changedByWid=' + (selectedWorker.id ?? '') %>",
+     "url": "<% '/IORC_0037_XFD_SEC_Bulk_Role_Changes_From_Grid/launch?ref=' + " + REF + " + '&mode=' + " + MODE + " + '&effectiveDate=' + effectiveDate.value.format('yyyy-MM-dd') + '&changedBy=' + (selectedWorker.descriptor ?? '').urlEncode() + '&changedByWid=' + (selectedWorker.id ?? '') %>",
      "values": [{"outboundPath": "ref", "value": "<% " + REF + " %>"}]}]},
   "presentation": {"headerSize": "STANDARD", "title": {"type": "title", "label": "ECO-COMS: Bulk Edit Role Assignments"},
     "cancelOverride": {"taskId": "home"},

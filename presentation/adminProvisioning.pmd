@@ -282,7 +282,7 @@
       {
         "name": "launchReview",
         "baseUrlType": "orchestration",
-        "url": "<% '/StartAAARequestReview/launch?ref=' + requestRefHidden.value %>",
+        "url": "<% '/IORC_0037_XFD_SEC_Start_Admin_Request_Review/launch?ref=' + requestRefHidden.value %>",
         "httpMethod": "POST",
         "authType": "sso",
         "values": [

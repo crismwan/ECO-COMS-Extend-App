@@ -5,8 +5,8 @@ flowchart LR
     RW[Withdraw request] 
   end
   subgraph COMS["ECO-COMS orchestrations"]
-    C1[StartRequestReview:<br/>start BP event as requester,<br/>audit REQUEST]
-    C2[DenyRoleRequest:<br/>status Denied, audit DENY]
+    C1[IORC_0037_XFD_SEC_Sub_Start_Request_Review:<br/>start BP event as requester,<br/>audit REQUEST]
+    C2[IORC_0037_XFD_SEC_Close_Denied_Role_Request:<br/>status Denied, audit DENY]
   end
   subgraph BP["Workday BP: Review COMS Assignable Role Request"]
     B1[1 Role Details] --> B2{2 Approve / Deny<br/>Exclude Initiator}

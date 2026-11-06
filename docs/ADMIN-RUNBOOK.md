@@ -127,7 +127,7 @@ Use short run-number names (`...:TEST:CI:RUN<n>`), never timestamp names.
 2. Run `cleanup-apply`. It cancels the reviews of pending test requests and waits for them to turn Denied, inactivates test orgs, and deletes test audit records.
 3. Orgs that already have a scheduled inactivation are reported as failed, because Workday allows only one. They still go inactive on that date.
 
-`ManageShellOrgStatus` writes an audit record even with `validateOnly=true`, so validate-only can't be used for safe write tests yet.
+`IORC_0037_XFD_SEC_Change_Shell_Org_Status` writes an audit record even with `validateOnly=true`, so validate-only can't be used for safe write tests yet.
 
 ---
 
@@ -154,10 +154,10 @@ Every orchestration a user can launch is secured by the same domain as the page 
 
 | Orchestration | Security domain |
 |---|---|
-| AddShellOrg, AddShellOrgPattern, ManageShellOrgStatus, AssignRolePositions | Manage: COMS Shell Organizations |
-| StartRoleRequestReview (My Assignable Role Requests) | Manage: COMS Assignable Roles |
-| StartAAARequestReview (Submit AAA Role Request; same steps) | Manage: COMS Admin Provisioning |
-| DenyRoleRequest | none (launched by the business process as the tenant's launch user) |
+| IORC_0037_XFD_SEC_Create_Application_Shell_Org, IORC_0037_XFD_SEC_Create_Pattern_Shell_Org, IORC_0037_XFD_SEC_Change_Shell_Org_Status, IORC_0037_XFD_SEC_Assign_Remove_Role_Positions | Manage: COMS Shell Organizations |
+| IORC_0037_XFD_SEC_Start_Role_Request_Review (My Assignable Role Requests) | Manage: COMS Assignable Roles |
+| IORC_0037_XFD_SEC_Start_Admin_Request_Review (Submit AAA Role Request; same steps) | Manage: COMS Admin Provisioning |
+| IORC_0037_XFD_SEC_Close_Denied_Role_Request | none (launched by the business process as the tenant's launch user) |
 
 Those three domains have `enabledForOrchestrationSecurity: true`. After deploying:
 
@@ -184,7 +184,7 @@ The section is context-free: on someone else's profile it still opens *your* req
 - **ECO-COMS: My Role Requests**: pending and approved-this-month counts for the signed-in user; buttons Open My Requests and Submit a Request. Domain: ManageCOMSAssignableRoles.
 - **ECO-COMS: ISC Queue**: number waiting for review and the oldest request date; button Open ISC Queue. Domain: MaintainCOMSAssignableRoles.
 - **Not on Workday Home:** Home Cards Workspace doesn't list Extend Cards. Add them to a Workday-delivered hub with card sections: Maintain Hubs → the hub → View Overview Configuration → Edit → Customize Sections and Cards → add a row → pick the card (needs Set Up: Tenant Setup - Hub). My Role Requests reads up to 100 of your own requests; ISC Queue reads the newest 100 requests (Workday allows two data calls per card).
-- **Workday Home cards** (`orchestration/MyRoleRequestsHomeCard`, `IscQueueHomeCard`; Workday Home Card orchestrations built by `tools/build_home_cards.py` with the same steps as the tested `*CardData` orchestrations; cached 1 hour). After a deploy, in Workday: **Home Cards Workspace → Add Card → Create External Card**, pick the orchestration, then choose who sees it (needs the Set Up: Custom Card and View: Custom Card policies, granted by the security admin). The card runs as the person viewing Workday Home, so My Role Requests shows their own requests; ISC Queue should only be offered to ISC reviewers (it has no security domain of its own: Workday allows those only on synchronous and asynchronous orchestrations).
+- **Workday Home cards** (`orchestration/IORC_0037_XFD_SEC_My_Role_Requests_Home_Card`, `IORC_0037_XFD_SEC_ISC_Queue_Home_Card`; Workday Home Card orchestrations built by `tools/build_home_cards.py` with the same steps as the tested `*CardData` orchestrations; cached 1 hour). After a deploy, in Workday: **Home Cards Workspace → Add Card → Create External Card**, pick the orchestration, then choose who sees it (needs the Set Up: Custom Card and View: Custom Card policies, granted by the security admin). The card runs as the person viewing Workday Home, so My Role Requests shows their own requests; ISC Queue should only be offered to ISC reviewers (it has no security domain of its own: Workday allows those only on synchronous and asynchronous orchestrations).
   The Home version counts all approved requests (the hub card counts this month's).
 
 ## 4. ISC review business process from scratch
@@ -229,12 +229,12 @@ Business process type: **Review COMS Assignable Role Request** (`model/ReviewCOM
 1. Open step b → **View Workflow Step** → related actions → Business Process → **Maintain Advanced Routing**.
 2. Set Routing Restrictions → **Exclude Initiator** = Yes. The definition grid shows "Restriction: Initiator".
 3. Consider adding an **Alternate Security Group**. If the restriction excludes everyone eligible, Workday marks the step **Not Required** and skips the approval.
-4. The review is started by `StartRoleRequestReview` running as the requester (`AccessTokenFromInitiatingUser`), so the requester is the initiator. Don't move that call to an ISU, or Exclude Initiator stops working.
+4. The review is started by `IORC_0037_XFD_SEC_Start_Role_Request_Review` running as the requester (`AccessTokenFromInitiatingUser`), so the requester is the initiator. Don't move that call to an ISU, or Exclude Initiator stops working.
 5. Not yet tested live: it needs a requester who is in the approval group.
 
 ### 4.5 Orchestrations on Deny and Cancel
 
-`DenyRoleRequest` marks the request `status: Denied, active: false` and writes a DENY audit record.
+`IORC_0037_XFD_SEC_Close_Denied_Role_Request` marks the request `status: Denied, active: false` and writes a DENY audit record.
 
 1. Tenant-wide, first: **Edit Tenant Setup – Business Processes** → set **User to perform Orchestration Launches**. Without it, the launch configuration below can't be saved.
 2. Definition related actions → Business Process → **Configure Orchestrations** → Add:
@@ -242,7 +242,7 @@ Business process type: **Review COMS Assignable Role Request** (`model/ReviewCOM
    - Action **Cancel** → the same launch configuration
 3. Pair it with **Cancel** as well as Deny. Deny is offered only while an approval is awaiting action; if the approval auto-completes, only Cancel remains, and without the pairing a cancelled request would stay Pending forever.
 4. Launches are queued. Workday says they usually run within about 15 minutes; in practice it is 2–3 minutes. Check the status in **Find Events** → the event → **Orchestrations** tab.
-5. After any deploy that changes `DenyRoleRequest`, confirm it still fires (see Open items).
+5. After any deploy that changes `IORC_0037_XFD_SEC_Close_Denied_Role_Request`, confirm it still fires (see Open items).
 
 ### 4.6 Help text, notification, inbox title
 
@@ -257,7 +257,7 @@ Business process type: **Review COMS Assignable Role Request** (`model/ReviewCOM
 
 ### 4.7 API facts the pages rely on
 
-- Start an event: POST `/apps/<app>/v1/reviewCOMSAssignableRoleRequestEvents` with `businessProcessTarget.id`. Done by `StartRoleRequestReview`, which then PATCHes `reviewEventWid` onto the request.
+- Start an event: POST `/apps/<app>/v1/reviewCOMSAssignableRoleRequestEvents` with `businessProcessTarget.id`. Done by `IORC_0037_XFD_SEC_Start_Role_Request_Review`, which then PATCHes `reviewEventWid` onto the request.
 - Complete an action step: POST `businessProcess/v1/eventSteps/<id>/submit` with `stepAction.id = d9e4223e446c11de98360015c5e6daf6` (Submitted).
 - Cancel: POST `businessProcess/v1/events/<id>/cancel` with `{ "comment": "..." }`.
 - A denied or cancelled event reads **"Process Terminated"** in the API.
@@ -266,7 +266,7 @@ Business process type: **Review COMS Assignable Role Request** (`model/ReviewCOM
 
 ## 5. Debugging orchestrations
 
-Orchestrations: `AddShellOrg`, `AddShellOrgPattern`, `ManageShellOrgStatus`, `AssignRolePositions`, `StartRoleRequestReview`, `DenyRoleRequest`.
+Orchestrations: `IORC_0037_XFD_SEC_Create_Application_Shell_Org`, `IORC_0037_XFD_SEC_Create_Pattern_Shell_Org`, `IORC_0037_XFD_SEC_Change_Shell_Org_Status`, `IORC_0037_XFD_SEC_Assign_Remove_Role_Positions`, `IORC_0037_XFD_SEC_Start_Role_Request_Review`, `IORC_0037_XFD_SEC_Close_Denied_Role_Request`.
 
 - **A launch returns HTTP 200 even when the orchestration fails.** The page's `failOnStatusCodes` never fires, so never trust the success page alone.
 - **Run-and-verify:** newShellOrg, newShellOrgPattern, manageShellOrgStatus and editRoleAssignment launch from `onSubmit` with a deferred endpoint, then re-read:
@@ -274,9 +274,9 @@ Orchestrations: `AddShellOrg`, `AddShellOrgPattern`, `ManageShellOrgStatus`, `As
   - status or position change → the `/comsAuditLogs?limit=1` `.total` went up, because the orchestration writes its audit record only after its `CheckWWSAccepted` success check
 
   If the check fails, the page shows "Workday rejected ..." and OK is blocked.
-- **Logs:** developer.workday.com → Apps → this app → **Logs** tab (last 15 minutes). Find the "Aggregated step totals" line for the run's commonId: it lists each step with its success and failure counts. `ManageShellOrgStatus` logs the full SOAP response (`LogWWSResponse`), including fault text.
+- **Logs:** developer.workday.com → Apps → this app → **Logs** tab (last 15 minutes). Find the "Aggregated step totals" line for the run's commonId: it lists each step with its success and failure counts. `IORC_0037_XFD_SEC_Change_Shell_Org_Status` logs the full SOAP response (`LogWWSResponse`), including fault text.
 - **Orchestration Activity** tab: runs per orchestration. A BP-triggered run that never launched shows no failed run at all; check the event's Orchestrations tab instead.
-- **Input guards:** `ManageShellOrgStatus` → `CheckInputs` (the org code starts with `X:`, the org is a real shell org, and the action matches the inactivate flag). `AddShellOrgPattern` → `CheckPatternName` (the name starts with `<appId>:PATTERN:`). A guard rejection is an ERROR in the logs.
+- **Input guards:** `IORC_0037_XFD_SEC_Change_Shell_Org_Status` → `CheckInputs` (the org code starts with `X:`, the org is a real shell org, and the action matches the inactivate flag). `IORC_0037_XFD_SEC_Create_Pattern_Shell_Org` → `CheckPatternName` (the name starts with `<appId>:PATTERN:`). A guard rejection is an ERROR in the logs.
 - **Common Workday rejections:**
   - "Organization has conflicting events (in progress or future events)": a future-dated status change already exists.
   - "not valid as an Event Target Role Assignee": a position WID was sent instead of `Position_ID`.
@@ -289,7 +289,7 @@ Orchestrations: `AddShellOrg`, `AddShellOrgPattern`, `ManageShellOrgStatus`, `As
 
 From `docs/ECO-COMS-NOTES.md` (2026-10-30):
 
-- `DenyRoleRequest` didn't run for test request `X:ADM:ROLE:TESTROLECIRUN22` after its review was cancelled: no failed runs in Orchestration Activity, simply no launch. The run-20 cancel worked. Check the event's Orchestrations tab (Find Events) and the BP's Configure Orchestrations after the deploy that changed the orchestration.
+- `IORC_0037_XFD_SEC_Close_Denied_Role_Request` didn't run for test request `X:ADM:ROLE:TESTROLECIRUN22` after its review was cancelled: no failed runs in Orchestration Activity, simply no launch. The run-20 cancel worked. Check the event's Orchestrations tab (Find Events) and the BP's Configure Orchestrations after the deploy that changed the orchestration.
 - Fixed 2026-10-31: the two older pending requests (`X:ADM:KEYCLOAK:ANY:ROLE:COORDINATOR` and the AAA request) had a WID as their Enabled For text; `node test/run-tests.js repair --apply` corrected them.
 - Branch `isu-writes` (ISU page writes) is ready but unmerged: merge it after the ISU is assigned in App Manager (section 3).
 

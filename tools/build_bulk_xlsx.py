@@ -5,14 +5,14 @@ Ideas taken from the Mass Student Appointment Studio template (2026-11-01): a he
 column needs (required, format, example), drop-downs, format checks with plain error messages, cross-field
 rules (ADD vs REMOVE), duplicate detection, shading for cells not to edit, a version stamp, frozen panes.
 
-The sheet must still save as a CSV the BulkRoleApply orchestration reads:
+The sheet must still save as a CSV the IORC_0037_XFD_SEC_Bulk_Role_Changes_From_CSV orchestration reads:
 - columns A-H stay in the order of the Workday template (Action, Role, Role WID, Organization, Organization WID,
   Position, Position ID, Assignee WID); the orchestration reads them by index;
 - it acts only on rows whose Action is exactly ADD or REMOVE, so the 6 header rows (column A never holds
   those words) are skipped;
 - data rows hold no formulas and no direct formatting (shading is conditional formatting), so Excel's CSV
   has no padding rows. The per-row checks live on the Row Checks sheet, which isn't saved into the CSV
-  (Excel saves only the active sheet). The 200 cap counts ADD/REMOVE rows, not lines (BulkRoleApply).
+  (Excel saves only the active sheet). The 200 cap counts ADD/REMOVE rows, not lines (IORC_0037_XFD_SEC_Bulk_Role_Changes_From_CSV).
 
 Pre-filled (EIB-style "get"): `--data rows.json` writes every current role assignment from row 7, Action empty,
 so users only mark REMOVE or add ADD rows. tools/publish_template.js builds rows.json from Workday and
@@ -32,7 +32,7 @@ opt = lambda n: sys.argv[sys.argv.index(n) + 1] if n in sys.argv else None
 OUT = opt('--out') or os.path.join(os.path.dirname(__file__), '..', 'docs', 'templates', 'ECO-COMS-Bulk-Role-Template.xlsx')
 ROWS = json.load(open(opt('--data'))) if opt('--data') else []
 ASOF = opt('--asof')
-MAX_CHANGES = 1000                       # safety limit per file (BulkRoleApply): Workday's 60-minute process limit
+MAX_CHANGES = 1000                       # safety limit per file (IORC_0037_XFD_SEC_Bulk_Role_Changes_From_CSV): Workday's 60-minute process limit
 FIRST = 7
 LAST = FIRST + max(len(ROWS) + 300, 300) - 1   # every current assignment plus room for ADD rows
 RC = "'Role Changes'"

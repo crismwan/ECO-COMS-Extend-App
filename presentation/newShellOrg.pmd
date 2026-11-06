@@ -68,7 +68,7 @@
       "baseUrlType": "orchestration",
       "authType": "sso",
       "deferred": "true",
-      "url": "<% '/AddShellOrg/launch?orgType=' + ot + '&orgSubtype=' + st + '&organizationName=' + on + '&organizationCode=' + oc + '&workerId=' + wid + '&effectiveDate=' + ed + '&changedBy=' + cb + '&timestamp=' + ts + '&changedByWid=' + cbw %>"
+      "url": "<% '/IORC_0037_XFD_SEC_Create_Application_Shell_Org/launch?orgType=' + ot + '&orgSubtype=' + st + '&organizationName=' + on + '&organizationCode=' + oc + '&workerId=' + wid + '&effectiveDate=' + ed + '&changedBy=' + cb + '&timestamp=' + ts + '&changedByWid=' + cbw %>"
     },
     {
       "name": "verifyShellOrg",

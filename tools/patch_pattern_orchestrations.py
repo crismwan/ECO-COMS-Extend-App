@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Schema-driven pattern guards and correct org subtypes in the create orchestrations (idempotent).
 
-* AddShellOrg sends subtype X:META (plain shell/meta orgs); AddShellOrgPattern sends X:SHELL.
+* IORC_0037_XFD_SEC_Create_Application_Shell_Org sends subtype X:META (plain shell/meta orgs); IORC_0037_XFD_SEC_Create_Pattern_Shell_Org sends X:SHELL.
   Organization_Add_Update only accepts Organization_Subtype_Name (no reference ID), checked in the
   v47.0 Human_Resources XSD on 2026-11-02 (Organization_Subtype_Reference_DataType).
-* AddShellOrgPattern's CheckPatternName re-checks every name against the application's record:
+* IORC_0037_XFD_SEC_Create_Pattern_Shell_Org's CheckPatternName re-checks every name against the application's record:
     - starts with the application code + ':'
     - the next part is one of the record's namePrefix values (comma-separated; blank = PATTERN)
     - when the record has a patternSchema: the number of fields matches the schema (each schema
@@ -92,7 +92,7 @@ ORG_ASSERTIONS = [
 
 def main():
     # Add Shell Org: the page picks X:META or X:SHELL; anything else becomes X:META (never free text)
-    d = set_subtype(load('AddShellOrg'), '{{data.GetInputParams.orgSubtype}}')
+    d = set_subtype(load('IORC_0037_XFD_SEC_Create_Application_Shell_Org'), '{{data.GetInputParams.orgSubtype}}')
     gip = find(d, 'GetInputParams')['_value']['values']['_value']
     if not any(a['_value']['param']['_value']['name']['_value'] == 'orgSubtype' for a in gip):
         proto = next(a for a in gip if a['_value']['param']['_value']['name']['_value'] == 'orgType')
@@ -101,10 +101,10 @@ def main():
         a['_value']['expr']['_value']['source']['_value'] = (
             '(if (data("start", "queryParams").getParam("orgSubtype", "X:META").equals("X:SHELL")) "X:SHELL" else "X:META")')
         gip.insert(gip.index(proto) + 1, a)
-    # CheckOrgName right after GetInputParams (cloned from AddShellOrgPattern's CheckPatternName)
+    # CheckOrgName right after GetInputParams (cloned from IORC_0037_XFD_SEC_Create_Pattern_Shell_Org's CheckPatternName)
     nodes = d['_value']['nodes']['_value']
     names = [n['_value']['name']['_value'] for n in nodes]
-    proto_node = find(load('AddShellOrgPattern'), 'CheckPatternName')
+    proto_node = find(load('IORC_0037_XFD_SEC_Create_Pattern_Shell_Org'), 'CheckPatternName')
     chk = copy.deepcopy(proto_node)
     chk['_value']['name']['_value'] = 'CheckOrgName'
     pa = chk['_value']['assertions']['_value'][0]
@@ -121,9 +121,9 @@ def main():
         nodes[names.index('CheckOrgName')] = chk
     else:
         nodes.insert(names.index('GetInputParams') + 1, chk)
-    save('AddShellOrg', d)
+    save('IORC_0037_XFD_SEC_Create_Application_Shell_Org', d)
 
-    d = set_subtype(load('AddShellOrgPattern'), 'X:SHELL')
+    d = set_subtype(load('IORC_0037_XFD_SEC_Create_Pattern_Shell_Org'), 'X:SHELL')
     node = find(d, 'CheckPatternName')
     proto = node['_value']['assertions']['_value'][0]
     out = []
@@ -136,8 +136,8 @@ def main():
     node['_value']['notes']['_value'][0]['_value']['value']['_value'] = (
         "Guard: the pattern name must start with the application code, use one of the application's "
         "prefixes (namePrefix, default PATTERN), and match its patternSchema field count; upper case, no spaces")
-    save('AddShellOrgPattern', d)
-    print('AddShellOrg: subtype from orgSubtype (X:META or X:SHELL); AddShellOrgPattern: subtype X:SHELL,', len(out), 'assertions')
+    save('IORC_0037_XFD_SEC_Create_Pattern_Shell_Org', d)
+    print('IORC_0037_XFD_SEC_Create_Application_Shell_Org: subtype from orgSubtype (X:META or X:SHELL); IORC_0037_XFD_SEC_Create_Pattern_Shell_Org: subtype X:SHELL,', len(out), 'assertions')
 
 
 if __name__ == '__main__':

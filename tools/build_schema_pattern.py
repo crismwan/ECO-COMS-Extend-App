@@ -12,7 +12,7 @@ code in Workday plus every configured record, with its pattern format.
 
 Clockwork moved onto this page on 2026-11-02 (product owner: "match all applications"); its old wizard
 (createShellOrgPatternWizard / newShellOrgPattern) was retired.
-Server side, AddShellOrgPattern re-checks prefix, field count, upper case and spaces
+Server side, IORC_0037_XFD_SEC_Create_Pattern_Shell_Org re-checks prefix, field count, upper case and spaces
 (tools/patch_pattern_orchestrations.py).
 """
 import json, os
@@ -113,7 +113,7 @@ page = {"id": "newSchemaPattern", "securityDomains": ["ManageCOMSShellOrgs"], "i
     {"name": "existingOrgs", "baseUrlType": "workday-wql", "url": "data", "authType": "sso", "bestEffort": "true",
      "failOnStatusCodes": FOS([400, 403, 500]), "wqlQuery": {"queryId": "customOrganizations"}},
     {"name": "launchAddShellOrgPattern", "baseUrlType": "orchestration", "authType": "sso", "deferred": "true",
-     "url": "<% '/AddShellOrgPattern/launch?comsAppId=' + aid + '&patternName=' + pn + '&workerId=' + wid + '&attribute1=' + a1 + '&attribute2=' + a2 + '&attribute3=' + a3 + '&attribute4=' + a4 + '&attribute5=' + a5 + '&effectiveDate=' + ed + '&changedBy=' + cb + '&timestamp=' + ts + '&changedByWid=' + cbw %>"},
+     "url": "<% '/IORC_0037_XFD_SEC_Create_Pattern_Shell_Org/launch?comsAppId=' + aid + '&patternName=' + pn + '&workerId=' + wid + '&attribute1=' + a1 + '&attribute2=' + a2 + '&attribute3=' + a3 + '&attribute4=' + a4 + '&attribute5=' + a5 + '&effectiveDate=' + ed + '&changedBy=' + cb + '&timestamp=' + ts + '&changedByWid=' + cbw %>"},
     {"name": "verifyPattern", "baseUrlType": "workday-wql", "authType": "sso", "deferred": "true",
      "url": "<% 'data?limit=' + lim + '&query=SELECT%20workdayID%2C%20code%20FROM%20topLevelOrganizations%20WHERE%20code%20contains%20%27X%3A%27' %>"}],
   "onSubmit": submit(),
@@ -229,7 +229,7 @@ open(p, 'w').write(json.dumps(d, indent=2, ensure_ascii=False) + '\n')
 print('newSchemaPattern written; Shell Org Manager and Quick Actions updated')
 
 # Add Shell Org: the organization subtype is a choice, X:META or X:SHELL (product owner 2026-11-02).
-# Add Pattern always sends X:SHELL (AddShellOrgPattern template).
+# Add Pattern always sends X:SHELL (IORC_0037_XFD_SEC_Create_Pattern_Shell_Org template).
 p = os.path.join(ROOT, 'newShellOrg.pmd')
 d = json.load(open(p))
 for e in d['endPoints']:

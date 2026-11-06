@@ -16,8 +16,8 @@ Rules (one place: presentation/scripts/comsShellOrg.script, shared by the previe
   -> X:BPMS(NEW)). X:META without an application: X: plus one part (X:NEWAPP).
 * For X:META the name is also the organization type: every application-level organization in Workday has an
   organization type of the same name (probe 2026-11-05), which must exist before the create.
-* AddShellOrg's CheckOrgName re-checks the same rules (tools/patch_pattern_orchestrations.py).
-* The launch no longer sends comsAppId (AddShellOrg doesn't use it), so the bracketed application ID isn't repeated
+* IORC_0037_XFD_SEC_Create_Application_Shell_Org's CheckOrgName re-checks the same rules (tools/patch_pattern_orchestrations.py).
+* The launch no longer sends comsAppId (IORC_0037_XFD_SEC_Create_Application_Shell_Org doesn't use it), so the bracketed application ID isn't repeated
   in the query string the API gateway scores.
 """
 import json, os
@@ -61,7 +61,7 @@ if 'comsShellOrg.script' not in d['include']:
 # launch URL: no comsAppId
 for e in d['endPoints']:
     if e['name'] == 'launchAddShellOrg':
-        e['url'] = e['url'].replace("'/AddShellOrg/launch?comsAppId=' + ac + '&orgType=' + ot", "'/AddShellOrg/launch?orgType=' + ot")
+        e['url'] = e['url'].replace("'/IORC_0037_XFD_SEC_Create_Application_Shell_Org/launch?comsAppId=' + ac + '&orgType=' + ot", "'/IORC_0037_XFD_SEC_Create_Application_Shell_Org/launch?orgType=' + ot")
 
 # 1. subtype first
 kids = holder(d['presentation'], 'selectedApplicationId')

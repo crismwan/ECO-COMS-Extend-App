@@ -21,7 +21,7 @@ Built, deployed to ubc_wcpdev2 and checked live in the tenant unless marked othe
 | R10 live-org notice | | **Done** (both create pages). |
 | R11 Withdraw | Keep DENY (Q5); requesters may cancel (Q6) | **Done.** The cancel comment becomes Denial Reason. |
 | R12 / R14 Maintain page | Retire it (Q2) | **Done (retired).** |
-| R13 gap: Deny comment | Copy it (Q2) | **Done.** DenyRoleRequest reads `events/{id}/comments`. |
+| R13 gap: Deny comment | Copy it (Q2) | **Done.** IORC_0037_XFD_SEC_Close_Denied_Role_Request reads `events/{id}/comments`. |
 | R16 / R17 receipts | | **Done**, checked live on the pattern success page. |
 | R19 / R21 home cards + chart | All three numbers, plus a chart (Q1) | **Done.** |
 | R22 grid counts | | **Done** (not on the role-assignment grid: its expression is too heavy to run twice). |
@@ -358,12 +358,12 @@ Use the same on newShellOrgPattern with `livePatternNoticeRichText`.
 - POSTs `workday-bp events/<reviewEventWid>/cancel` when the request has a review event
 - DELETEs the record (plus a DELETE audit) only when there's no review event
 
-That matches CLAUDE.md ("A record linked to a BP event can't be deleted"; DenyRoleRequest is paired with Cancel). An editWizard isn't needed: step 1 navigates with `queryParams`, and wizard steps can't pass data.
+That matches CLAUDE.md ("A record linked to a BP event can't be deleted"; IORC_0037_XFD_SEC_Close_Denied_Role_Request is paired with Cancel). An editWizard isn't needed: step 1 navigates with `queryParams`, and wizard steps can't pass data.
 
 **To finish.**
 
 1. The requester must be allowed to **Cancel** on the BP security policy. Today only HR Administrator has Cancel (ECO-COMS-NOTES). The person changes the policy; the assistant doesn't (Q6).
-2. **Vocabulary:** a withdrawn request becomes `Denied` with a `DENY` audit written by DenyRoleRequest, which reads as "denied by ISC" (Q5). Option: add `WITHDRAW` to the fixed vocabulary, and have DenyRoleRequest write it when the event was cancelled rather than denied. How an orchestration tells cancel from deny is **VERIFY** ("Reference: Business Process Global Functions").
+2. **Vocabulary:** a withdrawn request becomes `Denied` with a `DENY` audit written by IORC_0037_XFD_SEC_Close_Denied_Role_Request, which reads as "denied by ISC" (Q5). Option: add `WITHDRAW` to the fixed vocabulary, and have IORC_0037_XFD_SEC_Close_Denied_Role_Request write it when the event was cancelled rather than denied. How an orchestration tells cancel from deny is **VERIFY** ("Reference: Business Process Global Functions").
 3. The `cancel` body is `{ "comment": "..." }` (developer.workday.com "Events REST APIs", per CLAUDE.md). Confirm the page sends it.
 
 **Tests.**
@@ -388,7 +388,7 @@ If built: replace `maintainAction` (dropdown) with `maintainActionRadioGroup`, k
 
 - `denialReason` (textArea) is bound to `denyRole.denialReason` (a TEXT field on COMSAssignableRole) and included in the DENY audit `details`.
 - `guideMaintainAction` and `guideWorkdayRole` exist.
-- Gap on the BP path: the Deny comment typed in the Workday inbox isn't copied to `denialReason`. Reading event comments in DenyRoleRequest is **VERIFY** (Q2).
+- Gap on the BP path: the Deny comment typed in the Workday inbox isn't copied to `denialReason`. Reading event comments in IORC_0037_XFD_SEC_Close_Denied_Role_Request is **VERIFY** (Q2).
 
 ### R14. Requester and request date on the maintain page (P2, S)
 
@@ -434,7 +434,7 @@ Manual test: open Maintain on a legacy request.
 **Tests.**
 
 - Static: the card is now used (N4 orphan warning gone).
-- Full suite: after `AddShellOrg`, the newest own ADD audit has `coName` = the run's org (this is already checked through `launchAndVerify`; also assert `effectiveDate`).
+- Full suite: after `IORC_0037_XFD_SEC_Create_Application_Shell_Org`, the newest own ADD audit has `coName` = the run's org (this is already checked through `launchAndVerify`; also assert `effectiveDate`).
 - Manual checklist step 1: the receipt shows name, effective date and time.
 
 ### R18. Status change warning and guide (Done)
@@ -708,7 +708,7 @@ The only `fileUploader` was on the deleted newShellOrgConfirm. Building this nee
 | loop | instanceList / grid cover current needs |
 | currency, video, labeledImage | no data for them |
 | SSO | tenant-level, already `sso` in the SMD |
-| radioGroup (for manageShellOrgStatus, Part 5) | the action is set by the current status; a choice would allow a mismatch, the class of bug the ManageShellOrgStatus guard prevents |
+| radioGroup (for manageShellOrgStatus, Part 5) | the action is set by the current status; a choice would allow a mismatch, the class of bug the IORC_0037_XFD_SEC_Change_Shell_Org_Status guard prevents |
 
 ---
 
@@ -734,7 +734,7 @@ The only `fileUploader` was on the deleted newShellOrgConfirm. Building this nee
 **Full suite:**
 
 - `Withdraw.ownPending`: withdraw then expect Denied/inactive + audit; legacy delete + DELETE audit (R11)
-- the receipt data check after AddShellOrg / AddShellOrgPattern (R16)
+- the receipt data check after IORC_0037_XFD_SEC_Create_Application_Shell_Org / IORC_0037_XFD_SEC_Create_Pattern_Shell_Org (R16)
 
 **Manual checklist** (`test/README.md`), add:
 
