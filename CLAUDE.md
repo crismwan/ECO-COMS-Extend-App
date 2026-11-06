@@ -53,6 +53,7 @@ These notes apply to **all** Workday Extend apps I work on. Project-specific det
 - Audit logging pattern
 - Files: offering a stored file for download
 - Data and binding pitfalls
+- Renaming an app or an orchestration
 - Orchestrations — synchronous page limit is 25 seconds
 - Orchestrations — no Excel parsing node
 - Platform limits reference
@@ -2532,6 +2533,14 @@ Source: developer.workday.com "Concept: fileUploader", "fileUploaderRow", "attac
 - In the builder: an open orchestration's left panel → **Suborchestrations +**; the caller gets it from Components → Suborchestrations → **Call <name>** (drag only; automated drags don't register). Docs: doc.workday.com "Modular Orchestration Design" (no Trigger Business Process or RaaS steps inside).
 - **Run errors name the sub-orchestration's step:** "Completed with error: ... @[<Sub>.suborchestrationSteps.<Step>]" (the parent's own steps show as @[<Parent>.<Step>]), which makes a cheap test: launch the parent with input only Workday rejects and check the error comes from the sub. For a few minutes after a deploy, launches can run either the old or the new version of an orchestration (seen 2026-11-04: one run had AddShellOrg new and AddShellOrgPattern old, the next the other way round; consistent after ~5 minutes). Wait before concluding a change didn't deploy.
 - Repo pattern: a final build step (`tools/extract_subflows.py` in one app) that moves a block two orchestrations share into the sub-orchestration, turns everything the block reads from outside into inputs, and replaces the block in each parent with the call. Build steps that patch the parents in place by step name must see the full files, so keep the full copies and restore them at the start of the build (`--restore`), extracting again at the end. Add a static check that every `subflowId` matches a `.suborchestration` id and the inputs match.
+
+## Renaming an app or an orchestration (live 2026-11-06)
+
+- **Orchestration names take letters, digits and underscores only.** Orchestration Builder keeps Done disabled for a name with a hyphen. A team naming standard written with hyphens (e.g. `IORC-0037-...`) becomes `IORC_0037_...` for the orchestration; the app name can keep hyphens.
+- **Rename = same id, new `name`, new file name.** Keep the orchestration's 32-hex `id` (and every sub-orchestration's, which callers use as `subflowId`); a build step that derives ids from names must keep hashing the old name. App Hub then lists the same orchestrations under the new names.
+- Update every launch URL (`/<Name>/launch`), tests and docs in the same change, and check nothing still uses an old name.
+- **Tenant setup stores orchestrations by name:** a business process Orchestration Launch Configuration keeps "Orchestration Name" as text, so it must be edited after a rename or BP-triggered runs stop. Check External Cards (Home Card orchestrations) the same way.
+- **App display name:** developer.workday.com → Apps → the app → Related Actions → **Rename App**. The manifest `name` doesn't change the console name. The reference ID never changes.
 
 ## Orchestrations — synchronous page limit is 25 seconds
 

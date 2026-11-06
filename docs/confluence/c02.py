@@ -23,8 +23,8 @@ def diagram_after(title_start, src, alt, width=900):
 
 # ---------------------------------------------------------------- page properties
 pp = T(s, 'Solution name')
-kv(s, pp, 'Solution name', 'ECO-COMS: Custom Organization Management System (shell organizations and shell roles in Workday)')
-kv(s, pp, 'Solution ID', f'APP {APP} (development tenant ubc_wcpdev2). Production reference ID to be fixed before the first upload to that account [TBC]; a reference ID can never be reused.')
+kv(s, pp, 'Solution name', 'XTND-0037-XFD_SEC-Custom_Organization_Management\nECO-COMS: Custom Organization Management System (shell organizations and shell roles in Workday)')
+kv(s, pp, 'Solution ID', f'XTND-0037-XFD_SEC-Custom_Organization_Management\nExtend app reference ID {APP} (development tenant ubc_wcpdev2). Production reference ID to be fixed before the first upload to that account [TBC]; a reference ID can never be reused.')
 kv(s, pp, 'Solution type', 'Extend App')
 kv(s, pp, 'Solution pattern', 'In-tenant UI (one event-driven step on the review business process)')
 kv(s, pp, 'Domain', 'HCM (security: custom organizations, assignable roles, role assignments)')

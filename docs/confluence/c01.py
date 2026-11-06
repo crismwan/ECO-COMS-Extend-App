@@ -12,8 +12,8 @@ PO = 'Product owner decision'
 
 # ---------------------------------------------------------------- page properties
 pp = T(s, 'Solution name')
-kv(s, pp, 'Solution name', 'ECO-COMS: Custom Organization Management System (shell organizations and shell roles in Workday)')
-kv(s, pp, 'Solution ID', 'Proposed: APP-[TBC]-HCM_SEC-Custom_Organization_Management (sequence number to be issued under the EDG Naming Standard)\n'
+kv(s, pp, 'Solution name', 'XTND-0037-XFD_SEC-Custom_Organization_Management\nECO-COMS: Custom Organization Management System (shell organizations and shell roles in Workday)')
+kv(s, pp, 'Solution ID', 'XTND-0037-XFD_SEC-Custom_Organization_Management (EDG Naming Standard; its orchestrations are IORC_0037_XFD_SEC_<description>)\n'
    'Extend app reference ID (development): ecocomsphase_xclw_cm_sync2_vmzvxm')
 kv(s, pp, 'Linked Tickets', f'{TBC} (no ServiceNow or Jira item recorded yet)')
 kv(s, pp, 'Solution type', 'Extend App')
