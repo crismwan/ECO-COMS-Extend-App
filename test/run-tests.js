@@ -2386,6 +2386,8 @@ async function probe(token) {
     const roles = (await wql(token, q('allShellAssignableRolesinTenant').replace('<% types %>', types.join(',')), 10000)).data || [];
     console.log(`   SUBTYPE roles=${roles.length}: ${roles.map((r) => (r.role || {}).descriptor).sort().join(' | ')}`);
     console.log(`   SUBTYPE aaa=${((await wql(token, q('allAAArolesinTenant'), 10000)).data || []).length}`);
+    const typeOf = new Map(orgs.map((o) => [o.workdayID, ((o.type1 || [])[0] || {}).descriptor]));
+    for (const r of roles) for (const ra of (r.roleAssignments || [])) console.log(`   SUBTYPE RA ${(r.role || {}).descriptor} @ ${JSON.stringify(ra.organization)} -> ${typeOf.get((ra.organization || {}).id)}`);
     return;
   }
   // Sub-orchestration probe (tools/probe_subflow.py): ProbeSubflowCall calls ProbeEcho and returns {"echo": "echo:hello"}.
