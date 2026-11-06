@@ -1734,6 +1734,8 @@ Referenced from a PMD like any other card (`cardId` must match the card file nam
 
 Each `taskId` referenced by a pill must exist in the AMD `tasks` array.
 
+**A card can be picked at run time:** a `dynamicCards` template's `cardId` can be a script (`"cardId": "<% item.cardId %>"`, with `parameters: "<% item.params %>"`), so one container can show different card files per item (confirmed live 2026-11-05). Since a pill card's pill list is fixed, generate one card file per pill count (`Pills1`…`Pills10`) and pick `'Pills' + n`; a static orphan check must then count card ids named in scripts as used.
+
 **Pills have no `render`** (developer.workday.com "pillCard": a pill is only `label` + `taskReference`), so a pill can't be hidden on its own. Hide or show a whole card with the `card`'s `render` in the `cardContainer` (used live 2026-11-04 for an Organization filter card that appears only while one is picked). When several pill cards drive one page's query params, give every pill every param, or switching one filter drops the others.
 
 **Pills as filters and action rows (confirmed live 2026-10-31):** a pill's `taskReference` takes `parameterBindings`, so a pill card can drive a page's query-param filters (the Audit Log's `?period=7d` came through). Mark the current choice by scripting the label from card parameters, double-quoted only: `"label": "<% period == \"7d\" ? \"✓ Last 7 days\" : \"Last 7 days\" %>"`. Pills wrap side by side, so they replace a column of stacked buttons. Workday renders buttons in a section one per row; there is no row layout for plain buttons.

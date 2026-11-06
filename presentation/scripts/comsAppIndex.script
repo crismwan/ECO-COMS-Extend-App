@@ -91,7 +91,7 @@ var familyLabel = function(f) {
 };
 
 var groupCard = function(part, fam, app, n) {
-  pillCard(familyLabel(fam) + (n > 10 ? ' · ' + part.get(0).short + ' to ' + part.get(part.size() - 1).short : ''),
+  pillCard((n > 10 ? (fam == 'Standalone' ? 'Standalone' : fam) + ' · ' + part.get(0).short + '–' + part.get(part.size() - 1).short : familyLabel(fam)),
     '● pattern ready · ○ no pattern yet',
     part.map(a => { pill((a.id == app ? '✓ ' : (a.ready ? '● ' : '○ ')) + a.short, a.id, '') }));
 };
@@ -116,7 +116,7 @@ var todoCard = function(idx) {
   let todo = idx.filter(a => { !a.ready });
   let n = todo.size();
   pillCard('No pattern format yet', (n > 10 ? 'First 10 of ' + n : plural(n, 'application')) + ' · pick one to set it up',
-    (n > 10 ? todo.subList(0, 10) : todo).map(a => { pill('○ ' + a.id, a.id, '') }));
+    (n > 10 ? todo.subList(0, 10) : todo).map(a => { pill(idx.filter(x => { x.short == a.short }).size() > 1 ? a.id : a.short, a.id, '') }));
 };
 
 var navCard = function(idx, app, fam) {
@@ -130,7 +130,7 @@ var navCard = function(idx, app, fam) {
   let hop = [pill('‹ ' + shortOf(prev), prev, ''), pill(shortOf(next) + ' ›', next, '')];
   let rest = [pill(empty(fam) ? 'Change application' : 'Hide applications', app, (empty(fam) ? f : '')), pill('✕ All applications', '', '')];
   pillCard(app,
-    ((empty(a) || empty(a.name)) ? '' : a.name + ' · ') + (empty(a) ? 'no shell organizations found' : (familyLabel(f) + ' · ' + plural(a.orgs, 'shell org') + ' (' + a.active + ' active) · ' + plural(a.patterns, 'pattern'))),
+    empty(a) ? 'Not found: no X: organization or pattern record has this ID' : ((empty(a.name) ? '' : a.name + ' · ') + (f == 'Standalone' ? 'Standalone' : familyLabel(f))),
     n > 1 ? list:flatten([hop, rest]) : rest);
 };
 
@@ -144,7 +144,7 @@ var formatCard = function(recs, app, fmt) {
 var barCards = function(orgs, recs, app, fam, fmt) {
   let idx = index(orgs, recs);
   !empty(app)
-    ? list:flatten([[navCard(idx, app, fam), formatCard(recs, app, fmt)], (empty(fam) ? [] : groupCards(idx, fam, app))])
+    ? list:flatten([[navCard(idx, app, fam)], (empty(find(idx, app)) ? [] : [formatCard(recs, app, fmt)]), (empty(fam) ? [] : groupCards(idx, fam, app))])
     : list:flatten([[familiesCard(idx, orgs, fam)], (empty(fam) ? (idx.filter(a => { !a.ready }).size() == 0 ? [] : [todoCard(idx)]) : groupCards(idx, fam, app))]);
 };
 
