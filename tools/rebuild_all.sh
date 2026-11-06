@@ -16,6 +16,7 @@ fi
 
 run() { echo "== $*"; python3 "$@" | sed 's/^/   /'; }
 
+run tools/drop_unused_endpoints.py --restore  # pages before the unused-endpoint pass (runs again last)
 run tools/subtype_apps.py --restore      # pages as the later steps left them; first, before the other restores (the subtype rewrite runs again near the end)
 run tools/title_banner.py --restore    # put Workday titles back so every builder sees ordinary pages
 run tools/merge_nav_about.py --restore  # back links in their own navSection again
@@ -68,6 +69,7 @@ run tools/excel_export_values.py     # fieldSet columns get an Excel export valu
 run tools/clear_submit_errors.py      # every OK check clears its own earlier errors first
 run tools/subtype_apps.py             # organizations by subtype, applications by organization type
 run tools/apply_icons.py              # every icon from one table (CLAUDE.md "Icons" framework)
+run tools/drop_unused_endpoints.py     # endpoints nothing on the page uses (App Hub warning)
 run tools/extract_subflows.py         # shared logic moved into sub-orchestrations (runs last, after every patch)
 
 if [[ "${1:-}" == "--check" ]]; then

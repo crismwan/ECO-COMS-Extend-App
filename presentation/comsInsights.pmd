@@ -10,21 +10,6 @@
   ],
   "endPoints": [
     {
-      "name": "requestCount",
-      "baseUrlType": "BUSINESS-OBJECT",
-      "url": "/comsAssignableRoles?limit=1",
-      "authType": "sso",
-      "bestEffort": "true",
-      "failOnStatusCodes": [
-        {
-          "code": 400
-        },
-        {
-          "code": 429
-        }
-      ]
-    },
-    {
       "name": "requestPage0",
       "baseUrlType": "BUSINESS-OBJECT",
       "authType": "sso",
@@ -345,7 +330,6 @@
               "type": "grid",
               "id": "oldestPendingGrid",
               "label": "Oldest Pending Requests",
-              "readOnly": true,
               "rows": "<% comsInsights.oldestPending(list:flatten([requestPage0.data ?? [], requestPage1.data ?? [], requestPage2.data ?? []]), 10) %>",
               "rowVariableName": "pendingRow",
               "columns": [

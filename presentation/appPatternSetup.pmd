@@ -119,7 +119,6 @@
                   "id": "appPatternsGrid",
                   "label": "Application Pattern Formats",
                   "rowVariableName": "ap",
-                  "readOnly": true,
                   "rows": "<% list:sort((comsApplications.data ?? []).filter(a => { !empty(a.appId) }), 'appId', true).map(a => { {'appCode': a.appId, 'rec': a} }) %>",
                   "columns": [
                     {

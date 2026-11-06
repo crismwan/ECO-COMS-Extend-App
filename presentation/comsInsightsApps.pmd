@@ -10,21 +10,6 @@
   ],
   "endPoints": [
     {
-      "name": "requestCount",
-      "baseUrlType": "BUSINESS-OBJECT",
-      "url": "/comsAssignableRoles?limit=1",
-      "authType": "sso",
-      "bestEffort": "true",
-      "failOnStatusCodes": [
-        {
-          "code": 400
-        },
-        {
-          "code": 429
-        }
-      ]
-    },
-    {
       "name": "requestPage0",
       "baseUrlType": "BUSINESS-OBJECT",
       "authType": "sso",
@@ -149,7 +134,6 @@
               "type": "grid",
               "id": "appInsightsGrid",
               "label": "Applications at a Glance",
-              "readOnly": true,
               "rows": "<% comsInsights.appRows(list:flatten([requestPage0.data ?? [], requestPage1.data ?? [], requestPage2.data ?? []]), (allShellOrgs.data ?? []), comsApplications.data ?? []) %>",
               "rowVariableName": "appRow",
               "columns": [

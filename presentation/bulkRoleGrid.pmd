@@ -66,22 +66,6 @@
       ]
     },
     {
-      "name": "comsApplications",
-      "baseUrlType": "BUSINESS-OBJECT",
-      "url": "/comsApplications?limit=100",
-      "authType": "sso",
-      "isCollection": true,
-      "bestEffort": "true",
-      "failOnStatusCodes": [
-        {
-          "code": 400
-        },
-        {
-          "code": 429
-        }
-      ]
-    },
-    {
       "name": "gridPosSearch",
       "baseUrlType": "workday-wql",
       "authType": "sso",
@@ -458,43 +442,43 @@
                           },
                           {
                             "type": "hidden",
-                            "id": "removeRHidden",
+                            "id": "removeRoleNameHidden",
                             "value": "<% gr.role ?? '' %>",
                             "valueOutBinding": "removeDraft.roleName"
                           },
                           {
                             "type": "hidden",
-                            "id": "removeRHidden",
+                            "id": "removeRoleWidHidden",
                             "value": "<% gr.roleWid ?? '' %>",
                             "valueOutBinding": "removeDraft.roleWid"
                           },
                           {
                             "type": "hidden",
-                            "id": "removeOHidden",
+                            "id": "removeOrgNameHidden",
                             "value": "<% gr.org ?? '' %>",
                             "valueOutBinding": "removeDraft.orgName"
                           },
                           {
                             "type": "hidden",
-                            "id": "removeOHidden",
+                            "id": "removeOrgWidHidden",
                             "value": "<% gr.orgWid ?? '' %>",
                             "valueOutBinding": "removeDraft.orgWid"
                           },
                           {
                             "type": "hidden",
-                            "id": "removePHidden",
+                            "id": "removePositionNameHidden",
                             "value": "<% gr.position ?? '' %>",
                             "valueOutBinding": "removeDraft.positionName"
                           },
                           {
                             "type": "hidden",
-                            "id": "removePHidden",
+                            "id": "removePositionIdHidden",
                             "value": "<% gr.positionId ?? '' %>",
                             "valueOutBinding": "removeDraft.positionId"
                           },
                           {
                             "type": "hidden",
-                            "id": "removeAHidden",
+                            "id": "removeAssigneeWidHidden",
                             "value": "<% gr.assigneeWid ?? '' %>",
                             "valueOutBinding": "removeDraft.assigneeWid"
                           },

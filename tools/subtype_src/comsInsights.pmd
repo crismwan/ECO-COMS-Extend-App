@@ -345,7 +345,6 @@
               "type": "grid",
               "id": "oldestPendingGrid",
               "label": "Oldest Pending Requests",
-              "readOnly": true,
               "rows": "<% comsInsights.oldestPending(list:flatten([requestPage0.data ?? [], requestPage1.data ?? [], requestPage2.data ?? []]), 10) %>",
               "rowVariableName": "pendingRow",
               "columns": [

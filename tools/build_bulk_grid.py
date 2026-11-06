@@ -192,7 +192,7 @@ page = {"id": "bulkRoleGrid", "securityDomains": ["ManageCOMSShellOrgs"], "inclu
              txt("colOrg", "Organization", "<% gr.org ?? '' %>"),
              {"type": "column", "columnId": "colPosition", "label": "Position", "cellTemplate": {"type": "fieldSet", "id": "removeFieldSet", "children":
                [{"type": "text", "id": "positionText", "enabled": False, "value": "<% gr.position ?? '' %>"}]
-               + [hidden("remove" + f[0].capitalize() + "Hidden", "<% " + e + " ?? '' %>", f, "removeDraft") for f, e in REMOVE_FIELDS]
+               + [hidden("remove" + f[0].upper() + f[1:] + "Hidden", "<% " + e + " ?? '' %>", f, "removeDraft") for f, e in REMOVE_FIELDS]
                + constants("remove", "removeDraft", "REMOVE")}}]}]}]},
       {"type": "layoutSection", "id": "addSection", "render": "<% !empty(queryParams.appCode) %>", "children": [
         {"type": "fieldSet", "id": "addFieldSet", "title": "Positions to Add", "children": [

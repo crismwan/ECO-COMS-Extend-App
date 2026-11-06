@@ -9,23 +9,6 @@
   ],
   "endPoints": [
     {
-      "name": "selectedWorker",
-      "baseUrlType": "COMMON",
-      "url": "/workers/me",
-      "authType": "sso",
-      "failOnStatusCodes": [
-        {
-          "code": 400
-        },
-        {
-          "code": 403
-        },
-        {
-          "code": 429
-        }
-      ]
-    },
-    {
       "name": "comsAssignableRolesCount",
       "baseUrlType": "BUSINESS-OBJECT",
       "url": "/comsAssignableRoles?limit=1",
@@ -87,25 +70,6 @@
       ],
       "name": "comsAssignableRolesPage2",
       "url": "<% let t = comsAssignableRolesCount.total ?? 0; '/comsAssignableRoles?limit=100&offset=' + (t > 200 ? 200 : t) %>"
-    },
-    {
-      "name": "customOrganizations",
-      "baseUrlType": "workday-wql",
-      "url": "data",
-      "authType": "sso",
-      "isCollection": true,
-      "bestEffort": "true",
-      "wqlQuery": {
-        "queryId": "customOrganizations"
-      },
-      "failOnStatusCodes": [
-        {
-          "code": 400
-        },
-        {
-          "code": 429
-        }
-      ]
     }
   ],
   "outboundData": {

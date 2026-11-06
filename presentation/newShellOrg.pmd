@@ -26,25 +26,6 @@
       ]
     },
     {
-      "name": "comsApplications",
-      "baseUrlType": "BUSINESS-OBJECT",
-      "url": "/comsApplications?limit=100",
-      "authType": "sso",
-      "isCollection": true,
-      "bestEffort": "true",
-      "failOnStatusCodes": [
-        {
-          "code": 400
-        },
-        {
-          "code": 403
-        },
-        {
-          "code": 429
-        }
-      ]
-    },
-    {
       "name": "existingOrgs",
       "baseUrlType": "workday-wql",
       "url": "data",

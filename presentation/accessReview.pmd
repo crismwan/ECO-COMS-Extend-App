@@ -212,7 +212,6 @@
                   "id": "accessReviewGrid",
                   "label": "Vacant Positions Holding Shell Roles",
                   "rowVariableName": "rv",
-                  "readOnly": true,
                   "rows": "<% comsAccessReview.rowsFrom(shellRoles.data ?? [], comsAccessReview.vacantIds(positionFill.data ?? [])) %>",
                   "columns": [
                     {

@@ -618,6 +618,27 @@ function staticSuite() {
     pass('Static.schemas', `${f.applications.length} application schemas, ${n} examples checked`);
   } catch (e) { err('schema', `tools/pattern_schemas.json: ${e.message}`); }
 
+  // 7h2. App Hub build warnings (2026-11-06): duplicate widget ids on a page, "readOnly" on a grid (not a grid
+  // property), and inbound endpoints nothing on the page uses (tools/drop_unused_endpoints.py removes them).
+  {
+    let n = 0;
+    for (const [f, d] of Object.entries(pmds)) {
+      const seen = new Map();
+      walk(d.presentation || {}, (x) => {
+        if (!x || typeof x.id !== 'string' || !x.type) return;
+        seen.set(x.id, (seen.get(x.id) || 0) + 1);
+        if (x.type === 'grid' && 'readOnly' in x) err('appHubWarnings', `${f}: grid ${x.id} has readOnly, which isn't a grid property`);
+      });
+      for (const [id, c] of seen) if (c > 1) err('appHubWarnings', `${f}: id ${id} is used ${c} times`);
+      for (const e of d.endPoints || []) {
+        const rest = JSON.stringify({ ...d, endPoints: (d.endPoints || []).filter((x) => x !== e) });
+        if (!new RegExp(`(?<![\\w])${e.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b(?!['"]\\s*:)`).test(rest)) err('appHubWarnings', `${f}: endpoint ${e.name} is never used`);
+      }
+      n++;
+    }
+    pass('Static.appHubWarnings', `${n} pages: no duplicate ids, no grid readOnly, no unused endpoints`);
+  }
+
   // 7i. Load-time scripts (value, label, visible, rows, ...) can't use a widget declared later on the
   // page: "Unknown Variable found: x.value" (newSchemaPattern preview, 2026-11-02). Event handlers
   // (onChange, onSubmit, onSearch, ...) run after the page is built, so they may.

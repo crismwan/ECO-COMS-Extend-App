@@ -438,12 +438,12 @@
                     },
                     {
                       "type": "column",
-                      "columnId": "colMessage",
+                      "columnId": "colRowMessage",
                       "label": "Message",
                       "sortableAndFilterable": "true",
                       "cellTemplate": {
                         "type": "text",
-                        "id": "colMessageText",
+                        "id": "colRowMessageText",
                         "enabled": false,
                         "value": "<% rr.message ?? '' %>"
                       }

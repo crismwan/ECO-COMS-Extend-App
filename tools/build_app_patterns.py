@@ -204,7 +204,7 @@ setup = {"id": "appPatternSetup", "securityDomains": [DOMAIN], "include": ["coms
          "taskReference": {"taskId": "auditLogViewer", "parameterBindings": {"changeType": "Application Pattern"}}},
         # Same columns as every other application grid (tools/app_grid.py; product owner 2026-11-02 and 2026-11-05: grids
         # in one format): Application ID as a link, Name, Pattern Format, this page's Example and Status, then the action.
-        {"type": "grid", "id": "appPatternsGrid", "label": "Application Pattern Formats", "rowVariableName": "ap", "readOnly": True,
+        {"type": "grid", "id": "appPatternsGrid", "label": "Application Pattern Formats", "rowVariableName": "ap",
          "rows": "<% list:sort((comsApplications.data ?? []).filter(a => { !empty(a.appId) }), 'appId', true).map(a => { {'appCode': a.appId, 'rec': a} }) %>",
          "columns": (lambda cols: cols[:-1] + [
            {"type": "column", "columnId": "colExample", "label": "Example", "cellTemplate": {"type": "text", "id": "colExampleText", "enabled": False,

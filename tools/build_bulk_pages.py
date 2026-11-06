@@ -237,7 +237,7 @@ results = {"id": "bulkRoleResults", "securityDomains": ["ManageCOMSShellOrgs"],
          "columns": [txt("colResult", "Result", "<% rr.result ?? '' %>"), txt("colAction", "Action", "<% rr.rowAction ?? '' %>"),
                      txt("colRole", "Role", "<% rr.roleName ?? '' %>"), txt("colOrg", "Organization", "<% rr.orgName ?? '' %>"),
                      txt("colPosition", "Position", "<% (rr.positionName ?? '') != '' ? rr.positionName : (rr.positionId ?? '') %>"),
-                     txt("colMessage", "Message", "<% rr.message ?? '' %>")]}]}]}]},
+                     txt("colRowMessage", "Message", "<% rr.message ?? '' %>")]}]}]}]},
     "footer": FOOT, "pageType": "VIEW"}}
 save('bulkRoleResults', results)
 for cid, title, pills in [("BulkNextStepCard", "Next Step", [("Upload a file", "bulkRoleChanges"), ("Edit in the app", "bulkRoleGridApps"), ("View results", "bulkRoleResults")]),

@@ -335,7 +335,7 @@ Grid columns are NOT typed widgets placed directly in `columns`. Putting `"type"
 
 - Editable grid: start with `"rows": "<% [] %>"`; users add/remove rows via the +/trash icons. Set `isArrayOutBinding: true` to submit all rows as one outbound array.
 
-- Read-only display grid: set `readOnly: true` on the grid.
+- **`readOnly` is not a grid property** (App Hub build warning "You defined an invalid property in tag <grid>: readOnly", 2026-11-06). A grid on a VIEW page is read-only already; on an EDIT page use `enabled: false` cells and `doNotAdd`/`doNotRemove: true`.
 
 - Give **every** `cellTemplate` an `id` — `onChange` handlers reference sibling cells in the same row by that id (`otherCell.value = ...`).
 
@@ -2376,6 +2376,10 @@ For large datasets, use WQL with paging or RaaS (which has no pagination limit).
 Join several pages with `list:flatten([auditPage0.data ?? [], auditPage1.data ?? []])`. Leave 400 out of `failOnStatusCodes` on the extra pages so an empty page never fails the load. Tests that look for a just-written record must read every page too.
 
 **Bulk DELETE can't be used from a PMD** (developer.workday.com "Reference: Business Object API Requests"); use a grid `deleteEndPoint` or an orchestration.
+
+## App Hub build warnings (2026-11-06)
+
+The upload's build log lists warnings that don't block a deploy. Worth fixing: duplicate widget ids on a page (e.g. two hidden fields built from the same first letter), grid `readOnly`, and endpoints "declared but never used". **That last check misses uses in `tabs`, card `parameters`, outbound `values` and event scripts** (it flagged an endpoint used 26 times), so check each one before deleting. The isCollection warning is the one below.
 
 ## Endpoints — `isCollection: true` performance warning
 

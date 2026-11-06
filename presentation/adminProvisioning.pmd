@@ -107,16 +107,6 @@
       "url": "<% let t = comsAssignableRolesCount.total ?? 0; '/comsAssignableRoles?limit=100&offset=' + (t > 200 ? 200 : t) %>"
     },
     {
-      "name": "delSearch",
-      "baseUrlType": "workday-wql",
-      "url": "<% 'data?query=' + string:pathEncode('SELECT role FROM assignableRoles WHERE roleName contains \\'' + instanceListQuery.replace('\\'', '').replace('\\\\', '') + '\\'') %>",
-      "authType": "sso",
-      "isCollection": true,
-      "bestEffort": "true",
-      "deferred": "true",
-      "exclude": "<% empty instanceListQuery %>"
-    },
-    {
       "name": "fuhSearch",
       "baseUrlType": "workday-wql",
       "url": "<% 'data?query=' + string:pathEncode('SELECT workdayID, organization1, code FROM customOrganizations WHERE type1 in (b40d8b016367100175b147f364840000) AND code contains \\'' + instanceListQuery.replace('\\'', '').replace('\\\\', '') + '\\'') %>",

@@ -5,26 +5,6 @@
   ],
   "endPoints": [
     {
-      "name": "selectedWorker",
-      "baseUrlType": "COMMON",
-      "url": "/workers/me",
-      "authType": "sso",
-      "failOnStatusCodes": [
-        {
-          "code": 400
-        },
-        {
-          "code": 403
-        },
-        {
-          "code": 404
-        },
-        {
-          "code": 500
-        }
-      ]
-    },
-    {
       "name": "bpEvent",
       "baseUrlType": "workday-bp",
       "url": "<% 'events/' + queryParams.eventId %>",

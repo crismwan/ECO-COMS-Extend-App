@@ -747,3 +747,9 @@ Product owner: "these formats help guide nuances". A field may be `optionalField
 - Pattern guard: 15 passed, including the optional-field cases. Every app page loads without a page error (40 tasks swept in the browser; `home.htmld` isn't a route, the app root is).
 - Gaps fixed: the Assignable Role Request page still parsed the application from the code (bracketed apps became COMS); it now uses the organization type. The tests read organizations by subtype and now run the role query with the application types instead of skipping it.
 - Not changed (older design): Shell Org Manager's Patterns count only counts `:PATTERN` codes (Clockwork's), so other applications show 0 patterns even when they have a pattern format; their pattern organizations are counted as shell organizations.
+
+### App Hub build warnings reviewed (2026-11-06)
+
+- Fixed: grid `readOnly` on 4 VIEW grids (not a grid property); duplicate ids in bulkRoleGrid (removeRHidden/OHidden/PHidden: two hidden fields each, now named after the field) and bulkRoleResults (colMessageText in both grids, the second is now colRowMessage); 10 unused endpoints dropped by `tools/drop_unused_endpoints.py` (adminProvisioning.delSearch, bulkRoleGrid and newShellOrg comsApplications, comsInsights and comsInsightsApps requestCount, iscRoleRequestsView customOrganizations and selectedWorker, three review step pages' selectedWorker). `Static.appHubWarnings` keeps them out.
+- False positives, kept: auditLogViewer.auditAppOrgs, confirmAccessReview / editAppPattern / reviewRoleRequestAssignableRole selectedWorker (used in outbound values), shellOrgManager allShellOrgs / shellRoles / comsApplications (used in tabs and cards).
+- isCollection (most warnings): the app's business-object lists are small (15 applications, 49 requests, 13 audit records) and read with an explicit limit; the audit and request lists already moved to Graph where it mattered. Revisit if a collection grows into the thousands.

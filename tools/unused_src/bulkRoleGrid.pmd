@@ -1,0 +1,691 @@
+{
+  "id": "bulkRoleGrid",
+  "securityDomains": [
+    "ManageCOMSShellOrgs"
+  ],
+  "include": [
+    "comsValidations.script",
+    "comsPatterns.script"
+  ],
+  "endPoints": [
+    {
+      "name": "selectedWorker",
+      "baseUrlType": "COMMON",
+      "url": "/workers/me",
+      "authType": "sso",
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 403
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "name": "appTypes",
+      "baseUrlType": "workday-wql",
+      "url": "data",
+      "authType": "sso",
+      "bestEffort": "true",
+      "wqlQuery": {
+        "queryId": "appTypes"
+      },
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "name": "shellRoles",
+      "baseUrlType": "workday-wql",
+      "url": "data",
+      "authType": "sso",
+      "bestEffort": "true",
+      "wqlQuery": {
+        "queryId": "allShellAssignableRolesinTenant",
+        "parameters": {
+          "types": "<% let ts = (appTypes.data ?? []).map(o => { (o.type1 ?? []).size() > 0 ? o.type1[0].id : '' }).filter(t => { t != '' }).distinct(); ts.size() > 0 ? ts.join(',') : 'none' %>"
+        }
+      },
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "name": "comsApplications",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "url": "/comsApplications?limit=100",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "name": "gridPosSearch",
+      "baseUrlType": "workday-wql",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "deferred": "true",
+      "url": "<% 'data?limit=50&query=' + string:pathEncode('SELECT cf_PositionID, workdayID, position_PositionManagement, cf_PositionIsFilled, cf_PositionText FROM allPositions WHERE supervisoryOrganization is not empty AND cf_PositionText contains \\'' + q.replace('\\'', '').replace('\\\\', '') + '\\'') %>"
+    },
+    {
+      "name": "posTreeRoot",
+      "baseUrlType": "workday-staffing-v6",
+      "url": "values/jobChangesGroup/supervisoryOrganization/",
+      "authType": "sso",
+      "bestEffort": "true"
+    },
+    {
+      "name": "posTreeNode",
+      "baseUrlType": "workday-staffing-v6",
+      "url": "<% h + '?limit=100&offset=' + o %>",
+      "authType": "sso",
+      "deferred": "true"
+    },
+    {
+      "name": "posTreeOrgPositions",
+      "baseUrlType": "workday-wql",
+      "url": "<% 'data?limit=200&query=' + string:pathEncode('SELECT cf_PositionID, workdayID, position_PositionManagement, cf_PositionText FROM allPositions WHERE supervisoryOrganization in (\\'' + org.replace('\\'', '').replace('\\\\', '') + '\\')') %>",
+      "authType": "sso",
+      "deferred": "true"
+    }
+  ],
+  "onSubmit": "<%\n  effectiveDate.clearError();\n    confirmRealRunCheckBox.clearError();\n  let valid = true;\n  let removes = currentGrid.rows.filter(gr => { gr.childrenMap.colRemove.value == true }).size();\n  let adds = addGrid.rows.filter(ar => { !empty(ar.childrenMap.colPositionAdd.value) });\n  let addKeys = adds.filter(ar => { !empty(ar.childrenMap.colRoleOrg.value) }).map(ar => { (ar.childrenMap.colRoleOrg.selectedEntries[0].id + '|' + ar.childrenMap.colPositionAdd.value[0]) });\n  if (empty(queryParams.appCode)) {\n    valid = false;\n  } else if (removes + adds.size() == 0) {\n    effectiveDate.setError('No changes yet: tick Remove on a current assignment, or add a row under Positions to Add.');\n    valid = false;\n  } else if (removes + adds.size() > 50) {\n    effectiveDate.setError('At most 50 changes per submit (this one has ' + (removes + adds.size()) + '). Submit them in parts, or use the Excel template for large changes.');\n    valid = false;\n  } else if (addKeys.size() < adds.size()) {\n    effectiveDate.setError('Pick the role and organization on every row under Positions to Add.');\n    valid = false;\n  } else if (addKeys.distinct().size() < addKeys.size()) {\n    effectiveDate.setError('The same position is added twice to the same role and organization.');\n    valid = false;\n  } else if (addKeys.filter(k => { (list:flatten(list:flatten((shellRoles.data ?? []).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ((ra.organization.descriptor + ':').startsWith((queryParams.appCode ?? '') + ':') || ra.organization.descriptor.startsWith((queryParams.appCode ?? '') + ' ')) }).map(ra => { (ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? []).map(p => { { 'role': r.role.descriptor ?? '', 'roleWid': r.role.id ?? '', 'org': ra.organization.descriptor ?? '', 'orgWid': ra.organization.id ?? '', 'position': p.descriptor ?? '', 'positionId': (p.descriptor ?? '').substringBefore(' '), 'assigneeWid': p.id ?? '' } }) }) }))).map(x => { x.roleWid + '|' + x.orgWid + '|' + x.positionId })).contains(k) }).size() > 0) {\n    effectiveDate.setError('A position under Positions to Add already holds that role on that organization (marked on its row).');\n    valid = false;\n  }\n  if (empty(effectiveDate.value)) {\n    effectiveDate.setError('Effective Date is required.');\n    valid = false;\n  } else if (!comsValidations.isWeekday(effectiveDate.value)) {\n    effectiveDate.setError(comsValidations.errorWeekday());\n    valid = false;\n  } else if (!comsValidations.isCurrentOrFutureYear(effectiveDate.value)) {\n    effectiveDate.setError(comsValidations.errorYear());\n    valid = false;\n  }\n  if (valid && realRunCheckBox.value == true && confirmRealRunCheckBox.value != true) {\n    confirmRealRunCheckBox.setError('Tick this to confirm the real run, or untick Real run to validate first.');\n    valid = false;\n  }\n  valid;\n%>",
+  "outboundData": {
+    "outboundEndPoints": [
+      {
+        "name": "createRun",
+        "baseUrlType": "BUSINESS-OBJECT",
+        "url": "/comsBulkRuns",
+        "httpMethod": "POST",
+        "authType": "sso",
+        "failOnStatusCodes": [
+          {
+            "code": 400
+          },
+          {
+            "code": 403
+          },
+          {
+            "code": 429
+          },
+          {
+            "code": 500
+          }
+        ],
+        "values": [
+          {
+            "outboundPath": "batchRef",
+            "value": "<% batchRefHidden.value %>"
+          },
+          {
+            "outboundPath": "source",
+            "value": "<% 'Grid' %>"
+          },
+          {
+            "outboundPath": "runMode",
+            "value": "<% (realRunCheckBox.value == true ? 'APPLY' : 'VALIDATE') %>"
+          },
+          {
+            "outboundPath": "status",
+            "value": "<% 'Uploaded' %>"
+          },
+          {
+            "outboundPath": "effectiveDate",
+            "value": "<% effectiveDate.value.format('yyyy-MM-dd') %>"
+          },
+          {
+            "outboundPath": "uploadedByName",
+            "value": "<% selectedWorker.descriptor ?? '' %>"
+          },
+          {
+            "outboundPath": "uploadedByWid",
+            "value": "<% selectedWorker.id ?? '' %>"
+          },
+          {
+            "outboundPath": "uploadedAt",
+            "value": "<% date:now().format(\"yyyy-MM-dd'T'HH:mm:ss'Z'\") %>"
+          },
+          {
+            "outboundPath": "changeCount",
+            "value": "<% '' + (currentGrid.rows.filter(gr => { gr.childrenMap.colRemove.value == true }).size() + addGrid.rows.filter(ar => { !empty(ar.childrenMap.colPositionAdd.value) }).size()) %>"
+          },
+          {
+            "outboundPath": "summary",
+            "value": "<% 'Grid edit · ' + (queryParams.appCode ?? '') + ' · ' + (currentGrid.rows.filter(gr => { gr.childrenMap.colRemove.value == true }).size() + addGrid.rows.filter(ar => { !empty(ar.childrenMap.colPositionAdd.value) }).size()) + ' change(s)' %>"
+          }
+        ]
+      },
+      {
+        "name": "removeDraft",
+        "baseUrlType": "BUSINESS-OBJECT",
+        "url": "/comsBulkRowResults",
+        "httpMethod": "POST",
+        "authType": "sso",
+        "exclude": "<% removeCheckBox.value != true %>",
+        "failOnStatusCodes": [
+          {
+            "code": 400
+          },
+          {
+            "code": 403
+          },
+          {
+            "code": 429
+          },
+          {
+            "code": 500
+          }
+        ]
+      },
+      {
+        "name": "addDraft",
+        "baseUrlType": "BUSINESS-OBJECT",
+        "url": "/comsBulkRowResults",
+        "httpMethod": "POST",
+        "authType": "sso",
+        "exclude": "<% empty(positionAddList.value) %>",
+        "failOnStatusCodes": [
+          {
+            "code": 400
+          },
+          {
+            "code": 403
+          },
+          {
+            "code": 429
+          },
+          {
+            "code": 500
+          }
+        ]
+      },
+      {
+        "name": "launchGrid",
+        "baseUrlType": "orchestration",
+        "httpMethod": "POST",
+        "authType": "sso",
+        "failOnStatusCodes": [
+          {
+            "code": 400
+          },
+          {
+            "code": 403
+          },
+          {
+            "code": 429
+          }
+        ],
+        "url": "<% '/IORC_0037_XFD_SEC_Bulk_Role_Changes_From_Grid/launch?ref=' + batchRefHidden.value + '&mode=' + (realRunCheckBox.value == true ? 'APPLY' : 'VALIDATE') + '&effectiveDate=' + effectiveDate.value.format('yyyy-MM-dd') + '&changedBy=' + (selectedWorker.descriptor ?? '').urlEncode() + '&changedByWid=' + (selectedWorker.id ?? '') %>",
+        "values": [
+          {
+            "outboundPath": "ref",
+            "value": "<% batchRefHidden.value %>"
+          }
+        ]
+      }
+    ]
+  },
+  "presentation": {
+    "headerSize": "HIDDEN",
+    "cancelOverride": {
+      "taskId": "home"
+    },
+    "standardEditButtonsHidden": "<% empty(queryParams.appCode) %>",
+    "body": {
+      "type": "basicFormLayout",
+      "id": "bulkGridForm",
+      "sections": [
+        {
+          "type": "layoutSection",
+          "id": "titleBannerSection",
+          "children": [
+            {
+              "type": "richText",
+              "id": "titleBannerRichText",
+              "enabled": false,
+              "value": "<span style=\"color:#0055B3;font-size:24px\"><b>ECO-COMS: Bulk Edit Role Assignments</b></span><br><span style=\"color:#374151;font-size:13px\">Add or remove positions on roles across an application, then validate and apply.</span>"
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "aboutSection",
+          "children": [
+            {
+              "type": "button",
+              "id": "homeButton",
+              "label": "← Home",
+              "action": "LINK",
+              "suppressDiscardDialog": true,
+              "taskReference": {
+                "taskId": "home"
+              }
+            },
+            {
+              "type": "button",
+              "id": "changeAppButton",
+              "label": "Choose another application",
+              "action": "LINK",
+              "suppressDiscardDialog": true,
+              "render": "<% !empty(queryParams.appCode) %>",
+              "taskReference": {
+                "taskId": "bulkRoleGridApps"
+              }
+            },
+            {
+              "type": "fieldSet",
+              "id": "aboutFieldSet",
+              "title": "About This Page",
+              "children": [
+                {
+                  "type": "richText",
+                  "id": "aboutRichText",
+                  "enabled": false,
+                  "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">Change who holds roles on an application's shell organizations, right here. <b>Current Assignments</b> lists every position that holds a role now: tick <b>Remove</b> to take it off. Under <b>Positions to Add</b>, click + and pick the role and organization, then search for the position. OK checks every change in Workday first (<b>Validate only</b>, nothing changes) and opens Results, where <b>Apply</b> makes the changes. Tick <b>Real run</b> to apply straight away. Up to 50 changes per submit; for more, use the Excel template.</span>"
+                }
+              ],
+              "collapsible": true,
+              "initializeCollapsed": true
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "pickSection",
+          "render": "<% empty(queryParams.appCode) %>",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "pickFieldSet",
+              "title": "Choose an Application",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "pickText",
+                  "label": "Application",
+                  "enabled": false,
+                  "value": "<% 'No application chosen yet.' %>"
+                },
+                {
+                  "type": "button",
+                  "id": "pickAppButton",
+                  "label": "Choose an Application",
+                  "action": "PRIMARY",
+                  "suppressDiscardDialog": true,
+                  "taskReference": {
+                    "taskId": "bulkRoleGridApps"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "runSection",
+          "render": "<% !empty(queryParams.appCode) %>",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "runFieldSet",
+              "title": "Run",
+              "children": [
+                {
+                  "type": "hidden",
+                  "id": "batchRefHidden",
+                  "value": "<% 'GRID' + date:now().format('yyyyMMddHHmmss') + (selectedWorker.id ?? '').substring(0, 6) %>"
+                },
+                {
+                  "type": "readOnlyText",
+                  "id": "changesReadOnlyText",
+                  "label": "Changes",
+                  "value": "No changes yet. Up to 50 per submit."
+                },
+                {
+                  "type": "date",
+                  "id": "effectiveDate",
+                  "label": "Effective Date",
+                  "required": true,
+                  "onChange": "<%\n  if (empty(self.value)) { self.clearError(); }\n  else if (!comsValidations.isWeekday(self.value)) { self.setError(comsValidations.errorWeekday()); }\n  else if (!comsValidations.isCurrentOrFutureYear(self.value)) { self.setError(comsValidations.errorYear()); }\n  else { self.clearError(); }\n%>"
+                },
+                {
+                  "type": "checkBox",
+                  "id": "realRunCheckBox",
+                  "label": "Real run (skip validation and make the changes in Workday now)",
+                  "value": "<% false %>",
+                  "onChange": "<% confirmRealRunCheckBox.setVisible(self.value == true); confirmRealRunCheckBox.clearError(); %>"
+                },
+                {
+                  "type": "checkBox",
+                  "id": "confirmRealRunCheckBox",
+                  "visible": false,
+                  "label": "I want to apply these changes without validating first",
+                  "value": "<% false %>",
+                  "onChange": "<% self.clearError() %>"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "currentSection",
+          "render": "<% !empty(queryParams.appCode) %>",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "currentFieldSet",
+              "title": "Current Assignments",
+              "children": [
+                {
+                  "type": "grid",
+                  "id": "currentGrid",
+                  "rowVariableName": "gr",
+                  "doNotAdd": true,
+                  "doNotRemove": true,
+                  "label": "Current Assignments",
+                  "rows": "<% list:flatten(list:flatten((shellRoles.data ?? []).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ((ra.organization.descriptor + ':').startsWith((queryParams.appCode ?? '') + ':') || ra.organization.descriptor.startsWith((queryParams.appCode ?? '') + ' ')) }).map(ra => { (ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? []).map(p => { { 'role': r.role.descriptor ?? '', 'roleWid': r.role.id ?? '', 'org': ra.organization.descriptor ?? '', 'orgWid': ra.organization.id ?? '', 'position': p.descriptor ?? '', 'positionId': (p.descriptor ?? '').substringBefore(' '), 'assigneeWid': p.id ?? '' } }) }) }))) %>",
+                  "columns": [
+                    {
+                      "type": "column",
+                      "columnId": "colRemove",
+                      "label": "Remove",
+                      "cellTemplate": {
+                        "type": "checkBox",
+                        "id": "removeCheckBox",
+                        "value": "<% false %>",
+                        "onChange": "<%\n  effectiveDate.clearError(); /* change counter */ let removals = currentGrid.rows.filter(r => { r.childrenMap.colRemove.value == true }).size(); let addRows = addGrid.rows.filter(r => { !empty(r.childrenMap.colPositionAdd.value) }); let keys = addRows.filter(r => { !empty(r.childrenMap.colRoleOrg.value) }).map(r => { (r.childrenMap.colRoleOrg.selectedEntries[0].id + '|' + r.childrenMap.colPositionAdd.value[0]) }); let held = keys.size() == 0 ? [] : (list:flatten(list:flatten((shellRoles.data ?? []).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ((ra.organization.descriptor + ':').startsWith((queryParams.appCode ?? '') + ':') || ra.organization.descriptor.startsWith((queryParams.appCode ?? '') + ' ')) }).map(ra => { (ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? []).map(p => { { 'role': r.role.descriptor ?? '', 'roleWid': r.role.id ?? '', 'org': ra.organization.descriptor ?? '', 'orgWid': ra.organization.id ?? '', 'position': p.descriptor ?? '', 'positionId': (p.descriptor ?? '').substringBefore(' '), 'assigneeWid': p.id ?? '' } }) }) }))).map(x => { x.roleWid + '|' + x.orgWid + '|' + x.positionId })); let additions = keys.filter(k => { !held.contains(k) }).distinct().size(); let toFix = addRows.size() - additions; changesReadOnlyText.setValue((removals + addRows.size() == 0) ? 'No changes yet. Up to 50 per submit.' : ('' + removals + ' removal' + (removals == 1 ? '' : 's') + ' and ' + additions + ' addition' + (additions == 1 ? '' : 's') + ' ready' + (toFix > 0 ? ', ' + toFix + ' row' + (toFix == 1 ? '' : 's') + ' to fix' : '') + ((removals + addRows.size()) > 50 ? ': over the limit of 50 per submit' : ' (up to 50 per submit)'))); %>"
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colRole",
+                      "label": "Role",
+                      "cellTemplate": {
+                        "type": "text",
+                        "id": "colRoleText",
+                        "enabled": false,
+                        "value": "<% gr.role ?? '' %>"
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colOrg",
+                      "label": "Organization",
+                      "cellTemplate": {
+                        "type": "text",
+                        "id": "colOrgText",
+                        "enabled": false,
+                        "value": "<% gr.org ?? '' %>"
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colPosition",
+                      "label": "Position",
+                      "cellTemplate": {
+                        "type": "fieldSet",
+                        "id": "removeFieldSet",
+                        "children": [
+                          {
+                            "type": "text",
+                            "id": "positionText",
+                            "enabled": false,
+                            "value": "<% gr.position ?? '' %>"
+                          },
+                          {
+                            "type": "hidden",
+                            "id": "removeRoleNameHidden",
+                            "value": "<% gr.role ?? '' %>",
+                            "valueOutBinding": "removeDraft.roleName"
+                          },
+                          {
+                            "type": "hidden",
+                            "id": "removeRoleWidHidden",
+                            "value": "<% gr.roleWid ?? '' %>",
+                            "valueOutBinding": "removeDraft.roleWid"
+                          },
+                          {
+                            "type": "hidden",
+                            "id": "removeOrgNameHidden",
+                            "value": "<% gr.org ?? '' %>",
+                            "valueOutBinding": "removeDraft.orgName"
+                          },
+                          {
+                            "type": "hidden",
+                            "id": "removeOrgWidHidden",
+                            "value": "<% gr.orgWid ?? '' %>",
+                            "valueOutBinding": "removeDraft.orgWid"
+                          },
+                          {
+                            "type": "hidden",
+                            "id": "removePositionNameHidden",
+                            "value": "<% gr.position ?? '' %>",
+                            "valueOutBinding": "removeDraft.positionName"
+                          },
+                          {
+                            "type": "hidden",
+                            "id": "removePositionIdHidden",
+                            "value": "<% gr.positionId ?? '' %>",
+                            "valueOutBinding": "removeDraft.positionId"
+                          },
+                          {
+                            "type": "hidden",
+                            "id": "removeAssigneeWidHidden",
+                            "value": "<% gr.assigneeWid ?? '' %>",
+                            "valueOutBinding": "removeDraft.assigneeWid"
+                          },
+                          {
+                            "type": "hidden",
+                            "id": "removeBatchHidden",
+                            "value": "<% batchRefHidden.value + '-DRAFT' %>",
+                            "valueOutBinding": "removeDraft.batchRef"
+                          },
+                          {
+                            "type": "hidden",
+                            "id": "removeModeHidden",
+                            "value": "<% 'DRAFT' %>",
+                            "valueOutBinding": "removeDraft.runMode"
+                          },
+                          {
+                            "type": "hidden",
+                            "id": "removeActionHidden",
+                            "value": "<% 'REMOVE' %>",
+                            "valueOutBinding": "removeDraft.rowAction"
+                          },
+                          {
+                            "type": "hidden",
+                            "id": "removeResultHidden",
+                            "value": "<% 'DRAFT' %>",
+                            "valueOutBinding": "removeDraft.result"
+                          },
+                          {
+                            "type": "hidden",
+                            "id": "removeTimeHidden",
+                            "value": "<% date:now().format(\"yyyy-MM-dd'T'HH:mm:ss'Z'\") %>",
+                            "valueOutBinding": "removeDraft.timestamp"
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "gridType": "LIST",
+                  "multiViewStylingEnabled": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "addSection",
+          "render": "<% !empty(queryParams.appCode) %>",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "addFieldSet",
+              "title": "Positions to Add",
+              "children": [
+                {
+                  "type": "grid",
+                  "id": "addGrid",
+                  "rowVariableName": "ar",
+                  "label": "Positions to Add",
+                  "rows": "<% [] %>",
+                  "columns": [
+                    {
+                      "type": "column",
+                      "columnId": "colRoleOrg",
+                      "label": "Role and Organization",
+                      "required": true,
+                      "cellTemplate": {
+                        "type": "dropdown",
+                        "id": "roleOrgDropdown",
+                        "values": "<% list:flatten((shellRoles.data ?? []).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ((ra.organization.descriptor + ':').startsWith((queryParams.appCode ?? '') + ':') || ra.organization.descriptor.startsWith((queryParams.appCode ?? '') + ' ')) }).map(ra => { { 'id': (r.role.id ?? '') + '|' + (ra.organization.id ?? ''), 'descriptor': (r.role.descriptor ?? '') + ' — ' + (ra.organization.descriptor ?? '') } }) })) %>",
+                        "onChange": "<%\n  effectiveDate.clearError(); if (!empty(positionAddList.value) && !empty(self.value) && (list:flatten(list:flatten((shellRoles.data ?? []).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ((ra.organization.descriptor + ':').startsWith((queryParams.appCode ?? '') + ':') || ra.organization.descriptor.startsWith((queryParams.appCode ?? '') + ' ')) }).map(ra => { (ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? []).map(p => { { 'role': r.role.descriptor ?? '', 'roleWid': r.role.id ?? '', 'org': ra.organization.descriptor ?? '', 'orgWid': ra.organization.id ?? '', 'position': p.descriptor ?? '', 'positionId': (p.descriptor ?? '').substringBefore(' '), 'assigneeWid': p.id ?? '' } }) }) }))).map(x => { x.roleWid + '|' + x.orgWid + '|' + x.positionId })).contains(self.selectedEntries[0].id + '|' + positionAddList.value[0])) {\n    positionAddList.setError('This position already holds this role on this organization.');\n  } else { positionAddList.clearError(); }; /* change counter */ let removals = currentGrid.rows.filter(r => { r.childrenMap.colRemove.value == true }).size(); let addRows = addGrid.rows.filter(r => { !empty(r.childrenMap.colPositionAdd.value) }); let keys = addRows.filter(r => { !empty(r.childrenMap.colRoleOrg.value) }).map(r => { (r.childrenMap.colRoleOrg.selectedEntries[0].id + '|' + r.childrenMap.colPositionAdd.value[0]) }); let held = keys.size() == 0 ? [] : (list:flatten(list:flatten((shellRoles.data ?? []).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ((ra.organization.descriptor + ':').startsWith((queryParams.appCode ?? '') + ':') || ra.organization.descriptor.startsWith((queryParams.appCode ?? '') + ' ')) }).map(ra => { (ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? []).map(p => { { 'role': r.role.descriptor ?? '', 'roleWid': r.role.id ?? '', 'org': ra.organization.descriptor ?? '', 'orgWid': ra.organization.id ?? '', 'position': p.descriptor ?? '', 'positionId': (p.descriptor ?? '').substringBefore(' '), 'assigneeWid': p.id ?? '' } }) }) }))).map(x => { x.roleWid + '|' + x.orgWid + '|' + x.positionId })); let additions = keys.filter(k => { !held.contains(k) }).distinct().size(); let toFix = addRows.size() - additions; changesReadOnlyText.setValue((removals + addRows.size() == 0) ? 'No changes yet. Up to 50 per submit.' : ('' + removals + ' removal' + (removals == 1 ? '' : 's') + ' and ' + additions + ' addition' + (additions == 1 ? '' : 's') + ' ready' + (toFix > 0 ? ', ' + toFix + ' row' + (toFix == 1 ? '' : 's') + ' to fix' : '') + ((removals + addRows.size()) > 50 ? ': over the limit of 50 per submit' : ' (up to 50 per submit)'))); %>",
+                        "valuesOut": [
+                          {
+                            "value": "<% empty(self.value) ? '' : self.selectedEntries[0].id.substringBefore('|') %>",
+                            "valueOutBinding": "addDraft.roleWid"
+                          },
+                          {
+                            "value": "<% empty(self.value) ? '' : self.selectedEntries[0].id.substringAfter('|') %>",
+                            "valueOutBinding": "addDraft.orgWid"
+                          },
+                          {
+                            "value": "<% empty(self.value) ? '' : self.selectedEntries[0].descriptor.substringBefore(' — ') %>",
+                            "valueOutBinding": "addDraft.roleName"
+                          },
+                          {
+                            "value": "<% empty(self.value) ? '' : self.selectedEntries[0].descriptor.substringAfter(' — ') %>",
+                            "valueOutBinding": "addDraft.orgName"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colPositionAdd",
+                      "label": "Position",
+                      "required": true,
+                      "cellTemplate": {
+                        "type": "instanceList",
+                        "id": "positionAddList",
+                        "multiSelect": false,
+                        "values": "<% (posTreeRoot.data ?? []).filter(r => { r.descriptor == 'My Favorites' || r.descriptor == 'My Organizations' || r.descriptor == 'Supervisory Organizations by Manager' || r.descriptor == 'Supervisory Organization' }).map(r => { {'id': r.id, 'descriptor': r.descriptor} }) %>",
+                        "onSearch": "<% empty(event.query) ? [] : (gridPosSearch.invoke({ 'q': event.query }).data ?? []).filter(o => { !empty(o.cf_PositionID) }).map(o => { {'id': o.cf_PositionID, 'descriptor': !empty(o.position_PositionManagement.descriptor) ? o.position_PositionManagement.descriptor : (!empty(o.cf_PositionText) ? o.cf_PositionText : o.cf_PositionID)} }) %>",
+                        "onChange": "<%\n  effectiveDate.clearError(); if (empty(self.value) || empty(roleOrgDropdown.value)) { self.clearError(); }\n  else if ((list:flatten(list:flatten((shellRoles.data ?? []).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ((ra.organization.descriptor + ':').startsWith((queryParams.appCode ?? '') + ':') || ra.organization.descriptor.startsWith((queryParams.appCode ?? '') + ' ')) }).map(ra => { (ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? []).map(p => { { 'role': r.role.descriptor ?? '', 'roleWid': r.role.id ?? '', 'org': ra.organization.descriptor ?? '', 'orgWid': ra.organization.id ?? '', 'position': p.descriptor ?? '', 'positionId': (p.descriptor ?? '').substringBefore(' '), 'assigneeWid': p.id ?? '' } }) }) }))).map(x => { x.roleWid + '|' + x.orgWid + '|' + x.positionId })).contains(roleOrgDropdown.selectedEntries[0].id + '|' + self.value[0])) {\n    self.setError('This position already holds this role on this organization.');\n  } else { self.clearError(); }; /* change counter */ let removals = currentGrid.rows.filter(r => { r.childrenMap.colRemove.value == true }).size(); let addRows = addGrid.rows.filter(r => { !empty(r.childrenMap.colPositionAdd.value) }); let keys = addRows.filter(r => { !empty(r.childrenMap.colRoleOrg.value) }).map(r => { (r.childrenMap.colRoleOrg.selectedEntries[0].id + '|' + r.childrenMap.colPositionAdd.value[0]) }); let held = keys.size() == 0 ? [] : (list:flatten(list:flatten((shellRoles.data ?? []).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ((ra.organization.descriptor + ':').startsWith((queryParams.appCode ?? '') + ':') || ra.organization.descriptor.startsWith((queryParams.appCode ?? '') + ' ')) }).map(ra => { (ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? []).map(p => { { 'role': r.role.descriptor ?? '', 'roleWid': r.role.id ?? '', 'org': ra.organization.descriptor ?? '', 'orgWid': ra.organization.id ?? '', 'position': p.descriptor ?? '', 'positionId': (p.descriptor ?? '').substringBefore(' '), 'assigneeWid': p.id ?? '' } }) }) }))).map(x => { x.roleWid + '|' + x.orgWid + '|' + x.positionId })); let additions = keys.filter(k => { !held.contains(k) }).distinct().size(); let toFix = addRows.size() - additions; changesReadOnlyText.setValue((removals + addRows.size() == 0) ? 'No changes yet. Up to 50 per submit.' : ('' + removals + ' removal' + (removals == 1 ? '' : 's') + ' and ' + additions + ' addition' + (additions == 1 ? '' : 's') + ' ready' + (toFix > 0 ? ', ' + toFix + ' row' + (toFix == 1 ? '' : 's') + ' to fix' : '') + ((removals + addRows.size()) > 50 ? ': over the limit of 50 per submit' : ' (up to 50 per submit)'))); %>",
+                        "valuesOut": [
+                          {
+                            "value": "<% empty(self.value) ? '' : self.value[0] %>",
+                            "valueOutBinding": "addDraft.positionId"
+                          },
+                          {
+                            "value": "<% empty(self.value) ? '' : self.selectedEntries[0].descriptor %>",
+                            "valueOutBinding": "addDraft.positionName"
+                          }
+                        ],
+                        "helpText": "Click to browse by supervisory organization, or type a position name or ID. Shows the first 50 matches; type more of the title or ID to narrow.",
+                        "dynamicMonikerLevels": "<%\n  const sel = self.promptSelections;\n  const roots = posTreeRoot.data ?? [];\n  const i = roots.map(r => { r.id }).indexOf(sel[0]);\n  const href = i < 0 ? '' : (roots[i].href ?? '');\n  const byManager = i < 0 ? false : roots[i].descriptor == 'Supervisory Organizations by Manager';\n  if (sel.size() == 1 || (byManager && sel.size() == 2)) {\n    const node = sel.size() == 1 ? href : (href + '/' + sel[1]);\n    const first = posTreeNode.invoke({'h': node, 'o': '0'});\n    const more = (first.total ?? 0) > 100 ? (posTreeNode.invoke({'h': node, 'o': '100'}).data ?? []) : [];\n    return [list:flatten([first.data ?? [], more]).map(o => { {'id': o.id, 'descriptor': o.descriptor} }), true];\n  }\n  const ps = posTreeOrgPositions.invoke({'org': sel[sel.size() - 1]}).data ?? [];\n  return [ps.filter(o => { !empty(o.cf_PositionID) }).map(o => { {'id': o.cf_PositionID, 'descriptor': !empty(o.position_PositionManagement.descriptor) ? o.position_PositionManagement.descriptor : (!empty(o.cf_PositionText) ? o.cf_PositionText : o.cf_PositionID)} }), false];\n%>"
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colAddMeta",
+                      "label": "Action",
+                      "cellTemplate": {
+                        "type": "fieldSet",
+                        "id": "addFieldSetMeta",
+                        "children": [
+                          {
+                            "type": "text",
+                            "id": "addActionText",
+                            "enabled": false,
+                            "value": "<% 'Add' %>"
+                          },
+                          {
+                            "type": "hidden",
+                            "id": "addAssigneeHidden",
+                            "value": "<% '' %>",
+                            "valueOutBinding": "addDraft.assigneeWid"
+                          },
+                          {
+                            "type": "hidden",
+                            "id": "addBatchHidden",
+                            "value": "<% batchRefHidden.value + '-DRAFT' %>",
+                            "valueOutBinding": "addDraft.batchRef"
+                          },
+                          {
+                            "type": "hidden",
+                            "id": "addModeHidden",
+                            "value": "<% 'DRAFT' %>",
+                            "valueOutBinding": "addDraft.runMode"
+                          },
+                          {
+                            "type": "hidden",
+                            "id": "addActionHidden",
+                            "value": "<% 'ADD' %>",
+                            "valueOutBinding": "addDraft.rowAction"
+                          },
+                          {
+                            "type": "hidden",
+                            "id": "addResultHidden",
+                            "value": "<% 'DRAFT' %>",
+                            "valueOutBinding": "addDraft.result"
+                          },
+                          {
+                            "type": "hidden",
+                            "id": "addTimeHidden",
+                            "value": "<% date:now().format(\"yyyy-MM-dd'T'HH:mm:ss'Z'\") %>",
+                            "valueOutBinding": "addDraft.timestamp"
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "onRowRemove": "<%\n  effectiveDate.clearError(); /* change counter */ let removals = currentGrid.rows.filter(r => { r.childrenMap.colRemove.value == true }).size(); let addRows = addGrid.rows.filter(r => { !empty(r.childrenMap.colPositionAdd.value) }); let keys = addRows.filter(r => { !empty(r.childrenMap.colRoleOrg.value) }).map(r => { (r.childrenMap.colRoleOrg.selectedEntries[0].id + '|' + r.childrenMap.colPositionAdd.value[0]) }); let held = keys.size() == 0 ? [] : (list:flatten(list:flatten((shellRoles.data ?? []).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ((ra.organization.descriptor + ':').startsWith((queryParams.appCode ?? '') + ':') || ra.organization.descriptor.startsWith((queryParams.appCode ?? '') + ' ')) }).map(ra => { (ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? []).map(p => { { 'role': r.role.descriptor ?? '', 'roleWid': r.role.id ?? '', 'org': ra.organization.descriptor ?? '', 'orgWid': ra.organization.id ?? '', 'position': p.descriptor ?? '', 'positionId': (p.descriptor ?? '').substringBefore(' '), 'assigneeWid': p.id ?? '' } }) }) }))).map(x => { x.roleWid + '|' + x.orgWid + '|' + x.positionId })); let additions = keys.filter(k => { !held.contains(k) }).distinct().size(); let toFix = addRows.size() - additions; changesReadOnlyText.setValue((removals + addRows.size() == 0) ? 'No changes yet. Up to 50 per submit.' : ('' + removals + ' removal' + (removals == 1 ? '' : 's') + ' and ' + additions + ' addition' + (additions == 1 ? '' : 's') + ' ready' + (toFix > 0 ? ', ' + toFix + ' row' + (toFix == 1 ? '' : 's') + ' to fix' : '') + ((removals + addRows.size()) > 50 ? ': over the limit of 50 per submit' : ' (up to 50 per submit)'))); %>",
+                  "gridType": "LIST",
+                  "multiViewStylingEnabled": true,
+                  "onRowAdd": "<% effectiveDate.clearError(); %>"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "footer": {
+      "type": "footer",
+      "children": [
+        {
+          "type": "pod",
+          "podId": "ecoComsFooter"
+        }
+      ]
+    },
+    "pageType": "EDIT"
+  }
+}

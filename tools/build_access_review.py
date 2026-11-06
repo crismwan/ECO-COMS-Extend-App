@@ -124,7 +124,7 @@ page = {"id": "accessReview", "securityDomains": ["ManageCOMSShellOrgs"], "inclu
          "value": "No vacant position holds an ECO-COMS shell role."},
         {"type": "button", "id": "reviewAllButton", "label": "Review All Positions", "action": "PRIMARY", "visible": "<% size(" + ROWS + ") > 0 %>",
          "taskReference": {"taskId": "confirmAccessReview"}},
-        {"type": "grid", "id": "accessReviewGrid", "label": "Vacant Positions Holding Shell Roles", "rowVariableName": "rv", "readOnly": True,
+        {"type": "grid", "id": "accessReviewGrid", "label": "Vacant Positions Holding Shell Roles", "rowVariableName": "rv",
          "rows": "<% " + ROWS + " %>",
          "columns": [
            inst("colRole", "Role", "role", "roleWid"),

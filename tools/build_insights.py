@@ -93,7 +93,7 @@ def text_col(cid, label, value, kind="text"):
 
 
 apps_grid = {
-    "type": "grid", "id": "appInsightsGrid", "label": "Applications at a Glance", "readOnly": True,
+    "type": "grid", "id": "appInsightsGrid", "label": "Applications at a Glance",
     "rows": f"<% comsInsights.appRows({REQ}, {ORGS}, comsApplications.data ?? []) %>", "rowVariableName": "appRow",
     "columns": [
         {"type": "column", "columnId": "appCodeColumn", "label": "Application ID", "cellTemplate": {
@@ -110,7 +110,7 @@ apps_grid = {
     ]}
 
 pending_grid = {
-    "type": "grid", "id": "oldestPendingGrid", "label": "Oldest Pending Requests", "readOnly": True,
+    "type": "grid", "id": "oldestPendingGrid", "label": "Oldest Pending Requests",
     "rows": f"<% comsInsights.oldestPending({REQ}, 10) %>", "rowVariableName": "pendingRow",
     "columns": [
         text_col("requestedColumn", "Requested", "<% ('' + (pendingRow.requestedDate ?? '')).substring(0, 10) %>"),
