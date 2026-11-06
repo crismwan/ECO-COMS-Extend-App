@@ -2369,6 +2369,23 @@ async function subflowsSuite(token, me) {
 
 async function probe(token) {
   console.log('\n-- Probe (read-only) --');
+  // 2026-11-06: organization subtypes (X:META / X:SHELL) as the filter instead of the X: code prefix
+  {
+    const xs = (await wql(token, "SELECT workdayID, code, subtype, type1, superiorOrganization FROM topLevelOrganizations WHERE code contains 'X:'", 10000)).data || [];
+    const st = {};
+    for (const o of xs) { const k = JSON.stringify(o.subtype || null); st[k] = (st[k] || 0) + 1; }
+    Object.entries(st).forEach(([k, v]) => console.log(`   SUBTYPE ${k} count=${v}`));
+    console.log('   SAMPLE ' + JSON.stringify(xs.slice(0, 2)));
+    const ids = [...new Set(xs.map((o) => o.subtype && o.subtype.id).filter(Boolean))];
+    if (ids.length) {
+      const bySub = (await wql(token, `SELECT workdayID, code, subtype FROM topLevelOrganizations WHERE subtype in (${ids.join(',')})`, 10000)).data || [];
+      console.log(`   BYSUBTYPE total=${bySub.length} withoutX=${bySub.filter((o) => !String(o.code || '').includes('X:')).length}`);
+      bySub.filter((o) => !String(o.code || '').includes('X:')).slice(0, 20).forEach((o) => console.log('   NOX ' + JSON.stringify(o)));
+    }
+    const roles = (await wql(token, "SELECT role, roleName, enabledForOrganizationTypes FROM assignableRoles WHERE roleName contains 'X:'", 10000)).data || [];
+    console.log(`   ROLES total=${roles.length} sample=${JSON.stringify(roles.slice(0, 3))}`);
+    return;
+  }
   // Sub-orchestration probe (tools/probe_subflow.py): ProbeSubflowCall calls ProbeEcho and returns {"echo": "echo:hello"}.
   // Application Pattern audit rows vs application records (Audit Log link, 2026-11-05)
   const ap = (await readAll(token, 'comsAuditLogs')).filter((a) => a.objectType === 'Application Pattern');
