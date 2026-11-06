@@ -34,6 +34,7 @@ CARDS = {
     "PendingIscCard": "inbox", "MyAttentionCard": "inbox",
     # Shell organizations
     "HomeShellOrgActionsCard": "building", "ShellOrgCard": "building", "ShellOrgQuickActionsCard": "building",
+    "AppBarAllCard": "building", "AppBarNarrowedCard": "building", "FamilyPickCard": "building", "AppPickCard": "building",
     # Bulk role changes (many positions at once)
     "HomeBulkActionsCard": "people-group", "BulkActionsPillCard": "people-group",
     "BulkNextStepCard": "people-group", "BulkRelatedCard": "people-group",

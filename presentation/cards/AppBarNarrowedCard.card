@@ -1,0 +1,69 @@
+{
+  "id": "AppBarNarrowedCard",
+  "parameters": [
+    "appTitle",
+    "subtitleText",
+    "bodyText",
+    "changeLabel",
+    "changePick",
+    "family",
+    "appCode",
+    "prevLabel",
+    "prevCode",
+    "nextLabel",
+    "nextCode"
+  ],
+  "header": {
+    "title": "<% appTitle ?? \"\" %>",
+    "subtitle": "<% subtitleText ?? \"\" %>",
+    "icon": "wd-accent-building",
+    "indicator": {
+      "label": "Narrowed",
+      "color": "blue"
+    }
+  },
+  "body": {
+    "type": "simpleCard",
+    "value": "<% bodyText ?? \"\" %>"
+  },
+  "footer": [
+    {
+      "label": "<% changeLabel ?? \"Change application\" %>",
+      "taskReference": {
+        "taskId": "shellOrgManager",
+        "parameterBindings": {
+          "appCode": "<% appCode ?? \"\" %>",
+          "appName": "<% appCode ?? \"\" %>",
+          "pick": "<% changePick ?? \"\" %>",
+          "family": "<% family ?? \"\" %>"
+        }
+      }
+    },
+    {
+      "label": "Show all applications",
+      "taskReference": {
+        "taskId": "shellOrgManager"
+      }
+    },
+    {
+      "label": "<% prevLabel ?? \"Previous\" %>",
+      "taskReference": {
+        "taskId": "shellOrgManager",
+        "parameterBindings": {
+          "appCode": "<% prevCode ?? \"\" %>",
+          "appName": "<% prevCode ?? \"\" %>"
+        }
+      }
+    },
+    {
+      "label": "<% nextLabel ?? \"Next\" %>",
+      "taskReference": {
+        "taskId": "shellOrgManager",
+        "parameterBindings": {
+          "appCode": "<% nextCode ?? \"\" %>",
+          "appName": "<% nextCode ?? \"\" %>"
+        }
+      }
+    }
+  ]
+}

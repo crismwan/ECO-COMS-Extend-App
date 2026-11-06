@@ -474,6 +474,25 @@ function staticSuite() {
     });
   }
 
+  // 7g6. Calls into an included .script name a function it exports (a typo only fails at run time in Workday).
+  {
+    const exportsOf = {};
+    for (const f of fs.readdirSync(path.join(ROOT, 'presentation/scripts')).filter((x) => x.endsWith('.script'))) {
+      const txt = fs.readFileSync(path.join(ROOT, 'presentation/scripts', f), 'utf8');
+      const tail = txt.slice(txt.lastIndexOf('{'));
+      exportsOf[f.replace('.script', '')] = new Set([...tail.matchAll(/"(\w+)"\s*:/g)].map((m) => m[1]));
+    }
+    let bad = 0;
+    for (const [f, d] of Object.entries(pmds)) {
+      const txt = JSON.stringify(d);
+      for (const inc of (d.include || [])) {
+        const mod = inc.replace('.script', ''); const ex = exportsOf[mod]; if (!ex) continue;
+        for (const m of txt.matchAll(new RegExp(mod + '\\.(\\w+)\\(', 'g'))) if (!ex.has(m[1])) { bad++; fail('Static.scriptExports', `${f}: ${mod}.${m[1]} is not exported by ${inc}`); }
+      }
+    }
+    if (!bad) pass('Static.scriptExports', 'every script call names an exported function');
+  }
+
   // 7g5. Brackets in every page script balance (App Hub build 2026-11-05: "PMD Scripting syntax error ... Parsing
   // Error" from a counter missing one ')'). String literals are blanked first.
   for (const [f, d] of Object.entries(pmds)) {

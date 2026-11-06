@@ -108,14 +108,49 @@
                   "action": "LINK",
                   "suppressDiscardDialog": true,
                   "visible": "<% empty(queryParams.appCode) %>"
-                },
-                {
-                  "type": "richText",
-                  "id": "scopeWarning",
-                  "enabled": false,
-                  "value": "<% empty(queryParams.appCode) ? '<span style=\"display:inline-flex;align-items:center;gap:6px;background:#fef9c3;border:1px solid #fbbf24;border-radius:6px;padding:8px 12px;font-size:12px;color:#92400e\">⚠ No application selected — data below reflects all applications. Use Manage on an application on the Application Patterns tab to view its shell organizations and patterns.</span>' : '<span style=\"display:inline-flex;align-items:center;gap:6px;background:#fef9c3;border:1px solid #fbbf24;border-radius:6px;padding:8px 12px;font-size:12px;color:#92400e\">⚠ Showing shell organizations and patterns for <strong>' + (queryParams.appName ?? queryParams.appCode) + '</strong> only. Go back to view all applications.</span>' %>"
                 }
               ]
+            },
+            {
+              "type": "cardContainer",
+              "id": "appBarCardContainer",
+              "layout": "masonry",
+              "cards": [
+                {
+                  "type": "card",
+                  "cardId": "AppBarAllCard",
+                  "render": "<% empty(queryParams.appCode) %>",
+                  "parameters": "<% comsAppIndex.barAll(allShellOrgs.data, comsApplications.data, (queryParams.pick ?? '')) %>"
+                },
+                {
+                  "type": "card",
+                  "cardId": "AppBarNarrowedCard",
+                  "render": "<% !empty(queryParams.appCode) %>",
+                  "parameters": "<% comsAppIndex.barNarrowed(allShellOrgs.data, comsApplications.data, (queryParams.appCode ?? ''), (queryParams.pick ?? '')) %>"
+                }
+              ],
+              "dynamicCards": {
+                "on": "<% comsAppIndex.familyCards(allShellOrgs.data, comsApplications.data, (queryParams.pick ?? ''), (queryParams.family ?? ''), (queryParams.appCode ?? '')) %>",
+                "as": "fam",
+                "template": {
+                  "cardId": "FamilyPickCard",
+                  "parameters": "<% fam %>"
+                }
+              }
+            },
+            {
+              "type": "cardContainer",
+              "id": "appPickCardContainer",
+              "layout": "masonry",
+              "render": "<% (queryParams.pick ?? '') == '1' && !empty(queryParams.family) %>",
+              "dynamicCards": {
+                "on": "<% comsAppIndex.appCards(allShellOrgs.data, comsApplications.data, (queryParams.pick ?? ''), (queryParams.family ?? ''), (queryParams.appCode ?? '')) %>",
+                "as": "pickApp",
+                "template": {
+                  "cardId": "AppPickCard",
+                  "parameters": "<% pickApp %>"
+                }
+              }
             }
           ]
         }
@@ -189,7 +224,7 @@
                 "gridType": "LIST",
                 "multiViewStylingEnabled": true,
                 "id": "appsGrid",
-                "rows": "<% (comsApplications.data ?? []).filter(a => { !empty(a.patternSchema) }).map(a => { a.appId }).distinct().sort().map(appCode => { {'appCode': appCode} }) %>",
+                "rows": "<% comsAppIndex.appIds(allShellOrgs.data, comsApplications.data).map(appCode => { {'appCode': appCode} }) %>",
                 "rowVariableName": "app",
                 "enabled": false,
                 "label": "Applications",
@@ -236,7 +271,7 @@
                       "type": "text",
                       "id": "appFormatText",
                       "enabled": false,
-                      "value": "<% comsPatterns.summary(comsApplications.data, app.appCode) %>"
+                      "value": "<% (empty(comsPatterns.recordFor(comsApplications.data, app.appCode)) ? 'No pattern yet' : comsPatterns.summary(comsApplications.data, app.appCode)) %>"
                     }
                   },
                   {
@@ -283,7 +318,17 @@
                   }
                 },
                 "action": "PRIMARY",
-                "render": "<% (comsApplications.data ?? []).filter(a => { a.appId == (queryParams.appCode ?? '') && a.active == false }).size() == 0 %>"
+                "render": "<% (comsApplications.data ?? []).filter(a => { a.appId == (queryParams.appCode ?? '') && a.active != false }).size() > 0 %>"
+              },
+              {
+                "type": "button",
+                "id": "setupPatternBtn",
+                "label": "Set Up Pattern Format",
+                "action": "AUXILIARY",
+                "render": "<% !empty(queryParams.appCode) && (comsApplications.data ?? []).filter(a => { a.appId == (queryParams.appCode ?? '') }).size() == 0 %>",
+                "taskReference": {
+                  "taskId": "editAppPattern"
+                }
               },
               {
                 "type": "richText",
@@ -422,7 +467,7 @@
             "id": "shellOrgsAppWarning",
             "enabled": false,
             "visible": "<% !empty(queryParams.appCode) %>",
-            "value": "<span style=\"color:#d97706;font-size:12px;font-weight:700\">⚠ </span><span style=\"color:#92400e;font-size:12px\"><b>Filtered view:</b> You selected <b><% queryParams.appCode ?? '' %></b> from the Application Patterns tab. Only shell organizations matching this application are shown below. <a href=\"javascript:void(0)\" style=\"color:#0055B7\">View all organizations</a> by navigating to Shell Org Manager without an application selected.</span>"
+            "value": "<span style=\"color:#d97706;font-size:12px;font-weight:700\">⚠ </span><span style=\"color:#92400e;font-size:12px\"><b>Filtered view:</b> Narrowed to <b><% queryParams.appCode ?? '' %></b>: only its shell organizations are shown below. Use Show all applications on the Application card above to see every organization.</span>"
           },
           {
             "type": "button",
@@ -698,7 +743,7 @@
                 "id": "rolesEmptyText",
                 "enabled": false,
                 "label": "ⓘ Nothing to show",
-                "visible": "<% size(list:flatten((shellRoles.data ?? []).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith((empty(queryParams.appCode) ? 'X:' : queryParams.appCode)) }).map(ra => { { 'role': r.role, 'org': ra.organization, 'positions': ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? [], 'workers': ra.workersAssigned ?? [] } }) }))) == 0 %>",
+                "visible": "<% size(list:flatten((shellRoles.data ?? []).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && (empty(queryParams.appCode) ? ra.organization.descriptor.startsWith('X:') : (ra.organization.descriptor == queryParams.appCode || ra.organization.descriptor.startsWith(queryParams.appCode + ':') || ra.organization.descriptor.startsWith(queryParams.appCode + ' '))) }).map(ra => { { 'role': r.role, 'org': ra.organization, 'positions': ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? [], 'workers': ra.workersAssigned ?? [] } }) }))) == 0 %>",
                 "value": ""
               },
               {
@@ -706,11 +751,11 @@
                 "gridType": "LIST",
                 "multiViewStylingEnabled": true,
                 "id": "roleAssignmentsGrid",
-                "rows": "<% list:flatten((shellRoles.data ?? []).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith((empty(queryParams.appCode) ? 'X:' : queryParams.appCode)) }).map(ra => { { 'role': r.role, 'org': ra.organization, 'positions': ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? [], 'workers': ra.workersAssigned ?? [] } }) })) %>",
+                "rows": "<% list:flatten((shellRoles.data ?? []).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && (empty(queryParams.appCode) ? ra.organization.descriptor.startsWith('X:') : (ra.organization.descriptor == queryParams.appCode || ra.organization.descriptor.startsWith(queryParams.appCode + ':') || ra.organization.descriptor.startsWith(queryParams.appCode + ' '))) }).map(ra => { { 'role': r.role, 'org': ra.organization, 'positions': ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? [], 'workers': ra.workersAssigned ?? [] } }) })) %>",
                 "rowVariableName": "ra",
                 "label": "Role Assignments",
                 "autoPaging": true,
-                "visible": "<% size(list:flatten((shellRoles.data ?? []).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith((empty(queryParams.appCode) ? 'X:' : queryParams.appCode)) }).map(ra => { { 'role': r.role, 'org': ra.organization, 'positions': ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? [], 'workers': ra.workersAssigned ?? [] } }) }))) > 0 %>",
+                "visible": "<% size(list:flatten((shellRoles.data ?? []).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && (empty(queryParams.appCode) ? ra.organization.descriptor.startsWith('X:') : (ra.organization.descriptor == queryParams.appCode || ra.organization.descriptor.startsWith(queryParams.appCode + ':') || ra.organization.descriptor.startsWith(queryParams.appCode + ' '))) }).map(ra => { { 'role': r.role, 'org': ra.organization, 'positions': ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? [], 'workers': ra.workersAssigned ?? [] } }) }))) > 0 %>",
                 "columns": [
                   {
                     "type": "column",
@@ -823,6 +868,7 @@
     ]
   },
   "include": [
-    "comsPatterns.script"
+    "comsPatterns.script",
+    "comsAppIndex.script"
   ]
 }

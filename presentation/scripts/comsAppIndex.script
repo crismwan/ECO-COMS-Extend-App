@@ -1,0 +1,138 @@
+var appOf = function(code) {
+  code.contains('(') ? (code.substringBefore(')') + ')') : (code.substringAfter(':').contains(':') ? (code.substringBefore(':') + ':' + code.substringAfter(':').substringBefore(':')) : code);
+};
+
+var shortOf = function(app) {
+  app.contains('(') ? app.substringAfter('(').substringBefore(')') : app.substringAfter('X:');
+};
+
+var familyOf = function(app, ids) {
+  let base = app.contains('(') ? app.substringBefore('(') : app;
+  ids.filter(x => { x.startsWith(base + '(') }).size() > 0 ? base.substringAfter('X:') : 'Standalone';
+};
+
+var countOf = function(sorted, c) {
+  let i = sorted.indexOf(c);
+  i < 0 ? 0 : (sorted.lastIndexOf(c) - i + 1);
+};
+
+var recordOf = function(recs, app) {
+  let m = (recs ?? []).filter(r => { r.appId == app });
+  empty(m) ? null : m[0];
+};
+
+var nameOf = function(recs, app) {
+  let r = recordOf(recs, app);
+  empty(r) ? '' : (r.name ?? '');
+};
+
+var readyOf = function(recs, app) {
+  let r = recordOf(recs, app);
+  !empty(r) && r.active != false && !empty(r.patternSchema);
+};
+
+var index = function(orgs, recs) {
+  let codes = (orgs ?? []).map(o => { o.code ?? '' }).filter(c => { c.startsWith('X:') });
+  let ids = list:flatten([codes.map(c => { appOf(c) }), (recs ?? []).map(r => { r.appId ?? '' }).filter(x => { x.startsWith('X:') })]).distinct().sort();
+  let shell = codes.filter(c => { !c.contains(':PATTERN') && c != appOf(c) }).map(c => { appOf(c) }).sort();
+  let pats = codes.filter(c => { c.contains(':PATTERN') }).map(c => { appOf(c) }).sort();
+  let act = (orgs ?? []).filter(o => { (o.code ?? '').startsWith('X:') && !(o.code ?? '').contains(':PATTERN') && o.cf_active1 == true && (o.code ?? '') != appOf(o.code ?? '') }).map(o => { appOf(o.code) }).sort();
+  ids.map(a => { { 'id': a, 'short': shortOf(a), 'name': nameOf(recs, a), 'family': familyOf(a, ids), 'orgs': countOf(shell, a), 'active': countOf(act, a), 'patterns': countOf(pats, a), 'ready': readyOf(recs, a) } });
+};
+
+var familyNames = function(idx) {
+  let fams = idx.map(a => { a.family }).distinct();
+  list:flatten([fams.filter(f => { f != 'Standalone' }).sort(), fams.filter(f => { f == 'Standalone' })]);
+};
+
+var inFamily = function(idx, fam) {
+  idx.filter(a => { a.family == fam });
+};
+
+var find = function(idx, app) {
+  let m = idx.filter(a => { a.id == app });
+  empty(m) ? null : m[0];
+};
+
+var sumOrgs = function(apps) {
+  apps.size() == 0 ? 0 : apps.map(a => { a.orgs }).reduce((x, y) => { x + y });
+};
+
+var barAll = function(orgs, recs, pick) {
+  let idx = index(orgs, recs);
+  let total = (orgs ?? []).filter(o => { (o.code ?? '').startsWith('X:') }).size();
+  let m = { 'subtitleText': '' + idx.size() + ' applications · ' + total + ' shell organizations',
+    'bodyText': pick == '1' ? 'Pick a family below, then an application. The page reloads narrowed to it.' : 'Showing every application. Narrow down to see one application’s patterns, organizations and roles.',
+    'actionLabel': pick == '1' ? 'Close' : 'Narrow down',
+    'pickParam': pick == '1' ? '' : '1' };
+  m;
+};
+
+var barNarrowed = function(orgs, recs, app, pick) {
+  let idx = index(orgs, recs);
+  let a = find(idx, app);
+  let fam = empty(a) ? 'Standalone' : a.family;
+  let ids = empty(a) ? [app] : inFamily(idx, fam).map(x => { x.id });
+  let i = ids.indexOf(app) < 0 ? 0 : ids.indexOf(app);
+  let n = ids.size();
+  let prev = i > 0 ? ids.get(i - 1) : ids.get(n - 1);
+  let next = i < n - 1 ? ids.get(i + 1) : ids.get(0);
+  let m = { 'appTitle': 'Application: ' + app,
+    'subtitleText': ((empty(a) || empty(a.name)) ? '' : a.name + ' · ') + (fam == 'Standalone' ? 'standalone application' : 'in the ' + fam + ' family'),
+    'bodyText': empty(a) ? 'No shell organizations found for this application.' : ('' + a.orgs + ' shell organizations (' + a.active + ' active) · ' + a.patterns + ' patterns · ' + (a.ready ? 'pattern format set' : 'no pattern format yet')),
+    'changeLabel': pick == '1' ? 'Close' : 'Change application',
+    'changePick': pick == '1' ? '' : '1',
+    'family': fam,
+    'appCode': app,
+    'prevLabel': 'Previous: ' + prev,
+    'prevCode': prev,
+    'nextLabel': 'Next: ' + next,
+    'nextCode': next };
+  m;
+};
+
+var familyCards = function(orgs, recs, pick, current, app) {
+  let idx = index(orgs, recs);
+  pick != '1' ? [] : familyNames(idx).map(f => { {
+    'familyName': f == 'Standalone' ? 'Standalone applications' : f + ' family',
+    'subtitleText': '' + inFamily(idx, f).size() + ' applications · ' + sumOrgs(inFamily(idx, f)) + ' shell organizations',
+    'bodyText': (inFamily(idx, f).size() > 8 ? inFamily(idx, f).subList(0, 8) : inFamily(idx, f)).map(x => { x.short }).join(', ') + (inFamily(idx, f).size() > 8 ? ' …' : ''),
+    'indicatorLabel': f == current ? 'Selected' : (inFamily(idx, f).filter(x => { !x.ready }).size() == 0 ? 'All patterns ready' : ('' + inFamily(idx, f).filter(x => { !x.ready }).size() + ' need a pattern')),
+    'indicatorColor': f == current ? 'blue' : (inFamily(idx, f).filter(x => { !x.ready }).size() == 0 ? 'green' : 'orange'),
+    'family': f,
+    'appCode': app } });
+};
+
+var appCards = function(orgs, recs, pick, fam, app) {
+  let idx = index(orgs, recs);
+  (pick != '1' || empty(fam)) ? [] : inFamily(idx, fam).map(a => { {
+    'appId': a.id,
+    'subtitleText': empty(a.name) ? (a.ready ? 'Pattern format set' : 'No pattern record yet') : a.name,
+    'bodyText': '' + a.orgs + ' shell organizations · ' + a.patterns + ' patterns',
+    'indicatorLabel': a.id == app ? 'Showing now' : (a.ready ? 'Pattern ready' : 'No pattern yet'),
+    'indicatorColor': a.id == app ? 'blue' : (a.ready ? 'green' : 'orange') } });
+};
+
+var appIds = function(orgs, recs) {
+  index(orgs, recs).map(a => { a.id });
+};
+
+{
+  "appOf": appOf,
+  "shortOf": shortOf,
+  "familyOf": familyOf,
+  "countOf": countOf,
+  "recordOf": recordOf,
+  "nameOf": nameOf,
+  "readyOf": readyOf,
+  "index": index,
+  "familyNames": familyNames,
+  "inFamily": inFamily,
+  "find": find,
+  "sumOrgs": sumOrgs,
+  "barAll": barAll,
+  "barNarrowed": barNarrowed,
+  "familyCards": familyCards,
+  "appCards": appCards,
+  "appIds": appIds
+}

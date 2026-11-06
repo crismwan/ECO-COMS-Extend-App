@@ -1,0 +1,39 @@
+{
+  "id": "FamilyPickCard",
+  "parameters": [
+    "familyName",
+    "subtitleText",
+    "bodyText",
+    "indicatorLabel",
+    "indicatorColor",
+    "family",
+    "appCode"
+  ],
+  "header": {
+    "title": "<% familyName ?? \"\" %>",
+    "subtitle": "<% subtitleText ?? \"\" %>",
+    "icon": "wd-accent-building",
+    "indicator": {
+      "label": "<% indicatorLabel ?? \"\" %>",
+      "color": "<% indicatorColor ?? \"gray\" %>"
+    }
+  },
+  "body": {
+    "type": "simpleCard",
+    "value": "<% bodyText ?? \"\" %>"
+  },
+  "footer": [
+    {
+      "label": "Show applications",
+      "taskReference": {
+        "taskId": "shellOrgManager",
+        "parameterBindings": {
+          "pick": "1",
+          "family": "<% family ?? \"\" %>",
+          "appCode": "<% appCode ?? \"\" %>",
+          "appName": "<% appCode ?? \"\" %>"
+        }
+      }
+    }
+  ]
+}

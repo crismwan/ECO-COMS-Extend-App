@@ -58,6 +58,7 @@ run tools/audit_event_ref.py        # audit records carry their Workday event (f
 run tools/graphql_audit.py          # audit records through the Graph API (newest first, sorted on the server)
 run tools/audit_speed.py            # Audit Log: no lookup lists, empty Graph pages skipped
 run tools/som_speed.py              # Shell Org Manager: one organization list, not two
+run tools/som_app_bar.py            # Shell Org Manager: Application bar, every application, narrow down by family (--off)
 run tools/arm_speed.py              # Assignable Role Manager: unused position lists dropped
 run tools/audit_filters_more.py      # Audit Log Changed By + Organization filters, Shell Org Detail link
 run tools/app_pattern_audit.py       # Audit Log: Application Pattern rows link to their application record
