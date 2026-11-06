@@ -85,11 +85,15 @@ set_rows(s, T(s, 'ID', 0), [
     ['DD-10', 'Graph API for the audit log', 'REST count + offset pages', 'Server-side sort (newest first) and filters on any field', 'Graph offsets need a first request; hub stays on REST (faster there)', 'Developer', '2026-11-04'],
     ['DD-11', 'Shell Org Manager application bar as pill cards', 'Search bar; drop-down; family/app cards (Option D)', 'Every application derived from Workday; two clicks to narrow; all actions visible (Option E on the design canvas)', 'Pill cards hold 10 pills; one card file per pill count', 'Product owner', '2026-11-05'],
     ['DD-12', 'Position picker browses supervisory organizations', 'Workday Graph prompt values; type-ahead only', 'Workday\'s own prompt values (Staffing v6) give the same browse experience as Workday; Graph prompt values don\'t cover positions', 'Several calls per level opened', 'Product owner', '2026-11-05'],
+    ['DD-13', 'Naming standard: XTND-0037 app, IORC_0037 orchestrations', 'Keep ECO-COMS names; hyphens as written', 'App renamed XTND-0037-XFD_SEC-Custom_Organization_Management; orchestrations IORC_0037_XFD_SEC_<description> (Orchestration Builder refuses hyphens). IDs kept, so App Hub history stays', 'Business process launch configurations and Home cards store orchestration names and had to be re-pointed', 'Product owner', '2026-11-06'],
+    ['DD-14', 'Organizations by subtype, applications by organization type', 'Find organizations by an X: in the code; create a new subtype', 'Organizations are the X:META and X:SHELL subtypes; an organization\'s application is its organization type; roles are those enabled for those types. Names and codes can be anything', 'Every list, check and test changed together (tools/subtype_apps.py); same 614 organizations and 12 roles as before', 'Product owner', '2026-11-06'],
+    ['DD-15', 'Optional trailing pattern fields', 'One format per prefix; widen every rule', 'A field may be optional at the end and is left off the name when blank, so one format covers ORG:ELI and ORG:ARTS:HUMANITIES101 (ASMT) and ORG:SAO:GEOO (ADHC)', 'The server count check allows required-to-full field counts', 'Product owner', '2026-11-06'],
+    ['DD-16', 'Clickable count cards', 'Leave counts as text; add buttons', 'Each count is a pill that filters its own page\'s list or opens the list it counts', 'One card file per target page (a pill\'s task can\'t be a parameter)', 'Product owner', '2026-11-06'],
 ], keep=1)
 
 # ---------------------------------------------------------------- 4. traceability
 TR = [
-    ['FR-001', 'Every application listed, derived from Workday', 'comsAppIndex.script; shellOrgManager bar; WQL allShellOrgs', '§5.3, §6.7', 'TC-001'],
+    ['FR-001', 'Every application listed, derived from Workday', 'comsAppIndex.script (appOfOrg: organization type); shellOrgManager bar; WQL allShellOrgs (subtype X:META / X:SHELL)', '§5.3, §6.7', 'TC-001'],
     ['FR-002', 'Narrow Shell Org Manager to one application', 'shellOrgManager (UX-002), SomPills cards, exact role match', '§5.5, §7.1', 'TC-002'],
     ['FR-003', 'Create shell organization (X:META / X:SHELL)', 'createShellOrgWizard/newShellOrg (UX-004); IORC_0037_XFD_SEC_Create_Application_Shell_Org → IORC_0037_XFD_SEC_Sub_Create_Shell_Organization', '§6.6 INT-01, §6.7', 'TC-003'],
     ['FR-004', 'Naming rules page + server', 'comsShellOrg.script; IORC_0037_XFD_SEC_Create_Application_Shell_Org guard', '§5.6', 'TC-004'],
@@ -99,7 +103,7 @@ TR = [
     ['FR-008', 'No rename / delete', 'No such page or call exists', '§3 DD-06', 'TC-008'],
     ['FR-009', 'Inactivate / reactivate', 'manageShellOrgStatus (UX-007); IORC_0037_XFD_SEC_Change_Shell_Org_Status (CheckInputs)', '§6.6 INT-02/03', 'TC-009'],
     ['FR-010', 'Add / remove positions; browse picker', 'editRoleAssignment (UX-008); IORC_0037_XFD_SEC_Assign_Remove_Role_Positions', '§6.6 INT-04', 'TC-010'],
-    ['FR-011', 'Only X: shell roles', 'WQL allShellAssignableRolesinTenant filter X:', '§6.9', 'TC-011'],
+    ['FR-011', 'Only shell roles', 'WQL allShellAssignableRolesinTenant: enabledForOrganizationTypes in the application types (appTypes list)', '§6.9', 'TC-011'],
     ['FR-012', 'Bulk grid (50) and file (1,000), validate then apply', 'bulkRoleGrid, bulkRoleChanges, bulkRoleResults, bulkRoleApply; IORC_0037_XFD_SEC_Bulk_Role_Changes_From_Grid / IORC_0037_XFD_SEC_Bulk_Role_Changes_From_CSV → IORC_0037_XFD_SEC_Sub_Process_Bulk_Role_Row', '§6.7, §6.11', 'TC-012'],
     ['FR-013', 'Pre-filled Excel template', 'bulkRoleTemplate (UX-015); COMS Bulk Template; CI build step', '§6.4', 'TC-013'],
     ['FR-014', 'Assignable role request', 'assignableRoleManager (UX-018); IORC_0037_XFD_SEC_Start_Role_Request_Review → IORC_0037_XFD_SEC_Sub_Start_Request_Review', '§6.8', 'TC-014'],
@@ -114,6 +118,7 @@ TR = [
     ['FR-023', 'Plain rejection message, no false success', 'Run-and-verify in onSubmit', '§5.7, §6.10', 'TC-023'],
     ['FR-024', 'Shell roles on vacant positions', 'accessReview, confirmAccessReview (UX-017)', '§5.3', 'TC-024'],
     ['FR-025', 'Insights', 'comsInsights, comsInsightsApps (UX-020)', '§5.3', 'TC-025'],
+    ['FR-027', 'Clickable counts', 'tools/quick_filters.py: Quick<Task>Card pill cards; quick / status query parameters', '§5.5', 'TC-027'],
     ['FR-026', 'Context scoping (Phase C)', 'Not built: descoped from Phase A, planned', '§9 RSK-02', 'n/a'],
     ['NFR-002', 'Bulk limits', 'Async orchestrations, row limits', '§6.11', 'TC-012'],
     ['NFR-008', 'Response time < 2 s', 'Speed passes; server timing', '§6.11', 'TC-030'],
