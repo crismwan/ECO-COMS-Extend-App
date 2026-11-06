@@ -8,13 +8,34 @@
   ],
   "endPoints": [
     {
+      "name": "appTypes",
+      "baseUrlType": "workday-wql",
+      "url": "data",
+      "authType": "sso",
+      "bestEffort": "true",
+      "wqlQuery": {
+        "queryId": "appTypes"
+      },
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
       "name": "shellRoles",
       "baseUrlType": "workday-wql",
       "url": "data",
       "authType": "sso",
       "bestEffort": "true",
       "wqlQuery": {
-        "queryId": "allShellAssignableRolesinTenant"
+        "queryId": "allShellAssignableRolesinTenant",
+        "parameters": {
+          "types": "<% let ts = (appTypes.data ?? []).map(o => { (o.type1 ?? []).size() > 0 ? o.type1[0].id : '' }).filter(t => { t != '' }).distinct(); ts.size() > 0 ? ts.join(',') : 'none' %>"
+        }
       },
       "failOnStatusCodes": [
         {
@@ -102,7 +123,7 @@
                   "id": "appPickGrid",
                   "rowVariableName": "pa",
                   "label": "Applications",
-                  "rows": "<% list:flatten((shellRoles.data ?? []).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ra.organization.descriptor.startsWith('X:') }).map(ra => { 'X:' + ra.organization.descriptor.substringAfter(':').substringBefore(':').substringBefore(' ') }) })).distinct().sort().map(a => { {'appCode': a} }) %>",
+                  "rows": "<% list:flatten((shellRoles.data ?? []).filter(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null }).size() > 0 }).map(r => { (r.enabledForOrganizationTypes ?? []).map(t => { t.descriptor }) })).distinct().sort().map(a => { {'appCode': a} }) %>",
                   "columns": [
                     {
                       "type": "column",

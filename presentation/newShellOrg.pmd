@@ -73,7 +73,7 @@
     {
       "name": "verifyShellOrg",
       "baseUrlType": "workday-wql",
-      "url": "<% 'data?limit=' + lim + '&query=SELECT%20workdayID%2C%20code%20FROM%20topLevelOrganizations%20WHERE%20code%20contains%20%27X%3A%27' %>",
+      "url": "<% 'data?limit=' + lim + '&query=SELECT%20workdayID%2C%20code%20FROM%20topLevelOrganizations%20WHERE%20subtype%20in%20(e6ca8683b78d10017a5c108412fc0000%2C%20e6ca8683b78d10017a5c108412fc0001)' %>",
       "authType": "sso",
       "deferred": "true"
     }
@@ -168,7 +168,7 @@
                   "id": "selectedApplicationId",
                   "label": "Application",
                   "required": "<% !((!empty(orgSubtypeDropdown.value)) ? (orgSubtypeDropdown.selectedEntries[0].id == 'X:META') : false) %>",
-                  "values": "<%\n  let appCodes = [];\n  let result = [];\n  for (var org : (existingOrgs.data ?? [])) {\n    let code = org.code;\n    let appCode = code.substringAfter(':').contains(':') ?\n      code.substringBefore(':') + ':' + code.substringAfter(':').substringBefore(':') :\n      code;\n    if (!empty(appCode) && !appCodes.contains(appCode)) {\n      appCodes.add(appCode);\n      result.add({'id': appCode, 'descriptor': appCode});\n    }\n  }\n  result;\n%>",
+                  "values": "<%\n  let appCodes = [];\n  let result = [];\n  for (var org : (existingOrgs.data ?? [])) {\n    let code = org.code;\n    let appCode = ((org.type1 ?? []).size() > 0 ? org.type1[0].descriptor : org.code);\n    if (!empty(appCode) && !appCodes.contains(appCode)) {\n      appCodes.add(appCode);\n      result.add({'id': appCode, 'descriptor': appCode});\n    }\n  }\n  result;\n%>",
                   "helpText": "Select the application this organization belongs to. For X:META, leave it blank to add a new application.",
                   "onChange": "<%\n  selectedApplicationId.clearError();\n  organizationCode.clearError();\n  orgNamePreview.setValue(comsShellOrg.preview(((!empty(selectedApplicationId.value)) ? (selectedApplicationId.selectedEntries[0].descriptor ?? '') : ''), organizationCode.value ?? '', ((!empty(orgSubtypeDropdown.value)) ? (orgSubtypeDropdown.selectedEntries[0].id == 'X:META') : false)));\n%>"
                 },

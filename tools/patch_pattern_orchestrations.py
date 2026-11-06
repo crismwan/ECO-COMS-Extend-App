@@ -61,7 +61,7 @@ LABELS = f'({SCH}.length() - {SCH}.replace("fieldLabel", "").length())'
 COLONS = f'(({P}.length() - {P}.replace(":", "").length()) - ({APP}.length() - {APP}.replace(":", "").length()) - 1)'
 
 ASSERTIONS = [
-    (f'{APP}.startsWith("X:")', '"COMS application code must start with X:"'),
+    (f'{APP}.isEmpty().not()', '"The pattern\'s application has no application ID"'),
     (f'{P}.startsWith({APP}.append(":"))', f'"Pattern name must start with " + {APP} + ":, got " + {P}'),
     (f'",".append({PREF}.defaultIfBlank("PATTERN")).append(",").contains(",".append({SEG}).append(","))',
      f'"Pattern prefix " + {SEG} + " is not allowed for " + {APP} + ", got " + {P}'),
@@ -74,15 +74,14 @@ ASSERTIONS = [
 
 # Add Shell Org (product owner 2026-11-05): an X:META organization may be a new application's own
 # organization, named exactly as its organization type. Since 2026-11-06 (product owner) that code can be anything
-# (X: not required); an organization under an application still needs the application's X: type. The page checks the same rules.
+# (X: not required); an organization under an application uses the application as its type. The page checks the same rules.
 N = 'data.GetInputParams.organizationName'
 T = 'data.GetInputParams.orgType'
 ST = 'data.GetInputParams.orgSubtype'
 ORG_ASSERTIONS = [
     (f'{T}.isEmpty().not()', '"Organization type is required"'),
-    (f'(if ({N}.equals({T})) true else {T}.startsWith("X:"))', f'"Organization type must start with X:, got " + {T}'),
-    (f'(if ({N}.equals({T})) true else {T}.substringAfter("X:").isEmpty().not())', f'"Organization type must be X: plus one part, got " + {T}'),
-    (f'(if ({N}.equals({T})) true else {T}.substringAfter("X:").contains(":").not())', f'"Organization type must be X: plus one part, got " + {T}'),
+    # applications can be named anything (product owner 2026-11-06): the type is the application, any name, no spaces
+    (f'{T}.contains(" ").not()', f'"Organization type must not contain spaces, got " + {T}'),
     (f'{N}.equals({T}).or({N}.startsWith({T}.append(":")))', f'"Organization name must be " + {T} + " or start with " + {T} + ":, got " + {N}'),
     (f'(if ({N}.equals({T})) {ST}.equals("X:META") else true)', f'"A new application organization (" + {N} + ") must have subtype X:META"'),
     (f'{N}.contains(" ").not()', f'"Organization name must not contain spaces: " + {N}'),
@@ -118,7 +117,7 @@ def main():
         chk['_value']['assertions']['_value'].append(a)
     chk['_value']['notes']['_value'][0]['_value']['value']['_value'] = (
         "Guard: the name is the type itself (a new application's X:META organization, any code) or starts with the "
-        "type (X: plus one part) and ':'; no spaces")
+        "type and ':'; no spaces")
     if 'CheckOrgName' in names:
         nodes[names.index('CheckOrgName')] = chk
     else:

@@ -312,7 +312,7 @@
                   "type": "text",
                   "id": "applicationText",
                   "enabled": false,
-                  "value": "<% let n = (logEntry.coName ?? '').startsWith('X:') ? logEntry.coName : (logEntry.roleName ?? ''); n.startsWith('X:') ? (n.substringBefore(':') + ':' + n.substringAfter(':').substringBefore(':')) : '' %>"
+                  "value": "<% let n = !empty(logEntry.coName) ? logEntry.coName : (logEntry.roleName ?? ''); n.contains('(') ? (n.substringBefore(')') + ')') : (n.contains(':') ? (n.substringAfter(':').contains(':') && n.startsWith('X:') ? (n.substringBefore(':') + ':' + n.substringAfter(':').substringBefore(':')) : n.substringBefore(':')) : n) %>"
                 },
                 "sortableAndFilterable": "true"
               },

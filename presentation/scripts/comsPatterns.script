@@ -71,7 +71,7 @@ var summary = function(apps, appCode) {
 };
 
 var appCodes = function(orgs, apps) {
-  let fromOrgs = (orgs ?? []).filter(o => { (o.code ?? '').startsWith('X:') }).map(o => { o.code.substringAfter(':').contains(':') ? ('X:' + o.code.substringAfter(':').substringBefore(':')) : o.code });
+  let fromOrgs = (orgs ?? []).map(o => { (o.type1 ?? []).size() > 0 ? o.type1[0].descriptor : (o.code ?? '') }).filter(c => { c != '' });
   let fromApps = (apps ?? []).filter(a => { !empty(a.appId) }).map(a => { a.appId });
   list:flatten([fromOrgs, fromApps]).distinct().sort();
 };

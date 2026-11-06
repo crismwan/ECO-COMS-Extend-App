@@ -1,0 +1,4 @@
+{
+  "id": "appTypes",
+  "query": "SELECT type1 FROM topLevelOrganizations WHERE subtype in (e6ca8683b78d10017a5c108412fc0000, e6ca8683b78d10017a5c108412fc0001)"
+}

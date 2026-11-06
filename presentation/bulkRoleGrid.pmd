@@ -27,13 +27,34 @@
       ]
     },
     {
+      "name": "appTypes",
+      "baseUrlType": "workday-wql",
+      "url": "data",
+      "authType": "sso",
+      "bestEffort": "true",
+      "wqlQuery": {
+        "queryId": "appTypes"
+      },
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
       "name": "shellRoles",
       "baseUrlType": "workday-wql",
       "url": "data",
       "authType": "sso",
       "bestEffort": "true",
       "wqlQuery": {
-        "queryId": "allShellAssignableRolesinTenant"
+        "queryId": "allShellAssignableRolesinTenant",
+        "parameters": {
+          "types": "<% let ts = (appTypes.data ?? []).map(o => { (o.type1 ?? []).size() > 0 ? o.type1[0].id : '' }).filter(t => { t != '' }).distinct(); ts.size() > 0 ? ts.join(',') : 'none' %>"
+        }
       },
       "failOnStatusCodes": [
         {

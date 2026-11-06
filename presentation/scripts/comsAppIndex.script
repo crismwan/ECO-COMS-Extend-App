@@ -6,13 +6,18 @@ var appOf = function(code) {
   code.contains('(') ? (code.substringBefore(')') + ')') : (code.substringAfter(':').contains(':') ? (code.substringBefore(':') + ':' + code.substringAfter(':').substringBefore(':')) : code);
 };
 
+/* The application of an organization record: its organization type (subtype design, 2026-11-06), else its code. */
+var appOfOrg = function(o) {
+  (o.type1 ?? []).size() > 0 ? o.type1[0].descriptor : appOf(o.code ?? '');
+};
+
 var shortOf = function(app) {
-  app.contains('(') ? app.substringAfter('(').substringBefore(')') : app.substringAfter('X:');
+  app.contains('(') ? app.substringAfter('(').substringBefore(')') : (app.startsWith('X:') ? app.substringAfter('X:') : app);
 };
 
 var familyOf = function(app, ids) {
   let base = app.contains('(') ? app.substringBefore('(') : app;
-  ids.filter(x => { x.startsWith(base + '(') }).size() > 0 ? base.substringAfter('X:') : 'Standalone';
+  ids.filter(x => { x.startsWith(base + '(') }).size() > 0 ? (base.startsWith('X:') ? base.substringAfter('X:') : base) : 'Standalone';
 };
 
 var countOf = function(sorted, c) {
@@ -36,11 +41,11 @@ var readyOf = function(recs, app) {
 };
 
 var rowsOf = function(orgs) {
-  (orgs ?? []).filter(o => { (o.code ?? '').startsWith('X:') }).map(o => { { 'c': o.code, 'a': appOf(o.code), 'on': o.cf_active1 == true } });
+  (orgs ?? []).map(o => { { 'c': o.code, 'a': appOfOrg(o), 'on': o.cf_active1 == true } });
 };
 
 var idsOf = function(rows, recs) {
-  list:flatten([rows.map(r => { r.a }), (recs ?? []).map(r => { r.appId ?? '' }).filter(x => { x.startsWith('X:') })]).distinct().sort();
+  list:flatten([rows.map(r => { r.a }), (recs ?? []).map(r => { r.appId ?? '' }).filter(x => { x != '' })]).distinct().sort();
 };
 
 var index = function(orgs, recs) {
@@ -112,7 +117,7 @@ var groupCards = function(idx, fam, app) {
 };
 
 var familiesCard = function(idx, orgs, fam) {
-  let xs = (orgs ?? []).filter(o => { (o.code ?? '').startsWith('X:') });
+  let xs = (orgs ?? []);
   let pats = xs.filter(o => { (o.code ?? '').contains(':PATTERN') }).size();
   let fams = familyNames(idx);
   let fs = fams.size() > 9 ? fams.subList(0, 9) : fams;

@@ -30,11 +30,11 @@ var appOfIn = function(r, apps) {
 };
 
 var isShellOrg = function(o) {
-  ('' + (o.code ?? '')).startsWith('X:') && !('' + (o.code ?? '')).contains(':PATTERN');
+  !('' + (o.code ?? '')).contains(':PATTERN');
 };
 
 var isPattern = function(o) {
-  ('' + (o.code ?? '')).startsWith('X:') && ('' + (o.code ?? '')).contains(':PATTERN');
+  ('' + (o.code ?? '')).contains(':PATTERN');
 };
 
 /* yyyy-MM-dd for today and the previous days-1 days (days <= 90). */

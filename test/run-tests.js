@@ -2369,21 +2369,16 @@ async function subflowsSuite(token, me) {
 
 async function probe(token) {
   console.log('\n-- Probe (read-only) --');
-  // 2026-11-06: assignableRoles fields (looking for an organization subtype/type filter)
+  // 2026-11-06: the subtype design's WQL, exactly as the pages send it (presentation/wqlQueries)
   {
-    const ds = await request('GET', `${API}/wql/v1/dataSources?alias=assignableRoles`, token);
-    const id = (ds.data || [])[0]?.id;
-    let all = [];
-    for (let off = 0; off < 3000; off += 100) {
-      const r = await request('GET', `${API}/wql/v1/dataSources/${id}/fields?limit=100&offset=${off}`, token);
-      all = all.concat(r.data || []); if ((r.data || []).length < 100) break;
-    }
-    console.log(`   ARFIELDS total=${all.length}`);
-    all.filter((f) => /type|subtype|organi|enabled/i.test((f.alias || '') + ' ' + (f.descriptor || ''))).forEach((f) => console.log(`   ARF ${f.alias} | ${f.descriptor} | ${f.type || ''}`));
-    const SUB = 'e6ca8683b78d10017a5c108412fc0000,e6ca8683b78d10017a5c108412fc0001';
-    for (const q of [
-      `SELECT role FROM assignableRoles WHERE enabledForOrganizationTypes.subtype in (${SUB})`,
-    ]) { try { const r = await wql(token, q, 10000); console.log(`   ARQ ok ${(r.data || []).length}`); } catch (e) { console.log('   ARQ err ' + e.message.slice(0, 160)); } }
+    const q = (n) => JSON.parse(fs.readFileSync(path.join(ROOT, 'presentation', 'wqlQueries', n + '.wqlquery'), 'utf8')).query;
+    const orgs = (await wql(token, q('allShellOrgs'), 10000)).data || [];
+    const types = [...new Set(orgs.map((o) => ((o.type1 || [])[0] || {}).id).filter(Boolean))];
+    console.log(`   SUBTYPE orgs=${orgs.length} types=${types.length} noType=${orgs.filter((o) => !(o.type1 || []).length).length}`);
+    console.log(`   SUBTYPE customOrganizations=${((await wql(token, q('customOrganizations'), 10000)).data || []).length} appTypes=${((await wql(token, q('appTypes'), 10000)).data || []).length}`);
+    const roles = (await wql(token, q('allShellAssignableRolesinTenant').replace('<% types %>', types.join(',')), 10000)).data || [];
+    console.log(`   SUBTYPE roles=${roles.length}: ${roles.map((r) => (r.role || {}).descriptor).sort().join(' | ')}`);
+    console.log(`   SUBTYPE aaa=${((await wql(token, q('allAAArolesinTenant'), 10000)).data || []).length}`);
     return;
   }
   // Sub-orchestration probe (tools/probe_subflow.py): ProbeSubflowCall calls ProbeEcho and returns {"echo": "echo:hello"}.
