@@ -713,3 +713,13 @@ Asked: instead of an empty position picker until you type, let users drill down 
 
 - The Organization cell of an Application Pattern row now shows the application-level organization (code = application ID, e.g. X:ADM) as a Workday instance, so its related actions are the organization's (checked live: X:ADM opens the Custom Organization menu). Until then it linked the COMSApplication record, labelled "X:ADM (application pattern)".
 - Lookup: WQL `SELECT workdayID, code FROM topLevelOrganizations WHERE code in ('X:ADM', ...)` over the application IDs that have a record (endpoint `auditAppOrgs`, after `auditApplications`; `in` works on text per developer.workday.com WQL Reference → WHERE). Built by `tools/app_pattern_audit.py`.
+
+## Organizations by subtype, applications by organization type (2026-11-06)
+
+Product owner: organizations and applications can be named anything; the app finds them by subtype only (X:META and X:SHELL, no new subtype).
+- Organizations: `topLevelOrganizations WHERE subtype in (<X:META WID>, <X:SHELL WID>)` (allShellOrgs, customOrganizations, appTypes, and the Add Shell Org / Add Pattern readbacks). 614 organizations.
+- Application of an organization: its organization type (`type1[0].descriptor`; every one of the 614 has exactly one). Code parsing is only the fallback.
+- Roles: `assignableRoles WHERE enabledForOrganizationTypes in (<type WIDs>)`, the WIDs taken from the page's organization list (or the small `appTypes` list). Same 12 roles as the old name filter (live probe 2026-11-06).
+- Server checks: the Add Shell Org and Add Pattern orchestrations no longer require X: in the application or type.
+- Built by `tools/subtype_apps.py` (a late step in rebuild_all), which fails if any page or script still tells applications apart by an X: prefix.
+- The one mis-named test pattern (type X:CLW) now shows under X:CLW; it can be inactivated.
