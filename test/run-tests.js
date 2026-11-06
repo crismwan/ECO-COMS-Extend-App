@@ -2390,6 +2390,14 @@ async function probe(token) {
     // mis-named organizations: name not under its own type, or a pattern that fails its application's format
     const apps = (await request('GET', `${BO}/comsApplications?limit=100`, token)).data || [];
     const fmt = new Map(apps.map((a) => [a.appId, a]));
+    // every application's live format next to the shapes of its existing organizations (2026-11-06)
+    for (const a of apps.slice().sort((x, y) => String(x.appId).localeCompare(String(y.appId)))) {
+      const mine = orgs.filter((o) => (((o.type1 || [])[0] || {}).descriptor || '') === a.appId).map((o) => String(o.code || ''));
+      const shapes = {};
+      for (const c of mine) { if (c === a.appId) continue; const rest = c.startsWith(a.appId + ':') ? c.slice(a.appId.length + 1) : '(' + c + ')'; const k = rest.split(':').length; (shapes[k] = shapes[k] || []).push(rest); }
+      console.log(`   FMT ${a.appId} prefix=${a.namePrefix} active=${a.active} schema=${a.patternSchema || ''}`);
+      for (const [k, v] of Object.entries(shapes)) console.log(`   FMTORGS ${a.appId} parts=${k} n=${v.length} e.g. ${v.slice(0, 6).join(' , ')}`);
+    }
     for (const o of orgs) {
       const c = String(o.code || ''); const ty = ((o.type1 || [])[0] || {}).descriptor || '';
       const why = [];
