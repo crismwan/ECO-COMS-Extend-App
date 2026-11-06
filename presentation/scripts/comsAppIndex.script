@@ -35,12 +35,21 @@ var readyOf = function(recs, app) {
   !empty(r) && r.active != false && !empty(r.patternSchema);
 };
 
+var rowsOf = function(orgs) {
+  (orgs ?? []).filter(o => { (o.code ?? '').startsWith('X:') }).map(o => { { 'c': o.code, 'a': appOf(o.code), 'on': o.cf_active1 == true } });
+};
+
+var idsOf = function(rows, recs) {
+  list:flatten([rows.map(r => { r.a }), (recs ?? []).map(r => { r.appId ?? '' }).filter(x => { x.startsWith('X:') })]).distinct().sort();
+};
+
 var index = function(orgs, recs) {
-  let codes = (orgs ?? []).map(o => { o.code ?? '' }).filter(c => { c.startsWith('X:') });
-  let ids = list:flatten([codes.map(c => { appOf(c) }), (recs ?? []).map(r => { r.appId ?? '' }).filter(x => { x.startsWith('X:') })]).distinct().sort();
-  let shell = codes.filter(c => { !c.contains(':PATTERN') && c != appOf(c) }).map(c => { appOf(c) }).sort();
-  let pats = codes.filter(c => { c.contains(':PATTERN') }).map(c => { appOf(c) }).sort();
-  let act = (orgs ?? []).filter(o => { (o.code ?? '').startsWith('X:') && !(o.code ?? '').contains(':PATTERN') && o.cf_active1 == true && (o.code ?? '') != appOf(o.code ?? '') }).map(o => { appOf(o.code) }).sort();
+  let rows = rowsOf(orgs);
+  let ids = idsOf(rows, recs);
+  let shellRows = rows.filter(r => { !r.c.contains(':PATTERN') && r.c != r.a });
+  let shell = shellRows.map(r => { r.a }).sort();
+  let act = shellRows.filter(r => { r.on }).map(r => { r.a }).sort();
+  let pats = rows.filter(r => { r.c.contains(':PATTERN') }).map(r => { r.a }).sort();
   ids.map(a => { { 'id': a, 'short': shortOf(a), 'name': nameOf(recs, a), 'family': familyOf(a, ids), 'orgs': countOf(shell, a), 'active': countOf(act, a), 'patterns': countOf(pats, a), 'ready': readyOf(recs, a) } });
 };
 
@@ -149,7 +158,7 @@ var barCards = function(orgs, recs, app, fam, fmt) {
 };
 
 var appIds = function(orgs, recs) {
-  index(orgs, recs).map(a => { a.id });
+  idsOf(rowsOf(orgs), recs);
 };
 
 {
@@ -161,6 +170,8 @@ var appIds = function(orgs, recs) {
   "recordOf": recordOf,
   "nameOf": nameOf,
   "readyOf": readyOf,
+  "rowsOf": rowsOf,
+  "idsOf": idsOf,
   "index": index,
   "familyNames": familyNames,
   "inFamily": inFamily,
