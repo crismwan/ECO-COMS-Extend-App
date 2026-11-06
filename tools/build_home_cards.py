@@ -13,6 +13,8 @@ They can be launched and tested like any synchronous orchestration (test suite: 
 Idempotent.
 """
 import copy, hashlib, json, os, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from orch_names import legacy  # noqa: E402
 ROOT = os.path.join(os.path.dirname(__file__), '..')
 O = lambda n: json.load(open(os.path.join(ROOT, 'orchestration', n + '.orchestration')))
 
@@ -88,7 +90,7 @@ def end_with(ref):
 def flow(name, domain, steps, description):
     f = copy.deepcopy(base)
     v = f['_value']
-    v['id']['_value'] = hashlib.md5(name.encode()).hexdigest()   # stable id per orchestration
+    v['id']['_value'] = hashlib.md5(legacy(name).encode()).hexdigest()   # stable id per orchestration (old name)
     v['name']['_value'] = name
     v['nodes']['_value'] = steps
     v['end'] = end_with('data.Card.message')
@@ -188,7 +190,7 @@ def to_home_card(data_flow, name, description):
     f = copy.deepcopy(data_flow)
     v = f['_value']
     # new id: the first ids were deleted in App Hub on 2026-11-02 and an upload reusing them was refused
-    v['id']['_value'] = hashlib.md5((name + ':2').encode()).hexdigest()
+    v['id']['_value'] = hashlib.md5((legacy(name) + ':2').encode()).hexdigest()
     v['name']['_value'] = name
     v['type'] = {"_type": "FlowType", "_value": ".maya.FlowWorkdayTodayCard"}
     v['start'] = {"_type": "StartWorkdayTodayCard", "_value": {"notes": {"_type": ["List", "Note"], "_value": []}}}

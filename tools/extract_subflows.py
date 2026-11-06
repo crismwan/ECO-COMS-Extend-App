@@ -12,6 +12,8 @@ IORC_0037_XFD_SEC_Sub_Process_Bulk_Role_Row: IORC_0037_XFD_SEC_Bulk_Role_Changes
 apart from the audit wording, so it moves into the sub-orchestration with every value it reads passed in, and each
 loop becomes Row -> CallProcessRow. Idempotent: a parent that already calls the sub is left alone."""
 import json, copy, glob, hashlib, os, re, shutil, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from orch_names import legacy  # noqa: E402
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'orchestration')
 # Full (un-extracted) copies of the parents. Earlier build steps patch the parents in place by step name, so
 # `--restore` (first in rebuild_all.sh) puts these back before they run; this script extracts again at the end.
@@ -30,7 +32,7 @@ def EXPR(src, t):
 def NOTES(text):
     return {"_type": ["List", "Note"], "_value": [{"_type": "Note", "_value": {"key": S("description"), "value": S(text)}}]}
 def flow_id(name):
-    return hashlib.md5(('eco-coms-subflow:' + name).encode()).hexdigest()
+    return hashlib.md5(('eco-coms-subflow:' + legacy(name)).encode()).hexdigest()   # old name: ids never change
 
 def load(name, ext='.orchestration'):
     return json.load(open(os.path.join(ROOT, name + ext)))
