@@ -2369,27 +2369,22 @@ async function subflowsSuite(token, me) {
 
 async function probe(token) {
   console.log('\n-- Probe (read-only) --');
-  // 2026-11-06: organization type vs the application parsed from the code (subtype-based design)
+  // 2026-11-06: can the role queries filter by organization type instead of the X: name?
   {
     const SUB = 'e6ca8683b78d10017a5c108412fc0000,e6ca8683b78d10017a5c108412fc0001';
-    const xs = (await wql(token, `SELECT workdayID, code, subtype, type1 FROM topLevelOrganizations WHERE subtype in (${SUB})`, 10000)).data || [];
-    const appOf = (c) => (c.includes('(') ? c.slice(0, c.indexOf(')') + 1) : (c.split(':').length > 2 ? c.split(':').slice(0, 2).join(':') : c));
-    let noType = 0, multi = 0; const mism = [];
-    for (const o of xs) {
-      const t = (o.type1 || []).map((x) => x.descriptor);
-      if (!t.length) noType++; if (t.length > 1) multi++;
-      if (t[0] !== appOf(String(o.code || ''))) mism.push(`${o.code} type=${t.join('|')} parsed=${appOf(String(o.code || ''))} sub=${(o.subtype || {}).descriptor}`);
-    }
-    console.log(`   TYPECHECK orgs=${xs.length} noType=${noType} multiType=${multi} mismatches=${mism.length}`);
-    mism.slice(0, 40).forEach((m) => console.log('   MISMATCH ' + m));
-    const apps = [...new Set(xs.map((o) => ((o.type1 || [])[0] || {}).descriptor).filter(Boolean))].sort();
-    console.log(`   APPTYPES ${apps.length}: ${apps.join(', ')}`);
-    const appOrgs = xs.filter((o) => ((o.type1 || [])[0] || {}).descriptor === o.code).map((o) => o.code).sort();
-    console.log(`   APPORGS ${appOrgs.length}: ${appOrgs.join(', ')}`);
-    const all = (await wql(token, 'SELECT role, roleName, enabledForOrganizationTypes FROM assignableRoles', 10000)).data || [];
-    const appSet = new Set(apps);
-    const onApp = all.filter((r) => (r.enabledForOrganizationTypes || []).some((t) => appSet.has(t.descriptor)));
-    console.log(`   ROLES all=${all.length} enabledForAppTypes=${onApp.length} namedX=${all.filter((r) => String(r.roleName || '').includes('X:')).length} onAppNotX=${onApp.filter((r) => !String(r.roleName || '').includes('X:')).map((r) => r.roleName).slice(0, 10).join(' | ')}`);
+    const xs = (await wql(token, `SELECT type1 FROM topLevelOrganizations WHERE subtype in (${SUB})`, 10000)).data || [];
+    const tids = [...new Set(xs.map((o) => ((o.type1 || [])[0] || {}).id).filter(Boolean))];
+    const T = async (label, q) => { const s0 = Date.now(); try { const r = await wql(token, q, 10000); const d = r.data || [];
+      const n = d.reduce((k, x) => k + ((x.roleAssignments || []).length), 0);
+      console.log(`   RQ ${label}: roles=${d.length} assignments=${n} ${Math.round(JSON.stringify(r).length / 1024)}KB ${Date.now() - s0}ms names=${d.map((x) => (x.role || {}).descriptor).slice(0, 4).join(' | ')}`);
+      if (d[0] && d[0].roleAssignments && d[0].roleAssignments[0]) console.log('   RQSAMPLE ' + JSON.stringify(d[0].roleAssignments[0]).slice(0, 400));
+    } catch (e) { console.log(`   RQ ${label}: ERROR ${e.message.slice(0, 200)}`); } };
+    const SEL = 'SELECT role, enabledForOrganizationTypes, roleAssignments{organization, workersAssigned, cf_ZCF_EE_RoleAssignedToAsPositionRestrictions} as roleAssignments FROM assignableRoles';
+    await T('today shell', SEL + " WHERE ON roleAssignments cf_ZCF_FT_Organization contains 'X:' WHERE roleName contains 'X:' AND roleName not contains 'Organizations and Roles Assignment Administrator'");
+    await T('by type', SEL + ` WHERE enabledForOrganizationTypes in (${tids.join(',')}) AND roleName not contains 'Organizations and Roles Assignment Administrator'`);
+    await T('today AAA', SEL + " WHERE ON roleAssignments cf_ZCF_FT_Organization contains 'X:' WHERE roleName contains 'Organizations and Roles Assignment Administrator'");
+    await T('AAA all assignments', SEL + " WHERE roleName contains 'Organizations and Roles Assignment Administrator'");
+    await T('AAA nested subtype', SEL + ` WHERE ON roleAssignments organization.subtype in (${SUB}) WHERE roleName contains 'Organizations and Roles Assignment Administrator'`);
     return;
   }
   // Sub-orchestration probe (tools/probe_subflow.py): ProbeSubflowCall calls ProbeEcho and returns {"echo": "echo:hello"}.
