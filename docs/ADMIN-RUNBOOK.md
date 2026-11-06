@@ -298,7 +298,7 @@ Also outstanding:
 - Exclude Initiator is not yet tested live.
 - Fixed 2026-10-31: after OK, Manage Role Assignments now goes to a confirmation page (`roleAssignmentSuccess`, flow `editRoleAssignmentFlow`) with a button back to Shell Org Manager for the same application.
 - Done 2026-10-31: P-00001 was removed from `X:BPMS(ODMT):ROLE:ADVISORS`.
-- The stray org "COMS Application:PATTERN:TEST:TEST:302:152:2026W1" is still active and needs someone with organization maintenance rights to inactivate it.
+- The stray org "COMS Application:PATTERN:TEST:TEST:302:152:2026W1" is still active and needs someone with organization maintenance rights to inactivate it. **Inactivated 2026-11-06** through Change Status, once the guard accepted any X:META/X:SHELL organization.
 - Done 2026-10-31: Bulk Role Changes real runs (Apply button and direct) tested live on ADVISORS; the role was left as it was.
 
 ## 7. Test data that can't be deleted
@@ -308,7 +308,7 @@ Also outstanding:
   - `X:ADM:TEST:ORG:1032` (reactivated, Active)
   - `X:CLW:PATTERN:MATH:MATH_V:303:951:2026W1`
   - every `X:ADM:TEST:CI:RUN<n>` org and `X:CLW:PATTERN:TEST:TEST:...` pattern from full runs
-- **Stray org** `COMS Application:PATTERN:TEST:TEST:302:152:2026W1`, from a test bug. It is still active. The app's guard can't touch it (not an `X:` code), and no inactivate task was found in the tenant UI. It is hidden from Shell Org Manager.
+- **Stray org** `COMS Application:PATTERN:TEST:TEST:302:152:2026W1`, from a test bug. It is still active. The app's guard can't touch it (not an `X:` code), and no inactivate task was found in the tenant UI. It is hidden from Shell Org Manager. **Inactivated 2026-11-06** through Change Status, once the guard accepted any X:META/X:SHELL organization.
 - **Requests linked to a BP event** (HTTP 500 "Attempt to delete instance ... with references"):
   - `X:ADM:ROLE:TESTROLE1030`
   - `TESTROLE1031`–`TESTROLE1038`

@@ -222,7 +222,7 @@ ACTION: run 'wdcli app deploy ...' locally, log in, update WD_DEV_TOKEN secret
 - `IORC_0037_XFD_SEC_Change_Shell_Org_Status` writes its audit record even when `validateOnly=true`, so validate-only can't be used for safe write tests until the audit write is made conditional.
 - Full-suite test data uses short run-number names (`X:ADM:TEST:CI:RUN<n>`); don't reuse the old timestamp names such as `CI:2610302152` (user request).
 - The test role for position add/remove is `X:BPMS(ODMT):ROLE:ADVISORS` (override with `--role`). Run 22 left **P-00001** assigned there because WQL hadn't shown the add yet; check and remove it by hand. The readback now waits 90 s.
-- Stray org from a test bug: `COMS Application:PATTERN:TEST:TEST:302:152:2026W1` (a pattern named from the app's display name instead of `appId`). Still active; the app's status guard can't touch it (not an `X:` code) and no inactivate task was found in the tenant UI. Hidden from Shell Org Manager since the page only lists `X:…:PATTERN:` codes.
+- Stray org from a test bug: `COMS Application:PATTERN:TEST:TEST:302:152:2026W1` (a pattern named from the app's display name instead of `appId`). Still active; the app's status guard can't touch it (not an `X:` code) and no inactivate task was found in the tenant UI. Hidden from Shell Org Manager since the page only lists `X:…:PATTERN:` codes. **Inactivated 2026-11-06** through Change Status, once the guard accepted any X:META/X:SHELL organization.
 
 ### IORC_0037_XFD_SEC_Change_Shell_Org_Status input guard (deployed and confirmed live 2026-10-30)
 
@@ -322,7 +322,7 @@ ACTION: run 'wdcli app deploy ...' locally, log in, update WD_DEV_TOKEN secret
 - The two older pending requests (KEYCLOAK COORDINATOR and the AAA request) were corrected on 2026-10-31 with `node test/run-tests.js repair --apply`: Enabled For now reads "Faculty of Medicine" (FUH), with the WID in `enabledForWid` / `functionalUnitHierarchyWid`.
 - P-00001 was removed from X:BPMS(ODMT):ROLE:ADVISORS on 2026-10-31 through the Manage Role Assignments page (REMOVE POSITION audit at 18:58:57Z). The same removal sent by the test runner was refused by the API gateway (HTML 403); the page's request went through.
 - **ISU lockdown is now a script, `tools/isu_writes.py`** (2026-11-01), not a long-lived branch: the old `isu-writes` branch was one commit 61 commits behind main. Branch `isu-writes-v2` = main + the script applied (SMD `isuAuth` + `authType: isuAuth` on the 9 page writes to comsAssignableRoles / comsAuditLogs). Once the ISU is assigned to the app in App Manager: merge `isu-writes-v2` (or run the script on main), deploy, run `node test/run-tests.js isu`. `--undo` reverts. Old `isu-writes` kept untouched for reference.
-- The stray org "COMS Application:PATTERN:TEST:TEST:302:152:2026W1" is still active (hidden in the app). Logan McNeil has no inactivate action on it in Workday (related actions only offer view tasks), and IORC_0037_XFD_SEC_Change_Shell_Org_Status rightly refuses codes that don't start with X:. Someone with organization maintenance rights must inactivate it in Workday.
+- The stray org "COMS Application:PATTERN:TEST:TEST:302:152:2026W1" is still active (hidden in the app). Logan McNeil has no inactivate action on it in Workday (related actions only offer view tasks), and IORC_0037_XFD_SEC_Change_Shell_Org_Status rightly refuses codes that don't start with X:. Someone with organization maintenance rights must inactivate it in Workday. **Inactivated 2026-11-06** through Change Status, once the guard accepted any X:META/X:SHELL organization.
 - ISU lockdown (`isu-writes`): App Manager → Configure for the app shows no ISU assignment, and a search for DNU_ISU_ECO_COMS_DEPLOY_CMM finds nothing for Logan McNeil (2026-10-31). Not merged; see ADMIN-RUNBOOK section 3 for the setup steps.
 
 ## After UI phase 2 (2026-10-31)
@@ -723,3 +723,11 @@ Product owner: organizations and applications can be named anything; the app fin
 - Server checks: the Add Shell Org and Add Pattern orchestrations no longer require X: in the application or type.
 - Built by `tools/subtype_apps.py` (a late step in rebuild_all), which fails if any page or script still tells applications apart by an X: prefix.
 - The one mis-named test pattern (type X:CLW) now shows under X:CLW; it can be inactivated.
+
+### Mis-named organizations cleanup (2026-11-06)
+
+- The probe (`node test/run-tests.js probe`) lists every X:META/X:SHELL organization not under its own type or failing its application's pattern format (`MISNAMED` lines).
+- Product owner: inactivate only the test org `COMS Application:PATTERN:TEST:TEST:302:152:2026W1` (done 2026-11-06 via Change Status); leave the rest.
+- Clockwork's Academic Unit format widened to `\*|[A-Z0-9-]{2,6}` (real units UBC-V, ETPPV, DTSCV), in `tools/pattern_schemas.json` and on the live X:CLW record (edited through Maintain Application Pattern, since that record had in-app edits that seed-apps would overwrite).
+- Left active, still outside their formats: X:BPMS(ASMT):ORG:ARTS:HUMANITIES101 and :SCIF:SCIENCE101 (2 fields, format 1), X:CLW:PATTERN:CPSC:CPSC:21:300:2026W2 (course 21).
+- Change Status fixes: the guard checks the subtype list (not an X: code), and the launch takes the application from the organization's type, URL-encoded (a code with a space had failed with "Illegal character in query").
