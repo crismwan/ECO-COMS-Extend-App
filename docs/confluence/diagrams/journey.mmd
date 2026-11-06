@@ -1,0 +1,10 @@
+flowchart TB
+  subgraph TODAY["Today (Appian COMS + ISC tickets)"]
+    direction LR
+    T1[Need a new pattern<br/>for a course section] --> T2[Clockwork: Appian COMS form<br/>one pattern shape] --> T3[Other apps:<br/>raise ISC ticket] --> T4[Wait for ISC<br/>to action the ticket] --> T5[Check Workday<br/>by hand]
+  end
+  subgraph WITH["With ECO-COMS"]
+    direction LR
+    N1[RBAC Hub → Add Pattern<br/>or Shell Org Manager] --> N2[Form shows this app's<br/>fields and examples] --> N3[Live preview and<br/>checks as you type] --> N4[OK → created in Workday<br/>in seconds] --> N5[Receipt + Audit Log;<br/>AccessUBC picks it up]
+  end
+  TODAY ~~~ WITH

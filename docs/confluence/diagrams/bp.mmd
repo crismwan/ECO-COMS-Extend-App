@@ -1,0 +1,21 @@
+flowchart LR
+  subgraph REQ["Requester (AAA / app admin)"]
+    R1[Submit Assignable or<br/>AAA Role Request] --> R2[Request saved:<br/>Pending ISC Review]
+    R9[Notified: completed<br/>or closed]
+    RW[Withdraw request] 
+  end
+  subgraph COMS["ECO-COMS orchestrations"]
+    C1[StartRequestReview:<br/>start BP event as requester,<br/>audit REQUEST]
+    C2[DenyRoleRequest:<br/>status Denied, audit DENY]
+  end
+  subgraph BP["Workday BP: Review COMS Assignable Role Request"]
+    B1[1 Role Details] --> B2{2 Approve / Deny<br/>Exclude Initiator}
+    B2 -- Approve --> B3[3 To Do: Add<br/>Assignable Role] --> B4[4 To Do: Create<br/>Role-Based Security Group] --> B5[5 Link Workday Role<br/>status Approved, audit APPROVE]
+    B2 -- Deny --> BX[Process Terminated]
+    BR[Reminder after 2 days<br/>to awaiting approvers]
+  end
+  R2 --> C1 --> B1
+  B5 --> R9
+  BX --> C2 --> R9
+  RW -->|cancel event| BX
+  B2 -.-> BR

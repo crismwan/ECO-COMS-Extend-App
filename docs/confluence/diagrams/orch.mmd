@@ -1,0 +1,13 @@
+flowchart TB
+  S([Start: grid rows or<br/>uploaded CSV]) --> R[Read rows,<br/>write COMS Bulk Run]
+  R --> L{{For each row}}
+  L --> V{VALIDATE or<br/>APPLY mode?}
+  V -- validate --> C1[Check row: action, IDs,<br/>position exists, no duplicate] --> W1[Write row VALID / INVALID]
+  V -- apply --> C2[ProcessBulkRoleRow<br/>sub-orchestration] --> AR[Staffing Assign_Roles<br/>add or remove position]
+  AR --> OK{Accepted?}
+  OK -- yes --> AU[WriteAuditRecord<br/>ASSIGN / REMOVE POSITION] --> W2[Row DONE]
+  OK -- no --> W3[Row FAILED<br/>with Workday's message]
+  W1 --> L
+  W2 --> L
+  W3 --> L
+  L -- all rows --> E[Update run status:<br/>Validated / Applied / Rejected] --> X([End: results page refreshes])

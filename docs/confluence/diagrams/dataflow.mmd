@@ -1,0 +1,15 @@
+flowchart LR
+  A[User fills page] --> B{Page checks<br/>rules · dates · duplicates}
+  B -- fail --> B1[Error under the field<br/>OK blocked] --> A
+  B -- pass --> C[OK: launch orchestration<br/>as the user]
+  C --> D{Guard step<br/>re-checks inputs}
+  D -- fail --> D1[Run stops<br/>nothing sent]
+  D -- pass --> E[Workday web service<br/>Organization_Add_Update ·<br/>Inactivate · Assign_Roles]
+  E --> F{Accepted?<br/>2xx and no SOAP fault}
+  F -- no --> F1[Run stops<br/>logged with Workday's reason]
+  F -- yes --> G[WriteAuditRecord<br/>with run ID and event link]
+  G --> H[Page re-reads:<br/>org in WQL or audit total +1]
+  D1 --> H
+  F1 --> H
+  H -- found --> I[Receipt page]
+  H -- missing --> J["'Workday rejected this request,<br/>so nothing was changed'"] --> A

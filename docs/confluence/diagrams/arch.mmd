@@ -1,0 +1,25 @@
+flowchart LR
+  U([Users in Workday:<br/>AAAs, ISC reviewers]) -->|SSO session| P
+  subgraph TEN["Workday tenant — trust boundary"]
+    subgraph EXT["ECO-COMS · Workday Extend app"]
+      P[40 PMD pages · 45 cards<br/>hub, forms, grids, Excel] -->|launch, user token| O[13 orchestrations<br/>+ 4 sub-orchestrations]
+      P -->|REST / WQL / Graph<br/>user token| R[(Reads)]
+      O --> BO[(Extend business objects:<br/>Application, Request,<br/>Audit Log, Bulk Run/Row<br/>+ 2 attachment stores)]
+      P --> BO
+    end
+    subgraph CORE["Workday core"]
+      BPR[Business Process REST<br/>review events, steps, cancel]
+      HR[Human_Resources WWS v42.2<br/>Organization_Add_Update,<br/>Inactivate, Reactivate]
+      ST[Staffing WWS v42.2<br/>Assign_Roles]
+      DATA[(Custom org hierarchy X:«code»,<br/>positions, assignable roles,<br/>role assignments)]
+    end
+    O -->|REST| BPR
+    O -->|SOAP| HR
+    O -->|SOAP| ST
+    BPR --> DATA
+    HR --> DATA
+    ST --> DATA
+    R --- DATA
+  end
+  DATA -->|existing extract| AU[AccessUBC]
+  AU --> APPS[Clockwork, OAMS, Admissions …]

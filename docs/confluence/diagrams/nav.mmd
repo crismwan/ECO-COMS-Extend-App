@@ -1,0 +1,26 @@
+flowchart LR
+  E1([Workday search /<br/>app menu]) --> HUB
+  E2([Worker profile:<br/>COMS section]) --> MYR
+  E3([Workday Home cards]) --> MYR & ISCQ
+  E4([Inbox: review steps]) --> RV
+  E5([Related action on<br/>an application record]) --> EAP
+  HUB[RBAC Hub<br/>UX-001] --> SOM[Shell Org Manager<br/>UX-002]
+  HUB --> INS[Insights UX-020] --> INSA[Applications at a Glance]
+  HUB --> AUD[Audit Log Viewer UX-016]
+  HUB --> ACR[Access Review UX-017] --> CAR[Review All Positions]
+  HUB --> FUH[FUH Administration]
+  HUB --> BULK[Bulk Role Changes UX-012]
+  SOM --> SOD[Shell Org Detail UX-003]
+  SOM --> NSO[Add Shell Org wizard UX-004] --> NSOS[Org Created]
+  SOM --> SPA[Add Pattern: choose app UX-005] --> NSP[Add Shell Org Pattern UX-006] --> NSPS[Pattern Created]
+  SOM --> MSS[Change Status UX-007] --> MSSS[Status Updated]
+  SOM --> ERA[Manage Role Assignment UX-008] --> RAS[Role Assignment Updated]
+  SOM --> APS[Maintain Application Pattern UX-009] --> EAP[Add / Edit Pattern Format UX-010]
+  BULK --> BGA[Bulk Edit: choose app] --> BG[Bulk Edit grid UX-013] --> BR[Results UX-014]
+  BULK --> BT[Download Template UX-015] --> BTU[Upload Template Version]
+  BULK --> BR --> BA[Apply]
+  HUB --> ARM[Submit Assignable Role Request UX-018]
+  HUB --> MYR[My Assignable Role Requests]
+  HUB --> ADP[Submit AAA Role Request UX-019] --> ADV[AAA Role Requests]
+  MYR --> DEL[Withdraw Role Request]
+  HUB --> ISCQ[ISC Queue UX-021] --> RV[Review steps 1–5<br/>UX-022]
