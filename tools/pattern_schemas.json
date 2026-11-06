@@ -10,8 +10,8 @@
       "fields": [
         {
           "fieldLabel": "Academic Unit",
-          "regex": "\\*|[A-Z]{2,4}",
-          "hint": "The academic unit that owns the courses, 2 to 4 capital letters (e.g. PHAS covers PHYS_V and ASTR_V). Leave blank for any unit.",
+          "regex": "\\*|[A-Z0-9-]{2,6}",
+          "hint": "The academic unit that owns the courses, 2 to 6 capital letters, digits or hyphens (e.g. PHAS, UBC-V, ETPPV). Leave blank for any unit.",
           "example": "PHAS",
           "blankIsWildcard": true
         },
