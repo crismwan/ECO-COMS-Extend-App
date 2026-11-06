@@ -1,20 +1,22 @@
 #!/usr/bin/env python3
-"""Shell Org Manager, Option D (product owner 2026-11-05, design canvas "Shell Org Manager application filter
-options"): the page opens on every application as before; an Application bar above the tabs narrows it.
+"""Shell Org Manager application bar (product owner 2026-11-05, design canvas "Shell Org Manager application filter
+options", Option E = Option D rebuilt from pill cards): the page opens on every application as before; the bar
+above the tabs narrows it.
 
 - Application list = every X: organization's code cut to its application ID (the rule Add Shell Org and AAA Role
   Request use: X:BPMS(AOC), X:APP), plus pattern records, so a new X: organization shows up by itself
   (`presentation/scripts/comsAppIndex.script`). Families: X:FAM(...) applications, plus X:FAM itself; the rest are
   Standalone.
-- Bar (cards AppBarAllCard / AppBarNarrowedCard): "Narrow down" opens ?pick=1 (family cards, FamilyPickCard);
-  a family opens ?pick=1&family=F (application cards, AppPickCard); an application reloads with ?appCode=, exactly
-  as the Manage button does. Narrowed: Change application, Show all applications, Previous / Next in the family.
+- Bar = one cardContainer whose dynamicCards come from comsAppIndex.barCards (cards: tools/som_pill_cards.py):
+  all applications -> family pills + "No pattern format yet" pills; ?family=F -> that family's applications as
+  pills (● ready, ○ none yet, 10 per card); ?appCode=A -> previous / next / Change / All pills plus the
+  application's pattern format card (Set Up / Ready + Add Pattern / Inactive). Every pill reloads the page.
 - Applications grid (Application Patterns tab) lists every application, "No pattern yet" where there is no record;
-  Add Pattern only for an active record, otherwise "Set Up Pattern Format" (Maintain Application Pattern, Add).
+  Add Pattern only for an active record, otherwise "Set Up Pattern Format".
 - Role assignments match the narrowed application exactly (X:LLIS no longer picks up X:LLIS(CPE) roles).
-- The yellow "No application selected" banner is replaced by the bar.
+- Replaced: the yellow "No application selected" banner, and the "<app> / Back to Applications" heading.
 
-Idempotent. Rollback: `python3 tools/som_app_bar.py --off` (restores the saved banner and expressions).
+Idempotent. Rollback: `python3 tools/som_app_bar.py --off`, then `tools/som_pill_cards.py --off`.
 """
 import json, os, sys
 
@@ -27,6 +29,7 @@ ARGS = "allShellOrgs.data, comsApplications.data"
 PICK = "(queryParams.pick ?? '')"
 APP = "(queryParams.appCode ?? '')"
 FAM = "(queryParams.family ?? '')"
+FMTX = "(empty(queryParams.appCode) ? '' : comsPatterns.summary(comsApplications.data, queryParams.appCode))"
 
 OLD_RA = "ra.organization.descriptor.startsWith((empty(queryParams.appCode) ? 'X:' : queryParams.appCode))"
 NEW_RA = ("(empty(queryParams.appCode) ? ra.organization.descriptor.startsWith('X:') : (ra.organization.descriptor == queryParams.appCode"
@@ -46,24 +49,15 @@ NEW_EMPTY = ("<% " + REC + " }).size() == 0"
              " : (" + REC + " && a.active != false }).size() == 0"
              " ? 'The pattern format for this application is inactive. Reactivate it in Maintain Application Pattern to add patterns.'"
              " : '" + OLD_EMPTY + "') %>")
-SWAPS = [(OLD_EMPTY, NEW_EMPTY), (OLD_RA, NEW_RA), (OLD_ROWS, NEW_ROWS), (OLD_FMT, NEW_FMT), (OLD_ADD, NEW_ADD), (OLD_WARN, NEW_WARN)]
+NEW_WARN_E = "Narrowed to <b><% queryParams.appCode ?? '' %></b>: only its shell organizations are shown below. Use ✕ All applications above to see every organization."
+SWAPS = [(OLD_EMPTY, NEW_EMPTY), (OLD_RA, NEW_RA), (OLD_ROWS, NEW_ROWS), (OLD_FMT, NEW_FMT), (OLD_ADD, NEW_ADD), (OLD_WARN, NEW_WARN), (NEW_WARN, NEW_WARN_E)]
 
 
 def containers():
-    return [
-        {"type": "cardContainer", "id": "appBarCardContainer", "layout": "masonry",
-         "cards": [
-             {"type": "card", "cardId": "AppBarAllCard", "render": "<% empty(queryParams.appCode) %>",
-              "parameters": f"<% comsAppIndex.barAll({ARGS}, {PICK}) %>"},
-             {"type": "card", "cardId": "AppBarNarrowedCard", "render": "<% !empty(queryParams.appCode) %>",
-              "parameters": f"<% comsAppIndex.barNarrowed({ARGS}, {APP}, {PICK}) %>"}],
-         "dynamicCards": {"on": f"<% comsAppIndex.familyCards({ARGS}, {PICK}, {FAM}, {APP}) %>", "as": "fam",
-                          "template": {"cardId": "FamilyPickCard", "parameters": "<% fam %>"}}},
-        {"type": "cardContainer", "id": "appPickCardContainer", "layout": "masonry",
-         "render": f"<% {PICK} == '1' && !empty(queryParams.family) %>",
-         "dynamicCards": {"on": f"<% comsAppIndex.appCards({ARGS}, {PICK}, {FAM}, {APP}) %>", "as": "pickApp",
-                          "template": {"cardId": "AppPickCard", "parameters": "<% pickApp %>"}}},
-    ]
+    """One container: comsAppIndex.barCards returns [{cardId, params}], the cardId picking SomPills<n> or a format card."""
+    return [{"type": "cardContainer", "id": "appBarCardContainer", "layout": "masonry",
+             "dynamicCards": {"on": f"<% comsAppIndex.barCards({ARGS}, {APP}, {FAM}, {FMTX}) %>", "as": "barCard",
+                              "template": {"cardId": "<% barCard.cardId %>", "parameters": "<% barCard.params %>"}}}]
 
 
 SETUP_BTN = {"type": "button", "id": "setupPatternBtn", "label": "Set Up Pattern Format", "action": "AUXILIARY",
@@ -100,22 +94,36 @@ def swap(n, a, b, guard=True):
 d = json.load(open(P))
 nav = find(d['presentation'], lambda x: x.get('id') == 'navSection')[0]
 kids = nav['children']
-kids[:] = [k for k in kids if k.get('id') not in ('appBarCardContainer', 'appPickCardContainer')]
+kids[:] = [k for k in kids if k.get('id') not in ('appBarCardContainer', 'appPickCardContainer')]  # rebuilt below
 navfs = next(k for k in kids if k.get('id') == 'navFieldSet')
 fs_kids = navfs['children']
 banner = next((k for k in fs_kids if k.get('id') == 'scopeWarning'), None)
 patfs = find(d['presentation'], lambda x: x.get('id') == 'patternsFieldSet')[0]
 patfs['children'] = [k for k in patfs['children'] if k.get('id') != 'setupPatternBtn']
 
+back = next((k for k in fs_kids if k.get('id') == 'backToApplicationsBtn'), None)
+home = next(k for k in fs_kids if k.get('id') == 'backToHomeBtn')
+saved = json.load(open(SAVE)) if os.path.exists(SAVE) else {}
+
 if OFF:
-    if os.path.exists(SAVE) and banner is None:
-        fs_kids.append(json.load(open(SAVE))['scopeWarning'])
-    for a, b in SWAPS: swap(d['presentation'], b, a, guard=False)
+    if 'scopeWarning' in saved and banner is None:
+        fs_kids.append(saved['scopeWarning'])
+    if 'back' in saved and back is None:
+        fs_kids.insert(0, saved['back'])
+        navfs['title'] = saved['title']
+        home['visible'] = saved['homeVisible']
+    for a, b in reversed(SWAPS): swap(d['presentation'], b, a, guard=False)
     d['include'] = [i for i in d.get('include', []) if i != INC]
 else:
     if banner is not None:
-        json.dump({'scopeWarning': banner}, open(SAVE, 'w'), indent=1, ensure_ascii=False)
+        saved['scopeWarning'] = banner
         fs_kids.remove(banner)
+    if back is not None:
+        saved.update({'back': back, 'title': navfs['title'], 'homeVisible': home.get('visible')})
+        fs_kids.remove(back)
+        navfs['title'] = ''
+        home.pop('visible', None)
+    json.dump(saved, open(SAVE, 'w'), indent=1, ensure_ascii=False)
     for a, b in SWAPS: swap(d['presentation'], a, b)
     raw = []
     def texts(n):
@@ -123,11 +131,11 @@ else:
         elif isinstance(n, list): [texts(v) for v in n]
         elif isinstance(n, str): raw.append(n)
     texts(d['presentation'])
-    for a, b in SWAPS: assert any(b in t for t in raw), 'not applied: ' + a[:60]
+    for a, b in SWAPS[:-2] + SWAPS[-1:]: assert any(b in t for t in raw), 'not applied: ' + a[:60]
     kids.extend(containers())
     add = next(i for i, k in enumerate(patfs['children']) if k.get('id') == 'addPatternBtn')
     patfs['children'].insert(add + 1, SETUP_BTN)
     if INC not in d.get('include', []): d.setdefault('include', []).append(INC)
 
 open(P, 'w').write(json.dumps(d, indent=2, ensure_ascii=False) + '\n')
-print('shellOrgManager: Application bar ' + ('removed' if OFF else 'on (all applications, narrow down by family)'))
+print('shellOrgManager: Application bar ' + ('removed' if OFF else 'on (Option E: every application as pills)'))

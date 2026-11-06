@@ -1,0 +1,41 @@
+{
+  "id": "AppFormatReadyCard",
+  "parameters": [
+    "appCode",
+    "recordId",
+    "summaryText"
+  ],
+  "header": {
+    "title": "Pattern format",
+    "subtitle": "<% appCode ?? \"\" %>",
+    "icon": "wd-accent-worksheets",
+    "indicator": {
+      "label": "Ready",
+      "color": "green"
+    }
+  },
+  "body": {
+    "type": "simpleCard",
+    "value": "<% summaryText ?? \"\" %>"
+  },
+  "footer": [
+    {
+      "label": "Add Pattern",
+      "taskReference": {
+        "taskId": "newSchemaPattern",
+        "parameterBindings": {
+          "appCode": "<% appCode ?? \"\" %>"
+        }
+      }
+    },
+    {
+      "label": "Maintain Application Pattern",
+      "taskReference": {
+        "taskId": "editAppPattern",
+        "parameterBindings": {
+          "recordId": "<% recordId ?? \"\" %>"
+        }
+      }
+    }
+  ]
+}

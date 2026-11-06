@@ -1,0 +1,31 @@
+{
+  "id": "AppFormatInactiveCard",
+  "parameters": [
+    "appCode",
+    "recordId"
+  ],
+  "header": {
+    "title": "Pattern format",
+    "subtitle": "<% appCode ?? \"\" %>",
+    "icon": "wd-accent-worksheets",
+    "indicator": {
+      "label": "Inactive",
+      "color": "gray"
+    }
+  },
+  "body": {
+    "type": "simpleCard",
+    "value": "This application's pattern format is inactive, so no patterns can be added until it is reactivated."
+  },
+  "footer": [
+    {
+      "label": "Maintain Application Pattern",
+      "taskReference": {
+        "taskId": "editAppPattern",
+        "parameterBindings": {
+          "recordId": "<% recordId ?? \"\" %>"
+        }
+      }
+    }
+  ]
+}

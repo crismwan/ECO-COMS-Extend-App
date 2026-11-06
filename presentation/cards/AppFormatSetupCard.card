@@ -1,0 +1,27 @@
+{
+  "id": "AppFormatSetupCard",
+  "parameters": [
+    "appCode"
+  ],
+  "header": {
+    "title": "Pattern format",
+    "subtitle": "<% \"Not set up for \" + (appCode ?? \"\") %>",
+    "icon": "wd-accent-worksheets",
+    "indicator": {
+      "label": "No pattern yet",
+      "color": "orange"
+    }
+  },
+  "body": {
+    "type": "simpleCard",
+    "value": "Patterns can be added once the format is set."
+  },
+  "footer": [
+    {
+      "label": "Set Up Pattern Format",
+      "taskReference": {
+        "taskId": "editAppPattern"
+      }
+    }
+  ]
+}

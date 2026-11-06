@@ -34,7 +34,9 @@ CARDS = {
     "PendingIscCard": "inbox", "MyAttentionCard": "inbox",
     # Shell organizations
     "HomeShellOrgActionsCard": "building", "ShellOrgCard": "building", "ShellOrgQuickActionsCard": "building",
-    "AppBarAllCard": "building", "AppBarNarrowedCard": "building", "FamilyPickCard": "building", "AppPickCard": "building",
+    **{f"SomPills{n}": "building" for n in range(1, 11)},
+    # Application pattern formats (templates)
+    "AppFormatSetupCard": "worksheets", "AppFormatReadyCard": "worksheets", "AppFormatInactiveCard": "worksheets",
     # Bulk role changes (many positions at once)
     "HomeBulkActionsCard": "people-group", "BulkActionsPillCard": "people-group",
     "BulkNextStepCard": "people-group", "BulkRelatedCard": "people-group",

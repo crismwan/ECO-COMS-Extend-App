@@ -1,0 +1,157 @@
+{
+  "id": "SomPills10",
+  "parameters": [
+    "titleText",
+    "subtitleText",
+    "p1Label",
+    "p1App",
+    "p1Fam",
+    "p2Label",
+    "p2App",
+    "p2Fam",
+    "p3Label",
+    "p3App",
+    "p3Fam",
+    "p4Label",
+    "p4App",
+    "p4Fam",
+    "p5Label",
+    "p5App",
+    "p5Fam",
+    "p6Label",
+    "p6App",
+    "p6Fam",
+    "p7Label",
+    "p7App",
+    "p7Fam",
+    "p8Label",
+    "p8App",
+    "p8Fam",
+    "p9Label",
+    "p9App",
+    "p9Fam",
+    "p10Label",
+    "p10App",
+    "p10Fam"
+  ],
+  "header": {
+    "title": "<% titleText ?? \"\" %>",
+    "subtitle": "<% subtitleText ?? \"\" %>",
+    "icon": "wd-accent-building"
+  },
+  "body": {
+    "type": "pillCard",
+    "pills": [
+      {
+        "label": "<% p1Label ?? \"\" %>",
+        "taskReference": {
+          "taskId": "shellOrgManager",
+          "parameterBindings": {
+            "appCode": "<% p1App ?? \"\" %>",
+            "appName": "<% p1App ?? \"\" %>",
+            "family": "<% p1Fam ?? \"\" %>"
+          }
+        }
+      },
+      {
+        "label": "<% p2Label ?? \"\" %>",
+        "taskReference": {
+          "taskId": "shellOrgManager",
+          "parameterBindings": {
+            "appCode": "<% p2App ?? \"\" %>",
+            "appName": "<% p2App ?? \"\" %>",
+            "family": "<% p2Fam ?? \"\" %>"
+          }
+        }
+      },
+      {
+        "label": "<% p3Label ?? \"\" %>",
+        "taskReference": {
+          "taskId": "shellOrgManager",
+          "parameterBindings": {
+            "appCode": "<% p3App ?? \"\" %>",
+            "appName": "<% p3App ?? \"\" %>",
+            "family": "<% p3Fam ?? \"\" %>"
+          }
+        }
+      },
+      {
+        "label": "<% p4Label ?? \"\" %>",
+        "taskReference": {
+          "taskId": "shellOrgManager",
+          "parameterBindings": {
+            "appCode": "<% p4App ?? \"\" %>",
+            "appName": "<% p4App ?? \"\" %>",
+            "family": "<% p4Fam ?? \"\" %>"
+          }
+        }
+      },
+      {
+        "label": "<% p5Label ?? \"\" %>",
+        "taskReference": {
+          "taskId": "shellOrgManager",
+          "parameterBindings": {
+            "appCode": "<% p5App ?? \"\" %>",
+            "appName": "<% p5App ?? \"\" %>",
+            "family": "<% p5Fam ?? \"\" %>"
+          }
+        }
+      },
+      {
+        "label": "<% p6Label ?? \"\" %>",
+        "taskReference": {
+          "taskId": "shellOrgManager",
+          "parameterBindings": {
+            "appCode": "<% p6App ?? \"\" %>",
+            "appName": "<% p6App ?? \"\" %>",
+            "family": "<% p6Fam ?? \"\" %>"
+          }
+        }
+      },
+      {
+        "label": "<% p7Label ?? \"\" %>",
+        "taskReference": {
+          "taskId": "shellOrgManager",
+          "parameterBindings": {
+            "appCode": "<% p7App ?? \"\" %>",
+            "appName": "<% p7App ?? \"\" %>",
+            "family": "<% p7Fam ?? \"\" %>"
+          }
+        }
+      },
+      {
+        "label": "<% p8Label ?? \"\" %>",
+        "taskReference": {
+          "taskId": "shellOrgManager",
+          "parameterBindings": {
+            "appCode": "<% p8App ?? \"\" %>",
+            "appName": "<% p8App ?? \"\" %>",
+            "family": "<% p8Fam ?? \"\" %>"
+          }
+        }
+      },
+      {
+        "label": "<% p9Label ?? \"\" %>",
+        "taskReference": {
+          "taskId": "shellOrgManager",
+          "parameterBindings": {
+            "appCode": "<% p9App ?? \"\" %>",
+            "appName": "<% p9App ?? \"\" %>",
+            "family": "<% p9Fam ?? \"\" %>"
+          }
+        }
+      },
+      {
+        "label": "<% p10Label ?? \"\" %>",
+        "taskReference": {
+          "taskId": "shellOrgManager",
+          "parameterBindings": {
+            "appCode": "<% p10App ?? \"\" %>",
+            "appName": "<% p10App ?? \"\" %>",
+            "family": "<% p10Fam ?? \"\" %>"
+          }
+        }
+      }
+    ]
+  }
+}

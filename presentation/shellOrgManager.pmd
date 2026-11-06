@@ -85,19 +85,8 @@
             {
               "type": "fieldSet",
               "id": "navFieldSet",
-              "title": "<% queryParams.appName ?? queryParams.appCode ?? '' %>",
+              "title": "",
               "children": [
-                {
-                  "type": "button",
-                  "id": "backToApplicationsBtn",
-                  "label": "← Back to Applications",
-                  "taskReference": {
-                    "taskId": "shellOrgManager"
-                  },
-                  "action": "LINK",
-                  "suppressDiscardDialog": true,
-                  "visible": "<% !empty(queryParams.appCode) %>"
-                },
                 {
                   "type": "button",
                   "id": "backToHomeBtn",
@@ -106,8 +95,7 @@
                     "taskId": "home"
                   },
                   "action": "LINK",
-                  "suppressDiscardDialog": true,
-                  "visible": "<% empty(queryParams.appCode) %>"
+                  "suppressDiscardDialog": true
                 }
               ]
             },
@@ -115,40 +103,12 @@
               "type": "cardContainer",
               "id": "appBarCardContainer",
               "layout": "masonry",
-              "cards": [
-                {
-                  "type": "card",
-                  "cardId": "AppBarAllCard",
-                  "render": "<% empty(queryParams.appCode) %>",
-                  "parameters": "<% comsAppIndex.barAll(allShellOrgs.data, comsApplications.data, (queryParams.pick ?? '')) %>"
-                },
-                {
-                  "type": "card",
-                  "cardId": "AppBarNarrowedCard",
-                  "render": "<% !empty(queryParams.appCode) %>",
-                  "parameters": "<% comsAppIndex.barNarrowed(allShellOrgs.data, comsApplications.data, (queryParams.appCode ?? ''), (queryParams.pick ?? '')) %>"
-                }
-              ],
               "dynamicCards": {
-                "on": "<% comsAppIndex.familyCards(allShellOrgs.data, comsApplications.data, (queryParams.pick ?? ''), (queryParams.family ?? ''), (queryParams.appCode ?? '')) %>",
-                "as": "fam",
+                "on": "<% comsAppIndex.barCards(allShellOrgs.data, comsApplications.data, (queryParams.appCode ?? ''), (queryParams.family ?? ''), (empty(queryParams.appCode) ? '' : comsPatterns.summary(comsApplications.data, queryParams.appCode))) %>",
+                "as": "barCard",
                 "template": {
-                  "cardId": "FamilyPickCard",
-                  "parameters": "<% fam %>"
-                }
-              }
-            },
-            {
-              "type": "cardContainer",
-              "id": "appPickCardContainer",
-              "layout": "masonry",
-              "render": "<% (queryParams.pick ?? '') == '1' && !empty(queryParams.family) %>",
-              "dynamicCards": {
-                "on": "<% comsAppIndex.appCards(allShellOrgs.data, comsApplications.data, (queryParams.pick ?? ''), (queryParams.family ?? ''), (queryParams.appCode ?? '')) %>",
-                "as": "pickApp",
-                "template": {
-                  "cardId": "AppPickCard",
-                  "parameters": "<% pickApp %>"
+                  "cardId": "<% barCard.cardId %>",
+                  "parameters": "<% barCard.params %>"
                 }
               }
             }
@@ -467,7 +427,7 @@
             "id": "shellOrgsAppWarning",
             "enabled": false,
             "visible": "<% !empty(queryParams.appCode) %>",
-            "value": "<span style=\"color:#d97706;font-size:12px;font-weight:700\">⚠ </span><span style=\"color:#92400e;font-size:12px\"><b>Filtered view:</b> Narrowed to <b><% queryParams.appCode ?? '' %></b>: only its shell organizations are shown below. Use Show all applications on the Application card above to see every organization.</span>"
+            "value": "<span style=\"color:#d97706;font-size:12px;font-weight:700\">⚠ </span><span style=\"color:#92400e;font-size:12px\"><b>Filtered view:</b> Narrowed to <b><% queryParams.appCode ?? '' %></b>: only its shell organizations are shown below. Use ✕ All applications above to see every organization.</span>"
           },
           {
             "type": "button",

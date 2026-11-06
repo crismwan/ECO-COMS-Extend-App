@@ -392,6 +392,17 @@ function staticSuite() {
       }
     });
   }
+  // A dynamicCards template may pick its card in a script ("cardId": "<% barCard.cardId %>"): a card id written as a
+  // literal in a .script counts as used, and 'Prefix' + n counts every card named Prefix<digits> (Shell Org Manager bar).
+  const scriptDir = path.join(ROOT, 'presentation', 'scripts');
+  for (const sf of fs.existsSync(scriptDir) ? fs.readdirSync(scriptDir).filter((x) => x.endsWith('.script')) : []) {
+    const t = fs.readFileSync(path.join(scriptDir, sf), 'utf8');
+    for (const m of t.matchAll(/'([A-Za-z][A-Za-z0-9]*)'/g)) if (cardIds.has(m[1])) usedCards.add(m[1]);
+    for (const m of t.matchAll(/'([A-Za-z][A-Za-z0-9]*)' \+ /g)) {
+      const fam = [...cardIds].filter((c) => new RegExp(`^${m[1]}\\d+$`).test(c));
+      fam.forEach((c) => usedCards.add(c));
+    }
+  }
   for (const c of cardIds) if (!usedCards.has(c)) warn('Static.orphan', `card ${c} is not used by any page`);
   // 7f. AMD tasks nothing points at (pages count toward the 75-page limit). BP step pages are
   // reached by route, error pages through the SMD.

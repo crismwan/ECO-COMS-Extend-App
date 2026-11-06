@@ -4,5 +4,18 @@
   "id": "scopeWarning",
   "enabled": false,
   "value": "<% empty(queryParams.appCode) ? '<span style=\"display:inline-flex;align-items:center;gap:6px;background:#fef9c3;border:1px solid #fbbf24;border-radius:6px;padding:8px 12px;font-size:12px;color:#92400e\">⚠ No application selected — data below reflects all applications. Use Manage on an application on the Application Patterns tab to view its shell organizations and patterns.</span>' : '<span style=\"display:inline-flex;align-items:center;gap:6px;background:#fef9c3;border:1px solid #fbbf24;border-radius:6px;padding:8px 12px;font-size:12px;color:#92400e\">⚠ Showing shell organizations and patterns for <strong>' + (queryParams.appName ?? queryParams.appCode) + '</strong> only. Go back to view all applications.</span>' %>"
- }
+ },
+ "back": {
+  "type": "button",
+  "id": "backToApplicationsBtn",
+  "label": "← Back to Applications",
+  "taskReference": {
+   "taskId": "shellOrgManager"
+  },
+  "action": "LINK",
+  "suppressDiscardDialog": true,
+  "visible": "<% !empty(queryParams.appCode) %>"
+ },
+ "title": "<% queryParams.appName ?? queryParams.appCode ?? '' %>",
+ "homeVisible": "<% empty(queryParams.appCode) %>"
 }

@@ -1,0 +1,31 @@
+{
+  "id": "SomPills1",
+  "parameters": [
+    "titleText",
+    "subtitleText",
+    "p1Label",
+    "p1App",
+    "p1Fam"
+  ],
+  "header": {
+    "title": "<% titleText ?? \"\" %>",
+    "subtitle": "<% subtitleText ?? \"\" %>",
+    "icon": "wd-accent-building"
+  },
+  "body": {
+    "type": "pillCard",
+    "pills": [
+      {
+        "label": "<% p1Label ?? \"\" %>",
+        "taskReference": {
+          "taskId": "shellOrgManager",
+          "parameterBindings": {
+            "appCode": "<% p1App ?? \"\" %>",
+            "appName": "<% p1App ?? \"\" %>",
+            "family": "<% p1Fam ?? \"\" %>"
+          }
+        }
+      }
+    ]
+  }
+}

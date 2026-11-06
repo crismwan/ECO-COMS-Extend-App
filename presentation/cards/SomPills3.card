@@ -1,0 +1,59 @@
+{
+  "id": "SomPills3",
+  "parameters": [
+    "titleText",
+    "subtitleText",
+    "p1Label",
+    "p1App",
+    "p1Fam",
+    "p2Label",
+    "p2App",
+    "p2Fam",
+    "p3Label",
+    "p3App",
+    "p3Fam"
+  ],
+  "header": {
+    "title": "<% titleText ?? \"\" %>",
+    "subtitle": "<% subtitleText ?? \"\" %>",
+    "icon": "wd-accent-building"
+  },
+  "body": {
+    "type": "pillCard",
+    "pills": [
+      {
+        "label": "<% p1Label ?? \"\" %>",
+        "taskReference": {
+          "taskId": "shellOrgManager",
+          "parameterBindings": {
+            "appCode": "<% p1App ?? \"\" %>",
+            "appName": "<% p1App ?? \"\" %>",
+            "family": "<% p1Fam ?? \"\" %>"
+          }
+        }
+      },
+      {
+        "label": "<% p2Label ?? \"\" %>",
+        "taskReference": {
+          "taskId": "shellOrgManager",
+          "parameterBindings": {
+            "appCode": "<% p2App ?? \"\" %>",
+            "appName": "<% p2App ?? \"\" %>",
+            "family": "<% p2Fam ?? \"\" %>"
+          }
+        }
+      },
+      {
+        "label": "<% p3Label ?? \"\" %>",
+        "taskReference": {
+          "taskId": "shellOrgManager",
+          "parameterBindings": {
+            "appCode": "<% p3App ?? \"\" %>",
+            "appName": "<% p3App ?? \"\" %>",
+            "family": "<% p3Fam ?? \"\" %>"
+          }
+        }
+      }
+    ]
+  }
+}
