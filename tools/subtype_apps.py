@@ -47,7 +47,7 @@ QUERIES = {
     'customOrganizations': {'id': 'customOrganizations', 'query':
         f'SELECT workdayID, organizationByName, code, type1 FROM topLevelOrganizations WHERE subtype in ({SUBTYPES})'},
     'appTypes': {'id': 'appTypes', 'query':
-        f'SELECT type1 FROM topLevelOrganizations WHERE subtype in ({SUBTYPES})'},
+        f'SELECT workdayID, type1 FROM topLevelOrganizations WHERE subtype in ({SUBTYPES})'},
     'allShellAssignableRolesinTenant': {'id': 'allShellAssignableRolesinTenant', 'parameters': ['types'], 'query':
         f'{ROLE_SEL} WHERE enabledForOrganizationTypes in (<% types %>) AND {NOT_AAA}'},
     'allAAArolesinTenant': {'id': 'allAAArolesinTenant', 'query':
@@ -85,12 +85,13 @@ REWRITES = [
      "(empty(queryParams.appCode) ? true : ("),
     ("ra.organization.descriptor.startsWith(empty(queryParams.appCode) ? 'X:' : queryParams.appCode)",
      "(empty(queryParams.appCode) || ra.organization.descriptor.startsWith(queryParams.appCode))"),
-    # Bulk Edit: the applications that have role assignments come from the roles' organization types
+    # Bulk Edit: the applications that have role assignments: each assignment's organization type (appTypes list)
     ("list:flatten((shellRoles.data ?? []).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && "
      "ra.organization.descriptor.startsWith('X:') }).map(ra => { 'X:' + ra.organization.descriptor.substringAfter(':')"
      ".substringBefore(':').substringBefore(' ') }) })).distinct().sort()",
-     "list:flatten((shellRoles.data ?? []).filter(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null })"
-     ".size() > 0 }).map(r => { (r.enabledForOrganizationTypes ?? []).map(t => { t.descriptor }) })).distinct().sort()"),
+     "let ids = (appTypes.data ?? []).map(o => { o.workdayID ?? '' }); let tys = (appTypes.data ?? []).map(o => { (o.type1 ?? []).size() > 0 ? o.type1[0].descriptor : '' }); "
+     "list:flatten((shellRoles.data ?? []).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null }).map(ra => { let i = ids.indexOf(ra.organization.id); i < 0 ? '' : tys.get(i) }) }))"
+     ".filter(a => { a != '' }).distinct().sort()"),
     # Add Shell Org and AAA pages: the application picker lists organization types
     ("  for (var org : (existingOrgs.data ?? [])) {\n    let code = org.code;\n    let appCode = code.substringAfter(':').contains(':') ?\n"
      "      code.substringBefore(':') + ':' + code.substringAfter(':').substringBefore(':') :\n      code;\n",
