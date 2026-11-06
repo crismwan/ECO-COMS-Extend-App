@@ -2387,7 +2387,27 @@ async function probe(token) {
     console.log(`   SUBTYPE roles=${roles.length}: ${roles.map((r) => (r.role || {}).descriptor).sort().join(' | ')}`);
     console.log(`   SUBTYPE aaa=${((await wql(token, q('allAAArolesinTenant'), 10000)).data || []).length}`);
     const typeOf = new Map(orgs.map((o) => [o.workdayID, ((o.type1 || [])[0] || {}).descriptor]));
-    for (const r of roles) for (const ra of (r.roleAssignments || [])) console.log(`   SUBTYPE RA ${(r.role || {}).descriptor} @ ${JSON.stringify(ra.organization)} -> ${typeOf.get((ra.organization || {}).id)}`);
+    // mis-named organizations: name not under its own type, or a pattern that fails its application's format
+    const apps = (await request('GET', `${BO}/comsApplications?limit=100`, token)).data || [];
+    const fmt = new Map(apps.map((a) => [a.appId, a]));
+    for (const o of orgs) {
+      const c = String(o.code || ''); const ty = ((o.type1 || [])[0] || {}).descriptor || '';
+      const why = [];
+      if (c !== ty && !c.startsWith(ty + ':') && !c.startsWith(ty + '(') && !(ty.includes('(') && c.startsWith(ty.split('(')[0] + '('))) why.push('not under its type');
+      const rest = c.startsWith(ty + ':') ? c.slice(ty.length + 1) : '';
+      const a = fmt.get(ty); let s = null; try { s = a && a.patternSchema ? JSON.parse(a.patternSchema) : null; } catch (e) { why.push('bad schema'); }
+      const pre = rest.split(':')[0];
+      const prefixes = s ? s.prefixes : String((a && a.namePrefix) || 'PATTERN').split(',');
+      if (rest && prefixes.includes(pre) && s) {
+        const parts = rest.split(':').slice(1);
+        if (parts.length !== s.fields.length) why.push(`${parts.length} fields, format has ${s.fields.length}`);
+        else s.fields.forEach((f, i) => { if (!(f.blankIsWildcard && (parts[i] === '' || parts[i] === '*')) && !new RegExp('^(?:' + f.regex + ')$').test(parts[i])) why.push(`${f.fieldLabel} "${parts[i]}" !~ ${f.regex}`); });
+        if (c.toUpperCase() !== c) why.push('lower case');
+      }
+      if (c.includes(' ')) why.push('space');
+      if (/claude/i.test(c)) why.push('forbidden test text');
+      if (why.length) console.log(`   MISNAMED ${c} | type ${ty} | active ${o.cf_active1} | ${o.workdayID} | ${why.join('; ')}`);
+    }
     return;
   }
   // Sub-orchestration probe (tools/probe_subflow.py): ProbeSubflowCall calls ProbeEcho and returns {"echo": "echo:hello"}.
