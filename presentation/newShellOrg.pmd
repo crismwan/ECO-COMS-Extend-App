@@ -111,7 +111,7 @@
                   "type": "richText",
                   "id": "pageDescription",
                   "enabled": false,
-                  "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">Add a new organization to Workday. Pick the subtype first. <b>X:SHELL</b>: pick the application; the name is <b>Application:Code</b> (e.g. X:CLW:ORG:ANY). <b>X:META</b> with an application: the name is <b>Application(Code)</b>, for example X:LLIS(CPE). <b>X:META</b> without an application (a new application): enter its code starting with <b>X:</b> (e.g. X:NEWAPP). For X:META, an organization type of the same name must already exist in Workday.</span>"
+                  "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">Add a new organization to Workday. Pick the subtype first. <b>X:SHELL</b>: pick the application; the name is <b>Application:Code</b> (e.g. X:CLW:ORG:ANY). <b>X:META</b> with an application: the name is <b>Application(Code)</b>, for example X:LLIS(CPE). <b>X:META</b> without an application (a new application): enter its code; it is used exactly as typed. For X:META, an organization type of the same name must already exist in Workday.</span>"
                 }
               ],
               "title": "About This Page"
@@ -160,7 +160,7 @@
                       "descriptor": "X:SHELL"
                     }
                   ],
-                  "helpText": "X:META for an application-level organization: under an application it is APP(CODE), e.g. X:LLIS(CPE); without one, a new application (X:NEWAPP). X:SHELL for a shell organization roles are assigned on (APP:CODE).",
+                  "helpText": "X:META for an application-level organization: under an application it is APP(CODE), e.g. X:LLIS(CPE); without one, a new application named by its code. X:SHELL for a shell organization roles are assigned on (APP:CODE).",
                   "onChange": "<%\n  self.clearError();\n  organizationCode.clearError();\n  selectedApplicationId.setRequired(!((!empty(orgSubtypeDropdown.value)) ? (orgSubtypeDropdown.selectedEntries[0].id == 'X:META') : false));\n  if (((!empty(orgSubtypeDropdown.value)) ? (orgSubtypeDropdown.selectedEntries[0].id == 'X:META') : false)) { selectedApplicationId.clearError(); }\n  orgNamePreview.setValue(comsShellOrg.preview(((!empty(selectedApplicationId.value)) ? (selectedApplicationId.selectedEntries[0].descriptor ?? '') : ''), organizationCode.value ?? '', ((!empty(orgSubtypeDropdown.value)) ? (orgSubtypeDropdown.selectedEntries[0].id == 'X:META') : false)));\n%>"
                 },
                 {
@@ -177,15 +177,15 @@
                   "id": "organizationCode",
                   "label": "Organization Code",
                   "required": true,
-                  "helpText": "X:SHELL: the part after the application (ORG:ANY gives X:CLW:ORG:ANY). X:META with an application: the part in brackets, so NEW gives X:LLIS(NEW). X:META without one: the new application code, starting with X: (X:NEWAPP).",
+                  "helpText": "X:SHELL: the part after the application (ORG:ANY gives X:CLW:ORG:ANY). X:META with an application: the part in brackets, so NEW gives X:LLIS(NEW). X:META without one: the new application code, used as typed.",
                   "guide": {
                     "type": "guide",
                     "id": "guideOrgCode",
                     "title": "Organization Code Format",
-                    "text": "X:SHELL: enter the part after the application, or the full name (ORG:ANY or X:CLW:ORG:ANY both give X:CLW:ORG:ANY). X:META with an application: enter the part that goes in brackets, so NEW gives X:LLIS(NEW). X:META without an application: enter the new application code starting with X: (X:NEWAPP). For X:META the organization type of the same name must already exist in Workday. No spaces. Must be unique."
+                    "text": "X:SHELL: enter the part after the application, or the full name (ORG:ANY or X:CLW:ORG:ANY both give X:CLW:ORG:ANY). X:META with an application: enter the part that goes in brackets, so NEW gives X:LLIS(NEW). X:META without an application: enter the new application code; it is used exactly as typed. For X:META the organization type of the same name must already exist in Workday. No spaces. Must be unique."
                   },
                   "onChange": "<%\n  self.clearError();\n  orgNamePreview.setValue(comsShellOrg.preview(((!empty(selectedApplicationId.value)) ? (selectedApplicationId.selectedEntries[0].descriptor ?? '') : ''), organizationCode.value ?? '', ((!empty(orgSubtypeDropdown.value)) ? (orgSubtypeDropdown.selectedEntries[0].id == 'X:META') : false)));\n%>",
-                  "placeholder": "e.g. ORG:ANY, NEW, or X:NEWAPP"
+                  "placeholder": "e.g. ORG:ANY, NEW, or NEWAPP"
                 },
                 {
                   "type": "readOnlyText",
