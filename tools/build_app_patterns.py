@@ -44,7 +44,7 @@ var schemaOf = function(rec) {
 
 var fieldRows = function(rec) {
   let s = schemaOf(rec);
-  empty(s) ? [{ 'fieldLabel': '', 'regex': '', 'hint': '', 'example': '', 'blankIsWildcard': false }] : s.fields;
+  empty(s) ? [{ 'fieldLabel': '', 'regex': '', 'hint': '', 'example': '', 'blankIsWildcard': false, 'optionalField': false }] : s.fields;
 };
 
 var prefixText = function(rec) {
@@ -118,6 +118,12 @@ var fieldsError = function(rows) {
     'At most 7 fields: the Add Pattern form has 7 boxes.';
   } else if (rows.map(r => { r.fieldLabel }).distinct().size() != rows.size()) {
     'Each field needs its own label.';
+  } else if (rows.filter((r, i) => { r.optionalField == true && rows.subList(i, rows.size()).filter(x => { x.optionalField != true }).size() > 0 }).size() > 0) {
+    'Only the last fields can be optional: a field after an optional one must be optional too.';
+  } else if (rows.filter(r => { r.optionalField == true && r.blankIsWildcard == true }).size() > 0) {
+    'An optional field is left off when blank, so it cannot also be Blank = any (*).';
+  } else if (rows.filter(r => { r.optionalField != true }).size() == 0) {
+    'At least the first field must be required (not optional).';
   } else {
     let errs = rows.map((r, i) => { rowError(r, i + 1) }).filter(e => { e != '' });
     errs.size() == 0 ? '' : errs[0];
@@ -221,7 +227,8 @@ CHOSEN = "(empty(appIdDropdown.value) ? '' : appIdDropdown.selectedEntries[0].id
 APPID = f"({NEW} ? {CHOSEN} : ({REC} ?? {{'appId': ''}}).appId)"
 ROWS = ("fieldsGrid.rows.map(r => { { 'fieldLabel': (r.childrenMap.colFieldLabel.value ?? '').trim(), "
         "'regex': (r.childrenMap.colRegex.value ?? '').trim(), 'hint': (r.childrenMap.colHint.value ?? '').trim(), "
-        "'example': (r.childrenMap.colExample.value ?? '').trim(), 'blankIsWildcard': r.childrenMap.colBlank.value == true } })")
+        "'example': (r.childrenMap.colExample.value ?? '').trim(), 'blankIsWildcard': r.childrenMap.colBlank.value == true, "
+        "'optionalField': r.childrenMap.colOptional.value == true } })")
 SRC = "comsAppSetup.recordById(comsApplications.data, copyFromDropdown.selectedEntries[0].id)"
 # An error OK puts on the Fields line has no box of its own to clear it, and Workday refuses OK while any error shows
 # (live 2026-11-04: the page stayed stuck after the row was fixed), so every table edit clears it; OK re-checks.
@@ -334,7 +341,8 @@ edit = {"id": "editAppPattern", "securityDomains": [DOMAIN], "include": ["comsAp
            cell("colRegex", "Format (regular expression)", "regex"),
            cell("colHint", "Hint", "hint"),
            cell("colExample", "Example", "example"),
-           cell("colBlank", "Blank = any (*)", "blankIsWildcard", "checkBox")]},
+           cell("colBlank", "Blank = any (*)", "blankIsWildcard", "checkBox"),
+           cell("colOptional", "Optional at end", "optionalField", "checkBox")]},
         {"type": "readOnlyText", "id": "exampleNameText", "label": "Example Pattern Name",
          # page-load value from the saved record (the grid's rows aren't built yet at load); PREVIEW updates it as fields change
          "value": f"<% let s = comsAppSetup.schemaOf({REC}); empty(s) ? 'Appears here as you fill in the prefixes and fields.' : comsAppSetup.exampleName(({REC}).appId, s.prefixes.join(','), s.fields) %>"}]}]}]},

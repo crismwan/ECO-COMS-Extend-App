@@ -731,3 +731,12 @@ Product owner: organizations and applications can be named anything; the app fin
 - Clockwork's Academic Unit format widened to `\*|[A-Z0-9-]{2,6}` (real units UBC-V, ETPPV, DTSCV), in `tools/pattern_schemas.json` and on the live X:CLW record (edited through Maintain Application Pattern, since that record had in-app edits that seed-apps would overwrite).
 - Left active, still outside their formats: X:BPMS(ASMT):ORG:ARTS:HUMANITIES101 and :SCIF:SCIENCE101 (2 fields, format 1), X:CLW:PATTERN:CPSC:CPSC:21:300:2026W2 (course 21).
 - Change Status fixes: the guard checks the subtype list (not an X: code), and the launch takes the application from the organization's type, URL-encoded (a code with a space had failed with "Illegal character in query").
+
+### Optional trailing pattern fields (2026-11-06)
+
+Product owner: "these formats help guide nuances". A field may be `optionalField` (only the last ones): left blank it is dropped from the name, so one format covers X:BPMS(ASMT):ORG:ELI and X:BPMS(ASMT):ORG:ARTS:HUMANITIES101.
+- Page: `comsPatterns.usedCount` / `buildName`; the format editor has an "Optional at end" column and refuses an optional field before a required one, or one that is also Blank = any.
+- Server (CheckPatternName): the field count may be anything from the required count to the full count (it counts `"optionalField":true` in the stored schema, 20 characters each).
+- Formats: X:BPMS(ASMT) and X:BPMS(ADHC) get Role Name + optional Sub-unit; X:BPMS(ADHC) also takes prefix ORG (its 12 ORG:SAO:... organizations). Pushed with `seed-apps-apply` and `only=X:BPMS(ASMT),X:BPMS(ADHC)` (the new `--only` replaces just those records' formats).
+- Left as is: X:CLW:PATTERN:CPSC:CPSC:21:300:2026W2 (course 21 is most likely a typo for a 3-digit course; widening Course would let typos through).
+- **Build trap:** files that tools/subtype_apps.py rewrites (listed in tools/subtype_src/) are restored from that folder at the start of every build, so hand edits go into the copy in tools/subtype_src/, not presentation/.

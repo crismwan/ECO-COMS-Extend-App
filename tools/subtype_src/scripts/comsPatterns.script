@@ -32,8 +32,16 @@ var cell = function(value) {
   empty(value) ? '*' : value;
 };
 
+/* A field marked optionalField may be left off the end of the name (2026-11-06: ORG:ELI and ORG:ARTS:HUMANITIES101 in
+   one format); only trailing fields can be optional, and a blank one is dropped only when every field after it is blank too. */
+var usedCount = function(schema, values) {
+  let n = fieldCount(schema);
+  let vs = values.subList(0, n);
+  vs.filter((v, i) => { !(schema.fields[i].optionalField == true && vs.subList(i, n).filter(w => { !empty(w) }).size() == 0) }).size();
+};
+
 var buildName = function(appCode, prefix, schema, values) {
-  let parts = values.subList(0, fieldCount(schema)).map(v => { empty(v) ? '*' : v });
+  let parts = values.subList(0, usedCount(schema, values)).map(v => { empty(v) ? '*' : v });
   appCode + ':' + (empty(prefix) ? '?' : prefix) + ':' + parts.join(':');
 };
 
@@ -43,7 +51,7 @@ var checkField = function(schema, i, value) {
   } else {
     let f = schema.fields[i];
     if (empty(value)) {
-      f.blankIsWildcard ? '' : (f.fieldLabel + ' is required. ' + f.hint);
+      (f.blankIsWildcard || f.optionalField == true) ? '' : (f.fieldLabel + ' is required. ' + f.hint);
     } else {
       validate:match(f.regex, value) ? '' : (f.fieldLabel + ': ' + f.hint);
     }
@@ -54,7 +62,7 @@ var formatGuide = function(schema) {
   if (empty(schema)) {
     '';
   } else {
-    schema.fields.map(f => { f.fieldLabel + ' (e.g. ' + f.example + '): ' + f.hint }).join('  ·  ');
+    schema.fields.map(f => { f.fieldLabel + (f.optionalField == true ? ' (optional, may be left off)' : '') + ' (e.g. ' + f.example + '): ' + f.hint }).join('  ·  ');
   }
 };
 
@@ -85,6 +93,7 @@ var appCodes = function(orgs, apps) {
   "prefixOptions": prefixOptions,
   "fieldLabel": fieldLabel,
   "cell": cell,
+  "usedCount": usedCount,
   "buildName": buildName,
   "checkField": checkField,
   "formatGuide": formatGuide,

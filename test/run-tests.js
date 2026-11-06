@@ -599,10 +599,13 @@ function staticSuite() {
         if (JSON.stringify(x).replace('"fieldLabel"', '').includes('fieldLabel')) err('schema', `${a.appId}: "fieldLabel" must appear once per field`);
         try { new RegExp(`^(?:${x.regex})$`); } catch (e) { err('schema', `${a.appId} ${x.fieldLabel}: bad regex ${x.regex}`); }
       }
-      const ok = (x, v) => (v === '' ? x.blankIsWildcard : new RegExp(`^(?:${x.regex})$`).test(v));
+      const ok = (x, v) => (v === '' ? (x.blankIsWildcard || x.optionalField === true) : new RegExp(`^(?:${x.regex})$`).test(v));
+      fields.forEach((x, i) => { if (x.optionalField && fields.slice(i).some((y) => !y.optionalField)) err('schema', `${a.appId}: optional field ${x.fieldLabel} isn't at the end`); if (x.optionalField && x.blankIsWildcard) err('schema', `${a.appId}: ${x.fieldLabel} is both optional and blank = any`); });
+      // the page's comsPatterns.usedCount: trailing optional fields left blank are dropped from the name
+      const used = (vals) => fields.filter((x, i) => !(x.optionalField && fields.slice(i).every((y, j) => !(vals[i + j] || '')))).length;
       for (const ex of a.examples || []) {
         const bad = fields.filter((x, i) => !ok(x, ex.values[i] ?? ''));
-        const name = `${a.appId}:${ex.prefix || a.prefixes[0]}:${fields.map((x, i) => ex.values[i] || '*').join(':')}`;
+        const name = `${a.appId}:${ex.prefix || a.prefixes[0]}:${fields.slice(0, used(ex.values)).map((x, i) => ex.values[i] || '*').join(':')}`;
         if (bad.length) err('schema', `${a.appId}: example ${ex.name} fails ${bad.map((x) => x.fieldLabel).join(', ')}`);
         if (name !== ex.name) err('schema', `${a.appId}: example builds ${name}, expected ${ex.name}`);
         n++;
@@ -1758,7 +1761,9 @@ async function seedApps(token) {
   const APPLY = argv.includes('--apply');
   console.log(`\n-- Seed application records (${APPLY ? 'APPLY' : 'DRY RUN'}) --`);
   const have = (await request('GET', `${BO}/comsApplications?limit=100`, token)).data || [];
-  for (const a of loadSchemas()) {
+  // --only X:A,X:B: just these applications, replacing their stored formats (other records' in-app edits stay)
+  const oi = argv.indexOf('--only'); const only = oi >= 0 ? String(argv[oi + 1] || '').split(',').map((s) => s.trim()).filter(Boolean) : [];
+  for (const a of loadSchemas().filter((x) => !only.length || only.includes(x.appId))) {
     const body = { name: a.name, appId: a.appId, orgType: a.appId, orgSubtype: 'X:SHELL', namePrefix: a.prefixes.join(','),
       patternSchema: JSON.stringify(a.schema), active: true, description: `Pattern format from Application Patterns.xlsx: ${a.prefixes.join('/')} + ${a.fields.map((x) => x.fieldLabel).join(', ')}` };
     const cur = have.find((r) => r.appId === a.appId);
@@ -1766,7 +1771,7 @@ async function seedApps(token) {
     const same = cur && cur.namePrefix === body.namePrefix && cur.patternSchema === body.patternSchema;
     // Formats are edited on the Application Patterns page now (2026-11-04), so an existing record is only replaced
     // from tools/pattern_schemas.json with --overwrite; by default this only creates missing applications.
-    const keep = cur && !same && !argv.includes('--overwrite');
+    const keep = cur && !same && !argv.includes('--overwrite') && !only.length;
     console.log(`   ${cur ? (same ? 'unchanged' : (keep ? 'kept (differs; edited in the app? --overwrite replaces it)' : 'update')) : 'create'}  ${a.appId}  ${body.namePrefix}  [${a.fields.map((x) => x.fieldLabel).join(', ')}]`);
     if (!APPLY || same || keep) continue;
     await test(`Seed.${a.appId}`, async () => {
@@ -1776,7 +1781,7 @@ async function seedApps(token) {
     });
   }
   const after = (await request('GET', `${BO}/comsApplications?limit=100`, token)).data || [];
-  for (const a of loadSchemas()) {
+  for (const a of loadSchemas().filter((x) => !only.length || only.includes(x.appId))) {
     const r = after.find((x) => x.appId === a.appId);
     const want = JSON.stringify(a.schema);
     if (r && r.patternSchema !== want) fail(`Seed.stored ${a.appId}`, `patternSchema stored ${String(r.patternSchema || '').length} of ${want.length} characters`);
@@ -2408,8 +2413,9 @@ async function probe(token) {
       const prefixes = s ? s.prefixes : String((a && a.namePrefix) || 'PATTERN').split(',');
       if (rest && prefixes.includes(pre) && s) {
         const parts = rest.split(':').slice(1);
-        if (parts.length !== s.fields.length) why.push(`${parts.length} fields, format has ${s.fields.length}`);
-        else s.fields.forEach((f, i) => { if (!(f.blankIsWildcard && (parts[i] === '' || parts[i] === '*')) && !new RegExp('^(?:' + f.regex + ')$').test(parts[i])) why.push(`${f.fieldLabel} "${parts[i]}" !~ ${f.regex}`); });
+        const req = s.fields.filter((f) => !f.optionalField).length;
+        if (parts.length < req || parts.length > s.fields.length) why.push(`${parts.length} fields, format has ${req === s.fields.length ? req : req + '-' + s.fields.length}`);
+        else s.fields.slice(0, parts.length).forEach((f, i) => { if (!(f.blankIsWildcard && (parts[i] === '' || parts[i] === '*')) && !new RegExp('^(?:' + f.regex + ')$').test(parts[i])) why.push(`${f.fieldLabel} "${parts[i]}" !~ ${f.regex}`); });
         if (c.toUpperCase() !== c) why.push('lower case');
       }
       if (c.includes(' ')) why.push('space');

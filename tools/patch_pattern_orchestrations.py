@@ -58,6 +58,8 @@ SCH = 'data.GetApplication.response.asJSON().stringAtJsonPathWithDefault("$.patt
 P = 'data.GetInputParams.patternName'
 SEG = f'{P}.substringAfter({APP}.append(":")).substringBefore(":")'
 LABELS = f'({SCH}.length() - {SCH}.replace("fieldLabel", "").length())'
+# 20 characters per optional field: the stored schema is compact JSON ("optionalField":true)
+OPT = f'({SCH}.length() - {SCH}.replace("\\"optionalField\\":true", "").length())'
 COLONS = f'(({P}.length() - {P}.replace(":", "").length()) - ({APP}.length() - {APP}.replace(":", "").length()) - 1)'
 
 ASSERTIONS = [
@@ -65,7 +67,8 @@ ASSERTIONS = [
     (f'{P}.startsWith({APP}.append(":"))', f'"Pattern name must start with " + {APP} + ":, got " + {P}'),
     (f'",".append({PREF}.defaultIfBlank("PATTERN")).append(",").contains(",".append({SEG}).append(","))',
      f'"Pattern prefix " + {SEG} + " is not allowed for " + {APP} + ", got " + {P}'),
-    (f'(if ({LABELS} == 0) true else ({LABELS} == {COLONS} * 10))',
+    # optional trailing fields (2026-11-06): between the required count and the full count of fields
+    (f'(if ({LABELS} == 0) true else (if ({COLONS} * 10 <= {LABELS}) ({COLONS} * 20 >= {LABELS} * 2 - {OPT}) else false))',
      f'"Pattern name has the wrong number of fields for " + {APP} + ": " + {P}'),
     (f'(if ({SCH}.isEmpty()) true else {P}.upperCase().equals({P}))', f'"Pattern name must be upper case: " + {P}'),
     (f'{P}.contains(" ").not()', f'"Pattern name must not contain spaces: " + {P}'),

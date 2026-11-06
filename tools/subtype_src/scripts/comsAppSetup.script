@@ -10,7 +10,7 @@ var schemaOf = function(rec) {
 
 var fieldRows = function(rec) {
   let s = schemaOf(rec);
-  empty(s) ? [{ 'fieldLabel': '', 'regex': '', 'hint': '', 'example': '', 'blankIsWildcard': false }] : s.fields;
+  empty(s) ? [{ 'fieldLabel': '', 'regex': '', 'hint': '', 'example': '', 'blankIsWildcard': false, 'optionalField': false }] : s.fields;
 };
 
 var prefixText = function(rec) {
@@ -84,6 +84,12 @@ var fieldsError = function(rows) {
     'At most 7 fields: the Add Pattern form has 7 boxes.';
   } else if (rows.map(r => { r.fieldLabel }).distinct().size() != rows.size()) {
     'Each field needs its own label.';
+  } else if (rows.filter((r, i) => { r.optionalField == true && rows.subList(i, rows.size()).filter(x => { x.optionalField != true }).size() > 0 }).size() > 0) {
+    'Only the last fields can be optional: a field after an optional one must be optional too.';
+  } else if (rows.filter(r => { r.optionalField == true && r.blankIsWildcard == true }).size() > 0) {
+    'An optional field is left off when blank, so it cannot also be Blank = any (*).';
+  } else if (rows.filter(r => { r.optionalField != true }).size() == 0) {
+    'At least the first field must be required (not optional).';
   } else {
     let errs = rows.map((r, i) => { rowError(r, i + 1) }).filter(e => { e != '' });
     errs.size() == 0 ? '' : errs[0];
