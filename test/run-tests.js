@@ -2526,7 +2526,7 @@ async function timingSuite(token) {
   };
   const wqlFile = (id) => JSON.parse(fs.readFileSync(path.join(ROOT, 'presentation/wqlQueries', id + '.wqlquery'), 'utf8')).query;
   const kb = (r) => Math.round(JSON.stringify(r).length / 1024) + ' KB';
-  for (const id of ['allShellOrgs', 'existingPatterns', 'allShellAssignableRolesinTenant', 'allAAArolesinTenant', 'allPositions', 'customOrganizations']) {
+  for (const id of ['allShellOrgs', 'allShellAssignableRolesinTenant', 'allAAArolesinTenant', 'allPositions', 'customOrganizations']) {
     await med(`WQL ${id}`, async () => { const r = await wql(token, wqlFile(id), 10000); return `${(r.data || []).length} rows, ${kb(r)}`; });
   }
   await med('WQL positionFill (Access Review)', async () => { const r = await wql(token, 'SELECT cf_PositionID, cf_PositionIsFilled FROM allPositions WHERE supervisoryOrganization is not empty', 10000); return `${(r.data || []).length} rows, ${kb(r)}`; });

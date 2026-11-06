@@ -372,7 +372,7 @@ set_rows(s, T(s, 'Report name'), [
     ['ECO-COMS Audit Trail', 'Model report (data source)', 'COMS Audit Log', 'Custom reports; audit', 'n/a', AUD],
     ['ECO-COMS Bulk Runs', 'Model report (data source)', 'COMS Bulk Run', 'Custom reports', 'n/a', SO],
     ['ECO-COMS Applications', 'Model report (data source)', 'COMS Application', 'Custom reports', 'n/a', f'{SET}, {AP}'],
-    ['WQL queries (not reports): allShellOrgs, customOrganizations, existingPatterns, allPositions, allShellAssignableRolesinTenant, allAAArolesinTenant', 'WQL', 'customOrganizations, topLevelOrganizations, allPositions, assignableRoles, academicUnits', 'Pages (§6.7)', 'Code starts with X:; shell roles only', 'User\'s own Workday security'],
+    ['WQL queries (not reports): allShellOrgs, customOrganizations, allPositions, allShellAssignableRolesinTenant, allAAArolesinTenant', 'WQL', 'customOrganizations, topLevelOrganizations, allPositions, assignableRoles, academicUnits', 'Pages (§6.7)', 'Code starts with X:; shell roles only', 'User\'s own Workday security'],
 ], keep=1)
 set_rows(s, T(s, 'Report field'), [
     ['roleName / status', 'X:ADM:ROLE:COORDINATOR · Approved', 'Request report: what was asked and where it is'],
@@ -427,7 +427,7 @@ diagram_after('Diagram — Orchestration flow', 'img/orchestration-flow.png', 'B
 set_rows(s, T(s, 'Page (UX ID)'), [
     ['UX-002', 'allShellOrgs (WQL), comsApplications (REST), shell role assignments (WQL)', 'GET', 'Page load', 'Organizations, formats, roles', UT, 'One organization list serves every tab and the application bar'],
     ['UX-004a', 'addShellOrg (deferred), verify (WQL)', 'POST / GET', 'OK (onSubmit)', 'Launch + verification', UT, 'Run-and-verify'],
-    ['UX-006', 'addShellOrgPattern (deferred), existingPatterns', 'POST / GET', 'OK', 'Launch + verification', UT, ''],
+    ['UX-006', 'launchAddShellOrgPattern (deferred), verifyPattern (deferred WQL)', 'POST / GET', 'OK', 'Launch + verification', UT, ''],
     ['UX-008', 'assignRolePositions (deferred), audit count', 'POST / GET', 'OK', 'Launch + audit total', UT, 'Positions browse: Staffing v6 values (deferred, per level)'],
     ['UX-013', 'Bulk rows (REST), IORC_0037_XFD_SEC_Bulk_Role_Changes_From_Grid launch', 'POST', 'OK', 'Run created', UT, 'Results page polls with Refresh'],
     ['UX-016', 'auditLogsNewest (Graph) pages 0–4', 'POST', 'Page load', 'Newest 500 audit records', UT, 'Pages 1–4 skipped when the total is smaller'],

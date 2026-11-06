@@ -1,4 +1,0 @@
-{
-  "id": "existingPatterns",
-  "query": "SELECT workdayID, organizationByName, code, cf_active1 FROM topLevelOrganizations WHERE code contains 'PATTERN'"
-}

@@ -8,5 +8,4 @@ tools/
 test/
 .github/
 CLAUDE.md
-UPDATE_NOTES.txt
 *.md
