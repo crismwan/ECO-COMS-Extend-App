@@ -1,0 +1,209 @@
+{
+  "id": "manageShellOrgStatus",
+  "securityDomains": [
+    "ManageCOMSShellOrgs"
+  ],
+  "endPoints": [
+    {
+      "name": "selectedWorker",
+      "baseUrlType": "COMMON",
+      "url": "/workers/me",
+      "authType": "sso",
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 403
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "name": "launchManageStatus",
+      "baseUrlType": "orchestration",
+      "authType": "sso",
+      "deferred": "true",
+      "url": "<% '/IORC_0037_XFD_SEC_Change_Shell_Org_Status/launch?orgId=' + oid + '&action=' + act + '&orgCode=' + oc + '&orgName=' + on + '&includeInactive=' + inact + '&effectiveDate=' + ed + '&patternName=' + oc + '&orgType=' + ot + '&comsAppId=' + ot + '&validateOnly=' + vo + '&changedBy=' + cb + '&timestamp=' + ts + '&changedByWid=' + cbw %>"
+    },
+    {
+      "name": "verifyOrgStatus",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "url": "<% '/comsAuditLogs?limit=' + lim %>",
+      "authType": "sso",
+      "deferred": "true"
+    }
+  ],
+  "outboundData": {
+    "outboundEndPoints": [
+      {
+        "type": "outboundVariable",
+        "name": "manageStatusFlowVars",
+        "variableScope": "flow",
+        "values": [
+          {
+            "outboundPath": "orgCode",
+            "value": "<% queryParams.orgCode ?? '' %>"
+          },
+          {
+            "outboundPath": "currentStatus",
+            "value": "<% queryParams.currentStatus ?? '' %>"
+          }
+        ]
+      }
+    ],
+    "responseErrorDetail": {
+      "errorSummary": "<% error ?? '' %>"
+    }
+  },
+  "onSubmit": "<%\n  confirmStatusChange.clearError();\n  effectiveDate.clearError();\n  let valid = true;\n  if (confirmStatusChange.value != true) {\n    confirmStatusChange.setError('Please confirm the status change.');\n    valid = false;\n  }\n  if (empty(effectiveDate.value)) {\n    effectiveDate.setError('Effective Date is required.');\n    valid = false;\n  }\n  if (valid) {\n    let oc = queryParams.orgCode ?? '';\n    let ot = oc.substringBefore(':') + ':' + oc.substringAfter(':').substringBefore(':');\n    let inactivating = queryParams.currentStatus == 'Active';\n    let act = inactivating ? 'INACTIVATE' : 'REACTIVATE';\n    let oid = queryParams.orgId ?? '';\n    let before = verifyOrgStatus.invoke({'lim': '1'}).total ?? 0;\n    launchManageStatus.invoke({'cbw': selectedWorker.id ?? '', 'cb': (selectedWorker.descriptor ?? '').urlEncode(), 'ts': date:now().format(\"yyyy-MM-dd'T'HH:mm:ss'Z'\").urlEncode(), 'oid': oid, 'act': act, 'oc': oc.urlEncode(), 'on': (queryParams.orgName ?? oc).replace(' (inactive)', '').urlEncode(), 'inact': inactivating ? 'true' : 'false', 'ed': effectiveDate.value.format('yyyy-MM-dd'), 'ot': ot, 'vo': 'false'});\n    let after = verifyOrgStatus.invoke({'lim': '1'}).total ?? 0;\n    let changed = after > before;\n    if (!changed) {\n      confirmStatusChange.setError('Workday rejected this status change, so nothing was changed. Try again or check the organization in Workday.');\n      valid = false;\n    }\n  }\n  valid;\n%>",
+  "presentation": {
+    "headerSize": "HIDDEN",
+    "body": {
+      "type": "basicFormLayout",
+      "id": "manageStatusForm",
+      "sections": [
+        {
+          "type": "layoutSection",
+          "id": "titleBannerSection",
+          "children": [
+            {
+              "type": "richText",
+              "id": "titleBannerRichText",
+              "enabled": false,
+              "value": "<% '<span style=\"color:#0055B3;font-size:24px\"><b>' + ('ECO-COMS: Change Status – ' + (queryParams.orgCode ?? 'Organization')).replace('<', '&lt;') + '</b></span>' %>"
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "navSection",
+          "children": [
+            {
+              "type": "button",
+              "label": "← Shell Org Manager",
+              "taskReference": {
+                "taskId": "shellOrgManager"
+              },
+              "action": "LINK",
+              "suppressDiscardDialog": true
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "warningSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "warningFieldSet",
+              "title": "Before You Submit",
+              "children": [
+                {
+                  "type": "richText",
+                  "id": "warningMsg",
+                  "enabled": false,
+                  "value": "<% queryParams.currentStatus == 'Active' ? '<span style=\"color:#d97706;font-size:12px;font-weight:700\">⚠ </span><span style=\"color:#92400e;font-size:12px\"><b>Warning:</b> Setting this organization to Inactive does not automatically remove any Workday role assignments referencing it. Verify in Workday that no active role assignments use this Custom Organization before proceeding.</span>' : '<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">This will reactivate the organization and make it available for role assignments again.</span>' %>"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "confirmSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "confirmFieldSet",
+              "title": "Confirm Status Change",
+              "children": [
+                {
+                  "type": "readOnlyText",
+                  "id": "orgNameDisplay",
+                  "label": "Organization Name",
+                  "value": "<% queryParams.orgName ?? '' %>"
+                },
+                {
+                  "type": "readOnlyText",
+                  "id": "orgCodeDisplay",
+                  "label": "Organization Code",
+                  "value": "<% queryParams.orgCode ?? '' %>"
+                },
+                {
+                  "type": "readOnlyText",
+                  "id": "currentStatusDisplay",
+                  "label": "Current Status",
+                  "value": "<% queryParams.currentStatus ?? '' %>",
+                  "guide": {
+                    "type": "guide",
+                    "id": "guideCurrentStatus",
+                    "title": "About Organization Status",
+                    "text": "Active organizations are available for role assignments in Workday. Inactive organizations are hidden from selection but existing role assignments are NOT automatically removed — verify in Workday before inactivating."
+                  }
+                },
+                {
+                  "type": "readOnlyText",
+                  "id": "newStatusDisplay",
+                  "label": "New Status",
+                  "value": "<% queryParams.currentStatus == 'Active' ? 'Inactive' : 'Active' %>"
+                },
+                {
+                  "type": "date",
+                  "id": "effectiveDate",
+                  "label": "Effective Date",
+                  "required": true,
+                  "helpText": "The date the status change takes effect in Workday. It is sent as the Effective Date of the request.",
+                  "onChange": "<% effectiveDate.clearError(); %>"
+                },
+                {
+                  "type": "checkBox",
+                  "id": "confirmStatusChange",
+                  "label": "<% queryParams.currentStatus == 'Active' ? 'I confirm this organization should be inactivated and I have verified no active role assignments depend on it.' : 'I confirm I want to reactivate this organization and make it available for role assignments.' %>",
+                  "required": true,
+                  "helpText": "You must acknowledge before submitting this status change.",
+                  "onChange": "<% self.clearError(); %>"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "impactSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "impactFieldSet",
+              "title": "Impact of This Change",
+              "children": [
+                {
+                  "type": "richText",
+                  "id": "statusImpactNote",
+                  "enabled": false,
+                  "value": "<% queryParams.currentStatus == 'Active' ? '<span style=\"color:#92400e;font-size:12px\"><b>Impact of Inactivating:</b> The organization will no longer appear in Workday selection lists. Existing role assignments will NOT be removed automatically — you must remove them manually in Workday if needed.</span>' : '<span style=\"color:#065f46;font-size:12px\"><b>Impact of Reactivating:</b> The organization will become available again for new role assignments in Workday. No existing data will be changed.</span>' %>"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "footer": {
+      "type": "footer",
+      "children": [
+        {
+          "type": "pod",
+          "podId": "ecoComsFooter"
+        }
+      ]
+    },
+    "pageType": "EDIT",
+    "cancelOverride": {
+      "taskId": "shellOrgManager"
+    }
+  }
+}

@@ -70,6 +70,13 @@ APP_OF = "((org.type1 ?? []).size() > 0 ? org.type1[0].descriptor : org.code)"
 
 # ---- text rewrites (old -> new), applied to every page and script ------------------------------------------------------
 REWRITES = [
+    # Change Status: the application (orgType / comsAppId in the launch) is the organization's type, URL-encoded
+    # (a code with a space failed the launch: "Illegal character in query", live 2026-11-06)
+    ("let ot = oc.substringBefore(':') + ':' + oc.substringAfter(':').substringBefore(':');",
+     "let ti = (appTypes.data ?? []).map(o => { o.workdayID ?? '' }).indexOf(queryParams.orgId ?? ''); "
+     "let ot = ti < 0 ? (oc.contains('(') ? (oc.substringBefore(')') + ')') : (oc.substringAfter(':').contains(':') ? (oc.substringBefore(':') + ':' + oc.substringAfter(':').substringBefore(':')) : oc)) "
+     ": ((((appTypes.data ?? []).get(ti)).type1 ?? []).size() > 0 ? ((appTypes.data ?? []).get(ti)).type1[0].descriptor : oc);"),
+    ("'ot': ot, 'vo'", "'ot': ot.urlEncode(), 'vo'"),
     # run-and-verify readbacks (Add Shell Org, Add Pattern): find the new organization among the subtype ones
     ("WHERE%20code%20contains%20%27X%3A%27", f"WHERE%20subtype%20in%20({X_META}%2C%20{X_SHELL})"),
     # filters that only kept X: organizations: the list is already limited by subtype
@@ -163,6 +170,10 @@ for p in sorted(glob.glob(os.path.join(ROOT, '*.pmd'))):
     eps = d.get('endPoints', [])
     roles = [e for e in eps if (e.get('wqlQuery') or {}).get('queryId') == 'allShellAssignableRolesinTenant']
     if not roles:
+        if 'appTypes.data' in json.dumps(d) and not any(e.get('name') == 'appTypes' for e in eps):
+            keep(p)
+            eps.insert(0, dict(APP_TYPES_EP))
+            open(p, 'w', encoding='utf-8').write(json.dumps(d, indent=2, ensure_ascii=False) + '\n')
         continue
     orgs = next((e['name'] for e in eps if (e.get('wqlQuery') or {}).get('queryId') in ('allShellOrgs', 'customOrganizations')), None)
     if not orgs:
