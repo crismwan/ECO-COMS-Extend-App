@@ -133,6 +133,18 @@ def grids(name, page):
     return {}
 
 
+# Text changes that go with the filters (written as they appear in the .pmd JSON).
+SL = "(comsRequestStats.statusOrDefault(queryParams.status ?? '') == 'All' ? 'All' : (comsRequestStats.statusOrDefault(queryParams.status ?? '') == 'Pending ISC Review' ? 'Pending' : comsRequestStats.statusOrDefault(queryParams.status ?? '')))"
+REWRITES = {
+    # "Showing ApprovedThisMonth requests" read badly once the cards could set that status
+    'iscRoleRequestsView': [(SL, "comsRequestStats.statusLabel(queryParams.status ?? '')"),
+                            # the queue counts everyone's requests, both kinds; My Requests counts only yours (4 vs 5)
+                            ("'title': 'Pending', 'subtitle': 'Waiting for ISC review'", "'title': 'Pending', 'subtitle': 'Everyone, assignable and AAA'")],
+    'assignableRoleManagerView': [("'title': 'Pending', 'subtitle': 'Waiting for ISC review'", "'title': 'Pending', 'subtitle': 'Your requests waiting for ISC'")],
+    'adminProvisioningView': [("'title': 'Pending', 'subtitle': 'Waiting for ISC review'", "'title': 'Pending', 'subtitle': 'AAA requests waiting for ISC'")],
+}
+
+
 def card_id(task):
     return 'Quick' + task[0].upper() + task[1:] + 'Card'
 
@@ -181,7 +193,11 @@ for name, cards in CARDS.items():
                 walk(v)
     walk(page)
     assert not left, f'{name}: count cards not found: {list(left)}'
-    open(p, 'w', encoding='utf-8').write(json.dumps(page, indent=2, ensure_ascii=False) + '\n')
+    text = json.dumps(page, indent=2, ensure_ascii=False)
+    for old, new in REWRITES.get(name, []):
+        assert old in text, f'{name}: {old[:60]}'
+        text = text.replace(old, new)
+    open(p, 'w', encoding='utf-8').write(text + '\n')
     done.append(name)
 
 for task in sorted(used):

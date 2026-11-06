@@ -145,7 +145,7 @@
                 {
                   "type": "card",
                   "cardId": "QuickAdminProvisioningViewCard",
-                  "parameters": "<% { 'mark': ((queryParams.quick ?? '') == 'pending') ? 'y' : '', 'b_quick': ((queryParams.quick ?? '') == 'pending' ? '' : 'pending'), 'title': 'Pending', 'subtitle': 'Waiting for ISC review', 'countText': '' + comsRequestStats.countStatus((list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? []).filter(r => { comsRequestStats.isAaa(r) }), 'Pending ISC Review') + ' pending' } %>"
+                  "parameters": "<% { 'mark': ((queryParams.quick ?? '') == 'pending') ? 'y' : '', 'b_quick': ((queryParams.quick ?? '') == 'pending' ? '' : 'pending'), 'title': 'Pending', 'subtitle': 'AAA requests waiting for ISC', 'countText': '' + comsRequestStats.countStatus((list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? []).filter(r => { comsRequestStats.isAaa(r) }), 'Pending ISC Review') + ' pending' } %>"
                 },
                 {
                   "type": "card",

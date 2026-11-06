@@ -15,6 +15,12 @@ var statusOrDefault = function(status) {
   empty(status) ? 'Pending ISC Review' : status;
 };
 
+/* The status as people read it, for titles and the "Showing ..." line. */
+var statusLabel = function(status) {
+  let s = statusOrDefault(status);
+  s == 'Pending ISC Review' ? 'Pending' : (s == 'ApprovedThisMonth' ? 'Approved This Month' : s);
+};
+
 var isWeekday = function(d) {
   let day = d.format('E');
   day != 'Sat' && day != 'Sun';
@@ -122,5 +128,6 @@ var myRequestsText = function(list, meId) {
   "countOverdue": countOverdue,
   "countApprovedThisMonth": countApprovedThisMonth,
   "countStatus": countStatus,
-  "quick": quick
+  "quick": quick,
+  "statusLabel": statusLabel
 }
