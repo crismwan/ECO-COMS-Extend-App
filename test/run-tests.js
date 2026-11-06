@@ -2369,22 +2369,21 @@ async function subflowsSuite(token, me) {
 
 async function probe(token) {
   console.log('\n-- Probe (read-only) --');
-  // 2026-11-06: can the role queries filter by organization type instead of the X: name?
+  // 2026-11-06: assignableRoles fields (looking for an organization subtype/type filter)
   {
+    const ds = await request('GET', `${API}/wql/v1/dataSources?alias=assignableRoles`, token);
+    const id = (ds.data || [])[0]?.id;
+    let all = [];
+    for (let off = 0; off < 3000; off += 100) {
+      const r = await request('GET', `${API}/wql/v1/dataSources/${id}/fields?limit=100&offset=${off}`, token);
+      all = all.concat(r.data || []); if ((r.data || []).length < 100) break;
+    }
+    console.log(`   ARFIELDS total=${all.length}`);
+    all.filter((f) => /type|subtype|organi|enabled/i.test((f.alias || '') + ' ' + (f.descriptor || ''))).forEach((f) => console.log(`   ARF ${f.alias} | ${f.descriptor} | ${f.type || ''}`));
     const SUB = 'e6ca8683b78d10017a5c108412fc0000,e6ca8683b78d10017a5c108412fc0001';
-    const xs = (await wql(token, `SELECT type1 FROM topLevelOrganizations WHERE subtype in (${SUB})`, 10000)).data || [];
-    const tids = [...new Set(xs.map((o) => ((o.type1 || [])[0] || {}).id).filter(Boolean))];
-    const T = async (label, q) => { const s0 = Date.now(); try { const r = await wql(token, q, 10000); const d = r.data || [];
-      const n = d.reduce((k, x) => k + ((x.roleAssignments || []).length), 0);
-      console.log(`   RQ ${label}: roles=${d.length} assignments=${n} ${Math.round(JSON.stringify(r).length / 1024)}KB ${Date.now() - s0}ms names=${d.map((x) => (x.role || {}).descriptor).slice(0, 4).join(' | ')}`);
-      if (d[0] && d[0].roleAssignments && d[0].roleAssignments[0]) console.log('   RQSAMPLE ' + JSON.stringify(d[0].roleAssignments[0]).slice(0, 400));
-    } catch (e) { console.log(`   RQ ${label}: ERROR ${e.message.slice(0, 200)}`); } };
-    const SEL = 'SELECT role, enabledForOrganizationTypes, roleAssignments{organization, workersAssigned, cf_ZCF_EE_RoleAssignedToAsPositionRestrictions} as roleAssignments FROM assignableRoles';
-    await T('today shell', SEL + " WHERE ON roleAssignments cf_ZCF_FT_Organization contains 'X:' WHERE roleName contains 'X:' AND roleName not contains 'Organizations and Roles Assignment Administrator'");
-    await T('by type', SEL + ` WHERE enabledForOrganizationTypes in (${tids.join(',')}) AND roleName not contains 'Organizations and Roles Assignment Administrator'`);
-    await T('today AAA', SEL + " WHERE ON roleAssignments cf_ZCF_FT_Organization contains 'X:' WHERE roleName contains 'Organizations and Roles Assignment Administrator'");
-    await T('AAA all assignments', SEL + " WHERE roleName contains 'Organizations and Roles Assignment Administrator'");
-    await T('AAA nested subtype', SEL + ` WHERE ON roleAssignments organization.subtype in (${SUB}) WHERE roleName contains 'Organizations and Roles Assignment Administrator'`);
+    for (const q of [
+      `SELECT role FROM assignableRoles WHERE enabledForOrganizationTypes.subtype in (${SUB})`,
+    ]) { try { const r = await wql(token, q, 10000); console.log(`   ARQ ok ${(r.data || []).length}`); } catch (e) { console.log('   ARQ err ' + e.message.slice(0, 160)); } }
     return;
   }
   // Sub-orchestration probe (tools/probe_subflow.py): ProbeSubflowCall calls ProbeEcho and returns {"echo": "echo:hello"}.
