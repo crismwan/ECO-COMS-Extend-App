@@ -948,7 +948,7 @@ async function smoke(token, me) {
   await test('AccessReview.vacant', async () => {
     const pos = (await wql(token, 'SELECT cf_PositionID, cf_PositionIsFilled FROM allPositions WHERE supervisoryOrganization is not empty', 10000)).data || [];
     const vacant = new Set(pos.filter((p) => p.cf_PositionIsFilled === false).map((p) => String(p.cf_PositionID || '')));
-    const q = JSON.parse(fs.readFileSync(path.join(ROOT, 'presentation/wqlQueries/allShellAssignableRolesinTenant.wqlquery'), 'utf8')).query;
+    const q = await shellRolesQuery(token);
     const roles = (await wql(token, q, 1000)).data || [];
     const held = roles.flatMap((r) => (r.roleAssignments || []).flatMap((ra) => (ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions || []).map((p) => ({ role: r.role?.descriptor, pos: p.descriptor || '' }))));
     const rows = held.filter((h) => vacant.has(h.pos.split(' ')[0]));
@@ -1487,7 +1487,7 @@ async function repair(token, me) {
   if (argv.includes('--backfill-wids')) await test('Repair.backfillWids', async () => {
     const wqlFile = (id) => JSON.parse(fs.readFileSync(path.join(ROOT, 'presentation/wqlQueries', id + '.wqlquery'), 'utf8')).query;
     const orgs = (await wql(token, wqlFile('allShellOrgs'), 10000)).data || [];
-    const roles = [...((await wql(token, wqlFile('allShellAssignableRolesinTenant'), 1000)).data || []), ...((await wql(token, wqlFile('allAAArolesinTenant'), 1000)).data || [])];
+    const roles = [...((await wql(token, (await shellRolesQuery(token)), 1000)).data || []), ...((await wql(token, wqlFile('allAAArolesinTenant'), 1000)).data || [])];
     const todo = (await readAll(token, 'comsAuditLogs')).filter((a) => (!a.orgWid && a.coName) || (!a.roleWid && a.roleName));
     let done = 0;
     for (const a of todo) {
@@ -2184,7 +2184,7 @@ async function appSummary(token) {
   const appOf = (code) => code.includes('(') ? code.split(')')[0] + ')' : (code.split(':').slice(1).join(':').includes(':') ? code.split(':')[0] + ':' + code.split(':')[1] : code);
   const familyOf = (a) => a.includes('(') ? a.split('(')[0] : 'Standalone';
   const orgs = (await wql(token, wqlFile('allShellOrgs'), 10000)).data || [];
-  const roles = (await wql(token, wqlFile('allShellAssignableRolesinTenant'), 10000)).data || [];
+  const roles = (await wql(token, (await shellRolesQuery(token)), 10000)).data || [];
   const recs = await readAll(token, 'comsApplications');
   const reqs = await readAll(token, 'comsAssignableRoles');
   const audits = await readAll(token, 'comsAuditLogs');
@@ -2367,6 +2367,13 @@ async function subflowsSuite(token, me) {
   await test('Subflow.startReview', () => expectRejected('IORC_0037_XFD_SEC_Start_Role_Request_Review', 'Subflow.startReview', { ref: 'TEST-NO-SUCH-REQUEST' }, /IORC_0037_XFD_SEC_Sub_Start_Request_Review/));
 }
 
+// The shell-role query as the pages send it: the role list takes the application organization types (subtype design).
+async function shellRolesQuery(token) {
+  const file = (id) => JSON.parse(fs.readFileSync(path.join(ROOT, 'presentation/wqlQueries', id + '.wqlquery'), 'utf8')).query;
+  const types = [...new Set(((await wql(token, file('appTypes'), 10000)).data || []).map((o) => ((o.type1 || [])[0] || {}).id).filter(Boolean))];
+  return file('allShellAssignableRolesinTenant').replace('<% types %>', types.length ? types.join(',') : 'none');
+}
+
 async function probe(token) {
   console.log('\n-- Probe (read-only) --');
   // 2026-11-06: the subtype design's WQL, exactly as the pages send it (presentation/wqlQueries)
@@ -2540,7 +2547,7 @@ async function timingSuite(token) {
   const wqlFile = (id) => JSON.parse(fs.readFileSync(path.join(ROOT, 'presentation/wqlQueries', id + '.wqlquery'), 'utf8')).query;
   const kb = (r) => Math.round(JSON.stringify(r).length / 1024) + ' KB';
   for (const id of ['allShellOrgs', 'allShellAssignableRolesinTenant', 'allAAArolesinTenant', 'allPositions', 'customOrganizations']) {
-    await med(`WQL ${id}`, async () => { const r = await wql(token, wqlFile(id), 10000); return `${(r.data || []).length} rows, ${kb(r)}`; });
+    await med(`WQL ${id}`, async () => { const r = await wql(token, id === 'allShellAssignableRolesinTenant' ? await shellRolesQuery(token) : wqlFile(id), 10000); return `${(r.data || []).length} rows, ${kb(r)}`; });
   }
   await med('WQL positionFill (Access Review)', async () => { const r = await wql(token, 'SELECT cf_PositionID, cf_PositionIsFilled FROM allPositions WHERE supervisoryOrganization is not empty', 10000); return `${(r.data || []).length} rows, ${kb(r)}`; });
   await med('REST requests: count + 3 pages (today)', async () => { await request('GET', `${BO}/comsAssignableRoles?limit=1`, token); const r = await Promise.all([0, 100, 200].map((o) => request('GET', `${BO}/comsAssignableRoles?limit=100&offset=${o}`, token))); return `${r.reduce((n, x) => n + (x.data || []).length, 0)} rows, ${kb(r)}`; });
