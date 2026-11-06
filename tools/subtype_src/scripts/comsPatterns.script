@@ -1,0 +1,93 @@
+var recordFor = function(apps, appCode) {
+  let m = (apps ?? []).filter(a => { a.appId == appCode });
+  empty(m) ? null : m[0];
+};
+
+var schemaFor = function(apps, appCode) {
+  let r = recordFor(apps, appCode);
+  (empty(r) || empty(r.patternSchema)) ? null : json:parse(r.patternSchema);
+};
+
+var fieldCount = function(schema) {
+  empty(schema) ? 0 : schema.fields.size();
+};
+
+var prefixCount = function(schema) {
+  empty(schema) ? 0 : schema.prefixes.size();
+};
+
+var firstPrefix = function(schema) {
+  prefixCount(schema) == 0 ? '' : schema.prefixes[0];
+};
+
+var prefixOptions = function(schema) {
+  empty(schema) ? [] : schema.prefixes.map(p => { {'id': p, 'descriptor': p} });
+};
+
+var fieldLabel = function(schema, i) {
+  fieldCount(schema) > i ? schema.fields[i].fieldLabel : ('Field ' + (i + 1));
+};
+
+var cell = function(value) {
+  empty(value) ? '*' : value;
+};
+
+var buildName = function(appCode, prefix, schema, values) {
+  let parts = values.subList(0, fieldCount(schema)).map(v => { empty(v) ? '*' : v });
+  appCode + ':' + (empty(prefix) ? '?' : prefix) + ':' + parts.join(':');
+};
+
+var checkField = function(schema, i, value) {
+  if (fieldCount(schema) <= i) {
+    '';
+  } else {
+    let f = schema.fields[i];
+    if (empty(value)) {
+      f.blankIsWildcard ? '' : (f.fieldLabel + ' is required. ' + f.hint);
+    } else {
+      validate:match(f.regex, value) ? '' : (f.fieldLabel + ': ' + f.hint);
+    }
+  }
+};
+
+var formatGuide = function(schema) {
+  if (empty(schema)) {
+    '';
+  } else {
+    schema.fields.map(f => { f.fieldLabel + ' (e.g. ' + f.example + '): ' + f.hint }).join('  ·  ');
+  }
+};
+
+var summary = function(apps, appCode) {
+  let r = recordFor(apps, appCode);
+  if (empty(r)) {
+    'Not set up';
+  } else if (empty(r.patternSchema)) {
+    'No pattern format yet';
+  } else {
+    let s = json:parse(r.patternSchema);
+    s.prefixes.join(' / ') + ': ' + s.fields.map(f => { f.fieldLabel }).join(', ');
+  }
+};
+
+var appCodes = function(orgs, apps) {
+  let fromOrgs = (orgs ?? []).filter(o => { (o.code ?? '').startsWith('X:') }).map(o => { o.code.substringAfter(':').contains(':') ? ('X:' + o.code.substringAfter(':').substringBefore(':')) : o.code });
+  let fromApps = (apps ?? []).filter(a => { !empty(a.appId) }).map(a => { a.appId });
+  list:flatten([fromOrgs, fromApps]).distinct().sort();
+};
+
+{
+  "recordFor": recordFor,
+  "schemaFor": schemaFor,
+  "fieldCount": fieldCount,
+  "prefixCount": prefixCount,
+  "firstPrefix": firstPrefix,
+  "prefixOptions": prefixOptions,
+  "fieldLabel": fieldLabel,
+  "cell": cell,
+  "buildName": buildName,
+  "checkField": checkField,
+  "formatGuide": formatGuide,
+  "summary": summary,
+  "appCodes": appCodes
+}

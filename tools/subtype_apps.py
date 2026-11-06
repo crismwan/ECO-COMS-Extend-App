@@ -16,6 +16,23 @@ Runs near the end of rebuild_all (after every page builder). Every rewrite is pl
 import glob, json, os, re, sys
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'presentation')
+# Earlier build steps patch pages in place and check their own text, which this step then rewrites. So this step keeps
+# each page as it found it in tools/subtype_src/, and `--restore` (first in rebuild_all) puts those back before they run.
+SRC = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'subtype_src')
+if '--restore' in sys.argv:
+    for p in glob.glob(os.path.join(SRC, '**', '*'), recursive=True):
+        if os.path.isfile(p):
+            dst = os.path.join(ROOT, os.path.relpath(p, SRC))
+            open(dst, 'w', encoding='utf-8').write(open(p, encoding='utf-8').read())
+    print('subtype_apps --restore: pages as the earlier build steps left them')
+    sys.exit(0)
+import shutil
+shutil.rmtree(SRC, ignore_errors=True)
+def keep(p):
+    dst = os.path.join(SRC, os.path.relpath(p, ROOT))
+    os.makedirs(os.path.dirname(dst), exist_ok=True)
+    if not os.path.exists(dst):
+        shutil.copyfile(p, dst)
 X_META = 'e6ca8683b78d10017a5c108412fc0000'
 X_SHELL = 'e6ca8683b78d10017a5c108412fc0001'
 SUBTYPES = f'{X_META}, {X_SHELL}'
@@ -135,6 +152,7 @@ for p in sorted(glob.glob(os.path.join(ROOT, '*.pmd')) + glob.glob(os.path.join(
         for old, new in REWRITES + SCRIPT_REWRITES.get(os.path.basename(p), []):
             n = n.replace(old, new)
     if n != t:
+        keep(p)
         open(p, 'w', encoding='utf-8').write(n)
         changed.append(os.path.basename(p))
 
@@ -150,6 +168,7 @@ for p in sorted(glob.glob(os.path.join(ROOT, '*.pmd'))):
         if not any(e.get('name') == 'appTypes' for e in eps):
             eps.insert(eps.index(roles[0]), dict(APP_TYPES_EP))
         orgs = 'appTypes'
+    keep(p)
     for e in roles:
         e['wqlQuery']['parameters'] = {'types': types_of(orgs)}
     open(p, 'w', encoding='utf-8').write(json.dumps(d, indent=2, ensure_ascii=False) + '\n')

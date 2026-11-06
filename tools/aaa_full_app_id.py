@@ -35,7 +35,8 @@ def find(n, wid):
 d = json.load(open(P))
 w = find(d['presentation'], 'applicationDropdown')
 a, b = (FULL, SHORT) if OFF else (SHORT, FULL)
-assert (a in w['values']) or (b in w['values']), 'application list script changed; update this step'
+# since 2026-11-06 tools/subtype_apps.py takes the application from the organization type (no code parsing left)
+assert (a in w['values']) or (b in w['values']) or ('org.type1' in w['values']), 'application list script changed; update this step'
 w['values'] = w['values'].replace(a, b)
 open(P, 'w').write(json.dumps(d, indent=2, ensure_ascii=False) + '\n')
 print(f"adminProvisioning: Application list {'short codes' if OFF else 'full application IDs'}")

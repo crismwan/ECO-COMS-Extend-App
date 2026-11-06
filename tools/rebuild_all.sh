@@ -18,6 +18,7 @@ run() { echo "== $*"; python3 "$@" | sed 's/^/   /'; }
 
 run tools/title_banner.py --restore    # put Workday titles back so every builder sees ordinary pages
 run tools/merge_nav_about.py --restore  # back links in their own navSection again
+run tools/subtype_apps.py --restore      # pages as the steps below left them (the subtype rewrite runs again near the end)
 run tools/extract_subflows.py --restore # full orchestrations back, so the patch steps find their steps (re-extracted last)
 run tools/build_bulk_orchestration.py   # orchestration/IORC_0037_XFD_SEC_Bulk_Role_Changes_From_CSV.orchestration
 run tools/build_bulk_pages.py           # bulk template / upload / results / apply pages (+ empty messages)

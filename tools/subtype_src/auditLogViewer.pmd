@@ -1,0 +1,526 @@
+{
+  "id": "auditLogViewer",
+  "securityDomains": [
+    "ViewCOMSAuditLog"
+  ],
+  "include": [
+    "comsAuditFilters.script"
+  ],
+  "endPoints": [
+    {
+      "name": "selectedWorker",
+      "baseUrlType": "COMMON",
+      "url": "/workers/me",
+      "authType": "sso",
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 403
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "name": "auditPage0",
+      "baseUrlType": "workday-graph",
+      "httpMethod": "POST",
+      "authType": "sso",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 403
+        },
+        {
+          "code": 429
+        }
+      ],
+      "graphQuery": {
+        "queryId": "auditLogsNewest",
+        "parameters": {
+          "offset": 0
+        }
+      }
+    },
+    {
+      "name": "auditPage1",
+      "baseUrlType": "workday-graph",
+      "httpMethod": "POST",
+      "authType": "sso",
+      "failOnStatusCodes": [
+        {
+          "code": 429
+        }
+      ],
+      "graphQuery": {
+        "queryId": "auditLogsNewest",
+        "parameters": {
+          "offset": "<% ((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 100 ? 100 : 0 %>"
+        }
+      },
+      "exclude": "<% ((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) <= 100 %>"
+    },
+    {
+      "name": "auditPage2",
+      "baseUrlType": "workday-graph",
+      "httpMethod": "POST",
+      "authType": "sso",
+      "failOnStatusCodes": [
+        {
+          "code": 429
+        }
+      ],
+      "graphQuery": {
+        "queryId": "auditLogsNewest",
+        "parameters": {
+          "offset": "<% ((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 200 ? 200 : 0 %>"
+        }
+      },
+      "exclude": "<% ((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) <= 200 %>"
+    },
+    {
+      "name": "auditPage3",
+      "baseUrlType": "workday-graph",
+      "httpMethod": "POST",
+      "authType": "sso",
+      "failOnStatusCodes": [
+        {
+          "code": 429
+        }
+      ],
+      "graphQuery": {
+        "queryId": "auditLogsNewest",
+        "parameters": {
+          "offset": "<% ((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 300 ? 300 : 0 %>"
+        }
+      },
+      "exclude": "<% ((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) <= 300 %>"
+    },
+    {
+      "name": "auditPage4",
+      "baseUrlType": "workday-graph",
+      "httpMethod": "POST",
+      "authType": "sso",
+      "failOnStatusCodes": [
+        {
+          "code": 429
+        }
+      ],
+      "graphQuery": {
+        "queryId": "auditLogsNewest",
+        "parameters": {
+          "offset": "<% ((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 400 ? 400 : 0 %>"
+        }
+      },
+      "exclude": "<% ((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) <= 400 %>"
+    },
+    {
+      "name": "auditApplications",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "url": "/comsApplications?limit=100",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "name": "auditAppOrgs",
+      "baseUrlType": "workday-wql",
+      "authType": "sso",
+      "bestEffort": "true",
+      "url": "<% 'data?limit=200&query=' + string:pathEncode('SELECT workdayID, code FROM topLevelOrganizations WHERE code in (' + (auditApplications.data ?? []).map(a => { '\\'' + (a.appId ?? '').replace('\\'', '').replace('\\\\', '') + '\\'' }).join(',') + ')') %>",
+      "exclude": "<% empty(auditApplications.data) %>",
+      "failOnStatusCodes": [
+        {
+          "code": 429
+        }
+      ]
+    }
+  ],
+  "presentation": {
+    "headerSize": "HIDDEN",
+    "body": {
+      "type": "basicFormLayout",
+      "id": "auditLogViewerForm",
+      "sections": [
+        {
+          "type": "layoutSection",
+          "id": "titleBannerSection",
+          "children": [
+            {
+              "type": "richText",
+              "id": "titleBannerRichText",
+              "enabled": false,
+              "value": "<span style=\"color:#0055B3;font-size:24px\"><b>ECO-COMS: Audit Log Viewer</b></span><br><span style=\"color:#374151;font-size:13px\">Every change ECO-COMS made in Workday. Filter by time period and change type.</span>"
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "aboutSection",
+          "children": [
+            {
+              "type": "button",
+              "label": "← Home",
+              "taskReference": {
+                "taskId": "home"
+              },
+              "action": "LINK"
+            },
+            {
+              "type": "fieldSet",
+              "id": "aboutFieldSet",
+              "children": [
+                {
+                  "type": "richText",
+                  "id": "pageDescriptionText",
+                  "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">Every change made through ECO-COMS: shell orgs and patterns added, org status changes, role position assignments, and assignable role requests, approvals and denials. A record is written only after Workday accepts the change. Newest first. Use the buttons below to narrow the list, and the grid's export action to download what is shown. The page loads the newest 500 records.</span>",
+                  "enabled": false
+                }
+              ],
+              "title": "About This Page",
+              "collapsible": true,
+              "initializeCollapsed": true
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "auditFilterSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "auditShowFieldSet",
+              "title": "Show",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "auditCountText",
+                  "label": "Showing",
+                  "enabled": false,
+                  "value": "<% '' + size(comsAuditFilters.filterLogs(comsAuditFilters.filterOrgBy(list:flatten([((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.data ?? []) : []), ((((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 100 && !empty(auditPage1.data) && !empty(auditPage1.data.r)) ? (auditPage1.data.r.data ?? []) : []), ((((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 200 && !empty(auditPage2.data) && !empty(auditPage2.data.r)) ? (auditPage2.data.r.data ?? []) : []), ((((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 300 && !empty(auditPage3.data) && !empty(auditPage3.data.r)) ? (auditPage3.data.r.data ?? []) : []), ((((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 400 && !empty(auditPage4.data) && !empty(auditPage4.data.r)) ? (auditPage4.data.r.data ?? []) : [])]), queryParams.orgId ?? '', queryParams.orgCode ?? '', queryParams.orgName ?? '', queryParams.by ?? ''), queryParams.period ?? '', queryParams.changeType ?? '')) + ' of ' + ((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) + ' records (' + comsAuditFilters.periodLabel(queryParams.period ?? '') + (empty(queryParams.changeType) ? '' : ', ' + queryParams.changeType) + (empty(queryParams.orgCode) && empty(queryParams.orgName) ? '' : ', ' + (!empty(queryParams.orgCode) ? queryParams.orgCode : queryParams.orgName)) + (empty(queryParams.by) ? '' : ((queryParams.by == (selectedWorker.id ?? '')) ? ', my changes' : ', one person')) + ')' + (((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 500 ? '. Only the newest 500 are loaded.' : '') %>"
+                }
+              ]
+            },
+            {
+              "type": "cardContainer",
+              "id": "auditFilterCardContainer",
+              "layout": "masonry",
+              "cards": [
+                {
+                  "type": "card",
+                  "cardId": "AuditPeriodPillCard",
+                  "parameters": "<% { 'period': queryParams.period ?? '', 'changeType': queryParams.changeType ?? '', 'by': queryParams.by ?? '', 'orgId': queryParams.orgId ?? '', 'orgCode': queryParams.orgCode ?? '', 'orgName': queryParams.orgName ?? '' } %>"
+                },
+                {
+                  "type": "card",
+                  "cardId": "AuditTypePillCard",
+                  "parameters": "<% { 'period': queryParams.period ?? '', 'changeType': queryParams.changeType ?? '', 'by': queryParams.by ?? '', 'orgId': queryParams.orgId ?? '', 'orgCode': queryParams.orgCode ?? '', 'orgName': queryParams.orgName ?? '' } %>"
+                },
+                {
+                  "type": "card",
+                  "cardId": "AuditByPillCard",
+                  "parameters": "<% { 'period': queryParams.period ?? '', 'changeType': queryParams.changeType ?? '', 'by': queryParams.by ?? '', 'orgId': queryParams.orgId ?? '', 'orgCode': queryParams.orgCode ?? '', 'orgName': queryParams.orgName ?? '' , 'me': selectedWorker.id ?? '' } %>"
+                },
+                {
+                  "type": "card",
+                  "cardId": "AuditOrgPillCard",
+                  "parameters": "<% { 'period': queryParams.period ?? '', 'changeType': queryParams.changeType ?? '', 'by': queryParams.by ?? '', 'orgId': queryParams.orgId ?? '', 'orgCode': queryParams.orgCode ?? '', 'orgName': queryParams.orgName ?? '' } %>",
+                  "render": "<% !empty(queryParams.orgId) || !empty(queryParams.orgCode) || !empty(queryParams.orgName) %>"
+                },
+                {
+                  "type": "card",
+                  "cardId": "AuditActionChart",
+                  "parameters": "<% let f = comsAuditFilters.filterLogs(comsAuditFilters.filterOrgBy(list:flatten([((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.data ?? []) : []), ((((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 100 && !empty(auditPage1.data) && !empty(auditPage1.data.r)) ? (auditPage1.data.r.data ?? []) : []), ((((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 200 && !empty(auditPage2.data) && !empty(auditPage2.data.r)) ? (auditPage2.data.r.data ?? []) : []), ((((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 300 && !empty(auditPage3.data) && !empty(auditPage3.data.r)) ? (auditPage3.data.r.data ?? []) : []), ((((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 400 && !empty(auditPage4.data) && !empty(auditPage4.data.r)) ? (auditPage4.data.r.data ?? []) : [])]), queryParams.orgId ?? '', queryParams.orgCode ?? '', queryParams.orgName ?? '', queryParams.by ?? ''), queryParams.period ?? '', queryParams.changeType ?? ''); { 'addCount': comsAuditFilters.countAction(f, 'ADD'), 'inactivateCount': comsAuditFilters.countAction(f, 'INACTIVATE'), 'reactivateCount': comsAuditFilters.countAction(f, 'REACTIVATE'), 'assignCount': comsAuditFilters.countAction(f, 'ASSIGN POSITION'), 'removeCount': comsAuditFilters.countAction(f, 'REMOVE POSITION'), 'requestCount': comsAuditFilters.countAction(f, 'REQUEST'), 'approveCount': comsAuditFilters.countAction(f, 'APPROVE'), 'denyCount': comsAuditFilters.countAction(f, 'DENY'), 'deleteCount': comsAuditFilters.countAction(f, 'DELETE'), 'totalText': '' + size(f) + ' records, ' + comsAuditFilters.periodLabel(queryParams.period ?? '') } %>"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "tabs": [
+      {
+        "type": "section",
+        "label": "Audit Log",
+        "children": [
+          {
+            "type": "grid",
+            "gridType": "LIST",
+            "multiViewStylingEnabled": true,
+            "id": "AuditLogGrid",
+            "autoPaging": true,
+            "rows": "<% let logs = comsAuditFilters.filterLogs(comsAuditFilters.filterOrgBy(list:flatten([((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.data ?? []) : []), ((((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 100 && !empty(auditPage1.data) && !empty(auditPage1.data.r)) ? (auditPage1.data.r.data ?? []) : []), ((((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 200 && !empty(auditPage2.data) && !empty(auditPage2.data.r)) ? (auditPage2.data.r.data ?? []) : []), ((((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 300 && !empty(auditPage3.data) && !empty(auditPage3.data.r)) ? (auditPage3.data.r.data ?? []) : []), ((((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 400 && !empty(auditPage4.data) && !empty(auditPage4.data.r)) ? (auditPage4.data.r.data ?? []) : [])]), queryParams.orgId ?? '', queryParams.orgCode ?? '', queryParams.orgName ?? '', queryParams.by ?? ''), queryParams.period ?? '', queryParams.changeType ?? ''); list:sort(logs, 'timestamp', false).map(e => { { 'timestamp': e.timestamp ?? '', 'objectType': e.objectType ?? '', 'action': e.action ?? '', 'coName': e.coName ?? '', 'roleName': e.roleName ?? '', 'positionName': e.positionName ?? '', 'effectiveDate': e.effectiveDate ?? '', 'triggeredBy': e.triggeredBy ?? '', 'details': e.details ?? '', 'changedByWid': e.changedByWid ?? '', 'positionWid': e.positionWid ?? '', 'orgWid': e.orgWid ?? '', 'roleWid': e.roleWid ?? '', 'eventWid': e.eventWid ?? '' } }) %>",
+            "rowVariableName": "logEntry",
+            "enabled": false,
+            "label": "Audit Log",
+            "columns": [
+              {
+                "type": "column",
+                "id": "columnTimestamp",
+                "columnId": "columnTimestamp",
+                "label": "Timestamp",
+                "cellTemplate": {
+                  "type": "text",
+                  "value": "<% (empty(logEntry.timestamp) ? '' : date:formatDateWithTimeZones(logEntry.timestamp.substring(0, 19).replace('T', ' '), 'UTC', 'yyyy-MM-dd HH:mm:ss', 'America/Los_Angeles', 'yyyy-MM-dd HH:mm z')) %>",
+                  "enabled": false
+                },
+                "sortableAndFilterable": "true"
+              },
+              {
+                "type": "column",
+                "id": "columnChangeType",
+                "columnId": "columnChangeType",
+                "label": "Change Type",
+                "cellTemplate": {
+                  "type": "text",
+                  "value": "<% logEntry.objectType ?? '' %>",
+                  "enabled": false
+                },
+                "sortableAndFilterable": "true"
+              },
+              {
+                "type": "column",
+                "id": "columnAction",
+                "columnId": "columnAction",
+                "label": "Action",
+                "cellTemplate": {
+                  "type": "text",
+                  "value": "<% empty(logEntry.action) ? '' : (logEntry.action.substring(0, 1) + logEntry.action.substring(1).lowerCase()) %>",
+                  "enabled": false
+                },
+                "sortableAndFilterable": "true"
+              },
+              {
+                "type": "column",
+                "columnId": "columnApplication",
+                "label": "Application",
+                "cellTemplate": {
+                  "type": "text",
+                  "id": "applicationText",
+                  "enabled": false,
+                  "value": "<% let n = (logEntry.coName ?? '').startsWith('X:') ? logEntry.coName : (logEntry.roleName ?? ''); n.startsWith('X:') ? (n.substringBefore(':') + ':' + n.substringAfter(':').substringBefore(':')) : '' %>"
+                },
+                "sortableAndFilterable": "true"
+              },
+              {
+                "type": "column",
+                "id": "columnOrganization",
+                "columnId": "columnOrganization",
+                "label": "Organization",
+                "cellTemplate": {
+                  "type": "fieldSet",
+                  "id": "organizationFieldSet",
+                  "children": [
+                    {
+                      "type": "instanceList",
+                      "id": "organizationInstanceList",
+                      "view": true,
+                      "relatedTask": true,
+                      "enabled": false,
+                      "visible": "<% (!empty(logEntry.orgWid) || ((logEntry.objectType == 'Application Pattern' && (auditAppOrgs.data ?? []).map(o => { o.code ?? '' }).indexOf(logEntry.coName ?? '') >= 0) ? [(auditAppOrgs.data ?? []).get((auditAppOrgs.data ?? []).map(o => { o.code ?? '' }).indexOf(logEntry.coName ?? ''))] : []).size() > 0) %>",
+                      "values": "<% let o = (empty(logEntry.orgWid) ? [] : [{'id': logEntry.orgWid, 'descriptor': logEntry.coName ?? ''}]); o.size() > 0 ? o : ((logEntry.objectType == 'Application Pattern' && (auditAppOrgs.data ?? []).map(o => { o.code ?? '' }).indexOf(logEntry.coName ?? '') >= 0) ? [(auditAppOrgs.data ?? []).get((auditAppOrgs.data ?? []).map(o => { o.code ?? '' }).indexOf(logEntry.coName ?? ''))] : []).map(a => { {'id': a.workdayID ?? '', 'descriptor': logEntry.coName ?? ''} }) %>",
+                      "widKey": "id"
+                    },
+                    {
+                      "type": "text",
+                      "id": "organizationText",
+                      "enabled": false,
+                      "visible": "<% !(!empty(logEntry.orgWid) || ((logEntry.objectType == 'Application Pattern' && (auditAppOrgs.data ?? []).map(o => { o.code ?? '' }).indexOf(logEntry.coName ?? '') >= 0) ? [(auditAppOrgs.data ?? []).get((auditAppOrgs.data ?? []).map(o => { o.code ?? '' }).indexOf(logEntry.coName ?? ''))] : []).size() > 0) %>",
+                      "value": "<% (logEntry.coName ?? '') + (logEntry.objectType == 'Application Pattern' ? (' [DEBUG apps=' + (auditApplications.data ?? []).size() + ' match=' + ((auditApplications.data ?? []).map(a => { a.appId }).indexOf(logEntry.coName ?? '')) + ']') : '') %>"
+                    }
+                  ]
+                },
+                "excel": {
+                  "value": "<% logEntry.coName ?? '' %>"
+                }
+              },
+              {
+                "type": "column",
+                "id": "columnRole",
+                "columnId": "columnRole",
+                "label": "Role",
+                "cellTemplate": {
+                  "type": "fieldSet",
+                  "id": "roleFieldSet",
+                  "children": [
+                    {
+                      "type": "instanceList",
+                      "id": "roleInstanceList",
+                      "view": true,
+                      "relatedTask": true,
+                      "enabled": false,
+                      "visible": "<% !empty(logEntry.roleWid) %>",
+                      "values": "<% empty(logEntry.roleWid) ? [] : [{'id': logEntry.roleWid, 'descriptor': logEntry.roleName ?? ''}] %>",
+                      "widKey": "id"
+                    },
+                    {
+                      "type": "text",
+                      "id": "roleText",
+                      "enabled": false,
+                      "visible": "<% empty(logEntry.roleWid) %>",
+                      "value": "<% logEntry.roleName ?? '' %>"
+                    }
+                  ]
+                },
+                "excel": {
+                  "value": "<% logEntry.roleName ?? '' %>"
+                }
+              },
+              {
+                "type": "column",
+                "id": "columnPosition",
+                "columnId": "columnPosition",
+                "label": "Position",
+                "cellTemplate": {
+                  "type": "fieldSet",
+                  "id": "positionFieldSet",
+                  "children": [
+                    {
+                      "type": "instanceList",
+                      "id": "positionInstanceList",
+                      "view": true,
+                      "relatedTask": true,
+                      "enabled": false,
+                      "visible": "<% !empty(logEntry.positionWid) %>",
+                      "values": "<% empty(logEntry.positionWid) ? [] : logEntry.positionWid.splitByRegex(',').map((pid, i) => { { 'id': pid.trim(), 'descriptor': (!empty(logEntry.positionName) && logEntry.positionName.splitByRegex(', (?=P-[0-9])').size() > i) ? logEntry.positionName.splitByRegex(', (?=P-[0-9])')[i] : pid.trim() } }) %>",
+                      "widKey": "id",
+                      "multiSelect": true
+                    },
+                    {
+                      "type": "text",
+                      "id": "positionText",
+                      "enabled": false,
+                      "visible": "<% empty(logEntry.positionWid) %>",
+                      "value": "<% logEntry.positionName ?? '' %>"
+                    }
+                  ]
+                },
+                "excel": {
+                  "value": "<% logEntry.positionName ?? '' %>"
+                }
+              },
+              {
+                "type": "column",
+                "id": "columnEffectiveDate",
+                "columnId": "columnEffectiveDate",
+                "label": "Effective Date",
+                "cellTemplate": {
+                  "type": "text",
+                  "value": "<% logEntry.effectiveDate ?? '' %>",
+                  "enabled": false
+                },
+                "sortableAndFilterable": "true"
+              },
+              {
+                "type": "column",
+                "id": "columnChangedBy",
+                "columnId": "columnChangedBy",
+                "label": "Changed By",
+                "cellTemplate": {
+                  "type": "fieldSet",
+                  "id": "changedByFieldSet",
+                  "children": [
+                    {
+                      "type": "instanceList",
+                      "id": "changedByInstanceList",
+                      "view": true,
+                      "relatedTask": true,
+                      "enabled": false,
+                      "visible": "<% !empty(logEntry.changedByWid) %>",
+                      "values": "<% empty(logEntry.changedByWid) ? [] : [{'id': logEntry.changedByWid, 'descriptor': logEntry.triggeredBy ?? ''}] %>",
+                      "widKey": "id"
+                    },
+                    {
+                      "type": "text",
+                      "id": "changedByText",
+                      "enabled": false,
+                      "visible": "<% empty(logEntry.changedByWid) %>",
+                      "value": "<% logEntry.triggeredBy ?? '' %>"
+                    }
+                  ]
+                },
+                "excel": {
+                  "value": "<% logEntry.triggeredBy ?? '' %>"
+                }
+              },
+              {
+                "type": "column",
+                "id": "columnDetails",
+                "columnId": "columnDetails",
+                "label": "Details",
+                "cellTemplate": {
+                  "type": "text",
+                  "value": "<% logEntry.details ?? '' %>",
+                  "enabled": false
+                },
+                "sortableAndFilterable": "true"
+              },
+              {
+                "type": "column",
+                "columnId": "columnEvent",
+                "label": "Workday Event",
+                "excel": {
+                  "value": "<% empty(logEntry.eventWid) ? '' : 'https://wcpdev.wd101.myworkday.com/' + tenant + '/d/wid/' + logEntry.eventWid + '.htmld' %>"
+                },
+                "cellTemplate": {
+                  "type": "fieldSet",
+                  "id": "eventFieldSet",
+                  "children": [
+                    {
+                      "type": "instanceList",
+                      "id": "eventInstanceList",
+                      "view": true,
+                      "relatedTask": true,
+                      "enabled": false,
+                      "visible": "<% !empty(logEntry.eventWid) %>",
+                      "widKey": "id",
+                      "values": "<% empty(logEntry.eventWid) ? [] : [{'id': logEntry.eventWid, 'descriptor': (logEntry.objectType == 'Role Assignment' ? 'Assign Roles event' : 'Review event')}] %>"
+                    },
+                    {
+                      "type": "text",
+                      "id": "eventText",
+                      "enabled": false,
+                      "visible": "<% empty(logEntry.eventWid) %>",
+                      "value": "<% '' %>"
+                    }
+                  ]
+                }
+              }
+            ],
+            "excelExportEnabled": true
+          },
+          {
+            "type": "richText",
+            "id": "exportNote",
+            "enabled": false,
+            "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">Use the grid’s built-in export action to download these results as CSV for compliance reporting.</span>"
+          }
+        ]
+      }
+    ],
+    "footer": {
+      "type": "footer",
+      "children": [
+        {
+          "type": "pod",
+          "podId": "ecoComsFooter"
+        }
+      ]
+    },
+    "pageType": "VIEW"
+  }
+}

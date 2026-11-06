@@ -1,0 +1,450 @@
+{
+  "id": "comsInsights",
+  "securityDomains": [
+    "ManageCOMSShellOrgs"
+  ],
+  "include": [
+    "comsRequestStats.script",
+    "comsAuditFilters.script",
+    "comsInsights.script"
+  ],
+  "endPoints": [
+    {
+      "name": "requestCount",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "url": "/comsAssignableRoles?limit=1",
+      "authType": "sso",
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "name": "requestPage0",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 429
+        }
+      ],
+      "url": "/comsAssignableRoles?limit=100&offset=0"
+    },
+    {
+      "name": "requestPage1",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 429
+        }
+      ],
+      "url": "/comsAssignableRoles?limit=100&offset=100"
+    },
+    {
+      "name": "requestPage2",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 429
+        }
+      ],
+      "url": "/comsAssignableRoles?limit=100&offset=200"
+    },
+    {
+      "name": "allShellOrgs",
+      "baseUrlType": "workday-wql",
+      "url": "data",
+      "authType": "sso",
+      "bestEffort": "true",
+      "wqlQuery": {
+        "queryId": "allShellOrgs"
+      },
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "name": "comsApplications",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "url": "/comsApplications?limit=100",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "name": "auditPage0",
+      "baseUrlType": "workday-graph",
+      "bestEffort": "true",
+      "httpMethod": "POST",
+      "authType": "sso",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 403
+        },
+        {
+          "code": 429
+        }
+      ],
+      "graphQuery": {
+        "queryId": "auditLogsNewest",
+        "parameters": {
+          "offset": 0
+        }
+      }
+    },
+    {
+      "name": "auditPage1",
+      "baseUrlType": "workday-graph",
+      "bestEffort": "true",
+      "httpMethod": "POST",
+      "authType": "sso",
+      "failOnStatusCodes": [
+        {
+          "code": 429
+        }
+      ],
+      "graphQuery": {
+        "queryId": "auditLogsNewest",
+        "parameters": {
+          "offset": "<% ((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 100 ? 100 : 0 %>"
+        }
+      },
+      "exclude": "<% ((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) <= 100 %>"
+    },
+    {
+      "name": "auditPage2",
+      "baseUrlType": "workday-graph",
+      "bestEffort": "true",
+      "httpMethod": "POST",
+      "authType": "sso",
+      "failOnStatusCodes": [
+        {
+          "code": 429
+        }
+      ],
+      "graphQuery": {
+        "queryId": "auditLogsNewest",
+        "parameters": {
+          "offset": "<% ((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 200 ? 200 : 0 %>"
+        }
+      },
+      "exclude": "<% ((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) <= 200 %>"
+    },
+    {
+      "name": "bulkRunCount",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "url": "/comsBulkRuns?limit=1",
+      "authType": "sso",
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "name": "bulkRunPage0",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 429
+        }
+      ],
+      "url": "<% let t = bulkRunCount.total ?? 0; let start = (t - 100) < 0 ? 0 : (t - 100); let cnt = t - start; '/comsBulkRuns?limit=' + (cnt > 0 ? cnt : 1) + '&offset=' + (cnt > 0 ? start : t) %>"
+    }
+  ],
+  "presentation": {
+    "pageType": "VIEW",
+    "body": {
+      "type": "basicFormLayout",
+      "id": "comsInsightsForm",
+      "sections": [
+        {
+          "type": "layoutSection",
+          "id": "titleBannerSection",
+          "children": [
+            {
+              "type": "richText",
+              "id": "titleBannerRichText",
+              "enabled": false,
+              "value": "<span style=\"color:#0055B3;font-size:24px\"><b>ECO-COMS: Insights</b></span><br><span style=\"color:#374151;font-size:13px\">Role requests, shell organizations, audit records and bulk runs in one view.</span>"
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "aboutSection",
+          "children": [
+            {
+              "type": "button",
+              "label": "← Home",
+              "taskReference": {
+                "taskId": "home"
+              },
+              "action": "LINK",
+              "suppressDiscardDialog": true
+            },
+            {
+              "type": "fieldSet",
+              "id": "aboutFieldSet",
+              "title": "About This Page",
+              "children": [
+                {
+                  "type": "richText",
+                  "id": "aboutDesc",
+                  "enabled": false,
+                  "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">One view across ECO-COMS: role requests, shell organizations and patterns, the audit log and bulk runs. Counts read up to 300 role requests, the newest 300 audit records and the newest 100 bulk runs. Select an <b>Application ID</b> to open it in Shell Org Manager. For Workday custom reports use the ECO-COMS report data sources (Role Requests, Audit Trail, Bulk Runs, Applications).</span>"
+                }
+              ],
+              "collapsible": true,
+              "initializeCollapsed": true
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "kpiSection",
+          "children": [
+            {
+              "type": "cardContainer",
+              "id": "kpiCardContainer",
+              "layout": "masonry",
+              "cards": [
+                {
+                  "type": "card",
+                  "cardId": "CountCard",
+                  "parameters": "<% { 'title': 'ISC Turnaround', 'countText': comsInsights.turnaroundText(list:flatten([requestPage0.data ?? [], requestPage1.data ?? [], requestPage2.data ?? []])), 'subtitle': 'Request to approval, last 90 days' } %>"
+                },
+                {
+                  "type": "card",
+                  "cardId": "CountCard",
+                  "parameters": "<% { 'title': 'Pending ISC Review', 'countText': '' + comsRequestStats.countPending(list:flatten([requestPage0.data ?? [], requestPage1.data ?? [], requestPage2.data ?? []])) + ' pending · ' + comsRequestStats.countOverdue(list:flatten([requestPage0.data ?? [], requestPage1.data ?? [], requestPage2.data ?? []])) + ' overdue', 'subtitle': 'Overdue after 3 business days' } %>"
+                },
+                {
+                  "type": "card",
+                  "cardId": "CountCard",
+                  "parameters": "<% { 'title': 'Approved, Last 30 Days', 'countText': '' + list:flatten([requestPage0.data ?? [], requestPage1.data ?? [], requestPage2.data ?? []]).filter(r => { r.status == 'Approved' && comsInsights.inDays(r.approvedDate, comsInsights.lastDays(30)) }).size() + ' approved', 'subtitle': 'Role requests, by approval date' } %>"
+                },
+                {
+                  "type": "card",
+                  "cardId": "CountCard",
+                  "parameters": "<% { 'title': 'Changes, Last 30 Days', 'countText': '' + comsInsights.countInDays(list:flatten([((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.data ?? []) : []), ((((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 100 && !empty(auditPage1.data) && !empty(auditPage1.data.r)) ? (auditPage1.data.r.data ?? []) : []), ((((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 200 && !empty(auditPage2.data) && !empty(auditPage2.data.r)) ? (auditPage2.data.r.data ?? []) : [])]), 'timestamp', comsInsights.lastDays(30)) + ' audit records', 'subtitle': 'Newest 300 audit records' } %>"
+                },
+                {
+                  "type": "card",
+                  "cardId": "CountCard",
+                  "parameters": "<% let runs = (bulkRunPage0.data ?? []).filter(r => { comsInsights.inDays(r.uploadedAt, comsInsights.lastDays(30)) }); { 'title': 'Bulk Runs, Last 30 Days', 'countText': '' + size(runs) + ' runs · ' + runs.filter(r => { ('' + (r.status ?? '')).upperCase().contains('FAIL') }).size() + ' failed', 'subtitle': 'Uploads and grid edits' } %>"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "chartsSection",
+          "children": [
+            {
+              "type": "cardContainer",
+              "id": "chartsCardContainer",
+              "layout": "masonry",
+              "cards": [
+                {
+                  "type": "card",
+                  "cardId": "BreakdownChart",
+                  "parameters": "<% { 'title': 'Role Requests by Status', 'subtitle': '' + size(list:flatten([requestPage0.data ?? [], requestPage1.data ?? [], requestPage2.data ?? []])) + ' requests', 'slices': comsInsights.statusSlices(list:flatten([requestPage0.data ?? [], requestPage1.data ?? [], requestPage2.data ?? []])) } %>"
+                },
+                {
+                  "type": "card",
+                  "cardId": "BreakdownChart",
+                  "parameters": "<% { 'title': 'Role Requests by Application', 'subtitle': 'Top applications', 'slices': comsInsights.appSlices(list:flatten([requestPage0.data ?? [], requestPage1.data ?? [], requestPage2.data ?? []]), comsApplications.data ?? []) } %>"
+                },
+                {
+                  "type": "card",
+                  "cardId": "ShellOrgStatusChart",
+                  "parameters": "<% { 'activeCount': size((allShellOrgs.data ?? []).filter(o => { (o.code ?? '').startsWith('X:') && !(o.code ?? '').contains(':PATTERN') && o.cf_active1 == true })), 'inactiveCount': size((allShellOrgs.data ?? []).filter(o => { (o.code ?? '').startsWith('X:') && !(o.code ?? '').contains(':PATTERN') && o.cf_active1 != true })) } %>"
+                },
+                {
+                  "type": "card",
+                  "cardId": "AuditActionChart",
+                  "parameters": "<% let f = comsAuditFilters.filterLogs(list:flatten([((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.data ?? []) : []), ((((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 100 && !empty(auditPage1.data) && !empty(auditPage1.data.r)) ? (auditPage1.data.r.data ?? []) : []), ((((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 200 && !empty(auditPage2.data) && !empty(auditPage2.data.r)) ? (auditPage2.data.r.data ?? []) : [])]), '30d', ''); { 'addCount': comsAuditFilters.countAction(f, 'ADD'), 'inactivateCount': comsAuditFilters.countAction(f, 'INACTIVATE'), 'reactivateCount': comsAuditFilters.countAction(f, 'REACTIVATE'), 'assignCount': comsAuditFilters.countAction(f, 'ASSIGN POSITION'), 'removeCount': comsAuditFilters.countAction(f, 'REMOVE POSITION'), 'requestCount': comsAuditFilters.countAction(f, 'REQUEST'), 'approveCount': comsAuditFilters.countAction(f, 'APPROVE'), 'denyCount': comsAuditFilters.countAction(f, 'DENY'), 'deleteCount': comsAuditFilters.countAction(f, 'DELETE'), 'totalText': '' + size(f) + ' records, last 30 days' } %>"
+                },
+                {
+                  "type": "card",
+                  "cardId": "BreakdownChart",
+                  "parameters": "<% { 'title': 'Bulk Runs by Status', 'subtitle': '' + size((bulkRunPage0.data ?? [])) + ' runs', 'slices': comsInsights.bulkSlices((bulkRunPage0.data ?? [])) } %>"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "appsLinkSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "appsLinkFieldSet",
+              "title": "Applications at a Glance",
+              "children": [
+                {
+                  "type": "richText",
+                  "id": "appsLinkDesc",
+                  "enabled": false,
+                  "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">Shell orgs, patterns and role requests for each application, on a page of its own.</span>"
+                },
+                {
+                  "type": "button",
+                  "id": "openAppsButton",
+                  "label": "Open Applications at a Glance",
+                  "action": "AUXILIARY",
+                  "taskReference": {
+                    "taskId": "comsInsightsApps"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "pendingSection",
+          "children": [
+            {
+              "type": "grid",
+              "id": "oldestPendingGrid",
+              "label": "Oldest Pending Requests",
+              "readOnly": true,
+              "rows": "<% comsInsights.oldestPending(list:flatten([requestPage0.data ?? [], requestPage1.data ?? [], requestPage2.data ?? []]), 10) %>",
+              "rowVariableName": "pendingRow",
+              "columns": [
+                {
+                  "type": "column",
+                  "columnId": "requestedColumn",
+                  "label": "Requested",
+                  "cellTemplate": {
+                    "type": "text",
+                    "id": "requestedText",
+                    "value": "<% ('' + (pendingRow.requestedDate ?? '')).substring(0, 10) %>",
+                    "enabled": false
+                  },
+                  "sortableAndFilterable": "true"
+                },
+                {
+                  "type": "column",
+                  "columnId": "roleColumn",
+                  "label": "Role",
+                  "cellTemplate": {
+                    "type": "text",
+                    "id": "roleText",
+                    "value": "<% pendingRow.roleName ?? '' %>",
+                    "enabled": false
+                  },
+                  "sortableAndFilterable": "true"
+                },
+                {
+                  "type": "column",
+                  "columnId": "applicationColumn",
+                  "label": "Application",
+                  "cellTemplate": {
+                    "type": "text",
+                    "id": "applicationText",
+                    "value": "<% comsInsights.appOfIn(pendingRow, comsApplications.data ?? []) %>",
+                    "enabled": false
+                  },
+                  "sortableAndFilterable": "true"
+                },
+                {
+                  "type": "column",
+                  "columnId": "requestedByColumn",
+                  "label": "Requested By",
+                  "cellTemplate": {
+                    "type": "text",
+                    "id": "requestedByText",
+                    "value": "<% !empty(pendingRow.requestedBy) ? (pendingRow.requestedBy.descriptor ?? '') : '' %>",
+                    "enabled": false
+                  },
+                  "sortableAndFilterable": "true"
+                },
+                {
+                  "type": "column",
+                  "columnId": "referenceColumn",
+                  "label": "Reference",
+                  "cellTemplate": {
+                    "type": "text",
+                    "id": "referenceText",
+                    "value": "<% pendingRow.referenceId ?? '' %>",
+                    "enabled": false
+                  },
+                  "sortableAndFilterable": "true"
+                },
+                {
+                  "type": "column",
+                  "columnId": "openColumn",
+                  "label": "Open",
+                  "cellTemplate": {
+                    "type": "button",
+                    "id": "openQueueButton",
+                    "action": "AUXILIARY",
+                    "label": "ISC Queue",
+                    "taskReference": {
+                      "taskId": "iscRoleRequestsView"
+                    }
+                  },
+                  "excel": {
+                    "enabled": false
+                  }
+                }
+              ],
+              "gridType": "LIST",
+              "multiViewStylingEnabled": true,
+              "autoPaging": true,
+              "excelExportEnabled": true
+            }
+          ]
+        }
+      ]
+    },
+    "footer": {
+      "type": "footer",
+      "children": [
+        {
+          "type": "pod",
+          "podId": "ecoComsFooter"
+        }
+      ]
+    },
+    "headerSize": "HIDDEN"
+  }
+}

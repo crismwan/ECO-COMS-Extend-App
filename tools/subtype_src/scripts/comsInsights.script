@@ -1,0 +1,146 @@
+/* ECO-COMS Insights page: groupings across the business objects. Pure functions: no widget access. */
+/* Dates are compared as yyyy-MM-dd strings. */
+
+/* Request application text is "X:CODE" or "X:CODE Name": keep the code. */
+var appCodeOf = function(text) {
+  ('' + (text ?? '')).trim().substringBefore(' ');
+};
+
+/* Org code "X:CLW:MATH_100" -> application code "X:CLW". */
+var orgAppCode = function(code) {
+  let c = '' + (code ?? '');
+  c.substringBefore(':') + ':' + c.substringAfter(':').substringBefore(':');
+};
+
+/* A request's application code: its application text, else its shell org code, else its role name;
+   an org or role code ("X:ADM:KEYCLOAK:ANY") is cut to the application part ("X:ADM"). */
+var appOf = function(r) {
+  let a = appCodeOf(r.application);
+  let t = !empty(a) ? a : (!empty(r.shellOrgCode) ? ('' + r.shellOrgCode) : ('' + (r.roleName ?? '')));
+  t.startsWith('X:') ? orgAppCode(t) : (empty(a) ? '' : a);
+};
+
+/* appOf, then requests that carry a short code ("AOC Final Grades Submission (Assessment Outcomes)", AAA requests)
+   are matched to the COMS application whose name appears in the request's application text. */
+var appOfIn = function(r, apps) {
+  let a = appOf(r);
+  let text = '' + (r.application ?? '');
+  let hit = (a.startsWith('X:') || empty(text)) ? [] : apps.filter(x => { !empty(x.name) && ('' + (x.appId ?? '')).startsWith('X:') && text.contains(x.name) });
+  size(hit) == 0 ? a : ('' + hit[0].appId);
+};
+
+var isShellOrg = function(o) {
+  ('' + (o.code ?? '')).startsWith('X:') && !('' + (o.code ?? '')).contains(':PATTERN');
+};
+
+var isPattern = function(o) {
+  ('' + (o.code ?? '')).startsWith('X:') && ('' + (o.code ?? '')).contains(':PATTERN');
+};
+
+/* yyyy-MM-dd for today and the previous days-1 days (days <= 90). */
+var lastDays = function(days) {
+  let n = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89];
+  n.subList(0, days).map(i => { date:now().minusDays(i).format('yyyy-MM-dd') });
+};
+
+var inDays = function(text, keys) {
+  empty(text) ? false : keys.contains(('' + text).substring(0, 10));
+};
+
+/* How often c occurs in a sorted list of strings (no per-code filtering: the page script has a memory limit). */
+var countIn = function(sorted, c) {
+  let i = sorted.indexOf(c);
+  i < 0 ? 0 : sorted.lastIndexOf(c) - i + 1;
+};
+
+/* [{label, count}] for a donut, biggest first, at most `top` slices (the rest as "Other"). */
+var slices = function(labels, top) {
+  let sorted = labels.sort();
+  let all = list:sort(sorted.distinct().map(l => { { 'label': l, 'count': countIn(sorted, l) } }), 'count', false);
+  size(all) <= top ? all : list:flatten([all.subList(0, top - 1), [{ 'label': 'Other', 'count': all.subList(top - 1, size(all)).map(s => { s.count }).reduce((a, b) => { a + b }) }]]);
+};
+
+var statusSlices = function(requests) {
+  slices(requests.map(r => { empty(r.status) ? 'No status' : r.status }), 6);
+};
+
+var appSlices = function(requests, apps) {
+  slices(requests.map(r => { appOfIn(r, apps) }).map(c => { empty(c) ? 'No application' : c }), 8);
+};
+
+var bulkSlices = function(runs) {
+  slices(runs.map(r => { empty(r.status) ? 'No status' : r.status }), 6);
+};
+
+/* The name of orgs[i] ('' when i < 0 or the org has no name reference). */
+var orgName = function(orgs, i) {
+  i < 0 ? '' : (empty(orgs[i].organizationByName) ? '' : ('' + (orgs[i].organizationByName.descriptor ?? '')));
+};
+
+/* One row per application code: shell orgs, patterns and role requests.
+   Every list below is a sorted list of application codes, built once (memory limit hit 2026-11-02 with per-org maps). */
+var appRows = function(requests, orgs, apps) {
+  let active = orgs.filter(o => { isShellOrg(o) && o.cf_active1 == true }).map(o => { orgAppCode(o.code) }).sort();
+  let inactive = orgs.filter(o => { isShellOrg(o) && o.cf_active1 != true }).map(o => { orgAppCode(o.code) }).sort();
+  let pats = orgs.filter(o => { isPattern(o) }).map(o => { orgAppCode(o.code) }).sort();
+  let pend = requests.filter(r => { r.status == 'Pending ISC Review' }).map(r => { appOfIn(r, apps) }).sort();
+  let appr = requests.filter(r => { r.status == 'Approved' }).map(r => { appOfIn(r, apps) }).sort();
+  let den = requests.filter(r => { r.status == 'Denied' }).map(r => { appOfIn(r, apps) }).sort();
+  let newest = list:sort(requests.filter(r => { !empty(r.requestedDate) }), 'requestedDate', false);
+  let newestCodes = newest.map(r => { appOfIn(r, apps) });
+  let appIds = apps.map(a => { a.appId ?? '' });
+  /* fallback name: the application's own organization (code == application code) */
+  let orgCodes = orgs.map(o => { '' + (o.code ?? '') });
+  let codes = list:flatten([active, inactive, newestCodes]).filter(c => { !empty(c) }).distinct().sort();
+  codes.map(c => {
+    let n = appIds.indexOf(c);
+    let last = newestCodes.indexOf(c);
+    let row = {
+      'code': c,
+      'name': (n >= 0 ? ('' + (apps[n].name ?? '')) : '') != '' ? ('' + apps[n].name) : orgName(orgs, orgCodes.indexOf(c)),
+      'shellActive': countIn(active, c),
+      'shellInactive': countIn(inactive, c),
+      'patterns': countIn(pats, c),
+      'pending': countIn(pend, c),
+      'approved': countIn(appr, c),
+      'denied': countIn(den, c),
+      'lastRequest': last < 0 ? '' : ('' + newest[last].requestedDate).substring(0, 10)
+    };
+    row;
+  });
+};
+
+/* ISC turnaround: median calendar days from request to approval, approvals in the last 90 days.
+   Day differences come from positions in lastDays(90), so no date arithmetic is needed. */
+var turnaroundText = function(requests) {
+  let keys = lastDays(90);
+  let d = requests.filter(r => { r.status == 'Approved' && inDays(r.approvedDate, keys) && inDays(r.requestedDate, keys) })
+    .map(r => { keys.indexOf(('' + r.requestedDate).substring(0, 10)) - keys.indexOf(('' + r.approvedDate).substring(0, 10)) }).sort();
+  let m = size(d) == 0 ? 0 : ('' + ((size(d) - 1) / 2)).substringBefore('.').toInt();
+  size(d) == 0 ? 'No approvals in the last 90 days' : ('Median ' + d[m] + ' day' + (d[m] == 1 ? '' : 's') + ' · ' + size(d) + ' approval' + (size(d) == 1 ? '' : 's'));
+};
+
+/* Pending requests, oldest first, at most `top`. */
+var oldestPending = function(requests, top) {
+  let p = list:sort(requests.filter(r => { r.status == 'Pending ISC Review' && !empty(r.requestedDate) }), 'requestedDate', true);
+  size(p) <= top ? p : p.subList(0, top);
+};
+
+var countInDays = function(list, field, keys) {
+  list.filter(x => { inDays(x[field], keys) }).size();
+};
+
+{
+  "appCodeOf": appCodeOf,
+  "appOf": appOf,
+  "appOfIn": appOfIn,
+  "lastDays": lastDays,
+  "inDays": inDays,
+  "statusSlices": statusSlices,
+  "appSlices": appSlices,
+  "bulkSlices": bulkSlices,
+  "appRows": appRows,
+  "turnaroundText": turnaroundText,
+  "oldestPending": oldestPending,
+  "countInDays": countInDays
+}
