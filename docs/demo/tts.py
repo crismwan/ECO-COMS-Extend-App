@@ -6,7 +6,7 @@ K = Kokoro('kokoro-v1.0.onnx', 'voices-v1.0.bin')
 VOICE = sys.argv[1] if len(sys.argv) > 1 else 'am_michael'
 SAY = [  # spoken forms, longest first
  (r'X:BPMS\(COMS\)', 'X B P M S, Coms in brackets'), (r'X:BPMS\(TST\)', 'X B P M S, T S T in brackets'),
- (r'X:NEWAPP', 'X New App'), (r'X:META', 'X Meta'), (r'X:SHELL', 'X Shell'), (r'X:BPMS', 'X B P M S'),
+ (r'X:NEWAPP', 'X New App'), (r'X:META', 'X Meta'), (r'X:SHELL', 'X Shell'), (r'X:BPMS', 'X B P M S'), (r'\bBPMS\b', 'B P M S'), (r'\bODMT\b', 'O D M T'),
  (r'\bRBAC\b', 'R back'), (r'\bISC\b', 'I S C'), (r'\bEIB\b', 'E I B'), (r'\bAAA\b', 'triple A'), (r'\bCSV\b', 'C S V'),
  (r'\bADVISORS\b', 'Advisors'), (r'\bSTAFF\b', 'Staff'), (r'\bCOMS\b', 'Coms'), (r'\bOK\b', 'O K'), (r'\bID\b', 'I D'),
  (r'\bIDs\b', 'I Ds'), (r'\bX:', 'X '), (r'Appian', 'Appian')]

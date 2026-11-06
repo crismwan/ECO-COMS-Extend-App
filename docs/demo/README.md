@@ -13,4 +13,4 @@ ffmpeg -i narration.wav -af loudnorm=I=-16:TP=-1.5:LRA=11 -ar 24000 -ac 1 -b:a 9
 ```
 
 Codes such as X:BPMS(COMS) are given spoken forms in `tts.py` (SAY list), so the voice doesn't read punctuation.
-Delivered files: ECO-COMS-Live-Demo-Narration-2026-11-05.mp3 (8:54) and ECO-COMS-Live-Demo-Script-2026-11-05.docx/.pdf.
+Delivered files: ECO-COMS-Live-Demo-Narration-2026-11-05.mp3 (9:03; stop 4 redone for the Shell Org Manager application bar) and ECO-COMS-Live-Demo-Script-2026-11-05.docx/.pdf.
