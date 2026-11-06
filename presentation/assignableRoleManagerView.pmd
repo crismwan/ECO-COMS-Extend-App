@@ -160,13 +160,13 @@
               "cards": [
                 {
                   "type": "card",
-                  "cardId": "CountCard",
-                  "parameters": "<% { 'title': 'Pending', 'subtitle': 'Waiting for ISC review', 'countText': '' + comsRequestStats.countStatus((list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? []).filter(r => { !comsRequestStats.isAaa(r) && (!empty(r.requestedBy) ? r.requestedBy.id : '') == (selectedWorker.id ?? '') }), 'Pending ISC Review') + ' pending' } %>"
+                  "cardId": "QuickAssignableRoleManagerViewCard",
+                  "parameters": "<% { 'mark': ((queryParams.quick ?? '') == 'pending') ? 'y' : '', 'b_quick': ((queryParams.quick ?? '') == 'pending' ? '' : 'pending'), 'title': 'Pending', 'subtitle': 'Waiting for ISC review', 'countText': '' + comsRequestStats.countStatus((list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? []).filter(r => { !comsRequestStats.isAaa(r) && (!empty(r.requestedBy) ? r.requestedBy.id : '') == (selectedWorker.id ?? '') }), 'Pending ISC Review') + ' pending' } %>"
                 },
                 {
                   "type": "card",
-                  "cardId": "CountCard",
-                  "parameters": "<% { 'title': 'Decided', 'subtitle': 'Approved, denied or withdrawn', 'countText': '' + comsRequestStats.countStatus((list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? []).filter(r => { !comsRequestStats.isAaa(r) && (!empty(r.requestedBy) ? r.requestedBy.id : '') == (selectedWorker.id ?? '') }), 'Approved') + ' approved' + ' · ' + '' + comsRequestStats.countStatus((list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? []).filter(r => { !comsRequestStats.isAaa(r) && (!empty(r.requestedBy) ? r.requestedBy.id : '') == (selectedWorker.id ?? '') }), 'Denied') + ' denied' } %>"
+                  "cardId": "QuickAssignableRoleManagerViewCard",
+                  "parameters": "<% { 'mark': ((queryParams.quick ?? '') == 'decided') ? 'y' : '', 'b_quick': ((queryParams.quick ?? '') == 'decided' ? '' : 'decided'), 'title': 'Decided', 'subtitle': 'Approved, denied or withdrawn', 'countText': '' + comsRequestStats.countStatus((list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? []).filter(r => { !comsRequestStats.isAaa(r) && (!empty(r.requestedBy) ? r.requestedBy.id : '') == (selectedWorker.id ?? '') }), 'Approved') + ' approved' + ' · ' + '' + comsRequestStats.countStatus((list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? []).filter(r => { !comsRequestStats.isAaa(r) && (!empty(r.requestedBy) ? r.requestedBy.id : '') == (selectedWorker.id ?? '') }), 'Denied') + ' denied' } %>"
                 },
                 {
                   "type": "card",
@@ -207,7 +207,7 @@
                   "gridType": "LIST",
                   "multiViewStylingEnabled": true,
                   "id": "assignableRolesGrid",
-                  "rows": "<% list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]).filter(r => !r.roleName.startsWith('Organizations and Roles Assignment Administrator') && r.requestedBy.id == selectedWorker.id) %>",
+                  "rows": "<% comsRequestStats.quick(list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]).filter(r => !r.roleName.startsWith('Organizations and Roles Assignment Administrator') && r.requestedBy.id == selectedWorker.id), (queryParams.quick ?? '')) %>",
                   "rowVariableName": "role",
                   "enabled": false,
                   "label": "Assignable Role Requests",

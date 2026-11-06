@@ -1,0 +1,31 @@
+{
+  "id": "QuickIscRoleRequestsViewCard",
+  "parameters": [
+    "title",
+    "subtitle",
+    "countText",
+    "mark",
+    "b_view",
+    "b_status"
+  ],
+  "header": {
+    "title": "<% title ?? \"\" %>",
+    "subtitle": "<% subtitle ?? \"\" %>",
+    "icon": "wd-accent-sigma"
+  },
+  "body": {
+    "type": "pillCard",
+    "pills": [
+      {
+        "label": "<% mark == \"y\" ? (\"✓ \" + (countText ?? \"\")) : (countText ?? \"\") %>",
+        "taskReference": {
+          "taskId": "iscRoleRequestsView",
+          "parameterBindings": {
+            "view": "<% b_view ?? \"\" %>",
+            "status": "<% b_status ?? \"\" %>"
+          }
+        }
+      }
+    ]
+  }
+}

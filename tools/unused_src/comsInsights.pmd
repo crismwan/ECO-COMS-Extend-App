@@ -244,28 +244,28 @@
               "cards": [
                 {
                   "type": "card",
-                  "cardId": "CountCard",
-                  "parameters": "<% { 'title': 'ISC Turnaround', 'countText': comsInsights.turnaroundText(list:flatten([requestPage0.data ?? [], requestPage1.data ?? [], requestPage2.data ?? []])), 'subtitle': 'Request to approval, last 90 days' } %>"
+                  "cardId": "QuickIscRoleRequestsViewCard",
+                  "parameters": "<% { 'mark': '', 'b_view': (''), 'b_status': ('Approved'), 'title': 'ISC Turnaround', 'countText': comsInsights.turnaroundText(list:flatten([requestPage0.data ?? [], requestPage1.data ?? [], requestPage2.data ?? []])), 'subtitle': 'Request to approval, last 90 days' } %>"
                 },
                 {
                   "type": "card",
-                  "cardId": "CountCard",
-                  "parameters": "<% { 'title': 'Pending ISC Review', 'countText': '' + comsRequestStats.countPending(list:flatten([requestPage0.data ?? [], requestPage1.data ?? [], requestPage2.data ?? []])) + ' pending · ' + comsRequestStats.countOverdue(list:flatten([requestPage0.data ?? [], requestPage1.data ?? [], requestPage2.data ?? []])) + ' overdue', 'subtitle': 'Overdue after 3 business days' } %>"
+                  "cardId": "QuickIscRoleRequestsViewCard",
+                  "parameters": "<% { 'mark': '', 'b_view': (''), 'b_status': ('Pending ISC Review'), 'title': 'Pending ISC Review', 'countText': '' + comsRequestStats.countPending(list:flatten([requestPage0.data ?? [], requestPage1.data ?? [], requestPage2.data ?? []])) + ' pending · ' + comsRequestStats.countOverdue(list:flatten([requestPage0.data ?? [], requestPage1.data ?? [], requestPage2.data ?? []])) + ' overdue', 'subtitle': 'Overdue after 3 business days' } %>"
                 },
                 {
                   "type": "card",
-                  "cardId": "CountCard",
-                  "parameters": "<% { 'title': 'Approved, Last 30 Days', 'countText': '' + list:flatten([requestPage0.data ?? [], requestPage1.data ?? [], requestPage2.data ?? []]).filter(r => { r.status == 'Approved' && comsInsights.inDays(r.approvedDate, comsInsights.lastDays(30)) }).size() + ' approved', 'subtitle': 'Role requests, by approval date' } %>"
+                  "cardId": "QuickIscRoleRequestsViewCard",
+                  "parameters": "<% { 'mark': '', 'b_view': (''), 'b_status': ('Approved'), 'title': 'Approved, Last 30 Days', 'countText': '' + list:flatten([requestPage0.data ?? [], requestPage1.data ?? [], requestPage2.data ?? []]).filter(r => { r.status == 'Approved' && comsInsights.inDays(r.approvedDate, comsInsights.lastDays(30)) }).size() + ' approved', 'subtitle': 'Role requests, by approval date' } %>"
                 },
                 {
                   "type": "card",
-                  "cardId": "CountCard",
-                  "parameters": "<% { 'title': 'Changes, Last 30 Days', 'countText': '' + comsInsights.countInDays(list:flatten([((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.data ?? []) : []), ((((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 100 && !empty(auditPage1.data) && !empty(auditPage1.data.r)) ? (auditPage1.data.r.data ?? []) : []), ((((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 200 && !empty(auditPage2.data) && !empty(auditPage2.data.r)) ? (auditPage2.data.r.data ?? []) : [])]), 'timestamp', comsInsights.lastDays(30)) + ' audit records', 'subtitle': 'Newest 300 audit records' } %>"
+                  "cardId": "QuickAuditLogViewerCard",
+                  "parameters": "<% { 'mark': '', 'b_orgId': (''), 'b_orgCode': (''), 'b_orgName': (''), 'b_period': ('30d'), 'title': 'Changes, Last 30 Days', 'countText': '' + comsInsights.countInDays(list:flatten([((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.data ?? []) : []), ((((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 100 && !empty(auditPage1.data) && !empty(auditPage1.data.r)) ? (auditPage1.data.r.data ?? []) : []), ((((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 200 && !empty(auditPage2.data) && !empty(auditPage2.data.r)) ? (auditPage2.data.r.data ?? []) : [])]), 'timestamp', comsInsights.lastDays(30)) + ' audit records', 'subtitle': 'Newest 300 audit records' } %>"
                 },
                 {
                   "type": "card",
-                  "cardId": "CountCard",
-                  "parameters": "<% let runs = (bulkRunPage0.data ?? []).filter(r => { comsInsights.inDays(r.uploadedAt, comsInsights.lastDays(30)) }); { 'title': 'Bulk Runs, Last 30 Days', 'countText': '' + size(runs) + ' runs · ' + runs.filter(r => { ('' + (r.status ?? '')).upperCase().contains('FAIL') }).size() + ' failed', 'subtitle': 'Uploads and grid edits' } %>"
+                  "cardId": "QuickBulkRoleResultsCard",
+                  "parameters": "<% let runs = (bulkRunPage0.data ?? []).filter(r => { comsInsights.inDays(r.uploadedAt, comsInsights.lastDays(30)) }); { 'mark': '', 'b_batch': (''), 'b_quick': (''), 'title': 'Bulk Runs, Last 30 Days', 'countText': '' + size(runs) + ' runs · ' + runs.filter(r => { ('' + (r.status ?? '')).upperCase().contains('FAIL') }).size() + ' failed', 'subtitle': 'Uploads and grid edits' } %>"
                 }
               ]
             }

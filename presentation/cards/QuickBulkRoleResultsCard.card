@@ -1,0 +1,31 @@
+{
+  "id": "QuickBulkRoleResultsCard",
+  "parameters": [
+    "title",
+    "subtitle",
+    "countText",
+    "mark",
+    "b_batch",
+    "b_quick"
+  ],
+  "header": {
+    "title": "<% title ?? \"\" %>",
+    "subtitle": "<% subtitle ?? \"\" %>",
+    "icon": "wd-accent-sigma"
+  },
+  "body": {
+    "type": "pillCard",
+    "pills": [
+      {
+        "label": "<% mark == \"y\" ? (\"✓ \" + (countText ?? \"\")) : (countText ?? \"\") %>",
+        "taskReference": {
+          "taskId": "bulkRoleResults",
+          "parameterBindings": {
+            "batch": "<% b_batch ?? \"\" %>",
+            "quick": "<% b_quick ?? \"\" %>"
+          }
+        }
+      }
+    ]
+  }
+}

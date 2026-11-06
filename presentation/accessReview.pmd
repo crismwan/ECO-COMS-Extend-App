@@ -163,18 +163,18 @@
               "cards": [
                 {
                   "type": "card",
-                  "cardId": "CountCard",
-                  "parameters": "<% { 'title': 'Vacant Positions', 'subtitle': 'Still holding a shell role', 'countText': '' + size(comsAccessReview.rowsFrom(shellRoles.data ?? [], comsAccessReview.vacantIds(positionFill.data ?? []))) + ' vacant positions' } %>"
+                  "cardId": "QuickAccessReviewCard",
+                  "parameters": "<% { 'mark': ((queryParams.quick ?? '') == '') ? 'y' : '', 'b_quick': (''), 'title': 'Vacant Positions', 'subtitle': 'Still holding a shell role', 'countText': '' + size(comsAccessReview.rowsFrom(shellRoles.data ?? [], comsAccessReview.vacantIds(positionFill.data ?? []))) + ' vacant positions' } %>"
                 },
                 {
                   "type": "card",
-                  "cardId": "CountCard",
-                  "parameters": "<% { 'title': 'Never Reviewed', 'subtitle': 'No review in the Audit Log', 'countText': '' + comsAccessReview.countNeverReviewed(comsAccessReview.rowsFrom(shellRoles.data ?? [], comsAccessReview.vacantIds(positionFill.data ?? [])), list:flatten([((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.data ?? []) : []), ((((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 100 && !empty(auditPage1.data) && !empty(auditPage1.data.r)) ? (auditPage1.data.r.data ?? []) : [])])) + ' never reviewed' } %>"
+                  "cardId": "QuickAccessReviewCard",
+                  "parameters": "<% { 'mark': ((queryParams.quick ?? '') == 'never') ? 'y' : '', 'b_quick': ((queryParams.quick ?? '') == 'never' ? '' : 'never'), 'title': 'Never Reviewed', 'subtitle': 'No review in the Audit Log', 'countText': '' + comsAccessReview.countNeverReviewed(comsAccessReview.rowsFrom(shellRoles.data ?? [], comsAccessReview.vacantIds(positionFill.data ?? [])), list:flatten([((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.data ?? []) : []), ((((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 100 && !empty(auditPage1.data) && !empty(auditPage1.data.r)) ? (auditPage1.data.r.data ?? []) : [])])) + ' never reviewed' } %>"
                 },
                 {
                   "type": "card",
-                  "cardId": "CountCard",
-                  "parameters": "<% { 'title': 'Assigned Outside ECO-COMS', 'subtitle': 'No ECO-COMS change on record', 'countText': '' + comsAccessReview.countOutside(comsAccessReview.rowsFrom(shellRoles.data ?? [], comsAccessReview.vacantIds(positionFill.data ?? [])), list:flatten([((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.data ?? []) : []), ((((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 100 && !empty(auditPage1.data) && !empty(auditPage1.data.r)) ? (auditPage1.data.r.data ?? []) : [])])) + ' assigned outside' } %>"
+                  "cardId": "QuickAccessReviewCard",
+                  "parameters": "<% { 'mark': ((queryParams.quick ?? '') == 'outside') ? 'y' : '', 'b_quick': ((queryParams.quick ?? '') == 'outside' ? '' : 'outside'), 'title': 'Assigned Outside ECO-COMS', 'subtitle': 'No ECO-COMS change on record', 'countText': '' + comsAccessReview.countOutside(comsAccessReview.rowsFrom(shellRoles.data ?? [], comsAccessReview.vacantIds(positionFill.data ?? [])), list:flatten([((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.data ?? []) : []), ((((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 100 && !empty(auditPage1.data) && !empty(auditPage1.data.r)) ? (auditPage1.data.r.data ?? []) : [])])) + ' assigned outside' } %>"
                 }
               ]
             }
@@ -212,7 +212,7 @@
                   "id": "accessReviewGrid",
                   "label": "Vacant Positions Holding Shell Roles",
                   "rowVariableName": "rv",
-                  "rows": "<% comsAccessReview.rowsFrom(shellRoles.data ?? [], comsAccessReview.vacantIds(positionFill.data ?? [])) %>",
+                  "rows": "<% comsAccessReview.quick(comsAccessReview.rowsFrom(shellRoles.data ?? [], comsAccessReview.vacantIds(positionFill.data ?? [])), list:flatten([((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.data ?? []) : []), ((((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 100 && !empty(auditPage1.data) && !empty(auditPage1.data.r)) ? (auditPage1.data.r.data ?? []) : [])]), (queryParams.quick ?? '')) %>",
                   "columns": [
                     {
                       "type": "column",

@@ -1,0 +1,35 @@
+{
+  "id": "QuickManageShellOrgStatusCard",
+  "parameters": [
+    "title",
+    "subtitle",
+    "countText",
+    "mark",
+    "b_orgId",
+    "b_orgCode",
+    "b_orgName",
+    "b_currentStatus"
+  ],
+  "header": {
+    "title": "<% title ?? \"\" %>",
+    "subtitle": "<% subtitle ?? \"\" %>",
+    "icon": "wd-accent-sigma"
+  },
+  "body": {
+    "type": "pillCard",
+    "pills": [
+      {
+        "label": "<% mark == \"y\" ? (\"✓ \" + (countText ?? \"\")) : (countText ?? \"\") %>",
+        "taskReference": {
+          "taskId": "manageShellOrgStatus",
+          "parameterBindings": {
+            "orgId": "<% b_orgId ?? \"\" %>",
+            "orgCode": "<% b_orgCode ?? \"\" %>",
+            "orgName": "<% b_orgName ?? \"\" %>",
+            "currentStatus": "<% b_currentStatus ?? \"\" %>"
+          }
+        }
+      }
+    ]
+  }
+}

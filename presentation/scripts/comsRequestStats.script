@@ -15,14 +15,6 @@ var statusOrDefault = function(status) {
   empty(status) ? 'Pending ISC Review' : status;
 };
 
-var matchesStatus = function(r, status) {
-  statusOrDefault(status) == 'All' ? true : r.status == statusOrDefault(status);
-};
-
-var filterRequests = function(list, view, status) {
-  list.filter(r => { inView(r, view) && matchesStatus(r, status) });
-};
-
 var isWeekday = function(d) {
   let day = d.format('E');
   day != 'Sat' && day != 'Sun';
@@ -79,6 +71,23 @@ var countStatus = function(list, status) {
   list.filter(r => { r.status == status }).size();
 };
 
+/* status also takes 'Overdue' and 'ApprovedThisMonth' (the ISC count cards, 2026-11-06). Defined after the helpers
+   it calls: a .script function can't call one defined further down. */
+var matchesStatus = function(r, status) {
+  let s = statusOrDefault(status);
+  s == 'All' ? true : (s == 'Overdue' ? isOverdue(r) :
+    (s == 'ApprovedThisMonth' ? (r.status == 'Approved' && ('' + (r.approvedDate ?? '')).startsWith(date:now().format('yyyy-MM'))) : r.status == s));
+};
+
+var filterRequests = function(list, view, status) {
+  list.filter(r => { inView(r, view) && matchesStatus(r, status) });
+};
+
+/* Quick filter from a clicked count card: 'pending', 'decided', or '' for everything. */
+var quick = function(list, q) {
+  q == 'pending' ? list.filter(r => { r.status == 'Pending ISC Review' }) : (q == 'decided' ? list.filter(r => { r.status != 'Pending ISC Review' }) : list);
+};
+
 /* Home "Needs my attention": the signed-in user's own requests. */
 var isMine = function(r, meId) {
   !empty(meId) && !empty(r.requestedBy) && r.requestedBy.id == meId;
@@ -112,5 +121,6 @@ var myRequestsText = function(list, meId) {
   "countPending": countPending,
   "countOverdue": countOverdue,
   "countApprovedThisMonth": countApprovedThisMonth,
-  "countStatus": countStatus
+  "countStatus": countStatus,
+  "quick": quick
 }

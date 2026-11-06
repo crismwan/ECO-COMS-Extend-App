@@ -138,18 +138,18 @@
               "cards": [
                 {
                   "type": "card",
-                  "cardId": "CountCard",
-                  "parameters": "<% { 'title': 'Pending', 'subtitle': 'Waiting for ISC review', 'countText': '' + comsRequestStats.countPending(comsRequestStats.filterRequests(list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? [], (queryParams.view ?? ''), 'All')) + ' pending' } %>"
+                  "cardId": "QuickIscRoleRequestsViewCard",
+                  "parameters": "<% { 'mark': (((queryParams.status ?? '') == '' || (queryParams.status ?? '') == 'Pending ISC Review')) ? 'y' : '', 'b_view': (queryParams.view ?? ''), 'b_status': (((queryParams.status ?? '') == '' || (queryParams.status ?? '') == 'Pending ISC Review') ? 'All' : 'Pending ISC Review'), 'title': 'Pending', 'subtitle': 'Waiting for ISC review', 'countText': '' + comsRequestStats.countPending(comsRequestStats.filterRequests(list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? [], (queryParams.view ?? ''), 'All')) + ' pending' } %>"
                 },
                 {
                   "type": "card",
-                  "cardId": "CountCard",
-                  "parameters": "<% { 'title': 'Overdue', 'subtitle': 'Pending more than 3 business days', 'countText': '' + comsRequestStats.countOverdue(comsRequestStats.filterRequests(list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? [], (queryParams.view ?? ''), 'All')) + ' overdue' } %>"
+                  "cardId": "QuickIscRoleRequestsViewCard",
+                  "parameters": "<% { 'mark': ((queryParams.status ?? '') == 'Overdue') ? 'y' : '', 'b_view': (queryParams.view ?? ''), 'b_status': ((queryParams.status ?? '') == 'Overdue' ? 'All' : 'Overdue'), 'title': 'Overdue', 'subtitle': 'Pending more than 3 business days', 'countText': '' + comsRequestStats.countOverdue(comsRequestStats.filterRequests(list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? [], (queryParams.view ?? ''), 'All')) + ' overdue' } %>"
                 },
                 {
                   "type": "card",
-                  "cardId": "CountCard",
-                  "parameters": "<% { 'title': 'Approved this month', 'subtitle': 'Approved since the 1st', 'countText': '' + comsRequestStats.countApprovedThisMonth(comsRequestStats.filterRequests(list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? [], (queryParams.view ?? ''), 'All')) + ' approved' } %>"
+                  "cardId": "QuickIscRoleRequestsViewCard",
+                  "parameters": "<% { 'mark': ((queryParams.status ?? '') == 'ApprovedThisMonth') ? 'y' : '', 'b_view': (queryParams.view ?? ''), 'b_status': ((queryParams.status ?? '') == 'ApprovedThisMonth' ? 'All' : 'ApprovedThisMonth'), 'title': 'Approved this month', 'subtitle': 'Approved since the 1st', 'countText': '' + comsRequestStats.countApprovedThisMonth(comsRequestStats.filterRequests(list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? [], (queryParams.view ?? ''), 'All')) + ' approved' } %>"
                 }
               ]
             }

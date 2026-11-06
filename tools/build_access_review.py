@@ -65,6 +65,12 @@ var countOutside = function(rows, logs) {
   rows.filter(r => { empty(lastWhen(logs, 'ASSIGN POSITION', r.role, r.posWid, r.pos)) }).size();
 };
 
+/* Quick filter from a clicked count card: 'never' (never reviewed), 'outside' (assigned outside ECO-COMS), else all. */
+var quick = function(rows, logs, q) {
+  q == 'never' ? rows.filter(r => { empty(lastWhen(logs, 'REVIEW', r.role, r.posWid, r.pos)) }) :
+    (q == 'outside' ? rows.filter(r => { empty(lastWhen(logs, 'ASSIGN POSITION', r.role, r.posWid, r.pos)) }) : rows);
+};
+
 {
   "vacantIds": vacantIds,
   "allRows": allRows,
@@ -73,7 +79,8 @@ var countOutside = function(rows, logs) {
   "lastChanged": lastChanged,
   "lastReviewed": lastReviewed,
   "countNeverReviewed": countNeverReviewed,
-  "countOutside": countOutside
+  "countOutside": countOutside,
+  "quick": quick
 }
 '''
 open(os.path.join(ROOT, 'scripts', 'comsAccessReview.script'), 'w', encoding='utf-8').write(SCRIPT)

@@ -1,0 +1,328 @@
+{
+  "id": "adminProvisioningView",
+  "securityDomains": [
+    "ManageCOMSAdminProvisioning"
+  ],
+  "include": [
+    "comsRequestStats.script"
+  ],
+  "endPoints": [
+    {
+      "name": "comsAssignableRolesCount",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "url": "/comsAssignableRoles?limit=1",
+      "authType": "sso",
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 403
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "baseUrlType": "BUSINESS-OBJECT",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 403
+        },
+        {
+          "code": 429
+        }
+      ],
+      "name": "comsAssignableRolesPage0",
+      "url": "/comsAssignableRoles?limit=100&offset=0"
+    },
+    {
+      "baseUrlType": "BUSINESS-OBJECT",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 429
+        }
+      ],
+      "name": "comsAssignableRolesPage1",
+      "url": "<% let t = comsAssignableRolesCount.total ?? 0; '/comsAssignableRoles?limit=100&offset=' + (t > 100 ? 100 : t) %>"
+    },
+    {
+      "baseUrlType": "BUSINESS-OBJECT",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 429
+        }
+      ],
+      "name": "comsAssignableRolesPage2",
+      "url": "<% let t = comsAssignableRolesCount.total ?? 0; '/comsAssignableRoles?limit=100&offset=' + (t > 200 ? 200 : t) %>"
+    }
+  ],
+  "presentation": {
+    "pageType": "VIEW",
+    "headerSize": "HIDDEN",
+    "body": {
+      "type": "basicFormLayout",
+      "id": "adminProvisioningViewForm",
+      "sections": [
+        {
+          "type": "layoutSection",
+          "id": "titleBannerSection",
+          "children": [
+            {
+              "type": "richText",
+              "id": "titleBannerRichText",
+              "enabled": false,
+              "value": "<span style=\"color:#0055B3;font-size:24px\"><b>ECO-COMS: AAA Role Requests</b></span><br><span style=\"color:#374151;font-size:13px\">AAA role requests: who can manage shell orgs and submit role requests.</span>"
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "descSection",
+          "children": [
+            {
+              "type": "button",
+              "label": "← Home",
+              "taskReference": {
+                "taskId": "home"
+              },
+              "action": "LINK"
+            },
+            {
+              "type": "fieldSet",
+              "id": "aboutFieldSet",
+              "title": "About This Page",
+              "children": [
+                {
+                  "type": "richText",
+                  "id": "pageDesc",
+                  "enabled": false,
+                  "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">AAA Role Requests controls who can manage shell orgs and submit role requests in ECO-COMS for each application. These are <b>AAA (Organizations and Roles Assignment Administrator)</b> roles. To submit a new AAA role request for ISC review, use <b>Submit AAA Role Request</b> in Actions.</span>"
+                }
+              ],
+              "collapsible": true,
+              "initializeCollapsed": true
+            },
+            {
+              "type": "richText",
+              "id": "pendingNoticeYes",
+              "enabled": false,
+              "value": "<span style=\"color:#d97706;font-size:12px;font-weight:700\">⚠ </span><span style=\"color:#92400e;font-size:12px\">There are AAA role requests currently pending ISC review. ISC reviews them in Workday; open a row's <b>Review Process</b> to see where it is.</span>",
+              "visible": "<% size(list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]).filter(r => r.roleName.startsWith('Organizations and Roles Assignment Administrator') && r.status == 'Pending ISC Review')) > 0 %>"
+            },
+            {
+              "type": "richText",
+              "id": "pendingNoticeNo",
+              "enabled": false,
+              "value": "<span style=\"color:#059669;font-size:12px;font-weight:700\">✓ </span><span style=\"color:#065f46;font-size:12px\">There are no AAA role requests pending ISC review.</span>",
+              "visible": "<% size(list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]).filter(r => r.roleName.startsWith('Organizations and Roles Assignment Administrator') && r.status == 'Pending ISC Review')) == 0 %>"
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "summaryCardsSection",
+          "children": [
+            {
+              "type": "cardContainer",
+              "id": "aaaSummaryCardContainer",
+              "layout": "grid",
+              "cards": [
+                {
+                  "type": "card",
+                  "cardId": "CountCard",
+                  "parameters": "<% { 'title': 'Pending', 'subtitle': 'Waiting for ISC review', 'countText': '' + comsRequestStats.countStatus((list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? []).filter(r => { comsRequestStats.isAaa(r) }), 'Pending ISC Review') + ' pending' } %>"
+                },
+                {
+                  "type": "card",
+                  "cardId": "CountCard",
+                  "parameters": "<% { 'title': 'Decided', 'subtitle': 'Approved, denied or withdrawn', 'countText': '' + comsRequestStats.countStatus((list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? []).filter(r => { comsRequestStats.isAaa(r) }), 'Approved') + ' approved' + ' · ' + '' + comsRequestStats.countStatus((list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? []).filter(r => { comsRequestStats.isAaa(r) }), 'Denied') + ' denied' } %>"
+                },
+                {
+                  "type": "card",
+                  "cardId": "ListAaaActionsCard"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "gridSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "aaaRolesSection",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "emptyStateMsg",
+                  "enabled": false,
+                  "label": "ⓘ Nothing to show",
+                  "visible": "<% size(list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]).filter(r => r.roleName.startsWith('Organizations and Roles Assignment Administrator'))) == 0 %>",
+                  "value": "There are no AAA role requests to display. Use Submit AAA Role Request above to create one."
+                },
+                {
+                  "type": "button",
+                  "id": "emptyActionButton",
+                  "action": "PRIMARY",
+                  "label": "Submit AAA Role Request",
+                  "visible": "<% size(list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]).filter(r => r.roleName.startsWith('Organizations and Roles Assignment Administrator'))) == 0 %>",
+                  "taskReference": {
+                    "taskId": "adminProvisioning"
+                  }
+                },
+                {
+                  "type": "grid",
+                  "gridType": "LIST",
+                  "multiViewStylingEnabled": true,
+                  "id": "aaaRolesGrid",
+                  "rows": "<% list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]).filter(r => r.roleName.startsWith('Organizations and Roles Assignment Administrator')) %>",
+                  "rowVariableName": "role",
+                  "enabled": false,
+                  "label": "AAA Role Requests",
+                  "autoPaging": true,
+                  "visible": "<% size(list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]).filter(r => r.roleName.startsWith('Organizations and Roles Assignment Administrator'))) > 0 %>",
+                  "columns": [
+                    {
+                      "type": "column",
+                      "id": "colApplication",
+                      "columnId": "colApplication",
+                      "label": "Application",
+                      "sortableAndFilterable": "true",
+                      "cellTemplate": {
+                        "type": "text",
+                        "value": "<% role.application ?? '' %>",
+                        "enabled": false
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "id": "colRoleName",
+                      "columnId": "colRoleName",
+                      "label": "Role Name",
+                      "sortableAndFilterable": "true",
+                      "cellTemplate": {
+                        "type": "text",
+                        "value": "<% role.roleName ?? '' %>",
+                        "enabled": false
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "id": "colStatus",
+                      "columnId": "colStatus",
+                      "label": "Status",
+                      "sortableAndFilterable": "true",
+                      "cellTemplate": {
+                        "type": "richText",
+                        "value": "<% role.status == 'Pending ISC Review' ? '<span style=\"color:#92400e;font-weight:600;font-size:12px\">⏳ Pending ISC Review</span>' : role.status == 'Approved' ? '<span style=\"color:#065f46;font-weight:600;font-size:12px\">✓ Approved</span>' : role.status == 'Denied' ? '<span style=\"color:#991b1b;font-weight:600;font-size:12px\">✗ Denied</span>' : role.status == 'Inactive' ? '<span style=\"color:#6b7280;font-weight:600;font-size:12px\">○ Inactive</span>' : role.status ?? '' %>"
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "id": "colEnabledFor",
+                      "columnId": "colEnabledFor",
+                      "label": "Enabled For",
+                      "cellTemplate": {
+                        "type": "text",
+                        "value": "<% role.enabledForOrganizationTypes ?? '' %>",
+                        "enabled": false
+                      },
+                      "sortableAndFilterable": "true"
+                    },
+                    {
+                      "type": "column",
+                      "id": "colEffDate",
+                      "columnId": "colEffDate",
+                      "label": "Effective Date",
+                      "cellTemplate": {
+                        "type": "text",
+                        "value": "<% role.effectiveDate ?? '' %>",
+                        "enabled": false
+                      },
+                      "sortableAndFilterable": "true"
+                    },
+                    {
+                      "type": "column",
+                      "id": "colRequestedBy",
+                      "columnId": "colRequestedBy",
+                      "label": "Requested By",
+                      "cellTemplate": {
+                        "type": "text",
+                        "value": "<% role.requestedBy.descriptor ?? '' %>",
+                        "enabled": false
+                      },
+                      "sortableAndFilterable": "true"
+                    },
+                    {
+                      "type": "column",
+                      "id": "colRequestedDate",
+                      "columnId": "colRequestedDate",
+                      "label": "Requested Date",
+                      "sortableAndFilterable": "true",
+                      "cellTemplate": {
+                        "type": "text",
+                        "value": "<% role.requestedDate ?? '' %>",
+                        "enabled": false
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "id": "colActions",
+                      "columnId": "colActions",
+                      "label": "Review",
+                      "cellTemplate": {
+                        "type": "fieldSet",
+                        "id": "reviewActionFieldSet",
+                        "children": [
+                          {
+                            "type": "instanceList",
+                            "id": "reviewEventInstanceList",
+                            "widKey": "id",
+                            "view": true,
+                            "relatedTask": true,
+                            "visible": "<% !empty(role.reviewEventWid) %>",
+                            "values": "<% !empty(role.reviewEventWid) ? [{'id': role.reviewEventWid, 'descriptor': 'Review Process'}] : [] %>"
+                          }
+                        ]
+                      },
+                      "excel": {
+                        "enabled": false
+                      }
+                    }
+                  ],
+                  "excelExportEnabled": true
+                }
+              ],
+              "title": "AAA Role Requests"
+            }
+          ]
+        }
+      ]
+    },
+    "footer": {
+      "type": "footer",
+      "children": [
+        {
+          "type": "pod",
+          "podId": "ecoComsFooter"
+        }
+      ]
+    }
+  }
+}

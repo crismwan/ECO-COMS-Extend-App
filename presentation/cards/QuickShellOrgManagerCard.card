@@ -1,0 +1,37 @@
+{
+  "id": "QuickShellOrgManagerCard",
+  "parameters": [
+    "title",
+    "subtitle",
+    "countText",
+    "mark",
+    "b_appCode",
+    "b_appName",
+    "b_family",
+    "b_orgType",
+    "b_quick"
+  ],
+  "header": {
+    "title": "<% title ?? \"\" %>",
+    "subtitle": "<% subtitle ?? \"\" %>",
+    "icon": "wd-accent-sigma"
+  },
+  "body": {
+    "type": "pillCard",
+    "pills": [
+      {
+        "label": "<% mark == \"y\" ? (\"✓ \" + (countText ?? \"\")) : (countText ?? \"\") %>",
+        "taskReference": {
+          "taskId": "shellOrgManager",
+          "parameterBindings": {
+            "appCode": "<% b_appCode ?? \"\" %>",
+            "appName": "<% b_appName ?? \"\" %>",
+            "family": "<% b_family ?? \"\" %>",
+            "orgType": "<% b_orgType ?? \"\" %>",
+            "quick": "<% b_quick ?? \"\" %>"
+          }
+        }
+      }
+    ]
+  }
+}

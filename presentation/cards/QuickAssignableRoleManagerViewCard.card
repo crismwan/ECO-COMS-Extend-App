@@ -1,0 +1,29 @@
+{
+  "id": "QuickAssignableRoleManagerViewCard",
+  "parameters": [
+    "title",
+    "subtitle",
+    "countText",
+    "mark",
+    "b_quick"
+  ],
+  "header": {
+    "title": "<% title ?? \"\" %>",
+    "subtitle": "<% subtitle ?? \"\" %>",
+    "icon": "wd-accent-sigma"
+  },
+  "body": {
+    "type": "pillCard",
+    "pills": [
+      {
+        "label": "<% mark == \"y\" ? (\"✓ \" + (countText ?? \"\")) : (countText ?? \"\") %>",
+        "taskReference": {
+          "taskId": "assignableRoleManagerView",
+          "parameterBindings": {
+            "quick": "<% b_quick ?? \"\" %>"
+          }
+        }
+      }
+    ]
+  }
+}

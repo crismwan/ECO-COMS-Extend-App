@@ -1,0 +1,468 @@
+{
+  "id": "shellOrgDetail",
+  "securityDomains": [
+    "ManageCOMSShellOrgs"
+  ],
+  "endPoints": [
+    {
+      "name": "allShellOrgs",
+      "baseUrlType": "workday-wql",
+      "url": "data",
+      "authType": "sso",
+      "bestEffort": "true",
+      "wqlQuery": {
+        "queryId": "allShellOrgs"
+      },
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "name": "shellRoles",
+      "baseUrlType": "workday-wql",
+      "url": "data",
+      "authType": "sso",
+      "bestEffort": "true",
+      "wqlQuery": {
+        "queryId": "allShellAssignableRolesinTenant",
+        "parameters": {
+          "types": "<% let ts = (allShellOrgs.data ?? []).map(o => { (o.type1 ?? []).size() > 0 ? o.type1[0].id : '' }).filter(t => { t != '' }).distinct(); ts.size() > 0 ? ts.join(',') : 'none' %>"
+        }
+      },
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "name": "auditPage0",
+      "baseUrlType": "workday-graph",
+      "httpMethod": "POST",
+      "authType": "sso",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 403
+        },
+        {
+          "code": 429
+        }
+      ],
+      "graphQuery": {
+        "queryId": "auditLogsNewest",
+        "parameters": {
+          "offset": 0
+        }
+      }
+    },
+    {
+      "name": "auditPage1",
+      "baseUrlType": "workday-graph",
+      "httpMethod": "POST",
+      "authType": "sso",
+      "failOnStatusCodes": [
+        {
+          "code": 429
+        }
+      ],
+      "graphQuery": {
+        "queryId": "auditLogsNewest",
+        "parameters": {
+          "offset": "<% ((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 100 ? 100 : 0 %>"
+        }
+      },
+      "exclude": "<% ((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) <= 100 %>"
+    }
+  ],
+  "presentation": {
+    "headerSize": "HIDDEN",
+    "body": {
+      "type": "basicFormLayout",
+      "id": "orgDetailForm",
+      "sections": [
+        {
+          "type": "layoutSection",
+          "id": "titleBannerSection",
+          "children": [
+            {
+              "type": "richText",
+              "id": "titleBannerRichText",
+              "enabled": false,
+              "value": "<% '<span style=\"color:#0055B3;font-size:24px\"><b>' + ('ECO-COMS: Shell Organization – ' + (size(((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))) > 0 ? (((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))[0].organizationByName.descriptor ?? ((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))[0].code) : (queryParams.orgName ?? ''))).replace('<', '&lt;') + '</b></span>' + '<br><span style=\"color:#374151;font-size:13px\">One shell organization: its status, its roles and the changes made to it.</span>' %>"
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "aboutSection",
+          "children": [
+            {
+              "type": "button",
+              "id": "backButton",
+              "label": "← Shell Org Manager",
+              "action": "LINK",
+              "taskReference": {
+                "taskId": "shellOrgManager",
+                "parameterBindings": {
+                  "appCode": "<% queryParams.appCode ?? '' %>",
+                  "appName": "<% queryParams.appName ?? '' %>"
+                }
+              }
+            },
+            {
+              "type": "button",
+              "id": "auditLogButton",
+              "label": "View changes in Audit Log",
+              "action": "LINK",
+              "taskReference": {
+                "taskId": "auditLogViewer",
+                "parameterBindings": {
+                  "orgId": "<% queryParams.orgId ?? '' %>",
+                  "orgCode": "<% queryParams.orgCode ?? '' %>",
+                  "orgName": "<% queryParams.orgName ?? '' %>"
+                }
+              }
+            },
+            {
+              "type": "fieldSet",
+              "id": "aboutFieldSet",
+              "title": "About This Page",
+              "children": [
+                {
+                  "type": "richText",
+                  "id": "aboutRichText",
+                  "enabled": false,
+                  "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">One shell organization: its status in Workday, the roles assigned on it with their positions and workers, and the ECO-COMS changes made to it (from the newest 200 Audit Log records). Use <b>Inactivate Organization</b> or <b>Reactivate Organization</b> to change its status, or <b>Manage</b> on a role to add or remove positions.</span>"
+                }
+              ],
+              "collapsible": true,
+              "initializeCollapsed": true
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "cardsSection",
+          "children": [
+            {
+              "type": "cardContainer",
+              "id": "orgCardContainer",
+              "layout": "grid",
+              "cards": [
+                {
+                  "type": "card",
+                  "cardId": "CountCard",
+                  "parameters": "<% { 'title': 'Status', 'subtitle': 'In Workday', 'countText': size(((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))) == 0 ? 'Not found' : ((size(((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))) > 0 && ((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))[0].cf_active1 == true) ? '✓ Active' : '○ Inactive') } %>"
+                },
+                {
+                  "type": "card",
+                  "cardId": "CountCard",
+                  "parameters": "<% { 'title': 'Roles', 'subtitle': 'Assigned on this organization', 'countText': '' + size((list:flatten((shellRoles.data ?? []).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ra.organization.id == (queryParams.orgId ?? '') }).map(ra => { { 'role': r.role, 'org': ra.organization, 'positions': ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? [], 'workers': ra.workersAssigned ?? [] } }) })))) + (size((list:flatten((shellRoles.data ?? []).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ra.organization.id == (queryParams.orgId ?? '') }).map(ra => { { 'role': r.role, 'org': ra.organization, 'positions': ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? [], 'workers': ra.workersAssigned ?? [] } }) })))) == 1 ? ' role assignment' : ' role assignments') + ' · ' + '' + size(list:flatten((list:flatten((shellRoles.data ?? []).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ra.organization.id == (queryParams.orgId ?? '') }).map(ra => { { 'role': r.role, 'org': ra.organization, 'positions': ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? [], 'workers': ra.workersAssigned ?? [] } }) }))).map(ra => { ra.positions })).map(p => { p.id }).distinct()) + (size(list:flatten((list:flatten((shellRoles.data ?? []).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ra.organization.id == (queryParams.orgId ?? '') }).map(ra => { { 'role': r.role, 'org': ra.organization, 'positions': ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? [], 'workers': ra.workersAssigned ?? [] } }) }))).map(ra => { ra.positions })).map(p => { p.id }).distinct()) == 1 ? ' position' : ' positions') } %>"
+                },
+                {
+                  "type": "card",
+                  "cardId": "CountCard",
+                  "parameters": "<% { 'title': 'Changes', 'subtitle': 'Made through ECO-COMS', 'countText': '' + size((list:sort(list:flatten([((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.data ?? []) : []), ((((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 100 && !empty(auditPage1.data) && !empty(auditPage1.data.r)) ? (auditPage1.data.r.data ?? []) : [])]).filter(a => { (!empty(a.orgWid) && a.orgWid == (queryParams.orgId ?? '')) || (!empty(queryParams.orgCode) && (a.coReferenceId ?? '') == queryParams.orgCode) || (!empty(queryParams.orgName) && (a.coName ?? '') == queryParams.orgName) }), 'timestamp', false))) + (size((list:sort(list:flatten([((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.data ?? []) : []), ((((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 100 && !empty(auditPage1.data) && !empty(auditPage1.data.r)) ? (auditPage1.data.r.data ?? []) : [])]).filter(a => { (!empty(a.orgWid) && a.orgWid == (queryParams.orgId ?? '')) || (!empty(queryParams.orgCode) && (a.coReferenceId ?? '') == queryParams.orgCode) || (!empty(queryParams.orgName) && (a.coName ?? '') == queryParams.orgName) }), 'timestamp', false))) == 1 ? ' change recorded' : ' changes recorded') } %>"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "summarySection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "summaryFieldSet",
+              "title": "Organization",
+              "children": [
+                {
+                  "type": "instanceList",
+                  "id": "orgInstanceList",
+                  "label": "Organization",
+                  "view": true,
+                  "relatedTask": true,
+                  "enabled": false,
+                  "widKey": "id",
+                  "values": "<% empty(queryParams.orgId) ? [] : [{ 'id': queryParams.orgId, 'descriptor': (size(((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))) > 0 ? (((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))[0].organizationByName.descriptor ?? ((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))[0].code) : (queryParams.orgName ?? '')) }] %>"
+                },
+                {
+                  "type": "text",
+                  "id": "orgCodeText",
+                  "label": "Code",
+                  "enabled": false,
+                  "value": "<% (size(((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))) > 0 ? (((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))[0].code ?? '') : (queryParams.orgCode ?? '')) %>"
+                },
+                {
+                  "type": "button",
+                  "id": "changeStatusButton",
+                  "label": "<% (size(((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))) > 0 && ((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))[0].cf_active1 == true) ? 'Inactivate Organization' : 'Reactivate Organization' %>",
+                  "action": "AUXILIARY",
+                  "taskReference": {
+                    "taskId": "manageShellOrgStatus",
+                    "parameterBindings": {
+                      "orgId": "<% queryParams.orgId ?? '' %>",
+                      "orgCode": "<% (size(((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))) > 0 ? (((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))[0].code ?? '') : (queryParams.orgCode ?? '')) %>",
+                      "orgName": "<% (size(((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))) > 0 ? (((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))[0].organizationByName.descriptor ?? ((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))[0].code) : (queryParams.orgName ?? '')) %>",
+                      "currentStatus": "<% (size(((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))) > 0 && ((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))[0].cf_active1 == true) ? 'Active' : 'Inactive' %>",
+                      "effectiveDate": "<% date:now().format('yyyy-MM-dd') %>",
+                      "patternName": "<% (size(((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))) > 0 ? (((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))[0].code ?? '') : (queryParams.orgCode ?? '')) %>",
+                      "orgType": "<% queryParams.orgType ?? '' %>",
+                      "comsAppId": "<% queryParams.appCode ?? '' %>"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "rolesSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "rolesFieldSet",
+              "title": "Roles on This Organization",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "noRolesText",
+                  "label": "ⓘ Nothing to show",
+                  "enabled": false,
+                  "visible": "<% size((list:flatten((shellRoles.data ?? []).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ra.organization.id == (queryParams.orgId ?? '') }).map(ra => { { 'role': r.role, 'org': ra.organization, 'positions': ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? [], 'workers': ra.workersAssigned ?? [] } }) })))) == 0 %>",
+                  "value": "No shell roles are assigned on this organization."
+                },
+                {
+                  "type": "grid",
+                  "id": "orgRolesGrid",
+                  "gridType": "LIST",
+                  "multiViewStylingEnabled": true,
+                  "autoPaging": true,
+                  "enabled": false,
+                  "excelExportEnabled": true,
+                  "rowVariableName": "ra",
+                  "rows": "<% (list:flatten((shellRoles.data ?? []).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ra.organization.id == (queryParams.orgId ?? '') }).map(ra => { { 'role': r.role, 'org': ra.organization, 'positions': ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? [], 'workers': ra.workersAssigned ?? [] } }) }))) %>",
+                  "label": "Role Assignments",
+                  "columns": [
+                    {
+                      "type": "column",
+                      "columnId": "colRole",
+                      "label": "Role",
+                      "cellTemplate": {
+                        "type": "instanceList",
+                        "id": "colRoleInstanceList",
+                        "view": true,
+                        "relatedTask": true,
+                        "enabled": false,
+                        "values": "<% ra.role != null ? [ra.role] : [] %>",
+                        "widKey": "id"
+                      },
+                      "sortableAndFilterable": "true"
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colPositions",
+                      "label": "Positions",
+                      "cellTemplate": {
+                        "type": "instanceList",
+                        "id": "colPositionsInstanceList",
+                        "view": true,
+                        "relatedTask": true,
+                        "enabled": false,
+                        "values": "<% ra.positions %>",
+                        "widKey": "id"
+                      },
+                      "sortableAndFilterable": "true"
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colWorkers",
+                      "label": "Workers",
+                      "cellTemplate": {
+                        "type": "instanceList",
+                        "id": "colWorkersInstanceList",
+                        "view": true,
+                        "relatedTask": true,
+                        "enabled": false,
+                        "values": "<% ra.workers %>",
+                        "widKey": "id"
+                      },
+                      "sortableAndFilterable": "true"
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colManage",
+                      "label": "Manage",
+                      "excel": {
+                        "enabled": false
+                      },
+                      "cellTemplate": {
+                        "type": "button",
+                        "id": "manageRoleButton",
+                        "label": "Manage",
+                        "action": "AUXILIARY",
+                        "taskReference": {
+                          "taskId": "editRoleAssignment",
+                          "parameterBindings": {
+                            "roleId": "<% ra.role.id ?? '' %>",
+                            "roleName": "<% ra.role.descriptor ?? '' %>",
+                            "orgId": "<% ra.org.id ?? '' %>",
+                            "orgName": "<% ra.org.descriptor ?? '' %>",
+                            "appCode": "<% queryParams.appCode ?? '' %>",
+                            "appName": "<% queryParams.appName ?? '' %>"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "historySection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "historyFieldSet",
+              "title": "Change History",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "noHistoryText",
+                  "label": "ⓘ Nothing to show",
+                  "enabled": false,
+                  "visible": "<% size((list:sort(list:flatten([((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.data ?? []) : []), ((((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 100 && !empty(auditPage1.data) && !empty(auditPage1.data.r)) ? (auditPage1.data.r.data ?? []) : [])]).filter(a => { (!empty(a.orgWid) && a.orgWid == (queryParams.orgId ?? '')) || (!empty(queryParams.orgCode) && (a.coReferenceId ?? '') == queryParams.orgCode) || (!empty(queryParams.orgName) && (a.coName ?? '') == queryParams.orgName) }), 'timestamp', false))) == 0 %>",
+                  "value": "No ECO-COMS changes to this organization in the newest 200 Audit Log records. Older changes are in the Audit Log Viewer."
+                },
+                {
+                  "type": "grid",
+                  "id": "orgHistoryGrid",
+                  "gridType": "LIST",
+                  "multiViewStylingEnabled": true,
+                  "autoPaging": true,
+                  "enabled": false,
+                  "excelExportEnabled": true,
+                  "rowVariableName": "al",
+                  "rows": "<% (list:sort(list:flatten([((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.data ?? []) : []), ((((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 100 && !empty(auditPage1.data) && !empty(auditPage1.data.r)) ? (auditPage1.data.r.data ?? []) : [])]).filter(a => { (!empty(a.orgWid) && a.orgWid == (queryParams.orgId ?? '')) || (!empty(queryParams.orgCode) && (a.coReferenceId ?? '') == queryParams.orgCode) || (!empty(queryParams.orgName) && (a.coName ?? '') == queryParams.orgName) }), 'timestamp', false)) %>",
+                  "label": "Changes",
+                  "columns": [
+                    {
+                      "type": "column",
+                      "columnId": "colWhen",
+                      "label": "When",
+                      "sortableAndFilterable": "true",
+                      "cellTemplate": {
+                        "type": "text",
+                        "id": "colWhenText",
+                        "enabled": false,
+                        "value": "<% (empty(al.timestamp) ? '' : date:formatDateWithTimeZones(al.timestamp.substring(0, 19).replace('T', ' '), 'UTC', 'yyyy-MM-dd HH:mm:ss', 'America/Los_Angeles', 'yyyy-MM-dd HH:mm z')) %>"
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colAction",
+                      "label": "Action",
+                      "sortableAndFilterable": "true",
+                      "cellTemplate": {
+                        "type": "text",
+                        "id": "colActionText",
+                        "enabled": false,
+                        "value": "<% empty(al.action) ? '' : (al.action.substring(0, 1) + al.action.substring(1).lowerCase()) %>"
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colRoleName",
+                      "label": "Role",
+                      "sortableAndFilterable": "true",
+                      "cellTemplate": {
+                        "type": "text",
+                        "id": "colRoleNameText",
+                        "enabled": false,
+                        "value": "<% al.roleName ?? '' %>"
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colPosition",
+                      "label": "Position",
+                      "sortableAndFilterable": "true",
+                      "cellTemplate": {
+                        "type": "text",
+                        "id": "colPositionText",
+                        "enabled": false,
+                        "value": "<% al.positionName ?? '' %>"
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colEffective",
+                      "label": "Effective Date",
+                      "sortableAndFilterable": "true",
+                      "cellTemplate": {
+                        "type": "text",
+                        "id": "colEffectiveText",
+                        "enabled": false,
+                        "value": "<% '' + (al.effectiveDate ?? '') %>"
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colBy",
+                      "label": "Changed By",
+                      "sortableAndFilterable": "true",
+                      "cellTemplate": {
+                        "type": "text",
+                        "id": "colByText",
+                        "enabled": false,
+                        "value": "<% al.triggeredBy ?? '' %>"
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colDetails",
+                      "label": "Details",
+                      "sortableAndFilterable": "true",
+                      "cellTemplate": {
+                        "type": "text",
+                        "id": "colDetailsText",
+                        "enabled": false,
+                        "value": "<% al.details ?? '' %>"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "footer": {
+      "type": "footer",
+      "children": [
+        {
+          "type": "pod",
+          "podId": "ecoComsFooter"
+        }
+      ]
+    },
+    "pageType": "VIEW"
+  }
+}
