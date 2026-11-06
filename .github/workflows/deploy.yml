@@ -166,6 +166,18 @@ jobs:
         run: |
           set -uo pipefail
 
+          # wdcli reports a refused upload only as "Unable to upload app. Error". Make it print App Hub's response
+          # (status + body), with anything token-like removed (2026-11-06: an orchestration rename was refused).
+          IDX=$(find /opt/wdcli -path "*lib/commands/index.js" | head -1)
+          if [ -n "${IDX}" ]; then
+            IDX="${IDX}" node -e '
+              const fs = require("fs"); const p = process.env.IDX; let s = fs.readFileSync(p, "utf8");
+              const a = "new Error(`Unable to upload app. ${O.getErrorMessage(r)}`";
+              const b = "new Error(`Unable to upload app. ${O.getErrorMessage(r)} ${(()=>{try{const x=r||{},y=x.response||(x.cause||{}).response||{};return JSON.stringify({status:y.status,data:y.data,code:x.code,message:x.message,cause:String(x.cause||\"\")}).replace(/(Bearer\\s+|eyJ)[A-Za-z0-9._-]{8,}/g,\"[redacted]\")}catch(e){return \"\"}})()}`";
+              if (s.includes(a)) { fs.writeFileSync(p, s.replace(a, b)); console.log("wdcli: upload errors print App Hub response"); }
+              else console.log("wdcli: upload error patch not applied (text not found)");'
+          fi
+
           echo "=== Running wdcli app upload ==="
           # Disable -e so we can capture the exit code ourselves
           set +e
