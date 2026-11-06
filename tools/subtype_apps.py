@@ -70,6 +70,22 @@ APP_OF = "((org.type1 ?? []).size() > 0 ? org.type1[0].descriptor : org.code)"
 
 # ---- text rewrites (old -> new), applied to every page and script ------------------------------------------------------
 REWRITES = [
+    # Assignable Role Request: the application of the chosen organization is its organization type (was parsed from the
+    # code, which cut a bracketed application to its inner code: X:BPMS(COMS) -> COMS)
+    ("    let code = org.code;\n    let appCode = code.contains('(') ?\n      code.substringAfter('(').substringBefore(')') :\n"
+     "      (code.substringAfter(':').contains(':') ?\n        code.substringBefore(':') + ':' + code.substringAfter(':').substringBefore(':') :\n        code);\n"
+     "    if (!appCodes.contains(appCode)) {",
+     "    let code = org.code;\n    let appCode = ((org.type1 ?? []).size() > 0 ? org.type1[0].descriptor : org.code);\n"
+     "    if (!appCodes.contains(appCode)) {"),
+    ("              let appCode = orgCode.contains('(') ?\n                orgCode.substringAfter('(').substringBefore(')') :\n"
+     "                (orgCode.substringAfter(':').contains(':') ?\n                  orgCode.substringBefore(':') + ':' + orgCode.substringAfter(':').substringBefore(':') :\n"
+     "                  orgCode);\n              let matched = shellOrgPatterns.data.filter(o => {\n                let c = o.code;\n"
+     "                let ac = c.contains('(') ?\n                  c.substringAfter('(').substringBefore(')') :\n"
+     "                  (c.substringAfter(':').contains(':') ?\n                    c.substringBefore(':') + ':' + c.substringAfter(':').substringBefore(':') :\n"
+     "                    c);\n                ac == appCode;\n              });",
+     "              let sel = shellOrgPatterns.data.filter(o => { o.code == orgCode });\n"
+     "              let appCode = (sel.size() > 0 && (sel[0].type1 ?? []).size() > 0) ? sel[0].type1[0].descriptor : orgCode;\n"
+     "              let matched = shellOrgPatterns.data.filter(o => { ((o.type1 ?? []).size() > 0 ? o.type1[0].descriptor : o.code) == appCode });"),
     # Change Status: the application (orgType / comsAppId in the launch) is the organization's type, URL-encoded
     # (a code with a space failed the launch: "Illegal character in query", live 2026-11-06)
     ("let ot = oc.substringBefore(':') + ':' + oc.substringAfter(':').substringBefore(':');",

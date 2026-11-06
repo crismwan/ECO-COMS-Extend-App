@@ -847,6 +847,15 @@ async function smoke(token, me) {
   for (const f of fs.readdirSync(dir).filter((x) => x.endsWith('.wqlquery')).sort()) {
     const q = JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8'));
     const name = `WQL.${q.id || f}`;
+    if (q.id === 'allShellAssignableRolesinTenant') {
+      // the role list takes the application organization types, as the pages pass them (subtype design, 2026-11-06)
+      await test(name, async () => {
+        const r = await wql(token, await shellRolesQuery(token), 10000);
+        if (!(r.data || []).length) throw new Error('no shell roles for the application organization types');
+        pass(name, `runs with the application types (total ${(r.data || []).length})`);
+      });
+      continue;
+    }
     if ((q.parameters || []).length || /<%/.test(q.query)) { skip(name, 'takes parameters'); continue; }
     await test(name, async () => {
       const r = await wql(token, q.query.replace(/\s+/g, ' ').trim(), 1);
@@ -856,7 +865,7 @@ async function smoke(token, me) {
   }
 
   await test('WQL.shellOrgsExist', async () => {
-    const r = await wql(token, "SELECT workdayID, code FROM topLevelOrganizations WHERE code contains 'X:'", 1);
+    const r = await wql(token, "SELECT workdayID, code FROM topLevelOrganizations WHERE subtype in (e6ca8683b78d10017a5c108412fc0000, e6ca8683b78d10017a5c108412fc0001)", 1);
     if (!(r.total > 0 || (r.data || []).length > 0)) throw new Error('no X: shell organizations returned');
     pass('WQL.shellOrgsExist', `shell orgs found (total ${r.total ?? '>0'})`);
   });
@@ -864,7 +873,7 @@ async function smoke(token, me) {
   // Pages call WQL without a limit. If Workday's default page is smaller than the data, lists and
   // lookups are cut off silently: compare rows returned with no limit against the total.
   await test('WQL.noLimitReturnsAll', async () => {
-    const q = "SELECT workdayID, code FROM topLevelOrganizations WHERE code contains 'X:'";
+    const q = "SELECT workdayID, code FROM topLevelOrganizations WHERE subtype in (e6ca8683b78d10017a5c108412fc0000, e6ca8683b78d10017a5c108412fc0001)";
     const r = await request('GET', `${WQL}?query=${encodeURIComponent(q)}`, token);
     const n = (r.data || []).length;
     const p = await request('GET', `${WQL}?query=${encodeURIComponent('SELECT cf_PositionID FROM allPositions WHERE supervisoryOrganization is not empty')}`, token);
@@ -1825,7 +1834,7 @@ async function patternGuard(token, me) {
     await sleep(1500);
   }
   await sleep(20000);
-  const created = ((await wql(token, "SELECT code FROM topLevelOrganizations WHERE code contains 'X:'", 10000)).data || []).map((o) => o.code);
+  const created = ((await wql(token, "SELECT code FROM topLevelOrganizations WHERE subtype in (e6ca8683b78d10017a5c108412fc0000, e6ca8683b78d10017a5c108412fc0001)", 10000)).data || []).map((o) => o.code);
   const leaked = cases.map((c) => c[2]).filter((n) => created.includes(n));
   if (leaked.length) fail('Guard.nothingCreated', `created: ${leaked.join(', ')}`);
   else pass('Guard.nothingCreated', `${cases.length} launches, no new organization (check CheckPatternName per launch in the app Logs)`);
@@ -1853,7 +1862,7 @@ async function orgGuard(token, me) {
     ['workday', 'X:ADM',     'X:ADM:TEST:GUARDMETA','X:META', 'X:META under an application'],
   ];
   const auditTotal = async () => (await request('GET', `${BO}/comsAuditLogs?limit=1`, token)).total;
-  const orgCodes = async () => ((await wql(token, "SELECT code FROM topLevelOrganizations WHERE code contains 'X:'", 10000)).data || []).map((o) => o.code);
+  const orgCodes = async () => ((await wql(token, "SELECT code FROM topLevelOrganizations WHERE subtype in (e6ca8683b78d10017a5c108412fc0000, e6ca8683b78d10017a5c108412fc0001)", 10000)).data || []).map((o) => o.code);
   const existed = new Set(await orgCodes());
   const before = await auditTotal();
   for (const [want, type, name, subtype, label] of cases) {

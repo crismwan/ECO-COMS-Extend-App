@@ -1,0 +1,695 @@
+{
+  "id": "assignableRoleManager",
+  "endPoints": [
+    {
+      "name": "selectedWorker",
+      "baseUrlType": "COMMON",
+      "url": "/workers/me",
+      "authType": "sso",
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 403
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "name": "comsAssignableRolesCount",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "url": "/comsAssignableRoles?limit=1",
+      "authType": "sso",
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 403
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "baseUrlType": "BUSINESS-OBJECT",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 403
+        },
+        {
+          "code": 429
+        }
+      ],
+      "name": "comsAssignableRolesPage0",
+      "url": "/comsAssignableRoles?limit=100&offset=0"
+    },
+    {
+      "baseUrlType": "BUSINESS-OBJECT",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 429
+        }
+      ],
+      "name": "comsAssignableRolesPage1",
+      "url": "<% let t = comsAssignableRolesCount.total ?? 0; '/comsAssignableRoles?limit=100&offset=' + (t > 100 ? 100 : t) %>"
+    },
+    {
+      "baseUrlType": "BUSINESS-OBJECT",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 429
+        }
+      ],
+      "name": "comsAssignableRolesPage2",
+      "url": "<% let t = comsAssignableRolesCount.total ?? 0; '/comsAssignableRoles?limit=100&offset=' + (t > 200 ? 200 : t) %>"
+    },
+    {
+      "name": "shellOrgPatterns",
+      "baseUrlType": "workday-wql",
+      "url": "data",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "wqlQuery": {
+        "queryId": "customOrganizations"
+      },
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "name": "fuhSearch",
+      "baseUrlType": "workday-wql",
+      "url": "<% 'data?query=' + string:pathEncode('SELECT workdayID, organization1, code FROM customOrganizations WHERE type1 in (b40d8b016367100175b147f364840000) AND code contains \\'' + instanceListQuery.replace('\\'', '').replace('\\\\', '') + '\\'') %>",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "deferred": "true",
+      "exclude": "<% empty instanceListQuery %>"
+    },
+    {
+      "name": "auSearch",
+      "baseUrlType": "workday-wql",
+      "url": "<% 'data?query=' + string:pathEncode('SELECT workdayID, academicUnit, academicUnitName FROM academicUnits WHERE inactive = false AND academicUnitName contains \\'' + instanceListQuery.replace('\\'', '').replace('\\\\', '') + '\\'') %>",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "deferred": "true",
+      "exclude": "<% empty instanceListQuery %>"
+    },
+    {
+      "name": "posSearch",
+      "baseUrlType": "workday-wql",
+      "url": "<% 'data?limit=50&query=' + string:pathEncode('SELECT cf_PositionID, workdayID, position_PositionManagement, cf_PositionIsFilled, cf_PositionText FROM allPositions WHERE supervisoryOrganization is not empty AND cf_PositionText contains \\'' + instanceListQuery.replace('\\'', '').replace('\\\\', '') + '\\'') %>",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "deferred": "true",
+      "exclude": "<% empty instanceListQuery %>"
+    },
+    {
+      "name": "allShellRoles",
+      "baseUrlType": "workday-wql",
+      "url": "<% 'data?query=' + string:pathEncode('SELECT role FROM assignableRoles WHERE roleName contains \\':ROLE:\\' AND roleName not contains \\'Organizations and Roles Assignment Administrator\\'') %>",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "name": "posTreeRoot",
+      "baseUrlType": "workday-staffing-v6",
+      "url": "values/jobChangesGroup/supervisoryOrganization/",
+      "authType": "sso",
+      "bestEffort": "true"
+    },
+    {
+      "name": "posTreeNode",
+      "baseUrlType": "workday-staffing-v6",
+      "url": "<% h + '?limit=100&offset=' + o %>",
+      "authType": "sso",
+      "deferred": "true"
+    },
+    {
+      "name": "posTreeOrgPositions",
+      "baseUrlType": "workday-wql",
+      "url": "<% 'data?limit=200&query=' + string:pathEncode('SELECT cf_PositionID, workdayID, position_PositionManagement, cf_PositionText FROM allPositions WHERE supervisoryOrganization in (\\'' + org.replace('\\'', '').replace('\\\\', '') + '\\')') %>",
+      "authType": "sso",
+      "deferred": "true"
+    },
+    {
+      "name": "fuhTreeAll",
+      "baseUrlType": "workday-wql",
+      "url": "<% 'data?limit=10000&query=' + string:pathEncode('SELECT workdayID, organization1, subtype FROM customOrganizations WHERE type1 in (b40d8b016367100175b147f364840000)') %>",
+      "authType": "sso",
+      "bestEffort": "true"
+    },
+    {
+      "name": "auTreeAll",
+      "baseUrlType": "workday-wql",
+      "url": "<% 'data?limit=10000&query=' + string:pathEncode('SELECT workdayID, academicUnit, academicUnitSubtype FROM academicUnits WHERE inactive = false') %>",
+      "authType": "sso",
+      "bestEffort": "true"
+    }
+  ],
+  "outboundData": {
+    "outboundEndPoints": [
+      {
+        "name": "postAssignableRole",
+        "baseUrlType": "BUSINESS-OBJECT",
+        "url": "/comsAssignableRoles",
+        "httpMethod": "POST",
+        "authType": "sso",
+        "onSend": "<% self.data %>",
+        "values": [
+          {
+            "outboundPath": "status",
+            "value": "Pending ISC Review"
+          },
+          {
+            "outboundPath": "requestedDate",
+            "value": "<% date:now().format('yyyy-MM-dd') %>"
+          },
+          {
+            "outboundPath": "requestedBy.id",
+            "value": "<% selectedWorker.id %>"
+          },
+          {
+            "outboundPath": "referenceId",
+            "value": "<% requestRefHidden.value %>"
+          },
+          {
+            "outboundPath": "shellOrgCode",
+            "value": "<% !empty(selectedShellOrgId.value) ? selectedShellOrgId.selectedEntries[0].descriptor : '' %>"
+          },
+          {
+            "outboundPath": "active",
+            "value": "<% false %>"
+          },
+          {
+            "outboundPath": "positionWids",
+            "value": "<% positionsList.value.join(',') %>"
+          },
+          {
+            "outboundPath": "workdayRoleId",
+            "value": "<% generatedRoleName.value ?? '' %>"
+          },
+          {
+            "outboundPath": "enabledForOrganizationTypes",
+            "value": "<% !empty(fuhPicker.value) ? (fuhPicker.selectedEntries[0].descriptor ?? '') : (!empty(academicUnitPicker.value) ? (academicUnitPicker.selectedEntries[0].descriptor ?? '') : 'Academic Unit - University of British Columbia') %>"
+          },
+          {
+            "outboundPath": "enabledForWid",
+            "value": "<% !empty(fuhPicker.value) ? fuhPicker.value[0] : (!empty(academicUnitPicker.value) ? academicUnitPicker.value[0] : '') %>"
+          },
+          {
+            "outboundPath": "functionalUnitHierarchyWid",
+            "value": "<% !empty(fuhPicker.value) ? fuhPicker.value[0] : '' %>"
+          },
+          {
+            "outboundPath": "functionalUnitDescription",
+            "value": "<% !empty(fuhPicker.value) ? (fuhPicker.selectedEntries[0].descriptor ?? '') : '' %>"
+          },
+          {
+            "outboundPath": "academicUnitWid",
+            "value": "<% !empty(academicUnitPicker.value) ? academicUnitPicker.value[0] : '' %>"
+          },
+          {
+            "outboundPath": "academicUnitDescription",
+            "value": "<% !empty(academicUnitPicker.value) ? (academicUnitPicker.selectedEntries[0].descriptor ?? '') : '' %>"
+          }
+        ]
+      },
+      {
+        "name": "launchReview",
+        "baseUrlType": "orchestration",
+        "url": "<% '/IORC_0037_XFD_SEC_Start_Role_Request_Review/launch?ref=' + requestRefHidden.value %>",
+        "httpMethod": "POST",
+        "authType": "sso",
+        "values": [
+          {
+            "outboundPath": "ref",
+            "value": "<% requestRefHidden.value %>"
+          }
+        ]
+      }
+    ]
+  },
+  "presentation": {
+    "pageType": "EDIT",
+    "headerSize": "HIDDEN",
+    "body": {
+      "type": "basicFormLayout",
+      "id": "assignableRoleManagerForm",
+      "sections": [
+        {
+          "type": "layoutSection",
+          "id": "titleBannerSection",
+          "children": [
+            {
+              "type": "richText",
+              "id": "titleBannerRichText",
+              "enabled": false,
+              "value": "<span style=\"color:#0055B3;font-size:24px\"><b>ECO-COMS: Submit Assignable Role Request</b></span>"
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "contentSection",
+          "children": [
+            {
+              "type": "button",
+              "label": "← My Assignable Role Requests",
+              "taskReference": {
+                "taskId": "assignableRoleManagerView"
+              },
+              "action": "LINK"
+            },
+            {
+              "type": "fieldSet",
+              "id": "aboutFieldSet",
+              "title": "About This Page",
+              "children": [
+                {
+                  "type": "richText",
+                  "id": "pageDesc",
+                  "enabled": false,
+                  "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">Manage Assignable Roles for Custom Organizations. Review pending role requests or submit a new role request for ISC review.</span>"
+                },
+                {
+                  "type": "text",
+                  "id": "againNoteText",
+                  "enabled": false,
+                  "label": "ⓘ Requesting again",
+                  "visible": "<% !empty(queryParams.againFrom) %>",
+                  "value": "<% 'Based on ' + (queryParams.againFrom ?? '') + ' (' + (queryParams.againStatus ?? '') + ')' + (empty(queryParams.againReason) ? '' : ('. Reason given: ' + queryParams.againReason)) + '. The role name is filled in; choose the application, organization, positions and effective date again.' %>"
+                }
+              ]
+            },
+            {
+              "type": "fieldSet",
+              "id": "pendingRolesSection",
+              "children": [
+                {
+                  "type": "richText",
+                  "id": "pendingDesc",
+                  "enabled": false,
+                  "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">The following requests are awaiting ISC review. ISC approves or denies them in Workday; you can withdraw your own pending request.</span>"
+                },
+                {
+                  "type": "grid",
+                  "gridType": "LIST",
+                  "multiViewStylingEnabled": true,
+                  "id": "assignableRolesGrid",
+                  "rows": "<% list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]).filter(r => { r.status == 'Pending ISC Review' && !r.roleName.startsWith('Organizations and Roles Assignment Administrator') && r.requestedBy.id == selectedWorker.id }) %>",
+                  "rowVariableName": "role",
+                  "enabled": false,
+                  "label": "Pending Assignable Roles",
+                  "columns": [
+                    {
+                      "type": "column",
+                      "id": "colOrgApp",
+                      "columnId": "colOrgApp",
+                      "label": "Organization / Application",
+                      "sortableAndFilterable": "true",
+                      "cellTemplate": {
+                        "type": "text",
+                        "value": "<% role.shellOrgCode ?? role.application ?? '' %>",
+                        "enabled": false
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "id": "colRoleName",
+                      "columnId": "colRoleName",
+                      "label": "Role Name",
+                      "sortableAndFilterable": "true",
+                      "cellTemplate": {
+                        "type": "text",
+                        "value": "<% role.roleName ?? '' %>",
+                        "enabled": false
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "id": "colWdRoleName",
+                      "columnId": "colWdRoleName",
+                      "label": "Generated Workday Role Name",
+                      "cellTemplate": {
+                        "type": "text",
+                        "value": "<% role.workdayRoleId ?? '' %>",
+                        "enabled": false
+                      },
+                      "sortableAndFilterable": "true"
+                    },
+                    {
+                      "type": "column",
+                      "id": "colStatus",
+                      "columnId": "colStatus",
+                      "label": "Status",
+                      "sortableAndFilterable": "true",
+                      "cellTemplate": {
+                        "type": "richText",
+                        "value": "<% role.status == 'Pending ISC Review' ? '<span style=\"color:#92400e;font-weight:600;font-size:12px\">⏳ Pending ISC Review</span>' : role.status == 'Approved' ? '<span style=\"color:#065f46;font-weight:600;font-size:12px\">✓ Approved</span>' : role.status == 'Denied' ? '<span style=\"color:#991b1b;font-weight:600;font-size:12px\">✗ Denied</span>' : role.status == 'Inactive' ? '<span style=\"color:#6b7280;font-weight:600;font-size:12px\">○ Inactive</span>' : role.status ?? '' %>"
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "id": "colEnabledFor",
+                      "columnId": "colEnabledFor",
+                      "label": "Enabled For",
+                      "cellTemplate": {
+                        "type": "text",
+                        "value": "<% role.enabledForOrganizationTypes ?? 'Academic Unit - University of British Columbia' %>",
+                        "enabled": false
+                      },
+                      "sortableAndFilterable": "true"
+                    },
+                    {
+                      "type": "column",
+                      "id": "colEffDate",
+                      "columnId": "colEffDate",
+                      "label": "Effective Date",
+                      "cellTemplate": {
+                        "type": "text",
+                        "value": "<% role.effectiveDate ?? '' %>",
+                        "enabled": false
+                      },
+                      "sortableAndFilterable": "true"
+                    },
+                    {
+                      "type": "column",
+                      "id": "colPositions",
+                      "columnId": "colPositions",
+                      "label": "Positions / Delegated Roles",
+                      "cellTemplate": {
+                        "type": "text",
+                        "value": "<% role.positionNames ?? '' %>",
+                        "enabled": false
+                      },
+                      "sortableAndFilterable": "true"
+                    },
+                    {
+                      "type": "column",
+                      "id": "colRequestedBy",
+                      "columnId": "colRequestedBy",
+                      "label": "Requested By",
+                      "cellTemplate": {
+                        "type": "text",
+                        "value": "<% role.requestedBy.descriptor ?? '' %>",
+                        "enabled": false
+                      },
+                      "sortableAndFilterable": "true"
+                    },
+                    {
+                      "type": "column",
+                      "id": "colRequestedDate",
+                      "columnId": "colRequestedDate",
+                      "label": "Requested Date",
+                      "cellTemplate": {
+                        "type": "text",
+                        "value": "<% role.requestedDate ?? '' %>",
+                        "enabled": false
+                      },
+                      "sortableAndFilterable": "true"
+                    }
+                  ],
+                  "doNotAdd": true,
+                  "doNotRemove": true
+                }
+              ],
+              "title": "1. Pending ISC Review"
+            },
+            {
+              "type": "fieldSet",
+              "id": "addNewRoleSection",
+              "children": [
+                {
+                  "type": "richText",
+                  "id": "addNewDesc",
+                  "enabled": false,
+                  "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">Submit a new Assignable Role request. Select the Custom Organization, provide role details and select positions. Once submitted, status will be set to <b>Pending ISC Review</b>.</span><br/><span style=\"color:#374151;font-size:12px\"><b>Shell organization</b>: The shell organization the new role is scoped to. The role name is built from this organization's code, so pick the one for the application the role belongs to.<br/><b>Delegated roles</b>: Existing roles in the same application that holders of the new role will be allowed to assign. Only roles under the same application code are valid.<br/><b>Positions</b>: The positions that will hold the role once ISC approves the request. Search by position title or ID (for example P-00010). Vacant positions can be added; the role then applies to whoever fills them.<br/><b>Enabled For</b>: Limits where the role applies. Pick Functional Unit Hierarchy or Academic Unit, then search for one in the box that appears. Leave it blank for the whole university (Academic Unit - University of British Columbia).</span>"
+                },
+                {
+                  "type": "instanceList",
+                  "id": "selectedShellOrgId",
+                  "label": "Custom Organization",
+                  "required": true,
+                  "helpText": "Select the Custom Organization this role applies to.",
+                  "values": "<% shellOrgPatterns.data.map(org => { {'id': org.organizationByName.id, 'descriptor': org.code, 'workdayID': org.workdayID} }) %>",
+                  "onChange": "<%\n  self.clearError();\n            roleName.setValue(null);\n            delegatedRoles.setValue([]);\n            generatedRoleName.setValue('');\n            roleName.clearError();\n            delegatedRoles.clearError();\n            generatedRoleName.clearError();\n            if (!empty(self.value)) {\n              let orgCode = self.selectedEntries[0].descriptor;\n              let appCode = orgCode.contains('(') ?\n                orgCode.substringAfter('(').substringBefore(')') :\n                (orgCode.substringAfter(':').contains(':') ?\n                  orgCode.substringBefore(':') + ':' + orgCode.substringAfter(':').substringBefore(':') :\n                  orgCode);\n              let matched = shellOrgPatterns.data.filter(o => {\n                let c = o.code;\n                let ac = c.contains('(') ?\n                  c.substringAfter('(').substringBefore(')') :\n                  (c.substringAfter(':').contains(':') ?\n                    c.substringBefore(':') + ':' + c.substringAfter(':').substringBefore(':') :\n                    c);\n                ac == appCode;\n              });\n              if (matched.size() > 0) {\n                applicationDropdown.setValue([matched[0].workdayID]);\n              }\n              let orgMatched = shellOrgPatterns.data.filter(o => { o.code == orgCode });\n              if (orgMatched.size() > 0) {\n                shellOrgWidBinding.setValue(orgMatched[0].workdayID ?? '');\n              }\n            }\n          %>"
+                },
+                {
+                  "type": "dropdown",
+                  "id": "applicationDropdown",
+                  "label": "Application",
+                  "visible": false,
+                  "valuesOut": [
+                    {
+                      "value": "<% !empty(self.value) ? (self.selectedEntries[0].descriptor ?? '') : '' %>",
+                      "valueOutBinding": "postAssignableRole.application"
+                    }
+                  ],
+                  "values": "<%\n  let appCodes = [];\n  let result = [];\n  for (var org : shellOrgPatterns.data) {\n    let code = org.code;\n    let appCode = code.contains('(') ?\n      code.substringAfter('(').substringBefore(')') :\n      (code.substringAfter(':').contains(':') ?\n        code.substringBefore(':') + ':' + code.substringAfter(':').substringBefore(':') :\n        code);\n    if (!appCodes.contains(appCode)) {\n      appCodes.add(appCode);\n      result.add({'id': org.workdayID, 'descriptor': appCode});\n    }\n  }\n  result;\n%>",
+                  "guide": {
+                    "type": "guide",
+                    "id": "applicationDropdownGuide",
+                    "title": "Application",
+                    "text": "The application the new assignable role belongs to. The generated role name starts with this application code."
+                  },
+                  "helpText": "The generated role name starts with this application code."
+                },
+                {
+                  "type": "instanceList",
+                  "id": "delegatedRoles",
+                  "label": "Delegated Roles",
+                  "required": false,
+                  "multiSelect": true,
+                  "values": "<% allShellRoles.data.map(r => { {'id': r.role.id, 'descriptor': r.role.descriptor.substringAfter(':ROLE:')} }) %>",
+                  "onChange": "<%\n            self.clearError();\n            if (!empty(self.value)) { roleName.clearError(); generatedRoleName.clearError(); }\n            let orgCode = !empty(selectedShellOrgId.value) ? selectedShellOrgId.selectedEntries[0].descriptor : '';\n            if (!empty(self.value)) {\n              generatedRoleName.setValue(orgCode + ':ROLE:' + self.selectedEntries[0].descriptor);\n            } else if (!empty(roleName.value)) {\n              generatedRoleName.setValue(orgCode + ':ROLE:' + roleName.value);\n            } else {\n              generatedRoleName.setValue('');\n            }\n          %>",
+                  "helpText": "Select an existing delegated role, or enter a new one below."
+                },
+                {
+                  "type": "text",
+                  "id": "roleName",
+                  "label": "New Delegated Role",
+                  "required": false,
+                  "placeholder": "e.g. COORDINATOR",
+                  "onChange": "<%\n            let hasExisting = !empty(delegatedRoles.value);\n            if (!hasExisting && empty(self.value)) {\n              self.setError('Enter a new delegated role name or select an existing role above.');\n            } else if (!empty(self.value) && self.value.length() > 100) {\n              self.setError('Role name must be 100 characters or less.');\n            } else if (!empty(self.value)) {\n              let duplicate = !empty(allShellRoles.data) && allShellRoles.data.filter(r => {\n                r.role.descriptor.substringAfter(':ROLE:') == self.value\n              }).size() > 0;\n              if (duplicate) {\n                self.setError('This role name already exists. Select it from Delegated Roles instead.');\n              } else {\n                self.clearError();\n              }\n            } else {\n              self.clearError();\n            }\n            let orgCode = !empty(selectedShellOrgId.value) ? selectedShellOrgId.selectedEntries[0].descriptor : '';\n            if (!empty(self.value)) {\n              generatedRoleName.setValue(orgCode + ':ROLE:' + self.value);\n            } else if (!empty(delegatedRoles.value)) {\n              generatedRoleName.setValue(orgCode + ':ROLE:' + delegatedRoles.selectedEntries[0].descriptor);\n            } else {\n              generatedRoleName.setValue('');\n            }\n          %>",
+                  "valuesOut": [
+                    {
+                      "value": "<% self.value %>",
+                      "valueOutBinding": "postAssignableRole.roleName"
+                    }
+                  ],
+                  "helpText": "Type in ALL CAPS. Leave blank if selecting an existing role above.",
+                  "value": "<% queryParams.againRoleName ?? '' %>"
+                },
+                {
+                  "type": "text",
+                  "id": "generatedRoleName",
+                  "label": "Generated Workday Role Name",
+                  "required": true,
+                  "enabled": false,
+                  "value": "<% '' %>",
+                  "helpText": "Auto-generated from the selected or entered role name and Custom Organization code.",
+                  "valuesOut": [
+                    {
+                      "value": "<% self.value %>",
+                      "valueOutBinding": "postAssignableRole.workdayRoleId"
+                    },
+                    {
+                      "value": "<% self.value %>",
+                      "valueOutBinding": "postAssignableRole.roleName"
+                    }
+                  ]
+                },
+                {
+                  "type": "date",
+                  "id": "effectiveDate",
+                  "label": "Effective Date",
+                  "required": true,
+                  "helpText": "Date this assignable role becomes effective.",
+                  "valuesOut": [
+                    {
+                      "value": "<% self.value %>",
+                      "valueOutBinding": "postAssignableRole.effectiveDate"
+                    }
+                  ]
+                },
+                {
+                  "type": "instanceList",
+                  "id": "positionsList",
+                  "label": "Positions",
+                  "required": true,
+                  "multiSelect": true,
+                  "values": "<% (posTreeRoot.data ?? []).filter(r => { r.descriptor == 'My Favorites' || r.descriptor == 'My Organizations' || r.descriptor == 'Supervisory Organizations by Manager' || r.descriptor == 'Supervisory Organization' }).map(r => { {'id': r.id, 'descriptor': r.descriptor} }) %>",
+                  "searchEndPoint": "<% endpoints.posSearch %>",
+                  "searchResultValues": "<% empty(posSearch.data) ? [] : posSearch.data.map(o => { {'id': o.workdayID, 'descriptor': !empty(o.position_PositionManagement.descriptor) ? o.position_PositionManagement.descriptor : (!empty(o.cf_PositionText) ? o.cf_PositionText : (!empty(o.cf_PositionID) ? o.cf_PositionID : o.workdayID))} }) %>",
+                  "onChange": "<%\n            if (empty(self.value)) {\n              self.setError('At least one Position is required.');\n            } else {\n              self.clearError();\n            }\n          %>",
+                  "valuesOut": [
+                    {
+                      "value": "<% self.value.join(',') %>",
+                      "valueOutBinding": "postAssignableRole.positions"
+                    },
+                    {
+                      "value": "<% (self.selectedEntries ?? []).map(p => { p.descriptor }).join(', ') %>",
+                      "valueOutBinding": "postAssignableRole.positionNames"
+                    }
+                  ],
+                  "helpText": "Click to browse by supervisory organization, or type a position name or ID. Shows the first 50 matches; type more of the title or ID to narrow.",
+                  "dynamicMonikerLevels": "<%\n  const sel = self.promptSelections;\n  const roots = posTreeRoot.data ?? [];\n  const i = roots.map(r => { r.id }).indexOf(sel[0]);\n  const href = i < 0 ? '' : (roots[i].href ?? '');\n  const byManager = i < 0 ? false : roots[i].descriptor == 'Supervisory Organizations by Manager';\n  if (sel.size() == 1 || (byManager && sel.size() == 2)) {\n    const node = sel.size() == 1 ? href : (href + '/' + sel[1]);\n    const first = posTreeNode.invoke({'h': node, 'o': '0'});\n    const more = (first.total ?? 0) > 100 ? (posTreeNode.invoke({'h': node, 'o': '100'}).data ?? []) : [];\n    return [list:flatten([first.data ?? [], more]).map(o => { {'id': o.id, 'descriptor': o.descriptor} }), true];\n  }\n  const ps = posTreeOrgPositions.invoke({'org': sel[sel.size() - 1]}).data ?? [];\n  return [ps.filter(o => { !empty(o.workdayID) }).map(o => { {'id': o.workdayID, 'descriptor': !empty(o.position_PositionManagement.descriptor) ? o.position_PositionManagement.descriptor : (!empty(o.cf_PositionText) ? o.cf_PositionText : o.cf_PositionID)} }), false];\n%>"
+                },
+                {
+                  "type": "hidden",
+                  "id": "shellOrgWidBinding",
+                  "value": "<% '' %>",
+                  "valuesOut": [
+                    {
+                      "value": "<% self.value %>",
+                      "valueOutBinding": "postAssignableRole.shellOrgWid"
+                    }
+                  ]
+                },
+                {
+                  "type": "dropdown",
+                  "id": "enabledForTypeDropdown",
+                  "label": "Enabled For",
+                  "instanceList": [
+                    {
+                      "id": "FUH",
+                      "descriptor": "Functional Unit Hierarchy"
+                    },
+                    {
+                      "id": "AU",
+                      "descriptor": "Academic Unit"
+                    }
+                  ],
+                  "helpText": "Pick what the role is enabled for, then search for it below. Leave blank for the whole university (Academic Unit - University of British Columbia).",
+                  "onChange": "<%\n  let t = ((!empty(self.value)) ? self.selectedEntries[0].id : '');\n  fuhPicker.setVisible(t == 'FUH');\n  academicUnitPicker.setVisible(t == 'AU');\n  if (t != 'FUH') { fuhPicker.setValue([]); }\n  if (t != 'AU') { academicUnitPicker.setValue([]); }\n  fuhPicker.clearError();\n  academicUnitPicker.clearError();\n  let keepFuh = t == 'FUH' && !empty(fuhPicker.value);\n  let keepAu = t == 'AU' && !empty(academicUnitPicker.value);\n  enabledForWidBinding.setValue(keepFuh ? fuhPicker.value[0] : (keepAu ? academicUnitPicker.value[0] : ''));\n  enabledForDisplay.setValue(keepFuh ? fuhPicker.selectedEntries[0].descriptor : (keepAu ? academicUnitPicker.selectedEntries[0].descriptor : 'Academic Unit - University of British Columbia'));\n%>"
+                },
+                {
+                  "type": "instanceList",
+                  "id": "fuhPicker",
+                  "label": "Functional Unit Hierarchy",
+                  "required": false,
+                  "values": "<% let d = fuhTreeAll.data ?? []; let ts = d.map(o => { (empty(o.subtype) ? '(No subtype)' : (o.subtype.descriptor ?? '(No subtype)')) }); ts.distinct().sort().map(t => { {'id': 'T:' + t, 'descriptor': t + ' (' + ts.filter(x => { x == t }).size() + ')'} }) %>",
+                  "searchEndPoint": "<% endpoints.fuhSearch %>",
+                  "searchResultValues": "<% empty(fuhSearch.data) ? [] : fuhSearch.data.map(o => { {'id': o.workdayID, 'descriptor': o.organization1.descriptor} }) %>",
+                  "onChange": "<%\n            if (!empty(self.value) && !empty(academicUnitPicker.value)) {\n              self.setError('Cannot select both Functional Unit Hierarchy and Academic Unit.');\n            } else {\n              self.clearError();\n              academicUnitPicker.clearError();\n            }\n            enabledForWidBinding.setValue(!empty(self.value) ? self.value[0] : (!empty(academicUnitPicker.value) ? academicUnitPicker.value[0] : ''));\n            enabledForDisplay.setValue(\n              !empty(self.value) ? self.selectedEntries[0].descriptor :\n              (!empty(academicUnitPicker.value) ? academicUnitPicker.selectedEntries[0].descriptor : 'Academic Unit - University of British Columbia')\n            );\n          %>",
+                  "multiSelect": false,
+                  "dynamicMonikerLevels": "<%\n  const sel = self.promptSelections;\n  const t = sel[0].substring(2);\n  const items = (fuhTreeAll.data ?? []).filter(o => { (empty(o.subtype) ? '(No subtype)' : (o.subtype.descriptor ?? '(No subtype)')) == t }).map(o => { {'id': o.workdayID, 'descriptor': (empty(o.organization1) ? '' : (o.organization1.descriptor ?? ''))} });\n  const first = items.map(o => { (o.descriptor + ' ').substring(0, 1).upperCase() });\n  if (sel.size() == 1 && items.size() > 40) {\n    return [first.distinct().sort().map(l => { {'id': 'L:' + l, 'descriptor': l + ' (' + first.filter(x => { x == l }).size() + ')'} }), true];\n  }\n  const l = sel.size() > 1 ? sel[1].substring(2) : '';\n  return [list:sort(items.filter(o => { l == '' || (o.descriptor + ' ').substring(0, 1).upperCase() == l }), 'descriptor', true), false];\n%>",
+                  "helpText": "Click to browse by type, or type a code to search.",
+                  "visible": "<% ((!empty(enabledForTypeDropdown.value)) ? enabledForTypeDropdown.selectedEntries[0].id : '') == 'FUH' %>"
+                },
+                {
+                  "type": "instanceList",
+                  "id": "academicUnitPicker",
+                  "label": "Academic Unit",
+                  "required": false,
+                  "values": "<% let d = auTreeAll.data ?? []; let ts = d.map(o => { (empty(o.academicUnitSubtype) ? '(No subtype)' : (o.academicUnitSubtype.descriptor ?? '(No subtype)')) }); ts.distinct().sort().map(t => { {'id': 'T:' + t, 'descriptor': t + ' (' + ts.filter(x => { x == t }).size() + ')'} }) %>",
+                  "searchEndPoint": "<% endpoints.auSearch %>",
+                  "searchResultValues": "<% empty(auSearch.data) ? [] : auSearch.data.map(o => { {'id': o.workdayID, 'descriptor': o.academicUnit.descriptor} }) %>",
+                  "onChange": "<%\n            if (!empty(self.value) && !empty(fuhPicker.value)) {\n              self.setError('Cannot select both Academic Unit and Functional Unit Hierarchy.');\n            } else {\n              self.clearError();\n              fuhPicker.clearError();\n            }\n            enabledForWidBinding.setValue(!empty(fuhPicker.value) ? fuhPicker.value[0] : (!empty(self.value) ? self.value[0] : ''));\n            enabledForDisplay.setValue(\n              !empty(fuhPicker.value) ? fuhPicker.selectedEntries[0].descriptor :\n              (!empty(self.value) ? self.selectedEntries[0].descriptor : 'Academic Unit - University of British Columbia')\n            );\n          %>",
+                  "multiSelect": false,
+                  "dynamicMonikerLevels": "<%\n  const sel = self.promptSelections;\n  const t = sel[0].substring(2);\n  const items = (auTreeAll.data ?? []).filter(o => { (empty(o.academicUnitSubtype) ? '(No subtype)' : (o.academicUnitSubtype.descriptor ?? '(No subtype)')) == t }).map(o => { {'id': o.workdayID, 'descriptor': (empty(o.academicUnit) ? '' : (o.academicUnit.descriptor ?? ''))} });\n  const first = items.map(o => { (o.descriptor + ' ').substring(0, 1).upperCase() });\n  if (sel.size() == 1 && items.size() > 40) {\n    return [first.distinct().sort().map(l => { {'id': 'L:' + l, 'descriptor': l + ' (' + first.filter(x => { x == l }).size() + ')'} }), true];\n  }\n  const l = sel.size() > 1 ? sel[1].substring(2) : '';\n  return [list:sort(items.filter(o => { l == '' || (o.descriptor + ' ').substring(0, 1).upperCase() == l }), 'descriptor', true), false];\n%>",
+                  "helpText": "Click to browse by type, or type a name to search.",
+                  "visible": "<% ((!empty(enabledForTypeDropdown.value)) ? enabledForTypeDropdown.selectedEntries[0].id : '') == 'AU' %>"
+                },
+                {
+                  "type": "text",
+                  "id": "enabledForDisplay",
+                  "label": "Enabled For",
+                  "enabled": false,
+                  "value": "<% 'Academic Unit - University of British Columbia' %>",
+                  "visible": false
+                },
+                {
+                  "type": "hidden",
+                  "id": "enabledForWidBinding",
+                  "value": "<% '' %>"
+                },
+                {
+                  "type": "hidden",
+                  "id": "requestRefHidden",
+                  "value": "<% date:now().format('yyyyMMddHHmmssSSS') %>"
+                }
+              ],
+              "title": "2. Submit New Assignable Role Request"
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "activeNoteSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "activeNoteFieldSet",
+              "title": "Before You Submit",
+              "children": [
+                {
+                  "type": "richText",
+                  "id": "activeNote",
+                  "enabled": false,
+                  "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">Submitting sends the request to ISC for review in Workday; nothing changes in Workday until it is approved. The role assignment's Active status is set automatically from whether the selected positions are filled. You can withdraw your own request while it is pending.</span>"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "footer": {
+      "type": "footer",
+      "children": [
+        {
+          "type": "pod",
+          "podId": "ecoComsFooter"
+        }
+      ]
+    },
+    "cancelOverride": {
+      "taskId": "home"
+    }
+  },
+  "securityDomains": [
+    "ManageCOMSAssignableRoles"
+  ],
+  "include": [
+    "comsValidations.script"
+  ],
+  "onSubmit": "<%\n  academicUnitPicker.clearError();\n  fuhPicker.clearError();\n  generatedRoleName.clearError();\n  positionsList.clearError();\n  roleName.clearError();\n  selectedShellOrgId.clearError();\n  let valid = true;\n  if (empty(selectedShellOrgId.value)) {\n    selectedShellOrgId.setError('Please select a Custom Organization.');\n    valid = false;\n  }\n  if (empty(delegatedRoles.value) && empty(roleName.value)) {\n    roleName.setError('Enter a new delegated role name or select an existing role from the Delegated Roles list.');\n    valid = false;\n  }\n  if (empty(generatedRoleName.value)) {\n    generatedRoleName.setError('Generated Workday Role Name is required. Select an org, then select or enter a role.');\n    valid = false;\n  }\n  if (empty(positionsList.value)) {\n    positionsList.setError('At least one Position is required.');\n    valid = false;\n  }\n  /* enabled-for choice */\n  if (((!empty(enabledForTypeDropdown.value)) ? enabledForTypeDropdown.selectedEntries[0].id : '') == 'FUH' && empty(fuhPicker.value)) {\n    fuhPicker.setError('Search for and pick a Functional Unit Hierarchy, or clear Enabled For to use the whole university.');\n    valid = false;\n  }\n  if (((!empty(enabledForTypeDropdown.value)) ? enabledForTypeDropdown.selectedEntries[0].id : '') == 'AU' && empty(academicUnitPicker.value)) {\n    academicUnitPicker.setError('Search for and pick an Academic Unit, or clear Enabled For to use the whole university.');\n    valid = false;\n  }\n  /* enabled-for choice end */\n  valid;\n%>"
+}
