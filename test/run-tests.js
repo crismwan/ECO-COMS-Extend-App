@@ -1873,7 +1873,7 @@ async function orgGuard(token, me) {
   const cases = [
     ['workday', 'TSTGUARD',  'TSTGUARD',           'X:META',  'new application code without X: (allowed since 2026-11-06)'],
     ['guard',   'X:TST',     'X:ADM:TEST:GUARD',   'X:SHELL', 'name not under its type (type X:TST)'],
-    ['guard',   'X:TST:ONE', 'X:TST:ONE:GUARD',    'X:SHELL', 'application type with two parts'],
+    ['workday', 'X:TST:ONE', 'X:TST:ONE:GUARD',    'X:SHELL', 'application type with two parts (allowed since 2026-11-06: names can be anything)'],
     ['guard',   'X:ADM',     'X:CLW:TEST:GUARD',   'X:SHELL', 'name not under its type'],
     ['guard',   'X:TSTGUARD','X:TSTGUARD',         'X:SHELL', 'new application as X:SHELL'],
     ['guard',   'X:ADM',     'X:ADM:TEST GUARD',   'X:SHELL', 'space in name'],
