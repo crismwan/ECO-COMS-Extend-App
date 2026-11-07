@@ -21,8 +21,8 @@ const OPTIONS = {
 const ENDING = { star: BS + '*?', campus: '(_[A-Z])?', letter: '[A-Z]?' };
 const CHARS = ['upper', 'upperDigits', 'digits'];
 const trim = (s) => String(s ?? '').trim();
-const esc = (v) => v.split('*').join(BS + '*').split('.').join(BS + '.');
-const unesc = (v) => v.split(BS + '*').join('*').split(BS + '.').join('.');
+const esc = (v) => v.split('*').join(BS + '*').split('.').join(BS + '.').split('+').join(BS + '+');
+const unesc = (v) => v.split(BS + '*').join('*').split(BS + '.').join('.').split(BS + '+').join('+');
 const lo = (len) => +trim(trim(len).split('-')[0]);
 const hi = (len) => (trim(len).includes('-') ? +trim(trim(len).split('-')[1]) : lo(len));
 const quant = (len) => (!trim(len) ? '+' : trim(len).includes('-') ? `{${lo(len)},${hi(len)}}` : `{${lo(len)}}`);
@@ -52,18 +52,18 @@ const lengthOk = (len) => {
   if (/^[0-9]+ *- *[0-9]+$/.test(l)) return lo(l) > 0 && lo(l) <= hi(l);
   return false;
 };
-const VALUE = /^[A-Z0-9_.*\/-]+$/;
+const VALUE = /^[A-Z0-9_.*\/+-]+$/;
 const lengthError = (t, len, o) => {
   if ((CHARS.includes(t) || t === 'any') && !lengthOk(len)) return 'the length must be a number (3) or a range (2-6).';
   if (CHARS.includes(t) && opt(o)[3] && (!trim(len) || hi(len) < 2)) return 'a shorter start then * needs a length of 2 or more.';
   return '';
 };
 const valuesError = (t, values, o) => {
-  if (CHARS.includes(t) && !/^[-_.*\/]*$/.test(extraOf(values))) return 'extra characters can only be - _ . * /';
+  if (CHARS.includes(t) && !/^[-_.*\/+]*$/.test(extraOf(values))) return 'extra characters can only be - _ . * / +';
   if (CHARS.includes(t) && opt(o)[1] && !extraOf(values)) return '"starts with a letter or digit" only matters with extra characters such as - or _.';
   if (t === 'list' && listValues(values).length < 2) return 'list at least two values, separated by commas (e.g. V, O, S).';
-  if (t === 'list' && listValues(values).some((v) => !VALUE.test(v))) return 'list values use capital letters, digits and - _ . * / only.';
-  if (t === 'fixed' && !VALUE.test(trim(values))) return 'the fixed text uses capital letters, digits and - _ . * / only.';
+  if (t === 'list' && listValues(values).some((v) => !VALUE.test(v))) return 'list values use capital letters, digits and - _ . * / + only.';
+  if (t === 'fixed' && !VALUE.test(trim(values))) return 'the fixed text uses capital letters, digits and - _ . * / + only.';
   return '';
 };
 const ruleError = (t, len, values, o) => lengthError(t, len, o) || valuesError(t, values, o);

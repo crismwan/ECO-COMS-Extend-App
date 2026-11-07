@@ -51,11 +51,11 @@ var endingText = function(e) {
 };
 
 var esc = function(v) {
-  v.replace('*', bs() + '*').replace('.', bs() + '.');
+  v.replace('*', bs() + '*').replace('.', bs() + '.').replace('+', bs() + '+');
 };
 
 var unesc = function(v) {
-  v.replace(bs() + '*', '*').replace(bs() + '.', '.');
+  v.replace(bs() + '*', '*').replace(bs() + '.', '.').replace(bs() + '+', '+');
 };
 
 var num = function(s) {
@@ -138,16 +138,16 @@ var lengthError = function(t, len, o) {
 };
 
 var valuesError = function(t, values, o) {
-  if (isChars(t) && !validate:match('[-_.*/]*', extraOf(values))) {
-    'extra characters can only be - _ . * /';
+  if (isChars(t) && !validate:match('[-_.*/+]*', extraOf(values))) {
+    'extra characters can only be - _ . * / +';
   } else if (isChars(t) && optFirst(o) && empty(extraOf(values))) {
     '"starts with a letter or digit" only matters with extra characters such as - or _.';
   } else if (t == 'list' && listValues(values).size() < 2) {
     'list at least two values, separated by commas (e.g. V, O, S).';
-  } else if (t == 'list' && listValues(values).filter(v => { !validate:match('[A-Z0-9_.*/-]+', v) }).size() > 0) {
-    'list values use capital letters, digits and - _ . * / only.';
-  } else if (t == 'fixed' && !validate:match('[A-Z0-9_.*/-]+', tr(values))) {
-    'the fixed text uses capital letters, digits and - _ . * / only.';
+  } else if (t == 'list' && listValues(values).filter(v => { !validate:match('[A-Z0-9_.*/+-]+', v) }).size() > 0) {
+    'list values use capital letters, digits and - _ . * / + only.';
+  } else if (t == 'fixed' && !validate:match('[A-Z0-9_.*/+-]+', tr(values))) {
+    'the fixed text uses capital letters, digits and - _ . * / + only.';
   } else {
     '';
   }

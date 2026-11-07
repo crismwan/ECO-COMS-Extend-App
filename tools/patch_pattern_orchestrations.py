@@ -75,6 +75,28 @@ ASSERTIONS = [
 ]
 
 
+# Academic unit Code check (2026-11-07): a field whose Workday check is "Academic unit code" ("lookup":"academicUnitCode"
+# in the stored schema, written by Maintain Application Pattern) must hold the Code of an active academic unit. The page
+# checks it; this re-checks it on the server. The field's position = the "fieldLabel" keys before its lookup key (each
+# field's own label comes first in the compact JSON); its value is the matching attributeN the page sends (fields 1-5).
+# The WQL call always runs (an empty value finds nothing); the check only applies when there is a value other than *.
+# Query URL hand-encoded as Change Shell Org Status does ('+' in a code as %2B; G+PS exists); probe 2026-11-07 found
+# MATH and G+PS, not MAHT.
+LK = '"\\"lookup\\":\\"academicUnitCode\\""'
+PRE = f'{SCH}.substringBefore({LK})'
+POS = f'({PRE}.length() - {PRE}.replace("fieldLabel", "").length())'
+ATTR = lambda n: f'data.GetInputParams.attribute{n}.replace("\'", "")'
+UNIT_VALUE = (f'(if ({SCH}.contains({LK}).not()) "" else '
+              + ''.join(f'(if ({POS} == {10 * n}) {ATTR(n)} else ' for n in range(1, 6)) + '""' + ')' * 6)
+UV = 'data.UnitCodeInput.unitValue'
+UNIT_PATH = ('"/wql/v1/data?limit=1&query=SELECT%20academicUnitCode%20FROM%20academicUnits%20WHERE%20inactive%20%3D%20false'
+             '%20AND%20academicUnitCode%20%3D%20%27"'
+             f'.append({UV}.replace("%", "").replace("+", "%2B").replace("&", "").replace("#", "")).append("%27")')
+UNIT_ASSERT = (f'(if ({UV}.isEmpty().or({UV}.equals("*"))) true else '
+               f'data.LookupUnitCode.response.asJSON().stringAtJsonPathWithDefault("$.data[0].academicUnitCode", "").equals({UV}))',
+               f'"Academic unit code " + {UV} + " is not an active academic unit in Workday"')
+
+
 # Add Shell Org (product owner 2026-11-05): an X:META organization may be a new application's own
 # organization, named exactly as its organization type. Since 2026-11-06 (product owner) that code can be anything
 # (X: not required); an organization under an application uses the application as its type. The page checks the same rules.
@@ -140,6 +162,35 @@ def main():
     node['_value']['notes']['_value'][0]['_value']['value']['_value'] = (
         "Guard: the pattern name must start with the application code, use one of the application's "
         "prefixes (namePrefix, default PATTERN), and match its patternSchema field count; upper case, no spaces")
+    # academic unit Code check right after CheckPatternName (prototypes: ExtractOrgType, GetApplication, CheckPatternName)
+    nodes = d['_value']['nodes']['_value']
+    nodes[:] = [n for n in nodes if n['_value']['name']['_value'] not in ('UnitCodeInput', 'LookupUnitCode', 'CheckUnitCode')]
+    names = [n['_value']['name']['_value'] for n in nodes]
+    cv = copy.deepcopy(find(d, 'ExtractOrgType'))
+    cv['_value']['name']['_value'] = 'UnitCodeInput'
+    proto_a = cv['_value']['values']['_value'][0]
+    cv['_value']['values']['_value'] = []
+    for pname, src in (('unitValue', UNIT_VALUE), ('unitPath', UNIT_PATH)):
+        a = copy.deepcopy(proto_a)
+        a['_value']['param']['_value']['name']['_value'] = pname
+        a['_value']['expr']['_value']['source']['_value'] = src
+        cv['_value']['values']['_value'].append(a)
+    cv['_value']['notes']['_value'][0]['_value']['value']['_value'] = (
+        "The value of the field checked against academic unit codes (Maintain Application Pattern: Workday check), and the WQL URL that looks it up")
+    lk = copy.deepcopy(find(d, 'GetApplication'))
+    lk['_value']['name']['_value'] = 'LookupUnitCode'
+    lk['_value']['path']['_value']['source']['_value'] = 'data.UnitCodeInput.unitPath'
+    lk['_value']['notes']['_value'][0]['_value']['value']['_value'] = "Find the active academic unit with that Code (WQL academicUnits.academicUnitCode)"
+    ck = copy.deepcopy(node)
+    ck['_value']['name']['_value'] = 'CheckUnitCode'
+    a = copy.deepcopy(proto)
+    a['_value']['assertion']['_value']['source']['_value'] = UNIT_ASSERT[0]
+    a['_value']['message']['_value']['source']['_value'] = UNIT_ASSERT[1]
+    ck['_value']['assertions']['_value'] = [a]
+    ck['_value']['notes']['_value'][0]['_value']['value']['_value'] = (
+        "Guard: a field whose Workday check is Academic unit code holds the Code of an active academic unit (or * for any)")
+    at = names.index('CheckPatternName') + 1
+    nodes[at:at] = [cv, lk, ck]
     save('IORC_0037_XFD_SEC_Create_Pattern_Shell_Org', d)
     print('IORC_0037_XFD_SEC_Create_Application_Shell_Org: subtype from orgSubtype (X:META or X:SHELL); IORC_0037_XFD_SEC_Create_Pattern_Shell_Org: subtype X:SHELL,', len(out), 'assertions')
 
