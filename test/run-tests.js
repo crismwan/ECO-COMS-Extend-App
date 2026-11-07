@@ -2586,6 +2586,16 @@ async function shellRolesQuery(token) {
 
 async function probe(token) {
   console.log('\n-- Probe (read-only) --');
+  {
+    const act = (await wql(token, 'SELECT abbreviation FROM courseSubjects WHERE inactive = false', 2000)).data || [];
+    console.log(`   LIVE active subjects ${act.length}: ${act.map((x) => x.abbreviation).filter((x) => /^(PHYS|MECH|CHEM|MATH|PHAS)/.test(x)).join(' ')}`);
+    const apps = (await request('GET', `${BO}/comsApplications?limit=100`, token)).data || [];
+    for (const a of apps.filter((x) => x.patternSchema)) {
+      const sch = JSON.parse(a.patternSchema);
+      sch.fields.forEach((f, i) => { if (/subject|period|term|session/i.test(f.fieldLabel)) console.log(`   LIVE ${a.appId} active=${a.active} field ${i + 1} ${f.fieldLabel} | lookup=${f.lookup || 'none'} | example=${f.example} | regex=${f.regex} | blank=${f.blankIsWildcard}`); });
+    }
+  }
+  return;
   // 2026-11-06: the subtype design's WQL, exactly as the pages send it (presentation/wqlQueries)
   {
     const q = (n) => JSON.parse(fs.readFileSync(path.join(ROOT, 'presentation', 'wqlQueries', n + '.wqlquery'), 'utf8')).query;
