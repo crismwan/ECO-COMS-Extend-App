@@ -31,6 +31,45 @@ jobs:
         continue-on-error: true
         run: tools/rebuild_all.sh --check && git checkout -- presentation orchestration model
 
+      # Workday DevRel's code review tool (github.com/Developers-and-Dragons/ArcaneAuditor). Warning only for now:
+      # ACTION findings are listed in the run summary; make it blocking once the current ones are cleared.
+      - name: Arcane Auditor code review (warning only)
+        continue-on-error: true
+        run: |
+          set -uo pipefail
+          python3 -m pip install --quiet --break-system-packages "git+https://github.com/Developers-and-Dragons/ArcaneAuditor.git" 2>&1 | tail -5 || true
+          AA=$(command -v ArcaneAuditorCLI || command -v arcane-auditor || true)
+          if [ -z "${AA}" ]; then
+            AA_DIR="${RUNNER_TEMP}/arcane"; mkdir -p "${AA_DIR}"
+            GH_TOKEN="${{ secrets.GITHUB_TOKEN }}" gh release download --repo Developers-and-Dragons/ArcaneAuditor \
+              --pattern "*[Ll]inux*" --dir "${AA_DIR}" 2>&1 | tail -3 || true
+            for f in "${AA_DIR}"/*; do case "$f" in *.tar.gz|*.tgz) tar xzf "$f" -C "${AA_DIR}";; *.zip) unzip -qo "$f" -d "${AA_DIR}";; esac; done 2>/dev/null
+            AA=$(find "${AA_DIR}" -type f \( -name ArcaneAuditorCLI -o -name arcane-auditor \) | head -1)
+            [ -n "${AA}" ] && chmod +x "${AA}"
+          fi
+          if [ -z "${AA}" ]; then echo "::warning::Arcane Auditor could not be installed"; exit 1; fi
+          # Leave out what isn't the app (same as .wdignore) by reviewing a copy of the app folders only
+          REVIEW="${RUNNER_TEMP}/review"; mkdir -p "${REVIEW}"
+          cp -r appManifest.json cards model orchestration presentation "${REVIEW}/" 2>/dev/null || true
+          "${AA}" review-app "${REVIEW}" --agent > /tmp/arcane.json 2>/tmp/arcane.err
+          AA_EXIT=$?
+          echo "Arcane Auditor exit code ${AA_EXIT} (0 clean/advice, 1 ACTION findings, 2 usage, 3 crash)"
+          tail -5 /tmp/arcane.err
+          python3 - <<'PY'
+          import json, collections, os
+          try: d = json.load(open('/tmp/arcane.json'))
+          except Exception as e: print('could not read findings:', e); raise SystemExit(0)
+          f = d.get('findings', [])
+          by = collections.Counter((x['severity'], x['rule_id']) for x in f)
+          lines = ['## Arcane Auditor', f"{d.get('summary',{}).get('findings_by_severity')} over {d.get('summary',{}).get('total_files')} files", '',
+                   '| Severity | Rule | Count |', '|---|---|---|'] + [f'| {s} | {r} | {n} |' for (s, r), n in sorted(by.items())]
+          lines += ['', '### ACTION findings (first 40)', '```'] + [
+              f"{x['rule_id']}: {x['location']['file_path']}:{x['location'].get('line')} {x['message'][:160]}" for x in f if x['severity'] == 'ACTION'][:40] + ['```']
+          print('\n'.join(lines))
+          open(os.environ['GITHUB_STEP_SUMMARY'], 'a').write('\n'.join(lines) + '\n')
+          PY
+          [ "${AA_EXIT}" -le 1 ] || exit 1
+
       - name: Install WDCLI from GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -54,6 +93,34 @@ jobs:
           fi
           chmod +x "${WDCLI_BIN}"
           echo "$(dirname ${WDCLI_BIN})" >> $GITHUB_PATH
+
+      # App Builder's own component checks (PMD/AMD/SMD/model; not orchestrations), before any token step so a code
+      # error shows even when the deploy tokens have expired. Uses its own config with the system user only.
+      - name: wdcli app validate
+        id: wdvalidate
+        continue-on-error: true
+        env:
+          WDCLI_CLIENT_ID: ${{ secrets.WD_CLIENT_ID }}
+          WDCLI_CLIENT_SECRET: ${{ secrets.WD_CLIENT_SECRET }}
+        run: |
+          set -uo pipefail
+          export HOME="${RUNNER_TEMP}/wdvalidate"
+          mkdir -p "${HOME}/.config/@workday/wdcli"
+          jq -n --arg id "${WDCLI_CLIENT_ID}" --arg s "${WDCLI_CLIENT_SECRET}" \
+            '{clientId: $id, clientSecret: $s, defaultAccountShortId: "vmzvxm", defaultTenantAlias: "ubc_wcpdev2"}' \
+            > "${HOME}/.config/@workday/wdcli/config.json"
+          wdcli auth login --system-user > /dev/null 2>&1 || echo "system-user login failed"
+          wdcli app validate -d . --ci -f json > /tmp/validate.json 2>&1
+          V_EXIT=$?
+          echo "wdcli app validate exit code ${V_EXIT}"
+          sed -E 's/(Bearer\s+|eyJ)[A-Za-z0-9._-]{8,}/[redacted]/g' /tmp/validate.json | head -200
+          {
+            echo "## wdcli app validate (exit ${V_EXIT})"
+            echo '```'
+            sed -E 's/(Bearer\s+|eyJ)[A-Za-z0-9._-]{8,}/[redacted]/g' /tmp/validate.json | head -80
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit ${V_EXIT}
 
       - name: Pre-populate wdcli config with developer token
         env:
@@ -181,7 +248,9 @@ jobs:
           echo "=== Running wdcli app upload ==="
           # Disable -e so we can capture the exit code ourselves
           set +e
-          echo "." | wdcli app upload 2>&1 | tee /tmp/upload-output.txt
+          # --fail-on-build-timeout: a build still running when wdcli stops waiting fails here, rather than the job
+          # going on to deploy a version that hasn't finished building
+          echo "." | wdcli app upload --fail-on-build-timeout 2>&1 | tee /tmp/upload-output.txt
           UPLOAD_EXIT=${PIPESTATUS[1]}
           set -e
           echo "=== Upload output ==="
