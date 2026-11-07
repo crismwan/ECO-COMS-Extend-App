@@ -1058,7 +1058,8 @@ async function smoke(token, me) {
     if (!subj) warn('Lookups.subjects', 'no active course subject in this tenant: every subject check would refuse');
     else await expect(subj, L.lookupWql('courseSubject', subj), (r) => (r.data || []).some((x) => x.abbreviation === subj));
     await expect('ZZZZ', L.lookupWql('courseSubject', 'ZZZZ'), (r) => !(r.data || []).length);
-    await expect('PLAS_V (inactive)', L.lookupWql('courseSubject', 'PLAS_V'), (r) => !(r.data || []).length);
+    const inactive = (((await wql(token, 'SELECT abbreviation FROM courseSubjects WHERE inactive = true ORDER BY abbreviation', 1)).data || [])[0] || {}).abbreviation;
+    if (inactive) await expect(`${inactive} (inactive)`, L.lookupWql('courseSubject', inactive), (r) => !(r.data || []).length);
     await expect('2024W1', L.lookupWql('academicPeriod', '2024W1'), (r) => (r.data || []).length > 0);
     await expect('2024W', L.lookupWql('academicPeriod', '2024W'), (r) => (r.data || []).length > 0);
     await expect('2025S', L.lookupWql('academicPeriod', '2025S'), (r) => (r.data || []).length > 0);
@@ -1982,7 +1983,7 @@ async function patternGuard(token, me) {
   const clw = apps.find((a) => a.appId === 'X:CLW');
   const lookupCases = [
     ['subject', 'X:CLW:PATTERN:MATH:ZZZZ:999:999:2024W1', ['MATH', 'ZZZZ', '2024W1']],
-    ['subject', 'X:CLW:PATTERN:MATH:PLAS_V:999:999:2024W1', ['MATH', 'PLAS_V', '2024W1']],
+
     ['period', 'X:CLW:PATTERN:MATH:*:999:999:2031W1', ['MATH', '*', '2031W1']],
     ['period', 'X:CLW:PATTERN:MATH:*:999:999:2024S', ['MATH', '*', '2024S']],
     ['accept', 'X:CLW:PATTERN:MATH:*:999:999:2024W1', ['MATH', '*', '2024W1']],
@@ -1991,6 +1992,8 @@ async function patternGuard(token, me) {
   ];
   // an active subject passes (subjects are tenant data: every dev subject turned inactive on 2026-11-07)
   const activeSubj = (((await wql(token, 'SELECT abbreviation FROM courseSubjects WHERE inactive = false ORDER BY abbreviation', 1)).data || [])[0] || {}).abbreviation;
+  const inactiveSubj = (((await wql(token, 'SELECT abbreviation FROM courseSubjects WHERE inactive = true ORDER BY abbreviation', 1)).data || [])[0] || {}).abbreviation;
+  if (inactiveSubj) lookupCases.push(['subject', `X:CLW:PATTERN:MATH:${inactiveSubj}:999:999:2024W1`, ['MATH', inactiveSubj, '2024W1']]);
   if (activeSubj) lookupCases.push(['accept', `X:CLW:PATTERN:MATH:${activeSubj}:999:999:2024W1`, ['MATH', activeSubj, '2024W1']]);
   else warn('Guard.activeSubject', 'no active course subject in this tenant: the subject accept case is skipped');
   if (clw && clw.patternSchema) {
