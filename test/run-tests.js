@@ -2564,12 +2564,16 @@ async function shellRolesQuery(token) {
 
 async function probe(token) {
   console.log('\n-- Probe (read-only) --');
-  for (const q of ["SELECT academicUnitCode, academicUnit, academicUnitSubtype FROM academicUnits WHERE inactive = false AND academicUnit contains 'math' ORDER BY academicUnitCode",
-    "SELECT academicUnitCode, academicUnit FROM academicUnits WHERE inactive = false AND academicUnitCode startswith 'M' AND academicUnitCode is not empty ORDER BY academicUnitCode",
-    "SELECT academicUnitSubtype FROM academicUnits WHERE inactive = false AND academicUnitCode is not empty"]) {
-    try { const r = await wql(token, q, 500); const subs = {}; (r.data || []).forEach((x) => { const d = (x.academicUnitSubtype || {}).descriptor || '(none)'; subs[d] = (subs[d] || 0) + 1; });
-      console.log(`   AUQ ${r.total} rows: ${JSON.stringify((r.data || []).slice(0, 3)).slice(0, 400)} subtypes=${JSON.stringify(subs)}`); }
-    catch (e) { console.log(`   AUQ error ${String(e.message).slice(0, 250)}`); }
+  {
+    const ds = ((await request('GET', `${API}/wql/v1/dataSources?alias=academicUnits&limit=5`, token)).data || [])[0];
+    const fields = [];
+    for (let off = 0; off < 3000; off += 100) { const pg = (await request('GET', `${API}/wql/v1/dataSources/${ds.id}/fields?limit=100&offset=${off}`, token)).data || []; fields.push(...pg); if (pg.length < 100) break; }
+    console.log(`   AUQ text fields: ${fields.filter((f) => f.type === 'Text').map((f) => f.alias).join(' ')}`);
+    const sub = (await request('GET', `${API}/wql/v1/dataSources?search=${encodeURIComponent('academic unit subtype')}&limit=20`, token)).data || [];
+    console.log(`   AUQ subtype sources: ${sub.map((d) => d.alias).join(' ')}`);
+    for (const q of ["SELECT academicUnitCode, academicUnit FROM academicUnits WHERE inactive = false AND academicUnitCode is not empty AND academicUnitSubtype in (b40d8b0163671002158f6c4e6d210000) ORDER BY academicUnitCode"]) {
+      try { const r = await wql(token, q, 50); console.log(`   AUQ subtype filter ${r.total}`); } catch (e) { console.log(`   AUQ error ${String(e.message).slice(0, 200)}`); }
+    }
   }
   return;
   // 2026-11-06: the subtype design's WQL, exactly as the pages send it (presentation/wqlQueries)
