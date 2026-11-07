@@ -77,17 +77,18 @@ ASSERTIONS = [
 
 # Academic unit Code check (2026-11-07): a field whose Workday check is "Academic unit code" ("lookup":"academicUnitCode"
 # in the stored schema, written by Maintain Application Pattern) must hold the Code of an active academic unit. The page
-# checks it; this re-checks it on the server. The field's position = the "fieldLabel" keys before its lookup key (each
-# field's own label comes first in the compact JSON); its value is the matching attributeN the page sends (fields 1-5).
+# checks it; this re-checks it on the server. Its value is the matching attributeN the page sends (fields 1-5).
 # The WQL call always runs (an empty value finds nothing); the check only applies when there is a value other than *.
 # Query URL hand-encoded as Change Shell Org Status does ('+' in a code as %2B; G+PS exists); probe 2026-11-07 found
 # MATH and G+PS, not MAHT.
 LK = '"\\"lookup\\":\\"academicUnitCode\\""'
 PRE = f'{SCH}.substringBefore({LK})'
-POS = f'({PRE}.length() - {PRE}.replace("fieldLabel", "").length())'
+# Workday stores the record's JSON keys in its own order ("lookup" can come before "fieldLabel", live record 2026-11-07),
+# so the field's position is the number of "},{" boundaries between field objects before its lookup key (3 characters each).
+POS = f'({PRE}.length() - {PRE}.replace("}},{{", "").length())'
 ATTR = lambda n: f'data.GetInputParams.attribute{n}.replace("\'", "")'
 UNIT_VALUE = (f'(if ({SCH}.contains({LK}).not()) "" else '
-              + ''.join(f'(if ({POS} == {10 * n}) {ATTR(n)} else ' for n in range(1, 6)) + '""' + ')' * 6)
+              + ''.join(f'(if ({POS} == {3 * (n - 1)}) {ATTR(n)} else ' for n in range(1, 6)) + '""' + ')' * 6)
 UV = 'data.UnitCodeInput.unitValue'
 UNIT_PATH = ('"/wql/v1/data?limit=1&query=SELECT%20academicUnitCode%20FROM%20academicUnits%20WHERE%20inactive%20%3D%20false'
              '%20AND%20academicUnitCode%20%3D%20%27"'
