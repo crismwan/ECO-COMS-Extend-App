@@ -20,7 +20,7 @@ def diagram_after(title_start, src, alt, width=900):
 # ---------------------------------------------------------------- page properties
 pp = T(s, 'Solution name')
 kv(s, pp, 'Solution name', 'XTND-0037-XFD_SEC-Custom_Organization_Management\nECO-COMS: Custom Organization Management System (shell organizations and shell roles in Workday)')
-kv(s, pp, 'Solution ID', f'XTND-0037-XFD_SEC-Custom_Organization_Management\nExtend app reference ID {APP} (development tenant ubc_wcpdev2). Production reference ID to be fixed before the first upload to that account [TBC]; a reference ID can never be reused.')
+kv(s, pp, 'Solution ID', f'XTND-0037-XFD_SEC-Custom_Organization_Management\nExtend app reference ID: the ID App Hub assigned when the app was created in the development tenant (ubc_wcpdev2). Production reference ID to be fixed before the first upload to that account [TBC]; a reference ID can never be reused.')
 kv(s, pp, 'Solution type', 'Extend App')
 kv(s, pp, 'Solution pattern', 'In-tenant UI (one event-driven step on the review business process)')
 kv(s, pp, 'Domain', 'HCM (security: custom organizations, assignable roles, role assignments)')
@@ -532,7 +532,7 @@ set_rows(s, T(s, 'Object type'), [
     ['ISSG', 'ECO-COMS ISU security group', TBC, TBC, 'N'],
     ['ISU', 'ECO-COMS integration user', 'DNU_ISU_ECO_COMS_DEPLOY_CMM (dev); prod [TBC]', TBC, 'N'],
     ['Security domain', '7 COMS domains', 'ManageCOMSShellOrgs, ManageCOMSAssignableRoles, ManageCOMSAdminProvisioning, MaintainCOMSAssignableRoles, ViewCOMSAuditLog, ManageCOMSApplicationSetup, ViewCOMSProfileGroup', 'Manage/Maintain/View: COMS …', 'Y'],
-    ['Extend app ID', 'ECO-COMS', f'{APP} (dev). Production: [TBC]', 'Begins with a letter; a–z 0–9 _ only; never reusable', 'N (production ID to agree)'],
+    ['Extend app ID', 'ECO-COMS', 'Assigned by App Hub at creation (dev). Production: [TBC]', 'Begins with a letter; a–z 0–9 _ only; never reusable', 'N (production ID to agree)'],
     ['Extend business object', '5 objects + 2 attachments', 'COMSApplication, COMSAssignableRole, COMSAuditLog, COMSBulkRun, COMSBulkRowResult, COMSBulkUpload, COMSBulkTemplate', 'COMS prefix; IDs never change', 'Y'],
     ['Orchestration', '13 + 4 sub-orchestrations', 'IORC_0037_XFD_SEC_Create_Application_Shell_Org, IORC_0037_XFD_SEC_Create_Pattern_Shell_Org, IORC_0037_XFD_SEC_Change_Shell_Org_Status, IORC_0037_XFD_SEC_Assign_Remove_Role_Positions, IORC_0037_XFD_SEC_Bulk_Role_Changes_From_CSV, IORC_0037_XFD_SEC_Bulk_Role_Changes_From_Grid, IORC_0037_XFD_SEC_Start_Role_Request_Review, IORC_0037_XFD_SEC_Start_Admin_Request_Review, IORC_0037_XFD_SEC_Close_Denied_Role_Request, IORC_0037_XFD_SEC_My_Role_Requests_Card_Data, IORC_0037_XFD_SEC_ISC_Queue_Card_Data, IORC_0037_XFD_SEC_My_Role_Requests_Home_Card, IORC_0037_XFD_SEC_ISC_Queue_Home_Card; IORC_0037_XFD_SEC_Sub_Create_Shell_Organization, IORC_0037_XFD_SEC_Sub_Process_Bulk_Role_Row, IORC_0037_XFD_SEC_Sub_Start_Request_Review, IORC_0037_XFD_SEC_Sub_Write_Audit_Record', 'PascalCase verb + object', 'Y'],
     ['Business process', 'Review COMS Assignable Role Request', 'ReviewCOMSAssignableRoleRequest', 'Extend model', 'Y'],

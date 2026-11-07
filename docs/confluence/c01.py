@@ -14,7 +14,7 @@ PO = 'Product owner decision'
 pp = T(s, 'Solution name')
 kv(s, pp, 'Solution name', 'XTND-0037-XFD_SEC-Custom_Organization_Management\nECO-COMS: Custom Organization Management System (shell organizations and shell roles in Workday)')
 kv(s, pp, 'Solution ID', 'XTND-0037-XFD_SEC-Custom_Organization_Management (EDG Naming Standard; its orchestrations are IORC_0037_XFD_SEC_<description>)\n'
-   'Extend app reference ID (development): ecocomsphase_xclw_cm_sync2_vmzvxm')
+   'Extend app reference ID: the ID App Hub assigned when the app was created (development tenant); production ID [TBC]')
 kv(s, pp, 'Linked Tickets', f'{TBC} (no ServiceNow or Jira item recorded yet)')
 kv(s, pp, 'Solution type', 'Extend App')
 kv(s, pp, 'Solution pattern', 'In-tenant UI (with one event-driven step: an orchestration triggered by the review business process on Deny or Cancel)')
