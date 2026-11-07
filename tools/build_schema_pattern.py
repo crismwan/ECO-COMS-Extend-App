@@ -44,34 +44,55 @@ def note(sid, fid, title, rid, html, color='#0055B7', mark='ⓘ', render=None):
     return sec
 
 
-def field_on_change(i):
+FIND = lambda i: f"patternField{i + 1}FindInstanceList"
+LK = lambda j: f"comsPatterns.lookupOf(s, {j})"
+
+
+def recheck(j):
+    """e<j> = field j's error: its format and academic unit check, then (2026-11-07) a course subject / academic period
+    check with its own WQL query (wdLookup), run only when the field has that check, a value other than * and the right
+    format. Needs s (schema) and u (academic unit codes) set first."""
+    return (f"  let v{j} = {FIELD(j)}.value;\n  let q{j} = comsPatterns.fieldQuery(s, {j}, v{j}, u);\n  let t{j} = 0 - 1;\n  let d{j} = [];\n"
+            f"  if (q{j} != '') {{ let r{j} = wdLookup.invoke({{'q': q{j}, 'lim': '50'}}); t{j} = r{j}.total ?? (0 - 1); d{j} = r{j}.data ?? []; }}\n"
+            f"  let e{j} = comsPatterns.fieldError(s, {j}, v{j}, u, t{j}, d{j});\n")
+
+
+def field_on_change(i, target='self', fill=''):
     # Recheck every field, not just this one: a duplicate error set on another field for an earlier
     # name would otherwise stay after the name changes (seen live 2026-11-04). Then flag a duplicate
     # of the current name on this field only.
-    recheck = "".join(
-        f"  let e{j} = comsPatterns.checkFieldIn(s, {j}, {FIELD(j)}.value, {UNITS});\n"
-        f"  if (e{j} != '') {{ {FIELD(j)}.setError(e{j}); }} else {{ {FIELD(j)}.clearError(); }}\n"
-        for j in range(MAX_FIELDS))
+    body = "".join(recheck(j) + f"  if (e{j} != '') {{ {FIELD(j)}.setError(e{j}); }} else {{ {FIELD(j)}.clearError(); }}\n"
+                   for j in range(MAX_FIELDS))
     return ("<%\n"
-            f"  let s = {SCH};\n"
-            + recheck +
+            f"  let s = {SCH};\n  let u = {UNITS};\n"
+            + fill + body +
             f"  let err = e{i};\n"
             f"  let pn = {NAME};\n"
             "  patternPreviewText.setValue(pn);\n"
             "  if (err == '' && (existingOrgs.data ?? []).filter(o => { o.code == pn }).size() > 0) {\n"
-            "    self.setError('A pattern with this name already exists: ' + pn);\n"
+            f"    {target}.setError('A pattern with this name already exists: ' + pn);\n"
             "  }\n%>")
 
 
+def find_on_change(i):
+    # a picked subject or period goes into the field (a period as its short form, e.g. 2024W1), then the usual recheck
+    fill = (f"  {FIND(i)}.clearError();\n"
+            f"  if (!empty(self.value)) {{\n"
+            f"    let fv = comsPatterns.fillValue(comsPatterns.pickerKind(s, {i}), self.value[0]);\n"
+            f"    if (fv == '') {{ {FIND(i)}.setError('This period has no short form (W1, W2, W or S): type the value in the box above.'); }} else {{ {FIELD(i)}.setValue(fv); }}\n"
+            f"  }}\n")
+    return field_on_change(i, FIELD(i), fill)
+
+
 def submit():
-    lines = ["<%", f"  let s = {SCH};", "  let valid = true;", "  prefixDropdown.clearError();", "  effectiveDate.clearError();"]
+    lines = ["<%", f"  let s = {SCH};", f"  let u = {UNITS};", "  let valid = true;", "  prefixDropdown.clearError();", "  effectiveDate.clearError();"]
     lines += [f"  {FIELD(i)}.clearError();" for i in range(MAX_FIELDS)]
     lines += ["  if (empty(queryParams.appCode) || empty(s)) {", "    valid = false;", "  } else {",
               "    if (comsPatterns.prefixCount(s) > 1 && empty(prefixDropdown.value)) {",
               "      prefixDropdown.setError('Pick a pattern prefix.');", "      valid = false;", "    }"]
     for i in range(MAX_FIELDS):
-        lines += [f"    let e{i + 1} = comsPatterns.checkFieldIn(s, {i}, {FIELD(i)}.value, {UNITS});",
-                  f"    if (e{i + 1} != '') {{ {FIELD(i)}.setError(e{i + 1}); valid = false; }}"]
+        lines += [recheck(i).rstrip("\n"),
+                  f"    if (e{i} != '') {{ {FIELD(i)}.setError(e{i}); valid = false; }}"]
     lines += ["  }",
               "  if (empty(effectiveDate.value)) {", "    effectiveDate.setError('Effective Date is required.');", "    valid = false;",
               "  } else if (!comsValidations.isWeekday(effectiveDate.value)) {", "    effectiveDate.setError(comsValidations.errorWeekday());", "    valid = false;",
@@ -96,12 +117,30 @@ def submit():
 
 
 fields = []
+KIND = lambda i: f"comsPatterns.pickerKind({SCH}, {i})"
 for i in range(MAX_FIELDS):
     fields.append({"type": "text", "id": FIELD(i),
                    "label": f"<% comsPatterns.fieldLabel({SCH}, {i}) %>",
                    "visible": f"<% comsPatterns.fieldCount({SCH}) > {i} %>",
                    "placeholder": f"<% comsPatterns.fieldCount({SCH}) > {i} ? ('e.g. ' + {SCH}.fields[{i}].example) : '' %>",
                    "onChange": field_on_change(i)})
+    # 2026-11-07: a field checked against course subjects or academic periods gets a picker under it: type to search
+    # (first 50 matches), or click to browse (subjects by first letter, periods by academic year). Every list is one
+    # WQL query of only the rows it shows, so it stays quick with tens of thousands of subjects or periods.
+    fields.append({"type": "instanceList", "id": FIND(i), "multiSelect": False,
+                   "label": f"<% 'Find ' + comsPatterns.fieldLabel({SCH}, {i}) + ' in Workday' %>",
+                   "visible": f"<% {KIND(i)} != '' %>",
+                   "helpText": f"<% {KIND(i)} == 'academicPeriod' ? 'Click to browse by academic year, or type part of the period name. The box above gets its short form (e.g. 2024W1).' : 'Click to browse by first letter, or type an abbreviation or subject name. The box above gets the abbreviation.' %>",
+                   "values": f"<% {KIND(i)} == 'academicPeriod' ? comsPatterns.yearFolders(wdYears.data ?? []) : ({KIND(i)} == 'courseSubject' ? comsPatterns.letterFolders() : []) %>",
+                   "dynamicMonikerLevels": ("<%\n"
+                       "  const sel = self.promptSelections;\n"
+                       f"  const k = {KIND(i)};\n"
+                       "  const res = wdLookup.invoke({'q': comsPatterns.treeWql(k, sel[0]), 'lim': '2000'});\n"
+                       "  const leaves = comsPatterns.pickRows(k, res.data ?? []);\n"
+                       "  return [leaves, false];\n%>"),
+                   "onSearch": (f"<% empty(event.query) ? [] : comsPatterns.pickRows({KIND(i)}, "
+                                f"wdLookup.invoke({{'q': comsPatterns.searchWql({KIND(i)}, event.query), 'lim': '50'}}).data ?? []) %>"),
+                   "onChange": find_on_change(i)})
 
 PICK_ROWS = "(comsApplications.data ?? []).filter(x => { !empty(x.patternSchema) && x.active != false }).map(x => { x.appId }).distinct().sort().map(a => { {'appCode': a} })"
 txt = lambda cid, label, value: {"type": "column", "columnId": cid, "label": label,
@@ -120,6 +159,14 @@ page = {"id": "newSchemaPattern", "securityDomains": ["ManageCOMSShellOrgs"], "i
     {"name": "auCodes", "baseUrlType": "workday-wql", "url": "data", "authType": "sso", "bestEffort": "true",
      "wqlQuery": {"queryId": "academicUnitCodes"}, "failOnStatusCodes": FOS([429]),
      "exclude": f"<% !comsPatterns.needsUnits({SCH}) %>"},
+    # one WQL query per lookup (2026-11-07): q comes from comsPatterns (lookupWql / treeWql / searchWql), which strips
+    # quotes and backslashes from typed text first
+    {"name": "wdLookup", "baseUrlType": "workday-wql", "authType": "sso", "deferred": "true",
+     "url": "<% 'data?limit=' + lim + '&query=' + string:pathEncode(q) %>"},
+    # academic years for the period picker's folders, only when this application has a field checked against periods
+    {"name": "wdYears", "baseUrlType": "workday-wql", "authType": "sso", "bestEffort": "true", "failOnStatusCodes": FOS([429]),
+     "url": "data?limit=1000&query=SELECT%20academicYear%2C%20startDate%20FROM%20academicYears%20ORDER%20BY%20startDate",
+     "exclude": f"<% !comsPatterns.needsPeriods({SCH}) %>"},
     {"name": "verifyPattern", "baseUrlType": "workday-wql", "authType": "sso", "deferred": "true",
      "url": "<% 'data?limit=' + lim + '&query=SELECT%20workdayID%2C%20code%20FROM%20topLevelOrganizations%20WHERE%20code%20contains%20%27X%3A%27' %>"}],
   "onSubmit": submit(),
@@ -160,9 +207,8 @@ page = {"id": "newSchemaPattern", "securityDomains": ["ManageCOMSShellOrgs"], "i
           {"type": "text", "id": "formatGuideText", "label": "Format", "enabled": False, "value": f"<% comsPatterns.formatGuide({SCH}) %>"},
           {"type": "dropdown", "id": "prefixDropdown", "label": "Pattern Prefix", "values": f"<% comsPatterns.prefixOptions({SCH}) %>",
            "visible": f"<% comsPatterns.prefixCount({SCH}) > 1 %>",
-           "onChange": "<%\n  self.clearError();\n  let s = " + SCH + ";\n" + "".join(
-               f"  let e{j} = comsPatterns.checkFieldIn(s, {j}, {FIELD(j)}.value, {UNITS});\n"
-               f"  if (e{j} != '') {{ {FIELD(j)}.setError(e{j}); }} else {{ {FIELD(j)}.clearError(); }}\n" for j in range(MAX_FIELDS))
+           "onChange": "<%\n  self.clearError();\n  let s = " + SCH + ";\n  let u = " + UNITS + ";\n" + "".join(
+               recheck(j) + f"  if (e{j} != '') {{ {FIELD(j)}.setError(e{j}); }} else {{ {FIELD(j)}.clearError(); }}\n" for j in range(MAX_FIELDS))
                + f"  patternPreviewText.setValue({NAME});\n%>"},
           {"type": "readOnlyText", "id": "patternPreviewText", "label": "Pattern Name Preview",
            # page-load value: the fields are declared further down, so they can't be referenced here yet

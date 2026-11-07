@@ -481,11 +481,13 @@ function staticSuite() {
       let ok = true;
       for (const m of String(lv + ' ' + (n.values || '')).matchAll(/\b([A-Za-z]\w*)\.(invoke|data)\b/g)) {
         const e = eps.get(m[1]);
-        if (!e) { if (!['self', 'o', 'r', 'first', 'roots'].includes(m[1])) { fail('Static.treePickers', `${label} reads ${m[1]}.${m[2]}, which isn't an endpoint`); ok = false; } continue; }
+        if (!e) { if (!['self', 'o', 'r', 'first', 'roots', 'res'].includes(m[1])) { fail('Static.treePickers', `${label} reads ${m[1]}.${m[2]}, which isn't an endpoint`); ok = false; } continue; }
         if (m[2] === 'invoke' && !(e.deferred === true || e.deferred === 'true')) { fail('Static.treePickers', `${label} invokes ${m[1]}, which isn't deferred`); ok = false; }
       }
-      const leaf = [...String(lv).matchAll(/'id': o\.(\w+)/g)].pop();
-      const srch = String(search).match(/'id': o\.(\w+)/);
+      // rows built by one shared script function in both the levels and the search (comsPatterns.pickRows, 2026-11-07)
+      const shared = String(lv).match(/(\w+\.pickRows)\(/);
+      const leaf = shared && String(search).includes(shared[1] + '(') ? [null, shared[1]] : [...String(lv).matchAll(/'id': o\.(\w+)/g)].pop();
+      const srch = shared && String(search).includes(shared[1] + '(') ? [null, shared[1]] : String(search).match(/'id': o\.(\w+)/);
       if (!leaf || !srch) { fail('Static.treePickers', `${label}: can't find the leaf id (${leaf && leaf[1]}) or the search id (${srch && srch[1]})`); ok = false; }
       else if (leaf[1] !== srch[1]) { fail('Static.treePickers', `${label}: browsed leaves use ${leaf[1]} but the typed search uses ${srch[1]}; the page would save different ids`); ok = false; }
       if (/^<%\s*\[\]\s*%>$/.test(String(n.values || '').trim())) { fail('Static.treePickers', `${label}: has levels but empty root values`); ok = false; }
@@ -493,6 +495,14 @@ function staticSuite() {
       if (!/return \[[^\]]*, false\]/.test(String(lv))) { fail('Static.treePickers', `${label}: no level returns [list, false] (no selectable leaves)`); ok = false; }
       if (ok) pass('Static.treePickers', `${label}: leaves use ${leaf[1]} like the search; endpoints ok`);
     });
+  }
+
+  // 7g7. The lookup queries the tests run (test/lookups.js) are the ones comsPatterns.script builds (2026-11-07).
+  {
+    const sc = fs.readFileSync(path.join(ROOT, 'presentation/scripts/comsPatterns.script'), 'utf8').split("\\'").join("'");
+    const miss = Object.entries(require('./lookups.js').FRAGMENTS).filter(([, t]) => !sc.includes(t)).map(([k]) => k);
+    if (miss.length) fail('Static.lookups', `comsPatterns.script no longer builds: ${miss.join(', ')} (update test/lookups.js too)`);
+    else pass('Static.lookups', 'lookup queries in test/lookups.js match comsPatterns.script');
   }
 
   // 7g6. Calls into an included .script name a function it exports (a typo only fails at run time in Workday).
@@ -1025,12 +1035,41 @@ async function smoke(token, me) {
           const back = require('./rules.js').compileRule(f.ruleType, f.ruleLength || '', f.ruleValues || '', f.ruleOption || 'none', f.blankIsWildcard === true);
           if (back !== f.regex) bad.push(`${a.appId} field ${i + 1}: rule ${f.ruleType} compiles to ${back}, stored ${f.regex}`);
         }
-        if (f.lookup && !['none', 'academicUnitCode'].includes(f.lookup)) bad.push(`${a.appId} field ${i + 1}: unknown Workday check ${f.lookup}`);
+        if (f.lookup && !['none', 'academicUnitCode', 'courseSubject', 'academicPeriod'].includes(f.lookup)) bad.push(`${a.appId} field ${i + 1}: unknown Workday check ${f.lookup}`);
       });
       if ((a.namePrefix || '') !== (s.prefixes || []).join(',')) bad.push(`${a.appId}: namePrefix ${a.namePrefix} differs from the format's prefixes`);
     }
     if (bad.length) throw new Error(bad.slice(0, 5).join('; '));
     pass('Apps.patternFormats', `${apps.filter((x) => x.patternSchema).length} application formats valid`);
+  });
+
+  // Course subject and academic period checks (2026-11-07): the exact queries the Add Pattern page and Maintain Application
+  // Pattern build (test/lookups.js mirrors comsPatterns.script), run against Workday: one-value checks, tree folders, search.
+  await test('Lookups.queries', async () => {
+    const L = require('./lookups.js');
+    const run = async (q, lim = 50) => wql(token, q, lim);
+    const got = [];
+    const expect = async (label, q, ok) => { const r = await run(q, 2000); const n = (r.data || []).length; if (!ok(r)) throw new Error(`${label}: ${n} rows for ${q}`); got.push(`${label} ${n}`); return r; };
+    await expect('CHEM', L.lookupWql('courseSubject', 'CHEM'), (r) => (r.data || []).some((x) => x.abbreviation === 'CHEM'));
+    await expect('ZZZZ', L.lookupWql('courseSubject', 'ZZZZ'), (r) => !(r.data || []).length);
+    await expect('PLAS_V (inactive)', L.lookupWql('courseSubject', 'PLAS_V'), (r) => !(r.data || []).length);
+    await expect('2024W1', L.lookupWql('academicPeriod', '2024W1'), (r) => (r.data || []).length > 0);
+    await expect('2024W', L.lookupWql('academicPeriod', '2024W'), (r) => (r.data || []).length > 0);
+    await expect('2025S', L.lookupWql('academicPeriod', '2025S'), (r) => (r.data || []).length > 0);
+    await expect('2031W1', L.lookupWql('academicPeriod', '2031W1'), (r) => !(r.data || []).length);
+    if (L.lookupWql('academicPeriod', '*W1') !== '') throw new Error('*W1 should not be looked up');
+    await expect('tree C', L.treeWql('courseSubject', 'LETTER_C'), (r) => (r.data || []).length > 0 && (r.data || []).every((x) => x.abbreviation.startsWith('C')));
+    const years = (await wql(token, 'SELECT academicYear, startDate FROM academicYears ORDER BY startDate', 1000)).data || [];
+    if (!years.length) throw new Error('no academic years for the period tree');
+    const y = years.find((x) => x.academicYear) || {};
+    await expect('tree year', L.treeWql('academicPeriod', y.academicYear.id), (r) => (r.data || []).length > 0);
+    await expect('tree no year', L.treeWql('academicPeriod', 'NOYEAR'), () => true);
+    await expect('search chem', L.searchWql('courseSubject', 'chem'), (r) => (r.data || []).some((x) => x.abbreviation === 'CHEM'));
+    await expect("search o'neil", L.searchWql('courseSubject', "o'neil\\"), () => true);
+    await expect('search winter', L.searchWql('academicPeriod', 'winter'), (r) => (r.data || []).length > 0);
+    const fill = [['2024-25 Winter Term 1 (UBC-V)|0', '2024W1'], ['2025 Summer Term 2 (UBC-V)|3', '2025S'], ['2024-25 Winter Term 2 (UBC-V)|1', '2024W2']];
+    for (const [id, want] of fill) if (L.fillValue('academicPeriod', id) !== want) throw new Error(`fillValue ${id} gave ${L.fillValue('academicPeriod', id)}`);
+    pass('Lookups.queries', got.join(', ') + `; ${years.length} academic years`);
   });
 
   // Access Review lists vacant positions that still hold a shell role (tools/build_access_review.py): the same two
@@ -1920,6 +1959,44 @@ async function patternGuard(token, me) {
     });
     await sleep(1500);
   }
+  // Course subject and academic period checks (2026-11-07): no application has them switched on, so X:CLW's Subject
+  // (attribute2) and Academic Period (attribute5) get them for these launches only; its stored format is put back after.
+  const clw = apps.find((a) => a.appId === 'X:CLW');
+  const lookupCases = [
+    ['subject', 'X:CLW:PATTERN:MATH:ZZZZ:999:999:2024W1', ['MATH', 'ZZZZ', '2024W1']],
+    ['subject', 'X:CLW:PATTERN:MATH:PLAS_V:999:999:2024W1', ['MATH', 'PLAS_V', '2024W1']],
+    ['period', 'X:CLW:PATTERN:MATH:CHEM:999:999:2031W1', ['MATH', 'CHEM', '2031W1']],
+    ['period', 'X:CLW:PATTERN:MATH:CHEM:999:999:2024S', ['MATH', 'CHEM', '2024S']],
+    ['accept', 'X:CLW:PATTERN:MATH:CHEM:999:999:2024W1', ['MATH', 'CHEM', '2024W1']],
+    ['accept', 'X:CLW:PATTERN:MATH:CHEM:999:999:2025S', ['MATH', 'CHEM', '2025S']],
+    ['accept', 'X:CLW:PATTERN:MATH:*:999:999:*W1', ['MATH', '*', '*W1']],
+  ];
+  if (clw && clw.patternSchema) {
+    const original = clw.patternSchema;
+    const sch = JSON.parse(original);
+    sch.fields[1].lookup = 'courseSubject';
+    sch.fields[4].lookup = 'academicPeriod';
+    try {
+      await request('PATCH', `${BO}/comsApplications/${clw.id}`, token, { patternSchema: JSON.stringify(sch) });
+      for (const [want, name, [a1, a2, a5]] of lookupCases) {
+        await test(`Guard.${name}`, async () => {
+          const r = txt(await launch(token, 'IORC_0037_XFD_SEC_Create_Pattern_Shell_Org', { comsAppId: clw.id, patternName: name, workerId: me.id, attribute1: a1, attribute2: a2, attribute3: '999', attribute4: '999', attribute5: a5,
+            effectiveDate: '2026-02-30', changedBy: me.descriptor, changedByWid: me.id, timestamp: new Date().toISOString().replace(/\.\d+Z$/, 'Z') }));
+          const by = /CheckPatternName/.test(r) ? 'CheckPatternName' : /CheckUnitCode/.test(r) ? 'CheckUnitCode' : /CheckSubject/.test(r) ? 'CheckSubject' : /CheckPeriod/.test(r) ? 'CheckPeriod' : '';
+          const wantBy = { subject: 'CheckSubject', period: 'CheckPeriod', accept: '' }[want];
+          if (by !== wantBy) throw new Error(`expected ${wantBy || 'to pass the guards'}, got ${by || 'passed'}: ${r.slice(0, 300)}`);
+          pass(`Guard.${name}`, `${by ? 'stopped by ' + by : 'passed the guards'}: ${r.slice(0, 160)}`);
+        });
+        await sleep(1500);
+      }
+    } finally {
+      await request('PATCH', `${BO}/comsApplications/${clw.id}`, token, { patternSchema: original });
+      const back = ((await request('GET', `${BO}/comsApplications/${clw.id}`, token)) || {}).patternSchema;
+      if (back !== original) fail('Guard.restoreFormat', 'X:CLW pattern format was not put back; restore it from tools/pattern_schemas.json (seed-apps-apply)');
+      else pass('Guard.restoreFormat', 'X:CLW pattern format put back');
+    }
+    cases.push(...lookupCases.map(([w, n]) => [w, 'X:CLW', n]));
+  }
   await sleep(20000);
   const created = ((await wql(token, "SELECT code FROM topLevelOrganizations WHERE subtype in (e6ca8683b78d10017a5c108412fc0000, e6ca8683b78d10017a5c108412fc0001)", 10000)).data || []).map((o) => o.code);
   const leaked = cases.map((c) => c[2]).filter((n) => created.includes(n));
@@ -2487,46 +2564,6 @@ async function shellRolesQuery(token) {
 
 async function probe(token) {
   console.log('\n-- Probe (read-only) --');
-  // 2026-11-07: course subjects (Abbreviation, e.g. CHEM) and academic periods (name, e.g. 2024-25 Winter Term 1 (UBC-V)):
-  // data sources, fields, counts, and how fast a one-value lookup and a typed search are
-  for (const term of ['course subject', 'academic period']) {
-    try {
-      const found = [];
-      for (const q of [`search=${encodeURIComponent(term)}`, `alias=${term === 'course subject' ? 'courseSubjects' : 'academicPeriods'}`]) {
-        try { found.push(...((await request('GET', `${API}/wql/v1/dataSources?${q}&limit=20`, token)).data || [])); } catch (e) { console.log(`   DS ${q} error ${String(e.message).slice(0, 150)}`); }
-      }
-      const seen = new Set();
-      for (const d of found) {
-        if (seen.has(d.id)) continue; seen.add(d.id);
-        console.log(`   DS "${term}": ${d.alias} | ${d.descriptor} | ${d.id}`);
-      }
-      for (const d of found.filter((x) => /^(courseSubjects|academicPeriods)$/.test(x.alias)).slice(0, 2)) {
-        const fields = [];
-        for (let off = 0; off < 3000; off += 100) {
-          const page = (await request('GET', `${API}/wql/v1/dataSources/${d.id}/fields?limit=100&offset=${off}`, token)).data || [];
-          fields.push(...page);
-          if (page.length < 100) break;
-        }
-        console.log(`   FIELDS ${d.alias} (${fields.length}): ${fields.map((f) => `${f.alias}[${f.type}]`).join(' ')}`);
-      }
-    } catch (e) { console.log(`   DS ${term} error ${String(e.message).slice(0, 300)}`); }
-  }
-  const timed = async (label, q, lim) => {
-    const t0 = Date.now();
-    try {
-      const r = await wql(token, q, lim);
-      console.log(`   Q ${label}: total=${r.total} rows=${(r.data || []).length} ${Date.now() - t0}ms first=${JSON.stringify((r.data || [])[0] || {}).slice(0, 300)}`);
-      return r.data || [];
-    } catch (e) { console.log(`   Q ${label}: error ${String(e.message).slice(0, 250)} ${Date.now() - t0}ms`); return []; }
-  };
-  await timed('per refs', 'SELECT name, referenceID1, referenceId, referenceID3, workdayID, periodType, academicYear FROM academicPeriods', 20);
-  const pr = (await wql(token, 'SELECT name, referenceID1, referenceId, referenceID3, periodType, academicCalendar FROM academicPeriods', 100)).data || [];
-  pr.forEach((x) => console.log(`   PERREF ${x.name} | ref1=${x.referenceID1} | refId=${x.referenceId} | ref3=${x.referenceID3} | type=${(x.periodType || {}).descriptor} | cal=${(x.academicCalendar || {}).descriptor}`));
-  const sr = (await wql(token, "SELECT abbreviation, name, referenceID1 FROM courseSubjects WHERE abbreviation in ('PHYS_V','MECH_V','PHAS','PHYS','MECH','MATH','CPSC','HUMA')", 20)).data || [];
-  sr.forEach((x) => console.log(`   SUBJREF ${x.abbreviation} | ${x.name} | ref1=${x.referenceID1}`));
-  const sv = (await wql(token, "SELECT abbreviation FROM courseSubjects WHERE abbreviation contains '_'", 400)).data || [];
-  console.log(`   SUBJ with _: ${sv.length}: ${sv.map((x) => x.abbreviation).slice(0, 40).join(' ')}`);
-  return;
   // 2026-11-06: the subtype design's WQL, exactly as the pages send it (presentation/wqlQueries)
   {
     const q = (n) => JSON.parse(fs.readFileSync(path.join(ROOT, 'presentation', 'wqlQueries', n + '.wqlquery'), 'utf8')).query;

@@ -1,0 +1,36 @@
+// Workday checks that look one value up (2026-11-07): a JS mirror of the query builders in
+// presentation/scripts/comsPatterns.script (lookupWql, treeWql, searchWql, fillValue). The smoke suite runs these exact
+// queries against Workday; Static.lookups checks every query text below still appears in the script.
+const FRAGMENTS = {
+  subjectCheck: "SELECT abbreviation, name FROM courseSubjects WHERE inactive = false AND abbreviation = '",
+  periodCheck: "SELECT name FROM academicPeriods WHERE inactive = false AND name startswith '",
+  periodWords: " AND name contains '",
+  subjectTree: "SELECT abbreviation, name FROM courseSubjects WHERE inactive = false AND abbreviation startswith '",
+  subjectTreeEnd: "' ORDER BY abbreviation",
+  periodNoYear: 'SELECT name FROM academicPeriods WHERE inactive = false AND academicYear is empty ORDER BY name',
+  periodYear: 'SELECT name FROM academicPeriods WHERE inactive = false AND academicYear in (',
+  subjectSearch: "SELECT abbreviation, name FROM courseSubjects WHERE inactive = false AND (abbreviation startswith '",
+  subjectSearchMid: "' OR name contains '",
+  periodSearch: "SELECT name FROM academicPeriods WHERE inactive = false AND name contains '",
+};
+const F = FRAGMENTS;
+const text = (v) => String(v ?? '').split("'").join('').split('\\').join('').trim();
+const year = (v) => (v.length < 4 ? v : v.slice(0, 4));
+const words = (v) => ({ W1: 'Winter Term 1', W2: 'Winter Term 2', W: 'Winter', S: 'Summer' }[v.length > 4 ? v.slice(4) : ''] || '');
+const lookupWql = (kind, v) => {
+  const t = text(v);
+  if (!t || t.startsWith('*')) return '';
+  if (kind === 'courseSubject') return F.subjectCheck + t + "'";
+  if (kind === 'academicPeriod') return F.periodCheck + year(t) + "'" + (words(t) ? F.periodWords + words(t) + "'" : '');
+  return '';
+};
+const treeWql = (kind, folder) => (kind === 'courseSubject' ? F.subjectTree + text(folder).replace(/^.*?LETTER_/, '') + F.subjectTreeEnd
+  : folder === 'NOYEAR' ? F.periodNoYear : F.periodYear + text(folder) + ') ORDER BY name');
+const searchWql = (kind, q) => (kind === 'courseSubject' ? F.subjectSearch + text(q) + F.subjectSearchMid + text(q) + "') ORDER BY abbreviation"
+  : F.periodSearch + text(q) + "' ORDER BY name");
+const fillValue = (kind, id) => {
+  if (kind === 'courseSubject') return id;
+  const name = id.split('|')[0]; const y = year(name);
+  return name.includes('Winter Term 1') ? y + 'W1' : name.includes('Winter Term 2') ? y + 'W2' : name.includes('Summer') ? y + 'S' : name.includes('Winter') ? y + 'W' : '';
+};
+module.exports = { FRAGMENTS, lookupWql, treeWql, searchWql, fillValue };

@@ -548,7 +548,14 @@ RULE_OPTIONS = [("none", "None"), ("first", "Starts with a letter or digit"), ("
                 ("campus", "May end with _ and a campus letter (e.g. _V)"), ("letter", "May end with a capital letter (e.g. 100A)"),
                 ("shorter", "Or a shorter start then * (e.g. 1*)"),
                 ("letterShorter", "May end with a capital letter, or a shorter start then *")]
-LOOKUPS = [("none", "None"), ("academicUnitCode", "Academic unit code")]
+LOOKUPS = [("none", "None"), ("academicUnitCode", "Academic unit code"),
+           # 2026-11-07: each value looked up on its own (WQL courseSubjects / academicPeriods), for tens of thousands of rows
+           ("courseSubject", "Course subject abbreviation (e.g. CHEM)"),
+           ("academicPeriod", "Academic period (e.g. 2024W1 = a 2024-25 Winter Term 1 period)")]
+# a field's example must exist in Workday when its check is a course subject or an academic period: one query per example
+EXAMPLES_MISSING = ("ROWS.filter(r => { comsPatterns.lookupWql(r.lookup, r.example) != '' }).filter(r => { "
+                    "let x = wdLookup.invoke({'q': comsPatterns.lookupWql(r.lookup, r.example), 'lim': '50'}); "
+                    "comsPatterns.lookupMiss(r.lookup, r.example, x.total ?? (0 - 1), x.data ?? []) })")
 # A rule setting changed (cell onChange; the row's other cells are reachable by id): recheck the rule, write its regex
 # into the Format cell (read-only while a rule is in use), and keep the hint in step unless someone wrote their own.
 # Regular expression mode unlocks the Format cell and keeps whatever regex is there: rule -> regex loses nothing.
@@ -590,15 +597,21 @@ submit = ("<%\n"
           "  if (e3 != '') { prefixesText.setError(e3); valid = false; }\n"
           f"  let e4 = comsAppSetup.fieldsError({ROWS}, {UNITS});\n"
           "  if (e4 != '') { fieldsCheckText.setError(e4); valid = false; }\n"
+          "  if (e4 == '') {\n"
+          f"    let miss = {EXAMPLES_MISSING.replace('ROWS', ROWS)};\n"
+          "    if (miss.size() > 0) { fieldsCheckText.setError(comsPatterns.lookupMessage(miss[0].lookup, miss[0].fieldLabel + ' (example)', miss[0].example)); valid = false; }\n"
+          "  }\n"
           "  valid;\n%>")
-edit = {"id": "editAppPattern", "securityDomains": [DOMAIN], "include": ["comsAppSetup.script"],
+edit = {"id": "editAppPattern", "securityDomains": [DOMAIN], "include": ["comsAppSetup.script", "comsPatterns.script"],
   "endPoints": [APPS_EP,
     {"name": "existingOrgs", "baseUrlType": "workday-wql", "url": "data", "authType": "sso", "bestEffort": "true",
      "wqlQuery": {"queryId": "customOrganizations"}, "failOnStatusCodes": FOS([400, 429])},
     {"name": "selectedWorker", "baseUrlType": "COMMON", "url": "/workers/me", "authType": "sso", "bestEffort": "true", "failOnStatusCodes": FOS([400, 403, 429])},
     # a failed list only switches the code check off (bestEffort, 400 left out): the rest of the page still works
     {"name": "auCodes", "baseUrlType": "workday-wql", "url": "data", "authType": "sso", "bestEffort": "true",
-     "wqlQuery": {"queryId": "academicUnitCodes"}, "failOnStatusCodes": FOS([429])}],
+     "wqlQuery": {"queryId": "academicUnitCodes"}, "failOnStatusCodes": FOS([429])},
+    {"name": "wdLookup", "baseUrlType": "workday-wql", "authType": "sso", "deferred": "true",
+     "url": "<% 'data?limit=' + lim + '&query=' + string:pathEncode(q) %>"}],
   "outboundData": {"outboundEndPoints": [
     {"name": "postApplication", "baseUrlType": "BUSINESS-OBJECT", "url": "/comsApplications", "httpMethod": "POST", "authType": "sso",
      "exclude": f"<% !{NEW} %>", "failOnStatusCodes": FOS([400, 403, 429, 500]), "values": [

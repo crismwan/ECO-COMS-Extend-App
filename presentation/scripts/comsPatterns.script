@@ -76,11 +76,131 @@ var checkFieldIn = function(schema, i, value, units) {
   }
 };
 
+/* Workday checks that look up one value with its own WQL query (2026-11-07), built for tens of thousands of rows: nothing
+   is loaded up front. Course subject: the value is an active subject's Abbreviation (e.g. CHEM; WQL courseSubjects).
+   Academic period: the short form names an active period (WQL academicPeriods.name): 2024W1 = a name starting 2024 with
+   Winter Term 1 in it (2024-25 Winter Term 1 (UBC-V)), W2 = Winter Term 2, W = Winter, S = Summer, a bare year = any
+   period of that year; a value starting with * is not looked up. The page sends the query to its wdLookup endpoint. */
+var lookupOf = function(schema, i) {
+  fieldCount(schema) <= i ? '' : (schema.fields[i].lookup ?? '');
+};
+
+var pickerKind = function(schema, i) {
+  let k = lookupOf(schema, i);
+  (k == 'courseSubject' || k == 'academicPeriod') ? k : '';
+};
+
+var needsPeriods = function(schema) {
+  empty(schema) ? false : schema.fields.filter(f => { f.lookup == 'academicPeriod' }).size() > 0;
+};
+
+var wqlText = function(v) {
+  (v ?? '').replace('\'', '').replace('%5C'.urlDecode(), '').trim();
+};
+
+var periodYear = function(v) {
+  v.length() < 4 ? v : v.substring(0, 4);
+};
+
+var periodWords = function(v) {
+  let rest = v.length() > 4 ? v.substring(4) : '';
+  rest == 'W1' ? 'Winter Term 1' : (rest == 'W2' ? 'Winter Term 2' : (rest == 'W' ? 'Winter' : (rest == 'S' ? 'Summer' : '')));
+};
+
+var lookupWql = function(kind, v) {
+  let t = wqlText(v);
+  if (empty(t) || t.startsWith('*')) {
+    '';
+  } else if (kind == 'courseSubject') {
+    'SELECT abbreviation, name FROM courseSubjects WHERE inactive = false AND abbreviation = \'' + t + '\'';
+  } else if (kind == 'academicPeriod') {
+    'SELECT name FROM academicPeriods WHERE inactive = false AND name startswith \'' + periodYear(t) + '\''
+      + (periodWords(t) == '' ? '' : (' AND name contains \'' + periodWords(t) + '\''));
+  } else {
+    '';
+  }
+};
+
+/* total is the query's total, or a negative number when the lookup failed (then nothing is blocked); WQL's = ignores
+   case, so a subject must also match the returned Abbreviation exactly. */
+var lookupMiss = function(kind, v, total, rows) {
+  if (total < 0) {
+    false;
+  } else if (kind == 'courseSubject') {
+    rows.map(r => { r.abbreviation ?? '' }).indexOf(wqlText(v)) < 0;
+  } else {
+    total == 0;
+  }
+};
+
+var lookupMessage = function(kind, label, v) {
+  kind == 'courseSubject'
+    ? (label + ': ' + v + ' is not the abbreviation of an active course subject in Workday (e.g. CHEM for Chemistry).')
+    : (label + ': no active academic period in Workday matches ' + v + ' (2024W1 means a 2024-25 Winter Term 1 period, 2025S a 2025 Summer period).');
+};
+
+/* One field's check in two steps, so a page only queries Workday when the format is right: fieldQuery is the WQL to
+   run ('' = none), fieldError the field's error given that query's total (negative = not run or failed) and rows. */
+var fieldQuery = function(schema, i, value, units) {
+  checkFieldIn(schema, i, value, units) == '' ? lookupWql(lookupOf(schema, i), value) : '';
+};
+
+var fieldError = function(schema, i, value, units, total, rows) {
+  let e = checkFieldIn(schema, i, value, units);
+  (e == '' && lookupMiss(lookupOf(schema, i), value, total, rows)) ? lookupMessage(lookupOf(schema, i), fieldLabel(schema, i), value) : e;
+};
+
+/* "Find in Workday" pickers: typed search, or browse a tree (subjects by first letter, periods by academic year). */
+var letterFolders = function() {
+  ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
+    .map(c => { {'id': 'LETTER_' + c, 'descriptor': c} });
+};
+
+var yearFolders = function(years) {
+  list:flatten([(years ?? []).filter(y => { !empty(y.academicYear) }).map(y => { {'id': y.academicYear.id, 'descriptor': y.academicYear.descriptor} }),
+    [{'id': 'NOYEAR', 'descriptor': '(No academic year)'}]]);
+};
+
+var treeWql = function(kind, folder) {
+  if (kind == 'courseSubject') {
+    'SELECT abbreviation, name FROM courseSubjects WHERE inactive = false AND abbreviation startswith \'' + wqlText(folder).substringAfter('LETTER_') + '\' ORDER BY abbreviation';
+  } else if (folder == 'NOYEAR') {
+    'SELECT name FROM academicPeriods WHERE inactive = false AND academicYear is empty ORDER BY name';
+  } else {
+    'SELECT name FROM academicPeriods WHERE inactive = false AND academicYear in (' + wqlText(folder) + ') ORDER BY name';
+  }
+};
+
+var searchWql = function(kind, q) {
+  let t = wqlText(q);
+  kind == 'courseSubject'
+    ? ('SELECT abbreviation, name FROM courseSubjects WHERE inactive = false AND (abbreviation startswith \'' + t + '\' OR name contains \'' + t + '\') ORDER BY abbreviation')
+    : ('SELECT name FROM academicPeriods WHERE inactive = false AND name contains \'' + t + '\' ORDER BY name');
+};
+
+var pickRows = function(kind, rows) {
+  kind == 'courseSubject'
+    ? (rows ?? []).map(r => { {'id': r.abbreviation ?? '', 'descriptor': (r.abbreviation ?? '') + ' · ' + (r.name ?? '')} })
+    : (rows ?? []).map((r, n) => { {'id': (r.name ?? '') + '|' + n, 'descriptor': r.name ?? ''} });
+};
+
+/* the value a picked entry puts in the field: a subject's Abbreviation, a period's short form ('' when it has none) */
+var fillValue = function(kind, id) {
+  if (kind == 'courseSubject') {
+    id;
+  } else {
+    let name = id.substringBefore('|');
+    let y = periodYear(name);
+    name.contains('Winter Term 1') ? (y + 'W1') : (name.contains('Winter Term 2') ? (y + 'W2')
+      : (name.contains('Summer') ? (y + 'S') : (name.contains('Winter') ? (y + 'W') : '')));
+  }
+};
+
 var formatGuide = function(schema) {
   if (empty(schema)) {
     '';
   } else {
-    schema.fields.map(f => { f.fieldLabel + (f.optionalField == true ? ' (optional, may be left off)' : '') + ' (e.g. ' + f.example + '): ' + f.hint + (f.lookup == 'academicUnitCode' ? ' Must be an active academic unit code.' : '') }).join('  ·  ');
+    schema.fields.map(f => { f.fieldLabel + (f.optionalField == true ? ' (optional, may be left off)' : '') + ' (e.g. ' + f.example + '): ' + f.hint + (f.lookup == 'academicUnitCode' ? ' Must be an active academic unit code.' : (f.lookup == 'courseSubject' ? ' Must be an active course subject abbreviation in Workday.' : (f.lookup == 'academicPeriod' ? ' Must match an active academic period in Workday.' : ''))) }).join('  ·  ');
   }
 };
 
@@ -116,6 +236,20 @@ var appCodes = function(orgs, apps) {
   "checkField": checkField,
   "needsUnits": needsUnits,
   "checkFieldIn": checkFieldIn,
+  "lookupOf": lookupOf,
+  "pickerKind": pickerKind,
+  "needsPeriods": needsPeriods,
+  "lookupWql": lookupWql,
+  "lookupMiss": lookupMiss,
+  "lookupMessage": lookupMessage,
+  "fieldQuery": fieldQuery,
+  "fieldError": fieldError,
+  "letterFolders": letterFolders,
+  "yearFolders": yearFolders,
+  "treeWql": treeWql,
+  "searchWql": searchWql,
+  "pickRows": pickRows,
+  "fillValue": fillValue,
   "formatGuide": formatGuide,
   "summary": summary,
   "appCodes": appCodes

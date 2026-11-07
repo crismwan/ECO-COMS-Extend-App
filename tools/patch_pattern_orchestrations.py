@@ -98,6 +98,46 @@ UNIT_ASSERT = (f'(if ({UV}.isEmpty().or({UV}.equals("*"))) true else '
                f'"Academic unit code " + {UV} + " is not an active academic unit in Workday"')
 
 
+# Course subject and academic period checks (2026-11-07), the same way: the field's value (fields 1-5) is looked up with
+# a one-row WQL query, so this stays quick with tens of thousands of subjects or periods. A value that is empty or starts
+# with * is not checked. A period's short form names a period: 2024W1 = a name starting 2024 that contains
+# "Winter Term 1" (W2 Winter Term 2, W Winter, S Summer, a bare year any period); comsPatterns.lookupWql does the same.
+def field_value(kind):
+    lk = f'"\\"lookup\\":\\"{kind}\\""'
+    pre = f'{SCH}.substringBefore({lk})'
+    pos = f'({pre}.length() - {pre}.replace("}},{{", "").length())'
+    return (f'(if ({SCH}.contains({lk}).not()) "" else '
+            + ''.join(f'(if ({pos} == {3 * (n - 1)}) {ATTR(n)}.replace("\\\\", "").trim() else ' for n in range(1, 6)) + '""' + ')' * 6)
+
+
+ENC = lambda v: f'{v}.replace("%", "").replace("+", "%2B").replace("&", "").replace("#", "").replace(" ", "%20")'
+SV = 'data.SubjectInput.subjectValue'
+SUBJECT_PATH = ('"/wql/v1/data?limit=1&query=SELECT%20abbreviation%20FROM%20courseSubjects%20WHERE%20inactive%20%3D%20false'
+                f'%20AND%20abbreviation%20%3D%20%27".append({ENC(SV)}).append("%27")')
+SUBJECT_ASSERT = (f'(if ({SV}.isEmpty().or({SV}.startsWith("*"))) true else '
+                  f'data.LookupSubject.response.asJSON().stringAtJsonPathWithDefault("$.data[0].abbreviation", "").equals({SV}))',
+                  f'"Course subject " + {SV} + " is not the abbreviation of an active course subject in Workday"')
+PV = 'data.PeriodInput.periodValue'
+P_YEAR = f'{PV}.truncate(4)'
+P_REST = f'{PV}.replace({PV}.truncate(4), "")'
+P_WORDS = (f'(if ({P_REST}.equals("W1")) "Winter%20Term%201" else (if ({P_REST}.equals("W2")) "Winter%20Term%202" else '
+           f'(if ({P_REST}.equals("W")) "Winter" else (if ({P_REST}.equals("S")) "Summer" else ""))))')
+PERIOD_PATH = ('"/wql/v1/data?limit=1&query=SELECT%20name%20FROM%20academicPeriods%20WHERE%20inactive%20%3D%20false'
+               f'%20AND%20name%20startswith%20%27".append({ENC(P_YEAR)}).append("%27")'
+               f'.append((if ({P_WORDS}.isEmpty()) "" else "%20AND%20name%20contains%20%27".append({P_WORDS}).append("%27")))')
+PERIOD_ASSERT = (f'(if ({PV}.isEmpty().or({PV}.startsWith("*"))) true else '
+                 f'data.LookupPeriod.response.asJSON().stringAtJsonPathWithDefault("$.data[0].name", "").isEmpty().not())',
+                 f'"No active academic period in Workday matches " + {PV} + " (2024W1 means a 2024-25 Winter Term 1 period)"')
+LOOKUP_GUARDS = [  # (kind, input node, value param, path param, lookup node, check node, value, path, assertion, notes)
+    ('courseSubject', 'SubjectInput', 'subjectValue', 'subjectPath', 'LookupSubject', 'CheckSubject', SUBJECT_PATH, SUBJECT_ASSERT,
+     "Find the active course subject with that Abbreviation (WQL courseSubjects.abbreviation)",
+     "Guard: a field whose Workday check is Course subject holds an active subject's Abbreviation (or * for any)"),
+    ('academicPeriod', 'PeriodInput', 'periodValue', 'periodPath', 'LookupPeriod', 'CheckPeriod', PERIOD_PATH, PERIOD_ASSERT,
+     "Find an active academic period the short form names (WQL academicPeriods.name)",
+     "Guard: a field whose Workday check is Academic period names an active period (2024W1, 2024W, 2024S, 2024; * for any)"),
+]
+
+
 # Add Shell Org (product owner 2026-11-05): an X:META organization may be a new application's own
 # organization, named exactly as its organization type. Since 2026-11-06 (product owner) that code can be anything
 # (X: not required); an organization under an application uses the application as its type. The page checks the same rules.
@@ -192,6 +232,33 @@ def main():
         "Guard: a field whose Workday check is Academic unit code holds the Code of an active academic unit (or * for any)")
     at = names.index('CheckPatternName') + 1
     nodes[at:at] = [cv, lk, ck]
+    # course subject and academic period checks after the unit check, built from the same three prototypes
+    after = 'CheckUnitCode'
+    for kind, inp, vparam, pparam, lname, cname, path, (cond, msg), lnote, cnote in LOOKUP_GUARDS:
+        nodes[:] = [n for n in nodes if n['_value']['name']['_value'] not in (inp, lname, cname)]
+        c2 = copy.deepcopy(cv)
+        c2['_value']['name']['_value'] = inp
+        c2['_value']['values']['_value'] = []
+        for pname, src in ((vparam, field_value(kind)), (pparam, path)):
+            a2 = copy.deepcopy(proto_a)
+            a2['_value']['param']['_value']['name']['_value'] = pname
+            a2['_value']['expr']['_value']['source']['_value'] = src
+            c2['_value']['values']['_value'].append(a2)
+        c2['_value']['notes']['_value'][0]['_value']['value']['_value'] = f"The value of the field checked against {kind} (Maintain Application Pattern: Workday check), and the WQL URL that looks it up"
+        l2 = copy.deepcopy(lk)
+        l2['_value']['name']['_value'] = lname
+        l2['_value']['path']['_value']['source']['_value'] = f'data.{inp}.{pparam}'
+        l2['_value']['notes']['_value'][0]['_value']['value']['_value'] = lnote
+        k2 = copy.deepcopy(ck)
+        k2['_value']['name']['_value'] = cname
+        a3 = copy.deepcopy(proto)
+        a3['_value']['assertion']['_value']['source']['_value'] = cond
+        a3['_value']['message']['_value']['source']['_value'] = msg
+        k2['_value']['assertions']['_value'] = [a3]
+        k2['_value']['notes']['_value'][0]['_value']['value']['_value'] = cnote
+        at = [n['_value']['name']['_value'] for n in nodes].index(after) + 1
+        nodes[at:at] = [c2, l2, k2]
+        after = cname
     save('IORC_0037_XFD_SEC_Create_Pattern_Shell_Org', d)
     print('IORC_0037_XFD_SEC_Create_Application_Shell_Org: subtype from orgSubtype (X:META or X:SHELL); IORC_0037_XFD_SEC_Create_Pattern_Shell_Org: subtype X:SHELL,', len(out), 'assertions')
 

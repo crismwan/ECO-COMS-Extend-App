@@ -4,7 +4,8 @@
     "ManageCOMSApplicationSetup"
   ],
   "include": [
-    "comsAppSetup.script"
+    "comsAppSetup.script",
+    "comsPatterns.script"
   ],
   "endPoints": [
     {
@@ -75,6 +76,13 @@
           "code": 429
         }
       ]
+    },
+    {
+      "name": "wdLookup",
+      "baseUrlType": "workday-wql",
+      "authType": "sso",
+      "deferred": "true",
+      "url": "<% 'data?limit=' + lim + '&query=' + string:pathEncode(q) %>"
     }
   ],
   "outboundData": {
@@ -227,7 +235,7 @@
       }
     ]
   },
-  "onSubmit": "<%\n  appIdDropdown.clearError();\n  appNameText.clearError();\n  prefixesText.clearError();\n  fieldsCheckText.clearError();\n  let valid = true;\n  let e1 = comsAppSetup.appIdError((empty(appIdDropdown.value) ? '' : appIdDropdown.selectedEntries[0].id), comsApplications.data, empty((queryParams.recordId ?? queryParams.taskObjectId ?? '')));\n  if (e1 != '') { appIdDropdown.setError(e1); valid = false; }\n  let e2 = empty((queryParams.recordId ?? queryParams.taskObjectId ?? '')) ? comsAppSetup.nameError((appNameText.value ?? '').trim()) : '';\n  if (e2 != '') { appNameText.setError(e2); valid = false; }\n  let e3 = comsAppSetup.prefixError(prefixesText.value ?? '');\n  if (e3 != '') { prefixesText.setError(e3); valid = false; }\n  let e4 = comsAppSetup.fieldsError(fieldsGrid.rows.map(r => { comsAppSetup.rowOf(r.childrenMap.colFieldLabel.value, (empty(r.childrenMap.colRule.value) ? '' : r.childrenMap.colRule.value[0]), r.childrenMap.colLength.value, r.childrenMap.colValues.value, (empty(r.childrenMap.colOption.value) ? '' : r.childrenMap.colOption.value[0]), r.childrenMap.colRegex.value, r.childrenMap.colHint.value, r.childrenMap.colExample.value, r.childrenMap.colBlank.value == true, r.childrenMap.colOptional.value == true, (empty(r.childrenMap.colLookup.value) ? '' : r.childrenMap.colLookup.value[0])) }), (auCodes.data ?? []).map(u => { u.academicUnitCode ?? '' }));\n  if (e4 != '') { fieldsCheckText.setError(e4); valid = false; }\n  valid;\n%>",
+  "onSubmit": "<%\n  appIdDropdown.clearError();\n  appNameText.clearError();\n  prefixesText.clearError();\n  fieldsCheckText.clearError();\n  let valid = true;\n  let e1 = comsAppSetup.appIdError((empty(appIdDropdown.value) ? '' : appIdDropdown.selectedEntries[0].id), comsApplications.data, empty((queryParams.recordId ?? queryParams.taskObjectId ?? '')));\n  if (e1 != '') { appIdDropdown.setError(e1); valid = false; }\n  let e2 = empty((queryParams.recordId ?? queryParams.taskObjectId ?? '')) ? comsAppSetup.nameError((appNameText.value ?? '').trim()) : '';\n  if (e2 != '') { appNameText.setError(e2); valid = false; }\n  let e3 = comsAppSetup.prefixError(prefixesText.value ?? '');\n  if (e3 != '') { prefixesText.setError(e3); valid = false; }\n  let e4 = comsAppSetup.fieldsError(fieldsGrid.rows.map(r => { comsAppSetup.rowOf(r.childrenMap.colFieldLabel.value, (empty(r.childrenMap.colRule.value) ? '' : r.childrenMap.colRule.value[0]), r.childrenMap.colLength.value, r.childrenMap.colValues.value, (empty(r.childrenMap.colOption.value) ? '' : r.childrenMap.colOption.value[0]), r.childrenMap.colRegex.value, r.childrenMap.colHint.value, r.childrenMap.colExample.value, r.childrenMap.colBlank.value == true, r.childrenMap.colOptional.value == true, (empty(r.childrenMap.colLookup.value) ? '' : r.childrenMap.colLookup.value[0])) }), (auCodes.data ?? []).map(u => { u.academicUnitCode ?? '' }));\n  if (e4 != '') { fieldsCheckText.setError(e4); valid = false; }\n  if (e4 == '') {\n    let miss = fieldsGrid.rows.map(r => { comsAppSetup.rowOf(r.childrenMap.colFieldLabel.value, (empty(r.childrenMap.colRule.value) ? '' : r.childrenMap.colRule.value[0]), r.childrenMap.colLength.value, r.childrenMap.colValues.value, (empty(r.childrenMap.colOption.value) ? '' : r.childrenMap.colOption.value[0]), r.childrenMap.colRegex.value, r.childrenMap.colHint.value, r.childrenMap.colExample.value, r.childrenMap.colBlank.value == true, r.childrenMap.colOptional.value == true, (empty(r.childrenMap.colLookup.value) ? '' : r.childrenMap.colLookup.value[0])) }).filter(r => { comsPatterns.lookupWql(r.lookup, r.example) != '' }).filter(r => { let x = wdLookup.invoke({'q': comsPatterns.lookupWql(r.lookup, r.example), 'lim': '50'}); comsPatterns.lookupMiss(r.lookup, r.example, x.total ?? (0 - 1), x.data ?? []) });\n    if (miss.size() > 0) { fieldsCheckText.setError(comsPatterns.lookupMessage(miss[0].lookup, miss[0].fieldLabel + ' (example)', miss[0].example)); valid = false; }\n  }\n  valid;\n%>",
   "presentation": {
     "pageType": "EDIT",
     "headerSize": "HIDDEN",
@@ -555,6 +563,14 @@
                           {
                             "id": "academicUnitCode",
                             "descriptor": "Academic unit code"
+                          },
+                          {
+                            "id": "courseSubject",
+                            "descriptor": "Course subject abbreviation (e.g. CHEM)"
+                          },
+                          {
+                            "id": "academicPeriod",
+                            "descriptor": "Academic period (e.g. 2024W1 = a 2024-25 Winter Term 1 period)"
                           }
                         ],
                         "selectedValues": "<% [fr.lookup ?? 'none'] %>",
