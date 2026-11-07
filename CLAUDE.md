@@ -46,6 +46,7 @@ These notes apply to **all** Workday Extend apps I work on. Project-specific det
 - Endpoints — `isCollection: true` performance warning
 - Grid — do not combine paging with `sortableAndFilterable`
 - Grid — `excelExportEnabled` row limit
+- WQL — operators and one-value lookups
 - WQL — injection risk in string concatenation
 - Orchestrations — debugging and failure handling
 - Business processes on Extend business objects
@@ -2411,6 +2412,13 @@ Using `isCollection: true` on inbound endpoints **can degrade the entire tenant 
 ## Grid — `excelExportEnabled` row limit
 
 `"excelExportEnabled": true` on a grid has a **~60 second export limit**. Workday warns against it above ~4,000 rows. For large exports, use a **RaaS report** instead — RaaS has no pagination and is designed for bulk data export.
+
+## WQL — operators and one-value lookups (2026-11-07)
+
+- Text operators (doc.workday.com "WQL reference"): `=`, `!=`, `contains`, `not contains`, `startswith`, `endswith` (spelled lower case), `in (...)`, `not in`, `is empty`, `is not empty`. `contains`/`startswith`/`endswith` ignore case, and live `abbreviation = 'chem'` found CHEM, so `=` ignores case too: compare the returned value when case matters. `ORDER BY field` works; `SELECT *` doesn't ("This field is invalid: *"). An instance filter takes the WID bare: `academicYear in (e32e...)`.
+- **For a check against a list that may hold tens of thousands of rows, query the one value** (a deferred endpoint `'data?limit=' + lim + '&query=' + string:pathEncode(q)`, `.invoke()` from onChange/onSubmit; about 0.2 s) instead of loading the list. Build `q` in a `.script` that strips quotes and backslashes; pass `res.total ?? (0 - 1)` so a failed lookup doesn't block.
+- Data sources seen in a student tenant: `courseSubjects` (abbreviation, name, inactive), `academicPeriods` (name, academicYear, periodType, academicCalendar, startDate, inactive), `academicYears`, `academicUnits` (academicUnitCode). Find others with `GET /wql/v1/dataSources?alias=<alias>` or `?search=<words>`, then `/dataSources/<id>/fields`.
+- Repeating a long check in every field's onChange grows a page fast (7 fields × 15 handlers took one page from 40 KB to 122 KB, over the 100 KB limit): move the logic into `.script` functions and read shared lists once per handler.
 
 ## WQL — injection risk in string concatenation
 
