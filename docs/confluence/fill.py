@@ -128,3 +128,12 @@ def replace_placeholders(soup, mapping):
                 txt = txt.replace(a, b)
         if txt != str(s):
             s.replace_with(NavigableString(txt))
+
+
+def diagram_html(soup, title_start, html_s):
+    """Put HTML after the last guidance paragraph of a 'Diagram — …' block (paragraphs with class dh)."""
+    p = heading(soup, title_start, tags=('p',))
+    last = p
+    while last.find_next_sibling() is not None and 'dh' in (last.find_next_sibling().get('class') or []):
+        last = last.find_next_sibling()
+    insert_after(soup, last, html_s)

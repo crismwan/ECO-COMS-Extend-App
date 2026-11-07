@@ -13,12 +13,8 @@ SO, AR, AP, MA, AUD, SET, PROF = ('Manage: COMS Shell Organizations', 'Manage: C
 
 
 def diagram_after(title_start, src, alt, width=900):
-    """Put the image after the last guidance paragraph of a 'Diagram — …' block."""
-    p = heading(s, title_start, tags=('p',))
-    last = p
-    while last.find_next_sibling() is not None and 'dh' in (last.find_next_sibling().get('class') or []):
-        last = last.find_next_sibling()
-    insert_after(s, last, img(src, alt, width))
+    """Put the diagram after the last guidance paragraph of a 'Diagram — …' block."""
+    diagram_html(s, title_start, img(src, alt, width))
 
 
 # ---------------------------------------------------------------- page properties
@@ -201,11 +197,7 @@ WF = [('UX-001', 'img/ux-rbac-hub.png', 'RBAC Hub'), ('UX-002', 'img/ux-shell-or
       ('UX-006', 'img/ux-add-pattern.png', 'Add Shell Org Pattern for Clockwork (X:CLW)'), ('UX-015', 'img/ux-download-template.png', 'Download Template'),
       ('UX-020', 'img/ux-insights.png', 'Insights'), ('Home', 'img/ux-home-cards.png', 'Workday Home cards')]
 html_wf = ''.join(img(src, f'{uid} · {alt} (screen from the development tenant)', 700) for uid, src, alt in WF)
-diagram_after('Diagram — Wireframes', 'img/ux-rbac-hub.png', 'placeholder')  # replaced below
-ph = s.find('img', src='img/ux-rbac-hub.png').find_parent('p')
-ph.find_next_sibling('p').decompose()
-insert_after(s, ph, html_wf)
-ph.decompose()
+diagram_html(s, 'Diagram — Wireframes', html_wf)
 set_rows(s, T(s, 'UX ID', 0), [
     ['UX-001', 'Screenshot above (RBAC Hub)', 'High-fidelity (built)', 'Product owner', 'Reviewed'],
     ['UX-002', 'Screenshot above; options A–E on the design canvas "Shell Org Manager application filter options"', 'High-fidelity (built)', 'Product owner', 'Approved (Option E, 2026-11-05)'],
