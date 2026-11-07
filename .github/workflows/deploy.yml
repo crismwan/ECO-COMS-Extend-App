@@ -37,15 +37,12 @@ jobs:
         continue-on-error: true
         run: |
           set +e -uo pipefail
-          python3 --version
-          GH_TOKEN="${{ secrets.GITHUB_TOKEN }}" gh release view --repo Developers-and-Dragons/ArcaneAuditor --json tagName,assets --jq '.tagName, .assets[].name'
           # The repo isn't pip-installable (flat layout); use the release's Linux CLI build
           AA_DIR="${RUNNER_TEMP}/arcane"; mkdir -p "${AA_DIR}"
           GH_TOKEN="${{ secrets.GITHUB_TOKEN }}" gh release download --repo Developers-and-Dragons/ArcaneAuditor \
             --pattern "ArcaneAuditor_linux_CLI.tar.gz*" --dir "${AA_DIR}"
           (cd "${AA_DIR}" && sha256sum -c ArcaneAuditor_linux_CLI.tar.gz.sha256 2>&1 | tail -1)
           tar xzf "${AA_DIR}/ArcaneAuditor_linux_CLI.tar.gz" -C "${AA_DIR}"
-          find "${AA_DIR}" -maxdepth 3 | head -20
           AA=$(find "${AA_DIR}" -type f -iname "ArcaneAuditor*CLI*" ! -name "*.tar.gz*" | head -1)
           [ -n "${AA}" ] && chmod +x "${AA}"
           if [ -z "${AA}" ]; then echo "::warning::Arcane Auditor could not be installed"; exit 1; fi
@@ -101,9 +98,10 @@ jobs:
 
       # App Builder's own component checks (PMD/AMD/SMD/model; not orchestrations), before any token step so a code
       # error shows before any deploy. Uses its own config with the developer's platform token (WD_WCP_TOKEN, 8 hours).
+      # Blocks on validation errors; a sign-in problem (expired WD_WCP_TOKEN) only warns, and the token check below
+      # then stops the deploy with its own message. Warnings (isCollection, unused endpoints) go to the summary.
       - name: wdcli app validate
         id: wdvalidate
-        continue-on-error: true
         env:
           WDCLI_CLIENT_ID: ${{ secrets.WD_CLIENT_ID }}
           WDCLI_CLIENT_SECRET: ${{ secrets.WD_CLIENT_SECRET }}
@@ -136,13 +134,26 @@ jobs:
           WDCLI_AUTH="${WD_WCP_TOKEN}" wdcli app validate -d "${VAL}" --ci -f json > /tmp/validate.json 2>&1
           V_EXIT=$?
           echo "wdcli app validate exit code ${V_EXIT}"
-          sed -E 's/(Bearer\s+|eyJ)[A-Za-z0-9._-]{8,}/[redacted]/g' /tmp/validate.json | head -200
-          {
-            echo "## wdcli app validate (exit ${V_EXIT})"
-            echo '```'
-            sed -E 's/(Bearer\s+|eyJ)[A-Za-z0-9._-]{8,}/[redacted]/g' /tmp/validate.json | head -80
-            echo '```'
-          } >> "$GITHUB_STEP_SUMMARY"
+          sed -i -E 's/(Bearer\s+|eyJ)[A-Za-z0-9._-]{8,}/[redacted]/g' /tmp/validate.json
+          python3 - "${V_EXIT}" <<'PY'
+          import json, os, sys, collections
+          raw = open('/tmp/validate.json', encoding='utf-8', errors='replace').read()
+          i = raw.find('[')
+          try: items = json.JSONDecoder().raw_decode(raw[i:])[0] if i >= 0 else []
+          except Exception: items = []
+          by = collections.Counter(x.get('severity', '?') for x in items)
+          msgs = collections.Counter((x.get('severity'), x.get('message', '')[:110]) for x in items)
+          out = [f"## wdcli app validate (exit {sys.argv[1]})", f"{dict(by) or 'no findings'}", '']
+          out += ['| Severity | Message | Count |', '|---|---|---|'] + [f'| {s} | {m} | {n} |' for (s, m), n in msgs.most_common(20)]
+          errs = [x for x in items if x.get('severity') == 'ERROR']
+          if errs: out += ['', '### Errors', '```'] + [f"{x.get('file')}: {x.get('message')}" for x in errs[:60]] + ['```']
+          if not items: out += ['```', raw[-1500:], '```']
+          print('\n'.join(out)); open(os.environ['GITHUB_STEP_SUMMARY'], 'a').write('\n'.join(out) + '\n')
+          PY
+          if [ "${V_EXIT}" -ne 0 ] && grep -qiE 'not logged in|authentication|expired|unable to find app|organizationId does not match' /tmp/validate.json /tmp/download.txt; then
+            echo "::warning::wdcli app validate couldn't run (sign-in or setup); not blocking"
+            exit 0
+          fi
           exit ${V_EXIT}
 
       - name: Pre-populate wdcli config with developer token
