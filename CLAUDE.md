@@ -2048,6 +2048,10 @@ Keep percentages stored as **bare numbers** (`"progress": 85`) and append the `%
 
 `le`, `lt`, `ge`, `gt`, `eq`, `ne`, `and`, `or`, `not`, `div`, `mod` (and `size`, `empty`, `new`) are operator words: `let le = ...` failed the App Hub build with "PMD Scripting syntax error ... Parsing Error" and nothing more specific. Keep a static check on `let`/`var`/parameter names.
 
+### Business-object JSON text: key order isn't kept (live 2026-11-07)
+
+A JSON string saved from a page (`json:stringify` into a TEXT field) comes back with its keys in Workday's own order (a field object read `{"ruleLength":..,"lookup":..,"regex":..}` though written label-first). Don't locate things in it by key order (e.g. "labels before this key"); count object boundaries (`},{`) or parse it. Compact form (no spaces) did hold.
+
 ### Grid cell dropdowns and switching cells (live 2026-11-07)
 
 - A `dropdown` in a grid `cellTemplate` opens on each row's saved choice with `"selectedValues": "<% [rowVar.key ?? 'default'] %>"` (developer.workday.com "dropdown": the value is a list of ids, `selectedValues` picks the first); read it in `childrenMap.<columnId>.value[0]`.
