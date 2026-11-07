@@ -1051,7 +1051,12 @@ async function smoke(token, me) {
     const run = async (q, lim = 50) => wql(token, q, lim);
     const got = [];
     const expect = async (label, q, ok) => { const r = await run(q, 2000); const n = (r.data || []).length; if (!ok(r)) throw new Error(`${label}: ${n} rows for ${q}`); got.push(`${label} ${n}`); return r; };
-    await expect('CHEM', L.lookupWql('courseSubject', 'CHEM'), (r) => (r.data || []).some((x) => x.abbreviation === 'CHEM'));
+    // subjects are tenant data that can change (2026-11-07 17:00 UTC every dev subject turned inactive): test with one that is
+    // active now, and only warn when there is none
+    const active = ((await wql(token, 'SELECT abbreviation FROM courseSubjects WHERE inactive = false ORDER BY abbreviation', 1)).data || [])[0];
+    const subj = active ? active.abbreviation : '';
+    if (!subj) warn('Lookups.subjects', 'no active course subject in this tenant: every subject check would refuse');
+    else await expect(subj, L.lookupWql('courseSubject', subj), (r) => (r.data || []).some((x) => x.abbreviation === subj));
     await expect('ZZZZ', L.lookupWql('courseSubject', 'ZZZZ'), (r) => !(r.data || []).length);
     await expect('PLAS_V (inactive)', L.lookupWql('courseSubject', 'PLAS_V'), (r) => !(r.data || []).length);
     await expect('2024W1', L.lookupWql('academicPeriod', '2024W1'), (r) => (r.data || []).length > 0);
@@ -1059,13 +1064,13 @@ async function smoke(token, me) {
     await expect('2025S', L.lookupWql('academicPeriod', '2025S'), (r) => (r.data || []).length > 0);
     await expect('2031W1', L.lookupWql('academicPeriod', '2031W1'), (r) => !(r.data || []).length);
     if (L.lookupWql('academicPeriod', '*W1') !== '') throw new Error('*W1 should not be looked up');
-    await expect('tree C', L.treeWql('courseSubject', 'LETTER_C'), (r) => (r.data || []).length > 0 && (r.data || []).every((x) => x.abbreviation.startsWith('C')));
+    if (subj) await expect(`tree ${subj[0]}`, L.treeWql('courseSubject', 'LETTER_' + subj[0]), (r) => (r.data || []).length > 0 && (r.data || []).every((x) => x.abbreviation.startsWith(subj[0])));
     const years = (await wql(token, 'SELECT academicYear, startDate FROM academicYears ORDER BY startDate', 1000)).data || [];
     if (!years.length) throw new Error('no academic years for the period tree');
     const y = years.find((x) => x.academicYear) || {};
     await expect('tree year', L.treeWql('academicPeriod', y.academicYear.id), (r) => (r.data || []).length > 0);
     await expect('tree no year', L.treeWql('academicPeriod', 'NOYEAR'), () => true);
-    await expect('search chem', L.searchWql('courseSubject', 'chem'), (r) => (r.data || []).some((x) => x.abbreviation === 'CHEM'));
+    if (subj) await expect(`search ${subj.toLowerCase()}`, L.searchWql('courseSubject', subj.toLowerCase()), (r) => (r.data || []).some((x) => x.abbreviation === subj));
     await expect("search o'neil", L.searchWql('courseSubject', "o'neil\\"), () => true);
     await expect('search winter', L.searchWql('academicPeriod', 'winter'), (r) => (r.data || []).length > 0);
     await expect('unit search math', L.searchWql('academicUnitCode', 'math'), (r) => (r.data || []).some((x) => x.academicUnitCode === 'MATH'));
@@ -1978,12 +1983,16 @@ async function patternGuard(token, me) {
   const lookupCases = [
     ['subject', 'X:CLW:PATTERN:MATH:ZZZZ:999:999:2024W1', ['MATH', 'ZZZZ', '2024W1']],
     ['subject', 'X:CLW:PATTERN:MATH:PLAS_V:999:999:2024W1', ['MATH', 'PLAS_V', '2024W1']],
-    ['period', 'X:CLW:PATTERN:MATH:CHEM:999:999:2031W1', ['MATH', 'CHEM', '2031W1']],
-    ['period', 'X:CLW:PATTERN:MATH:CHEM:999:999:2024S', ['MATH', 'CHEM', '2024S']],
-    ['accept', 'X:CLW:PATTERN:MATH:CHEM:999:999:2024W1', ['MATH', 'CHEM', '2024W1']],
-    ['accept', 'X:CLW:PATTERN:MATH:CHEM:999:999:2025S', ['MATH', 'CHEM', '2025S']],
+    ['period', 'X:CLW:PATTERN:MATH:*:999:999:2031W1', ['MATH', '*', '2031W1']],
+    ['period', 'X:CLW:PATTERN:MATH:*:999:999:2024S', ['MATH', '*', '2024S']],
+    ['accept', 'X:CLW:PATTERN:MATH:*:999:999:2024W1', ['MATH', '*', '2024W1']],
+    ['accept', 'X:CLW:PATTERN:MATH:*:999:999:2025S', ['MATH', '*', '2025S']],
     ['accept', 'X:CLW:PATTERN:MATH:*:999:999:*W1', ['MATH', '*', '*W1']],
   ];
+  // an active subject passes (subjects are tenant data: every dev subject turned inactive on 2026-11-07)
+  const activeSubj = (((await wql(token, 'SELECT abbreviation FROM courseSubjects WHERE inactive = false ORDER BY abbreviation', 1)).data || [])[0] || {}).abbreviation;
+  if (activeSubj) lookupCases.push(['accept', `X:CLW:PATTERN:MATH:${activeSubj}:999:999:2024W1`, ['MATH', activeSubj, '2024W1']]);
+  else warn('Guard.activeSubject', 'no active course subject in this tenant: the subject accept case is skipped');
   if (clw && clw.patternSchema) {
     const original = clw.patternSchema;
     const sch = JSON.parse(original);
@@ -2577,11 +2586,6 @@ async function shellRolesQuery(token) {
 
 async function probe(token) {
   console.log('\n-- Probe (read-only) --');
-  for (const q of ["SELECT abbreviation, name, inactive FROM courseSubjects WHERE abbreviation = 'CHEM'", "SELECT abbreviation, name, inactive FROM courseSubjects WHERE abbreviation startswith 'CH'",
-    "SELECT abbreviation, name, inactive FROM courseSubjects WHERE inactive = false AND abbreviation = 'CHEM'", "SELECT abbreviation FROM courseSubjects WHERE inactive = false"]) {
-    try { const r = await wql(token, q, 2000); console.log(`   CQ ${r.total}: ${JSON.stringify((r.data || []).slice(0, 4))} | ${q}`); } catch (e) { console.log(`   CQ error ${String(e.message).slice(0, 200)}`); }
-  }
-  return;
   // 2026-11-06: the subtype design's WQL, exactly as the pages send it (presentation/wqlQueries)
   {
     const q = (n) => JSON.parse(fs.readFileSync(path.join(ROOT, 'presentation', 'wqlQueries', n + '.wqlquery'), 'utf8')).query;
