@@ -59,6 +59,8 @@ These notes apply to **all** Workday Extend apps I work on. Project-specific det
 - Platform limits reference
 - CI/CD — deploying with GitHub Actions and wdcli
 - Deploy decision guide (what to ask the user to run)
+- Promotion: what can't change after an app leaves dev
+- More wdcli commands, and Arcane Auditor
 - Testing an Extend app
 - Working in the Workday UI with browser automation
 - Patterns from Workday's sample apps (GraphQL, Extend Cards, Profile Groups, more widgets)
@@ -2675,6 +2677,31 @@ wdcli app deploy <appRef>    # answer Yes to the default tenant, y to a login pr
 - Then redeploy by route 1 or 2.
 
 **Never ask the user to paste tokens into the chat**, and never repeat ones they paste. If they do, note that the tenant token is good for an hour and the platform token for 8, and that the `gh secret set` route avoids it next time.
+
+## Promotion: what can't change after an app leaves dev
+
+Source: a colleague's Extend skills (2026-11-07), citing developer.workday.com "Concept: Update Model Components", "Reference: Allowed Updates After Extend App Promotion", "Reference: Promotion Deadlines for Extend Apps with Model Components", "Reference: Limits on Model Components", "Reference: Model Component Error Codes". Check those pages before promoting.
+
+- **Never, even in dev:** change a model component's `id`, swap two fields' ids, change a field's `type`, or reuse a field `id` that was used before. Ids are integers 1–32767; `<appReferenceId>` + a business object's `name` must stay within 124 characters (B202).
+- **In a dev tenant, deleting a model component or field (or giving a field a new id) deletes all its data** on the next deploy. Settle the model in dev before the first promotion.
+- **After promotion (implementation, sandbox, production) you can't:** delete business objects, attachment objects, business processes or regular fields; remove or change the security domains on attachment objects or business processes; remove all actions (or only `SEND_BACK`) from an approval step; turn `enabledForPageSecurity`, `enabledForOrchestrationSecurity` or `enableReportingFromTarget` from true to false.
+- **Still allowed after promotion:** add components, fields and domains; rename a business object, field or collection, change labels and `defaultSecurityDomains`; change `enableIndex`, `enableSearch`, `isPurgeable`, `useForDisplay` (TEXT), `decimals`, `precision`, `secureByTarget`; remove or change derived fields, reports, tasks and profile groups; rename a security domain (update every reference).
+- **Promotion deadline:** model components reach non-dev tenants in the Friday-night weekly service update. Promote by Thursday 11:59:59 pm local region time outside the US (US: Thursday 11:59:59 pm Pacific for WD10/WD12/WD104 and Workday's own data centres, 08:59:59 am Pacific for other US public-cloud ones); later than that waits a week. `wdcli app promote <ref> -l implementation|sandbox|production [--latest-version] [-n "<notes>"]` moves one level at a time.
+- **Tenant reports that help:** Extend Object Instance Count (instances against the tenant limit), View Business Objects Available to Extend (which Workday objects allow `target`/`secureByTarget`), View Security for Extend Related Instance (an instance's security context), Business Object Details.
+- **More than about 100 records to load or extract:** an inbound EIB with File Type "Extend Spreadsheet Template" (needs Modify on the app's domain policy in App Manager, then Activate Pending Security Policy Changes), or an outbound EIB over a web-service-enabled custom report.
+
+## More wdcli commands, and Arcane Auditor
+
+Source: the same colleague's skills (wdcli 1.9.x reference). Not yet used in this repo's CI: try each before relying on it.
+
+- `wdcli app validate -d <dir> [--ci -f json]` checks PMD/AMD/SMD/model components locally against App Builder's rules, before an upload. Needs the developer session only (no tenant login). Orchestrations aren't checked. Reported to catch an unresolved `taskId` and a duplicate PMD `id` (e.g. a `_backup.pmd` copy that kept its id).
+- `wdcli app upload --fail-on-build-timeout` exits non-zero when the build outlasts the CLI's wait (by default a still-running build exits 0); `--no-build-wait` returns straight away.
+- `wdcli app versions <ref>`, `wdcli app builds <ref> [--latest-version]` (build history with SUCCESS/FAILED), `wdcli app info <ref>`.
+- `wdcli app deploy <ref> -t <tenant alias> --latest-version` names the tenant without the interactive prompt (needs `wdcli tenant login <alias>` first).
+- `wdcli tenant open <alias> -l app-manager -r <ref>` opens App Manager on the app; `wdcli config set defaultTenantAlias <alias>`.
+- `wdcli app preview -d <dir> --skip-open` serves the UI locally (port 9329), Extend pages only.
+- **Arcane Auditor** (Workday DevRel's code review tool, github.com/Developers-and-Dragons/ArcaneAuditor; binary `ArcaneAuditorCLI`): `ArcaneAuditorCLI review-app <dir> --agent` prints JSON findings (`rule_id`, `severity` ACTION/ADVICE, `fix_strategy` actionable/human_review, `location.path` as a JSONPath, `target_text` + `suggested_replacement`). `--config development` picks its development rule profile; `list-rules` / `describe-rule <RuleId>` explain each rule. Exit codes: 0 clean or ADVICE only, 1 ACTION found, 2 usage error, 3 crash. Runs locally, no network. For an `actionable` fix inside a `<% %>` script, replace only `target_text`, never the whole field.
+- **Same skills, unverified layout notes:** a `layout` object on `section`/`fieldSet` (`density`, `alignment`, `horizontalSizing`, `labelPosition`) needs an explicit `labelPosition` or labels move to the side, and isn't allowed inside a grid; in a horizontal `section` each column needs more than about 280 px or the row stacks; `columnWidthRatios` must have one entry per child; `text`/`textArea` take a `placeholder`. Write PMD/JSON as UTF-8 **without** a BOM (Windows PowerShell's `-Encoding UTF8` adds one and App Builder rejects the file). Note that skill writes `pageType` lowercase; keep it uppercase here (see Edit pages).
 
 ## Testing an Extend app
 
