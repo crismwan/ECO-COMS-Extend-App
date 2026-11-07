@@ -1255,7 +1255,8 @@ async function full(token, me) {
     const appCode = app.appId; // same value the New Pattern page uses (e.g. X:CLW)
     if (!/^X:/.test(appCode || '')) throw new Error(`COMS application appId "${appCode}" is not an X: code`);
     // Clockwork's five fields: Academic Unit, Subject, Course, Section, Academic Period
-    const [a1, a2, a3, a4, a5] = ['TEST', 'TEST', run3, '900', `${now.getUTCFullYear()}W1`];
+    // Academic Unit * (any): since 2026-11-07 it must otherwise be an active academic unit's Code (CheckUnitCode)
+    const [a1, a2, a3, a4, a5] = ['*', 'TEST', run3, '900', `${now.getUTCFullYear()}W1`];
     const pname = `${appCode}:PATTERN:${a1}:${a2}:${a3}:${a4}:${a5}`;
     const a = await launchAndVerify(token, 'IORC_0037_XFD_SEC_Create_Pattern_Shell_Org', {
       comsAppId: app.id, patternName: pname, workerId: me.id, attribute1: a1, attribute2: a2, attribute3: a3,
@@ -2469,10 +2470,10 @@ async function subflowsSuite(token, me) {
   await test('Subflow.createShellOrgPattern', async () => {
     const app = ((await request('GET', `${BO}/comsApplications?limit=100`, token)).data || []).find((a) => a.appId === 'X:CLW');
     if (!app) return skip('Subflow.createShellOrgPattern', 'no X:CLW record');
-    const pname = 'X:CLW:PATTERN:TEST:TEST:999:900:2026W1';
+    const pname = 'X:CLW:PATTERN:*:TEST:999:900:2026W1';
     await expectRejected('IORC_0037_XFD_SEC_Create_Pattern_Shell_Org', 'Subflow.createShellOrgPattern', { comsAppId: app.id, patternName: pname, workerId: me.id,
-      attribute1: 'TEST', attribute2: 'TEST', attribute3: '999', attribute4: '900', attribute5: '2026W1', effectiveDate: 'NOTADATE', ...who() },
-      new RegExp('rejected the request for ' + pname.replace(/[()]/g, '\\$&') + '[\\s\\S]*IORC_0037_XFD_SEC_Sub_Create_Shell_Organization'));
+      attribute1: '*', attribute2: 'TEST', attribute3: '999', attribute4: '900', attribute5: '2026W1', effectiveDate: 'NOTADATE', ...who() },
+      new RegExp('rejected the request for ' + pname.replace(/[()*]/g, '\\$&') + '[\\s\\S]*IORC_0037_XFD_SEC_Sub_Create_Shell_Organization'));
   });
   await test('Subflow.startReview', () => expectRejected('IORC_0037_XFD_SEC_Start_Role_Request_Review', 'Subflow.startReview', { ref: 'TEST-NO-SUCH-REQUEST' }, /IORC_0037_XFD_SEC_Sub_Start_Request_Review/));
 }
