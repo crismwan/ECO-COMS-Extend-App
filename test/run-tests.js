@@ -2487,33 +2487,43 @@ async function shellRolesQuery(token) {
 
 async function probe(token) {
   console.log('\n-- Probe (read-only) --');
-  // 2026-11-07: which academicUnits field holds the unit Code (e.g. Department of Mathematics = MATH), and how complete it is
-  try {
-    const ds = (await request('GET', `${API}/wql/v1/dataSources?alias=academicUnits&limit=5`, token)).data || [];
-    for (const d of ds) {
-      const fields = [];
-      for (let off = 0; off < 2000; off += 100) {
-        const page = (await request('GET', `${API}/wql/v1/dataSources/${d.id}/fields?limit=100&offset=${off}`, token)).data || [];
-        fields.push(...page);
-        if (page.length < 100) break;
+  // 2026-11-07: course subjects (Abbreviation, e.g. CHEM) and academic periods (name, e.g. 2024-25 Winter Term 1 (UBC-V)):
+  // data sources, fields, counts, and how fast a one-value lookup and a typed search are
+  for (const term of ['course subject', 'academic period']) {
+    try {
+      const found = [];
+      for (const q of [`search=${encodeURIComponent(term)}`, `alias=${term === 'course subject' ? 'courseSubjects' : 'academicPeriods'}`]) {
+        try { found.push(...((await request('GET', `${API}/wql/v1/dataSources?${q}&limit=20`, token)).data || [])); } catch (e) { console.log(`   DS ${q} error ${String(e.message).slice(0, 150)}`); }
       }
-      console.log(`   AUFIELDS ${d.alias} ${fields.length} fields; code/id-like: ${fields.filter((f) => /code|(^|[^a-z])id/i.test(`${f.alias} ${f.descriptor}`)).map((f) => `${f.alias} (${f.descriptor}, ${f.type})`).join(' | ')}`);
-    }
-    const units = (await wql(token, 'SELECT workdayID, academicUnit, academicUnitCode, inactive FROM academicUnits', 10000)).data || [];
-    const active = units.filter((u) => !u.inactive);
-    const codes = active.map((u) => String(u.academicUnitCode || '').trim()).filter(Boolean);
-    const dup = codes.filter((c, i) => codes.indexOf(c) !== i);
-    console.log(`   AUCODE units=${units.length} active=${active.length} activeWithCode=${codes.length} unique=${new Set(codes).size} dup=${[...new Set(dup)].join(',') || 'none'} lengths=${JSON.stringify(codes.reduce((m, c) => ((m[c.length] = (m[c.length] || 0) + 1), m), {}))}`);
-    console.log(`   AUCODE chars outside A-Z0-9-: ${codes.filter((c) => !/^[A-Z0-9-]+$/.test(c)).slice(0, 20).join(' | ') || 'none'}`);
-    active.filter((u) => /Mathematics|Physics|Computer Science|Chemistry|Okanagan|Vancouver/.test((u.academicUnit || {}).descriptor || '')).slice(0, 10)
-      .forEach((u) => console.log(`   AUCODE ${(u.academicUnit || {}).descriptor} = ${JSON.stringify(u.academicUnitCode)}`));
-    // the exact URL IORC_0037_XFD_SEC_Create_Pattern_Shell_Org's LookupUnitCode sends (hand-encoded, + as %2B)
-    const enc = (v) => v.split('%').join('').split('+').join('%2B').split('&').join('').split('#').join('').split("'").join('');
-    for (const v of ['MATH', 'G+PS', 'MAHT', '']) {
-      const r = await request('GET', `${API}/wql/v1/data?limit=1&query=SELECT%20academicUnitCode%20FROM%20academicUnits%20WHERE%20inactive%20%3D%20false%20AND%20academicUnitCode%20%3D%20%27${enc(v)}%27`, token);
-      console.log(`   AULOOKUP ${JSON.stringify(v)} -> total=${r.total} first=${JSON.stringify(((r.data || [])[0] || {}).academicUnitCode)}`);
-    }
-  } catch (e) { console.log(`   AUCODE error ${String(e.message).slice(0, 300)}`); }
+      const seen = new Set();
+      for (const d of found) {
+        if (seen.has(d.id)) continue; seen.add(d.id);
+        console.log(`   DS "${term}": ${d.alias} | ${d.descriptor} | ${d.id}`);
+      }
+      for (const d of found.filter((x) => /^(courseSubjects|academicPeriods)$/.test(x.alias)).slice(0, 2)) {
+        const fields = [];
+        for (let off = 0; off < 3000; off += 100) {
+          const page = (await request('GET', `${API}/wql/v1/dataSources/${d.id}/fields?limit=100&offset=${off}`, token)).data || [];
+          fields.push(...page);
+          if (page.length < 100) break;
+        }
+        console.log(`   FIELDS ${d.alias} (${fields.length}): ${fields.map((f) => `${f.alias}[${f.type}]`).join(' ')}`);
+      }
+    } catch (e) { console.log(`   DS ${term} error ${String(e.message).slice(0, 300)}`); }
+  }
+  const timed = async (label, q, lim) => {
+    const t0 = Date.now();
+    try {
+      const r = await wql(token, q, lim);
+      console.log(`   Q ${label}: total=${r.total} rows=${(r.data || []).length} ${Date.now() - t0}ms first=${JSON.stringify((r.data || [])[0] || {}).slice(0, 300)}`);
+      return r.data || [];
+    } catch (e) { console.log(`   Q ${label}: error ${String(e.message).slice(0, 250)} ${Date.now() - t0}ms`); return []; }
+  };
+  const subj = await timed('subjects all', 'SELECT * FROM courseSubjects', 10000);
+  if (subj.length) console.log(`   SUBJ keys: ${Object.keys(subj[0]).join(', ')}`);
+  const per = await timed('periods all', 'SELECT * FROM academicPeriods', 10000);
+  if (per.length) console.log(`   PER keys: ${Object.keys(per[0]).join(', ')}`);
+  return;
   // 2026-11-06: the subtype design's WQL, exactly as the pages send it (presentation/wqlQueries)
   {
     const q = (n) => JSON.parse(fs.readFileSync(path.join(ROOT, 'presentation', 'wqlQueries', n + '.wqlquery'), 'utf8')).query;
