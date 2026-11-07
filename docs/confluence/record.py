@@ -20,6 +20,7 @@ OPS, LOC = [], {}
 GLIFFY = {
     'img/current-architecture.png': 'ECO-COMS Current State',
     'img/future-state.png': 'ECO-COMS Future State',
+    'img/value-stream.png': 'ECO-COMS Value Stream Map',
     'img/user-journey.png': 'ECO-COMS User Journey',
     'img/solution-architecture.png': 'ECO-COMS Solution Architecture',
     'img/navigation-map.png': 'ECO-COMS Navigation Map',

@@ -1,0 +1,22 @@
+flowchart LR
+  subgraph FUT["Future state: ECO-COMS on Workday Extend"]
+    f1([AAA needs a shell org,<br/>pattern or role holder]) --> f2[AAA fills the ECO-COMS<br/>form, grid or Excel in Workday]
+    f2 --> f3{Checks as you type:<br/>format, dates, duplicates}
+    f3 -->|fix on the page| f2
+    f3 --> f4[Orchestration makes the<br/>change in Workday in seconds]
+    f4 --> f5[Receipt and<br/>audit record]
+    f4 --> f6[(Workday: current<br/>role assignments)]
+    f6 --> f7[AccessUBC extract<br/>then access granted]
+    f2 -. new assignable role only .-> f8[ISC approves in<br/>the Workday inbox]
+  end
+  subgraph CUR["Current state: Appian COMS form or ISC ticket"]
+    c1([AAA needs a shell org,<br/>pattern or role holder]) --> c2[Clockwork: Appian form,<br/>one pattern shape.<br/>Other apps: ISC ticket]
+    c2 -->|wait: ISC queue| c3[ISC reads the request,<br/>asks for missing details]
+    c3 -->|rework| c2
+    c3 --> c4[ISC keys the change<br/>by hand in Workday]
+    c4 -->|wait| c5[Requester told<br/>it is done]
+    c4 --> c6[(Workday: current<br/>role assignments)]
+    c6 --> c7[AccessUBC extract<br/>then access granted]
+  end
+  classDef new fill:#FFE8D6,stroke:#C26A00,color:#1F2933
+  class f2,f3,f4,f5,f8 new

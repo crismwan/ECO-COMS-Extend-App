@@ -81,7 +81,25 @@ insert_after(s, ul, para(
     'For which population: the custom organizations with subtype X:META or X:SHELL (named anything; since 2026-11-06 the X: prefix is a convention, not a rule), each belonging to the application its organization type names (for example X:CLW, X:BPMS(AOC)); shell roles (X:«code»:ROLE:…) on those organizations; positions in the tenant. Real Workday roles, supervisory organizations and academic units are out of reach.\n'
     'When: on demand, whenever an administrator needs a change (Clockwork: at least each term). Role requests start a Workday review immediately; a review waiting 2 days sends a reminder.\n'
     'How it behaves: each application has its own pattern format (prefix, fields, rules), kept as data in the app, so a new application is set up by filling in a record, not by a development release. Every change is checked on the page and again on the server before Workday is called, and is recorded only after Workday accepts it. AccessUBC picks up the result through its existing extract; nothing changes downstream.'))
-insert_after(s, wrap_of(T(s, 'Diagram — Future-state process flow')), img('img/future-state.png', 'Future-state process: the administrator works in ECO-COMS, which checks, calls Workday, records the change; AccessUBC and the target application are unchanged', 900))
+
+VSM_ROWS = [
+    ('Steps from need to change in Workday', '4, with 2 hand-offs (requester to ISC, ISC back to requester)', '2 (fill the form, OK); ISC only approves new assignable roles', 'Fewer hand-offs'),
+    ('People involved', 'AAA and an ISC administrator for every change', 'AAA alone; ISC reviews new assignable roles in the Workday inbox', 'ISC time moves from keying changes to reviewing'),
+    ('Waiting time', 'ISC queue for every change (to be measured from ISC tickets) [TBC]', 'None for routine changes: the change runs in seconds', 'Access ready sooner, e.g. at term start'),
+    ('Errors and rework', 'Found by ISC, or after the extract when access is wrong', 'Caught on the page before OK (format, dates, duplicates), then re-checked on the server', 'Less rework, fewer wrong grants'),
+    ('Adding a new application', 'Appian form rebuilt: it knows one pattern shape', 'A pattern format record in the app; no release', 'New applications self-serve'),
+    ('Bulk changes', 'One ticket or form per change', 'Excel template: validate every row, then apply', 'Term-start loads in one pass'),
+    ('Evidence of who changed what', 'Ticket history plus Workday history', 'Audit log linked to the Workday event', 'Audits answered from one place'),
+    ('Systems to run and support', 'Appian (licence, hosting, support) and Workday', 'Workday only (Extend app inside the tenant)', 'One platform; Appian licence can lapse [TBC]'),
+    ('Data reaching AccessUBC', 'Extract of current role assignments from Workday', 'Same extract of current role assignments, unchanged', 'No downstream change'),
+]
+VSM_HTML = ('<p><strong>Value stream map: current state compared with ECO-COMS</strong></p>'
+            + img('img/value-stream.png', 'Value stream map: today each change waits for ISC and is keyed by hand; with ECO-COMS the administrator makes the change in Workday, checked as they type. Both end with AccessUBC extracting the current role assignments from Workday', 900)
+            + '<table><tbody><tr><th><p>Measure</p></th><th><p>Current (Appian COMS form or ISC ticket)</p></th><th><p>Future (ECO-COMS on Workday Extend)</p></th><th><p>Value</p></th></tr>'
+            + ''.join('<tr>' + ''.join(f'<td><p>{esc(c)}</p></td>' for c in r) + '</tr>' for r in VSM_ROWS)
+            + '</tbody></table>')
+
+insert_after(s, wrap_of(T(s, 'Diagram — Future-state process flow')), img('img/future-state.png', 'Future-state process: the administrator works in ECO-COMS, which checks the request and makes the change in Workday. Workday holds the current custom organizations, roles and role assignments, and AccessUBC extracts the current role assignments from Workday as today. The audit record is ECO-COMS\'s own evidence and is not part of the extract', 900) + VSM_HTML)
 
 # ---------------------------------------------------------------- 5. users
 act = T(s, 'Actor')

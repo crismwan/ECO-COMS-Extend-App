@@ -11,18 +11,20 @@ flowchart LR
   subgraph WD["Workday core"]
     W1[Create custom org /<br/>change status /<br/>Assign Roles] --> W2{Accepted?}
     W3[Review COMS Assignable<br/>Role Request BP]
+    W4[(Current custom orgs,<br/>roles and role assignments)]
   end
   subgraph ISC["ISC"]
     I1[Approve / deny<br/>new assignable roles]
   end
   subgraph DS["Downstream (unchanged)"]
-    D1[AccessUBC extract] --> D2[Target app grants access]
+    D1[AccessUBC extract of<br/>current role assignments] --> D2[Target app grants access]
   end
   A2 --> C1
   C3 --> W1
+  W2 -- Yes --> W4
   W2 -- Yes --> C5
   W2 -- No: Workday's reason --> C1
   C1 -. new role request .-> W3 --> I1
-  C5 --> D1
+  W4 --> D1
   classDef new fill:#FFE8D6,stroke:#C26A00,color:#1F2933
   class C1,C2,C3,C5 new
