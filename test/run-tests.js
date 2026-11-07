@@ -2498,6 +2498,12 @@ async function probe(token) {
     console.log(`   AUCODE chars outside A-Z0-9-: ${codes.filter((c) => !/^[A-Z0-9-]+$/.test(c)).slice(0, 20).join(' | ') || 'none'}`);
     active.filter((u) => /Mathematics|Physics|Computer Science|Chemistry|Okanagan|Vancouver/.test((u.academicUnit || {}).descriptor || '')).slice(0, 10)
       .forEach((u) => console.log(`   AUCODE ${(u.academicUnit || {}).descriptor} = ${JSON.stringify(u.academicUnitCode)}`));
+    // the exact URL IORC_0037_XFD_SEC_Create_Pattern_Shell_Org's LookupUnitCode sends (hand-encoded, + as %2B)
+    const enc = (v) => v.split('%').join('').split('+').join('%2B').split('&').join('').split('#').join('').split("'").join('');
+    for (const v of ['MATH', 'G+PS', 'MAHT', '']) {
+      const r = await request('GET', `${API}/wql/v1/data?limit=1&query=SELECT%20academicUnitCode%20FROM%20academicUnits%20WHERE%20inactive%20%3D%20false%20AND%20academicUnitCode%20%3D%20%27${enc(v)}%27`, token);
+      console.log(`   AULOOKUP ${JSON.stringify(v)} -> total=${r.total} first=${JSON.stringify(((r.data || [])[0] || {}).academicUnitCode)}`);
+    }
   } catch (e) { console.log(`   AUCODE error ${String(e.message).slice(0, 300)}`); }
   // 2026-11-06: the subtype design's WQL, exactly as the pages send it (presentation/wqlQueries)
   {
