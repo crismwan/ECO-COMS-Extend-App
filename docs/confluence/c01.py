@@ -31,7 +31,7 @@ kv(s, pp, 'Data classification', 'Medium risk (proposed; to be confirmed with UB
 kv(s, pp, 'Personal information involved', 'Yes: worker names and position titles shown next to role assignments; requester, approver and "changed by" names on requests and audit records. Read from Workday, not collected from the public. No sensitive categories.')
 kv(s, pp, 'PIA required', f'{TBC}: to be confirmed with UBC Privacy (the app adds no new personal data to Workday; it shows existing data and records who made each change)')
 kv(s, pp, 'Related solutions', 'Upstream: Workday positions and the custom organization hierarchy (X: shell organizations). Downstream (unchanged): AccessUBC shell-role extract, then the target applications (Clockwork, OAMS, Admissions and others delivered under IRPS). Replaces: Appian COMS.')
-kv(s, pp, 'Version', 'v1.0 draft · last reviewed 2026-11-05 · next review due at Phase A sign-off [TBC]')
+kv(s, pp, 'Version', 'v1.0 draft · last reviewed 2026-11-05 · next review due at sign-off [TBC]')
 
 # ---------------------------------------------------------------- 1. delivery pattern
 cards = T(s, 'Workday Studio Integration')
@@ -160,7 +160,7 @@ FR = [
     ['FR-024', 'The system shall list shell roles still held by positions that have become vacant, with a way to confirm they are still needed or remove them.', 'UC-11', 'Should', 'Given a vacant position holding X:BPMS(ODMT):ROLE:ADVISORS, then it is listed; ticking Still Needed writes a REVIEW audit record.', ARCH + ' (deprovision on vacancy)'],
     ['FR-025', 'The system shall provide summary insight: requests by status and application, ISC turnaround, changes over time, and applications at a glance.', 'UC-10', 'Could', 'Given the Insights page, then counts match the request and audit records.', PO],
     ['FR-027', 'Every count shown on a summary card shall be clickable: on a page with a list it filters that list (marked ✓, a second click clears it); elsewhere it opens the list it counts.', 'UC-09, UC-10', 'Should', 'Given My Assignable Role Requests with 51 requests, when "4 pending" is clicked, then the list shows the 4 pending requests and the count shows ✓; clicking again shows all 51.', PO],
-    ['FR-026', f'(Phase C, not built) The system shall scope each user to the applications they administer, read from their own AAA meta role assignments, on every page, search and orchestration.', 'UC-09', 'Should', 'Given a user who is AAA for X:CLW only, then they see and change only X:CLW data.', ARCH],
+    ['FR-026', f'(Not built yet) The system shall scope each user to the applications they administer, read from their own AAA meta role assignments, on every page, search and orchestration.', 'UC-09', 'Should', 'Given a user who is AAA for X:CLW only, then they see and change only X:CLW data.', ARCH],
 ]
 set_rows(s, T(s, 'ID', 0), FR, keep=1)
 oos = heading(s, 'Explicitly out of scope').find_next_sibling('p')
@@ -170,7 +170,7 @@ insert_after(s, oos, para(
     '• Changing the AccessUBC extract or any target application.\n'
     '• Hiring or position management (HR keeps doing this; deprovisioning on vacancy follows from the position).\n'
     '• Mobile use.\n'
-    '• Phase B (delegating creation of shell assignable roles without ISC review) and Phase C (context scoping, a COMS API for automation such as AWS): later phases, recorded in FR-026 and the delivery plan.\n'
+    '• Delegating creation of shell assignable roles without ISC review, context scoping, and a COMS API for automation such as AWS: later work, recorded in FR-026 and the delivery plan.\n'
     '• Migrating Appian COMS history (the existing organizations are already in Workday and are read from there).'))
 
 # ---------------------------------------------------------------- 8. NFR
@@ -192,12 +192,12 @@ set_rows(s, T(s, 'ID', 1), [
 set_rows(s, T(s, 'ID', 2), [
     ['AS-01', 'Assumption', 'AccessUBC keeps extracting shell organizations, roles and assignments from Workday as today.', 'Changes made in ECO-COMS would not reach the target applications; needs a downstream change.', TBC, 'Open'],
     ['AS-02', 'Assumption', 'Each application\'s organizations use an organization type named after the application (e.g. X:CLW).', 'New organizations for that application are refused until its type exists (X:SET and X:PHA today).', 'ISC', 'Validated (dev)'],
-    ['AS-03', 'Assumption', 'ISC is comfortable delegating shell organization creation within an application\'s own type.', 'Phase A scope shrinks to requests only.', 'ISC Security', 'Open'],
+    ['AS-03', 'Assumption', 'ISC is comfortable delegating shell organization creation within an application\'s own type.', 'The scope shrinks to requests only.', 'ISC Security', 'Open'],
     ['CN-01', 'Constraint', 'Workday allows one pending status change per organization; future-dated changes block another.', 'Users must choose a later date; the page explains the rejection.', 'n/a', 'Accepted'],
     ['CN-02', 'Constraint', 'Extend platform limits: 60 s per page request, 24 s per call, 25 s for a synchronous orchestration from a page, 60 min per background run.', 'Bulk work runs in the background with row limits (50 / 1,000).', 'n/a', 'Accepted'],
     ['CN-03', 'Constraint', 'Organizations can only be inactivated, never deleted; business process records are permanent.', 'Test data stays in the tenant; naming marks it as TEST.', 'n/a', 'Accepted'],
     ['RSK-01', 'Risk', 'Until the integration system user is set up, a user with Modify on the audit domain could edit audit records through the REST API.', 'Audit could be tampered with. Mitigation: ISU writes (built, awaiting ISU setup) and View-only access for users.', 'ISC Security', 'Open'],
-    ['RSK-02', 'Risk', 'An AAA sees every application in ECO-COMS until context scoping (Phase C) is built.', 'Changes to another application\'s organizations. Mitigation: security domains, audit log, Phase C scoping.', 'Product owner', 'Open'],
+    ['RSK-02', 'Risk', 'An AAA sees every application in ECO-COMS until context scoping is built.', 'Changes to another application\'s organizations. Mitigation: security domains, audit log, context scoping when built.', 'Product owner', 'Open'],
     ['RSK-03', 'Risk', 'Workday changes custom organization security or web services in a release.', 'Orchestrations fail. Mitigation: smoke tests after every deploy; check each release.', 'Developer', 'Open'],
     ['RSK-04', 'Risk', 'Single developer / knowledge concentration.', 'Support gaps. Mitigation: user guide, admin runbook, notes and automated tests in the repository.', 'Product owner', 'Open'],
 ], keep=1)

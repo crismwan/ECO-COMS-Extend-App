@@ -33,7 +33,7 @@ kv(s, pp, 'Data classification', 'Medium risk (proposed; to confirm with UBC Pri
 kv(s, pp, 'Personal information involved', 'Yes: worker names and position titles shown with role assignments; requester, approver and "changed by" names on request and audit records (Workday worker references). No sensitive categories.')
 kv(s, pp, 'PIA required', f'{TBC}: to be confirmed with UBC Privacy')
 kv(s, pp, 'Related solutions', 'Page 01 Business Requirements (ECO-COMS). Upstream: Workday positions, custom organization hierarchy. Downstream (unchanged): AccessUBC shell-role extract → Clockwork, OAMS, Admissions and other IRPS applications. Replaces Appian COMS.')
-kv(s, pp, 'Version', 'v1.0 draft · last reviewed 2026-11-05 · next review due at Phase A sign-off [TBC]')
+kv(s, pp, 'Version', 'v1.0 draft · last reviewed 2026-11-05 · next review due at sign-off [TBC]')
 
 # ---------------------------------------------------------------- 1. type & pattern
 cards = T(s, 'Workday Studio Integration')
@@ -115,7 +115,7 @@ TR = [
     ['FR-024', 'Shell roles on vacant positions', 'accessReview, confirmAccessReview (UX-017)', '§5.3', 'TC-024'],
     ['FR-025', 'Insights', 'comsInsights, comsInsightsApps (UX-020)', '§5.3', 'TC-025'],
     ['FR-027', 'Clickable counts', 'tools/quick_filters.py: Quick<Task>Card pill cards; quick / status query parameters', '§5.5', 'TC-027'],
-    ['FR-026', 'Context scoping (Phase C)', 'Not built: descoped from Phase A, planned', '§9 RSK-02', 'n/a'],
+    ['FR-026', 'Context scoping', 'Not built yet: planned', '§9 RSK-02', 'n/a'],
     ['NFR-002', 'Bulk limits', 'Async orchestrations, row limits', '§6.11', 'TC-012'],
     ['NFR-008', 'Response time < 2 s', 'Speed passes; server timing', '§6.11', 'TC-030'],
     ['NFR-010', 'WCAG 2.2 AA', 'Canvas components as delivered; text + symbol for status', '§5.8', 'TC-031'],
@@ -463,7 +463,7 @@ set_rows(s, T(s, 'Access matrix'), [
     ['', 'Worker without COMS domains (negative)', 'Nothing: pages redirect to the hub / error page; launch URLs refused', 'No', 'No', 'No'],
     ['', 'Any user (negative)', 'Real Workday roles, supervisory orgs, academic units are never offered', 'No', 'No', 'No'],
 ], keep=1)
-insert_after(s, wrap_of(T(s, 'Access matrix')), para('* Until Phase C context scoping, an AAA can see and change every application\'s shell data (page 01 RSK-02).'))
+insert_after(s, wrap_of(T(s, 'Access matrix')), para('* Until context scoping is built, an AAA can see and change every application\'s shell data (page 01 RSK-02).'))
 
 # ---------------------------------------------------------------- 6.10 errors
 set_rows(s, T(s, 'Failure scenario'), [
@@ -546,7 +546,7 @@ set_rows(s, T(s, 'ID', 5), [
     ['CN-02', 'Constraint', 'Orchestration launch returns 200 even on failure', 'False success if unchecked', 'Run-and-verify on every write page', 'Developer', 'Mitigated'],
     ['CN-03', 'Constraint', 'Model components deploy only with the weekly service update', 'A late model change can cost a week', 'Freeze the model before promotion', 'Developer', 'Accepted'],
     ['RSK-01', 'Risk', 'Audit and request records editable through REST until ISU writes are live', 'Tampering', 'ISU writes built (tools/isu_writes.py); needs ISU + App Manager assignment + policy change', 'ISC Security', 'Open'],
-    ['RSK-02', 'Risk', 'No context scoping yet (Phase C)', 'An AAA could change another application\'s data', 'Security domains limit who uses the app; audit; Phase C', 'Product owner', 'Open'],
+    ['RSK-02', 'Risk', 'No context scoping yet', 'An AAA could change another application\'s data', 'Security domains limit who uses the app; audit; context scoping when built', 'Product owner', 'Open'],
     ['RSK-03', 'Risk', 'Exclude Initiator not yet tested live with a requester in the approval group', 'Self-approval possible', 'Test before go-live; alternate approval group', 'ISC', 'Open'],
     ['RSK-04', 'Risk', 'Some API gateway refusals (HTML 403) on long launch query strings', 'Launch fails', 'Pass codes/IDs instead of long text; URL-encode values', 'Developer', 'Mitigated'],
     ['RSK-05', 'Risk', 'CI tokens expire (1 h / 8 h)', 'Deploys stop', 'Documented refresh; static checks run first', 'Developer', 'Accepted'],
