@@ -58,7 +58,7 @@ insert_after(s, heading(s, 'Two to four sentences', tags=('p',)), para(
     'Every change goes through a guarded orchestration (13 orchestrations sharing 4 sub-orchestrations) that re-checks its inputs, calls Workday\'s Human_Resources or Staffing web service, confirms Workday accepted the change, and only then writes an audit record. '
     'Application formats, role requests, audit records and bulk runs are kept in five Extend business objects and two attachment stores; the organizations, roles and assignments themselves live only in Workday, where AccessUBC already reads them.'))
 a2 = T(s, 'Attribute', 1)
-kv(s, a2, 'Build tool', 'App Builder (Code mode) and Orchestration Builder; source in a Git repository, built and checked by scripts, deployed by GitHub Actions with wdcli')
+kv(s, a2, 'Build tool', 'App Builder (Code mode) and Orchestration Builder; source kept under version control, built and checked by scripts before each deployment')
 kv(s, a2, 'Runtime', 'Extend runtime (pages) and Orchestrate runtime (orchestrations)')
 kv(s, a2, 'Entry point', 'Worklet / task (Workday search: Shell Org Manager, Audit Log Viewer, ISC Queue, Submit Assignable Role Request, Submit AAA Role Request, Withdraw Role Request); worker profile section; Workday Home cards; BP inbox steps; related action on an application record')
 kv(s, a2, 'External systems', 'None')
@@ -454,7 +454,7 @@ set_rows(s, T(s, 'ID', 4), [
     ['SEC-03', 'Page security domain (Extend)', 'Page security', 'Each page has one domain (§5.3)', 'View or Modify', 'Orchestrations launched by a page use the same domain (enabledForOrchestrationSecurity)'],
     ['SEC-04', 'ISSG', 'Integration System Security Group', f'{TBC} (for the ECO-COMS ISU)', 'Get/Put on audit and request domains', 'Only so records can be made read-only for users'],
     ['SEC-05', 'ISU', 'Integration System User', 'DNU_ISU_ECO_COMS_DEPLOY_CMM (planned; assigned to the app in App Manager per tenant)', 'Writes audit and request records only', 'Unavoidable to make audit records tamper-resistant: users keep View/Get only. Workday changes and BP starts stay as the user'],
-    ['SEC-06', 'Credential', 'ISU (orchestration credential)', 'Stored in Orchestration Builder / Workday, never in the repository', 'n/a', 'CI tokens are GitHub secrets, refreshed by a person'],
+    ['SEC-06', 'Credential', 'ISU (orchestration credential)', 'Stored in Orchestration Builder / Workday, never in the repository', 'n/a', 'Deployment tokens are stored as secrets, refreshed by a person'],
 ], keep=1)
 set_rows(s, T(s, 'Access matrix'), [
     ['', 'AAA (shell org + request domains)', 'Shell Org Manager, own app data*, audit', 'Organizations, patterns, role changes, requests', 'Status, positions on shell roles', 'Nothing (Workday has no delete)'],
@@ -469,7 +469,7 @@ insert_after(s, wrap_of(T(s, 'Access matrix')), para('* Until context scoping is
 set_rows(s, T(s, 'Failure scenario'), [
     ['Source data missing or malformed', 'Page checks; orchestration guards; bulk row checks', 'Refuse on the page; guard stops the run; bulk row INVALID', 'No', 'The user', 'Message under the field / row reason'],
     ['Endpoint unavailable or timing out', 'Workday error codes (failOnStatusCodes)', 'Error page; nothing claimed as done', 'Default Workday retry config in orchestrations', 'The user', 'ECO-COMS error page'],
-    ['Authentication or token failure', 'HTTP 401', 'Workday sign-in; CI deploy stops at the token step', 'No', 'User; developer for CI', 'Sign-in page; GitHub run'],
+    ['Authentication or token failure', 'HTTP 401', 'Workday sign-in; CI deploy stops at the token step', 'No', 'User; developer for CI', 'Sign-in page; deployment log'],
     ['Permission denied (403)', 'Domain policy', 'Redirect to hub or the friendly error page', 'n/a', 'The user', '"Access Restricted" / error page'],
     ['Partial success', 'Per position / per row result', 'Successful changes stay; failed ones listed', 'No (user re-runs the remainder)', 'The user', '"Workday rejected N of M changes" / FAILED rows'],
     ['Downstream rejects the payload', 'Not 2xx or SOAP fault (CheckWWSAccepted)', 'Run stops, nothing audited, logged with Workday\'s text; page blocks OK', 'No', 'The user; developer via app Logs', 'Page message; developer console Logs (15 min)'],
@@ -494,7 +494,7 @@ for title in ('Studio', 'Orchestrate'):
     while nxt is not None and nxt.name == 'p' and 'ct' not in (nxt.get('class') or []):
         n2 = nxt.find_next_sibling(); nxt.decompose(); nxt = n2
 set_rows(s, T(s, 'Tenant'), [
-    ['WCP Development (ubc_wcpdev2)', 'Build and test; deployed on every push to main', 'Sample only — never PII', 'GitHub Actions (wdcli) after static checks; smoke tests after each deploy', 'n/a', 'Write suite run by hand; test data marked TEST and listed in the admin runbook'],
+    ['WCP Development (ubc_wcpdev2)', 'Build and test; deployed on every push to main', 'Sample only — never PII', 'Automated deployment after static checks; smoke tests after each deploy', 'n/a', 'Write suite run by hand; test data marked TEST and listed in the admin runbook'],
     ['Implementation', 'Configure and test', TBC, 'Promote the latest passing Dev build', TBC, 'Re-assign the ISU in App Manager; set up the BP definition, policies, launch configuration'],
     ['Sandbox / Sandbox Preview', 'Production-like verification (Clockwork pilot)', 'Production copy', TBC, 'Weekly', 'Anything configured only here is lost at refresh'],
     ['Production', 'Live', 'Live', 'Account Administrator', 'n/a', 'Cannot be uninstalled; plan roll-forward'],
@@ -562,7 +562,7 @@ set_rows(s, T(s, 'Document name and URI'), [
     [f'Security review {TBC}', 'Security review / architecture review record', TBC, TBC, 'Per governance'],
     ['Appian COMS documentation (shell roles, IRPS)', 'Integration Design Document (legacy format)', 'To be confirmed', TBC, 'Optional'],
     ['App Hub build log (developer.workday.com → app → Builds)', 'App Hub build log', 'CI', 'Each deploy', 'Extend / Orchestrate'],
-    ['GitHub repository crismwan/ECO-COMS-Extend-App (code, user guide, admin runbook, notes, tests)', 'Source repository', 'Crispin Mwanyumba', '2026-11-05', 'Studio (used here for Extend)'],
+    ['Source repository (code, user guide, admin runbook, notes, tests)', 'Source repository', 'Crispin Mwanyumba', '2026-11-05', 'Studio (used here for Extend)'],
 ], keep=1)
 set_rows(s, T(s, 'System'), [['Jira', TBC, 'Epic', ''], ['ServiceNow', TBC, 'Change', '']], keep=1)
 set_rows(s, T(s, 'Role', 0), [
