@@ -36,8 +36,10 @@ jobs:
       - name: Arcane Auditor code review (warning only)
         continue-on-error: true
         run: |
-          set -uo pipefail
-          python3 -m pip install --quiet --break-system-packages "git+https://github.com/Developers-and-Dragons/ArcaneAuditor.git" 2>&1 | tail -5 || true
+          set +e -uo pipefail
+          python3 --version
+          GH_TOKEN="${{ secrets.GITHUB_TOKEN }}" gh release view --repo Developers-and-Dragons/ArcaneAuditor --json tagName,assets --jq '.tagName, .assets[].name'
+          python3 -m pip install --break-system-packages "git+https://github.com/Developers-and-Dragons/ArcaneAuditor.git" 2>&1 | tail -30
           AA=$(command -v ArcaneAuditorCLI || command -v arcane-auditor || true)
           if [ -z "${AA}" ]; then
             AA_DIR="${RUNNER_TEMP}/arcane"; mkdir -p "${AA_DIR}"
@@ -103,13 +105,13 @@ jobs:
           WDCLI_CLIENT_ID: ${{ secrets.WD_CLIENT_ID }}
           WDCLI_CLIENT_SECRET: ${{ secrets.WD_CLIENT_SECRET }}
         run: |
-          set -uo pipefail
+          set +e -uo pipefail
           export HOME="${RUNNER_TEMP}/wdvalidate"
           mkdir -p "${HOME}/.config/@workday/wdcli"
           jq -n --arg id "${WDCLI_CLIENT_ID}" --arg s "${WDCLI_CLIENT_SECRET}" \
             '{clientId: $id, clientSecret: $s, defaultAccountShortId: "vmzvxm", defaultTenantAlias: "ubc_wcpdev2"}' \
             > "${HOME}/.config/@workday/wdcli/config.json"
-          wdcli auth login --system-user > /dev/null 2>&1 || echo "system-user login failed"
+          wdcli auth login --system-user 2>&1 | sed -E 's/(Bearer\s+|eyJ)[A-Za-z0-9._-]{8,}/[redacted]/g' | tail -3
           wdcli app validate -d . --ci -f json > /tmp/validate.json 2>&1
           V_EXIT=$?
           echo "wdcli app validate exit code ${V_EXIT}"
