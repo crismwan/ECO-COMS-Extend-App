@@ -162,7 +162,8 @@ FR = [
     ['FR-027', 'Every count shown on a summary card shall be clickable: on a page with a list it filters that list (marked ✓, a second click clears it); elsewhere it opens the list it counts.', 'UC-09, UC-10', 'Should', 'Given My Assignable Role Requests with 51 requests, when "4 pending" is clicked, then the list shows the 4 pending requests and the count shows ✓; clicking again shows all 51.', PO],
     ['FR-026', f'(Not built yet) The system shall scope each user to the applications they administer, read from their own AAA meta role assignments, on every page, search and orchestration.', 'UC-09', 'Should', 'Given a user who is AAA for X:CLW only, then they see and change only X:CLW data.', ARCH],
 ]
-set_rows(s, T(s, 'ID', 0), FR, keep=1)
+# Sources are to be confirmed (product owner, 2026-11-06)
+set_rows(s, T(s, 'ID', 0), [r[:-1] + ['To be confirmed'] for r in FR], keep=1)
 oos = heading(s, 'Explicitly out of scope').find_next_sibling('p')
 insert_after(s, oos, para(
     '• Creating or changing real Workday security roles, security groups, supervisory organizations or academic units.\n'
