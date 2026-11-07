@@ -7,7 +7,7 @@ SRC = '01_part1.html'
 OUT = sys.argv[1] if len(sys.argv) > 1 else 'out01.html'
 s = BeautifulSoup(open(SRC, encoding='utf-8').read(), 'html.parser')
 TBC = '[TBC]'
-ARCH = 'Solution architect briefing, 2026-11-01'
+ARCH = 'To be confirmed'
 PO = 'Product owner decision'
 
 # ---------------------------------------------------------------- page properties
@@ -71,7 +71,7 @@ set_rows(s, cs, [
     ['Known failure modes', '• ISC is the bottleneck: changes wait in a queue.\n• The Appian form only knows one pattern shape, so each new application would need a rebuild.\n• A AAA using the standard task sees other roles on a position and can request their deletion; if the owner approves by mistake, access is lost ("two errors").\n• No single audit trail of who changed what.'],
     ['Related tickets in the last 12 months if any', TBC],
 ], keep=1, bold_first=True)
-insert_after(s, wrap_of(cs), img('img/current-architecture.png', 'Current shell-role architecture (solution architect): Workday holds the truth, AccessUBC adds ad hoc assignments, the application turns roles into grants', 800))
+insert_after(s, wrap_of(cs), img('img/current-architecture.png', 'Current shell-role architecture: Workday holds the truth, AccessUBC adds ad hoc assignments, the application turns roles into grants', 800))
 
 # ---------------------------------------------------------------- 4. future state
 ul = heading(s, '4. Future / Desired State').find_next_sibling('ul')
@@ -205,9 +205,9 @@ set_rows(s, T(s, 'ID', 2), [
 
 # ---------------------------------------------------------------- 10. FAQ
 set_rows(s, T(s, 'Question', 1), [
-    ['Can ECO-COMS give anyone real Workday access?', 'No. Shell roles have no security group, so they carry no power inside Workday. ECO-COMS cannot create or change real roles, supervisory organizations or academic units.', 'Solution architect', '2026-11-01'],
-    ['Why can organizations not be renamed or deleted?', 'Role assignments depend on them; renaming would silently change what an assignment means. Organizations can be inactivated and reactivated.', 'Solution architect', '2026-11-01'],
-    ['What happens to access when someone leaves a position?', 'The role assignment stays on the position; with nobody in it, the next extract turns access off, and a replacement gets it back. The Access Review page lists shell roles on vacant positions.', 'Solution architect', '2026-11-01'],
+    ['Can ECO-COMS give anyone real Workday access?', 'No. Shell roles have no security group, so they carry no power inside Workday. ECO-COMS cannot create or change real roles, supervisory organizations or academic units.', 'To be confirmed', '2026-11-01'],
+    ['Why can organizations not be renamed or deleted?', 'Role assignments depend on them; renaming would silently change what an assignment means. Organizations can be inactivated and reactivated.', 'To be confirmed', '2026-11-01'],
+    ['What happens to access when someone leaves a position?', 'The role assignment stays on the position; with nobody in it, the next extract turns access off, and a replacement gets it back. The Access Review page lists shell roles on vacant positions.', 'To be confirmed', '2026-11-01'],
     ['How is a new application added?', 'A pattern maintainer adds a record on Maintain Application Pattern (prefixes, fields, rules, example). The application needs an organization type named after it in Workday.', 'Product owner', '2026-11-04'],
     ['Why does Clockwork keep ":PATTERN:" in its names?', 'About 395 existing Clockwork organizations use it; keeping it keeps names consistent.', 'Product owner', '2026-11-04'],
     ['Why CSV and not an Excel upload?', 'Workday orchestrations read CSV; there is no Excel parser. The Excel template checks rows and is saved as CSV for upload.', 'Product owner', '2026-10-31'],
@@ -215,7 +215,7 @@ set_rows(s, T(s, 'Question', 1), [
 
 # ---------------------------------------------------------------- 11. supporting documentation
 set_rows(s, T(s, 'Document name and URI'), [
-    ['Requirements from architect (briefing transcript) + Current Architecture diagram', 'Functional Context Document', 'Solution architect', '2026-11-01', 'Mandatory'],
+    ['Requirements briefing + Current Architecture diagram', 'Functional Context Document', 'To be confirmed', '2026-11-01', 'Mandatory'],
     ['01: Business Requirements (this page)', 'Business Requirements Specification (page 01)', 'Crispin Mwanyumba', '2026-11-05', 'Mandatory'],
     ['02: Solutions Design', 'Solution Design (page 02)', 'Crispin Mwanyumba', '2026-11-05', 'Mandatory'],
     ['Shell Org Manager design options (design canvas); ECO-COMS presentation and live demo runbook (2026-11-05)', 'UX Design pack', 'Crispin Mwanyumba', '2026-11-05', 'Extend only'],
