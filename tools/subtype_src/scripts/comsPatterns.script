@@ -87,7 +87,7 @@ var lookupOf = function(schema, i) {
 
 var pickerKind = function(schema, i) {
   let k = lookupOf(schema, i);
-  (k == 'courseSubject' || k == 'academicPeriod') ? k : '';
+  (k == 'courseSubject' || k == 'academicPeriod' || k == 'academicUnitCode') ? k : '';
 };
 
 var needsPeriods = function(schema) {
@@ -150,15 +150,54 @@ var fieldError = function(schema, i, value, units, total, rows) {
   (e == '' && lookupMiss(lookupOf(schema, i), value, total, rows)) ? lookupMessage(lookupOf(schema, i), fieldLabel(schema, i), value) : e;
 };
 
-/* "Find in Workday" pickers: typed search, or browse a tree (subjects by first letter, periods by academic year). */
+/* Pickers (2026-11-07): a field with a Workday check is picked from a list, not typed. Folders: the wildcards the field's
+   format allows (* any; for periods *W1, *W2, *S every year), then units by subtype (from the page's unit list), subjects
+   by first letter, periods by academic year (each year also offers its whole year, e.g. 2024, and sessions, 2024W / 2024S).
+   Typing searches Workday (code or name; * shows the wildcards). Ids: CODE:<value> for a wildcard or session, a unit
+   code, a subject abbreviation, or <period name>|<n>; fillValue turns the picked id into the value the name uses. */
+var allowed = function(schema, i, code) {
+  fieldCount(schema) > i && validate:match(schema.fields[i].regex, code);
+};
+
+var wildcards = function(schema, i) {
+  [{'id': 'CODE:*', 'descriptor': '* · Any'}, {'id': 'CODE:*W1', 'descriptor': '*W1 · Winter Term 1, every year'},
+   {'id': 'CODE:*W2', 'descriptor': '*W2 · Winter Term 2, every year'}, {'id': 'CODE:*S', 'descriptor': '*S · Summer, every year'}]
+    .filter(w => { allowed(schema, i, w.id.substringAfter('CODE:')) });
+};
+
+var yearCodes = function(schema, i, yearName) {
+  let y = periodYear(yearName ?? '');
+  [{'id': 'CODE:' + y, 'descriptor': y + ' · Any period of ' + y},
+   {'id': 'CODE:' + y + 'W', 'descriptor': y + 'W · Winter session ' + (yearName ?? '').substringBefore(' ')},
+   {'id': 'CODE:' + y + 'S', 'descriptor': y + 'S · Summer ' + y}]
+    .filter(w => { allowed(schema, i, w.id.substringAfter('CODE:')) });
+};
+
 var letterFolders = function() {
   ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
     .map(c => { {'id': 'LETTER_' + c, 'descriptor': c} });
 };
 
-var yearFolders = function(years) {
-  list:flatten([(years ?? []).filter(y => { !empty(y.academicYear) }).map(y => { {'id': y.academicYear.id, 'descriptor': y.academicYear.descriptor} }),
-    [{'id': 'NOYEAR', 'descriptor': '(No academic year)'}]]);
+var unitType = function(u) {
+  empty(u.academicUnitSubtype) ? '(No subtype)' : (u.academicUnitSubtype.descriptor ?? '(No subtype)');
+};
+
+var rootFolders = function(schema, i, units, years) {
+  let k = pickerKind(schema, i);
+  let wild = wildcards(schema, i).size() > 0 ? [{'id': 'WILD', 'descriptor': 'Any, or several (wildcards)'}] : [];
+  let types = (units ?? []).filter(u => { !empty(u.academicUnitCode) }).map(u => { unitType(u) });
+  let folders = k == 'academicUnitCode'
+    ? types.distinct().sort().map(t => { {'id': 'TYPE:' + t, 'descriptor': t + ' (' + types.filter(x => { x == t }).size() + ')'} })
+    : (k == 'courseSubject' ? letterFolders()
+      : list:flatten([(years ?? []).filter(y => { !empty(y.academicYear) }).map(y => { {'id': y.academicYear.id, 'descriptor': y.academicYear.descriptor} }),
+          [{'id': 'NOYEAR', 'descriptor': '(No academic year)'}]]));
+  list:flatten([wild, folders]);
+};
+
+var unitRows = function(units, folder) {
+  let t = folder.substringAfter('TYPE:');
+  list:sort((units ?? []).filter(u => { !empty(u.academicUnitCode) && unitType(u) == t })
+    .map(u => { {'id': u.academicUnitCode, 'descriptor': u.academicUnitCode + ' · ' + (u.academicUnitName ?? '')} }), 'id', true);
 };
 
 var treeWql = function(kind, folder) {
@@ -173,20 +212,59 @@ var treeWql = function(kind, folder) {
 
 var searchWql = function(kind, q) {
   let t = wqlText(q);
-  kind == 'courseSubject'
-    ? ('SELECT abbreviation, name FROM courseSubjects WHERE inactive = false AND (abbreviation startswith \'' + t + '\' OR name contains \'' + t + '\') ORDER BY abbreviation')
-    : ('SELECT name FROM academicPeriods WHERE inactive = false AND name contains \'' + t + '\' ORDER BY name');
+  if (kind == 'courseSubject') {
+    'SELECT abbreviation, name FROM courseSubjects WHERE inactive = false AND (abbreviation startswith \'' + t + '\' OR name contains \'' + t + '\') ORDER BY abbreviation';
+  } else if (kind == 'academicUnitCode') {
+    'SELECT academicUnitCode, academicUnitName FROM academicUnits WHERE inactive = false AND academicUnitCode is not empty AND (academicUnitCode startswith \'' + t + '\' OR academicUnitName contains \'' + t + '\') ORDER BY academicUnitCode';
+  } else {
+    'SELECT name FROM academicPeriods WHERE inactive = false AND name contains \'' + t + '\' ORDER BY name';
+  }
 };
 
 var pickRows = function(kind, rows) {
-  kind == 'courseSubject'
-    ? (rows ?? []).map(r => { {'id': r.abbreviation ?? '', 'descriptor': (r.abbreviation ?? '') + ' · ' + (r.name ?? '')} })
-    : (rows ?? []).map((r, n) => { {'id': (r.name ?? '') + '|' + n, 'descriptor': r.name ?? ''} });
+  if (kind == 'courseSubject') {
+    (rows ?? []).map(r => { {'id': r.abbreviation ?? '', 'descriptor': (r.abbreviation ?? '') + ' · ' + (r.name ?? '')} });
+  } else if (kind == 'academicUnitCode') {
+    (rows ?? []).map(r => { {'id': r.academicUnitCode ?? '', 'descriptor': (r.academicUnitCode ?? '') + ' · ' + (r.academicUnitName ?? '')} });
+  } else {
+    (rows ?? []).map((r, n) => { {'id': (r.name ?? '') + '|' + n, 'descriptor': r.name ?? ''} });
+  }
 };
 
-/* the value a picked entry puts in the field: a subject's Abbreviation, a period's short form ('' when it has none) */
+/* one level of the tree: the wildcards, a unit subtype (from the page's list), or a WQL query (subjects, a year's periods) */
+var levelRows = function(schema, i, folder, units, rows) {
+  let k = pickerKind(schema, i);
+  if (folder == 'WILD') {
+    wildcards(schema, i);
+  } else if (k == 'academicUnitCode') {
+    unitRows(units, folder);
+  } else if (k == 'courseSubject') {
+    pickRows(k, rows);
+  } else {
+    list:flatten([folder == 'NOYEAR' ? [] : yearCodes(schema, i, (rows ?? []).size() > 0 ? rows[0].name : ''), pickRows(k, rows)]);
+  }
+};
+
+/* the WQL a level needs ('' when it needs none: the wildcards and unit subtypes) */
+var levelWql = function(schema, i, folder) {
+  let k = pickerKind(schema, i);
+  (folder == 'WILD' || k == 'academicUnitCode') ? '' : treeWql(k, folder);
+};
+
+/* typed search: the wildcards when the text starts with *, otherwise Workday's matches */
+var searchRows = function(schema, i, q, rows) {
+  (q ?? '').trim().startsWith('*') ? wildcards(schema, i) : pickRows(pickerKind(schema, i), rows);
+};
+
+var searchQuery = function(schema, i, q) {
+  (empty(q) || q.trim().startsWith('*')) ? '' : searchWql(pickerKind(schema, i), q);
+};
+
+/* the value a picked entry puts in the name ('' when a period has no short form) */
 var fillValue = function(kind, id) {
-  if (kind == 'courseSubject') {
+  if (id.startsWith('CODE:')) {
+    id.substringAfter('CODE:');
+  } else if (kind != 'academicPeriod') {
     id;
   } else {
     let name = id.substringBefore('|');
@@ -244,10 +322,11 @@ var appCodes = function(orgs, apps) {
   "lookupMessage": lookupMessage,
   "fieldQuery": fieldQuery,
   "fieldError": fieldError,
-  "letterFolders": letterFolders,
-  "yearFolders": yearFolders,
-  "treeWql": treeWql,
-  "searchWql": searchWql,
+  "rootFolders": rootFolders,
+  "levelRows": levelRows,
+  "levelWql": levelWql,
+  "searchRows": searchRows,
+  "searchQuery": searchQuery,
   "pickRows": pickRows,
   "fillValue": fillValue,
   "formatGuide": formatGuide,

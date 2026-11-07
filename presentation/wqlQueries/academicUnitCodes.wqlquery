@@ -1,4 +1,4 @@
 {
   "id": "academicUnitCodes",
-  "query": "SELECT academicUnitCode FROM academicUnits WHERE inactive = false"
+  "query": "SELECT academicUnitCode, academicUnitName, academicUnitSubtype FROM academicUnits WHERE inactive = false AND academicUnitCode is not empty"
 }

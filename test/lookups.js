@@ -12,6 +12,8 @@ const FRAGMENTS = {
   subjectSearch: "SELECT abbreviation, name FROM courseSubjects WHERE inactive = false AND (abbreviation startswith '",
   subjectSearchMid: "' OR name contains '",
   periodSearch: "SELECT name FROM academicPeriods WHERE inactive = false AND name contains '",
+  unitSearch: "SELECT academicUnitCode, academicUnitName FROM academicUnits WHERE inactive = false AND academicUnitCode is not empty AND (academicUnitCode startswith '",
+  unitSearchMid: "' OR academicUnitName contains '",
 };
 const F = FRAGMENTS;
 const text = (v) => String(v ?? '').split("'").join('').split('\\').join('').trim();
@@ -27,10 +29,15 @@ const lookupWql = (kind, v) => {
 const treeWql = (kind, folder) => (kind === 'courseSubject' ? F.subjectTree + text(folder).replace(/^.*?LETTER_/, '') + F.subjectTreeEnd
   : folder === 'NOYEAR' ? F.periodNoYear : F.periodYear + text(folder) + ') ORDER BY name');
 const searchWql = (kind, q) => (kind === 'courseSubject' ? F.subjectSearch + text(q) + F.subjectSearchMid + text(q) + "') ORDER BY abbreviation"
+  : kind === 'academicUnitCode' ? F.unitSearch + text(q) + F.unitSearchMid + text(q) + "') ORDER BY academicUnitCode"
   : F.periodSearch + text(q) + "' ORDER BY name");
+// wildcard choices offered when the field's format allows them (comsPatterns.wildcards / yearCodes)
+const wildcards = (regex) => ['*', '*W1', '*W2', '*S'].filter((c) => new RegExp('^(?:' + regex + ')$').test(c));
+const yearCodes = (regex, periodName) => { const y = year(periodName); return [y, y + 'W', y + 'S'].filter((c) => new RegExp('^(?:' + regex + ')$').test(c)); };
 const fillValue = (kind, id) => {
-  if (kind === 'courseSubject') return id;
+  if (id.startsWith('CODE:')) return id.slice(5);
+  if (kind !== 'academicPeriod') return id;
   const name = id.split('|')[0]; const y = year(name);
   return name.includes('Winter Term 1') ? y + 'W1' : name.includes('Winter Term 2') ? y + 'W2' : name.includes('Summer') ? y + 'S' : name.includes('Winter') ? y + 'W' : '';
 };
-module.exports = { FRAGMENTS, lookupWql, treeWql, searchWql, fillValue };
+module.exports = { FRAGMENTS, lookupWql, treeWql, searchWql, fillValue, wildcards, yearCodes };

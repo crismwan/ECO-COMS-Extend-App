@@ -75,12 +75,12 @@ def field_on_change(i, target='self', fill=''):
 
 
 def find_on_change(i):
-    # a picked subject or period goes into the field (a period as its short form, e.g. 2024W1), then the usual recheck
+    # the picked entry's value goes into the field below (a period as its short form, e.g. 2024W1; nothing picked = blank),
+    # then the usual recheck of every field
     fill = (f"  {FIND(i)}.clearError();\n"
-            f"  if (!empty(self.value)) {{\n"
-            f"    let fv = comsPatterns.fillValue(comsPatterns.pickerKind(s, {i}), self.value[0]);\n"
-            f"    if (fv == '') {{ {FIND(i)}.setError('This period has no short form (W1, W2, W or S): type the value in the box above.'); }} else {{ {FIELD(i)}.setValue(fv); }}\n"
-            f"  }}\n")
+            f"  let fv = empty(self.value) ? '' : comsPatterns.fillValue(comsPatterns.pickerKind(s, {i}), self.value[0]);\n"
+            f"  if (!empty(self.value) && fv == '') {{ {FIND(i)}.setError('This period has no short form (W1, W2, W or S): pick its year or session instead.'); }}\n"
+            f"  {FIELD(i)}.setValue(fv);\n")
     return field_on_change(i, FIELD(i), fill)
 
 
@@ -118,29 +118,33 @@ def submit():
 
 fields = []
 KIND = lambda i: f"comsPatterns.pickerKind({SCH}, {i})"
+AU = "(auCodes.data ?? [])"
 for i in range(MAX_FIELDS):
-    fields.append({"type": "text", "id": FIELD(i),
-                   "label": f"<% comsPatterns.fieldLabel({SCH}, {i}) %>",
-                   "visible": f"<% comsPatterns.fieldCount({SCH}) > {i} %>",
-                   "placeholder": f"<% comsPatterns.fieldCount({SCH}) > {i} ? ('e.g. ' + {SCH}.fields[{i}].example) : '' %>",
-                   "onChange": field_on_change(i)})
-    # 2026-11-07: a field checked against course subjects or academic periods gets a picker under it: type to search
-    # (first 50 matches), or click to browse (subjects by first letter, periods by academic year). Every list is one
-    # WQL query of only the rows it shows, so it stays quick with tens of thousands of subjects or periods.
+    # 2026-11-07 (product owner): a field with a Workday check (academic unit, course subject, academic period) is picked
+    # from a list, not typed. Click to browse (the field's wildcards, then units by subtype, subjects by first letter,
+    # periods by academic year with whole-year and session choices) or type to search Workday. Each list is one query of
+    # only the rows it shows (units come from the page's unit list), so it stays quick with tens of thousands of rows.
     fields.append({"type": "instanceList", "id": FIND(i), "multiSelect": False,
-                   "label": f"<% 'Find ' + comsPatterns.fieldLabel({SCH}, {i}) + ' in Workday' %>",
+                   "label": f"<% comsPatterns.fieldLabel({SCH}, {i}) %>",
                    "visible": f"<% {KIND(i)} != '' %>",
-                   "helpText": f"<% {KIND(i)} == 'academicPeriod' ? 'Click to browse by academic year, or type part of the period name. The box above gets its short form (e.g. 2024W1).' : 'Click to browse by first letter, or type an abbreviation or subject name. The box above gets the abbreviation.' %>",
-                   "values": f"<% {KIND(i)} == 'academicPeriod' ? comsPatterns.yearFolders(wdYears.data ?? []) : ({KIND(i)} == 'courseSubject' ? comsPatterns.letterFolders() : []) %>",
+                   "helpText": "Click to browse, or type a code or name to search Workday (type * for the wildcards). The value it puts in the name shows below.",
+                   "values": f"<% comsPatterns.rootFolders({SCH}, {i}, {AU}, wdYears.data ?? []) %>",
                    "dynamicMonikerLevels": ("<%\n"
                        "  const sel = self.promptSelections;\n"
-                       f"  const k = {KIND(i)};\n"
-                       "  const res = wdLookup.invoke({'q': comsPatterns.treeWql(k, sel[0]), 'lim': '2000'});\n"
-                       "  const leaves = comsPatterns.pickRows(k, res.data ?? []);\n"
+                       f"  const q = comsPatterns.levelWql({SCH}, {i}, sel[0]);\n"
+                       "  const rows = q == '' ? [] : (wdLookup.invoke({'q': q, 'lim': '2000'}).data ?? []);\n"
+                       f"  const leaves = comsPatterns.levelRows({SCH}, {i}, sel[0], {AU}, rows);\n"
                        "  return [leaves, false];\n%>"),
-                   "onSearch": (f"<% empty(event.query) ? [] : comsPatterns.pickRows({KIND(i)}, "
-                                f"wdLookup.invoke({{'q': comsPatterns.searchWql({KIND(i)}, event.query), 'lim': '50'}}).data ?? []) %>"),
+                   "onSearch": (f"<% comsPatterns.searchQuery({SCH}, {i}, event.query) == '' ? comsPatterns.searchRows({SCH}, {i}, event.query, []) : "
+                                f"comsPatterns.searchRows({SCH}, {i}, event.query, wdLookup.invoke({{'q': comsPatterns.searchQuery({SCH}, {i}, event.query), 'lim': '50'}}).data ?? []) %>"),
                    "onChange": find_on_change(i)})
+    # the value that goes into the name: typed for ordinary fields, filled from the list (read-only) for checked ones
+    fields.append({"type": "text", "id": FIELD(i),
+                   "label": f"<% comsPatterns.fieldLabel({SCH}, {i}) + ({KIND(i)} == '' ? '' : ' in the name') %>",
+                   "enabled": f"<% {KIND(i)} == '' %>",
+                   "visible": f"<% comsPatterns.fieldCount({SCH}) > {i} %>",
+                   "placeholder": f"<% comsPatterns.fieldCount({SCH}) > {i} ? ({KIND(i)} == '' ? ('e.g. ' + {SCH}.fields[{i}].example) : 'Pick above (blank = any)') : '' %>",
+                   "onChange": field_on_change(i)})
 
 PICK_ROWS = "(comsApplications.data ?? []).filter(x => { !empty(x.patternSchema) && x.active != false }).map(x => { x.appId }).distinct().sort().map(a => { {'appCode': a} })"
 txt = lambda cid, label, value: {"type": "column", "columnId": cid, "label": label,

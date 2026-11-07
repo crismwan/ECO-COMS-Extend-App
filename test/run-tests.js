@@ -485,9 +485,10 @@ function staticSuite() {
         if (m[2] === 'invoke' && !(e.deferred === true || e.deferred === 'true')) { fail('Static.treePickers', `${label} invokes ${m[1]}, which isn't deferred`); ok = false; }
       }
       // rows built by one shared script function in both the levels and the search (comsPatterns.pickRows, 2026-11-07)
-      const shared = String(lv).match(/(\w+\.pickRows)\(/);
-      const leaf = shared && String(search).includes(shared[1] + '(') ? [null, shared[1]] : [...String(lv).matchAll(/'id': o\.(\w+)/g)].pop();
-      const srch = shared && String(search).includes(shared[1] + '(') ? [null, shared[1]] : String(search).match(/'id': o\.(\w+)/);
+      const sm = String(lv).match(/(\w+)\.(?:pickRows|levelRows)\(/);
+      const shared = sm && new RegExp(sm[1] + '\\.(?:pickRows|searchRows)\\(').test(String(search)) ? sm[1] + ' rows' : '';
+      const leaf = shared ? [null, shared] : [...String(lv).matchAll(/'id': o\.(\w+)/g)].pop();
+      const srch = shared ? [null, shared] : String(search).match(/'id': o\.(\w+)/);
       if (!leaf || !srch) { fail('Static.treePickers', `${label}: can't find the leaf id (${leaf && leaf[1]}) or the search id (${srch && srch[1]})`); ok = false; }
       else if (leaf[1] !== srch[1]) { fail('Static.treePickers', `${label}: browsed leaves use ${leaf[1]} but the typed search uses ${srch[1]}; the page would save different ids`); ok = false; }
       if (/^<%\s*\[\]\s*%>$/.test(String(n.values || '').trim())) { fail('Static.treePickers', `${label}: has levels but empty root values`); ok = false; }
@@ -1067,6 +1068,18 @@ async function smoke(token, me) {
     await expect('search chem', L.searchWql('courseSubject', 'chem'), (r) => (r.data || []).some((x) => x.abbreviation === 'CHEM'));
     await expect("search o'neil", L.searchWql('courseSubject', "o'neil\\"), () => true);
     await expect('search winter', L.searchWql('academicPeriod', 'winter'), (r) => (r.data || []).length > 0);
+    await expect('unit search math', L.searchWql('academicUnitCode', 'math'), (r) => (r.data || []).some((x) => x.academicUnitCode === 'MATH'));
+    await expect('unit search MA', L.searchWql('academicUnitCode', 'MA'), (r) => (r.data || []).some((x) => x.academicUnitCode === 'MATH'));
+    const units = (await wql(token, JSON.parse(fs.readFileSync(path.join(ROOT, 'presentation/wqlQueries/academicUnitCodes.wqlquery'), 'utf8')).query, 10000)).data || [];
+    const types = [...new Set(units.map((u) => (u.academicUnitSubtype || {}).descriptor || '(No subtype)'))];
+    if (!units.length || units.some((u) => !u.academicUnitCode) || !units.some((u) => u.academicUnitName)) throw new Error(`unit list: ${units.length} units, names ${units.filter((u) => u.academicUnitName).length}`);
+    got.push(`units ${units.length} in ${types.length} subtypes`);
+    // Clockwork's period format: wildcards *W1 *W2 *S and *, year/session codes from a period name
+    const per = '\\*|20[0-9]{2}(S|W|W1|W2)?|\\*(S|W1|W2)';
+    if (L.wildcards(per).join() !== '*,*W1,*W2,*S') throw new Error(`period wildcards ${L.wildcards(per)}`);
+    if (L.yearCodes(per, '2024-25 Winter Term 1 (UBC-V)').join() !== '2024,2024W,2024S') throw new Error(`year codes ${L.yearCodes(per, '2024-25 Winter Term 1 (UBC-V)')}`);
+    if (L.wildcards('[A-Z]{2,4}(_[A-Z])?').length) throw new Error('a required field must offer no wildcards');
+    if (L.fillValue('academicPeriod', 'CODE:2024W') !== '2024W' || L.fillValue('academicUnitCode', 'MATH') !== 'MATH') throw new Error('fillValue codes');
     const fill = [['2024-25 Winter Term 1 (UBC-V)|0', '2024W1'], ['2025 Summer Term 2 (UBC-V)|3', '2025S'], ['2024-25 Winter Term 2 (UBC-V)|1', '2024W2']];
     for (const [id, want] of fill) if (L.fillValue('academicPeriod', id) !== want) throw new Error(`fillValue ${id} gave ${L.fillValue('academicPeriod', id)}`);
     pass('Lookups.queries', got.join(', ') + `; ${years.length} academic years`);
@@ -2564,18 +2577,6 @@ async function shellRolesQuery(token) {
 
 async function probe(token) {
   console.log('\n-- Probe (read-only) --');
-  {
-    const ds = ((await request('GET', `${API}/wql/v1/dataSources?alias=academicUnits&limit=5`, token)).data || [])[0];
-    const fields = [];
-    for (let off = 0; off < 3000; off += 100) { const pg = (await request('GET', `${API}/wql/v1/dataSources/${ds.id}/fields?limit=100&offset=${off}`, token)).data || []; fields.push(...pg); if (pg.length < 100) break; }
-    console.log(`   AUQ text fields: ${fields.filter((f) => f.type === 'Text').map((f) => f.alias).join(' ')}`);
-    const sub = (await request('GET', `${API}/wql/v1/dataSources?search=${encodeURIComponent('academic unit subtype')}&limit=20`, token)).data || [];
-    console.log(`   AUQ subtype sources: ${sub.map((d) => d.alias).join(' ')}`);
-    for (const q of ["SELECT academicUnitCode, academicUnit FROM academicUnits WHERE inactive = false AND academicUnitCode is not empty AND academicUnitSubtype in (b40d8b0163671002158f6c4e6d210000) ORDER BY academicUnitCode"]) {
-      try { const r = await wql(token, q, 50); console.log(`   AUQ subtype filter ${r.total}`); } catch (e) { console.log(`   AUQ error ${String(e.message).slice(0, 200)}`); }
-    }
-  }
-  return;
   // 2026-11-06: the subtype design's WQL, exactly as the pages send it (presentation/wqlQueries)
   {
     const q = (n) => JSON.parse(fs.readFileSync(path.join(ROOT, 'presentation', 'wqlQueries', n + '.wqlquery'), 'utf8')).query;
