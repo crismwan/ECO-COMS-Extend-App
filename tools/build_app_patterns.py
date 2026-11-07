@@ -33,6 +33,295 @@ load = lambda n: json.load(open(os.path.join(ROOT, n), encoding='utf-8'))
 def save(n, d): open(os.path.join(ROOT, n), 'w', encoding='utf-8').write(json.dumps(d, indent=2, ensure_ascii=False) + '\n')
 
 SCRIPT = '''/* Application Patterns setup (tools/build_app_patterns.py). Pure functions; each check returns '' or an error. */
+/* ---- Field rules (2026-11-07). A rule (type, length, characters or values, option) compiles to the regular expression
+   every check already uses; a regex the builder could have written reads back as a rule, and anything else stays an
+   advanced regular expression. Mirrors test/rules.js, which the static checks run over the real formats. ---- */
+var bs = function() {
+  '%5C'.urlDecode();
+};
+
+var tr = function(s) {
+  (s ?? '').trim();
+};
+
+var isChars = function(t) {
+  t == 'upper' || t == 'upperDigits' || t == 'digits';
+};
+
+var optFirst = function(o) {
+  o == 'first' || o == 'firstStar';
+};
+
+var optEnding = function(o) {
+  (o == 'star' || o == 'firstStar') ? 'star' : (o == 'campus' ? 'campus' : ((o == 'letter' || o == 'letterShorter') ? 'letter' : ''));
+};
+
+var optShorter = function(o) {
+  o == 'shorter' || o == 'letterShorter';
+};
+
+var optionId = function(first, ending, shorter) {
+  if (first && ending == 'star' && !shorter) {
+    'firstStar';
+  } else if (first && ending == '' && !shorter) {
+    'first';
+  } else if (first) {
+    '';
+  } else if (ending == 'letter' && shorter) {
+    'letterShorter';
+  } else if (shorter && ending == '') {
+    'shorter';
+  } else if (shorter) {
+    '';
+  } else if (ending == '') {
+    'none';
+  } else {
+    ending;
+  }
+};
+
+var endingText = function(e) {
+  e == 'star' ? (bs() + '*?') : (e == 'campus' ? '(_[A-Z])?' : (e == 'letter' ? '[A-Z]?' : ''));
+};
+
+var esc = function(v) {
+  v.replace('*', bs() + '*').replace('.', bs() + '.');
+};
+
+var unesc = function(v) {
+  v.replace(bs() + '*', '*').replace(bs() + '.', '.');
+};
+
+var num = function(s) {
+  validate:match('[0-9]+', tr(s)) ? tr(s).toInt() : 0;
+};
+
+var lo = function(len) {
+  num(tr(len).contains('-') ? tr(len).substringBefore('-') : len);
+};
+
+var hi = function(len) {
+  tr(len).contains('-') ? num(tr(len).substringAfter('-')) : lo(len);
+};
+
+var quant = function(len) {
+  empty(tr(len)) ? '+' : (tr(len).contains('-') ? ('{' + lo(len) + ',' + hi(len) + '}') : ('{' + lo(len) + '}'));
+};
+
+var restQuant = function(len) {
+  empty(tr(len)) ? '*' : (tr(len).contains('-') ? ('{' + (lo(len) - 1) + ',' + (hi(len) - 1) + '}') : ('{' + (lo(len) - 1) + '}'));
+};
+
+var baseOf = function(t) {
+  t == 'upper' ? 'A-Z' : (t == 'upperDigits' ? 'A-Z0-9' : '0-9');
+};
+
+var extraOf = function(x) {
+  (x ?? '').replace(' ', '');
+};
+
+var classOf = function(t, extra) {
+  let x = extraOf(extra);
+  '[' + baseOf(t) + x.replace('-', '') + (x.contains('-') ? '-' : '') + ']';
+};
+
+var listValues = function(text) {
+  empty(tr(text)) ? [] : text.split(',').map(v => { v.trim() }).filter(v => { !empty(v) });
+};
+
+var ruleBody = function(t, len, values, o) {
+  if (isChars(t)) {
+    let main = (optFirst(o) && !empty(extraOf(values))) ? ('[' + baseOf(t) + ']' + classOf(t, values) + restQuant(len)) : (classOf(t, values) + quant(len));
+    (optShorter(o) ? (classOf(t, values) + '{1,' + (hi(len) - 1) + '}' + bs() + '*|') : '') + main + endingText(optEnding(o));
+  } else if (t == 'any') {
+    '[^: ]' + quant(len);
+  } else if (t == 'list') {
+    '(' + listValues(values).map(v => { esc(v) }).join('|') + ')';
+  } else if (t == 'fixed') {
+    esc(tr(values));
+  } else {
+    '';
+  }
+};
+
+var compileRule = function(t, len, values, o, blank) {
+  (blank == true ? (bs() + '*|') : '') + ruleBody(t, len, values, o);
+};
+
+var lengthOk = function(len) {
+  let l = tr(len);
+  if (empty(l)) {
+    true;
+  } else if (validate:match('[0-9]+', l)) {
+    num(l) > 0;
+  } else if (validate:match('[0-9]+ *- *[0-9]+', l)) {
+    lo(l) > 0 && lo(l) <= hi(l);
+  } else {
+    false;
+  }
+};
+
+var lengthError = function(t, len, o) {
+  if ((isChars(t) || t == 'any') && !lengthOk(len)) {
+    'the length must be a number (3) or a range (2-6).';
+  } else if (isChars(t) && optShorter(o) && (empty(tr(len)) || hi(len) < 2)) {
+    'a shorter start then * needs a length of 2 or more.';
+  } else {
+    '';
+  }
+};
+
+var valuesError = function(t, values, o) {
+  if (isChars(t) && !validate:match('[-_.*/]*', extraOf(values))) {
+    'extra characters can only be - _ . * /';
+  } else if (isChars(t) && optFirst(o) && empty(extraOf(values))) {
+    '"starts with a letter or digit" only matters with extra characters such as - or _.';
+  } else if (t == 'list' && listValues(values).size() < 2) {
+    'list at least two values, separated by commas (e.g. V, O, S).';
+  } else if (t == 'list' && listValues(values).filter(v => { !validate:match('[A-Z0-9_.*/-]+', v) }).size() > 0) {
+    'list values use capital letters, digits and - _ . * / only.';
+  } else if (t == 'fixed' && !validate:match('[A-Z0-9_.*/-]+', tr(values))) {
+    'the fixed text uses capital letters, digits and - _ . * / only.';
+  } else {
+    '';
+  }
+};
+
+var ruleError = function(t, len, values, o) {
+  let a = lengthError(t, len, o);
+  a != '' ? a : valuesError(t, values, o);
+};
+
+var lengthWords = function(len) {
+  empty(tr(len)) ? 'one or more' : (tr(len).contains('-') ? ('' + lo(len) + ' to ' + hi(len)) : ('' + lo(len)));
+};
+
+var charWords = function(t) {
+  t == 'upper' ? 'capital letters' : (t == 'upperDigits' ? 'capital letters or digits' : (t == 'digits' ? 'digits' : 'characters (no colons or spaces)'));
+};
+
+var endWords = function(e) {
+  e == 'star' ? '; may end with * to match many' : (e == 'campus' ? '; may end with _ and a campus letter (e.g. _V)' : (e == 'letter' ? '; may end with a capital letter' : ''));
+};
+
+var hintFor = function(t, len, values, o, blank) {
+  let x = extraOf(values);
+  let core = '';
+  if (isChars(t)) {
+    core = lengthWords(len) + ' ' + charWords(t) + (empty(x) ? '' : (', or any of ' + x))
+      + ((optFirst(o) && !empty(x)) ? ', starting with a letter or digit' : '') + endWords(optEnding(o))
+      + (optShorter(o) ? ('; or the first 1 to ' + (hi(len) - 1) + ' followed by * (e.g. 1*)') : '');
+  } else if (t == 'any') {
+    core = lengthWords(len) + ' ' + charWords(t);
+  } else if (t == 'list') {
+    core = 'one of ' + listValues(values).join(', ');
+  } else if (t == 'fixed') {
+    core = 'always ' + tr(values);
+  }
+  empty(core) ? '' : (core.capitalize() + (blank == true ? '. Leave blank for any.' : '.'));
+};
+
+var asRule = function(t, len, values, o, regex, blank) {
+  if (empty(t) || t == 'regex' || empty(o)) {
+    null;
+  } else if (ruleError(t, len, values, o) != '') {
+    null;
+  } else if (compileRule(t, len, values, o, blank) != regex) {
+    null;
+  } else {
+    let m = { 'ruleType': t, 'ruleLength': len, 'ruleValues': values, 'ruleOption': o };
+    m;
+  }
+};
+
+var lenFrom = function(q, plus) {
+  if (q == '+' || (q == '*' && plus == 1)) {
+    '';
+  } else if (!(q.startsWith('{') && q.endsWith('}') && q.length() > 2)) {
+    'x';
+  } else {
+    let m = q.substring(1, q.length() - 1);
+    m.contains(',') ? ('' + (num(m.substringBefore(',')) + plus) + '-' + (num(m.substringAfter(',')) + plus)) : ('' + (num(m) + plus));
+  }
+};
+
+var typeOf = function(inner) {
+  inner.startsWith('A-Z0-9') ? 'upperDigits' : (inner.startsWith('A-Z') ? 'upper' : (inner.startsWith('0-9') ? 'digits' : ''));
+};
+
+var parseChars = function(body, r, blank) {
+  let sep = bs() + '*|';
+  let shorter = body.contains(sep) && body.substringBefore(sep).contains('{1,');
+  let b1 = shorter ? body.substringAfter(sep) : body;
+  let ending = b1.endsWith(endingText('star')) ? 'star' : (b1.endsWith(endingText('campus')) ? 'campus' : (b1.endsWith(endingText('letter')) ? 'letter' : ''));
+  let b = ending == '' ? b1 : b1.substring(0, b1.length() - endingText(ending).length());
+  let c1 = b.substringAfter('[').substringBefore(']');
+  let rest = b.substringAfter(']');
+  let first = rest.startsWith('[');
+  let inner = first ? rest.substringAfter('[').substringBefore(']') : c1;
+  let q = first ? rest.substringAfter(']') : rest;
+  let t = typeOf(inner);
+  let extra = t == 'upperDigits' ? inner.substring(6) : (empty(t) ? '' : inner.substring(3));
+  let o = optionId(first, ending, shorter);
+  empty(o) ? null : asRule(t, lenFrom(q, first ? 1 : 0), extra, o, r, blank);
+};
+
+var parseRegex = function(regex, blank) {
+  let r = tr(regex);
+  let body = (blank == true && r.startsWith(bs() + '*|')) ? r.substring(3) : r;
+  let rule = null;
+  if (body == '[^: ]+' || (body.startsWith('[^: ]{') && body.endsWith('}'))) {
+    rule = asRule('any', lenFrom(body.substring(5), 0), '', 'none', r, blank);
+  } else if (body.startsWith('[') && body.contains(']')) {
+    rule = parseChars(body, r, blank);
+  } else if (body.startsWith('(') && body.endsWith(')') && body.length() > 2) {
+    rule = asRule('list', '', body.substring(1, body.length() - 1).split('|').map(v => { unesc(v) }).join(', '), 'none', r, blank);
+  } else if (!empty(body)) {
+    rule = asRule('fixed', '', unesc(body), 'none', r, blank);
+  }
+  if (empty(rule)) {
+    let m = { 'ruleType': 'regex', 'ruleLength': '', 'ruleValues': '', 'ruleOption': 'none' };
+    m;
+  } else {
+    rule;
+  }
+};
+
+/* A stored field's rule: the saved rule, or (formats saved before rules existed) the regex read back as a rule. */
+var ruleOf = function(f) {
+  if (!empty(f.ruleType) && f.ruleType != 'regex') {
+    let m = { 'ruleType': f.ruleType, 'ruleLength': f.ruleLength ?? '', 'ruleValues': f.ruleValues ?? '', 'ruleOption': f.ruleOption ?? 'none' };
+    m;
+  } else if (f.ruleType == 'regex') {
+    let m = { 'ruleType': 'regex', 'ruleLength': '', 'ruleValues': '', 'ruleOption': 'none' };
+    m;
+  } else {
+    parseRegex(f.regex, f.blankIsWildcard == true);
+  }
+};
+
+var fieldRow = function(f) {
+  let p = ruleOf(f);
+  let m = { 'fieldLabel': f.fieldLabel ?? '', 'regex': f.regex ?? '', 'hint': f.hint ?? '', 'example': f.example ?? '',
+    'blankIsWildcard': f.blankIsWildcard == true, 'optionalField': f.optionalField == true,
+    'ruleType': p.ruleType, 'ruleLength': p.ruleLength, 'ruleValues': p.ruleValues, 'ruleOption': p.ruleOption,
+    'lookup': empty(f.lookup) ? 'none' : f.lookup };
+  m;
+};
+
+/* One grid row as it is saved: in rule mode the regex and (when left blank) the hint come from the rule. */
+var rowOf = function(label, t, len, vals, o, regex, hint, example, blank, optional, lookup) {
+  let tt = empty(t) ? 'regex' : t;
+  let oo = empty(o) ? 'none' : o;
+  let isRule = tt != 'regex';
+  let m = { 'fieldLabel': tr(label), 'regex': isRule ? compileRule(tt, tr(len), tr(vals), oo, blank == true) : tr(regex),
+    'hint': empty(tr(hint)) ? hintFor(tt, tr(len), tr(vals), oo, blank == true) : tr(hint), 'example': tr(example),
+    'blankIsWildcard': blank == true, 'optionalField': optional == true,
+    'ruleType': tt, 'ruleLength': isRule ? tr(len) : '', 'ruleValues': isRule ? tr(vals) : '', 'ruleOption': isRule ? oo : 'none',
+    'lookup': empty(lookup) ? 'none' : lookup };
+  m;
+};
+
 var recordById = function(apps, id) {
   let m = (apps ?? []).filter(a => { a.id == id });
   empty(id) || empty(m) ? null : m[0];
@@ -44,7 +333,7 @@ var schemaOf = function(rec) {
 
 var fieldRows = function(rec) {
   let s = schemaOf(rec);
-  empty(s) ? [{ 'fieldLabel': '', 'regex': '', 'hint': '', 'example': '', 'blankIsWildcard': false, 'optionalField': false }] : s.fields;
+  empty(s) ? [rowOf('', 'upperDigits', '', '', 'none', '', '', '', false, false, 'none')] : s.fields.map(f => { fieldRow(f) });
 };
 
 var prefixText = function(rec) {
@@ -92,12 +381,14 @@ var prefixError = function(text) {
   }
 };
 
-var rowError = function(r, n) {
+var rowError = function(r, n, units) {
   let where = 'Field ' + n + ': ';
   if (empty(r.fieldLabel)) {
     where + 'a label is required.';
   } else if (r.fieldLabel.contains(':')) {
     where + 'the label cannot contain a colon.';
+  } else if (r.ruleType != 'regex' && ruleError(r.ruleType, r.ruleLength, r.ruleValues, r.ruleOption) != '') {
+    where + ruleError(r.ruleType, r.ruleLength, r.ruleValues, r.ruleOption);
   } else if (empty(r.regex)) {
     where + 'a format is required (a regular expression, e.g. [A-Z]{2,4}).';
   } else if (empty(r.example)) {
@@ -106,12 +397,14 @@ var rowError = function(r, n) {
     where + 'the example cannot contain a colon or spaces.';
   } else if (!validate:match(r.regex, r.example)) {
     where + 'the example ' + r.example + ' does not match the format ' + r.regex + '.';
+  } else if (r.lookup == 'academicUnitCode' && (units ?? []).size() > 0 && r.example != '*' && !units.contains(r.example)) {
+    where + 'the example ' + r.example + ' is not the code of an active academic unit in Workday (e.g. MATH).';
   } else {
     '';
   }
 };
 
-var fieldsError = function(rows) {
+var fieldsError = function(rows, units) {
   if (rows.size() == 0) {
     'Add at least one field.';
   } else if (rows.size() > 7) {
@@ -125,7 +418,7 @@ var fieldsError = function(rows) {
   } else if (rows.filter(r => { r.optionalField != true }).size() == 0) {
     'At least the first field must be required (not optional).';
   } else {
-    let errs = rows.map((r, i) => { rowError(r, i + 1) }).filter(e => { e != '' });
+    let errs = rows.map((r, i) => { rowError(r, i + 1, units) }).filter(e => { e != '' });
     errs.size() == 0 ? '' : errs[0];
   }
 };
@@ -157,6 +450,14 @@ var copyOptions = function(apps, appId) {
 };
 
 {
+  "parseRegex": parseRegex,
+  "compileRule": compileRule,
+  "hintFor": hintFor,
+  "lengthError": lengthError,
+  "valuesError": valuesError,
+  "ruleError": ruleError,
+  "fieldRow": fieldRow,
+  "rowOf": rowOf,
   "recordById": recordById,
   "schemaOf": schemaOf,
   "fieldRows": fieldRows,
@@ -225,10 +526,13 @@ REC = f"comsAppSetup.recordById(comsApplications.data, {RID})"
 NEW = f"empty({RID})"
 CHOSEN = "(empty(appIdDropdown.value) ? '' : appIdDropdown.selectedEntries[0].id)"
 APPID = f"({NEW} ? {CHOSEN} : ({REC} ?? {{'appId': ''}}).appId)"
-ROWS = ("fieldsGrid.rows.map(r => { { 'fieldLabel': (r.childrenMap.colFieldLabel.value ?? '').trim(), "
-        "'regex': (r.childrenMap.colRegex.value ?? '').trim(), 'hint': (r.childrenMap.colHint.value ?? '').trim(), "
-        "'example': (r.childrenMap.colExample.value ?? '').trim(), 'blankIsWildcard': r.childrenMap.colBlank.value == true, "
-        "'optionalField': r.childrenMap.colOptional.value == true } })")
+DD = lambda col: f"(empty(r.childrenMap.{col}.value) ? '' : r.childrenMap.{col}.value[0])"
+ROWS = ("fieldsGrid.rows.map(r => { comsAppSetup.rowOf(r.childrenMap.colFieldLabel.value, "
+        f"{DD('colRule')}, r.childrenMap.colLength.value, r.childrenMap.colValues.value, {DD('colOption')}, "
+        "r.childrenMap.colRegex.value, r.childrenMap.colHint.value, r.childrenMap.colExample.value, "
+        f"r.childrenMap.colBlank.value == true, r.childrenMap.colOptional.value == true, {DD('colLookup')}) }})")
+# active academic unit codes (Workday's Code field, e.g. MATH) for fields checked against them
+UNITS = "(auCodes.data ?? []).map(u => { u.code ?? '' })"
 SRC = "comsAppSetup.recordById(comsApplications.data, copyFromDropdown.selectedEntries[0].id)"
 # An error OK puts on the Fields line has no box of its own to clear it, and Workday refuses OK while any error shows
 # (live 2026-11-04: the page stayed stuck after the row was fixed), so every table edit clears it; OK re-checks.
@@ -237,6 +541,40 @@ FIELDS_TOUCHED = "fieldsCheckText.clearError(); " + PREVIEW
 cell = lambda cid, label, key, kind="text": {"type": "column", "columnId": cid, "label": label, "cellTemplate": {
     "type": kind, "id": cid + ("CheckBox" if kind == "checkBox" else "Text"),
     "value": f"<% fr.{key} ?? {'false' if kind == 'checkBox' else chr(39) * 2} %>", "onChange": "<% " + FIELDS_TOUCHED + " %>"}}
+RULE_TYPES = [("upper", "Capital letters"), ("upperDigits", "Capital letters and digits"), ("digits", "Digits"),
+              ("list", "One of a list"), ("fixed", "Fixed text"), ("any", "Any text"), ("regex", "Regular expression (advanced)")]
+RULE_OPTIONS = [("none", "None"), ("first", "Starts with a letter or digit"), ("star", "May end with *"),
+                ("firstStar", "Starts with a letter or digit, may end with *"),
+                ("campus", "May end with _ and a campus letter (e.g. _V)"), ("letter", "May end with a capital letter (e.g. 100A)"),
+                ("shorter", "Or a shorter start then * (e.g. 1*)"),
+                ("letterShorter", "May end with a capital letter, or a shorter start then *")]
+LOOKUPS = [("none", "None"), ("academicUnitCode", "Academic unit code")]
+# A rule setting changed (cell onChange; the row's other cells are reachable by id): recheck the rule, write its regex
+# into the Format cell (read-only while a rule is in use), and keep the hint in step unless someone wrote their own.
+# Regular expression mode unlocks the Format cell and keeps whatever regex is there: rule -> regex loses nothing.
+# Regex -> a rule type: when the regex reads back as that type, its length and characters are filled in.
+RULE_CHANGED = ("<%\n"
+  "  let t = empty(colRuleDropdown.value) ? 'regex' : colRuleDropdown.value[0];\n"
+  "  let o = empty(colOptionDropdown.value) ? 'none' : colOptionDropdown.value[0];\n"
+  "  let blank = colBlankCheckBox.value == true;\n"
+  "  let was = comsAppSetup.parseRegex(colRegexText.value ?? '', blank);\n"
+  "  let wasHint = comsAppSetup.hintFor(was.ruleType, was.ruleLength, was.ruleValues, was.ruleOption, blank);\n"
+  "  let fill = t != 'regex' && was.ruleType == t && empty(colLengthText.value) && empty(colValuesText.value);\n"
+  "  let len = fill ? was.ruleLength : (colLengthText.value ?? '');\n"
+  "  let vals = fill ? was.ruleValues : (colValuesText.value ?? '');\n"
+  "  if (fill) { colLengthText.setValue(len); colValuesText.setValue(vals); }\n"
+  "  let le = t == 'regex' ? '' : comsAppSetup.lengthError(t, len, o);\n"
+  "  let ve = t == 'regex' ? '' : comsAppSetup.valuesError(t, vals, o);\n"
+  "  if (le != '') { colLengthText.setError(le); } else { colLengthText.clearError(); }\n"
+  "  if (ve != '') { colValuesText.setError(ve); } else { colValuesText.clearError(); }\n"
+  "  colRegexText.setEnabled(t == 'regex');\n"
+  "  if (t != 'regex' && le == '' && ve == '') {\n"
+  "    colRegexText.setValue(comsAppSetup.compileRule(t, len, vals, o, blank));\n"
+  "    if (empty(colHintText.value) || colHintText.value == wasHint) { colHintText.setValue(comsAppSetup.hintFor(t, len, vals, o, blank)); }\n"
+  "  }\n  " + FIELDS_TOUCHED + "\n%>")
+pick = lambda cid, label, key, choices, default, on_change: {"type": "column", "columnId": cid, "label": label, "cellTemplate": {
+    "type": "dropdown", "id": cid + "Dropdown", "instanceList": [{"id": i, "descriptor": d} for i, d in choices],
+    "selectedValues": f"<% [fr.{key} ?? '{default}'] %>", "onChange": on_change}}
 OUT = lambda path, value: {"outboundPath": path, "value": value}
 SCHEMA = f"comsAppSetup.schemaJson(prefixesText.value ?? '', {ROWS})"
 PREFIXES = "comsAppSetup.prefixList(prefixesText.value ?? '').join(',')"
@@ -250,14 +588,17 @@ submit = ("<%\n"
           "  if (e2 != '') { appNameText.setError(e2); valid = false; }\n"
           "  let e3 = comsAppSetup.prefixError(prefixesText.value ?? '');\n"
           "  if (e3 != '') { prefixesText.setError(e3); valid = false; }\n"
-          f"  let e4 = comsAppSetup.fieldsError({ROWS});\n"
+          f"  let e4 = comsAppSetup.fieldsError({ROWS}, {UNITS});\n"
           "  if (e4 != '') { fieldsCheckText.setError(e4); valid = false; }\n"
           "  valid;\n%>")
 edit = {"id": "editAppPattern", "securityDomains": [DOMAIN], "include": ["comsAppSetup.script"],
   "endPoints": [APPS_EP,
     {"name": "existingOrgs", "baseUrlType": "workday-wql", "url": "data", "authType": "sso", "bestEffort": "true",
      "wqlQuery": {"queryId": "customOrganizations"}, "failOnStatusCodes": FOS([400, 429])},
-    {"name": "selectedWorker", "baseUrlType": "COMMON", "url": "/workers/me", "authType": "sso", "bestEffort": "true", "failOnStatusCodes": FOS([400, 403, 429])}],
+    {"name": "selectedWorker", "baseUrlType": "COMMON", "url": "/workers/me", "authType": "sso", "bestEffort": "true", "failOnStatusCodes": FOS([400, 403, 429])},
+    # a failed list only switches the code check off (bestEffort, 400 left out): the rest of the page still works
+    {"name": "auCodes", "baseUrlType": "workday-wql", "url": "data", "authType": "sso", "bestEffort": "true",
+     "wqlQuery": {"queryId": "academicUnitCodes"}, "failOnStatusCodes": FOS([429])}],
   "outboundData": {"outboundEndPoints": [
     {"name": "postApplication", "baseUrlType": "BUSINESS-OBJECT", "url": "/comsApplications", "httpMethod": "POST", "authType": "sso",
      "exclude": f"<% !{NEW} %>", "failOnStatusCodes": FOS([400, 403, 429, 500]), "values": [
@@ -287,8 +628,12 @@ edit = {"id": "editAppPattern", "securityDomains": [DOMAIN], "include": ["comsAp
       {"type": "layoutSection", "id": "aboutSection", "children": [{"type": "fieldSet", "id": "aboutFieldSet", "title": "About This Page", "children": [
         {"type": "richText", "id": "aboutRichText", "enabled": False, "value": INFO(
           "A pattern name is <b>APPLICATION:PREFIX:field:field:…</b>. Set the prefixes the application may use, then its fields "
-          "in order (up to 7). Each field has a label (shown on the Add Pattern form), a format (a regular expression the value "
-          "must match, e.g. <b>[A-Z]{2,4}</b>), a hint shown when a value doesn't match, and an example that matches the format. "
+          "in order (up to 7). Each field has a label (shown on the Add Pattern form) and a <b>rule</b>: pick a type such as "
+          "<b>Capital letters</b>, a <b>length</b> (3, or a range such as 2-6), extra <b>characters</b> (e.g. - _) or the "
+          "<b>values</b> of a list, and an <b>option</b> such as <i>may end with *</i>. The rule writes the <b>format</b> "
+          "(a regular expression) for you; pick <b>Regular expression (advanced)</b> to edit the format by hand, and pick a rule "
+          "type again to switch back. <b>Workday check</b> also requires the value to exist in Workday (Academic unit code: "
+          "e.g. MATH, the Department of Mathematics). Leave the hint blank to use the rule's own description. "
           "Tick <b>Blank = any</b> when a field may be left empty (it becomes *). <b>Copy from</b> fills the prefixes and "
           "fields from another application. Existing patterns keep their names. An <b>inactive</b> application takes no new patterns.")}]}]},
       {"type": "layoutSection", "id": "appSection", "children": [{"type": "fieldSet", "id": "appFieldSet", "title": "Application", "children": [
@@ -338,10 +683,18 @@ edit = {"id": "editAppPattern", "securityDomains": [DOMAIN], "include": ["comsAp
          "rows": f"<% comsAppSetup.fieldRows({REC}) %>",
          "columns": [
            cell("colFieldLabel", "Label", "fieldLabel"),
-           cell("colRegex", "Format (regular expression)", "regex"),
+           pick("colRule", "Rule", "ruleType", RULE_TYPES, "regex", RULE_CHANGED),
+           dict(cell("colLength", "Length", "ruleLength"), cellTemplate=dict(cell("colLength", "Length", "ruleLength")["cellTemplate"], onChange=RULE_CHANGED)),
+           dict(cell("colValues", "Characters or values", "ruleValues"), cellTemplate=dict(cell("colValues", "Characters or values", "ruleValues")["cellTemplate"], onChange=RULE_CHANGED)),
+           pick("colOption", "Option", "ruleOption", RULE_OPTIONS, "none", RULE_CHANGED),
+           # written by the rule; editable only in Regular expression mode
+           dict(cell("colRegex", "Format (regular expression)", "regex"),
+                cellTemplate=dict(cell("colRegex", "Format (regular expression)", "regex")["cellTemplate"], enabled="<% (fr.ruleType ?? 'regex') == 'regex' %>")),
            cell("colHint", "Hint", "hint"),
            cell("colExample", "Example", "example"),
-           cell("colBlank", "Blank = any (*)", "blankIsWildcard", "checkBox"),
+           pick("colLookup", "Workday check", "lookup", LOOKUPS, "none", "<% " + FIELDS_TOUCHED + " %>"),
+           dict(cell("colBlank", "Blank = any (*)", "blankIsWildcard", "checkBox"),
+                cellTemplate=dict(cell("colBlank", "Blank = any (*)", "blankIsWildcard", "checkBox")["cellTemplate"], onChange=RULE_CHANGED)),
            cell("colOptional", "Optional at end", "optionalField", "checkBox")]},
         {"type": "readOnlyText", "id": "exampleNameText", "label": "Example Pattern Name",
          # page-load value from the saved record (the grid's rows aren't built yet at load); PREVIEW updates it as fields change

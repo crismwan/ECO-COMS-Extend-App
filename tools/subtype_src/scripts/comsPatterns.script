@@ -58,11 +58,29 @@ var checkField = function(schema, i, value) {
   }
 };
 
+/* Fields whose Workday check is "Academic unit code" (Maintain Application Pattern, 2026-11-07): the value must be the
+   Code of an active academic unit (e.g. MATH, Department of Mathematics). units = those codes; an empty list (not
+   loaded) skips the check rather than block every pattern. */
+var needsUnits = function(schema) {
+  empty(schema) ? false : schema.fields.filter(f => { f.lookup == 'academicUnitCode' }).size() > 0;
+};
+
+var checkFieldIn = function(schema, i, value, units) {
+  let e = checkField(schema, i, value);
+  if (e != '' || fieldCount(schema) <= i || empty(value) || value == '*') {
+    e;
+  } else if (schema.fields[i].lookup == 'academicUnitCode' && (units ?? []).size() > 0 && !units.contains(value)) {
+    schema.fields[i].fieldLabel + ': ' + value + ' is not the code of an active academic unit in Workday (e.g. MATH for the Department of Mathematics).';
+  } else {
+    '';
+  }
+};
+
 var formatGuide = function(schema) {
   if (empty(schema)) {
     '';
   } else {
-    schema.fields.map(f => { f.fieldLabel + (f.optionalField == true ? ' (optional, may be left off)' : '') + ' (e.g. ' + f.example + '): ' + f.hint }).join('  ·  ');
+    schema.fields.map(f => { f.fieldLabel + (f.optionalField == true ? ' (optional, may be left off)' : '') + ' (e.g. ' + f.example + '): ' + f.hint + (f.lookup == 'academicUnitCode' ? ' Must be an active academic unit code.' : '') }).join('  ·  ');
   }
 };
 
@@ -96,6 +114,8 @@ var appCodes = function(orgs, apps) {
   "usedCount": usedCount,
   "buildName": buildName,
   "checkField": checkField,
+  "needsUnits": needsUnits,
+  "checkFieldIn": checkFieldIn,
   "formatGuide": formatGuide,
   "summary": summary,
   "appCodes": appCodes

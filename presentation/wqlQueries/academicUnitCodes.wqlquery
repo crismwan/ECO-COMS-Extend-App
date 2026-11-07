@@ -1,0 +1,4 @@
+{
+  "id": "academicUnitCodes",
+  "query": "SELECT code FROM academicUnits WHERE inactive = false"
+}

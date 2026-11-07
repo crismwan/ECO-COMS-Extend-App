@@ -60,6 +60,21 @@
           "code": 429
         }
       ]
+    },
+    {
+      "name": "auCodes",
+      "baseUrlType": "workday-wql",
+      "url": "data",
+      "authType": "sso",
+      "bestEffort": "true",
+      "wqlQuery": {
+        "queryId": "academicUnitCodes"
+      },
+      "failOnStatusCodes": [
+        {
+          "code": 429
+        }
+      ]
     }
   ],
   "outboundData": {
@@ -108,7 +123,7 @@
           },
           {
             "outboundPath": "patternSchema",
-            "value": "<% comsAppSetup.schemaJson(prefixesText.value ?? '', fieldsGrid.rows.map(r => { { 'fieldLabel': (r.childrenMap.colFieldLabel.value ?? '').trim(), 'regex': (r.childrenMap.colRegex.value ?? '').trim(), 'hint': (r.childrenMap.colHint.value ?? '').trim(), 'example': (r.childrenMap.colExample.value ?? '').trim(), 'blankIsWildcard': r.childrenMap.colBlank.value == true, 'optionalField': r.childrenMap.colOptional.value == true } })) %>"
+            "value": "<% comsAppSetup.schemaJson(prefixesText.value ?? '', fieldsGrid.rows.map(r => { comsAppSetup.rowOf(r.childrenMap.colFieldLabel.value, (empty(r.childrenMap.colRule.value) ? '' : r.childrenMap.colRule.value[0]), r.childrenMap.colLength.value, r.childrenMap.colValues.value, (empty(r.childrenMap.colOption.value) ? '' : r.childrenMap.colOption.value[0]), r.childrenMap.colRegex.value, r.childrenMap.colHint.value, r.childrenMap.colExample.value, r.childrenMap.colBlank.value == true, r.childrenMap.colOptional.value == true, (empty(r.childrenMap.colLookup.value) ? '' : r.childrenMap.colLookup.value[0])) })) %>"
           },
           {
             "outboundPath": "active",
@@ -147,7 +162,7 @@
           },
           {
             "outboundPath": "patternSchema",
-            "value": "<% comsAppSetup.schemaJson(prefixesText.value ?? '', fieldsGrid.rows.map(r => { { 'fieldLabel': (r.childrenMap.colFieldLabel.value ?? '').trim(), 'regex': (r.childrenMap.colRegex.value ?? '').trim(), 'hint': (r.childrenMap.colHint.value ?? '').trim(), 'example': (r.childrenMap.colExample.value ?? '').trim(), 'blankIsWildcard': r.childrenMap.colBlank.value == true, 'optionalField': r.childrenMap.colOptional.value == true } })) %>"
+            "value": "<% comsAppSetup.schemaJson(prefixesText.value ?? '', fieldsGrid.rows.map(r => { comsAppSetup.rowOf(r.childrenMap.colFieldLabel.value, (empty(r.childrenMap.colRule.value) ? '' : r.childrenMap.colRule.value[0]), r.childrenMap.colLength.value, r.childrenMap.colValues.value, (empty(r.childrenMap.colOption.value) ? '' : r.childrenMap.colOption.value[0]), r.childrenMap.colRegex.value, r.childrenMap.colHint.value, r.childrenMap.colExample.value, r.childrenMap.colBlank.value == true, r.childrenMap.colOptional.value == true, (empty(r.childrenMap.colLookup.value) ? '' : r.childrenMap.colLookup.value[0])) })) %>"
           },
           {
             "outboundPath": "active",
@@ -206,13 +221,13 @@
           },
           {
             "outboundPath": "details",
-            "value": "<% 'Pattern format for ' + (empty((queryParams.recordId ?? queryParams.taskObjectId ?? '')) ? (empty(appIdDropdown.value) ? '' : appIdDropdown.selectedEntries[0].id) : (comsAppSetup.recordById(comsApplications.data, (queryParams.recordId ?? queryParams.taskObjectId ?? '')) ?? {'appId': ''}).appId) + ': ' + comsAppSetup.prefixList(prefixesText.value ?? '').join(',').replace(',', ' / ') + ': ' + fieldsGrid.rows.map(r => { { 'fieldLabel': (r.childrenMap.colFieldLabel.value ?? '').trim(), 'regex': (r.childrenMap.colRegex.value ?? '').trim(), 'hint': (r.childrenMap.colHint.value ?? '').trim(), 'example': (r.childrenMap.colExample.value ?? '').trim(), 'blankIsWildcard': r.childrenMap.colBlank.value == true, 'optionalField': r.childrenMap.colOptional.value == true } }).map(r => { r.fieldLabel }).join(', ') + (appActiveCheckBox.value == true ? '' : ' (inactive)') %>"
+            "value": "<% 'Pattern format for ' + (empty((queryParams.recordId ?? queryParams.taskObjectId ?? '')) ? (empty(appIdDropdown.value) ? '' : appIdDropdown.selectedEntries[0].id) : (comsAppSetup.recordById(comsApplications.data, (queryParams.recordId ?? queryParams.taskObjectId ?? '')) ?? {'appId': ''}).appId) + ': ' + comsAppSetup.prefixList(prefixesText.value ?? '').join(',').replace(',', ' / ') + ': ' + fieldsGrid.rows.map(r => { comsAppSetup.rowOf(r.childrenMap.colFieldLabel.value, (empty(r.childrenMap.colRule.value) ? '' : r.childrenMap.colRule.value[0]), r.childrenMap.colLength.value, r.childrenMap.colValues.value, (empty(r.childrenMap.colOption.value) ? '' : r.childrenMap.colOption.value[0]), r.childrenMap.colRegex.value, r.childrenMap.colHint.value, r.childrenMap.colExample.value, r.childrenMap.colBlank.value == true, r.childrenMap.colOptional.value == true, (empty(r.childrenMap.colLookup.value) ? '' : r.childrenMap.colLookup.value[0])) }).map(r => { r.fieldLabel }).join(', ') + (appActiveCheckBox.value == true ? '' : ' (inactive)') %>"
           }
         ]
       }
     ]
   },
-  "onSubmit": "<%\n  appIdDropdown.clearError();\n  appNameText.clearError();\n  prefixesText.clearError();\n  fieldsCheckText.clearError();\n  let valid = true;\n  let e1 = comsAppSetup.appIdError((empty(appIdDropdown.value) ? '' : appIdDropdown.selectedEntries[0].id), comsApplications.data, empty((queryParams.recordId ?? queryParams.taskObjectId ?? '')));\n  if (e1 != '') { appIdDropdown.setError(e1); valid = false; }\n  let e2 = empty((queryParams.recordId ?? queryParams.taskObjectId ?? '')) ? comsAppSetup.nameError((appNameText.value ?? '').trim()) : '';\n  if (e2 != '') { appNameText.setError(e2); valid = false; }\n  let e3 = comsAppSetup.prefixError(prefixesText.value ?? '');\n  if (e3 != '') { prefixesText.setError(e3); valid = false; }\n  let e4 = comsAppSetup.fieldsError(fieldsGrid.rows.map(r => { { 'fieldLabel': (r.childrenMap.colFieldLabel.value ?? '').trim(), 'regex': (r.childrenMap.colRegex.value ?? '').trim(), 'hint': (r.childrenMap.colHint.value ?? '').trim(), 'example': (r.childrenMap.colExample.value ?? '').trim(), 'blankIsWildcard': r.childrenMap.colBlank.value == true, 'optionalField': r.childrenMap.colOptional.value == true } }));\n  if (e4 != '') { fieldsCheckText.setError(e4); valid = false; }\n  valid;\n%>",
+  "onSubmit": "<%\n  appIdDropdown.clearError();\n  appNameText.clearError();\n  prefixesText.clearError();\n  fieldsCheckText.clearError();\n  let valid = true;\n  let e1 = comsAppSetup.appIdError((empty(appIdDropdown.value) ? '' : appIdDropdown.selectedEntries[0].id), comsApplications.data, empty((queryParams.recordId ?? queryParams.taskObjectId ?? '')));\n  if (e1 != '') { appIdDropdown.setError(e1); valid = false; }\n  let e2 = empty((queryParams.recordId ?? queryParams.taskObjectId ?? '')) ? comsAppSetup.nameError((appNameText.value ?? '').trim()) : '';\n  if (e2 != '') { appNameText.setError(e2); valid = false; }\n  let e3 = comsAppSetup.prefixError(prefixesText.value ?? '');\n  if (e3 != '') { prefixesText.setError(e3); valid = false; }\n  let e4 = comsAppSetup.fieldsError(fieldsGrid.rows.map(r => { comsAppSetup.rowOf(r.childrenMap.colFieldLabel.value, (empty(r.childrenMap.colRule.value) ? '' : r.childrenMap.colRule.value[0]), r.childrenMap.colLength.value, r.childrenMap.colValues.value, (empty(r.childrenMap.colOption.value) ? '' : r.childrenMap.colOption.value[0]), r.childrenMap.colRegex.value, r.childrenMap.colHint.value, r.childrenMap.colExample.value, r.childrenMap.colBlank.value == true, r.childrenMap.colOptional.value == true, (empty(r.childrenMap.colLookup.value) ? '' : r.childrenMap.colLookup.value[0])) }), (auCodes.data ?? []).map(u => { u.code ?? '' }));\n  if (e4 != '') { fieldsCheckText.setError(e4); valid = false; }\n  valid;\n%>",
   "presentation": {
     "pageType": "EDIT",
     "headerSize": "HIDDEN",
@@ -268,7 +283,7 @@
                   "type": "richText",
                   "id": "aboutRichText",
                   "enabled": false,
-                  "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">A pattern name is <b>APPLICATION:PREFIX:field:field:…</b>. Set the prefixes the application may use, then its fields in order (up to 7). Each field has a label (shown on the Add Pattern form), a format (a regular expression the value must match, e.g. <b>[A-Z]{2,4}</b>), a hint shown when a value doesn't match, and an example that matches the format. Tick <b>Blank = any</b> when a field may be left empty (it becomes *). <b>Copy from</b> fills the prefixes and fields from another application. Existing patterns keep their names. An <b>inactive</b> application takes no new patterns.</span>"
+                  "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">A pattern name is <b>APPLICATION:PREFIX:field:field:…</b>. Set the prefixes the application may use, then its fields in order (up to 7). Each field has a label (shown on the Add Pattern form) and a <b>rule</b>: pick a type such as <b>Capital letters</b>, a <b>length</b> (3, or a range such as 2-6), extra <b>characters</b> (e.g. - _) or the <b>values</b> of a list, and an <b>option</b> such as <i>may end with *</i>. The rule writes the <b>format</b> (a regular expression) for you; pick <b>Regular expression (advanced)</b> to edit the format by hand, and pick a rule type again to switch back. <b>Workday check</b> also requires the value to exist in Workday (Academic unit code: e.g. MATH, the Department of Mathematics). Leave the hint blank to use the rule's own description. Tick <b>Blank = any</b> when a field may be left empty (it becomes *). <b>Copy from</b> fills the prefixes and fields from another application. Existing patterns keep their names. An <b>inactive</b> application takes no new patterns.</span>"
                 }
               ],
               "collapsible": true,
@@ -301,7 +316,7 @@
                   "required": true,
                   "helpText": "Applications in Workday that aren't set up here yet.",
                   "values": "<% comsAppSetup.newAppOptions(existingOrgs.data, comsApplications.data) %>",
-                  "onChange": "<%\n  let e = comsAppSetup.appIdError((empty(appIdDropdown.value) ? '' : appIdDropdown.selectedEntries[0].id), comsApplications.data, empty((queryParams.recordId ?? queryParams.taskObjectId ?? '')));\n  if (e != '') { self.setError(e); } else { self.clearError(); }\n  exampleNameText.setValue(comsAppSetup.exampleName((empty((queryParams.recordId ?? queryParams.taskObjectId ?? '')) ? (empty(appIdDropdown.value) ? '' : appIdDropdown.selectedEntries[0].id) : (comsAppSetup.recordById(comsApplications.data, (queryParams.recordId ?? queryParams.taskObjectId ?? '')) ?? {'appId': ''}).appId), prefixesText.value ?? '', fieldsGrid.rows.map(r => { { 'fieldLabel': (r.childrenMap.colFieldLabel.value ?? '').trim(), 'regex': (r.childrenMap.colRegex.value ?? '').trim(), 'hint': (r.childrenMap.colHint.value ?? '').trim(), 'example': (r.childrenMap.colExample.value ?? '').trim(), 'blankIsWildcard': r.childrenMap.colBlank.value == true, 'optionalField': r.childrenMap.colOptional.value == true } })));\n%>"
+                  "onChange": "<%\n  let e = comsAppSetup.appIdError((empty(appIdDropdown.value) ? '' : appIdDropdown.selectedEntries[0].id), comsApplications.data, empty((queryParams.recordId ?? queryParams.taskObjectId ?? '')));\n  if (e != '') { self.setError(e); } else { self.clearError(); }\n  exampleNameText.setValue(comsAppSetup.exampleName((empty((queryParams.recordId ?? queryParams.taskObjectId ?? '')) ? (empty(appIdDropdown.value) ? '' : appIdDropdown.selectedEntries[0].id) : (comsAppSetup.recordById(comsApplications.data, (queryParams.recordId ?? queryParams.taskObjectId ?? '')) ?? {'appId': ''}).appId), prefixesText.value ?? '', fieldsGrid.rows.map(r => { comsAppSetup.rowOf(r.childrenMap.colFieldLabel.value, (empty(r.childrenMap.colRule.value) ? '' : r.childrenMap.colRule.value[0]), r.childrenMap.colLength.value, r.childrenMap.colValues.value, (empty(r.childrenMap.colOption.value) ? '' : r.childrenMap.colOption.value[0]), r.childrenMap.colRegex.value, r.childrenMap.colHint.value, r.childrenMap.colExample.value, r.childrenMap.colBlank.value == true, r.childrenMap.colOptional.value == true, (empty(r.childrenMap.colLookup.value) ? '' : r.childrenMap.colLookup.value[0])) })));\n%>"
                 },
                 {
                   "type": "text",
@@ -354,7 +369,7 @@
                   "required": true,
                   "placeholder": "e.g. ORG, or CP, PRIV for several",
                   "value": "<% comsAppSetup.prefixText(comsAppSetup.recordById(comsApplications.data, (queryParams.recordId ?? queryParams.taskObjectId ?? ''))) %>",
-                  "onChange": "<%\n  let e = comsAppSetup.prefixError(self.value ?? '');\n  if (e != '') { self.setError(e); } else { self.clearError(); }\n  exampleNameText.setValue(comsAppSetup.exampleName((empty((queryParams.recordId ?? queryParams.taskObjectId ?? '')) ? (empty(appIdDropdown.value) ? '' : appIdDropdown.selectedEntries[0].id) : (comsAppSetup.recordById(comsApplications.data, (queryParams.recordId ?? queryParams.taskObjectId ?? '')) ?? {'appId': ''}).appId), prefixesText.value ?? '', fieldsGrid.rows.map(r => { { 'fieldLabel': (r.childrenMap.colFieldLabel.value ?? '').trim(), 'regex': (r.childrenMap.colRegex.value ?? '').trim(), 'hint': (r.childrenMap.colHint.value ?? '').trim(), 'example': (r.childrenMap.colExample.value ?? '').trim(), 'blankIsWildcard': r.childrenMap.colBlank.value == true, 'optionalField': r.childrenMap.colOptional.value == true } })));\n%>"
+                  "onChange": "<%\n  let e = comsAppSetup.prefixError(self.value ?? '');\n  if (e != '') { self.setError(e); } else { self.clearError(); }\n  exampleNameText.setValue(comsAppSetup.exampleName((empty((queryParams.recordId ?? queryParams.taskObjectId ?? '')) ? (empty(appIdDropdown.value) ? '' : appIdDropdown.selectedEntries[0].id) : (comsAppSetup.recordById(comsApplications.data, (queryParams.recordId ?? queryParams.taskObjectId ?? '')) ?? {'appId': ''}).appId), prefixesText.value ?? '', fieldsGrid.rows.map(r => { comsAppSetup.rowOf(r.childrenMap.colFieldLabel.value, (empty(r.childrenMap.colRule.value) ? '' : r.childrenMap.colRule.value[0]), r.childrenMap.colLength.value, r.childrenMap.colValues.value, (empty(r.childrenMap.colOption.value) ? '' : r.childrenMap.colOption.value[0]), r.childrenMap.colRegex.value, r.childrenMap.colHint.value, r.childrenMap.colExample.value, r.childrenMap.colBlank.value == true, r.childrenMap.colOptional.value == true, (empty(r.childrenMap.colLookup.value) ? '' : r.childrenMap.colLookup.value[0])) })));\n%>"
                 },
                 {
                   "type": "text",
@@ -368,8 +383,8 @@
                   "id": "fieldsGrid",
                   "label": "Fields",
                   "rowVariableName": "fr",
-                  "onRowAdd": "<% fieldsCheckText.clearError(); exampleNameText.setValue(comsAppSetup.exampleName((empty((queryParams.recordId ?? queryParams.taskObjectId ?? '')) ? (empty(appIdDropdown.value) ? '' : appIdDropdown.selectedEntries[0].id) : (comsAppSetup.recordById(comsApplications.data, (queryParams.recordId ?? queryParams.taskObjectId ?? '')) ?? {'appId': ''}).appId), prefixesText.value ?? '', fieldsGrid.rows.map(r => { { 'fieldLabel': (r.childrenMap.colFieldLabel.value ?? '').trim(), 'regex': (r.childrenMap.colRegex.value ?? '').trim(), 'hint': (r.childrenMap.colHint.value ?? '').trim(), 'example': (r.childrenMap.colExample.value ?? '').trim(), 'blankIsWildcard': r.childrenMap.colBlank.value == true, 'optionalField': r.childrenMap.colOptional.value == true } }))); %>",
-                  "onRowRemove": "<% fieldsCheckText.clearError(); exampleNameText.setValue(comsAppSetup.exampleName((empty((queryParams.recordId ?? queryParams.taskObjectId ?? '')) ? (empty(appIdDropdown.value) ? '' : appIdDropdown.selectedEntries[0].id) : (comsAppSetup.recordById(comsApplications.data, (queryParams.recordId ?? queryParams.taskObjectId ?? '')) ?? {'appId': ''}).appId), prefixesText.value ?? '', fieldsGrid.rows.map(r => { { 'fieldLabel': (r.childrenMap.colFieldLabel.value ?? '').trim(), 'regex': (r.childrenMap.colRegex.value ?? '').trim(), 'hint': (r.childrenMap.colHint.value ?? '').trim(), 'example': (r.childrenMap.colExample.value ?? '').trim(), 'blankIsWildcard': r.childrenMap.colBlank.value == true, 'optionalField': r.childrenMap.colOptional.value == true } }))); %>",
+                  "onRowAdd": "<% fieldsCheckText.clearError(); exampleNameText.setValue(comsAppSetup.exampleName((empty((queryParams.recordId ?? queryParams.taskObjectId ?? '')) ? (empty(appIdDropdown.value) ? '' : appIdDropdown.selectedEntries[0].id) : (comsAppSetup.recordById(comsApplications.data, (queryParams.recordId ?? queryParams.taskObjectId ?? '')) ?? {'appId': ''}).appId), prefixesText.value ?? '', fieldsGrid.rows.map(r => { comsAppSetup.rowOf(r.childrenMap.colFieldLabel.value, (empty(r.childrenMap.colRule.value) ? '' : r.childrenMap.colRule.value[0]), r.childrenMap.colLength.value, r.childrenMap.colValues.value, (empty(r.childrenMap.colOption.value) ? '' : r.childrenMap.colOption.value[0]), r.childrenMap.colRegex.value, r.childrenMap.colHint.value, r.childrenMap.colExample.value, r.childrenMap.colBlank.value == true, r.childrenMap.colOptional.value == true, (empty(r.childrenMap.colLookup.value) ? '' : r.childrenMap.colLookup.value[0])) }))); %>",
+                  "onRowRemove": "<% fieldsCheckText.clearError(); exampleNameText.setValue(comsAppSetup.exampleName((empty((queryParams.recordId ?? queryParams.taskObjectId ?? '')) ? (empty(appIdDropdown.value) ? '' : appIdDropdown.selectedEntries[0].id) : (comsAppSetup.recordById(comsApplications.data, (queryParams.recordId ?? queryParams.taskObjectId ?? '')) ?? {'appId': ''}).appId), prefixesText.value ?? '', fieldsGrid.rows.map(r => { comsAppSetup.rowOf(r.childrenMap.colFieldLabel.value, (empty(r.childrenMap.colRule.value) ? '' : r.childrenMap.colRule.value[0]), r.childrenMap.colLength.value, r.childrenMap.colValues.value, (empty(r.childrenMap.colOption.value) ? '' : r.childrenMap.colOption.value[0]), r.childrenMap.colRegex.value, r.childrenMap.colHint.value, r.childrenMap.colExample.value, r.childrenMap.colBlank.value == true, r.childrenMap.colOptional.value == true, (empty(r.childrenMap.colLookup.value) ? '' : r.childrenMap.colLookup.value[0])) }))); %>",
                   "rows": "<% comsAppSetup.fieldRows(comsAppSetup.recordById(comsApplications.data, (queryParams.recordId ?? queryParams.taskObjectId ?? ''))) %>",
                   "columns": [
                     {
@@ -380,7 +395,115 @@
                         "type": "text",
                         "id": "colFieldLabelText",
                         "value": "<% fr.fieldLabel ?? '' %>",
-                        "onChange": "<% fieldsCheckText.clearError(); exampleNameText.setValue(comsAppSetup.exampleName((empty((queryParams.recordId ?? queryParams.taskObjectId ?? '')) ? (empty(appIdDropdown.value) ? '' : appIdDropdown.selectedEntries[0].id) : (comsAppSetup.recordById(comsApplications.data, (queryParams.recordId ?? queryParams.taskObjectId ?? '')) ?? {'appId': ''}).appId), prefixesText.value ?? '', fieldsGrid.rows.map(r => { { 'fieldLabel': (r.childrenMap.colFieldLabel.value ?? '').trim(), 'regex': (r.childrenMap.colRegex.value ?? '').trim(), 'hint': (r.childrenMap.colHint.value ?? '').trim(), 'example': (r.childrenMap.colExample.value ?? '').trim(), 'blankIsWildcard': r.childrenMap.colBlank.value == true, 'optionalField': r.childrenMap.colOptional.value == true } }))); %>"
+                        "onChange": "<% fieldsCheckText.clearError(); exampleNameText.setValue(comsAppSetup.exampleName((empty((queryParams.recordId ?? queryParams.taskObjectId ?? '')) ? (empty(appIdDropdown.value) ? '' : appIdDropdown.selectedEntries[0].id) : (comsAppSetup.recordById(comsApplications.data, (queryParams.recordId ?? queryParams.taskObjectId ?? '')) ?? {'appId': ''}).appId), prefixesText.value ?? '', fieldsGrid.rows.map(r => { comsAppSetup.rowOf(r.childrenMap.colFieldLabel.value, (empty(r.childrenMap.colRule.value) ? '' : r.childrenMap.colRule.value[0]), r.childrenMap.colLength.value, r.childrenMap.colValues.value, (empty(r.childrenMap.colOption.value) ? '' : r.childrenMap.colOption.value[0]), r.childrenMap.colRegex.value, r.childrenMap.colHint.value, r.childrenMap.colExample.value, r.childrenMap.colBlank.value == true, r.childrenMap.colOptional.value == true, (empty(r.childrenMap.colLookup.value) ? '' : r.childrenMap.colLookup.value[0])) }))); %>"
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colRule",
+                      "label": "Rule",
+                      "cellTemplate": {
+                        "type": "dropdown",
+                        "id": "colRuleDropdown",
+                        "instanceList": [
+                          {
+                            "id": "upper",
+                            "descriptor": "Capital letters"
+                          },
+                          {
+                            "id": "upperDigits",
+                            "descriptor": "Capital letters and digits"
+                          },
+                          {
+                            "id": "digits",
+                            "descriptor": "Digits"
+                          },
+                          {
+                            "id": "list",
+                            "descriptor": "One of a list"
+                          },
+                          {
+                            "id": "fixed",
+                            "descriptor": "Fixed text"
+                          },
+                          {
+                            "id": "any",
+                            "descriptor": "Any text"
+                          },
+                          {
+                            "id": "regex",
+                            "descriptor": "Regular expression (advanced)"
+                          }
+                        ],
+                        "selectedValues": "<% [fr.ruleType ?? 'regex'] %>",
+                        "onChange": "<%\n  let t = empty(colRuleDropdown.value) ? 'regex' : colRuleDropdown.value[0];\n  let o = empty(colOptionDropdown.value) ? 'none' : colOptionDropdown.value[0];\n  let blank = colBlankCheckBox.value == true;\n  let was = comsAppSetup.parseRegex(colRegexText.value ?? '', blank);\n  let wasHint = comsAppSetup.hintFor(was.ruleType, was.ruleLength, was.ruleValues, was.ruleOption, blank);\n  let fill = t != 'regex' && was.ruleType == t && empty(colLengthText.value) && empty(colValuesText.value);\n  let len = fill ? was.ruleLength : (colLengthText.value ?? '');\n  let vals = fill ? was.ruleValues : (colValuesText.value ?? '');\n  if (fill) { colLengthText.setValue(len); colValuesText.setValue(vals); }\n  let le = t == 'regex' ? '' : comsAppSetup.lengthError(t, len, o);\n  let ve = t == 'regex' ? '' : comsAppSetup.valuesError(t, vals, o);\n  if (le != '') { colLengthText.setError(le); } else { colLengthText.clearError(); }\n  if (ve != '') { colValuesText.setError(ve); } else { colValuesText.clearError(); }\n  colRegexText.setEnabled(t == 'regex');\n  if (t != 'regex' && le == '' && ve == '') {\n    colRegexText.setValue(comsAppSetup.compileRule(t, len, vals, o, blank));\n    if (empty(colHintText.value) || colHintText.value == wasHint) { colHintText.setValue(comsAppSetup.hintFor(t, len, vals, o, blank)); }\n  }\n  fieldsCheckText.clearError(); exampleNameText.setValue(comsAppSetup.exampleName((empty((queryParams.recordId ?? queryParams.taskObjectId ?? '')) ? (empty(appIdDropdown.value) ? '' : appIdDropdown.selectedEntries[0].id) : (comsAppSetup.recordById(comsApplications.data, (queryParams.recordId ?? queryParams.taskObjectId ?? '')) ?? {'appId': ''}).appId), prefixesText.value ?? '', fieldsGrid.rows.map(r => { comsAppSetup.rowOf(r.childrenMap.colFieldLabel.value, (empty(r.childrenMap.colRule.value) ? '' : r.childrenMap.colRule.value[0]), r.childrenMap.colLength.value, r.childrenMap.colValues.value, (empty(r.childrenMap.colOption.value) ? '' : r.childrenMap.colOption.value[0]), r.childrenMap.colRegex.value, r.childrenMap.colHint.value, r.childrenMap.colExample.value, r.childrenMap.colBlank.value == true, r.childrenMap.colOptional.value == true, (empty(r.childrenMap.colLookup.value) ? '' : r.childrenMap.colLookup.value[0])) })));\n%>"
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colLength",
+                      "label": "Length",
+                      "cellTemplate": {
+                        "type": "text",
+                        "id": "colLengthText",
+                        "value": "<% fr.ruleLength ?? '' %>",
+                        "onChange": "<%\n  let t = empty(colRuleDropdown.value) ? 'regex' : colRuleDropdown.value[0];\n  let o = empty(colOptionDropdown.value) ? 'none' : colOptionDropdown.value[0];\n  let blank = colBlankCheckBox.value == true;\n  let was = comsAppSetup.parseRegex(colRegexText.value ?? '', blank);\n  let wasHint = comsAppSetup.hintFor(was.ruleType, was.ruleLength, was.ruleValues, was.ruleOption, blank);\n  let fill = t != 'regex' && was.ruleType == t && empty(colLengthText.value) && empty(colValuesText.value);\n  let len = fill ? was.ruleLength : (colLengthText.value ?? '');\n  let vals = fill ? was.ruleValues : (colValuesText.value ?? '');\n  if (fill) { colLengthText.setValue(len); colValuesText.setValue(vals); }\n  let le = t == 'regex' ? '' : comsAppSetup.lengthError(t, len, o);\n  let ve = t == 'regex' ? '' : comsAppSetup.valuesError(t, vals, o);\n  if (le != '') { colLengthText.setError(le); } else { colLengthText.clearError(); }\n  if (ve != '') { colValuesText.setError(ve); } else { colValuesText.clearError(); }\n  colRegexText.setEnabled(t == 'regex');\n  if (t != 'regex' && le == '' && ve == '') {\n    colRegexText.setValue(comsAppSetup.compileRule(t, len, vals, o, blank));\n    if (empty(colHintText.value) || colHintText.value == wasHint) { colHintText.setValue(comsAppSetup.hintFor(t, len, vals, o, blank)); }\n  }\n  fieldsCheckText.clearError(); exampleNameText.setValue(comsAppSetup.exampleName((empty((queryParams.recordId ?? queryParams.taskObjectId ?? '')) ? (empty(appIdDropdown.value) ? '' : appIdDropdown.selectedEntries[0].id) : (comsAppSetup.recordById(comsApplications.data, (queryParams.recordId ?? queryParams.taskObjectId ?? '')) ?? {'appId': ''}).appId), prefixesText.value ?? '', fieldsGrid.rows.map(r => { comsAppSetup.rowOf(r.childrenMap.colFieldLabel.value, (empty(r.childrenMap.colRule.value) ? '' : r.childrenMap.colRule.value[0]), r.childrenMap.colLength.value, r.childrenMap.colValues.value, (empty(r.childrenMap.colOption.value) ? '' : r.childrenMap.colOption.value[0]), r.childrenMap.colRegex.value, r.childrenMap.colHint.value, r.childrenMap.colExample.value, r.childrenMap.colBlank.value == true, r.childrenMap.colOptional.value == true, (empty(r.childrenMap.colLookup.value) ? '' : r.childrenMap.colLookup.value[0])) })));\n%>"
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colValues",
+                      "label": "Characters or values",
+                      "cellTemplate": {
+                        "type": "text",
+                        "id": "colValuesText",
+                        "value": "<% fr.ruleValues ?? '' %>",
+                        "onChange": "<%\n  let t = empty(colRuleDropdown.value) ? 'regex' : colRuleDropdown.value[0];\n  let o = empty(colOptionDropdown.value) ? 'none' : colOptionDropdown.value[0];\n  let blank = colBlankCheckBox.value == true;\n  let was = comsAppSetup.parseRegex(colRegexText.value ?? '', blank);\n  let wasHint = comsAppSetup.hintFor(was.ruleType, was.ruleLength, was.ruleValues, was.ruleOption, blank);\n  let fill = t != 'regex' && was.ruleType == t && empty(colLengthText.value) && empty(colValuesText.value);\n  let len = fill ? was.ruleLength : (colLengthText.value ?? '');\n  let vals = fill ? was.ruleValues : (colValuesText.value ?? '');\n  if (fill) { colLengthText.setValue(len); colValuesText.setValue(vals); }\n  let le = t == 'regex' ? '' : comsAppSetup.lengthError(t, len, o);\n  let ve = t == 'regex' ? '' : comsAppSetup.valuesError(t, vals, o);\n  if (le != '') { colLengthText.setError(le); } else { colLengthText.clearError(); }\n  if (ve != '') { colValuesText.setError(ve); } else { colValuesText.clearError(); }\n  colRegexText.setEnabled(t == 'regex');\n  if (t != 'regex' && le == '' && ve == '') {\n    colRegexText.setValue(comsAppSetup.compileRule(t, len, vals, o, blank));\n    if (empty(colHintText.value) || colHintText.value == wasHint) { colHintText.setValue(comsAppSetup.hintFor(t, len, vals, o, blank)); }\n  }\n  fieldsCheckText.clearError(); exampleNameText.setValue(comsAppSetup.exampleName((empty((queryParams.recordId ?? queryParams.taskObjectId ?? '')) ? (empty(appIdDropdown.value) ? '' : appIdDropdown.selectedEntries[0].id) : (comsAppSetup.recordById(comsApplications.data, (queryParams.recordId ?? queryParams.taskObjectId ?? '')) ?? {'appId': ''}).appId), prefixesText.value ?? '', fieldsGrid.rows.map(r => { comsAppSetup.rowOf(r.childrenMap.colFieldLabel.value, (empty(r.childrenMap.colRule.value) ? '' : r.childrenMap.colRule.value[0]), r.childrenMap.colLength.value, r.childrenMap.colValues.value, (empty(r.childrenMap.colOption.value) ? '' : r.childrenMap.colOption.value[0]), r.childrenMap.colRegex.value, r.childrenMap.colHint.value, r.childrenMap.colExample.value, r.childrenMap.colBlank.value == true, r.childrenMap.colOptional.value == true, (empty(r.childrenMap.colLookup.value) ? '' : r.childrenMap.colLookup.value[0])) })));\n%>"
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colOption",
+                      "label": "Option",
+                      "cellTemplate": {
+                        "type": "dropdown",
+                        "id": "colOptionDropdown",
+                        "instanceList": [
+                          {
+                            "id": "none",
+                            "descriptor": "None"
+                          },
+                          {
+                            "id": "first",
+                            "descriptor": "Starts with a letter or digit"
+                          },
+                          {
+                            "id": "star",
+                            "descriptor": "May end with *"
+                          },
+                          {
+                            "id": "firstStar",
+                            "descriptor": "Starts with a letter or digit, may end with *"
+                          },
+                          {
+                            "id": "campus",
+                            "descriptor": "May end with _ and a campus letter (e.g. _V)"
+                          },
+                          {
+                            "id": "letter",
+                            "descriptor": "May end with a capital letter (e.g. 100A)"
+                          },
+                          {
+                            "id": "shorter",
+                            "descriptor": "Or a shorter start then * (e.g. 1*)"
+                          },
+                          {
+                            "id": "letterShorter",
+                            "descriptor": "May end with a capital letter, or a shorter start then *"
+                          }
+                        ],
+                        "selectedValues": "<% [fr.ruleOption ?? 'none'] %>",
+                        "onChange": "<%\n  let t = empty(colRuleDropdown.value) ? 'regex' : colRuleDropdown.value[0];\n  let o = empty(colOptionDropdown.value) ? 'none' : colOptionDropdown.value[0];\n  let blank = colBlankCheckBox.value == true;\n  let was = comsAppSetup.parseRegex(colRegexText.value ?? '', blank);\n  let wasHint = comsAppSetup.hintFor(was.ruleType, was.ruleLength, was.ruleValues, was.ruleOption, blank);\n  let fill = t != 'regex' && was.ruleType == t && empty(colLengthText.value) && empty(colValuesText.value);\n  let len = fill ? was.ruleLength : (colLengthText.value ?? '');\n  let vals = fill ? was.ruleValues : (colValuesText.value ?? '');\n  if (fill) { colLengthText.setValue(len); colValuesText.setValue(vals); }\n  let le = t == 'regex' ? '' : comsAppSetup.lengthError(t, len, o);\n  let ve = t == 'regex' ? '' : comsAppSetup.valuesError(t, vals, o);\n  if (le != '') { colLengthText.setError(le); } else { colLengthText.clearError(); }\n  if (ve != '') { colValuesText.setError(ve); } else { colValuesText.clearError(); }\n  colRegexText.setEnabled(t == 'regex');\n  if (t != 'regex' && le == '' && ve == '') {\n    colRegexText.setValue(comsAppSetup.compileRule(t, len, vals, o, blank));\n    if (empty(colHintText.value) || colHintText.value == wasHint) { colHintText.setValue(comsAppSetup.hintFor(t, len, vals, o, blank)); }\n  }\n  fieldsCheckText.clearError(); exampleNameText.setValue(comsAppSetup.exampleName((empty((queryParams.recordId ?? queryParams.taskObjectId ?? '')) ? (empty(appIdDropdown.value) ? '' : appIdDropdown.selectedEntries[0].id) : (comsAppSetup.recordById(comsApplications.data, (queryParams.recordId ?? queryParams.taskObjectId ?? '')) ?? {'appId': ''}).appId), prefixesText.value ?? '', fieldsGrid.rows.map(r => { comsAppSetup.rowOf(r.childrenMap.colFieldLabel.value, (empty(r.childrenMap.colRule.value) ? '' : r.childrenMap.colRule.value[0]), r.childrenMap.colLength.value, r.childrenMap.colValues.value, (empty(r.childrenMap.colOption.value) ? '' : r.childrenMap.colOption.value[0]), r.childrenMap.colRegex.value, r.childrenMap.colHint.value, r.childrenMap.colExample.value, r.childrenMap.colBlank.value == true, r.childrenMap.colOptional.value == true, (empty(r.childrenMap.colLookup.value) ? '' : r.childrenMap.colLookup.value[0])) })));\n%>"
                       }
                     },
                     {
@@ -391,7 +514,8 @@
                         "type": "text",
                         "id": "colRegexText",
                         "value": "<% fr.regex ?? '' %>",
-                        "onChange": "<% fieldsCheckText.clearError(); exampleNameText.setValue(comsAppSetup.exampleName((empty((queryParams.recordId ?? queryParams.taskObjectId ?? '')) ? (empty(appIdDropdown.value) ? '' : appIdDropdown.selectedEntries[0].id) : (comsAppSetup.recordById(comsApplications.data, (queryParams.recordId ?? queryParams.taskObjectId ?? '')) ?? {'appId': ''}).appId), prefixesText.value ?? '', fieldsGrid.rows.map(r => { { 'fieldLabel': (r.childrenMap.colFieldLabel.value ?? '').trim(), 'regex': (r.childrenMap.colRegex.value ?? '').trim(), 'hint': (r.childrenMap.colHint.value ?? '').trim(), 'example': (r.childrenMap.colExample.value ?? '').trim(), 'blankIsWildcard': r.childrenMap.colBlank.value == true, 'optionalField': r.childrenMap.colOptional.value == true } }))); %>"
+                        "onChange": "<% fieldsCheckText.clearError(); exampleNameText.setValue(comsAppSetup.exampleName((empty((queryParams.recordId ?? queryParams.taskObjectId ?? '')) ? (empty(appIdDropdown.value) ? '' : appIdDropdown.selectedEntries[0].id) : (comsAppSetup.recordById(comsApplications.data, (queryParams.recordId ?? queryParams.taskObjectId ?? '')) ?? {'appId': ''}).appId), prefixesText.value ?? '', fieldsGrid.rows.map(r => { comsAppSetup.rowOf(r.childrenMap.colFieldLabel.value, (empty(r.childrenMap.colRule.value) ? '' : r.childrenMap.colRule.value[0]), r.childrenMap.colLength.value, r.childrenMap.colValues.value, (empty(r.childrenMap.colOption.value) ? '' : r.childrenMap.colOption.value[0]), r.childrenMap.colRegex.value, r.childrenMap.colHint.value, r.childrenMap.colExample.value, r.childrenMap.colBlank.value == true, r.childrenMap.colOptional.value == true, (empty(r.childrenMap.colLookup.value) ? '' : r.childrenMap.colLookup.value[0])) }))); %>",
+                        "enabled": "<% (fr.ruleType ?? 'regex') == 'regex' %>"
                       }
                     },
                     {
@@ -402,7 +526,7 @@
                         "type": "text",
                         "id": "colHintText",
                         "value": "<% fr.hint ?? '' %>",
-                        "onChange": "<% fieldsCheckText.clearError(); exampleNameText.setValue(comsAppSetup.exampleName((empty((queryParams.recordId ?? queryParams.taskObjectId ?? '')) ? (empty(appIdDropdown.value) ? '' : appIdDropdown.selectedEntries[0].id) : (comsAppSetup.recordById(comsApplications.data, (queryParams.recordId ?? queryParams.taskObjectId ?? '')) ?? {'appId': ''}).appId), prefixesText.value ?? '', fieldsGrid.rows.map(r => { { 'fieldLabel': (r.childrenMap.colFieldLabel.value ?? '').trim(), 'regex': (r.childrenMap.colRegex.value ?? '').trim(), 'hint': (r.childrenMap.colHint.value ?? '').trim(), 'example': (r.childrenMap.colExample.value ?? '').trim(), 'blankIsWildcard': r.childrenMap.colBlank.value == true, 'optionalField': r.childrenMap.colOptional.value == true } }))); %>"
+                        "onChange": "<% fieldsCheckText.clearError(); exampleNameText.setValue(comsAppSetup.exampleName((empty((queryParams.recordId ?? queryParams.taskObjectId ?? '')) ? (empty(appIdDropdown.value) ? '' : appIdDropdown.selectedEntries[0].id) : (comsAppSetup.recordById(comsApplications.data, (queryParams.recordId ?? queryParams.taskObjectId ?? '')) ?? {'appId': ''}).appId), prefixesText.value ?? '', fieldsGrid.rows.map(r => { comsAppSetup.rowOf(r.childrenMap.colFieldLabel.value, (empty(r.childrenMap.colRule.value) ? '' : r.childrenMap.colRule.value[0]), r.childrenMap.colLength.value, r.childrenMap.colValues.value, (empty(r.childrenMap.colOption.value) ? '' : r.childrenMap.colOption.value[0]), r.childrenMap.colRegex.value, r.childrenMap.colHint.value, r.childrenMap.colExample.value, r.childrenMap.colBlank.value == true, r.childrenMap.colOptional.value == true, (empty(r.childrenMap.colLookup.value) ? '' : r.childrenMap.colLookup.value[0])) }))); %>"
                       }
                     },
                     {
@@ -413,7 +537,28 @@
                         "type": "text",
                         "id": "colExampleText",
                         "value": "<% fr.example ?? '' %>",
-                        "onChange": "<% fieldsCheckText.clearError(); exampleNameText.setValue(comsAppSetup.exampleName((empty((queryParams.recordId ?? queryParams.taskObjectId ?? '')) ? (empty(appIdDropdown.value) ? '' : appIdDropdown.selectedEntries[0].id) : (comsAppSetup.recordById(comsApplications.data, (queryParams.recordId ?? queryParams.taskObjectId ?? '')) ?? {'appId': ''}).appId), prefixesText.value ?? '', fieldsGrid.rows.map(r => { { 'fieldLabel': (r.childrenMap.colFieldLabel.value ?? '').trim(), 'regex': (r.childrenMap.colRegex.value ?? '').trim(), 'hint': (r.childrenMap.colHint.value ?? '').trim(), 'example': (r.childrenMap.colExample.value ?? '').trim(), 'blankIsWildcard': r.childrenMap.colBlank.value == true, 'optionalField': r.childrenMap.colOptional.value == true } }))); %>"
+                        "onChange": "<% fieldsCheckText.clearError(); exampleNameText.setValue(comsAppSetup.exampleName((empty((queryParams.recordId ?? queryParams.taskObjectId ?? '')) ? (empty(appIdDropdown.value) ? '' : appIdDropdown.selectedEntries[0].id) : (comsAppSetup.recordById(comsApplications.data, (queryParams.recordId ?? queryParams.taskObjectId ?? '')) ?? {'appId': ''}).appId), prefixesText.value ?? '', fieldsGrid.rows.map(r => { comsAppSetup.rowOf(r.childrenMap.colFieldLabel.value, (empty(r.childrenMap.colRule.value) ? '' : r.childrenMap.colRule.value[0]), r.childrenMap.colLength.value, r.childrenMap.colValues.value, (empty(r.childrenMap.colOption.value) ? '' : r.childrenMap.colOption.value[0]), r.childrenMap.colRegex.value, r.childrenMap.colHint.value, r.childrenMap.colExample.value, r.childrenMap.colBlank.value == true, r.childrenMap.colOptional.value == true, (empty(r.childrenMap.colLookup.value) ? '' : r.childrenMap.colLookup.value[0])) }))); %>"
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colLookup",
+                      "label": "Workday check",
+                      "cellTemplate": {
+                        "type": "dropdown",
+                        "id": "colLookupDropdown",
+                        "instanceList": [
+                          {
+                            "id": "none",
+                            "descriptor": "None"
+                          },
+                          {
+                            "id": "academicUnitCode",
+                            "descriptor": "Academic unit code"
+                          }
+                        ],
+                        "selectedValues": "<% [fr.lookup ?? 'none'] %>",
+                        "onChange": "<% fieldsCheckText.clearError(); exampleNameText.setValue(comsAppSetup.exampleName((empty((queryParams.recordId ?? queryParams.taskObjectId ?? '')) ? (empty(appIdDropdown.value) ? '' : appIdDropdown.selectedEntries[0].id) : (comsAppSetup.recordById(comsApplications.data, (queryParams.recordId ?? queryParams.taskObjectId ?? '')) ?? {'appId': ''}).appId), prefixesText.value ?? '', fieldsGrid.rows.map(r => { comsAppSetup.rowOf(r.childrenMap.colFieldLabel.value, (empty(r.childrenMap.colRule.value) ? '' : r.childrenMap.colRule.value[0]), r.childrenMap.colLength.value, r.childrenMap.colValues.value, (empty(r.childrenMap.colOption.value) ? '' : r.childrenMap.colOption.value[0]), r.childrenMap.colRegex.value, r.childrenMap.colHint.value, r.childrenMap.colExample.value, r.childrenMap.colBlank.value == true, r.childrenMap.colOptional.value == true, (empty(r.childrenMap.colLookup.value) ? '' : r.childrenMap.colLookup.value[0])) }))); %>"
                       }
                     },
                     {
@@ -424,7 +569,7 @@
                         "type": "checkBox",
                         "id": "colBlankCheckBox",
                         "value": "<% fr.blankIsWildcard ?? false %>",
-                        "onChange": "<% fieldsCheckText.clearError(); exampleNameText.setValue(comsAppSetup.exampleName((empty((queryParams.recordId ?? queryParams.taskObjectId ?? '')) ? (empty(appIdDropdown.value) ? '' : appIdDropdown.selectedEntries[0].id) : (comsAppSetup.recordById(comsApplications.data, (queryParams.recordId ?? queryParams.taskObjectId ?? '')) ?? {'appId': ''}).appId), prefixesText.value ?? '', fieldsGrid.rows.map(r => { { 'fieldLabel': (r.childrenMap.colFieldLabel.value ?? '').trim(), 'regex': (r.childrenMap.colRegex.value ?? '').trim(), 'hint': (r.childrenMap.colHint.value ?? '').trim(), 'example': (r.childrenMap.colExample.value ?? '').trim(), 'blankIsWildcard': r.childrenMap.colBlank.value == true, 'optionalField': r.childrenMap.colOptional.value == true } }))); %>"
+                        "onChange": "<%\n  let t = empty(colRuleDropdown.value) ? 'regex' : colRuleDropdown.value[0];\n  let o = empty(colOptionDropdown.value) ? 'none' : colOptionDropdown.value[0];\n  let blank = colBlankCheckBox.value == true;\n  let was = comsAppSetup.parseRegex(colRegexText.value ?? '', blank);\n  let wasHint = comsAppSetup.hintFor(was.ruleType, was.ruleLength, was.ruleValues, was.ruleOption, blank);\n  let fill = t != 'regex' && was.ruleType == t && empty(colLengthText.value) && empty(colValuesText.value);\n  let len = fill ? was.ruleLength : (colLengthText.value ?? '');\n  let vals = fill ? was.ruleValues : (colValuesText.value ?? '');\n  if (fill) { colLengthText.setValue(len); colValuesText.setValue(vals); }\n  let le = t == 'regex' ? '' : comsAppSetup.lengthError(t, len, o);\n  let ve = t == 'regex' ? '' : comsAppSetup.valuesError(t, vals, o);\n  if (le != '') { colLengthText.setError(le); } else { colLengthText.clearError(); }\n  if (ve != '') { colValuesText.setError(ve); } else { colValuesText.clearError(); }\n  colRegexText.setEnabled(t == 'regex');\n  if (t != 'regex' && le == '' && ve == '') {\n    colRegexText.setValue(comsAppSetup.compileRule(t, len, vals, o, blank));\n    if (empty(colHintText.value) || colHintText.value == wasHint) { colHintText.setValue(comsAppSetup.hintFor(t, len, vals, o, blank)); }\n  }\n  fieldsCheckText.clearError(); exampleNameText.setValue(comsAppSetup.exampleName((empty((queryParams.recordId ?? queryParams.taskObjectId ?? '')) ? (empty(appIdDropdown.value) ? '' : appIdDropdown.selectedEntries[0].id) : (comsAppSetup.recordById(comsApplications.data, (queryParams.recordId ?? queryParams.taskObjectId ?? '')) ?? {'appId': ''}).appId), prefixesText.value ?? '', fieldsGrid.rows.map(r => { comsAppSetup.rowOf(r.childrenMap.colFieldLabel.value, (empty(r.childrenMap.colRule.value) ? '' : r.childrenMap.colRule.value[0]), r.childrenMap.colLength.value, r.childrenMap.colValues.value, (empty(r.childrenMap.colOption.value) ? '' : r.childrenMap.colOption.value[0]), r.childrenMap.colRegex.value, r.childrenMap.colHint.value, r.childrenMap.colExample.value, r.childrenMap.colBlank.value == true, r.childrenMap.colOptional.value == true, (empty(r.childrenMap.colLookup.value) ? '' : r.childrenMap.colLookup.value[0])) })));\n%>"
                       }
                     },
                     {
@@ -435,7 +580,7 @@
                         "type": "checkBox",
                         "id": "colOptionalCheckBox",
                         "value": "<% fr.optionalField ?? false %>",
-                        "onChange": "<% fieldsCheckText.clearError(); exampleNameText.setValue(comsAppSetup.exampleName((empty((queryParams.recordId ?? queryParams.taskObjectId ?? '')) ? (empty(appIdDropdown.value) ? '' : appIdDropdown.selectedEntries[0].id) : (comsAppSetup.recordById(comsApplications.data, (queryParams.recordId ?? queryParams.taskObjectId ?? '')) ?? {'appId': ''}).appId), prefixesText.value ?? '', fieldsGrid.rows.map(r => { { 'fieldLabel': (r.childrenMap.colFieldLabel.value ?? '').trim(), 'regex': (r.childrenMap.colRegex.value ?? '').trim(), 'hint': (r.childrenMap.colHint.value ?? '').trim(), 'example': (r.childrenMap.colExample.value ?? '').trim(), 'blankIsWildcard': r.childrenMap.colBlank.value == true, 'optionalField': r.childrenMap.colOptional.value == true } }))); %>"
+                        "onChange": "<% fieldsCheckText.clearError(); exampleNameText.setValue(comsAppSetup.exampleName((empty((queryParams.recordId ?? queryParams.taskObjectId ?? '')) ? (empty(appIdDropdown.value) ? '' : appIdDropdown.selectedEntries[0].id) : (comsAppSetup.recordById(comsApplications.data, (queryParams.recordId ?? queryParams.taskObjectId ?? '')) ?? {'appId': ''}).appId), prefixesText.value ?? '', fieldsGrid.rows.map(r => { comsAppSetup.rowOf(r.childrenMap.colFieldLabel.value, (empty(r.childrenMap.colRule.value) ? '' : r.childrenMap.colRule.value[0]), r.childrenMap.colLength.value, r.childrenMap.colValues.value, (empty(r.childrenMap.colOption.value) ? '' : r.childrenMap.colOption.value[0]), r.childrenMap.colRegex.value, r.childrenMap.colHint.value, r.childrenMap.colExample.value, r.childrenMap.colBlank.value == true, r.childrenMap.colOptional.value == true, (empty(r.childrenMap.colLookup.value) ? '' : r.childrenMap.colLookup.value[0])) }))); %>"
                       }
                     }
                   ],

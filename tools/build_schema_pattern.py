@@ -32,6 +32,8 @@ VALUES = "[" + ", ".join(f"{FIELD(i)}.value" for i in range(MAX_FIELDS)) + "]"
 PREFIX = (f"(comsPatterns.prefixCount({SCH}) > 1 ? (empty(prefixDropdown.value) ? '' : prefixDropdown.selectedEntries[0].id)"
           f" : comsPatterns.firstPrefix({SCH}))")
 NAME = f"comsPatterns.buildName({APPC}, {PREFIX}, {SCH}, {VALUES})"
+# active academic unit codes, for fields whose Workday check is "Academic unit code" (2026-11-07)
+UNITS = "(auCodes.data ?? []).map(u => { u.code ?? '' })"
 
 
 def note(sid, fid, title, rid, html, color='#0055B7', mark='ⓘ', render=None):
@@ -47,7 +49,7 @@ def field_on_change(i):
     # name would otherwise stay after the name changes (seen live 2026-11-04). Then flag a duplicate
     # of the current name on this field only.
     recheck = "".join(
-        f"  let e{j} = comsPatterns.checkField(s, {j}, {FIELD(j)}.value);\n"
+        f"  let e{j} = comsPatterns.checkFieldIn(s, {j}, {FIELD(j)}.value, {UNITS});\n"
         f"  if (e{j} != '') {{ {FIELD(j)}.setError(e{j}); }} else {{ {FIELD(j)}.clearError(); }}\n"
         for j in range(MAX_FIELDS))
     return ("<%\n"
@@ -68,7 +70,7 @@ def submit():
               "    if (comsPatterns.prefixCount(s) > 1 && empty(prefixDropdown.value)) {",
               "      prefixDropdown.setError('Pick a pattern prefix.');", "      valid = false;", "    }"]
     for i in range(MAX_FIELDS):
-        lines += [f"    let e{i + 1} = comsPatterns.checkField(s, {i}, {FIELD(i)}.value);",
+        lines += [f"    let e{i + 1} = comsPatterns.checkFieldIn(s, {i}, {FIELD(i)}.value, {UNITS});",
                   f"    if (e{i + 1} != '') {{ {FIELD(i)}.setError(e{i + 1}); valid = false; }}"]
     lines += ["  }",
               "  if (empty(effectiveDate.value)) {", "    effectiveDate.setError('Effective Date is required.');", "    valid = false;",
@@ -114,6 +116,10 @@ page = {"id": "newSchemaPattern", "securityDomains": ["ManageCOMSShellOrgs"], "i
      "failOnStatusCodes": FOS([400, 403, 500]), "wqlQuery": {"queryId": "customOrganizations"}},
     {"name": "launchAddShellOrgPattern", "baseUrlType": "orchestration", "authType": "sso", "deferred": "true",
      "url": "<% '/IORC_0037_XFD_SEC_Create_Pattern_Shell_Org/launch?comsAppId=' + aid + '&patternName=' + pn + '&workerId=' + wid + '&attribute1=' + a1 + '&attribute2=' + a2 + '&attribute3=' + a3 + '&attribute4=' + a4 + '&attribute5=' + a5 + '&effectiveDate=' + ed + '&changedBy=' + cb + '&timestamp=' + ts + '&changedByWid=' + cbw %>"},
+    # only fetched when this application has a field checked against academic unit codes
+    {"name": "auCodes", "baseUrlType": "workday-wql", "url": "data", "authType": "sso", "bestEffort": "true",
+     "wqlQuery": {"queryId": "academicUnitCodes"}, "failOnStatusCodes": FOS([429]),
+     "exclude": f"<% !comsPatterns.needsUnits({SCH}) %>"},
     {"name": "verifyPattern", "baseUrlType": "workday-wql", "authType": "sso", "deferred": "true",
      "url": "<% 'data?limit=' + lim + '&query=SELECT%20workdayID%2C%20code%20FROM%20topLevelOrganizations%20WHERE%20code%20contains%20%27X%3A%27' %>"}],
   "onSubmit": submit(),
@@ -155,7 +161,7 @@ page = {"id": "newSchemaPattern", "securityDomains": ["ManageCOMSShellOrgs"], "i
           {"type": "dropdown", "id": "prefixDropdown", "label": "Pattern Prefix", "values": f"<% comsPatterns.prefixOptions({SCH}) %>",
            "visible": f"<% comsPatterns.prefixCount({SCH}) > 1 %>",
            "onChange": "<%\n  self.clearError();\n  let s = " + SCH + ";\n" + "".join(
-               f"  let e{j} = comsPatterns.checkField(s, {j}, {FIELD(j)}.value);\n"
+               f"  let e{j} = comsPatterns.checkFieldIn(s, {j}, {FIELD(j)}.value, {UNITS});\n"
                f"  if (e{j} != '') {{ {FIELD(j)}.setError(e{j}); }} else {{ {FIELD(j)}.clearError(); }}\n" for j in range(MAX_FIELDS))
                + f"  patternPreviewText.setValue({NAME});\n%>"},
           {"type": "readOnlyText", "id": "patternPreviewText", "label": "Pattern Name Preview",

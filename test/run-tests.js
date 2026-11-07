@@ -639,6 +639,39 @@ function staticSuite() {
     pass('Static.appHubWarnings', `${n} pages: no duplicate ids, no grid readOnly, no unused endpoints`);
   }
 
+  // 7h2. Field rules (2026-11-07): the rule engine (test/rules.js, mirrored in comsAppSetup.script) reads every real
+  // format back to the same regex, the page offers exactly the engine's rule types and options, and the script has them.
+  {
+    const R = require('./rules.js');
+    const schemas = JSON.parse(fs.readFileSync(path.join(ROOT, 'tools/pattern_schemas.json'), 'utf8'));
+    const fields = schemas.applications.flatMap((a) => (a.fields || schemas.fieldSets[a.fieldsFrom] || []).map((f) => [a.appId, f]));
+    let asRules = 0;
+    for (const [app, f] of fields) {
+      const p = R.parseRegex(f.regex, f.blankIsWildcard === true);
+      if (p.ruleType === 'regex') continue;
+      asRules++;
+      const back = R.compileRule(p.ruleType, p.ruleLength, p.ruleValues, p.ruleOption, f.blankIsWildcard === true);
+      if (back !== f.regex) err('rules', `${app} ${f.fieldLabel}: ${f.regex} reads as ${p.ruleType} but compiles back to ${back}`);
+      if (!new RegExp(`^(?:${back})$`).test(f.example)) err('rules', `${app} ${f.fieldLabel}: example ${f.example} fails ${back}`);
+    }
+    const cases = [['upper', '2-6', '', 'none', false, '[A-Z]{2,6}'], ['digits', '3', '', 'letterShorter', true, '\\*|[0-9]{1,2}\\*|[0-9]{3}[A-Z]?'],
+      ['upperDigits', '1-30', '_-', 'firstStar', true, '\\*|[A-Z0-9][A-Z0-9_-]{0,29}\\*?'], ['list', '', 'V, O, S', 'none', false, '(V|O|S)'],
+      ['fixed', '', 'ROLE', 'none', false, 'ROLE'], ['any', '', '', 'none', false, '[^: ]+'], ['upper', '2-4', '', 'campus', false, '[A-Z]{2,4}(_[A-Z])?']];
+    for (const [t, l, v, o, b, want] of cases) {
+      const got = R.compileRule(t, l, v, o, b);
+      const p = R.parseRegex(got, b);
+      if (got !== want || p.ruleType !== t || p.ruleOption !== o) err('rules', `${t}/${o}: compiled ${got} (want ${want}), read back as ${p.ruleType}/${p.ruleOption}`);
+    }
+    const page = pmds['presentation/editAppPattern.pmd'];
+    const ids = (cid) => { let out = null; walk(page || {}, (x) => { if (x && x.id === cid && Array.isArray(x.instanceList)) out = x.instanceList.map((i) => i.id); }); return out || []; };
+    const want = (a) => JSON.stringify([...a].sort());
+    if (want(ids('colRuleDropdown')) !== want(R.TYPES.map(([k]) => k))) err('rules', `editAppPattern Rule choices ${ids('colRuleDropdown')} differ from test/rules.js`);
+    if (want(ids('colOptionDropdown')) !== want(Object.keys(R.OPTIONS))) err('rules', `editAppPattern Option choices ${ids('colOptionDropdown')} differ from test/rules.js`);
+    const script = fs.readFileSync(path.join(ROOT, 'presentation/scripts/comsAppSetup.script'), 'utf8');
+    for (const k of Object.keys(R.OPTIONS).filter((k) => k !== 'none')) if (!script.includes(`'${k}'`)) err('rules', `comsAppSetup.script doesn't know option ${k}`);
+    pass('Static.rules', `${asRules} of ${fields.length} real fields read as rules and compile back exactly; ${cases.length} engine cases; page choices match`);
+  }
+
   // 7i. Load-time scripts (value, label, visible, rows, ...) can't use a widget declared later on the
   // page: "Unknown Variable found: x.value" (newSchemaPattern preview, 2026-11-02). Event handlers
   // (onChange, onSubmit, onSearch, ...) run after the page is built, so they may.
@@ -969,6 +1002,12 @@ async function smoke(token, me) {
       (s.fields || []).forEach((f, i) => {
         let ok = false; try { ok = new RegExp('^(?:' + f.regex + ')$').test(f.example); } catch (e) { bad.push(`${a.appId} field ${i + 1}: format isn't a valid regex`); return; }
         if (!f.fieldLabel || !ok) bad.push(`${a.appId} field ${i + 1} (${f.fieldLabel || 'no label'}): example ${f.example} doesn't match ${f.regex}`);
+        // a field saved as a rule (2026-11-07) must hold exactly the regex its rule compiles to
+        if (f.ruleType && f.ruleType !== 'regex') {
+          const back = require('./rules.js').compileRule(f.ruleType, f.ruleLength || '', f.ruleValues || '', f.ruleOption || 'none', f.blankIsWildcard === true);
+          if (back !== f.regex) bad.push(`${a.appId} field ${i + 1}: rule ${f.ruleType} compiles to ${back}, stored ${f.regex}`);
+        }
+        if (f.lookup && !['none', 'academicUnitCode'].includes(f.lookup)) bad.push(`${a.appId} field ${i + 1}: unknown Workday check ${f.lookup}`);
       });
       if ((a.namePrefix || '') !== (s.prefixes || []).join(',')) bad.push(`${a.appId}: namePrefix ${a.namePrefix} differs from the format's prefixes`);
     }
@@ -2421,6 +2460,27 @@ async function shellRolesQuery(token) {
 
 async function probe(token) {
   console.log('\n-- Probe (read-only) --');
+  // 2026-11-07: which academicUnits field holds the unit Code (e.g. Department of Mathematics = MATH), and how complete it is
+  try {
+    const ds = (await request('GET', `${API}/wql/v1/dataSources?alias=academicUnits&limit=5`, token)).data || [];
+    for (const d of ds) {
+      const fields = [];
+      for (let off = 0; off < 2000; off += 100) {
+        const page = (await request('GET', `${API}/wql/v1/dataSources/${d.id}/fields?limit=100&offset=${off}`, token)).data || [];
+        fields.push(...page);
+        if (page.length < 100) break;
+      }
+      console.log(`   AUFIELDS ${d.alias} ${fields.length} fields; code/id-like: ${fields.filter((f) => /code|(^|[^a-z])id/i.test(`${f.alias} ${f.descriptor}`)).map((f) => `${f.alias} (${f.descriptor}, ${f.type})`).join(' | ')}`);
+    }
+    const units = (await wql(token, 'SELECT workdayID, academicUnit, code, inactive FROM academicUnits', 10000)).data || [];
+    const active = units.filter((u) => !u.inactive);
+    const codes = active.map((u) => String(u.code || '').trim()).filter(Boolean);
+    const dup = codes.filter((c, i) => codes.indexOf(c) !== i);
+    console.log(`   AUCODE units=${units.length} active=${active.length} activeWithCode=${codes.length} unique=${new Set(codes).size} dup=${[...new Set(dup)].join(',') || 'none'} lengths=${JSON.stringify(codes.reduce((m, c) => ((m[c.length] = (m[c.length] || 0) + 1), m), {}))}`);
+    console.log(`   AUCODE chars outside A-Z0-9-: ${codes.filter((c) => !/^[A-Z0-9-]+$/.test(c)).slice(0, 20).join(' | ') || 'none'}`);
+    active.filter((u) => /Mathematics|Physics|Computer Science|Chemistry/.test((u.academicUnit || {}).descriptor || '')).slice(0, 10)
+      .forEach((u) => console.log(`   AUCODE ${(u.academicUnit || {}).descriptor} = ${JSON.stringify(u.code)}`));
+  } catch (e) { console.log(`   AUCODE error ${String(e.message).slice(0, 300)}`); }
   // 2026-11-06: the subtype design's WQL, exactly as the pages send it (presentation/wqlQueries)
   {
     const q = (n) => JSON.parse(fs.readFileSync(path.join(ROOT, 'presentation', 'wqlQueries', n + '.wqlquery'), 'utf8')).query;
