@@ -530,6 +530,24 @@ function staticSuite() {
     if (!seen.size) pass('Static.scriptBrackets', `${f}: brackets balance`);
   }
 
+  // 7g6. Variable and parameter names that are Workday Script operator words (App Hub build 2026-11-07: `let le = ...`
+  // failed with "PMD Scripting syntax error ... Parsing Error"; le, lt, ge, gt, eq, ne, and, or, not, div, mod are
+  // operators). Checked in page scripts and .script files.
+  {
+    const RESERVED = ['le', 'lt', 'ge', 'gt', 'eq', 'ne', 'and', 'or', 'not', 'div', 'mod', 'size', 'empty', 'new', 'null', 'true', 'false'];
+    const re = new RegExp(`\\b(?:let|var)\\s+(${RESERVED.join('|')})\\b|function\\s*\\(([^)]*)\\)|\\(([\\w\\s,]*)\\)\\s*=>`, 'g');
+    const texts = [...Object.entries(pmds).map(([f, d]) => [f, JSON.stringify(d)]),
+      ...fs.readdirSync(path.join(ROOT, 'presentation/scripts')).filter((x) => x.endsWith('.script')).map((x) => [`presentation/scripts/${x}`, fs.readFileSync(path.join(ROOT, 'presentation/scripts', x), 'utf8')])];
+    let bad = 0;
+    for (const [f, txt] of texts) {
+      for (const m of txt.matchAll(re)) {
+        const names = m[1] ? [m[1]] : (m[2] ?? m[3] ?? '').split(',').map((x) => x.trim());
+        for (const n of names) if (RESERVED.includes(n)) { bad++; fail('Static.reservedNames', `${f}: "${n}" is a Workday Script operator word, not a usable name`); }
+      }
+    }
+    if (!bad) pass('Static.reservedNames', `${texts.length} pages and scripts: no operator words used as names`);
+  }
+
   // 7g4. A field OK flags must clear its error when the user changes it, or OK stays refused until a reload (found
   // live on Edit Role Assignment 2026-11-05; tools/clear_on_change.py adds the calls on the pages it lists).
   for (const [f, d] of Object.entries(pmds)) {
