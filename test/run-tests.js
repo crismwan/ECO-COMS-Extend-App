@@ -2564,6 +2564,14 @@ async function shellRolesQuery(token) {
 
 async function probe(token) {
   console.log('\n-- Probe (read-only) --');
+  for (const q of ["SELECT academicUnitCode, academicUnit, academicUnitSubtype FROM academicUnits WHERE inactive = false AND academicUnit contains 'math' ORDER BY academicUnitCode",
+    "SELECT academicUnitCode, academicUnit FROM academicUnits WHERE inactive = false AND academicUnitCode startswith 'M' AND academicUnitCode is not empty ORDER BY academicUnitCode",
+    "SELECT academicUnitSubtype FROM academicUnits WHERE inactive = false AND academicUnitCode is not empty"]) {
+    try { const r = await wql(token, q, 500); const subs = {}; (r.data || []).forEach((x) => { const d = (x.academicUnitSubtype || {}).descriptor || '(none)'; subs[d] = (subs[d] || 0) + 1; });
+      console.log(`   AUQ ${r.total} rows: ${JSON.stringify((r.data || []).slice(0, 3)).slice(0, 400)} subtypes=${JSON.stringify(subs)}`); }
+    catch (e) { console.log(`   AUQ error ${String(e.message).slice(0, 250)}`); }
+  }
+  return;
   // 2026-11-06: the subtype design's WQL, exactly as the pages send it (presentation/wqlQueries)
   {
     const q = (n) => JSON.parse(fs.readFileSync(path.join(ROOT, 'presentation', 'wqlQueries', n + '.wqlquery'), 'utf8')).query;
