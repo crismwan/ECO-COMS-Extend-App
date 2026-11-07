@@ -2577,6 +2577,11 @@ async function shellRolesQuery(token) {
 
 async function probe(token) {
   console.log('\n-- Probe (read-only) --');
+  for (const q of ["SELECT abbreviation, name, inactive FROM courseSubjects WHERE abbreviation = 'CHEM'", "SELECT abbreviation, name, inactive FROM courseSubjects WHERE abbreviation startswith 'CH'",
+    "SELECT abbreviation, name, inactive FROM courseSubjects WHERE inactive = false AND abbreviation = 'CHEM'", "SELECT abbreviation FROM courseSubjects WHERE inactive = false"]) {
+    try { const r = await wql(token, q, 2000); console.log(`   CQ ${r.total}: ${JSON.stringify((r.data || []).slice(0, 4))} | ${q}`); } catch (e) { console.log(`   CQ error ${String(e.message).slice(0, 200)}`); }
+  }
+  return;
   // 2026-11-06: the subtype design's WQL, exactly as the pages send it (presentation/wqlQueries)
   {
     const q = (n) => JSON.parse(fs.readFileSync(path.join(ROOT, 'presentation', 'wqlQueries', n + '.wqlquery'), 'utf8')).query;
