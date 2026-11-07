@@ -126,20 +126,11 @@ jobs:
           # organizationId does not match user's organization"); ours has none, so check a copy that does
           VAL="${RUNNER_TEMP}/validate-app"; mkdir -p "${VAL}"
           cp -r cards model orchestration presentation "${VAL}/" 2>/dev/null
-          # The organization validate compares with is the account's (wdcli: Companies().getAccountForCommand), read here
-          # from `wdcli account list`: the entry for account vmzvxm
-          ACC_ORG=$(WDCLI_AUTH="${WD_WCP_TOKEN}" wdcli account list -f json --ci 2>/dev/null | python3 -c '
-          import json, sys
-          def walk(x):
-              if isinstance(x, dict):
-                  if "vmzvxm" in [str(v) for v in x.values()]:
-                      print("account keys:", sorted(x.keys()), file=sys.stderr)
-                      for k in ("organizationUuid", "organizationId", "uuid", "id"):
-                          if x.get(k): print(x[k]); sys.exit(0)
-                  for v in x.values(): walk(v)
-              elif isinstance(x, list):
-                  for v in x: walk(v)
-          walk(json.load(sys.stdin))')
+          # The organization validate compares with is the account's organizationUuid (from the platform's
+          # getOrganizations; `wdcli account list` doesn't show it). App Hub's own copy of the manifest carries it.
+          DL="${RUNNER_TEMP}/apphub-manifest"
+          WDCLI_AUTH="${WD_WCP_TOKEN}" wdcli app download ecocomsphase_xclw_cm_sync2_vmzvxm --latest-version -d "${DL}" --overwrite > /tmp/download.txt 2>&1
+          ACC_ORG=$(find "${DL}" -name appManifest.json -exec jq -r '.organizationId // empty' {} \; 2>/dev/null | head -1)
           echo "account organization found: $([ -n "${ACC_ORG}" ] && echo yes || echo no)"
           jq --arg org "${ACC_ORG:-${WD_ORG_UUID}}" '. + {organizationId: $org}' appManifest.json > "${VAL}/appManifest.json"
           WDCLI_AUTH="${WD_WCP_TOKEN}" wdcli app validate -d "${VAL}" --ci -f json > /tmp/validate.json 2>&1
