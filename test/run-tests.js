@@ -1082,7 +1082,7 @@ async function smoke(token, me) {
     // Clockwork's period format: wildcards *W1 *W2 *S and *, year/session codes from a period name
     const per = '\\*|20[0-9]{2}(S|W|W1|W2)?|\\*(S|W1|W2)';
     if (L.wildcards(per).join() !== '*,*W1,*W2,*S') throw new Error(`period wildcards ${L.wildcards(per)}`);
-    if (L.yearCodes(per, '2024-25 Winter Term 1 (UBC-V)').join() !== '2024,2024W,2024S') throw new Error(`year codes ${L.yearCodes(per, '2024-25 Winter Term 1 (UBC-V)')}`);
+    if (L.yearCodes(per, '2024-25 Winter Term 1 (UBC-V)').join() !== '2024,2024W,2025S') throw new Error(`year codes ${L.yearCodes(per, '2024-25 Winter Term 1 (UBC-V)')}`);
     if (L.wildcards('[A-Z]{2,4}(_[A-Z])?').length) throw new Error('a required field must offer no wildcards');
     if (L.fillValue('academicPeriod', 'CODE:2024W') !== '2024W' || L.fillValue('academicUnitCode', 'MATH') !== 'MATH') throw new Error('fillValue codes');
     const fill = [['2024-25 Winter Term 1 (UBC-V)|0', '2024W1'], ['2025 Summer Term 2 (UBC-V)|3', '2025S'], ['2024-25 Winter Term 2 (UBC-V)|1', '2024W2']];
@@ -2586,16 +2586,6 @@ async function shellRolesQuery(token) {
 
 async function probe(token) {
   console.log('\n-- Probe (read-only) --');
-  {
-    const act = (await wql(token, 'SELECT abbreviation FROM courseSubjects WHERE inactive = false', 2000)).data || [];
-    console.log(`   LIVE active subjects ${act.length}: ${act.map((x) => x.abbreviation).filter((x) => /^(PHYS|MECH|CHEM|MATH|PHAS)/.test(x)).join(' ')}`);
-    const apps = (await request('GET', `${BO}/comsApplications?limit=100`, token)).data || [];
-    for (const a of apps.filter((x) => x.patternSchema)) {
-      const sch = JSON.parse(a.patternSchema);
-      sch.fields.forEach((f, i) => { if (/subject|period|term|session/i.test(f.fieldLabel)) console.log(`   LIVE ${a.appId} active=${a.active} field ${i + 1} ${f.fieldLabel} | lookup=${f.lookup || 'none'} | example=${f.example} | regex=${f.regex} | blank=${f.blankIsWildcard}`); });
-    }
-  }
-  return;
   // 2026-11-06: the subtype design's WQL, exactly as the pages send it (presentation/wqlQueries)
   {
     const q = (n) => JSON.parse(fs.readFileSync(path.join(ROOT, 'presentation', 'wqlQueries', n + '.wqlquery'), 'utf8')).query;

@@ -165,11 +165,13 @@ var wildcards = function(schema, i) {
     .filter(w => { allowed(schema, i, w.id.substringAfter('CODE:')) });
 };
 
+/* an academic year 2024-25 holds the 2024 Winter session (2024W) and the 2025 Summer session (2025S) */
 var yearCodes = function(schema, i, yearName) {
   let y = periodYear(yearName ?? '');
+  let summer = (y.isNumeric() ? ('' + (y.toInt() + 1)) : y) + 'S';
   [{'id': 'CODE:' + y, 'descriptor': y + ' · Any period of ' + y},
    {'id': 'CODE:' + y + 'W', 'descriptor': y + 'W · Winter session ' + (yearName ?? '').substringBefore(' ')},
-   {'id': 'CODE:' + y + 'S', 'descriptor': y + 'S · Summer ' + y}]
+   {'id': 'CODE:' + summer, 'descriptor': summer + ' · Summer ' + summer.substring(0, 4)}]
     .filter(w => { allowed(schema, i, w.id.substringAfter('CODE:')) });
 };
 
