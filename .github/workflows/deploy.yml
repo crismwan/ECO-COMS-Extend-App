@@ -55,7 +55,8 @@ jobs:
           "${AA}" review-app "${REVIEW}" --agent > /tmp/arcane.json 2>/tmp/arcane.err
           AA_EXIT=$?
           echo "Arcane Auditor exit code ${AA_EXIT} (0 clean/advice, 1 ACTION findings, 2 usage, 3 crash)"
-          tail -5 /tmp/arcane.err; head -c 600 /tmp/arcane.json; echo
+          grep -v "^Preprocessor warning" /tmp/arcane.err | tail -15; echo "stdout bytes: $(wc -c < /tmp/arcane.json)"; head -c 600 /tmp/arcane.json; echo
+          "${AA}" review-app --help 2>&1 | head -40
           python3 - <<'PY'
           import json, collections, os
           try: d = json.load(open('/tmp/arcane.json'))
@@ -104,14 +105,15 @@ jobs:
           WDCLI_CLIENT_ID: ${{ secrets.WD_CLIENT_ID }}
           WDCLI_CLIENT_SECRET: ${{ secrets.WD_CLIENT_SECRET }}
           WD_WCP_TOKEN: ${{ secrets.WD_WCP_TOKEN }}
+          WD_ORG_UUID: ${{ secrets.WD_ORG_UUID }}
         run: |
           set +e -uo pipefail
           export WD_WCP_TOKEN="$(printf '%s' "${WD_WCP_TOKEN}" | tr -d '[:space:]\"')"
           export HOME="${RUNNER_TEMP}/wdvalidate"
           mkdir -p "${HOME}/.config/@workday/wdcli"
           jq -n --arg id "${WDCLI_CLIENT_ID}" --arg s "${WDCLI_CLIENT_SECRET}" \
-            --arg t "${WD_WCP_TOKEN}" \
-            '{clientId: $id, clientSecret: $s, wcpAccessToken: $t, defaultAccountShortId: "vmzvxm", defaultTenantAlias: "ubc_wcpdev2"}' \
+            --arg t "${WD_WCP_TOKEN}" --arg org "${WD_ORG_UUID}" \
+            '{clientId: $id, clientSecret: $s, wcpAccessToken: $t, organizationUuid: $org, defaultAccountShortId: "vmzvxm", defaultTenantAlias: "ubc_wcpdev2"}' \
             > "${HOME}/.config/@workday/wdcli/config.json"
           # The developer's platform token, not the system user: validate compares the manifest's organizationId with
           # the signed-in user's ("App manifest organizationId does not match user's organization" as the ISU, 2026-11-07)
