@@ -199,8 +199,8 @@ set_rows(s, T(s, 'ID', 2), [
     ['CN-03', 'Constraint', 'Organizations can only be inactivated, never deleted; business process records are permanent.', 'Test data stays in the tenant; naming marks it as TEST.', 'n/a', 'Accepted'],
     ['RSK-01', 'Risk', 'Until the integration system user is set up, a user with Modify on the audit domain could edit audit records through the REST API.', 'Audit could be tampered with. Mitigation: ISU writes (built, awaiting ISU setup) and View-only access for users.', 'ISC Security', 'Open'],
     ['RSK-02', 'Risk', 'An AAA sees every application in ECO-COMS until context scoping is built.', 'Changes to another application\'s organizations. Mitigation: security domains, audit log, context scoping when built.', 'Product owner', 'Open'],
-    ['RSK-03', 'Risk', 'Workday changes custom organization security or web services in a release.', 'Orchestrations fail. Mitigation: smoke tests after every deploy; check each release.', 'Developer', 'Open'],
-    ['RSK-04', 'Risk', 'Single developer / knowledge concentration.', 'Support gaps. Mitigation: user guide, admin runbook, notes and automated tests in the repository.', 'Product owner', 'Open'],
+    ['RSK-03', 'Risk', 'Workday changes custom organization security or web services in a release.', 'Orchestrations fail. Mitigation: test after every deploy; check each release.', 'Developer', 'Open'],
+    ['RSK-04', 'Risk', 'Single developer / knowledge concentration.', 'Support gaps. Mitigation: user guide, admin runbook and notes.', 'Product owner', 'Open'],
 ], keep=1)
 
 # ---------------------------------------------------------------- 10. FAQ
@@ -221,7 +221,7 @@ set_rows(s, T(s, 'Document name and URI'), [
     ['Shell Org Manager design options (design canvas); ECO-COMS presentation and live demo runbook (2026-11-05)', 'UX Design pack', 'Crispin Mwanyumba', '2026-11-05', 'Extend only'],
     [f'Security review / architecture review record {TBC}', 'Security review / architecture review record', TBC, TBC, 'Mandatory'],
     ['Application Patterns.xlsx (pattern formats per application)', 'Source data', TBC, '2026-11-02', 'Supporting'],
-    ['ECO-COMS user guide, admin runbook and notes (repository docs/)', 'User and support documentation', 'Crispin Mwanyumba', '2026-11-05', 'Supporting'],
+    ['ECO-COMS user guide, admin runbook and notes', 'User and support documentation', 'Crispin Mwanyumba', '2026-11-05', 'Supporting'],
 ], keep=1)
 
 # ---------------------------------------------------------------- 12. sign-off

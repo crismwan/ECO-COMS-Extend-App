@@ -58,13 +58,13 @@ insert_after(s, heading(s, 'Two to four sentences', tags=('p',)), para(
     'Every change goes through a guarded orchestration (13 orchestrations sharing 4 sub-orchestrations) that re-checks its inputs, calls Workday\'s Human_Resources or Staffing web service, confirms Workday accepted the change, and only then writes an audit record. '
     'Application formats, role requests, audit records and bulk runs are kept in five Extend business objects and two attachment stores; the organizations, roles and assignments themselves live only in Workday, where AccessUBC already reads them.'))
 a2 = T(s, 'Attribute', 1)
-kv(s, a2, 'Build tool', 'App Builder (Code mode) and Orchestration Builder; source kept under version control, built and checked by scripts before each deployment')
+kv(s, a2, 'Build tool', 'Workday App Builder and Orchestration Builder, deployed through App Hub')
 kv(s, a2, 'Runtime', 'Extend runtime (pages) and Orchestrate runtime (orchestrations)')
 kv(s, a2, 'Entry point', 'Worklet / task (Workday search: Shell Org Manager, Audit Log Viewer, ISC Queue, Submit Assignable Role Request, Submit AAA Role Request, Withdraw Role Request); worker profile section; Workday Home cards; BP inbox steps; related action on an application record')
 kv(s, a2, 'External systems', 'None')
 kv(s, a2, 'Persistence', 'Extend business objects: COMS Application, COMS Assignable Role (requests), COMS Audit Log, COMS Bulk Run, COMS Bulk Row Result; attachment objects COMS Bulk Upload, COMS Bulk Template. Workday custom organizations and role assignments hold the real data.')
 kv(s, a2, 'Reusable components consumed', 'Workday web services (Human_Resources v42.2, Staffing v42.2), Business Process REST API, WQL data sources (customOrganizations, topLevelOrganizations, allPositions, assignableRoles, academicUnits), Staffing v6 supervisory organization prompt values')
-kv(s, a2, 'Reusable components produced', 'Sub-orchestrations IORC_0037_XFD_SEC_Sub_Create_Shell_Organization, IORC_0037_XFD_SEC_Sub_Process_Bulk_Role_Row, IORC_0037_XFD_SEC_Sub_Start_Request_Review, IORC_0037_XFD_SEC_Sub_Write_Audit_Record; schema-driven pattern engine (comsPatterns.script); application index (comsAppIndex.script); browse-by-supervisory-organization position picker pattern; static test suite of Extend pitfalls')
+kv(s, a2, 'Reusable components produced', 'Sub-orchestrations IORC_0037_XFD_SEC_Sub_Create_Shell_Organization, IORC_0037_XFD_SEC_Sub_Process_Bulk_Role_Row, IORC_0037_XFD_SEC_Sub_Start_Request_Review, IORC_0037_XFD_SEC_Sub_Write_Audit_Record; schema-driven pattern engine (comsPatterns.script); application index (comsAppIndex.script); browse-by-supervisory-organization position picker pattern')
 diagram_after('Diagram — Solution architecture', 'img/solution-architecture.png', 'Solution architecture: users reach the Extend app through SSO; orchestrations call Workday web services inside the tenant; AccessUBC reads Workday through its existing extract (the only boundary crossing, unchanged)')
 
 # ---------------------------------------------------------------- 3. decision log
@@ -77,12 +77,12 @@ set_rows(s, T(s, 'ID', 0), [
     ['DD-06', 'Organizations are add and inactivate/reactivate only', 'Allow rename/delete', 'A role assignment\'s meaning must never change; Workday cannot delete organizations anyway', 'Mistakes are fixed by inactivating', 'To be confirmed', '2026-11-01'],
     ['DD-07', 'Bulk engine: asynchronous orchestration, CSV, row limits', 'Synchronous; Excel parsing; EIB', 'Page-launched synchronous calls stop at 25 s; Orchestrate reads CSV, not Excel. One engine (IORC_0037_XFD_SEC_Sub_Process_Bulk_Role_Row) behind the grid (50 rows) and the file (1,000 rows); validate first, then apply', 'Results arrive after a minute or two', 'Product owner', '2026-10-31'],
     ['DD-08', 'Role requests through a Workday business process', 'Status field only; email; BP', 'Approvals, inbox, delegation, Exclude Initiator, reminders and history come from Workday', 'BP definition is tenant configuration, set up per tenant', 'ISC / product owner', '2026-10-30'],
-    ['DD-09', 'Shared sub-orchestrations', 'Copy steps into each orchestration', 'IORC_0037_XFD_SEC_Sub_Create_Shell_Organization, IORC_0037_XFD_SEC_Sub_Process_Bulk_Role_Row, IORC_0037_XFD_SEC_Sub_Start_Request_Review and IORC_0037_XFD_SEC_Sub_Write_Audit_Record exist once, so a fix is made once', 'A build step extracts them; sub-orchestration IDs must match', 'Developer', '2026-11-04'],
+    ['DD-09', 'Shared sub-orchestrations', 'Copy steps into each orchestration', 'IORC_0037_XFD_SEC_Sub_Create_Shell_Organization, IORC_0037_XFD_SEC_Sub_Process_Bulk_Role_Row, IORC_0037_XFD_SEC_Sub_Start_Request_Review and IORC_0037_XFD_SEC_Sub_Write_Audit_Record exist once, so a fix is made once', 'Each caller references the sub-orchestration by its ID', 'Developer', '2026-11-04'],
     ['DD-10', 'Graph API for the audit log', 'REST count + offset pages', 'Server-side sort (newest first) and filters on any field', 'Graph offsets need a first request; hub stays on REST (faster there)', 'Developer', '2026-11-04'],
     ['DD-11', 'Shell Org Manager application bar as pill cards', 'Search bar; drop-down; family/app cards (Option D)', 'Every application derived from Workday; two clicks to narrow; all actions visible (Option E on the design canvas)', 'Pill cards hold 10 pills; one card file per pill count', 'Product owner', '2026-11-05'],
     ['DD-12', 'Position picker browses supervisory organizations', 'Workday Graph prompt values; type-ahead only', 'Workday\'s own prompt values (Staffing v6) give the same browse experience as Workday; Graph prompt values don\'t cover positions', 'Several calls per level opened', 'Product owner', '2026-11-05'],
     ['DD-13', 'Naming standard: XTND-0037 app, IORC_0037 orchestrations', 'Keep ECO-COMS names; hyphens as written', 'App renamed XTND-0037-XFD_SEC-Custom_Organization_Management; orchestrations IORC_0037_XFD_SEC_<description> (Orchestration Builder refuses hyphens). IDs kept, so App Hub history stays', 'Business process launch configurations and Home cards store orchestration names and had to be re-pointed', 'Product owner', '2026-11-06'],
-    ['DD-14', 'Organizations by subtype, applications by organization type', 'Find organizations by an X: in the code; create a new subtype', 'Organizations are the X:META and X:SHELL subtypes; an organization\'s application is its organization type; roles are those enabled for those types. Names and codes can be anything', 'Every list, check and test changed together (tools/subtype_apps.py); same 614 organizations and 12 roles as before', 'Product owner', '2026-11-06'],
+    ['DD-14', 'Organizations by subtype, applications by organization type', 'Find organizations by an X: in the code; create a new subtype', 'Organizations are the X:META and X:SHELL subtypes; an organization\'s application is its organization type; roles are those enabled for those types. Names and codes can be anything', 'Every list and check changed together; same 614 organizations and 12 roles as before', 'Product owner', '2026-11-06'],
     ['DD-15', 'Optional trailing pattern fields', 'One format per prefix; widen every rule', 'A field may be optional at the end and is left off the name when blank, so one format covers ORG:ELI and ORG:ARTS:HUMANITIES101 (ASMT) and ORG:SAO:GEOO (ADHC)', 'The server count check allows required-to-full field counts', 'Product owner', '2026-11-06'],
     ['DD-16', 'Clickable count cards', 'Leave counts as text; add buttons', 'Each count is a pill that filters its own page\'s list or opens the list it counts', 'One card file per target page (a pill\'s task can\'t be a parameter)', 'Product owner', '2026-11-06'],
 ], keep=1)
@@ -101,7 +101,7 @@ TR = [
     ['FR-010', 'Add / remove positions; browse picker', 'editRoleAssignment (UX-008); IORC_0037_XFD_SEC_Assign_Remove_Role_Positions', '§6.6 INT-04', 'TC-010'],
     ['FR-011', 'Only shell roles', 'WQL allShellAssignableRolesinTenant: enabledForOrganizationTypes in the application types (appTypes list)', '§6.9', 'TC-011'],
     ['FR-012', 'Bulk grid (50) and file (1,000), validate then apply', 'bulkRoleGrid, bulkRoleChanges, bulkRoleResults, bulkRoleApply; IORC_0037_XFD_SEC_Bulk_Role_Changes_From_Grid / IORC_0037_XFD_SEC_Bulk_Role_Changes_From_CSV → IORC_0037_XFD_SEC_Sub_Process_Bulk_Role_Row', '§6.7, §6.11', 'TC-012'],
-    ['FR-013', 'Pre-filled Excel template', 'bulkRoleTemplate (UX-015); COMS Bulk Template; CI build step', '§6.4', 'TC-013'],
+    ['FR-013', 'Pre-filled Excel template', 'bulkRoleTemplate (UX-015); COMS Bulk Template', '§6.4', 'TC-013'],
     ['FR-014', 'Assignable role request', 'assignableRoleManager (UX-018); IORC_0037_XFD_SEC_Start_Role_Request_Review → IORC_0037_XFD_SEC_Sub_Start_Request_Review', '§6.8', 'TC-014'],
     ['FR-015', 'AAA role request, duplicate check', 'adminProvisioning (UX-019); WQL allAAArolesinTenant; IORC_0037_XFD_SEC_Start_Admin_Request_Review', '§5.6, §6.8', 'TC-015'],
     ['FR-016', 'Review BP with Exclude Initiator', 'Review COMS Assignable Role Request BP; review step pages (UX-022)', '§6.8', 'TC-016'],
@@ -114,14 +114,14 @@ TR = [
     ['FR-023', 'Plain rejection message, no false success', 'Run-and-verify in onSubmit', '§5.7, §6.10', 'TC-023'],
     ['FR-024', 'Shell roles on vacant positions', 'accessReview, confirmAccessReview (UX-017)', '§5.3', 'TC-024'],
     ['FR-025', 'Insights', 'comsInsights, comsInsightsApps (UX-020)', '§5.3', 'TC-025'],
-    ['FR-027', 'Clickable counts', 'tools/quick_filters.py: Quick<Task>Card pill cards; quick / status query parameters', '§5.5', 'TC-027'],
+    ['FR-027', 'Clickable counts', 'Quick<Task>Card pill cards; quick / status query parameters', '§5.5', 'TC-027'],
     ['FR-026', 'Context scoping', 'Not built yet: planned', '§9 RSK-02', 'n/a'],
     ['NFR-002', 'Bulk limits', 'Async orchestrations, row limits', '§6.11', 'TC-012'],
     ['NFR-008', 'Response time < 2 s', 'Speed passes; server timing', '§6.11', 'TC-030'],
     ['NFR-010', 'WCAG 2.2 AA', 'Canvas components as delivered; text + symbol for status', '§5.8', 'TC-031'],
 ]
 set_rows(s, T(s, 'Requirement ID'), TR, keep=1)
-insert_after(s, wrap_of(T(s, 'Requirement ID')), para('Test case IDs are proposed for page 03. Most are already automated in the repository\'s test runner (static, smoke and full suites); page 03 will map each TC to its suite.'))
+insert_after(s, wrap_of(T(s, 'Requirement ID')), para('Test case IDs are proposed for page 03, which will describe each test.'))
 
 # ---------------------------------------------------------------- 5.1 UX scope
 set_rows(s, T(s, 'Question', 0), [
@@ -454,7 +454,7 @@ set_rows(s, T(s, 'ID', 4), [
     ['SEC-03', 'Page security domain (Extend)', 'Page security', 'Each page has one domain (§5.3)', 'View or Modify', 'Orchestrations launched by a page use the same domain (enabledForOrchestrationSecurity)'],
     ['SEC-04', 'ISSG', 'Integration System Security Group', f'{TBC} (for the ECO-COMS ISU)', 'Get/Put on audit and request domains', 'Only so records can be made read-only for users'],
     ['SEC-05', 'ISU', 'Integration System User', 'DNU_ISU_ECO_COMS_DEPLOY_CMM (planned; assigned to the app in App Manager per tenant)', 'Writes audit and request records only', 'Unavoidable to make audit records tamper-resistant: users keep View/Get only. Workday changes and BP starts stay as the user'],
-    ['SEC-06', 'Credential', 'ISU (orchestration credential)', 'Stored in Orchestration Builder / Workday, never in the repository', 'n/a', 'Deployment tokens are stored as secrets, refreshed by a person'],
+    ['SEC-06', 'Credential', 'ISU (orchestration credential)', 'Stored in Orchestration Builder / Workday', 'n/a', 'App Hub access is per developer'],
 ], keep=1)
 set_rows(s, T(s, 'Access matrix'), [
     ['', 'AAA (shell org + request domains)', 'Shell Org Manager, own app data*, audit', 'Organizations, patterns, role changes, requests', 'Status, positions on shell roles', 'Nothing (Workday has no delete)'],
@@ -469,7 +469,7 @@ insert_after(s, wrap_of(T(s, 'Access matrix')), para('* Until context scoping is
 set_rows(s, T(s, 'Failure scenario'), [
     ['Source data missing or malformed', 'Page checks; orchestration guards; bulk row checks', 'Refuse on the page; guard stops the run; bulk row INVALID', 'No', 'The user', 'Message under the field / row reason'],
     ['Endpoint unavailable or timing out', 'Workday error codes (failOnStatusCodes)', 'Error page; nothing claimed as done', 'Default Workday retry config in orchestrations', 'The user', 'ECO-COMS error page'],
-    ['Authentication or token failure', 'HTTP 401', 'Workday sign-in; CI deploy stops at the token step', 'No', 'User; developer for CI', 'Sign-in page; deployment log'],
+    ['Authentication or token failure', 'HTTP 401', 'Workday sign-in', 'No', 'User', 'Sign-in page'],
     ['Permission denied (403)', 'Domain policy', 'Redirect to hub or the friendly error page', 'n/a', 'The user', '"Access Restricted" / error page'],
     ['Partial success', 'Per position / per row result', 'Successful changes stay; failed ones listed', 'No (user re-runs the remainder)', 'The user', '"Workday rejected N of M changes" / FAILED rows'],
     ['Downstream rejects the payload', 'Not 2xx or SOAP fault (CheckWWSAccepted)', 'Run stops, nothing audited, logged with Workday\'s text; page blocks OK', 'No', 'The user; developer via app Logs', 'Page message; developer console Logs (15 min)'],
@@ -494,7 +494,7 @@ for title in ('Studio', 'Orchestrate'):
     while nxt is not None and nxt.name == 'p' and 'ct' not in (nxt.get('class') or []):
         n2 = nxt.find_next_sibling(); nxt.decompose(); nxt = n2
 set_rows(s, T(s, 'Tenant'), [
-    ['WCP Development (ubc_wcpdev2)', 'Build and test; deployed on every push to main', 'Sample only — never PII', 'Automated deployment after static checks; smoke tests after each deploy', 'n/a', 'Write suite run by hand; test data marked TEST and listed in the admin runbook'],
+    ['WCP Development (ubc_wcpdev2)', 'Build and test; deployed from App Hub', 'Sample only — never PII', 'Deployed from App Hub; tested after each deploy', 'n/a', 'Write suite run by hand; test data marked TEST and listed in the admin runbook'],
     ['Implementation', 'Configure and test', TBC, 'Promote the latest passing Dev build', TBC, 'Re-assign the ISU in App Manager; set up the BP definition, policies, launch configuration'],
     ['Sandbox / Sandbox Preview', 'Production-like verification (Clockwork pilot)', 'Production copy', TBC, 'Weekly', 'Anything configured only here is lost at refresh'],
     ['Production', 'Live', 'Live', 'Account Administrator', 'n/a', 'Cannot be uninstalled; plan roll-forward'],
@@ -545,11 +545,10 @@ set_rows(s, T(s, 'ID', 5), [
     ['CN-01', 'Constraint', 'Extend apps cannot be uninstalled; reference IDs never reused', 'Roll-forward only', 'Agree the production app ID before the first upload', 'Product owner', 'Open'],
     ['CN-02', 'Constraint', 'Orchestration launch returns 200 even on failure', 'False success if unchecked', 'Run-and-verify on every write page', 'Developer', 'Mitigated'],
     ['CN-03', 'Constraint', 'Model components deploy only with the weekly service update', 'A late model change can cost a week', 'Freeze the model before promotion', 'Developer', 'Accepted'],
-    ['RSK-01', 'Risk', 'Audit and request records editable through REST until ISU writes are live', 'Tampering', 'ISU writes built (tools/isu_writes.py); needs ISU + App Manager assignment + policy change', 'ISC Security', 'Open'],
+    ['RSK-01', 'Risk', 'Audit and request records editable through REST until ISU writes are live', 'Tampering', 'ISU writes built; needs ISU + App Manager assignment + policy change', 'ISC Security', 'Open'],
     ['RSK-02', 'Risk', 'No context scoping yet', 'An AAA could change another application\'s data', 'Security domains limit who uses the app; audit; context scoping when built', 'Product owner', 'Open'],
     ['RSK-03', 'Risk', 'Exclude Initiator not yet tested live with a requester in the approval group', 'Self-approval possible', 'Test before go-live; alternate approval group', 'ISC', 'Open'],
     ['RSK-04', 'Risk', 'Some API gateway refusals (HTML 403) on long launch query strings', 'Launch fails', 'Pass codes/IDs instead of long text; URL-encode values', 'Developer', 'Mitigated'],
-    ['RSK-05', 'Risk', 'CI tokens expire (1 h / 8 h)', 'Deploys stop', 'Documented refresh; static checks run first', 'Developer', 'Accepted'],
 ], keep=1)
 
 # ---------------------------------------------------------------- supporting docs, tickets, sign-off
@@ -561,8 +560,7 @@ set_rows(s, T(s, 'Document name and URI'), [
     [f'Privacy Impact Assessment {TBC}', 'Privacy Impact Assessment', TBC, TBC, 'If personal information is involved'],
     [f'Security review {TBC}', 'Security review / architecture review record', TBC, TBC, 'Per governance'],
     ['Appian COMS documentation (shell roles, IRPS)', 'Integration Design Document (legacy format)', 'To be confirmed', TBC, 'Optional'],
-    ['App Hub build log (developer.workday.com → app → Builds)', 'App Hub build log', 'CI', 'Each deploy', 'Extend / Orchestrate'],
-    ['Source repository (code, user guide, admin runbook, notes, tests)', 'Source repository', 'Crispin Mwanyumba', '2026-11-05', 'Studio (used here for Extend)'],
+    ['App Hub build log (developer.workday.com → app → Builds)', 'App Hub build log', 'Developer', 'Each deploy', 'Extend / Orchestrate'],
 ], keep=1)
 set_rows(s, T(s, 'System'), [['Jira', TBC, 'Epic', ''], ['ServiceNow', TBC, 'Change', '']], keep=1)
 set_rows(s, T(s, 'Role', 0), [
