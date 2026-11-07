@@ -10,8 +10,8 @@
       "fields": [
         {
           "fieldLabel": "Academic Unit",
-          "regex": "\\*|[A-Z0-9-]{2,7}",
-          "hint": "2 to 7 capital letters or digits, or any of -. Leave blank for any.",
+          "regex": "\\*|[A-Z0-9+-]{2,7}",
+          "hint": "2 to 7 capital letters or digits, or any of -+. Leave blank for any.",
           "example": "MATH",
           "blankIsWildcard": true,
           "lookup": "academicUnitCode"
