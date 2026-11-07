@@ -2519,10 +2519,34 @@ async function probe(token) {
       return r.data || [];
     } catch (e) { console.log(`   Q ${label}: error ${String(e.message).slice(0, 250)} ${Date.now() - t0}ms`); return []; }
   };
-  const subj = await timed('subjects all', 'SELECT * FROM courseSubjects', 10000);
-  if (subj.length) console.log(`   SUBJ keys: ${Object.keys(subj[0]).join(', ')}`);
-  const per = await timed('periods all', 'SELECT * FROM academicPeriods', 10000);
-  if (per.length) console.log(`   PER keys: ${Object.keys(per[0]).join(', ')}`);
+  const subj = await timed('subjects all', 'SELECT abbreviation, name, inactive, institutionAcademicUnits FROM courseSubjects', 10000);
+  const act = subj.filter((x) => !x.inactive);
+  const ab = act.map((x) => String(x.abbreviation || ''));
+  console.log(`   SUBJ total=${subj.length} active=${act.length} uniqueAbbr=${new Set(ab).size} noAbbr=${ab.filter((x) => !x).length} lengths=${JSON.stringify(ab.reduce((m, c) => ((m[c.length] = (m[c.length] || 0) + 1), m), {}))}`);
+  console.log(`   SUBJ chars outside A-Z0-9_: ${[...new Set(ab.filter((c) => !/^[A-Z0-9_]+$/.test(c)))].slice(0, 30).join(' | ') || 'none'}`);
+  console.log(`   SUBJ first letters: ${JSON.stringify(ab.reduce((m, c) => ((m[c[0]] = (m[c[0]] || 0) + 1), m), {}))}`);
+  const units = {}; act.forEach((x) => (x.institutionAcademicUnits || []).forEach((u) => (units[u.descriptor] = (units[u.descriptor] || 0) + 1)));
+  console.log(`   SUBJ institutions: ${JSON.stringify(units)} none=${act.filter((x) => !(x.institutionAcademicUnits || []).length).length}`);
+  await timed('subj = CHEM', "SELECT abbreviation, name FROM courseSubjects WHERE inactive = false AND abbreviation = 'CHEM'", 1);
+  await timed('subj = chem', "SELECT abbreviation, name FROM courseSubjects WHERE inactive = false AND abbreviation = 'chem'", 1);
+  await timed('subj = PLAS_V (inactive ok?)', "SELECT abbreviation, name, inactive FROM courseSubjects WHERE abbreviation = 'PLAS_V'", 1);
+  await timed('subj startswith C', "SELECT abbreviation, name FROM courseSubjects WHERE inactive = false AND abbreviation startswith 'C'", 1000);
+  await timed('subj name contains chem', "SELECT abbreviation, name FROM courseSubjects WHERE inactive = false AND (abbreviation contains 'chem' OR name contains 'chem')", 50);
+  await timed('subj ORDER BY', "SELECT abbreviation, name FROM courseSubjects WHERE inactive = false AND abbreviation startswith 'M' ORDER BY abbreviation", 5);
+  const per = await timed('periods all', 'SELECT name, inactive, academicYear, academicCalendar, periodType, startDate, standardAcademicPeriod FROM academicPeriods', 10000);
+  const pa = per.filter((x) => !x.inactive);
+  const grp = (k) => JSON.stringify(pa.reduce((m, x) => { const d = (x[k] || {}).descriptor || (Array.isArray(x[k]) ? (x[k][0] || {}).descriptor : '') || '(none)'; m[d] = (m[d] || 0) + 1; return m; }, {})).slice(0, 1200);
+  console.log(`   PER total=${per.length} active=${pa.length} uniqueName=${new Set(pa.map((x) => x.name)).size}`);
+  console.log(`   PER by academicYear: ${grp('academicYear')}`);
+  console.log(`   PER by academicCalendar: ${grp('academicCalendar')}`);
+  console.log(`   PER by periodType: ${grp('periodType')}`);
+  console.log(`   PER names: ${pa.slice(0, 15).map((x) => x.name).join(' | ')}`);
+  console.log(`   PER chars: ${[...new Set(pa.map((x) => x.name).join('').split('').filter((c) => !/[A-Za-z0-9 ]/.test(c)))].join('')}`);
+  const y = pa.find((x) => x.academicYear); if (y) console.log(`   PER year ref: ${JSON.stringify(y.academicYear)}`);
+  await timed('per = name', "SELECT name FROM academicPeriods WHERE inactive = false AND name = '2024-25 Winter Term 1 (UBC-V)'", 1);
+  await timed('per contains winter', "SELECT name FROM academicPeriods WHERE inactive = false AND name contains 'winter'", 50);
+  if (y) await timed('per in year', `SELECT name FROM academicPeriods WHERE inactive = false AND academicYear in (${(Array.isArray(y.academicYear) ? y.academicYear[0] : y.academicYear).id})`, 500);
+  const yrs = await timed('academicYears ds', 'SELECT academicYear, startDate FROM academicYears', 50);
   return;
   // 2026-11-06: the subtype design's WQL, exactly as the pages send it (presentation/wqlQueries)
   {
