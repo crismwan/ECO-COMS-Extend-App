@@ -2472,14 +2472,14 @@ async function probe(token) {
       }
       console.log(`   AUFIELDS ${d.alias} ${fields.length} fields; code/id-like: ${fields.filter((f) => /code|(^|[^a-z])id/i.test(`${f.alias} ${f.descriptor}`)).map((f) => `${f.alias} (${f.descriptor}, ${f.type})`).join(' | ')}`);
     }
-    const units = (await wql(token, 'SELECT workdayID, academicUnit, code, inactive FROM academicUnits', 10000)).data || [];
+    const units = (await wql(token, 'SELECT workdayID, academicUnit, academicUnitCode, inactive FROM academicUnits', 10000)).data || [];
     const active = units.filter((u) => !u.inactive);
-    const codes = active.map((u) => String(u.code || '').trim()).filter(Boolean);
+    const codes = active.map((u) => String(u.academicUnitCode || '').trim()).filter(Boolean);
     const dup = codes.filter((c, i) => codes.indexOf(c) !== i);
     console.log(`   AUCODE units=${units.length} active=${active.length} activeWithCode=${codes.length} unique=${new Set(codes).size} dup=${[...new Set(dup)].join(',') || 'none'} lengths=${JSON.stringify(codes.reduce((m, c) => ((m[c.length] = (m[c.length] || 0) + 1), m), {}))}`);
     console.log(`   AUCODE chars outside A-Z0-9-: ${codes.filter((c) => !/^[A-Z0-9-]+$/.test(c)).slice(0, 20).join(' | ') || 'none'}`);
-    active.filter((u) => /Mathematics|Physics|Computer Science|Chemistry/.test((u.academicUnit || {}).descriptor || '')).slice(0, 10)
-      .forEach((u) => console.log(`   AUCODE ${(u.academicUnit || {}).descriptor} = ${JSON.stringify(u.code)}`));
+    active.filter((u) => /Mathematics|Physics|Computer Science|Chemistry|Okanagan|Vancouver/.test((u.academicUnit || {}).descriptor || '')).slice(0, 10)
+      .forEach((u) => console.log(`   AUCODE ${(u.academicUnit || {}).descriptor} = ${JSON.stringify(u.academicUnitCode)}`));
   } catch (e) { console.log(`   AUCODE error ${String(e.message).slice(0, 300)}`); }
   // 2026-11-06: the subtype design's WQL, exactly as the pages send it (presentation/wqlQueries)
   {

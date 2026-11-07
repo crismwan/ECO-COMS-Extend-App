@@ -33,7 +33,7 @@ PREFIX = (f"(comsPatterns.prefixCount({SCH}) > 1 ? (empty(prefixDropdown.value) 
           f" : comsPatterns.firstPrefix({SCH}))")
 NAME = f"comsPatterns.buildName({APPC}, {PREFIX}, {SCH}, {VALUES})"
 # active academic unit codes, for fields whose Workday check is "Academic unit code" (2026-11-07)
-UNITS = "(auCodes.data ?? []).map(u => { u.code ?? '' })"
+UNITS = "(auCodes.data ?? []).map(u => { u.academicUnitCode ?? '' })"
 
 
 def note(sid, fid, title, rid, html, color='#0055B7', mark='ⓘ', render=None):

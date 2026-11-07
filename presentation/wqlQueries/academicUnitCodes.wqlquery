@@ -1,4 +1,4 @@
 {
   "id": "academicUnitCodes",
-  "query": "SELECT code FROM academicUnits WHERE inactive = false"
+  "query": "SELECT academicUnitCode FROM academicUnits WHERE inactive = false"
 }

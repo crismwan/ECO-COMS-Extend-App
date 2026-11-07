@@ -532,7 +532,7 @@ ROWS = ("fieldsGrid.rows.map(r => { comsAppSetup.rowOf(r.childrenMap.colFieldLab
         "r.childrenMap.colRegex.value, r.childrenMap.colHint.value, r.childrenMap.colExample.value, "
         f"r.childrenMap.colBlank.value == true, r.childrenMap.colOptional.value == true, {DD('colLookup')}) }})")
 # active academic unit codes (Workday's Code field, e.g. MATH) for fields checked against them
-UNITS = "(auCodes.data ?? []).map(u => { u.code ?? '' })"
+UNITS = "(auCodes.data ?? []).map(u => { u.academicUnitCode ?? '' })"
 SRC = "comsAppSetup.recordById(comsApplications.data, copyFromDropdown.selectedEntries[0].id)"
 # An error OK puts on the Fields line has no box of its own to clear it, and Workday refuses OK while any error shows
 # (live 2026-11-04: the page stayed stuck after the row was fixed), so every table edit clears it; OK re-checks.
