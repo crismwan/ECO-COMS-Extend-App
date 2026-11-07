@@ -2044,6 +2044,16 @@ The leading `'' +` is what makes the quotient a string — without it, neither `
 When comparing an average against exact boundaries (0 or 100), skip rounding entirely and compare the raw quotient — those cases are exact.
 
 Keep percentages stored as **bare numbers** (`"progress": 85`) and append the `%` only at render time (`value.toString() + '%'`). Storing `"85%"` makes the value a display string and forces a `substringBefore('%')` + `toInt()` round-trip before any arithmetic.
+### Workday Script — operator words can't be names (App Hub build 2026-11-07)
+
+`le`, `lt`, `ge`, `gt`, `eq`, `ne`, `and`, `or`, `not`, `div`, `mod` (and `size`, `empty`, `new`) are operator words: `let le = ...` failed the App Hub build with "PMD Scripting syntax error ... Parsing Error" and nothing more specific. Keep a static check on `let`/`var`/parameter names.
+
+### Grid cell dropdowns and switching cells (live 2026-11-07)
+
+- A `dropdown` in a grid `cellTemplate` opens on each row's saved choice with `"selectedValues": "<% [rowVar.key ?? 'default'] %>"` (developer.workday.com "dropdown": the value is a list of ids, `selectedValues` picks the first); read it in `childrenMap.<columnId>.value[0]`.
+- A cell's `enabled` can use the row variable at load, and a sibling cell's `onChange` can flip it with `otherCell.setEnabled(...)` and fill it with `setValue(...)` on an EDIT page.
+- A literal backslash in Workday Script without escaping questions: `'%5C'.urlDecode()`.
+
 ### Workday Script — define helpers before use; counting without memory blow-ups (live 2026-11-02)
 
 - **A `.script` helper that calls one defined further down the file is dropped**: the page fails with "Unknown Function call: .waitingText(row)" even though the function is exported. Define every helper before its first caller. (Static check `scriptOrder`.)

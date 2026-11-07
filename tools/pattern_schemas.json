@@ -1,5 +1,5 @@
 {
-  "_about": "Pattern schemas per application, from Requirements/Application Patterns.xlsx (received 2026-11-02). A pattern name is <appId>:<prefix>:<field1>:...:<fieldN>. Each field: fieldLabel, regex (validate:match, whole value), hint, example, blankIsWildcard (blank becomes *). X:CLW (Clockwork) uses the same form since 2026-11-02: its five columns (Academic Unit, Subject, Course, Section, Academic Period) give the same names as its existing patterns. Judgement calls: X:BPMS(ASMT) prefix ORG (sheet says ORD, its example and Workday use ORG); X:OAM (sheet heading says X:OAMS, its example and Workday use X:OAM); X:SET and X:PHA have no organization type in Workday yet, so creating their patterns is refused until those types exist. Academic Unit is out of scope for now; Subject is checked by format because the tenant has no course-subject data source. Since 2026-11-06 a field may be optionalField (only trailing ones): left blank, it is dropped from the name (X:BPMS(ASMT):ORG:ELI and :ORG:ARTS:HUMANITIES101 in one format); X:BPMS(ADHC) also takes prefix ORG (its 12 ORG:SAO:... organizations).",
+  "_about": "Pattern schemas per application, from Requirements/Application Patterns.xlsx (received 2026-11-02). A pattern name is <appId>:<prefix>:<field1>:...:<fieldN>. Each field: fieldLabel, regex (validate:match, whole value), hint, example, blankIsWildcard (blank becomes *). X:CLW (Clockwork) uses the same form since 2026-11-02: its five columns (Academic Unit, Subject, Course, Section, Academic Period) give the same names as its existing patterns. Judgement calls: X:BPMS(ASMT) prefix ORG (sheet says ORD, its example and Workday use ORG); X:OAM (sheet heading says X:OAMS, its example and Workday use X:OAM); X:SET and X:PHA have no organization type in Workday yet, so creating their patterns is refused until those types exist. Since 2026-11-07 a field may carry a rule (ruleType, ruleLength, ruleValues, ruleOption) that writes its regex, and a Workday check (lookup academicUnitCode: the value must be an active academic unit's Code, WQL academicUnits.academicUnitCode); Clockwork's Academic Unit uses it. Subject is checked by format because the tenant has no course-subject data source. Since 2026-11-06 a field may be optionalField (only trailing ones): left blank, it is dropped from the name (X:BPMS(ASMT):ORG:ELI and :ORG:ARTS:HUMANITIES101 in one format); X:BPMS(ADHC) also takes prefix ORG (its 12 ORG:SAO:... organizations).",
   "applications": [
     {
       "appId": "X:CLW",
@@ -10,10 +10,11 @@
       "fields": [
         {
           "fieldLabel": "Academic Unit",
-          "regex": "\\*|[A-Z0-9-]{2,6}",
-          "hint": "The academic unit that owns the courses, 2 to 6 capital letters, digits or hyphens (e.g. PHAS, UBC-V, ETPPV). Leave blank for any unit.",
-          "example": "PHAS",
-          "blankIsWildcard": true
+          "regex": "\\*|[A-Z0-9-]{2,7}",
+          "hint": "2 to 7 capital letters or digits, or any of -. Leave blank for any.",
+          "example": "MATH",
+          "blankIsWildcard": true,
+          "lookup": "academicUnitCode"
         },
         {
           "fieldLabel": "Subject",
