@@ -65,7 +65,7 @@ kv(s, a2, 'External systems', 'None')
 kv(s, a2, 'Persistence', 'Extend business objects: COMS Application, COMS Assignable Role (requests), COMS Audit Log, COMS Bulk Run, COMS Bulk Row Result; attachment objects COMS Bulk Upload, COMS Bulk Template. Workday custom organizations and role assignments hold the real data.')
 kv(s, a2, 'Reusable components consumed', 'Workday web services (Human_Resources v42.2, Staffing v42.2), Business Process REST API, WQL data sources (customOrganizations, topLevelOrganizations, allPositions, assignableRoles, academicUnits), Staffing v6 supervisory organization prompt values')
 kv(s, a2, 'Reusable components produced', 'Sub-orchestrations IORC_0037_XFD_SEC_Sub_Create_Shell_Organization, IORC_0037_XFD_SEC_Sub_Process_Bulk_Role_Row, IORC_0037_XFD_SEC_Sub_Start_Request_Review, IORC_0037_XFD_SEC_Sub_Write_Audit_Record; schema-driven pattern engine (comsPatterns.script); application index (comsAppIndex.script); browse-by-supervisory-organization position picker pattern')
-diagram_after('Diagram — Solution architecture', 'img/solution-architecture.png', 'Solution architecture: users reach the Extend app through SSO; orchestrations call Workday web services inside the tenant; AccessUBC reads Workday through its existing extract (the only boundary crossing, unchanged)')
+diagram_after('Diagram — Solution architecture', 'img/solution-architecture.png', 'Architecture: users reach the Extend app through SSO; orchestrations call Workday web services inside the tenant; AccessUBC reads Workday through its existing extract (the only boundary crossing, unchanged)')
 
 # ---------------------------------------------------------------- 3. decision log
 set_rows(s, T(s, 'ID', 0), [
