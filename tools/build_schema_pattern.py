@@ -84,9 +84,12 @@ def field_on_change(i, target='self', fill='', after=''):
 def find_on_change(i):
     # the picked entry's value goes into the field's (hidden) box: a period as its short form, e.g. 2024W1; nothing
     # picked = blank. Then the usual recheck of every field.
-    fill = (f"  let fv = empty(self.value) ? '' : comsPatterns.fillValue(comsPatterns.pickerKind(s, {i}), self.value[0]);\n"
-            f"  if (empty(self.value) || fv != '') {{ {FIELD(i)}.setValue(fv); }}\n")
-    after = (f"  if (!empty(self.value) && fv == '') {{ self.setError('This period has no short form (W1, W2, W or S): pick its year or session instead.'); }}\n")
+    # a new subject clears the course picked for the old one (2026-11-07)
+    fill = (f"  let fv = empty(self.value) ? '' : comsPatterns.pickValue(s, {i}, self.value[0]);\n"
+            f"  if (empty(self.value) || fv != '') {{ {FIELD(i)}.setValue(fv); }}\n"
+            + "".join(f"  if (comsPatterns.pickerKind(s, {i}) == 'courseSubject' && comsPatterns.pickerKind(s, {j}) == 'course') {{ {FIND(j)}.setValue([]); {FIELD(j)}.setValue(''); }}\n"
+                      for j in range(MAX_FIELDS) if j != i))
+    after = (f"  if (!empty(self.value) && fv == '') {{ self.setError(comsPatterns.pickerKind(s, {i}) == 'course' ? 'This course has no number that fits the format: pick another or a wildcard.' : 'This period has no short form (W1, W2, W or S): pick its year or session instead.'); }}\n")
     return field_on_change(i, 'self', fill, after)
 
 
@@ -138,14 +141,21 @@ for i in range(MAX_FIELDS):
                    "visible": f"<% {KIND(i)} != '' %>",
                    "helpText": "Click to browse, or type a code or name to search Workday (type * for the wildcards). Leave empty for any.",
                    "values": f"<% comsPatterns.rootFolders({SCH}, {i}, {AU}, wdYears.data ?? []) %>",
+                   # one or two WQL steps: a course list first finds the picked subject's WID, then its courses
                    "dynamicMonikerLevels": ("<%\n"
                        "  const sel = self.promptSelections;\n"
-                       f"  const q = comsPatterns.levelWql({SCH}, {i}, sel[0]);\n"
-                       "  const rows = q == '' ? [] : (wdLookup.invoke({'q': q, 'lim': '2000'}).data ?? []);\n"
+                       f"  const q = comsPatterns.levelWql({SCH}, {i}, sel[0], {VALUES});\n"
+                       "  const r1 = q == '' ? [] : (wdLookup.invoke({'q': q, 'lim': '2000'}).data ?? []);\n"
+                       f"  const q2 = comsPatterns.nextWql({SCH}, {i}, r1);\n"
+                       "  const rows = q2 == '' ? r1 : (wdLookup.invoke({'q': q2, 'lim': '2000'}).data ?? []);\n"
                        f"  const leaves = comsPatterns.levelRows({SCH}, {i}, sel[0], {AU}, rows);\n"
                        "  return [leaves, false];\n%>"),
-                   "onSearch": (f"<% comsPatterns.searchQuery({SCH}, {i}, event.query) == '' ? comsPatterns.searchRows({SCH}, {i}, event.query, []) : "
-                                f"comsPatterns.searchRows({SCH}, {i}, event.query, wdLookup.invoke({{'q': comsPatterns.searchQuery({SCH}, {i}, event.query), 'lim': '50'}}).data ?? []) %>"),
+                   "onSearch": ("<%\n"
+                       f"  let sq = comsPatterns.searchQuery({SCH}, {i}, event.query, {VALUES});\n"
+                       "  let r1 = sq == '' ? [] : (wdLookup.invoke({'q': sq, 'lim': '50'}).data ?? []);\n"
+                       f"  let q2 = comsPatterns.nextWql({SCH}, {i}, r1);\n"
+                       "  let rows = q2 == '' ? r1 : (wdLookup.invoke({'q': q2, 'lim': '2000'}).data ?? []);\n"
+                       f"  comsPatterns.searchRows({SCH}, {i}, event.query, rows);\n%>"),
                    "onChange": find_on_change(i)})
     # the value that goes into the name: typed for ordinary fields, filled from the list (read-only) for checked ones
     # the value that goes into the name: typed for ordinary fields; hidden for checked ones, filled from the list

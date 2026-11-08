@@ -571,6 +571,10 @@
                           {
                             "id": "academicPeriod",
                             "descriptor": "Academic period (e.g. 2024W1 = a 2024-25 Winter Term 1 period)"
+                          },
+                          {
+                            "id": "course",
+                            "descriptor": "Course of the picked subject (listed from Workday)"
                           }
                         ],
                         "selectedValues": "<% [fr.lookup ?? 'none'] %>",

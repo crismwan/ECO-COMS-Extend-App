@@ -551,7 +551,9 @@ RULE_OPTIONS = [("none", "None"), ("first", "Starts with a letter or digit"), ("
 LOOKUPS = [("none", "None"), ("academicUnitCode", "Academic unit code"),
            # 2026-11-07: each value looked up on its own (WQL courseSubjects / academicPeriods), for tens of thousands of rows
            ("courseSubject", "Course subject abbreviation (e.g. CHEM)"),
-           ("academicPeriod", "Academic period (e.g. 2024W1 = a 2024-25 Winter Term 1 period)")]
+           ("academicPeriod", "Academic period (e.g. 2024W1 = a 2024-25 Winter Term 1 period)"),
+           # the picked subject's courses (WQL courseDefinitions); needs a Course subject field in the same format
+           ("course", "Course of the picked subject (listed from Workday)")]
 # a field's example must exist in Workday when its check is a course subject or an academic period: one query per example
 EXAMPLES_MISSING = ("ROWS.filter(r => { comsPatterns.lookupWql(r.lookup, r.example) != '' }).filter(r => { "
                     "let x = wdLookup.invoke({'q': comsPatterns.lookupWql(r.lookup, r.example), 'lim': '50'}); "

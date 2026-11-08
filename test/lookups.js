@@ -14,6 +14,8 @@ const FRAGMENTS = {
   periodSearch: "SELECT name FROM academicPeriods WHERE inactive = false AND name contains '",
   unitSearch: "SELECT academicUnitCode, academicUnitName FROM academicUnits WHERE inactive = false AND academicUnitCode is not empty AND (academicUnitCode startswith '",
   unitSearchMid: "' OR academicUnitName contains '",
+  subjectWid: "SELECT courseSubject FROM courseSubjects WHERE abbreviation = '",
+  courseList: 'SELECT course, title FROM courseDefinitions WHERE courseSubjects in (',
 };
 const F = FRAGMENTS;
 const text = (v) => String(v ?? '').split("'").join('').split('\\').join('').trim();
@@ -40,4 +42,7 @@ const fillValue = (kind, id) => {
   const name = id.split('|')[0]; const y = year(name);
   return name.includes('Winter Term 1') ? y + 'W1' : name.includes('Winter Term 2') ? y + 'W2' : name.includes('Summer') ? y + 'S' : name.includes('Winter') ? y + 'W' : '';
 };
-module.exports = { FRAGMENTS, lookupWql, treeWql, searchWql, fillValue, wildcards, yearCodes };
+// a course list: the picked subject's WID first, then its courses (comsPatterns.subjectWql / courseWql)
+const subjectWql = (abbr) => (text(abbr) && !text(abbr).startsWith('*') ? F.subjectWid + text(abbr) + "'" : '');
+const courseWql = (rows) => (rows && rows[0] && rows[0].courseSubject ? F.courseList + text(rows[0].courseSubject.id) + ')' : '');
+module.exports = { subjectWql, courseWql, FRAGMENTS, lookupWql, treeWql, searchWql, fillValue, wildcards, yearCodes };

@@ -712,7 +712,8 @@ function staticSuite() {
       if (!n || typeof n !== 'object') return;
       if (typeof n.id === 'string') ids.push(n.id);
       for (const [k, v] of Object.entries(n)) {
-        if (/^on[A-Z]/.test(k)) continue;
+        // dynamicMonikerLevels runs when a list's folder opens, like an event (2026-11-07)
+        if (/^on[A-Z]/.test(k) || k === 'dynamicMonikerLevels') continue;
         if (typeof v === 'string' && v.includes('<%')) {
           for (const m of v.matchAll(/\b([a-z][A-Za-z0-9]*)\.(value|selectedEntries|rows|childrenMap)\b/g)) {
             if (allIds.has(m[1]) && !ids.includes(m[1]) && m[1] !== n.id) warn('Static.forwardRef', `${f}: ${n.id || n.type} ${k} uses ${m[1]}, declared later on the page: fails if evaluated at page load (guard it so it isn't)`);
@@ -1086,6 +1087,12 @@ async function smoke(token, me) {
     if (L.yearCodes(per, '2024-25 Winter Term 1 (UBC-V)').join() !== '2024,2024W,2025S') throw new Error(`year codes ${L.yearCodes(per, '2024-25 Winter Term 1 (UBC-V)')}`);
     if (L.wildcards('[A-Z]{2,4}(_[A-Z])?').length) throw new Error('a required field must offer no wildcards');
     if (L.fillValue('academicPeriod', 'CODE:2024W') !== '2024W' || L.fillValue('academicUnitCode', 'MATH') !== 'MATH') throw new Error('fillValue codes');
+    // course list: subject WID, then its courses (dev has no course definitions: 0 rows is fine, an error isn't)
+    const sw = await run(L.subjectWql(subj || 'CHEM'), 1);
+    if (!(sw.data || []).length || !sw.data[0].courseSubject) throw new Error(`no WID for subject ${subj || 'CHEM'}`);
+    const cl = await run(L.courseWql(sw.data), 2000);
+    got.push(`courses of ${subj || 'CHEM'} ${(cl.data || []).length}`);
+    if (L.subjectWql('*') !== '') throw new Error('a wildcard subject must not list courses');
     const fill = [['2024-25 Winter Term 1 (UBC-V)|0', '2024W1'], ['2025 Summer Term 2 (UBC-V)|3', '2025S'], ['2024-25 Winter Term 2 (UBC-V)|1', '2024W2']];
     for (const [id, want] of fill) if (L.fillValue('academicPeriod', id) !== want) throw new Error(`fillValue ${id} gave ${L.fillValue('academicPeriod', id)}`);
     pass('Lookups.queries', got.join(', ') + `; ${years.length} academic years`);
@@ -2589,18 +2596,6 @@ async function shellRolesQuery(token) {
 
 async function probe(token) {
   console.log('\n-- Probe (read-only) --');
-  // TEMP 2026-11-07: course data for the Course pick-list (removed after use)
-  const crs = async (label, q, lim = 5) => { const t0 = Date.now(); try { const r = await wql(token, q, lim); console.log(`   CRS ${label}: total=${r.total} ${Date.now() - t0}ms ${JSON.stringify((r.data || []).slice(0, 4)).slice(0, 1500)}`); return r.data || []; } catch (e) { console.log(`   CRS ${label}: error ${String(e.message).slice(0, 250)}`); return []; } };
-  await crs('all', 'SELECT course, title, abbreviatedTitle, courseSubjects, courseListings, academicUnits, hiddenCourse, lastAvailable FROM courseDefinitions', 4);
-  const subj = (await wql(token, "SELECT courseSubject, abbreviation FROM courseSubjects WHERE abbreviation in ('CHEM','CHEM_V','MATH','MATH_V','PHYS_V','ENPH_V','CCST_V')", 20)).data || [];
-  console.log(`   CRS subjects: ${JSON.stringify(subj).slice(0, 800)}`);
-  for (const x of subj.slice(0, 4)) {
-    const id = (x.courseSubject || {}).id;
-    await crs(`by subject ${x.abbreviation}`, `SELECT course, title, courseListings FROM courseDefinitions WHERE courseSubjects in (${id})`, 200);
-  }
-  const ds = (await request('GET', `${API}/wql/v1/dataSources?search=${encodeURIComponent('listing')}&limit=50`, token)).data || [];
-  console.log(`   CRS listing sources: ${ds.map((x) => x.alias).filter((a) => /ourse|isting/.test(a)).join(' ')}`);
-  return;
   // 2026-11-06: the subtype design's WQL, exactly as the pages send it (presentation/wqlQueries)
   {
     const q = (n) => JSON.parse(fs.readFileSync(path.join(ROOT, 'presentation', 'wqlQueries', n + '.wqlquery'), 'utf8')).query;

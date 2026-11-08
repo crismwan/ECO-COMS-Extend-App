@@ -87,7 +87,7 @@ var lookupOf = function(schema, i) {
 
 var pickerKind = function(schema, i) {
   let k = lookupOf(schema, i);
-  (k == 'courseSubject' || k == 'academicPeriod' || k == 'academicUnitCode') ? k : '';
+  (k == 'courseSubject' || k == 'academicPeriod' || k == 'academicUnitCode' || k == 'course') ? k : '';
 };
 
 var needsPeriods = function(schema) {
@@ -175,7 +175,10 @@ var allowed = function(schema, i, code) {
 
 var wildcards = function(schema, i) {
   [{'id': 'CODE:*', 'descriptor': '* · Any'}, {'id': 'CODE:*W1', 'descriptor': '*W1 · Winter Term 1, every year'},
-   {'id': 'CODE:*W2', 'descriptor': '*W2 · Winter Term 2, every year'}, {'id': 'CODE:*S', 'descriptor': '*S · Summer, every year'}]
+   {'id': 'CODE:*W2', 'descriptor': '*W2 · Winter Term 2, every year'}, {'id': 'CODE:*S', 'descriptor': '*S · Summer, every year'},
+   {'id': 'CODE:1*', 'descriptor': '1* · every 100-level course'}, {'id': 'CODE:2*', 'descriptor': '2* · every 200-level course'},
+   {'id': 'CODE:3*', 'descriptor': '3* · every 300-level course'}, {'id': 'CODE:4*', 'descriptor': '4* · every 400-level course'},
+   {'id': 'CODE:5*', 'descriptor': '5* · every 500-level course'}, {'id': 'CODE:6*', 'descriptor': '6* · every 600-level course'}]
     .filter(w => { allowed(schema, i, w.id.substringAfter('CODE:')) });
 };
 
@@ -198,15 +201,40 @@ var unitType = function(u) {
   empty(u.academicUnitSubtype) ? '(No subtype)' : (u.academicUnitSubtype.descriptor ?? '(No subtype)');
 };
 
+/* Course (2026-11-07, product owner): a field whose Workday check is "course" lists the courses of the subject picked in
+   the same pattern (WQL courseDefinitions, by the subject's WID). Two steps: the subject's WID, then its courses. A
+   course's value is the first word of its name that fits the field's format (e.g. 121 in "CHEM_V 121 ..."). When
+   Workday has no courses for that subject (the dev tenant has none at all, 2026-11-07), a typed value that fits the
+   format is offered instead, so a pattern can still be made. */
+var subjectOf = function(schema, values) {
+  let k = empty(schema) ? (0 - 1) : schema.fields.map(f => { f.lookup ?? '' }).indexOf('courseSubject');
+  k < 0 ? '' : wqlText(values[k]);
+};
+
+var subjectWql = function(schema, values) {
+  let a = subjectOf(schema, values);
+  (empty(a) || a.startsWith('*')) ? '' : ('SELECT courseSubject FROM courseSubjects WHERE abbreviation = \'' + a + '\'');
+};
+
+var courseWql = function(rows) {
+  ((rows ?? []).size() == 0 || empty(rows[0].courseSubject)) ? ''
+    : ('SELECT course, title FROM courseDefinitions WHERE courseSubjects in (' + wqlText(rows[0].courseSubject.id) + ')');
+};
+
+var courseNumber = function(schema, i, name) {
+  let w = (name ?? '').split(' ').filter(t => { t != '*' && allowed(schema, i, t) });
+  w.size() == 0 ? '' : w[0];
+};
+
 var rootFolders = function(schema, i, units, years) {
   let k = pickerKind(schema, i);
   let wild = wildcards(schema, i).size() > 0 ? [{'id': 'WILD', 'descriptor': 'Any, or several (wildcards)'}] : [];
   let types = (units ?? []).filter(u => { !empty(u.academicUnitCode) }).map(u => { unitType(u) });
-  let folders = k == 'academicUnitCode'
+  let folders = k == 'course' ? [{'id': 'COURSES', 'descriptor': 'Courses of the picked subject'}] : (k == 'academicUnitCode'
     ? types.distinct().sort().map(t => { {'id': 'TYPE:' + t, 'descriptor': t + ' (' + types.filter(x => { x == t }).size() + ')'} })
     : (k == 'courseSubject' ? letterFolders()
       : list:flatten([(years ?? []).filter(y => { !empty(y.academicYear) }).map(y => { {'id': y.academicYear.id, 'descriptor': y.academicYear.descriptor} }),
-          [{'id': 'NOYEAR', 'descriptor': '(No academic year)'}]]));
+          [{'id': 'NOYEAR', 'descriptor': '(No academic year)'}]])));
   list:flatten([wild, folders]);
 };
 
@@ -242,6 +270,8 @@ var pickRows = function(kind, rows) {
     (rows ?? []).map(r => { {'id': r.abbreviation ?? '', 'descriptor': (r.abbreviation ?? '') + ' · ' + (r.name ?? '')} });
   } else if (kind == 'academicUnitCode') {
     (rows ?? []).map(r => { {'id': r.academicUnitCode ?? '', 'descriptor': (r.academicUnitCode ?? '') + ' · ' + (r.academicUnitName ?? '')} });
+  } else if (kind == 'course') {
+    list:sort((rows ?? []).filter(r => { !empty(r.course) }).map(r => { {'id': r.course.descriptor ?? '', 'descriptor': (r.course.descriptor ?? '') + (empty(r.title) ? '' : (' · ' + r.title))} }), 'id', true);
   } else {
     (rows ?? []).map((r, n) => { {'id': (r.name ?? '') + '|' + n, 'descriptor': r.name ?? ''} });
   }
@@ -254,26 +284,42 @@ var levelRows = function(schema, i, folder, units, rows) {
     wildcards(schema, i);
   } else if (k == 'academicUnitCode') {
     unitRows(units, folder);
-  } else if (k == 'courseSubject') {
+  } else if (k == 'courseSubject' || k == 'course') {
     pickRows(k, rows);
   } else {
     list:flatten([folder == 'NOYEAR' ? [] : yearCodes(schema, i, (rows ?? []).size() > 0 ? rows[0].name : ''), pickRows(k, rows)]);
   }
 };
 
-/* the WQL a level needs ('' when it needs none: the wildcards and unit subtypes) */
-var levelWql = function(schema, i, folder) {
+/* the WQL a level needs ('' when it needs none: the wildcards and unit subtypes); for courses it is the first of two
+   steps (the subject's WID), nextWql gives the second */
+var levelWql = function(schema, i, folder, values) {
   let k = pickerKind(schema, i);
-  (folder == 'WILD' || k == 'academicUnitCode') ? '' : treeWql(k, folder);
+  (folder == 'WILD' || k == 'academicUnitCode') ? '' : (k == 'course' ? subjectWql(schema, values) : treeWql(k, folder));
 };
 
-/* typed search: the wildcards when the text starts with *, otherwise Workday's matches */
+var nextWql = function(schema, i, rows) {
+  pickerKind(schema, i) == 'course' ? courseWql(rows) : '';
+};
+
+/* typed search: the wildcards when the text starts with * (or, for a course, is a level such as 1*), otherwise Workday's
+   matches; a course is searched among the subject's courses, and a typed number is offered when Workday has none */
+var searchQuery = function(schema, i, q, values) {
+  let t = (q ?? '').trim();
+  (empty(t) || t.startsWith('*') || t.endsWith('*')) ? '' : (pickerKind(schema, i) == 'course' ? subjectWql(schema, values) : searchWql(pickerKind(schema, i), t));
+};
+
 var searchRows = function(schema, i, q, rows) {
-  (q ?? '').trim().startsWith('*') ? wildcards(schema, i) : pickRows(pickerKind(schema, i), rows);
-};
-
-var searchQuery = function(schema, i, q) {
-  (empty(q) || q.trim().startsWith('*')) ? '' : searchWql(pickerKind(schema, i), q);
+  let t = (q ?? '').trim();
+  let k = pickerKind(schema, i);
+  if (t.startsWith('*') || t.endsWith('*')) {
+    wildcards(schema, i).filter(w => { w.id.substringAfter('CODE:').startsWith(t) || t == '*' });
+  } else if (k == 'course') {
+    let found = pickRows(k, rows).filter(r => { r.descriptor.containsIgnoreCase(t) });
+    ((rows ?? []).size() == 0 && allowed(schema, i, t)) ? [{'id': 'CODE:' + t, 'descriptor': t + ' · typed (Workday has no courses for this subject)'}] : found;
+  } else {
+    pickRows(k, rows);
+  }
 };
 
 /* the value a picked entry puts in the name ('' when a period has no short form) */
@@ -290,11 +336,15 @@ var fillValue = function(kind, id) {
   }
 };
 
+var pickValue = function(schema, i, id) {
+  (pickerKind(schema, i) == 'course' && !id.startsWith('CODE:')) ? courseNumber(schema, i, id) : fillValue(pickerKind(schema, i), id);
+};
+
 var formatGuide = function(schema) {
   if (empty(schema)) {
     '';
   } else {
-    schema.fields.map(f => { f.fieldLabel + (f.optionalField == true ? ' (optional, may be left off)' : '') + ' (e.g. ' + f.example + '): ' + f.hint + (f.lookup == 'academicUnitCode' ? ' Must be an active academic unit code.' : (f.lookup == 'courseSubject' ? ' Must be an active course subject abbreviation in Workday.' : (f.lookup == 'academicPeriod' ? ' Must match an active academic period in Workday.' : ''))) }).join('  ·  ');
+    schema.fields.map(f => { f.fieldLabel + (f.optionalField == true ? ' (optional, may be left off)' : '') + ' (e.g. ' + f.example + '): ' + f.hint + (f.lookup == 'academicUnitCode' ? ' Must be an active academic unit code.' : (f.lookup == 'courseSubject' ? ' Must be an active course subject abbreviation in Workday.' : (f.lookup == 'academicPeriod' ? ' Must match an active academic period in Workday.' : (f.lookup == 'course' ? ' Picked from the subject\'s courses in Workday.' : '')))) }).join('  ·  ');
   }
 };
 
@@ -346,6 +396,8 @@ var appCodes = function(orgs, apps) {
   "levelWql": levelWql,
   "searchRows": searchRows,
   "searchQuery": searchQuery,
+  "nextWql": nextWql,
+  "pickValue": pickValue,
   "pickRows": pickRows,
   "fillValue": fillValue,
   "formatGuide": formatGuide,
