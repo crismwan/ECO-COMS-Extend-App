@@ -1320,8 +1320,11 @@ async function full(token, me) {
     const appCode = app.appId; // same value the New Pattern page uses (e.g. X:CLW)
     if (!/^X:/.test(appCode || '')) throw new Error(`COMS application appId "${appCode}" is not an X: code`);
     // Clockwork's five fields: Academic Unit, Subject, Course, Section, Academic Period
-    // Academic Unit * (any): since 2026-11-07 it must otherwise be an active academic unit's Code (CheckUnitCode)
-    const [a1, a2, a3, a4, a5] = ['*', 'TEST', run3, '900', `${now.getUTCFullYear()}W1`];
+    // Academic Unit * (any): since 2026-11-07 it must otherwise be an active academic unit's Code (CheckUnitCode).
+    // Subject and Academic Period are checked against Workday too (CheckSubject, CheckPeriod, switched on 2026-11-07):
+    // a subject that is active now, period *W1 (Winter Term 1, every year). TEST (for cleanup) goes in Section.
+    const subj = (((await wql(token, 'SELECT abbreviation FROM courseSubjects WHERE inactive = false ORDER BY abbreviation', 1)).data || [])[0] || {}).abbreviation || '*';
+    const [a1, a2, a3, a4, a5] = ['*', subj, run3, 'TEST', '*W1'];
     const pname = `${appCode}:PATTERN:${a1}:${a2}:${a3}:${a4}:${a5}`;
     const a = await launchAndVerify(token, 'IORC_0037_XFD_SEC_Create_Pattern_Shell_Org', {
       comsAppId: app.id, patternName: pname, workerId: me.id, attribute1: a1, attribute2: a2, attribute3: a3,
