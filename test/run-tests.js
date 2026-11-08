@@ -1086,6 +1086,10 @@ async function smoke(token, me) {
     if (L.wildcards(per).join() !== '*,*W1,*W2,*S') throw new Error(`period wildcards ${L.wildcards(per)}`);
     if (L.yearCodes(per, '2024-25 Winter Term 1 (UBC-V)').join() !== '2024,2024W,2025S') throw new Error(`year codes ${L.yearCodes(per, '2024-25 Winter Term 1 (UBC-V)')}`);
     if (L.wildcards('[A-Z]{2,4}(_[A-Z])?').length) throw new Error('a required field must offer no wildcards');
+    // a course of the picked subject can be any course (*) or a level (1* to 6*); a subject of * has no course list
+    const crs = '\\*|[0-9]{1,2}\\*|[0-9]{3}[A-Z]?';
+    if (L.wildcards(crs).join() !== '*,1*,2*,3*,4*,5*,6*') throw new Error(`course wildcards ${L.wildcards(crs)}`);
+    if (L.fillValue('course', 'CODE:*') !== '*' || L.subjectWql('*') !== '') throw new Error('course * or subject *');
     if (L.fillValue('academicPeriod', 'CODE:2024W') !== '2024W' || L.fillValue('academicUnitCode', 'MATH') !== 'MATH') throw new Error('fillValue codes');
     // course list: subject WID, then its courses (dev has no course definitions: 0 rows is fine, an error isn't)
     const sw = await run(L.subjectWql(subj || 'CHEM'), 1);

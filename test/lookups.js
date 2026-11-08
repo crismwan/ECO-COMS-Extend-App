@@ -34,7 +34,7 @@ const searchWql = (kind, q) => (kind === 'courseSubject' ? F.subjectSearch + tex
   : kind === 'academicUnitCode' ? F.unitSearch + text(q) + F.unitSearchMid + text(q) + "') ORDER BY academicUnitCode"
   : F.periodSearch + text(q) + "' ORDER BY name");
 // wildcard choices offered when the field's format allows them (comsPatterns.wildcards / yearCodes)
-const wildcards = (regex) => ['*', '*W1', '*W2', '*S'].filter((c) => new RegExp('^(?:' + regex + ')$').test(c));
+const wildcards = (regex) => ['*', '*W1', '*W2', '*S', '1*', '2*', '3*', '4*', '5*', '6*'].filter((c) => new RegExp('^(?:' + regex + ')$').test(c));
 const yearCodes = (regex, periodName) => { const y = year(periodName); return [y, y + 'W', (/^[0-9]+$/.test(y) ? String(+y + 1) : y) + 'S'].filter((c) => new RegExp('^(?:' + regex + ')$').test(c)); };
 const fillValue = (kind, id) => {
   if (id.startsWith('CODE:')) return id.slice(5);
