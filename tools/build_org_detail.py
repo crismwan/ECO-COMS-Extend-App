@@ -58,7 +58,10 @@ page = {"id": "shellOrgDetail", "securityDomains": ["ManageCOMSShellOrgs"],
         {"type": "instanceList", "id": "orgInstanceList", "label": "Organization", "view": True, "relatedTask": True, "enabled": False, "widKey": "id",
          "values": "<% empty(queryParams.orgId) ? [] : [{ 'id': queryParams.orgId, 'descriptor': " + NAME + " }] %>"},
         {"type": "text", "id": "orgCodeText", "label": "Code", "enabled": False, "value": "<% " + CODE + " %>"},
-        {"type": "button", "id": "changeStatusButton", "label": "<% " + ACTIVE + " ? 'Inactivate Organization' : 'Reactivate Organization' %>", "action": "AUXILIARY",
+        # 2026-11-08: browser Back from Manage Role Assignment can reopen this page without its parameters; say so,
+        # and don't offer a status change for an organization that isn't there
+        empty_msg("orgNotFoundText", "size(" + ORG + ") == 0", "This organization wasn't found. Open it again from Shell Org Manager."),
+        {"type": "button", "id": "changeStatusButton", "visible": "<% size(" + ORG + ") > 0 %>", "label": "<% " + ACTIVE + " ? 'Inactivate Organization' : 'Reactivate Organization' %>", "action": "AUXILIARY",
          "taskReference": {"taskId": "manageShellOrgStatus", "parameterBindings": {
            "orgId": "<% queryParams.orgId ?? '' %>", "orgCode": "<% " + CODE + " %>", "orgName": "<% " + NAME + " %>",
            "currentStatus": "<% " + ACTIVE + " ? 'Active' : 'Inactive' %>", "effectiveDate": "<% date:now().format('yyyy-MM-dd') %>",

@@ -203,8 +203,17 @@
                   "value": "<% (size(((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))) > 0 ? (((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))[0].code ?? '') : (queryParams.orgCode ?? '')) %>"
                 },
                 {
+                  "type": "text",
+                  "id": "orgNotFoundText",
+                  "label": "ⓘ Nothing to show",
+                  "enabled": false,
+                  "visible": "<% size(((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))) == 0 %>",
+                  "value": "This organization wasn't found. Open it again from Shell Org Manager."
+                },
+                {
                   "type": "button",
                   "id": "changeStatusButton",
+                  "visible": "<% size(((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))) > 0 %>",
                   "label": "<% (size(((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))) > 0 && ((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))[0].cf_active1 == true) ? 'Inactivate Organization' : 'Reactivate Organization' %>",
                   "action": "AUXILIARY",
                   "taskReference": {
