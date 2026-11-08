@@ -1037,7 +1037,7 @@ async function smoke(token, me) {
           const back = require('./rules.js').compileRule(f.ruleType, f.ruleLength || '', f.ruleValues || '', f.ruleOption || 'none', f.blankIsWildcard === true);
           if (back !== f.regex) bad.push(`${a.appId} field ${i + 1}: rule ${f.ruleType} compiles to ${back}, stored ${f.regex}`);
         }
-        if (f.lookup && !['none', 'academicUnitCode', 'courseSubject', 'academicPeriod'].includes(f.lookup)) bad.push(`${a.appId} field ${i + 1}: unknown Workday check ${f.lookup}`);
+        if (f.lookup && !['none', 'academicUnitCode', 'courseSubject', 'academicPeriod', 'course'].includes(f.lookup)) bad.push(`${a.appId} field ${i + 1}: unknown Workday check ${f.lookup}`);
       });
       if ((a.namePrefix || '') !== (s.prefixes || []).join(',')) bad.push(`${a.appId}: namePrefix ${a.namePrefix} differs from the format's prefixes`);
     }
