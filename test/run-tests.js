@@ -2589,6 +2589,21 @@ async function shellRolesQuery(token) {
 
 async function probe(token) {
   console.log('\n-- Probe (read-only) --');
+  // TEMP 2026-11-07: course data sources for the Course pick-list (removed after use)
+  for (const term of ['course', 'course definition', 'course listing']) {
+    try { const d = (await request('GET', `${API}/wql/v1/dataSources?search=${encodeURIComponent(term)}&limit=30`, token)).data || [];
+      console.log(`   CRS ds "${term}": ${d.map((x) => x.alias).join(' ')}`); } catch (e) { console.log(`   CRS ds error ${String(e.message).slice(0, 150)}`); }
+  }
+  for (const alias of ['courses', 'courseDefinitions', 'courseListings', 'allCourses']) {
+    try {
+      const ds = ((await request('GET', `${API}/wql/v1/dataSources?alias=${alias}&limit=5`, token)).data || [])[0];
+      if (!ds) { console.log(`   CRS ${alias}: none`); continue; }
+      const fields = [];
+      for (let off = 0; off < 3000; off += 100) { const pg = (await request('GET', `${API}/wql/v1/dataSources/${ds.id}/fields?limit=100&offset=${off}`, token)).data || []; fields.push(...pg); if (pg.length < 100) break; }
+      console.log(`   CRS ${alias} (${ds.descriptor}) fields: ${fields.map((f) => `${f.alias}[${f.type}]`).join(' ').slice(0, 2500)}`);
+    } catch (e) { console.log(`   CRS ${alias} error ${String(e.message).slice(0, 200)}`); }
+  }
+  return;
   // 2026-11-06: the subtype design's WQL, exactly as the pages send it (presentation/wqlQueries)
   {
     const q = (n) => JSON.parse(fs.readFileSync(path.join(ROOT, 'presentation', 'wqlQueries', n + '.wqlquery'), 'utf8')).query;

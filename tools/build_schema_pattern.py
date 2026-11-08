@@ -48,51 +48,60 @@ FIND = lambda i: f"patternField{i + 1}FindInstanceList"
 LK = lambda j: f"comsPatterns.lookupOf(s, {j})"
 
 
-def recheck(j):
-    """e<j> = field j's error: its format and academic unit check, then (2026-11-07) a course subject / academic period
-    check with its own WQL query (wdLookup), run only when the field has that check, a value other than * and the right
-    format. Needs s (schema) and u (academic unit codes) set first."""
-    return (f"  let v{j} = {FIELD(j)}.value;\n  let q{j} = comsPatterns.fieldQuery(s, {j}, v{j}, u);\n  let t{j} = 0 - 1;\n  let d{j} = [];\n"
-            f"  if (q{j} != '') {{ let r{j} = wdLookup.invoke({{'q': q{j}, 'lim': '50'}}); t{j} = r{j}.total ?? (0 - 1); d{j} = r{j}.data ?? []; }}\n"
-            f"  let e{j} = comsPatterns.fieldError(s, {j}, v{j}, u, t{j}, d{j});\n")
+def recheck_all():
+    """es = every field's error (format, academic unit, and for fields with a Workday check one WQL query each through
+    wdLookup); te / fe = those errors split between the typed boxes and the Workday pick-lists. Needs s and u first.
+    One script call for all fields keeps the page under Workday's 100 KB limit."""
+    return ("  let vs = " + VALUES + ";\n"
+            "  let qs = vs.map((v, j) => { comsPatterns.fieldQuery(s, j, v, u) });\n"
+            "  let rs = qs.map(q => { q == '' ? null : wdLookup.invoke({'q': q, 'lim': '50'}) });\n"
+            "  let es = comsPatterns.fieldErrors(s, vs, u, rs);\n"
+            "  let te = comsPatterns.textErrors(s, es);\n"
+            "  let fe = comsPatterns.findErrors(s, es);\n")
 
 
-def field_on_change(i, target='self', fill=''):
+def show_errors(prefix='  '):
+    return "".join(f"{prefix}if (te[{j}] != '') {{ {FIELD(j)}.setError(te[{j}]); }} else {{ {FIELD(j)}.clearError(); }}\n"
+                   f"{prefix}if (fe[{j}] != '') {{ {FIND(j)}.setError(fe[{j}]); }} else {{ {FIND(j)}.clearError(); }}\n"
+                   for j in range(MAX_FIELDS))
+
+
+def field_on_change(i, target='self', fill='', after=''):
     # Recheck every field, not just this one: a duplicate error set on another field for an earlier
     # name would otherwise stay after the name changes (seen live 2026-11-04). Then flag a duplicate
     # of the current name on this field only.
-    body = "".join(recheck(j) + f"  if (e{j} != '') {{ {FIELD(j)}.setError(e{j}); }} else {{ {FIELD(j)}.clearError(); }}\n"
-                   for j in range(MAX_FIELDS))
     return ("<%\n"
             f"  let s = {SCH};\n  let u = {UNITS};\n"
-            + fill + body +
-            f"  let err = e{i};\n"
+            + fill + recheck_all() + show_errors() +
+            f"  let err = es[{i}];\n"
             f"  let pn = {NAME};\n"
             "  patternPreviewText.setValue(pn);\n"
             "  if (err == '' && (existingOrgs.data ?? []).filter(o => { o.code == pn }).size() > 0) {\n"
             f"    {target}.setError('A pattern with this name already exists: ' + pn);\n"
-            "  }\n%>")
+            "  }\n" + after + "%>")
 
 
 def find_on_change(i):
-    # the picked entry's value goes into the field below (a period as its short form, e.g. 2024W1; nothing picked = blank),
-    # then the usual recheck of every field
-    fill = (f"  {FIND(i)}.clearError();\n"
-            f"  let fv = empty(self.value) ? '' : comsPatterns.fillValue(comsPatterns.pickerKind(s, {i}), self.value[0]);\n"
-            f"  if (!empty(self.value) && fv == '') {{ {FIND(i)}.setError('This period has no short form (W1, W2, W or S): pick its year or session instead.'); }}\n"
-            f"  {FIELD(i)}.setValue(fv);\n")
-    return field_on_change(i, FIELD(i), fill)
+    # the picked entry's value goes into the field's (hidden) box: a period as its short form, e.g. 2024W1; nothing
+    # picked = blank. Then the usual recheck of every field.
+    fill = (f"  let fv = empty(self.value) ? '' : comsPatterns.fillValue(comsPatterns.pickerKind(s, {i}), self.value[0]);\n"
+            f"  if (empty(self.value) || fv != '') {{ {FIELD(i)}.setValue(fv); }}\n")
+    after = (f"  if (!empty(self.value) && fv == '') {{ self.setError('This period has no short form (W1, W2, W or S): pick its year or session instead.'); }}\n")
+    return field_on_change(i, 'self', fill, after)
+
+
+# the message for the whole name (duplicate, or Workday refused) goes under the first field, typed or picked
+FIRST_ERR = lambda m: (f"if (comsPatterns.pickerKind(s, 0) == '') {{ {FIELD(0)}.setError({m}); }} else {{ {FIND(0)}.setError({m}); }}")
 
 
 def submit():
     lines = ["<%", f"  let s = {SCH};", f"  let u = {UNITS};", "  let valid = true;", "  prefixDropdown.clearError();", "  effectiveDate.clearError();"]
-    lines += [f"  {FIELD(i)}.clearError();" for i in range(MAX_FIELDS)]
+    lines += [f"  {FIELD(i)}.clearError();\n  {FIND(i)}.clearError();" for i in range(MAX_FIELDS)]
     lines += ["  if (empty(queryParams.appCode) || empty(s)) {", "    valid = false;", "  } else {",
               "    if (comsPatterns.prefixCount(s) > 1 && empty(prefixDropdown.value)) {",
               "      prefixDropdown.setError('Pick a pattern prefix.');", "      valid = false;", "    }"]
-    for i in range(MAX_FIELDS):
-        lines += [recheck(i).rstrip("\n"),
-                  f"    if (e{i} != '') {{ {FIELD(i)}.setError(e{i}); valid = false; }}"]
+    lines += [recheck_all().rstrip("\n"), show_errors("    ").rstrip("\n"),
+              "    if (es.filter(e => { e != '' }).size() > 0) { valid = false; }"]
     lines += ["  }",
               "  if (empty(effectiveDate.value)) {", "    effectiveDate.setError('Effective Date is required.');", "    valid = false;",
               "  } else if (!comsValidations.isWeekday(effectiveDate.value)) {", "    effectiveDate.setError(comsValidations.errorWeekday());", "    valid = false;",
@@ -100,7 +109,7 @@ def submit():
               "  if (valid) {",
               f"    let dupName = {NAME};",
               "    if ((existingOrgs.data ?? []).filter(o => { o.code == dupName }).size() > 0) {",
-              f"      {FIELD(0)}.setError('A pattern with this name already exists: ' + dupName);", "      valid = false;", "    }", "  }",
+              "      " + FIRST_ERR("'A pattern with this name already exists: ' + dupName"), "      valid = false;", "    }", "  }",
               "  if (valid) {",
               f"    let rec = comsPatterns.recordFor(comsApplications.data, queryParams.appCode);",
               f"    let pn = {NAME};",
@@ -111,7 +120,7 @@ def submit():
               + ", 'ed': effectiveDate.value.format('yyyy-MM-dd')});",
               "    let created = (verifyPattern.invoke({'lim': '10000'}).data ?? []).filter(o => { o.code == pn }).size() > 0;",
               "    if (!created) {",
-              f"      {FIELD(0)}.setError('Workday rejected this request, so nothing was created. Check the values and try again.');",
+              "      " + FIRST_ERR("'Workday rejected this request, so nothing was created. Check the values and try again.'"),
               "      valid = false;", "    }", "  }", "  valid;", "%>"]
     return "\n".join(lines)
 
@@ -127,7 +136,7 @@ for i in range(MAX_FIELDS):
     fields.append({"type": "instanceList", "id": FIND(i), "multiSelect": False,
                    "label": f"<% comsPatterns.fieldLabel({SCH}, {i}) %>",
                    "visible": f"<% {KIND(i)} != '' %>",
-                   "helpText": "Click to browse, or type a code or name to search Workday (type * for the wildcards). The value it puts in the name shows below.",
+                   "helpText": "Click to browse, or type a code or name to search Workday (type * for the wildcards). Leave empty for any.",
                    "values": f"<% comsPatterns.rootFolders({SCH}, {i}, {AU}, wdYears.data ?? []) %>",
                    "dynamicMonikerLevels": ("<%\n"
                        "  const sel = self.promptSelections;\n"
@@ -139,11 +148,12 @@ for i in range(MAX_FIELDS):
                                 f"comsPatterns.searchRows({SCH}, {i}, event.query, wdLookup.invoke({{'q': comsPatterns.searchQuery({SCH}, {i}, event.query), 'lim': '50'}}).data ?? []) %>"),
                    "onChange": find_on_change(i)})
     # the value that goes into the name: typed for ordinary fields, filled from the list (read-only) for checked ones
+    # the value that goes into the name: typed for ordinary fields; hidden for checked ones, filled from the list
+    # (2026-11-07, product owner: no per-field preview, the Pattern Name Preview shows the whole name)
     fields.append({"type": "text", "id": FIELD(i),
-                   "label": f"<% comsPatterns.fieldLabel({SCH}, {i}) + ({KIND(i)} == '' ? '' : ' in the name') %>",
-                   "enabled": f"<% {KIND(i)} == '' %>",
-                   "visible": f"<% comsPatterns.fieldCount({SCH}) > {i} %>",
-                   "placeholder": f"<% comsPatterns.fieldCount({SCH}) > {i} ? ({KIND(i)} == '' ? ('e.g. ' + {SCH}.fields[{i}].example) : 'Pick above (blank = any)') : '' %>",
+                   "label": f"<% comsPatterns.fieldLabel({SCH}, {i}) %>",
+                   "visible": f"<% comsPatterns.fieldCount({SCH}) > {i} && {KIND(i)} == '' %>",
+                   "placeholder": f"<% comsPatterns.fieldCount({SCH}) > {i} ? ('e.g. ' + {SCH}.fields[{i}].example) : '' %>",
                    "onChange": field_on_change(i)})
 
 PICK_ROWS = "(comsApplications.data ?? []).filter(x => { !empty(x.patternSchema) && x.active != false }).map(x => { x.appId }).distinct().sort().map(a => { {'appCode': a} })"
@@ -211,8 +221,7 @@ page = {"id": "newSchemaPattern", "securityDomains": ["ManageCOMSShellOrgs"], "i
           {"type": "text", "id": "formatGuideText", "label": "Format", "enabled": False, "value": f"<% comsPatterns.formatGuide({SCH}) %>"},
           {"type": "dropdown", "id": "prefixDropdown", "label": "Pattern Prefix", "values": f"<% comsPatterns.prefixOptions({SCH}) %>",
            "visible": f"<% comsPatterns.prefixCount({SCH}) > 1 %>",
-           "onChange": "<%\n  self.clearError();\n  let s = " + SCH + ";\n  let u = " + UNITS + ";\n" + "".join(
-               recheck(j) + f"  if (e{j} != '') {{ {FIELD(j)}.setError(e{j}); }} else {{ {FIELD(j)}.clearError(); }}\n" for j in range(MAX_FIELDS))
+           "onChange": "<%\n  self.clearError();\n  let s = " + SCH + ";\n  let u = " + UNITS + ";\n" + recheck_all() + show_errors()
                + f"  patternPreviewText.setValue({NAME});\n%>"},
           {"type": "readOnlyText", "id": "patternPreviewText", "label": "Pattern Name Preview",
            # page-load value: the fields are declared further down, so they can't be referenced here yet

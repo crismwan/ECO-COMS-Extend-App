@@ -150,6 +150,20 @@ var fieldError = function(schema, i, value, units, total, rows) {
   (e == '' && lookupMiss(lookupOf(schema, i), value, total, rows)) ? lookupMessage(lookupOf(schema, i), fieldLabel(schema, i), value) : e;
 };
 
+/* Every field at once: rs holds each field's lookup result (null when it needed none), as the page ran fieldQuery's
+   queries. textErrors / findErrors split the errors between the typed boxes and the Workday pick-lists. */
+var fieldErrors = function(schema, values, units, rs) {
+  values.map((v, j) => { fieldError(schema, j, v, units, empty(rs[j]) ? (0 - 1) : (rs[j].total ?? (0 - 1)), empty(rs[j]) ? [] : (rs[j].data ?? [])) });
+};
+
+var textErrors = function(schema, errs) {
+  errs.map((e, j) => { pickerKind(schema, j) == '' ? e : '' });
+};
+
+var findErrors = function(schema, errs) {
+  errs.map((e, j) => { pickerKind(schema, j) == '' ? '' : e });
+};
+
 /* Pickers (2026-11-07): a field with a Workday check is picked from a list, not typed. Folders: the wildcards the field's
    format allows (* any; for periods *W1, *W2, *S every year), then units by subtype (from the page's unit list), subjects
    by first letter, periods by academic year (each year also offers its whole year, e.g. 2024, and sessions, 2024W / 2024S).
@@ -324,6 +338,9 @@ var appCodes = function(orgs, apps) {
   "lookupMessage": lookupMessage,
   "fieldQuery": fieldQuery,
   "fieldError": fieldError,
+  "fieldErrors": fieldErrors,
+  "textErrors": textErrors,
+  "findErrors": findErrors,
   "rootFolders": rootFolders,
   "levelRows": levelRows,
   "levelWql": levelWql,
