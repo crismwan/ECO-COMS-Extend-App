@@ -77,14 +77,14 @@ kpis = [
     None,   # set below (needs a let)
 ]
 kpis[4] = {"type": "card", "cardId": "CountCard", "parameters": (f"<% let runs = {RUNS}.filter(r => {{ comsInsights.inDays(r.uploadedAt, comsInsights.lastDays(30)) }}); "
-                         f"{{ 'title': 'Bulk Runs, Last 30 Days', 'countText': '' + size(runs) + ' runs · ' + runs.filter(r => {{ ('' + (r.status ?? '')).upperCase().contains('FAIL') }}).size() + ' failed', 'subtitle': 'Uploads and grid edits' }} %>")}
+                         f"{{ 'title': 'Bulk Runs, Last 30 Days', 'countText': '' + size(runs) + (size(runs) == 1 ? ' run · ' : ' runs · ') + runs.filter(r => {{ ('' + (r.status ?? '')).upperCase().contains('FAIL') }}).size() + ' failed', 'subtitle': 'Uploads and grid edits' }} %>")}
 
 charts = [
     chart("Role Requests by Status", f"comsInsights.statusSlices({REQ})", f"'' + size({REQ}) + ' requests'"),
     chart("Role Requests by Application", f"comsInsights.appSlices({REQ}, comsApplications.data ?? [])", "'Top applications'"),
     {"type": "card", "cardId": "ShellOrgStatusChart", "parameters": "<% { 'activeCount': size((allShellOrgs.data ?? []).filter(o => { (o.code ?? '').startsWith('X:') && !(o.code ?? '').contains(':PATTERN') && o.cf_active1 == true })), 'inactiveCount': size((allShellOrgs.data ?? []).filter(o => { (o.code ?? '').startsWith('X:') && !(o.code ?? '').contains(':PATTERN') && o.cf_active1 != true })) } %>"},
     {"type": "card", "cardId": "AuditActionChart", "parameters": f"<% let f = comsAuditFilters.filterLogs({AUD}, '30d', ''); {{ 'addCount': comsAuditFilters.countAction(f, 'ADD'), 'inactivateCount': comsAuditFilters.countAction(f, 'INACTIVATE'), 'reactivateCount': comsAuditFilters.countAction(f, 'REACTIVATE'), 'assignCount': comsAuditFilters.countAction(f, 'ASSIGN POSITION'), 'removeCount': comsAuditFilters.countAction(f, 'REMOVE POSITION'), 'requestCount': comsAuditFilters.countAction(f, 'REQUEST'), 'approveCount': comsAuditFilters.countAction(f, 'APPROVE'), 'denyCount': comsAuditFilters.countAction(f, 'DENY'), 'deleteCount': comsAuditFilters.countAction(f, 'DELETE'), 'totalText': '' + size(f) + ' records, last 30 days' }} %>"},
-    chart("Bulk Runs by Status", f"comsInsights.bulkSlices({RUNS})", f"'' + size({RUNS}) + ' runs'"),
+    chart("Bulk Runs by Status", f"comsInsights.bulkSlices({RUNS})", f"'' + size({RUNS}) + (size({RUNS}) == 1 ? ' run' : ' runs')"),
 ]
 
 

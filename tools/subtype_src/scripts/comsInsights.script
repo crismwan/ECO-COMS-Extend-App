@@ -26,7 +26,9 @@ var appOfIn = function(r, apps) {
   let a = appOf(r);
   let text = '' + (r.application ?? '');
   let hit = (a.startsWith('X:') || empty(text)) ? [] : apps.filter(x => { !empty(x.name) && ('' + (x.appId ?? '')).startsWith('X:') && text.contains(x.name) });
-  size(hit) == 0 ? a : ('' + hit[0].appId);
+  /* 2026-11-08: a short code alone ("AOC", older AAA requests) is the code in brackets (X:BPMS(AOC)) or after X: (X:AOC) */
+  let byCode = (a.startsWith('X:') || empty(a) || size(hit) > 0) ? [] : apps.filter(x => { ('' + (x.appId ?? '')).endsWith('(' + a + ')') || ('' + (x.appId ?? '')) == ('X:' + a) });
+  size(hit) > 0 ? ('' + hit[0].appId) : (size(byCode) > 0 ? ('' + byCode[0].appId) : a);
 };
 
 var isShellOrg = function(o) {

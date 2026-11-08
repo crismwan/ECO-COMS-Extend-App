@@ -265,7 +265,7 @@
                 {
                   "type": "card",
                   "cardId": "QuickBulkRoleResultsCard",
-                  "parameters": "<% let runs = (bulkRunPage0.data ?? []).filter(r => { comsInsights.inDays(r.uploadedAt, comsInsights.lastDays(30)) }); { 'mark': '', 'b_batch': (''), 'b_quick': (''), 'title': 'Bulk Runs, Last 30 Days', 'countText': '' + size(runs) + ' runs · ' + runs.filter(r => { ('' + (r.status ?? '')).upperCase().contains('FAIL') }).size() + ' failed', 'subtitle': 'Uploads and grid edits' } %>"
+                  "parameters": "<% let runs = (bulkRunPage0.data ?? []).filter(r => { comsInsights.inDays(r.uploadedAt, comsInsights.lastDays(30)) }); { 'mark': '', 'b_batch': (''), 'b_quick': (''), 'title': 'Bulk Runs, Last 30 Days', 'countText': '' + size(runs) + (size(runs) == 1 ? ' run · ' : ' runs · ') + runs.filter(r => { ('' + (r.status ?? '')).upperCase().contains('FAIL') }).size() + ' failed', 'subtitle': 'Uploads and grid edits' } %>"
                 }
               ]
             }
@@ -303,7 +303,7 @@
                 {
                   "type": "card",
                   "cardId": "BreakdownChart",
-                  "parameters": "<% { 'title': 'Bulk Runs by Status', 'subtitle': '' + size((bulkRunPage0.data ?? [])) + ' runs', 'slices': comsInsights.bulkSlices((bulkRunPage0.data ?? [])) } %>"
+                  "parameters": "<% { 'title': 'Bulk Runs by Status', 'subtitle': '' + size((bulkRunPage0.data ?? [])) + (size((bulkRunPage0.data ?? [])) == 1 ? ' run' : ' runs'), 'slices': comsInsights.bulkSlices((bulkRunPage0.data ?? [])) } %>"
                 }
               ]
             }
