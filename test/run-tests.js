@@ -1931,10 +1931,11 @@ async function seedApps(token) {
     for (const cur of have.filter((r) => only.includes(r.appId) && r.patternSchema)) {
       const sch = JSON.parse(cur.patternSchema);
       const hits = sch.fields.filter((f) => (f.fieldLabel || '').trim().toLowerCase() === label.trim().toLowerCase());
-      const changed = hits.filter((f) => (f.lookup || '') !== kind);
+      const changed = hits.filter((f) => (f.lookup || 'none') !== kind || (arg('--rename') && f.fieldLabel !== arg('--rename')));
       console.log(`   ${cur.appId}: ${hits.length ? hits.map((f) => `${f.fieldLabel} ${f.lookup || 'none'} -> ${kind}`).join(', ') : `no ${label} field`}${changed.length ? '' : ' (already set)'}`);
       if (!APPLY || !changed.length) continue;
-      changed.forEach((f) => { f.lookup = kind; });
+      const rn = arg('--rename');
+      changed.forEach((f) => { if (kind === 'none') delete f.lookup; else f.lookup = kind; if (rn) f.fieldLabel = rn; });
       const want = JSON.stringify(sch);
       await test(`Seed.lookup ${cur.appId}`, async () => {
         await request('PATCH', `${BO}/comsApplications/${cur.id}`, token, { patternSchema: want });

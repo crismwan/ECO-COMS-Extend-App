@@ -25,17 +25,16 @@
           "lookup": "courseSubject"
         },
         {
-          "fieldLabel": "Course",
+          "fieldLabel": "Course Number",
           "regex": "\\*|[0-9]{1,2}\\*|[0-9]{3}[A-Z]?",
           "hint": "A course number (e.g. 100, 100A) or a start followed by * (e.g. 1* for every 100-level course). Leave blank for any course.",
           "example": "100",
-          "blankIsWildcard": true,
-          "lookup": "course"
+          "blankIsWildcard": true
         },
         {
           "fieldLabel": "Section",
           "regex": "\\*|[A-Z0-9_]{1,6}",
-          "hint": "A section code: capital letters, digits or _, up to 6 (e.g. 101, L1A, A_900). Leave blank for any section, unless Course is a specific course: then enter it, or *.",
+          "hint": "A section code: capital letters, digits or _, up to 6 (e.g. 101, L1A, A_900). Leave blank for any section, unless Course Number is a specific course: then enter it, or *.",
           "example": "101",
           "blankIsWildcard": true
         },
@@ -149,12 +148,11 @@
           "lookup": "courseSubject"
         },
         {
-          "fieldLabel": "Course",
+          "fieldLabel": "Course Number",
           "regex": "\\*|[0-9]{1,2}\\*|[0-9]{3}[A-Z]?",
           "hint": "A course number (e.g. 100, 100A) or a start followed by * (e.g. 1* for every 100-level course). Leave blank for any course.",
           "example": "1*",
-          "blankIsWildcard": true,
-          "lookup": "course"
+          "blankIsWildcard": true
         }
       ],
       "examples": [
