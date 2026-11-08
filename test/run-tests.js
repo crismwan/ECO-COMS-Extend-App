@@ -1923,6 +1923,28 @@ async function seedApps(token) {
   const have = (await request('GET', `${BO}/comsApplications?limit=100`, token)).data || [];
   // --only X:A,X:B: just these applications, replacing their stored formats (other records' in-app edits stay)
   const oi = argv.indexOf('--only'); const only = oi >= 0 ? String(argv[oi + 1] || '').split(',').map((s) => s.trim()).filter(Boolean) : [];
+  // --lookup Course=course (with --only): set one field's Workday check in the STORED format, leaving every other
+  // in-app edit as it is (2026-11-08: Course picked from the subject's courses for Clockwork and Final Grades)
+  const lk = arg('--lookup');
+  if (lk) {
+    const [label, kind] = lk.split('=');
+    for (const cur of have.filter((r) => only.includes(r.appId) && r.patternSchema)) {
+      const sch = JSON.parse(cur.patternSchema);
+      const hits = sch.fields.filter((f) => (f.fieldLabel || '').trim().toLowerCase() === label.trim().toLowerCase());
+      const changed = hits.filter((f) => (f.lookup || '') !== kind);
+      console.log(`   ${cur.appId}: ${hits.length ? hits.map((f) => `${f.fieldLabel} ${f.lookup || 'none'} -> ${kind}`).join(', ') : `no ${label} field`}${changed.length ? '' : ' (already set)'}`);
+      if (!APPLY || !changed.length) continue;
+      changed.forEach((f) => { f.lookup = kind; });
+      const want = JSON.stringify(sch);
+      await test(`Seed.lookup ${cur.appId}`, async () => {
+        await request('PATCH', `${BO}/comsApplications/${cur.id}`, token, { patternSchema: want });
+        const back = ((await request('GET', `${BO}/comsApplications/${cur.id}`, token)) || {}).patternSchema;
+        if (back !== want) throw new Error(`stored ${String(back || '').length} of ${want.length} characters`);
+        pass(`Seed.lookup ${cur.appId}`, `${label} checked as ${kind}`);
+      });
+    }
+    return;
+  }
   for (const a of loadSchemas().filter((x) => !only.length || only.includes(x.appId))) {
     const body = { name: a.name, appId: a.appId, orgType: a.appId, orgSubtype: 'X:SHELL', namePrefix: a.prefixes.join(','),
       patternSchema: JSON.stringify(a.schema), active: true, description: `Pattern format from Application Patterns.xlsx: ${a.prefixes.join('/')} + ${a.fields.map((x) => x.fieldLabel).join(', ')}` };

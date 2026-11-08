@@ -8,7 +8,7 @@ on:
       task:
         description: "static = repo checks; smoke = read-only; full = smoke + write tests; isu = ISU lockdown (only once ISU writes are live); cleanup-dry-run / cleanup-apply = list / remove TEST data; repair-dry-run / repair-apply = one-off data fixes; publish-template = rebuild the pre-filled Excel template from Workday and publish it to Download Template"
         type: choice
-        options: [static, smoke, full, isu, seconduser, cleanup-dry-run, cleanup-apply, repair-dry-run, repair-apply, purge-dry-run, purge-apply, demo-seed, datacheck, probe, bulkvalidate, bulkapply, subflows, graphql, eventlinks, timing, seed-apps-dry-run, seed-apps-apply, pattern-guard, org-guard, gateway, prompts, possearch, postree, orgtree, aaaname, appsummary, publish-template]
+        options: [static, smoke, full, isu, seconduser, cleanup-dry-run, cleanup-apply, repair-dry-run, repair-apply, purge-dry-run, purge-apply, demo-seed, datacheck, probe, bulkvalidate, bulkapply, subflows, graphql, eventlinks, timing, seed-apps-dry-run, seed-apps-apply, course-lookup-dry-run, course-lookup-apply, pattern-guard, org-guard, gateway, prompts, possearch, postree, orgtree, aaaname, appsummary, publish-template]
         default: smoke
       also:
         description: "cleanup only: extra record ids (comma-separated) to treat as test data"
@@ -63,6 +63,8 @@ jobs:
             repair-apply)    node test/run-tests.js repair --apply ${{ github.event.inputs.repair_flags }} ${UNASSIGN:+--unassign "$UNASSIGN"} ${ONLY:+--drop-audit "$ONLY"} ;;
             seed-apps-dry-run) node test/run-tests.js seedapps ${ONLY:+--only "$ONLY"} ;;
             seed-apps-apply)   node test/run-tests.js seedapps --apply ${ONLY:+--only "$ONLY"} ;;
+            course-lookup-dry-run) node test/run-tests.js seedapps --lookup Course=course --only "$ONLY" ;;
+            course-lookup-apply)   node test/run-tests.js seedapps --apply --lookup Course=course --only "$ONLY" ;;
             pattern-guard)     node test/run-tests.js patternguard ;;
             org-guard)         node test/run-tests.js orgguard ;;
             gateway)           node test/run-tests.js gateway ;;
