@@ -2589,20 +2589,17 @@ async function shellRolesQuery(token) {
 
 async function probe(token) {
   console.log('\n-- Probe (read-only) --');
-  // TEMP 2026-11-07: course data sources for the Course pick-list (removed after use)
-  for (const term of ['course', 'course definition', 'course listing']) {
-    try { const d = (await request('GET', `${API}/wql/v1/dataSources?search=${encodeURIComponent(term)}&limit=30`, token)).data || [];
-      console.log(`   CRS ds "${term}": ${d.map((x) => x.alias).join(' ')}`); } catch (e) { console.log(`   CRS ds error ${String(e.message).slice(0, 150)}`); }
+  // TEMP 2026-11-07: course data for the Course pick-list (removed after use)
+  const crs = async (label, q, lim = 5) => { const t0 = Date.now(); try { const r = await wql(token, q, lim); console.log(`   CRS ${label}: total=${r.total} ${Date.now() - t0}ms ${JSON.stringify((r.data || []).slice(0, 4)).slice(0, 1500)}`); return r.data || []; } catch (e) { console.log(`   CRS ${label}: error ${String(e.message).slice(0, 250)}`); return []; } };
+  await crs('all', 'SELECT course, title, abbreviatedTitle, courseSubjects, courseListings, academicUnits, hiddenCourse, lastAvailable FROM courseDefinitions', 4);
+  const subj = (await wql(token, "SELECT courseSubject, abbreviation FROM courseSubjects WHERE abbreviation in ('CHEM','CHEM_V','MATH','MATH_V','PHYS_V','ENPH_V','CCST_V')", 20)).data || [];
+  console.log(`   CRS subjects: ${JSON.stringify(subj).slice(0, 800)}`);
+  for (const x of subj.slice(0, 4)) {
+    const id = (x.courseSubject || {}).id;
+    await crs(`by subject ${x.abbreviation}`, `SELECT course, title, courseListings FROM courseDefinitions WHERE courseSubjects in (${id})`, 200);
   }
-  for (const alias of ['courses', 'courseDefinitions', 'courseListings', 'allCourses']) {
-    try {
-      const ds = ((await request('GET', `${API}/wql/v1/dataSources?alias=${alias}&limit=5`, token)).data || [])[0];
-      if (!ds) { console.log(`   CRS ${alias}: none`); continue; }
-      const fields = [];
-      for (let off = 0; off < 3000; off += 100) { const pg = (await request('GET', `${API}/wql/v1/dataSources/${ds.id}/fields?limit=100&offset=${off}`, token)).data || []; fields.push(...pg); if (pg.length < 100) break; }
-      console.log(`   CRS ${alias} (${ds.descriptor}) fields: ${fields.map((f) => `${f.alias}[${f.type}]`).join(' ').slice(0, 2500)}`);
-    } catch (e) { console.log(`   CRS ${alias} error ${String(e.message).slice(0, 200)}`); }
-  }
+  const ds = (await request('GET', `${API}/wql/v1/dataSources?search=${encodeURIComponent('listing')}&limit=50`, token)).data || [];
+  console.log(`   CRS listing sources: ${ds.map((x) => x.alias).filter((a) => /ourse|isting/.test(a)).join(' ')}`);
   return;
   // 2026-11-06: the subtype design's WQL, exactly as the pages send it (presentation/wqlQueries)
   {
