@@ -34,7 +34,7 @@
         {
           "fieldLabel": "Section",
           "regex": "\\*|[A-Z0-9_]{1,6}",
-          "hint": "A section code: capital letters, digits or _, up to 6 (e.g. 101, L1A, A_900). Leave blank for any section, unless Course Number is a specific course: then enter it, or *.",
+          "hint": "A section code: capital letters, digits or _, up to 6 (e.g. 101, L1A, A_900). Leave blank for any section.",
           "example": "101",
           "blankIsWildcard": true
         },

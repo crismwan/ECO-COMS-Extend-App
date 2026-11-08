@@ -152,24 +152,8 @@ var fieldError = function(schema, i, value, units, total, rows) {
 
 /* Every field at once: rs holds each field's lookup result (null when it needed none), as the page ran fieldQuery's
    queries. textErrors / findErrors split the errors between the typed boxes and the Workday pick-lists. */
-/* Section follows Course Number (2026-11-08, product owner): when Course Number is a specific course (not blank, * or a level such as
-   1*), Section has to be filled in before OK; * still counts. Found by the fields' labels, so it applies to any format
-   with a Course and a Section field. */
-var labelIndex = function(schema, label) {
-  empty(schema) ? (0 - 1) : schema.fields.map(f => { (f.fieldLabel ?? '').trim().lowerCase() }).indexOf(label);
-};
-
-var sectionNeeded = function(schema, values) {
-  let c = labelIndex(schema, 'course number') < 0 ? labelIndex(schema, 'course') : labelIndex(schema, 'course number');
-  let x = labelIndex(schema, 'section');
-  (c < 0 || x < 0) ? false : (!empty(values[c]) && !values[c].contains('*') && empty(values[x]));
-};
-
 var fieldErrors = function(schema, values, units, rs) {
-  let base = values.map((v, j) => { fieldError(schema, j, v, units, empty(rs[j]) ? (0 - 1) : (rs[j].total ?? (0 - 1)), empty(rs[j]) ? [] : (rs[j].data ?? [])) });
-  let x = labelIndex(schema, 'section');
-  let need = sectionNeeded(schema, values);
-  base.map((e, j) => { (need && j == x && e == '') ? (fieldLabel(schema, j) + ' is required when Course Number is a specific course: enter the section (e.g. 101), or * for any section.') : e });
+  values.map((v, j) => { fieldError(schema, j, v, units, empty(rs[j]) ? (0 - 1) : (rs[j].total ?? (0 - 1)), empty(rs[j]) ? [] : (rs[j].data ?? [])) });
 };
 
 var textErrors = function(schema, errs) {
