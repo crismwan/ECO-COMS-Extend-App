@@ -48,7 +48,13 @@ function pacificNow() {
   if (!token) { console.error('WD_DEV_TOKEN is not set'); process.exit(2); }
 
   // 1. current assignments (same flattening as the Download Template grid)
-  const q = JSON.parse(fs.readFileSync(path.join(ROOT, 'presentation', 'wqlQueries', 'allShellAssignableRolesinTenant.wqlquery'), 'utf8')).query;
+  // the query takes the applications' organization types as a parameter (since the X:META / X:SHELL change); fill it the
+  // way the pages do: the distinct first type of each application organization from the appTypes query (2026-11-08:
+  // sending the raw <% types %> made WQL refuse the query, so the template hadn't refreshed since 2026-11-06)
+  const wq = (name) => JSON.parse(fs.readFileSync(path.join(ROOT, 'presentation', 'wqlQueries', name + '.wqlquery'), 'utf8')).query;
+  const apps = await call('GET', `${API}/wql/v1/data?limit=10000&query=${encodeURIComponent(wq('appTypes'))}`, { headers: { Accept: 'application/json' } });
+  const types = [...new Set((apps.data || []).map((o) => ((o.type1 || [])[0] || {}).id).filter(Boolean))];
+  const q = wq('allShellAssignableRolesinTenant').replace('<% types %>', types.length ? types.join(',') : 'none');
   const res = await call('GET', `${API}/wql/v1/data?limit=10000&query=${encodeURIComponent(q)}`, { headers: { Accept: 'application/json' } });
   const rows = [];
   for (const r of res.data || []) {
