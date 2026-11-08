@@ -28,6 +28,10 @@ d = json.load(open(P))
 META = "((!empty(orgSubtypeDropdown.value)) ? (orgSubtypeDropdown.selectedEntries[0].id == 'X:META') : false)"
 APP = "((!empty(selectedApplicationId.value)) ? (selectedApplicationId.selectedEntries[0].descriptor ?? '') : '')"
 PREVIEW = f"orgNamePreview.setValue(comsShellOrg.preview({APP}, organizationCode.value ?? '', {META}));"
+# the code's format is checked as it changes, and again when the subtype or application changes (2026-11-08: a lower-case
+# code under X:META only showed its error at OK on Review & Submit, a step after the field)
+CODECHECK = (f"let ce = (organizationCode.value ?? '').trim() == '' ? '' : comsShellOrg.codeError({APP}, organizationCode.value ?? '', {META});\n"
+             "  if (ce == '') { organizationCode.clearError(); } else { organizationCode.setError(ce); }")
 
 
 def find(n, wid):
@@ -73,15 +77,15 @@ if ids.index('orgSubtypeDropdown') > ids.index('selectedApplicationId'):
 st = find(d, 'orgSubtypeDropdown')
 st['helpText'] = ("X:META for an application-level organization: under an application it is APP(CODE), e.g. X:LLIS(CPE); "
                   "without one, a new application named by its code. X:SHELL for a shell organization roles are assigned on (APP:CODE).")
-st['onChange'] = ("<%\n  self.clearError();\n  organizationCode.clearError();\n"
+st['onChange'] = ("<%\n  self.clearError();\n"
                   f"  selectedApplicationId.setRequired(!{META});\n"
-                  f"  if ({META}) {{ selectedApplicationId.clearError(); }}\n  {PREVIEW}\n%>")
+                  f"  if ({META}) {{ selectedApplicationId.clearError(); }}\n  {CODECHECK}\n  {PREVIEW}\n%>")
 
 app = find(d, 'selectedApplicationId')
 app['required'] = f"<% !{META} %>"
 app['helpText'] = ("Select the application this organization belongs to. "
                    "For X:META, leave it blank to add a new application.")
-app['onChange'] = f"<%\n  selectedApplicationId.clearError();\n  organizationCode.clearError();\n  {PREVIEW}\n%>"
+app['onChange'] = f"<%\n  selectedApplicationId.clearError();\n  {CODECHECK}\n  {PREVIEW}\n%>"
 
 code = find(d, 'organizationCode')
 code['placeholder'] = "e.g. ORG:ANY, NEW, or NEWAPP"
@@ -92,7 +96,7 @@ code['guide']['text'] = ("X:SHELL: enter the part after the application, or the 
                          "X:CLW:ORG:ANY). X:META with an application: enter the part that goes in brackets, so NEW gives X:LLIS(NEW). "
                          "X:META without an application: enter the new application code; it is used exactly as typed. "
                          "For X:META the organization type of the same name must already exist in Workday. No spaces. Must be unique.")
-code['onChange'] = f"<%\n  self.clearError();\n  {PREVIEW}\n%>"
+code['onChange'] = f"<%\n  {CODECHECK}\n  {PREVIEW}\n%>"
 
 prev = find(d, 'orgNamePreview')
 prev['value'] = f"<% comsShellOrg.preview({APP}, organizationCode.value ?? '', {META}) %>"
