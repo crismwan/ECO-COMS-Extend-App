@@ -84,11 +84,16 @@ def field_on_change(i, target='self', fill='', after=''):
 def find_on_change(i):
     # the picked entry's value goes into the field's (hidden) box: a period as its short form, e.g. 2024W1; nothing
     # picked = blank. Then the usual recheck of every field.
-    # a new subject clears the course picked for the old one (2026-11-07)
+    # a new subject clears the course picked for the old one (2026-11-07). Course comes from Subject (2026-11-08,
+    # product owner): with no subject or *, Course is any (*) and locked (its list hidden, the read-only box shows it);
+    # a real subject opens the Course list on that subject's courses
     fill = (f"  let fv = empty(self.value) ? '' : comsPatterns.pickValue(s, {i}, self.value[0]);\n"
             f"  if (empty(self.value) || fv != '') {{ {FIELD(i)}.setValue(fv); }}\n"
-            + "".join(f"  if (comsPatterns.pickerKind(s, {i}) == 'courseSubject' && comsPatterns.pickerKind(s, {j}) == 'course') {{ {FIND(j)}.setValue([]); {FIELD(j)}.setValue(''); }}\n"
-                      for j in range(MAX_FIELDS) if j != i))
+            f"  let realSubject = !empty(self.value) && fv != '' && fv != '*';\n"
+            f"  let sc = comsPatterns.pickerKind(s, {i}) == 'courseSubject';\n"
+            # a Course field comes after its Subject (both formats); every error is reset by the recheck below
+            + "".join(f"  if (sc && comsPatterns.pickerKind(s, {j}) == 'course') {{ {FIND(j)}.setValue([]); {FIELD(j)}.setValue(fv == '*' ? '*' : ''); {FIND(j)}.setVisible(realSubject); {FIELD(j)}.setVisible(!realSubject); }}\n"
+                      for j in range(i + 1, MAX_FIELDS)))
     after = (f"  if (!empty(self.value) && fv == '') {{ self.setError(comsPatterns.pickerKind(s, {i}) == 'course' ? 'This course has no number that fits the format: pick another or a wildcard.' : 'This period has no short form (W1, W2, W or S): pick its year or session instead.'); }}\n")
     return field_on_change(i, 'self', fill, after)
 
@@ -138,7 +143,8 @@ for i in range(MAX_FIELDS):
     # only the rows it shows (units come from the page's unit list), so it stays quick with tens of thousands of rows.
     fields.append({"type": "instanceList", "id": FIND(i), "multiSelect": False,
                    "label": f"<% comsPatterns.fieldLabel({SCH}, {i}) %>",
-                   "visible": f"<% {KIND(i)} != '' %>",
+                   # a course list shows once a real subject is picked (find_on_change); until then Course is any
+                   "visible": f"<% {KIND(i)} != '' && {KIND(i)} != 'course' %>",
                    "helpText": "Click to browse, or type a code or name to search Workday (type * for the wildcards). Leave empty for any.",
                    "values": f"<% comsPatterns.rootFolders({SCH}, {i}, {AU}, wdYears.data ?? []) %>",
                    # one or two WQL steps: a course list first finds the picked subject's WID, then its courses
@@ -162,8 +168,9 @@ for i in range(MAX_FIELDS):
     # (2026-11-07, product owner: no per-field preview, the Pattern Name Preview shows the whole name)
     fields.append({"type": "text", "id": FIELD(i),
                    "label": f"<% comsPatterns.fieldLabel({SCH}, {i}) %>",
-                   "visible": f"<% comsPatterns.fieldCount({SCH}) > {i} && {KIND(i)} == '' %>",
-                   "placeholder": f"<% comsPatterns.fieldCount({SCH}) > {i} ? ('e.g. ' + {SCH}.fields[{i}].example) : '' %>",
+                   "visible": f"<% comsPatterns.fieldCount({SCH}) > {i} && ({KIND(i)} == '' || {KIND(i)} == 'course') %>",
+                   "enabled": f"<% {KIND(i)} != 'course' %>",
+                   "placeholder": f"<% comsPatterns.fieldCount({SCH}) > {i} ? ({KIND(i)} == 'course' ? 'Any (*): pick a subject first' : ('e.g. ' + {SCH}.fields[{i}].example)) : '' %>",
                    "onChange": field_on_change(i)})
 
 PICK_ROWS = "(comsApplications.data ?? []).filter(x => { !empty(x.patternSchema) && x.active != false }).map(x => { x.appId }).distinct().sort().map(a => { {'appCode': a} })"
