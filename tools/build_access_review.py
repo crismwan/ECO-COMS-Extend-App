@@ -152,7 +152,7 @@ GOUT = lambda field, value: {"value": value, "valueOutBinding": "postReview." + 
 REVIEW_OUT = [
     GOUT("timestamp", "<% date:now().format(\"yyyy-MM-dd'T'HH:mm:ss'Z'\") %>"),
     GOUT("objectType", "Role Assignment"), GOUT("action", "REVIEW"),
-    GOUT("effectiveDate", "<% date:now().format('yyyy-MM-dd') %>"),
+    GOUT("effectiveDate", "<% date:now().formatWithTimeZone('yyyy-MM-dd', userTimeZone) %>"),
     GOUT("triggeredBy", "<% selectedWorker.descriptor ?? '' %>"), GOUT("changedByWid", "<% selectedWorker.id ?? '' %>"),
 ]
 cell = lambda cid, label, value, outs: {"type": "column", "columnId": cid, "label": label, "sortableAndFilterable": "true",

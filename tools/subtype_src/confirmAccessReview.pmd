@@ -335,7 +335,7 @@
                             "valueOutBinding": "postReview.action"
                           },
                           {
-                            "value": "<% date:now().format('yyyy-MM-dd') %>",
+                            "value": "<% date:now().formatWithTimeZone('yyyy-MM-dd', userTimeZone) %>",
                             "valueOutBinding": "postReview.effectiveDate"
                           },
                           {

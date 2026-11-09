@@ -64,7 +64,7 @@ page = {"id": "shellOrgDetail", "securityDomains": ["ManageCOMSShellOrgs"],
         {"type": "button", "id": "changeStatusButton", "visible": "<% size(" + ORG + ") > 0 %>", "label": "<% " + ACTIVE + " ? 'Inactivate Organization' : 'Reactivate Organization' %>", "action": "AUXILIARY",
          "taskReference": {"taskId": "manageShellOrgStatus", "parameterBindings": {
            "orgId": "<% queryParams.orgId ?? '' %>", "orgCode": "<% " + CODE + " %>", "orgName": "<% " + NAME + " %>",
-           "currentStatus": "<% " + ACTIVE + " ? 'Active' : 'Inactive' %>", "effectiveDate": "<% date:now().format('yyyy-MM-dd') %>",
+           "currentStatus": "<% " + ACTIVE + " ? 'Active' : 'Inactive' %>", "effectiveDate": "<% date:now().formatWithTimeZone('yyyy-MM-dd', userTimeZone) %>",
            "patternName": "<% " + CODE + " %>", "orgType": "<% queryParams.orgType ?? '' %>", "comsAppId": "<% queryParams.appCode ?? '' %>"}}}]}]},
       {"type": "layoutSection", "id": "rolesSection", "children": [{"type": "fieldSet", "id": "rolesFieldSet", "title": "Roles on This Organization", "children": [
         empty_msg("noRolesText", "size(" + ROLES + ") == 0", "No shell roles are assigned on this organization."),

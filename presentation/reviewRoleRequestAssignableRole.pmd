@@ -190,7 +190,7 @@
           },
           {
             "outboundPath": "approvedDate",
-            "value": "<% date:now().format('yyyy-MM-dd') %>"
+            "value": "<% date:now().formatWithTimeZone('yyyy-MM-dd', userTimeZone) %>"
           }
         ]
       },

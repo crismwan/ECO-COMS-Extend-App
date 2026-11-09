@@ -226,7 +226,7 @@
                       "orgCode": "<% (size(((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))) > 0 ? (((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))[0].code ?? '') : (queryParams.orgCode ?? '')) %>",
                       "orgName": "<% (size(((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))) > 0 ? (((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))[0].organizationByName.descriptor ?? ((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))[0].code) : (queryParams.orgName ?? '')) %>",
                       "currentStatus": "<% (size(((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))) > 0 && ((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))[0].cf_active1 == true) ? 'Active' : 'Inactive' %>",
-                      "effectiveDate": "<% date:now().format('yyyy-MM-dd') %>",
+                      "effectiveDate": "<% date:now().formatWithTimeZone('yyyy-MM-dd', userTimeZone) %>",
                       "patternName": "<% (size(((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))) > 0 ? (((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))[0].code ?? '') : (queryParams.orgCode ?? '')) %>",
                       "orgType": "<% queryParams.orgType ?? '' %>",
                       "comsAppId": "<% queryParams.appCode ?? '' %>"

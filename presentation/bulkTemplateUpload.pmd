@@ -124,7 +124,7 @@
                   "id": "versionText",
                   "label": "Version",
                   "required": true,
-                  "value": "<% 'v' + date:now().format('yyyy-MM-dd') %>"
+                  "value": "<% 'v' + date:now().formatWithTimeZone('yyyy-MM-dd', userTimeZone) %>"
                 },
                 {
                   "type": "text",

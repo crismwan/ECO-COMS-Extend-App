@@ -176,7 +176,7 @@ template_upload = {"id": "bulkTemplateUpload", "securityDomains": ["ManageCOMSSh
       {"type": "layoutSection", "id": "formSection", "children": [{"type": "fieldSet", "id": "templateUploadFieldSet", "title": "Template", "children": [
         {"type": "fileUploader", "id": "templateUploader", "label": "Excel file", "fileTypes": "xlsx", "singular": True, "required": True,
          "metadata": "<% { 'version': '' } %>", "valueOutBinding": "uploadTemplateFile:comsBulkTemplates"},
-        {"type": "text", "id": "versionText", "label": "Version", "required": True, "value": "<% 'v' + date:now().format('yyyy-MM-dd') %>"},
+        {"type": "text", "id": "versionText", "label": "Version", "required": True, "value": "<% 'v' + date:now().formatWithTimeZone('yyyy-MM-dd', userTimeZone) %>"},
         {"type": "text", "id": "notesText", "label": "Notes"}]}]}]},
     "footer": FOOT, "pageType": "EDIT"}}
 save('bulkTemplateUpload', template_upload)

@@ -207,7 +207,7 @@
           },
           {
             "outboundPath": "requestedDate",
-            "value": "<% date:now().format('yyyy-MM-dd') %>"
+            "value": "<% date:now().formatWithTimeZone('yyyy-MM-dd', userTimeZone) %>"
           },
           {
             "outboundPath": "requestedBy.id",
