@@ -2546,17 +2546,22 @@ async function bulkValidate(token, me) {
     const audits = await readAll(token, 'comsAuditLogs');
     const src = audits.filter((a) => a.objectType === 'Role Assignment' && a.roleWid && a.orgWid && a.coReferenceId).pop();
     if (!src) return skip('Bulk.validateRun', 'no Role Assignment audit record to take a role, organization and position from');
+    // the API gateway's content filter can refuse a body (HTML 403, see CLAUDE.md); retry once without the free-text names
+    const postRow = async (b) => {
+      try { return await request('POST', `${BO}/comsBulkRowResults`, token, b); }
+      catch (e) { if (!/403/.test(e.message)) throw e; console.log(`   row ${b.positionId}: gateway refused (HTML 403), retrying without names`); return request('POST', `${BO}/comsBulkRowResults`, token, { ...b, orgName: '', roleName: '', positionName: '' }); }
+    };
     const ref = 'TEST' + new Date().toISOString().replace(/\D/g, '').slice(0, 14);
     const stamp = new Date().toISOString().replace(/\.\d+Z$/, 'Z');
     const today = new Date(Date.now() - 8 * 3600e3).toISOString().slice(0, 10);   // tenant (Pacific) date
     await request('POST', `${BO}/comsBulkRuns`, token, { batchRef: ref, source: 'Grid', runMode: 'VALIDATE', status: 'Uploaded',
       effectiveDate: today, uploadedByName: me.descriptor, uploadedByWid: me.id, uploadedAt: stamp, changeCount: '2', summary: 'TEST validate run' });
-    await request('POST', `${BO}/comsBulkRowResults`, token, { batchRef: ref + '-DRAFT', runMode: 'VALIDATE', rowAction: 'ADD', result: 'DRAFT',
+    await postRow({ batchRef: ref + '-DRAFT', runMode: 'VALIDATE', rowAction: 'ADD', result: 'DRAFT',
       roleName: src.roleName || '', roleWid: src.roleWid, orgName: src.coName || '', orgWid: src.orgWid,
       positionId: src.coReferenceId, positionName: src.positionName || '', assigneeWid: '', timestamp: stamp });
     // a second row on a vacant position: the row message must say so (delivered `worker` field, 2026-11-10)
     const vac = ((await wql(token, 'SELECT positionID FROM allPositions WHERE supervisoryOrganization is not empty AND worker is empty', 1)).data || [])[0];
-    if (vac) await request('POST', `${BO}/comsBulkRowResults`, token, { batchRef: ref + '-DRAFT', runMode: 'VALIDATE', rowAction: 'ADD', result: 'DRAFT',
+    if (vac) await postRow({ batchRef: ref + '-DRAFT', runMode: 'VALIDATE', rowAction: 'ADD', result: 'DRAFT',
       roleName: src.roleName || '', roleWid: src.roleWid, orgName: src.coName || '', orgWid: src.orgWid,
       positionId: vac.positionID, positionName: '', assigneeWid: '', timestamp: stamp });
     const auditsBefore = new Set(audits.map((a) => a.id));
