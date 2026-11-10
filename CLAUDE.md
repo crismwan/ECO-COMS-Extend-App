@@ -48,6 +48,7 @@ These notes apply to **all** Workday Extend apps I work on. Project-specific det
 - Grid — `excelExportEnabled` row limit
 - WQL — operators and one-value lookups
 - WQL — injection risk in string concatenation
+- Moving an app between tenants: WIDs and calculated fields
 - Orchestrations — debugging and failure handling
 - Business processes on Extend business objects
 - Security and ISU writes
@@ -2420,6 +2421,21 @@ Using `isCollection: true` on inbound endpoints **can degrade the entire tenant 
 - Data sources seen in a student tenant: `courseSubjects` (abbreviation, name, inactive), `academicPeriods` (name, academicYear, periodType, academicCalendar, startDate, inactive), `academicYears`, `academicUnits` (academicUnitCode). Find others with `GET /wql/v1/dataSources?alias=<alias>` or `?search=<words>`, then `/dataSources/<id>/fields`.
 - **Courses in WQL:** the `courses` alias is the Course Subjects data source, not courses; course definitions are `courseDefinitions` (course, title, courseSubjects, courseListings, academicUnits, hiddenCourse). To list one subject's courses, find the subject's WID first (`SELECT courseSubject FROM courseSubjects WHERE abbreviation = '...'`), then filter `courseSubjects in (<WID>)` (live 2026-11-07; one dev tenant had 0 course definitions).
 - Repeating a long check in every field's onChange grows a page fast (7 fields × 15 handlers took one page from 40 KB to 122 KB, over the 100 KB limit): move the logic into `.script` functions and read shared lists once per handler.
+
+## Moving an app between tenants: WIDs and calculated fields (live 2026-11-10)
+
+**Don't hard-code tenant data in an app.** A WID of a tenant-configured instance (an organization subtype or type, a role, an org) and a calculated field (`cf_...`) are tenant configuration: the next tenant has other WIDs, and its calculated fields may be missing or named differently. Workday-delivered instances (e.g. the BP step action "Submitted" `d9e4223e446c11de98360015c5e6daf6`) and the app's own orchestration ids are the same everywhere. Keep a static check that fails on any other 32-hex value in the app files.
+
+**Find instances by name in WQL:**
+- An instance field filters by WID only. Refused (one tenant): `subtype in (X:SHELL)` / `("X:SHELL")` ("cannot resolve instance"), `subtype in (Organization_Subtype_Name = "X:SHELL")`, the documented `(inst_refId = ...)` (both "Invalid WQL syntax ... at or near '='"), a bare reference ID, `subtype.descriptor = ...` ("This field is invalid").
+- **Works: a GROUP BY lookup, then the WIDs as a parameter.** `SELECT subtype, COUNT(workdayID) FROM topLevelOrganizations GROUP BY subtype` returns one row per value, `{"subtype": {"descriptor", "id"}, "COUNT(workdayID)": "7"}` (34 rows here). Keep the ids whose descriptor matches and pass them into the real query (`WHERE subtype in (<% subtypes %>)` in a WQL component with `parameters`; an eager lookup endpoint that the query endpoint's `parameters` read). `SELECT DISTINCT` is refused.
+- **GROUP BY refuses a multi-instance field** ("For grouping, specify a field other than a multi instance field"). Look for a single-instance twin: `customOrganizations.type1` (multi) has `organizationTypesPrimary` (single, same values here).
+- **`in ()` with nothing in it returns no rows, no error**, so a name that doesn't exist in a tenant gives an empty list rather than a broken page. A made-up WID errors ("cannot resolve instance").
+- In an orchestration: one GET for the lookup, then `stringAtJsonPathWithDefault("$.data[?(@.subtype.descriptor == 'X:SHELL')].subtype.id", "")` per name, joined into the next step's path.
+- The lookup adds one small call (~0.3 s) before the query it feeds.
+
+**Calculated fields can't be part of an app.** They're tenant report fields (Create Calculated Field), not Extend components, so an app that reads `cf_...` needs them recreated with the same alias in every tenant, or migrated with the tenant configuration. Prefer delivered fields; compare values over every row before switching. One tenant (2026-11-10, all rows): `allPositions.cf_PositionID` = `positionID`; `cf_PositionIsFilled` = `worker is not empty`; `cf_PositionText` = `positionAndJob_AllStaffingModels.descriptor + '-' + positionID`; `topLevelOrganizations.cf_active1` = `not inactive`; role assignment `cf_ZCF_EE_RoleAssignedToAsPositionRestrictions` = delivered `roleAssignedTo` (only 3 assignments to compare). If a calculated field must stay, list it as a tenant prerequisite in the project notes and have a smoke test query it, so a missing one fails clearly.
+- Field list of a data source: `GET /wql/v1/dataSources?alias=<alias>` → id, then `/dataSources/<id>/fields?limit=100&offset=<n>`; a related object's field shows `relatedBusinessObject`.
 
 ## WQL — injection risk in string concatenation
 
