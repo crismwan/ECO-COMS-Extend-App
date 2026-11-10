@@ -8,6 +8,42 @@
   ],
   "endPoints": [
     {
+      "name": "orgSubtypes",
+      "baseUrlType": "workday-wql",
+      "url": "data",
+      "authType": "sso",
+      "bestEffort": "true",
+      "wqlQuery": {
+        "queryId": "orgSubtypes"
+      },
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "name": "orgTypes",
+      "baseUrlType": "workday-wql",
+      "url": "data",
+      "authType": "sso",
+      "bestEffort": "true",
+      "wqlQuery": {
+        "queryId": "orgTypes"
+      },
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
       "name": "selectedWorker",
       "baseUrlType": "COMMON",
       "url": "/workers/me",
@@ -32,7 +68,10 @@
       "isCollection": true,
       "bestEffort": "true",
       "wqlQuery": {
-        "queryId": "customOrganizations"
+        "queryId": "customOrganizations",
+        "parameters": {
+          "subtypes": "<% (orgSubtypes.data ?? []).filter(r => { empty(r.subtype) ? false : (r.subtype.descriptor == 'X:META' || r.subtype.descriptor == 'X:SHELL') }).map(r => { r.subtype.id }).join(',') %>"
+        }
       },
       "failOnStatusCodes": [
         {
@@ -119,7 +158,7 @@
     {
       "name": "fuhSearch",
       "baseUrlType": "workday-wql",
-      "url": "<% 'data?query=' + string:pathEncode('SELECT workdayID, organization1, code FROM customOrganizations WHERE type1 in (b40d8b016367100175b147f364840000) AND code contains \\'' + instanceListQuery.replace('\\'', '').replace('\\\\', '') + '\\'') %>",
+      "url": "<% 'data?query=' + string:pathEncode('SELECT workdayID, organization1, code FROM customOrganizations WHERE type1 in (' + (orgTypes.data ?? []).filter(r => { empty(r.organizationTypesPrimary) ? false : (r.organizationTypesPrimary.descriptor == 'Functional Unit Hierarchy') }).map(r => { r.organizationTypesPrimary.id }).join(',') + ') AND code contains \\'' + instanceListQuery.replace('\\'', '').replace('\\\\', '') + '\\'') %>",
       "authType": "sso",
       "isCollection": true,
       "bestEffort": "true",
@@ -189,7 +228,7 @@
     {
       "name": "fuhTreeAll",
       "baseUrlType": "workday-wql",
-      "url": "<% 'data?limit=10000&query=' + string:pathEncode('SELECT workdayID, organization1, subtype FROM customOrganizations WHERE type1 in (b40d8b016367100175b147f364840000)') %>",
+      "url": "<% 'data?limit=10000&query=' + string:pathEncode('SELECT workdayID, organization1, subtype FROM customOrganizations WHERE type1 in (' + (orgTypes.data ?? []).filter(r => { empty(r.organizationTypesPrimary) ? false : (r.organizationTypesPrimary.descriptor == 'Functional Unit Hierarchy') }).map(r => { r.organizationTypesPrimary.id }).join(',') + ')') %>",
       "authType": "sso",
       "bestEffort": "true"
     },

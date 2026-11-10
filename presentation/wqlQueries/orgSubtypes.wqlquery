@@ -1,0 +1,4 @@
+{
+  "id": "orgSubtypes",
+  "query": "SELECT subtype, COUNT(workdayID) FROM topLevelOrganizations GROUP BY subtype"
+}

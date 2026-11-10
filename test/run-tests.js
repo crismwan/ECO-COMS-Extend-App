@@ -465,6 +465,25 @@ function staticSuite() {
     }
   }
 
+  // 7g2. No tenant-specific WIDs (2026-11-10: a WID differs from tenant to tenant, so the app must find Workday data by
+  // name; tools/subtype_apps.py looks the subtype / type WIDs up by descriptor). Allowed: the app's own orchestration ids
+  // (sub-orchestration calls) and Workday-delivered instances, which carry the same WID in every tenant.
+  {
+    const DELIVERED = new Set(['d9e4223e446c11de98360015c5e6daf6']); // business process step action "Submitted"
+    const own = new Set();
+    for (const f of listFiles('orchestration')) { try { own.add(JSON.parse(fs.readFileSync(path.join(ROOT, f), 'utf8'))._value.id._value); } catch (_) {} }
+    const bad = [];
+    for (const dir of ['presentation', 'orchestration', 'model', 'cards']) {
+      if (!fs.existsSync(path.join(ROOT, dir))) continue;
+      for (const f of listFiles(dir, true)) {
+        const t = fs.readFileSync(path.join(ROOT, f), 'utf8');
+        for (const m of t.matchAll(/\b[0-9a-f]{32}\b/g)) if (!own.has(m[0]) && !DELIVERED.has(m[0])) bad.push(`${f}: ${m[0]}`);
+      }
+    }
+    if (bad.length) fail('Static.tenantWids', `tenant-specific WIDs (look them up by name instead): ${[...new Set(bad)].slice(0, 8).join('; ')}`);
+    else pass('Static.tenantWids', 'no tenant-specific WIDs in the app files');
+  }
+
   // 7g3. Browse pickers (tools/pos_tree.py, tools/unit_tree.py; 2026-11-05). A multilevel instanceList must:
   // read only endpoints that exist, invoke only deferred ones, give its leaves the same id field as its typed search
   // (a browsed pick must save exactly what a searched pick saves), have root values, and say it can be browsed.
@@ -878,8 +897,29 @@ async function readAll(token, collection, max = 3000) {
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-const wql = (token, query, limit = 100) =>
-  request('GET', `${WQL}?limit=${limit}&query=${encodeURIComponent(query)}`, token);
+// The app finds its organizations by the NAMES of their subtypes and type (WIDs differ between tenants). WQL only filters
+// an instance field by WID, so the pages look the WIDs up with a GROUP BY first; tests write <% subtypes %> / <% fuhTypes %>
+// in a query and wql() fills them the same way.
+const SUBTYPE_NAMES = ['X:META', 'X:SHELL'];
+const FUH_TYPE_NAME = 'Functional Unit Hierarchy';
+let nameIdsCache = null;
+async function nameIds(token) {
+  if (nameIdsCache) return nameIdsCache;
+  const g = async (q, f, names) => (((await request('GET', `${WQL}?limit=1000&query=${encodeURIComponent(q)}`, token)).data) || [])
+    .filter((r) => r[f] && names.includes(r[f].descriptor)).map((r) => r[f].id).join(',');
+  nameIdsCache = {
+    subtypes: await g('SELECT subtype, COUNT(workdayID) FROM topLevelOrganizations GROUP BY subtype', 'subtype', SUBTYPE_NAMES),
+    fuhTypes: await g('SELECT organizationTypesPrimary, COUNT(workdayID) FROM customOrganizations GROUP BY organizationTypesPrimary', 'organizationTypesPrimary', [FUH_TYPE_NAME]),
+  };
+  return nameIdsCache;
+}
+async function fillNames(token, query) {
+  if (!/<% (subtypes|fuhTypes) %>/.test(query)) return query;
+  const ids = await nameIds(token);
+  return query.replace(/<% subtypes %>/g, ids.subtypes).replace(/<% fuhTypes %>/g, ids.fuhTypes);
+}
+const wql = async (token, query, limit = 100) =>
+  request('GET', `${WQL}?limit=${limit}&query=${encodeURIComponent(await fillNames(token, query))}`, token);
 // IORC_0037_XFD_SEC_Change_Shell_Org_Status picks inactivate vs reactivate from includeInactive ("true" = inactivate),
 // not from action; action is only written to the audit record. Send both, as the page does.
 // Encode like the pages' .urlEncode() (Java URLEncoder: space as +, only A-Z a-z 0-9 . - * _ left as is).
@@ -940,7 +980,7 @@ async function smoke(token, me) {
       });
       continue;
     }
-    if ((q.parameters || []).length || /<%/.test(q.query)) { skip(name, 'takes parameters'); continue; }
+    if ((q.parameters || []).some((x) => x !== 'subtypes') || /<%(?! subtypes %>)/.test(q.query)) { skip(name, 'takes parameters'); continue; }
     await test(name, async () => {
       const r = await wql(token, q.query.replace(/\s+/g, ' ').trim(), 1);
       if (!Array.isArray(r.data)) throw new Error('response has no data array');
@@ -949,7 +989,7 @@ async function smoke(token, me) {
   }
 
   await test('WQL.shellOrgsExist', async () => {
-    const r = await wql(token, "SELECT workdayID, code FROM topLevelOrganizations WHERE subtype in (e6ca8683b78d10017a5c108412fc0000, e6ca8683b78d10017a5c108412fc0001)", 1);
+    const r = await wql(token, "SELECT workdayID, code FROM topLevelOrganizations WHERE subtype in (<% subtypes %>)", 1);
     if (!(r.total > 0 || (r.data || []).length > 0)) throw new Error('no X: shell organizations returned');
     pass('WQL.shellOrgsExist', `shell orgs found (total ${r.total ?? '>0'})`);
   });
@@ -957,8 +997,8 @@ async function smoke(token, me) {
   // Pages call WQL without a limit. If Workday's default page is smaller than the data, lists and
   // lookups are cut off silently: compare rows returned with no limit against the total.
   await test('WQL.noLimitReturnsAll', async () => {
-    const q = "SELECT workdayID, code FROM topLevelOrganizations WHERE subtype in (e6ca8683b78d10017a5c108412fc0000, e6ca8683b78d10017a5c108412fc0001)";
-    const r = await request('GET', `${WQL}?query=${encodeURIComponent(q)}`, token);
+    const q = "SELECT workdayID, code FROM topLevelOrganizations WHERE subtype in (<% subtypes %>)";
+    const r = await request('GET', `${WQL}?query=${encodeURIComponent(await fillNames(token, q))}`, token);
     const n = (r.data || []).length;
     const p = await request('GET', `${WQL}?query=${encodeURIComponent('SELECT cf_PositionID FROM allPositions WHERE supervisoryOrganization is not empty')}`, token);
     const msg = `no limit: shell orgs ${n} of ${r.total}, positions ${(p.data || []).length} of ${p.total}`;
@@ -1732,7 +1772,7 @@ async function repair(token, me) {
     const roles = await readAll(token, 'comsAssignableRoles');
     const bad = roles.filter((r) => r.status === 'Pending ISC Review' && /^[0-9a-f]{32}$/.test(r.enabledForOrganizationTypes || ''));
     if (!bad.length) return pass('Repair.enabledFor', 'no pending request holds a bare WID in Enabled For');
-    const fuh = (await wql(token, 'SELECT workdayID, organization1, code FROM customOrganizations WHERE type1 in (b40d8b016367100175b147f364840000)', 10000)).data || [];
+    const fuh = (await wql(token, 'SELECT workdayID, organization1, code FROM customOrganizations WHERE type1 in (<% fuhTypes %>)', 10000)).data || [];
     const au = (await wql(token, 'SELECT workdayID, academicUnit, academicUnitName FROM academicUnits WHERE inactive = false', 10000)).data || [];
     const left = [];
     for (const r of bad) {
@@ -2060,7 +2100,7 @@ async function patternGuard(token, me) {
     cases.push(...lookupCases.map(([w, n]) => [w, 'X:CLW', n]));
   }
   await sleep(20000);
-  const created = ((await wql(token, "SELECT code FROM topLevelOrganizations WHERE subtype in (e6ca8683b78d10017a5c108412fc0000, e6ca8683b78d10017a5c108412fc0001)", 10000)).data || []).map((o) => o.code);
+  const created = ((await wql(token, "SELECT code FROM topLevelOrganizations WHERE subtype in (<% subtypes %>)", 10000)).data || []).map((o) => o.code);
   const leaked = cases.map((c) => c[2]).filter((n) => created.includes(n));
   if (leaked.length) fail('Guard.nothingCreated', `created: ${leaked.join(', ')}`);
   else pass('Guard.nothingCreated', `${cases.length} launches, no new organization (check CheckPatternName per launch in the app Logs)`);
@@ -2088,7 +2128,7 @@ async function orgGuard(token, me) {
     ['workday', 'X:ADM',     'X:ADM:TEST:GUARDMETA','X:META', 'X:META under an application'],
   ];
   const auditTotal = async () => (await request('GET', `${BO}/comsAuditLogs?limit=1`, token)).total;
-  const orgCodes = async () => ((await wql(token, "SELECT code FROM topLevelOrganizations WHERE subtype in (e6ca8683b78d10017a5c108412fc0000, e6ca8683b78d10017a5c108412fc0001)", 10000)).data || []).map((o) => o.code);
+  const orgCodes = async () => ((await wql(token, "SELECT code FROM topLevelOrganizations WHERE subtype in (<% subtypes %>)", 10000)).data || []).map((o) => o.code);
   const existed = new Set(await orgCodes());
   const before = await auditTotal();
   for (const [want, type, name, subtype, label] of cases) {
@@ -2166,7 +2206,7 @@ async function orgGuard(token, me) {
   // appear in it, so the default must not cut the list.
   await test('Apps.listComplete', async () => {
     const q = JSON.parse(fs.readFileSync(path.join(ROOT, 'presentation/wqlQueries/customOrganizations.wqlquery'), 'utf8')).query;
-    const noLimit = await request('GET', `${WQL}?query=${encodeURIComponent(q)}`, token);
+    const noLimit = await request('GET', `${WQL}?query=${encodeURIComponent(await fillNames(token, q))}`, token);
     const full = await wql(token, q, 10000);
     const n0 = (noLimit.data || []).length, n1 = (full.data || []).length;
     const appOf = (c) => (c.split(':').length > 2 ? c.split(':').slice(0, 2).join(':') : c);
@@ -2242,7 +2282,7 @@ async function promptsProbe(token) {
     console.log(`   TIME ${label}: median ${ms.slice().sort((a, b) => a - b)[1]} ms (${ms.join(', ')}) · ${info}`);
   };
   const n = (r) => `${(r.data || []).length} rows`;
-  await med('FUH search "X:B"', async () => n(await wql(token, "SELECT workdayID, organization1, code FROM customOrganizations WHERE type1 in (b40d8b016367100175b147f364840000) AND code contains 'X:B'", 100)));
+  await med('FUH search "X:B"', async () => n(await wql(token, "SELECT workdayID, organization1, code FROM customOrganizations WHERE type1 in (<% fuhTypes %>) AND code contains 'X:B'", 100)));
   await med('Academic Unit search "Math"', async () => n(await wql(token, "SELECT workdayID, academicUnit, academicUnitName FROM academicUnits WHERE inactive = false AND academicUnitName contains 'Math'", 100)));
   await med('Position search "Manager"', async () => n(await wql(token, "SELECT cf_PositionID, workdayID, position_PositionManagement, cf_PositionIsFilled, cf_PositionText FROM allPositions WHERE supervisoryOrganization is not empty AND cf_PositionText contains 'Manager'", 100)));
   await med('REST values supervisoryOrganization (no search; top level)', async () => { const r = await request('GET', `${API}/staffing/v6/values/jobChangesGroup/supervisoryOrganization/`, token); return `${(r.data || []).length} entries${(r.data || [])[0] ? ', first: ' + (r.data[0].descriptor || '') : ''}`; });
@@ -2252,8 +2292,8 @@ async function promptsProbe(token) {
 // ═══ Position search timing (read-only): the four pages' position search and candidate changes ═══
 async function posSearchTiming(token) {
   console.log('\n-- Position search timing (read-only, median of 5) --');
-  const run = async (q) => request('GET', `${WQL}?query=${encodeURIComponent(q)}${''}`, token);
-  const runL = async (q, lim) => request('GET', `${WQL}?limit=${lim}&query=${encodeURIComponent(q)}`, token);
+  const run = async (q) => request('GET', `${WQL}?query=${encodeURIComponent(await fillNames(token, q))}`, token);
+  const runL = async (q, lim) => request('GET', `${WQL}?limit=${lim}&query=${encodeURIComponent(await fillNames(token, q))}`, token);
   const med = async (label, f) => {
     const ms = []; let info = '';
     for (let i = 0; i < 5; i++) { const t0 = Date.now(); try { info = await f(); } catch (e) { info = 'ERROR ' + e.message.slice(0, 100); } ms.push(Date.now() - t0); }
@@ -2357,7 +2397,7 @@ async function orgTreeProbe(token) {
       (r.data || []).forEach((d) => console.log(`   DSS[${q}] ${d.alias || ''} | ${d.descriptor || ''}`)); } catch (e) { console.log(`   DSS[${q}] error ${e.message.slice(0, 100)}`); }
   }
   try { const r = await wql(token, 'SELECT workdayID, academicUnit, academicUnitName FROM academicUnits WHERE inactive = false', 10000); console.log(`   AU active count ${(r.data || []).length}`); } catch (e) { console.log('   AU count error ' + e.message.slice(0, 150)); }
-  try { const r = await wql(token, 'SELECT workdayID, organization1, code FROM customOrganizations WHERE type1 in (b40d8b016367100175b147f364840000)', 10000); const d = r.data || []; console.log(`   FUH count ${d.length}; sample codes: ${d.slice(0, 8).map((x) => x.code).join(' | ')}`); } catch (e) { console.log('   FUH count error ' + e.message.slice(0, 150)); }
+  try { const r = await wql(token, 'SELECT workdayID, organization1, code FROM customOrganizations WHERE type1 in (<% fuhTypes %>)', 10000); const d = r.data || []; console.log(`   FUH count ${d.length}; sample codes: ${d.slice(0, 8).map((x) => x.code).join(' | ')}`); } catch (e) { console.log('   FUH count error ' + e.message.slice(0, 150)); }
   // second pass: custom organization parent fields (not cf_), and the shape of both trees
   try {
     const ds = await request('GET', `${API}/wql/v1/dataSources?alias=customOrganizations`, token); const id = (ds.data || [])[0]?.id;
@@ -2366,7 +2406,7 @@ async function orgTreeProbe(token) {
   } catch (e) { console.log('   CFIELD error ' + e.message.slice(0, 150)); }
   for (const f of ['superiorOrganization', 'superiorCustomOrganization', 'hierarchicParents', 'directSuperiors', 'organizationHierarchy']) {
     try {
-      const r = await wql(token, `SELECT workdayID, organization1, code, ${f} FROM customOrganizations WHERE type1 in (b40d8b016367100175b147f364840000)`, 10000); const d = r.data || [];
+      const r = await wql(token, `SELECT workdayID, organization1, code, ${f} FROM customOrganizations WHERE type1 in (<% fuhTypes %>)`, 10000); const d = r.data || [];
       const parentOf = (o) => { const v = o[f]; return Array.isArray(v) ? (v[0] && v[0].id) : (v && v.id); };
       const ids = new Set(d.map((o) => o.workdayID)); const kids = {};
       d.forEach((o) => { const p = parentOf(o) || 'ROOT'; (kids[ids.has(p) ? p : (p === 'ROOT' ? 'ROOT' : 'OUTSIDE:' + p)] = kids[ids.has(p) ? p : (p === 'ROOT' ? 'ROOT' : 'OUTSIDE:' + p)] || []).push(o); });
@@ -2394,7 +2434,7 @@ async function orgTreeProbe(token) {
   const show = (v) => Array.isArray(v) ? v.map((x) => x.descriptor || x.id).slice(0, 3).join('+') + (v.length > 3 ? `+${v.length - 3}` : '') : (v && typeof v === 'object' ? (v.descriptor || v.id) : String(v ?? ''));
   for (const f of ['includedByOrganizations', 'includedOrganizations', 'subordinateOrganizations', 'level01FromTheTop', 'organizationLevelFromTop', 'superiorOrganizationCode', 'subtype']) {
     try {
-      const r = await wql(token, `SELECT code, ${f} FROM customOrganizations WHERE type1 in (b40d8b016367100175b147f364840000)`, 10000); const d = r.data || [];
+      const r = await wql(token, `SELECT code, ${f} FROM customOrganizations WHERE type1 in (<% fuhTypes %>)`, 10000); const d = r.data || [];
       const filled = d.filter((o) => { const v = o[f]; return Array.isArray(v) ? v.length : (v !== undefined && v !== null && v !== ''); });
       const dist = {}; filled.forEach((o) => { const k = show(o[f]).slice(0, 40); dist[k] = (dist[k] || 0) + 1; });
       console.log(`   FUH2 ${f}: filled ${filled.length}/${d.length}; values ${Object.entries(dist).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([k, v]) => k + '=' + v).join(' | ')}`);
@@ -2410,13 +2450,13 @@ async function orgTreeProbe(token) {
   }
   try { const h = await wql(token, 'SELECT workdayID, academicUnitHierarchy FROM academicUnitHierarchies', 10000); console.log(`   AUH2 rows ${(h.data || []).length}: ${(h.data || []).slice(0, 5).map((x) => show(x.academicUnitHierarchy)).join(' | ')}`); } catch (e) { console.log('   AUH2 ' + e.message.slice(0, 160)); }
   try {
-    const r = await wql(token, 'SELECT workdayID, organization1, subtype FROM customOrganizations WHERE type1 in (b40d8b016367100175b147f364840000)', 10000); const d = r.data || [];
+    const r = await wql(token, 'SELECT workdayID, organization1, subtype FROM customOrganizations WHERE type1 in (<% fuhTypes %>)', 10000); const d = r.data || [];
     const dep = d.filter((o) => (o.subtype?.descriptor || '') === '07 Department');
     const first = {}; dep.forEach((o) => { const n = o.organization1?.descriptor; const k = n === undefined ? 'UNDEF' : (n === '' ? 'EMPTY' : JSON.stringify(n[0])); first[k] = (first[k] || 0) + 1; });
     console.log(`   DEPT rows ${dep.length}; first chars ${JSON.stringify(first)}; samples ${dep.slice(0, 5).map((o) => JSON.stringify(o.organization1)).join(' ; ')}`);
     const ids = new Set(); let dup = 0; d.forEach((o) => { if (ids.has(o.workdayID)) dup++; ids.add(o.workdayID); }); console.log(`   FUH distinct WIDs ${ids.size} of ${d.length} rows (dup ${dup})`);
   } catch (e) { console.log('   DEPT error ' + e.message.slice(0, 150)); }
-  for (const [n, q] of [['fuhTreeAll', 'SELECT workdayID, organization1, subtype FROM customOrganizations WHERE type1 in (b40d8b016367100175b147f364840000)'], ['auTreeAll', 'SELECT workdayID, academicUnit, academicUnitSubtype FROM academicUnits WHERE inactive = false']]) {
+  for (const [n, q] of [['fuhTreeAll', 'SELECT workdayID, organization1, subtype FROM customOrganizations WHERE type1 in (<% fuhTypes %>)'], ['auTreeAll', 'SELECT workdayID, academicUnit, academicUnitSubtype FROM academicUnits WHERE inactive = false']]) {
     const ms = []; let bytes = 0;
     for (let i = 0; i < 5; i++) { const t = Date.now(); const r = await wql(token, q, 10000); ms.push(Date.now() - t); bytes = JSON.stringify(r).length; }
     ms.sort((a, b) => a - b); console.log(`   TIME ${n}: median ${ms[2]} ms (${ms.join(', ')}), ${Math.round(bytes / 1024)} KB`);
@@ -2626,28 +2666,10 @@ async function shellRolesQuery(token) {
 
 async function probe(token) {
   console.log('\n-- Probe (read-only) --');
-  // 2026-11-10: can the subtype / type filters name the value instead of its tenant-specific WID?
+  // 2026-11-10: subtype / type WIDs as the pages find them, by name (findings: docs/ECO-COMS-NOTES.md)
   {
-    const W = 'e6ca8683b78d10017a5c108412fc0000, e6ca8683b78d10017a5c108412fc0001';
-    const FUH = 'b40d8b016367100175b147f364840000';
-    const tryQ = async (label, q) => {
-      try {
-        const r = await wql(token, q, 10000); const d = r.data || [];
-        const st = {}; for (const o of d) { const k = [].concat(o.subtype || o.type1 || []).map((x) => x.descriptor).join('+') || '-'; st[k] = (st[k] || 0) + 1; }
-        console.log(`   WQLP ${label}: rows=${d.length} total=${r.total} err=${String(r.error || (r.errors && JSON.stringify(r.errors)) || "").slice(0, 200)} ${JSON.stringify(st).slice(0, 300)}`);
-        return d;
-      } catch (e) { console.log(`   WQLP ${label}: ERROR ${String(e.message).slice(0, 220)}`); return null; }
-    };
-    const raw = async (label, q) => { try { const r = await wql(token, q, 10000); console.log(`   WQLP ${label}: total=${r.total} ` + JSON.stringify((r.data || []).slice(0, 3)).slice(0, 600)); return r.data || []; } catch (e) { console.log(`   WQLP ${label}: ERROR ${String(e.message).slice(0, 250)}`); return null; } };
-    for (const f of ['organizationTypesPrimary', 'organizationTypesForIntegrationUseOnly']) {
-      const g = await raw('group ' + f, `SELECT ${f}, COUNT(workdayID) FROM customOrganizations GROUP BY ${f}`);
-      if (g) console.log(`   WQLP ${f} FUH: ` + JSON.stringify(g.filter((r) => JSON.stringify(r).includes('Functional Unit'))));
-    }
-    const ids = new Set(((await wql(token, 'SELECT workdayID FROM customOrganizations WHERE type1 in (b40d8b016367100175b147f364840000)', 10000)).data || []).map((o) => o.workdayID));
-    const all = (await wql(token, 'SELECT workdayID, type1, organizationTypesPrimary FROM customOrganizations', 10000)).data || [];
-    const byPrim = all.filter((o) => ((o.organizationTypesPrimary || {}).descriptor) === 'Functional Unit Hierarchy');
-    const byType = all.filter((o) => (o.type1 || []).some((t) => t.descriptor === 'Functional Unit Hierarchy'));
-    console.log(`   WQLP FUH wid=${ids.size} byType1Name=${byType.length} byPrimaryName=${byPrim.length} multiType=${all.filter((o) => (o.type1 || []).length > 1).length} primEqualsWid=${byPrim.every((o) => ids.has(o.workdayID))}`);
+    const ids = await nameIds(token);
+    console.log(`   NAMES subtypes ${SUBTYPE_NAMES.join(', ')} -> ${ids.subtypes || '(none)'}; type ${FUH_TYPE_NAME} -> ${ids.fuhTypes || '(none)'}`);
     pass('Probe.wqlNames', 'see WQLP lines');
     return;
   }

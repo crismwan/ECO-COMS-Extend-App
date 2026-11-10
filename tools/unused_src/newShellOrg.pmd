@@ -9,6 +9,24 @@
   ],
   "endPoints": [
     {
+      "name": "orgSubtypes",
+      "baseUrlType": "workday-wql",
+      "url": "data",
+      "authType": "sso",
+      "bestEffort": "true",
+      "wqlQuery": {
+        "queryId": "orgSubtypes"
+      },
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
       "name": "selectedWorker",
       "baseUrlType": "COMMON",
       "url": "/workers/me",
@@ -52,7 +70,10 @@
       "isCollection": true,
       "bestEffort": "true",
       "wqlQuery": {
-        "queryId": "customOrganizations"
+        "queryId": "customOrganizations",
+        "parameters": {
+          "subtypes": "<% (orgSubtypes.data ?? []).filter(r => { empty(r.subtype) ? false : (r.subtype.descriptor == 'X:META' || r.subtype.descriptor == 'X:SHELL') }).map(r => { r.subtype.id }).join(',') %>"
+        }
       },
       "failOnStatusCodes": [
         {
@@ -73,7 +94,7 @@
     {
       "name": "verifyShellOrg",
       "baseUrlType": "workday-wql",
-      "url": "<% 'data?limit=' + lim + '&query=SELECT%20workdayID%2C%20code%20FROM%20topLevelOrganizations%20WHERE%20subtype%20in%20(e6ca8683b78d10017a5c108412fc0000%2C%20e6ca8683b78d10017a5c108412fc0001)' %>",
+      "url": "<% 'data?limit=' + lim + '&query=SELECT%20workdayID%2C%20code%20FROM%20topLevelOrganizations%20WHERE%20subtype%20in%20(' + (orgSubtypes.data ?? []).filter(r => { empty(r.subtype) ? false : (r.subtype.descriptor == 'X:META' || r.subtype.descriptor == 'X:SHELL') }).map(r => { r.subtype.id }).join(',') + ')' %>",
       "authType": "sso",
       "deferred": "true"
     }

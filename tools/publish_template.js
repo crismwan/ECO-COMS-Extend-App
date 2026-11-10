@@ -52,7 +52,10 @@ function pacificNow() {
   // way the pages do: the distinct first type of each application organization from the appTypes query (2026-11-08:
   // sending the raw <% types %> made WQL refuse the query, so the template hadn't refreshed since 2026-11-06)
   const wq = (name) => JSON.parse(fs.readFileSync(path.join(ROOT, 'presentation', 'wqlQueries', name + '.wqlquery'), 'utf8')).query;
-  const apps = await call('GET', `${API}/wql/v1/data?limit=10000&query=${encodeURIComponent(wq('appTypes'))}`, { headers: { Accept: 'application/json' } });
+  // appTypes takes the X:META / X:SHELL subtype WIDs, looked up by name as the pages do (WIDs differ between tenants)
+  const subs = await call('GET', `${API}/wql/v1/data?limit=1000&query=${encodeURIComponent('SELECT subtype, COUNT(workdayID) FROM topLevelOrganizations GROUP BY subtype')}`, { headers: { Accept: 'application/json' } });
+  const subtypeIds = (subs.data || []).filter((r) => r.subtype && ['X:META', 'X:SHELL'].includes(r.subtype.descriptor)).map((r) => r.subtype.id).join(',');
+  const apps = await call('GET', `${API}/wql/v1/data?limit=10000&query=${encodeURIComponent(wq('appTypes').replace('<% subtypes %>', subtypeIds))}`, { headers: { Accept: 'application/json' } });
   const types = [...new Set((apps.data || []).map((o) => ((o.type1 || [])[0] || {}).id).filter(Boolean))];
   const q = wq('allShellAssignableRolesinTenant').replace('<% types %>', types.length ? types.join(',') : 'none');
   const res = await call('GET', `${API}/wql/v1/data?limit=10000&query=${encodeURIComponent(q)}`, { headers: { Accept: 'application/json' } });

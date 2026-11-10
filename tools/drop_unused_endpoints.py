@@ -25,18 +25,25 @@ shutil.rmtree(SRC, ignore_errors=True)
 dropped = []
 for p in sorted(glob.glob(os.path.join(ROOT, '*.pmd'))):
     d = json.load(open(p, encoding='utf-8'))
-    eps = d.get('endPoints') or []
-    keep, gone = [], []
-    for e in eps:
-        rest = dict(d)
-        rest['endPoints'] = [x for x in eps if x is not e]
-        text = json.dumps(rest)
-        used = re.search(r"(?<![\w])" + re.escape(e['name']) + r"\b(?!['\"]\s*:)", text)
-        (keep if used else gone).append(e)
-    if gone:
-        os.makedirs(SRC, exist_ok=True)
-        shutil.copyfile(p, os.path.join(SRC, os.path.basename(p)))
+    orig = None
+    # repeat: an endpoint used only by one just dropped (e.g. orgSubtypes feeding customOrganizations) goes too
+    while True:
+        eps = d.get('endPoints') or []
+        keep, gone = [], []
+        for e in eps:
+            rest = dict(d)
+            rest['endPoints'] = [x for x in eps if x is not e]
+            text = json.dumps(rest)
+            used = re.search(r"(?<![\w])" + re.escape(e['name']) + r"\b(?!['\"]\s*:)", text)
+            (keep if used else gone).append(e)
+        if not gone:
+            break
+        if orig is None:
+            os.makedirs(SRC, exist_ok=True)
+            shutil.copyfile(p, os.path.join(SRC, os.path.basename(p)))
+            orig = True
         d['endPoints'] = keep
-        open(p, 'w', encoding='utf-8').write(json.dumps(d, indent=2, ensure_ascii=False) + '\n')
         dropped += [f"{os.path.basename(p)[:-4]}.{e['name']}" for e in gone]
+    if orig:
+        open(p, 'w', encoding='utf-8').write(json.dumps(d, indent=2, ensure_ascii=False) + '\n')
 print('drop_unused_endpoints:', ', '.join(dropped) if dropped else 'none')

@@ -33,20 +33,36 @@ def keep(p):
     os.makedirs(os.path.dirname(dst), exist_ok=True)
     if not os.path.exists(dst):
         shutil.copyfile(p, dst)
-X_META = 'e6ca8683b78d10017a5c108412fc0000'
-X_SHELL = 'e6ca8683b78d10017a5c108412fc0001'
-SUBTYPES = f'{X_META}, {X_SHELL}'
+# The app's organizations are found by the NAMES of their subtypes and type, not by WIDs: a WID differs from tenant to
+# tenant (user, 2026-11-10). WQL can't filter an instance field by name (probe 2026-11-10: `subtype in (X:SHELL)` and
+# `Organization_Subtype_Name = ...` are refused; only WIDs resolve), so each list is two steps: a tiny GROUP BY lookup
+# returns every subtype (or type) with its WID (34 / 41 rows), the page keeps the WIDs whose descriptor matches, and the
+# real query takes them as a parameter. No match gives `in ()`, which WQL answers with no rows (no error).
+SUBTYPE_NAMES = ['X:META', 'X:SHELL']
+FUH_TYPE_NAME = 'Functional Unit Hierarchy'
+SUBTYPES = '<% subtypes %>'
+def _match(field, names):
+    return ' || '.join(f"r.{field}.descriptor == '{n}'" for n in names)
+# script text: the matching WIDs, comma-separated
+SUB_IDS = (f"(orgSubtypes.data ?? []).filter(r => {{ empty(r.subtype) ? false : ({_match('subtype', SUBTYPE_NAMES)}) }})"
+           ".map(r => { r.subtype.id }).join(',')")
+FUH_IDS = (f"(orgTypes.data ?? []).filter(r => {{ empty(r.organizationTypesPrimary) ? false : ({_match('organizationTypesPrimary', [FUH_TYPE_NAME])}) }})"
+           ".map(r => { r.organizationTypesPrimary.id }).join(',')")
 NOT_AAA = "roleName not contains 'Organizations and Roles Assignment Administrator'"
 ROLE_SEL = ('SELECT role, enabledForOrganizationTypes, roleAssignments{organization, workersAssigned, '
             'cf_ZCF_EE_RoleAssignedToAsPositionRestrictions} as roleAssignments FROM assignableRoles')
 
 # ---- WQL query components -------------------------------------------------------------------------------------------
 QUERIES = {
-    'allShellOrgs': {'id': 'allShellOrgs', 'query':
+    'orgSubtypes': {'id': 'orgSubtypes', 'query':
+        'SELECT subtype, COUNT(workdayID) FROM topLevelOrganizations GROUP BY subtype'},
+    'orgTypes': {'id': 'orgTypes', 'query':
+        'SELECT organizationTypesPrimary, COUNT(workdayID) FROM customOrganizations GROUP BY organizationTypesPrimary'},
+    'allShellOrgs': {'id': 'allShellOrgs', 'parameters': ['subtypes'], 'query':
         f'SELECT workdayID, organizationByName, code, cf_active1, type1 FROM topLevelOrganizations WHERE subtype in ({SUBTYPES})'},
-    'customOrganizations': {'id': 'customOrganizations', 'query':
+    'customOrganizations': {'id': 'customOrganizations', 'parameters': ['subtypes'], 'query':
         f'SELECT workdayID, organizationByName, code, type1 FROM topLevelOrganizations WHERE subtype in ({SUBTYPES})'},
-    'appTypes': {'id': 'appTypes', 'query':
+    'appTypes': {'id': 'appTypes', 'parameters': ['subtypes'], 'query':
         f'SELECT workdayID, type1 FROM topLevelOrganizations WHERE subtype in ({SUBTYPES})'},
     'allShellAssignableRolesinTenant': {'id': 'allShellAssignableRolesinTenant', 'parameters': ['types'], 'query':
         f'{ROLE_SEL} WHERE enabledForOrganizationTypes in (<% types %>) AND {NOT_AAA}'},
@@ -62,8 +78,13 @@ def types_of(ep):
     return (f"<% let ts = ({ep}.data ?? []).map(o => {{ (o.type1 ?? []).size() > 0 ? o.type1[0].id : '' }})"
             f".filter(t => {{ t != '' }}).distinct(); ts.size() > 0 ? ts.join(',') : 'none' %>")
 
-APP_TYPES_EP = {"name": "appTypes", "baseUrlType": "workday-wql", "url": "data", "authType": "sso", "bestEffort": "true",
-                "wqlQuery": {"queryId": "appTypes"}, "failOnStatusCodes": [{"code": 400}, {"code": 429}]}
+def _wql_ep(name, params=None):
+    q = {"queryId": name}
+    if params:
+        q["parameters"] = params
+    return {"name": name, "baseUrlType": "workday-wql", "url": "data", "authType": "sso", "bestEffort": "true",
+            "wqlQuery": q, "failOnStatusCodes": [{"code": 400}, {"code": 429}]}
+APP_TYPES_EP = _wql_ep("appTypes", {"subtypes": f"<% {SUB_IDS} %>"})
 
 # The application of an organization record (inline in pages): its type, else its code.
 APP_OF = "((org.type1 ?? []).size() > 0 ? org.type1[0].descriptor : org.code)"
@@ -94,7 +115,7 @@ REWRITES = [
      ": ((((appTypes.data ?? []).get(ti)).type1 ?? []).size() > 0 ? ((appTypes.data ?? []).get(ti)).type1[0].descriptor : oc);"),
     ("'ot': ot, 'vo'", "'ot': ot.urlEncode(), 'vo'"),
     # run-and-verify readbacks (Add Shell Org, Add Pattern): find the new organization among the subtype ones
-    ("WHERE%20code%20contains%20%27X%3A%27", f"WHERE%20subtype%20in%20({X_META}%2C%20{X_SHELL})"),
+    ("WHERE%20code%20contains%20%27X%3A%27", f"WHERE%20subtype%20in%20(' + {SUB_IDS} + ')"),
     # filters that only kept X: organizations: the list is already limited by subtype
     ("(o.code ?? '').startsWith('X:') && ", ""),
     ("o.code.startsWith('X:') && ", ""),
@@ -213,4 +234,76 @@ ALLOWED = {'comsShellOrg.script', 'comsInsights.script'}  # typed-name check; re
 bad = sorted(set(left) - ALLOWED)
 if bad:
     sys.exit('subtype_apps: X: prefix tests left in ' + ', '.join(bad))
+# ---- by name, not WID: subtype / type lookups on every page that needs them -------------------------------------------
+NEEDS_SUBTYPES = ('allShellOrgs', 'customOrganizations', 'appTypes')
+FUH_WID = 'b40d8b016367100175b147f364840000'
+for p in sorted(glob.glob(os.path.join(ROOT, '*.pmd'))):
+    t = open(p, encoding='utf-8').read()
+    n = t.replace(f'type1 in ({FUH_WID})', f"type1 in (' + {FUH_IDS} + ')")
+    d = json.loads(n)
+    eps = d.get('endPoints', [])
+    for e in eps:
+        q = e.get('wqlQuery') or {}
+        if q.get('queryId') in NEEDS_SUBTYPES:
+            q.setdefault('parameters', {})['subtypes'] = f'<% {SUB_IDS} %>'
+    body = json.dumps(d)
+    names = [e.get('name') for e in eps]
+    for ep, ref in (('orgTypes', 'orgTypes.data'), ('orgSubtypes', 'orgSubtypes.data')):
+        if ref in body and ep not in names:
+            eps.insert(0, _wql_ep(ep))
+    n2 = json.dumps(d, indent=2, ensure_ascii=False) + '\n'
+    if n2 != t:
+        keep(p)
+        open(p, 'w', encoding='utf-8').write(n2)
+        if os.path.basename(p) not in changed:
+            changed.append(os.path.basename(p))
+
+# Change Status guard (orchestration): look the subtype WIDs up by name, then list the X:META / X:SHELL organizations
+ORCH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'orchestration')
+op = os.path.join(ORCH, 'IORC_0037_XFD_SEC_Change_Shell_Org_Status.orchestration')
+od = json.load(open(op, encoding='utf-8'))
+def _node_lists(x):
+    if isinstance(x, dict):
+        for k, v in x.items():
+            if k == 'nodes' and isinstance(v, dict) and isinstance(v.get('_value'), list):
+                yield v['_value']
+            yield from _node_lists(v)
+    elif isinstance(x, list):
+        for v in x:
+            yield from _node_lists(v)
+import copy
+def _name(nd):
+    return ((nd.get('_value') or {}).get('name') or {}).get('_value')
+for nodes in _node_lists(od):
+    idx = next((i for i, nd in enumerate(nodes) if _name(nd) == 'LookupShellOrgs'), None)
+    if idx is None:
+        continue
+    if not any(_name(nd) == 'LookupSubtypes' for nd in nodes):
+        nn = copy.deepcopy(nodes[idx])
+        nn['_value']['name']['_value'] = 'LookupSubtypes'
+        nodes.insert(idx, nn)
+        idx += 1
+    look = next(nd for nd in nodes if _name(nd) == 'LookupSubtypes')
+    look['_value']['path']['_value']['source']['_value'] = (
+        '"/wql/v1/data?limit=1000&query=SELECT%20subtype%2C%20COUNT(workdayID)%20FROM%20topLevelOrganizations%20GROUP%20BY%20subtype"')
+    look['_value']['notes'] = {"_type": ["List", "Note"], "_value": [{"_type": "Note", "_value": {
+        "key": {"_type": "String", "_value": "description"},
+        "value": {"_type": "String", "_value": "Every organization subtype with its WID, so the next step can find X:META and X:SHELL by name (WIDs differ between tenants)"}}}]}
+    sub = lambda nm: f"data.LookupSubtypes.response.asJSON().stringAtJsonPathWithDefault(\"$.data[?(@.subtype.descriptor == '{nm}')].subtype.id\", \"\")"
+    m, sh = sub(SUBTYPE_NAMES[0]), sub(SUBTYPE_NAMES[1])
+    ids = f'(if ({m}.isEmpty()) {sh} else (if ({sh}.isEmpty()) {m} else {m}.append("%2C").append({sh})))'
+    nodes[idx]['_value']['path']['_value']['source']['_value'] = (
+        '"/wql/v1/data?limit=10000&query=SELECT%20workdayID%20FROM%20topLevelOrganizations%20WHERE%20subtype%20in%20(" + '
+        + ids + ' + ")"')
+ns = json.dumps(od, separators=(',', ':'), ensure_ascii=False)
+if ns != open(op, encoding='utf-8').read():
+    open(op, 'w', encoding='utf-8').write(ns)
+    changed.append(os.path.basename(op))
+
+# no tenant-specific subtype / type WID may be left behind
+for p in glob.glob(os.path.join(ROOT, '**', '*'), recursive=True) + [op]:
+    if os.path.isfile(p) and any(w in open(p, encoding='utf-8', errors='ignore').read() for w in
+                                 ('e6ca8683b78d10017a5c108412fc0000', 'e6ca8683b78d10017a5c108412fc0001', FUH_WID)):
+        sys.exit('subtype_apps: tenant WID left in ' + os.path.relpath(p, ROOT))
+
 print('subtype_apps: organizations by subtype, applications by organization type;', len(changed), 'files')

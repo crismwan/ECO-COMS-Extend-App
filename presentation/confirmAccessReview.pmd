@@ -8,6 +8,24 @@
   ],
   "endPoints": [
     {
+      "name": "orgSubtypes",
+      "baseUrlType": "workday-wql",
+      "url": "data",
+      "authType": "sso",
+      "bestEffort": "true",
+      "wqlQuery": {
+        "queryId": "orgSubtypes"
+      },
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
       "name": "selectedWorker",
       "baseUrlType": "COMMON",
       "url": "/workers/me",
@@ -32,7 +50,10 @@
       "authType": "sso",
       "bestEffort": "true",
       "wqlQuery": {
-        "queryId": "appTypes"
+        "queryId": "appTypes",
+        "parameters": {
+          "subtypes": "<% (orgSubtypes.data ?? []).filter(r => { empty(r.subtype) ? false : (r.subtype.descriptor == 'X:META' || r.subtype.descriptor == 'X:SHELL') }).map(r => { r.subtype.id }).join(',') %>"
+        }
       },
       "failOnStatusCodes": [
         {

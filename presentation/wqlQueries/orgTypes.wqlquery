@@ -1,0 +1,4 @@
+{
+  "id": "orgTypes",
+  "query": "SELECT organizationTypesPrimary, COUNT(workdayID) FROM customOrganizations GROUP BY organizationTypesPrimary"
+}
