@@ -2550,10 +2550,15 @@ async function bulkValidate(token, me) {
     const stamp = new Date().toISOString().replace(/\.\d+Z$/, 'Z');
     const today = new Date(Date.now() - 8 * 3600e3).toISOString().slice(0, 10);   // tenant (Pacific) date
     await request('POST', `${BO}/comsBulkRuns`, token, { batchRef: ref, source: 'Grid', runMode: 'VALIDATE', status: 'Uploaded',
-      effectiveDate: today, uploadedByName: me.descriptor, uploadedByWid: me.id, uploadedAt: stamp, changeCount: '1', summary: 'TEST validate run' });
+      effectiveDate: today, uploadedByName: me.descriptor, uploadedByWid: me.id, uploadedAt: stamp, changeCount: '2', summary: 'TEST validate run' });
     await request('POST', `${BO}/comsBulkRowResults`, token, { batchRef: ref + '-DRAFT', runMode: 'VALIDATE', rowAction: 'ADD', result: 'DRAFT',
       roleName: src.roleName || '', roleWid: src.roleWid, orgName: src.coName || '', orgWid: src.orgWid,
       positionId: src.coReferenceId, positionName: src.positionName || '', assigneeWid: '', timestamp: stamp });
+    // a second row on a vacant position: the row message must say so (delivered `worker` field, 2026-11-10)
+    const vac = ((await wql(token, 'SELECT positionID FROM allPositions WHERE supervisoryOrganization is not empty AND worker is empty', 1)).data || [])[0];
+    if (vac) await request('POST', `${BO}/comsBulkRowResults`, token, { batchRef: ref + '-DRAFT', runMode: 'VALIDATE', rowAction: 'ADD', result: 'DRAFT',
+      roleName: src.roleName || '', roleWid: src.roleWid, orgName: src.coName || '', orgWid: src.orgWid,
+      positionId: vac.positionID, positionName: '', assigneeWid: '', timestamp: stamp });
     const auditsBefore = new Set(audits.map((a) => a.id));
     const r = await launch(token, 'IORC_0037_XFD_SEC_Bulk_Role_Changes_From_Grid', { ref, mode: 'VALIDATE', effectiveDate: today, changedBy: me.descriptor, changedByWid: me.id });
     console.log('   launch: ' + String(typeof r === 'string' ? r : JSON.stringify(r)).slice(0, 200));
@@ -2562,7 +2567,7 @@ async function bulkValidate(token, me) {
       await sleep(4000);
       run = ((await request('GET', `${BO}/comsBulkRuns?limit=100&batchRef=${encodeURIComponent(ref)}`, token)).data || [])[0];
       rows = (await request('GET', `${BO}/comsBulkRowResults?limit=100&batchRef=${encodeURIComponent(ref)}`, token)).data || [];
-      if (run && /Validated|Completed|Rejected|Failed/.test(run.status || '') && rows.length) break;
+      if (run && /Validated|Completed|Rejected|Failed/.test(run.status || '') && rows.length >= (vac ? 2 : 1)) break;
     }
     if (!run || run.status !== 'Validated') throw new Error(`${ref}: run status ${run?.status} (${run?.statusMessage || ''}) after 2 minutes`);
     if (!rows.length) throw new Error(`${ref}: no row result (the per-row sub-orchestration didn't write one)`);
@@ -2570,7 +2575,13 @@ async function bulkValidate(token, me) {
     if (bad.length) throw new Error(`${ref}: unexpected row result ${bad.map((x) => x.result).join(', ')}`);
     const newAudits = (await readAll(token, 'comsAuditLogs')).filter((a) => !auditsBefore.has(a.id) && (a.details || '').includes(ref));
     if (newAudits.length) throw new Error(`${ref}: VALIDATE wrote ${newAudits.length} audit record(s)`);
-    pass('Bulk.validateRun', `${ref}: Validated; row ${rows[0].result}: ${rows[0].message || ''} (role ${src.roleName}, ${src.coReferenceId})`);
+    if (vac) {
+      const vr = rows.find((x) => x.positionId === vac.positionID), fr = rows.find((x) => x.positionId === src.coReferenceId);
+      console.log(`   rows: ${rows.map((x) => `${x.positionId} ${x.result}: ${x.message || ''}`).join(' | ')}`);
+      if (!vr || !/unfilled/i.test(vr.message || '')) throw new Error(`${ref}: vacant ${vac.positionID} row doesn't say unfilled: ${vr?.message}`);
+      if (fr && /unfilled/i.test(fr.message || '') && vr !== fr) throw new Error(`${ref}: filled ${src.coReferenceId} row says unfilled`);
+    }
+    pass('Bulk.validateRun', `${ref}: Validated; ${rows.map((x) => `${x.positionId} ${x.result}`).join(', ')} (role ${src.roleName})`);
   });
 }
 
