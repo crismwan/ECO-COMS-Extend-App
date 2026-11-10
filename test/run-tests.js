@@ -2639,13 +2639,15 @@ async function probe(token) {
       } catch (e) { console.log(`   WQLP ${label}: ERROR ${String(e.message).slice(0, 220)}`); return null; }
     };
     const raw = async (label, q) => { try { const r = await wql(token, q, 10000); console.log(`   WQLP ${label}: total=${r.total} ` + JSON.stringify((r.data || []).slice(0, 3)).slice(0, 600)); return r.data || []; } catch (e) { console.log(`   WQLP ${label}: ERROR ${String(e.message).slice(0, 250)}`); return null; } };
-    for (const alias of ['customOrganizations']) {
-      const ds = (await request('GET', `${API}/wql/v1/dataSources?alias=${alias}`, token)).data || [];
-      const all = []; for (let off = 0; off < 1000; off += 100) { const pg = (await request('GET', `${API}/wql/v1/dataSources/${ds[0].id}/fields?limit=100&offset=${off}`, token)).data || []; all.push(...pg); if (pg.length < 100) break; }
-      console.log(`   WQLP fields ${alias} n=${all.length}: ` + all.filter((x) => !/Numeric/.test(x.type) && /type/i.test(x.alias + ' ' + x.descriptor)).map((x) => `${x.alias}(${x.type})`).join(', '));
+    for (const f of ['organizationTypesPrimary', 'organizationTypesForIntegrationUseOnly']) {
+      const g = await raw('group ' + f, `SELECT ${f}, COUNT(workdayID) FROM customOrganizations GROUP BY ${f}`);
+      if (g) console.log(`   WQLP ${f} FUH: ` + JSON.stringify(g.filter((r) => JSON.stringify(r).includes('Functional Unit'))));
     }
-    const r = await raw('fuhOne', 'SELECT workdayID, type1 FROM customOrganizations WHERE type1 in (b40d8b016367100175b147f364840000)');
-    await raw('customAllTypes', 'SELECT workdayID, type1 FROM customOrganizations');
+    const ids = new Set(((await wql(token, 'SELECT workdayID FROM customOrganizations WHERE type1 in (b40d8b016367100175b147f364840000)', 10000)).data || []).map((o) => o.workdayID));
+    const all = (await wql(token, 'SELECT workdayID, type1, organizationTypesPrimary FROM customOrganizations', 10000)).data || [];
+    const byPrim = all.filter((o) => ((o.organizationTypesPrimary || {}).descriptor) === 'Functional Unit Hierarchy');
+    const byType = all.filter((o) => (o.type1 || []).some((t) => t.descriptor === 'Functional Unit Hierarchy'));
+    console.log(`   WQLP FUH wid=${ids.size} byType1Name=${byType.length} byPrimaryName=${byPrim.length} multiType=${all.filter((o) => (o.type1 || []).length > 1).length} primEqualsWid=${byPrim.every((o) => ids.has(o.workdayID))}`);
     pass('Probe.wqlNames', 'see WQLP lines');
     return;
   }
