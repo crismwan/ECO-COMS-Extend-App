@@ -168,7 +168,7 @@
     {
       "name": "posSearch",
       "baseUrlType": "workday-wql",
-      "url": "<% 'data?limit=50&query=' + string:pathEncode('SELECT cf_PositionID, workdayID, position_PositionManagement, cf_PositionIsFilled, cf_PositionText FROM allPositions WHERE supervisoryOrganization is not empty AND cf_PositionText contains \\'' + instanceListQuery.replace('\\'', '').replace('\\\\', '') + '\\'') %>",
+      "url": "<% 'data?limit=50&query=' + string:pathEncode('SELECT positionID, workdayID, position_PositionManagement, worker, cf_PositionText FROM allPositions WHERE supervisoryOrganization is not empty AND cf_PositionText contains \\'' + instanceListQuery.replace('\\'', '').replace('\\\\', '') + '\\'') %>",
       "authType": "sso",
       "isCollection": true,
       "bestEffort": "true",
@@ -211,7 +211,7 @@
     {
       "name": "posTreeOrgPositions",
       "baseUrlType": "workday-wql",
-      "url": "<% 'data?limit=200&query=' + string:pathEncode('SELECT cf_PositionID, workdayID, position_PositionManagement, cf_PositionText FROM allPositions WHERE supervisoryOrganization in (\\'' + org.replace('\\'', '').replace('\\\\', '') + '\\')') %>",
+      "url": "<% 'data?limit=200&query=' + string:pathEncode('SELECT positionID, workdayID, position_PositionManagement, cf_PositionText FROM allPositions WHERE supervisoryOrganization in (\\'' + org.replace('\\'', '').replace('\\\\', '') + '\\')') %>",
       "authType": "sso",
       "deferred": "true"
     },
@@ -690,7 +690,7 @@
                   "multiSelect": true,
                   "values": "<% (posTreeRoot.data ?? []).filter(r => { r.descriptor == 'My Favorites' || r.descriptor == 'My Organizations' || r.descriptor == 'Supervisory Organizations by Manager' || r.descriptor == 'Supervisory Organization' }).map(r => { {'id': r.id, 'descriptor': r.descriptor} }) %>",
                   "searchEndPoint": "<% endpoints.posSearch %>",
-                  "searchResultValues": "<% empty(posSearch.data) ? [] : posSearch.data.map(o => { {'id': o.workdayID, 'descriptor': !empty(o.position_PositionManagement.descriptor) ? o.position_PositionManagement.descriptor : (!empty(o.cf_PositionText) ? o.cf_PositionText : (!empty(o.cf_PositionID) ? o.cf_PositionID : o.workdayID))} }) %>",
+                  "searchResultValues": "<% empty(posSearch.data) ? [] : posSearch.data.map(o => { {'id': o.workdayID, 'descriptor': !empty(o.position_PositionManagement.descriptor) ? o.position_PositionManagement.descriptor : (!empty(o.cf_PositionText) ? o.cf_PositionText : (!empty(o.positionID) ? o.positionID : o.workdayID))} }) %>",
                   "valuesOut": [
                     {
                       "value": "<% self.value.join(',') %>",
@@ -702,7 +702,7 @@
                     }
                   ],
                   "helpText": "Click to browse by supervisory organization, or type a position name or ID. Shows the first 50 matches; type more of the title or ID to narrow.",
-                  "dynamicMonikerLevels": "<%\n  const sel = self.promptSelections;\n  const roots = posTreeRoot.data ?? [];\n  const i = roots.map(r => { r.id }).indexOf(sel[0]);\n  const href = i < 0 ? '' : (roots[i].href ?? '');\n  const byManager = i < 0 ? false : roots[i].descriptor == 'Supervisory Organizations by Manager';\n  if (sel.size() == 1 || (byManager && sel.size() == 2)) {\n    const node = sel.size() == 1 ? href : (href + '/' + sel[1]);\n    const first = posTreeNode.invoke({'h': node, 'o': '0'});\n    const more = (first.total ?? 0) > 100 ? (posTreeNode.invoke({'h': node, 'o': '100'}).data ?? []) : [];\n    return [list:flatten([first.data ?? [], more]).map(o => { {'id': o.id, 'descriptor': o.descriptor} }), true];\n  }\n  const ps = posTreeOrgPositions.invoke({'org': sel[sel.size() - 1]}).data ?? [];\n  return [ps.filter(o => { !empty(o.workdayID) }).map(o => { {'id': o.workdayID, 'descriptor': !empty(o.position_PositionManagement.descriptor) ? o.position_PositionManagement.descriptor : (!empty(o.cf_PositionText) ? o.cf_PositionText : o.cf_PositionID)} }), false];\n%>"
+                  "dynamicMonikerLevels": "<%\n  const sel = self.promptSelections;\n  const roots = posTreeRoot.data ?? [];\n  const i = roots.map(r => { r.id }).indexOf(sel[0]);\n  const href = i < 0 ? '' : (roots[i].href ?? '');\n  const byManager = i < 0 ? false : roots[i].descriptor == 'Supervisory Organizations by Manager';\n  if (sel.size() == 1 || (byManager && sel.size() == 2)) {\n    const node = sel.size() == 1 ? href : (href + '/' + sel[1]);\n    const first = posTreeNode.invoke({'h': node, 'o': '0'});\n    const more = (first.total ?? 0) > 100 ? (posTreeNode.invoke({'h': node, 'o': '100'}).data ?? []) : [];\n    return [list:flatten([first.data ?? [], more]).map(o => { {'id': o.id, 'descriptor': o.descriptor} }), true];\n  }\n  const ps = posTreeOrgPositions.invoke({'org': sel[sel.size() - 1]}).data ?? [];\n  return [ps.filter(o => { !empty(o.workdayID) }).map(o => { {'id': o.workdayID, 'descriptor': !empty(o.position_PositionManagement.descriptor) ? o.position_PositionManagement.descriptor : (!empty(o.cf_PositionText) ? o.cf_PositionText : o.positionID)} }), false];\n%>"
                 },
                 {
                   "type": "hidden",

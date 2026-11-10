@@ -82,8 +82,8 @@ var orgName = function(orgs, i) {
 /* One row per application code: shell orgs, patterns and role requests.
    Every list below is a sorted list of application codes, built once (memory limit hit 2026-11-02 with per-org maps). */
 var appRows = function(requests, orgs, apps) {
-  let active = orgs.filter(o => { isShellOrg(o) && o.cf_active1 == true }).map(o => { orgAppCode(o.code) }).sort();
-  let inactive = orgs.filter(o => { isShellOrg(o) && o.cf_active1 != true }).map(o => { orgAppCode(o.code) }).sort();
+  let active = orgs.filter(o => { isShellOrg(o) && o.inactive != true }).map(o => { orgAppCode(o.code) }).sort();
+  let inactive = orgs.filter(o => { isShellOrg(o) && o.inactive == true }).map(o => { orgAppCode(o.code) }).sort();
   let pats = orgs.filter(o => { isPattern(o) }).map(o => { orgAppCode(o.code) }).sort();
   let pend = requests.filter(r => { r.status == 'Pending ISC Review' }).map(r => { appOfIn(r, apps) }).sort();
   let appr = requests.filter(r => { r.status == 'Approved' }).map(r => { appOfIn(r, apps) }).sort();

@@ -41,7 +41,7 @@ var readyOf = function(recs, app) {
 };
 
 var rowsOf = function(orgs) {
-  (orgs ?? []).map(o => { { 'c': o.code, 'a': appOfOrg(o), 'on': o.cf_active1 == true } });
+  (orgs ?? []).map(o => { { 'c': o.code, 'a': appOfOrg(o), 'on': o.inactive != true } });
 };
 
 var idsOf = function(rows, recs) {

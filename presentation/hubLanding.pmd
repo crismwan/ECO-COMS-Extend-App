@@ -244,7 +244,7 @@
                 {
                   "type": "card",
                   "cardId": "ShellOrgCard",
-                  "parameters": "<% { 'countText': '' + size((allShellOrgs.data ?? []).filter(o => { !(o.code ?? '').contains(':PATTERN') && o.cf_active1 == true })) + ' active shell organizations' } %>"
+                  "parameters": "<% { 'countText': '' + size((allShellOrgs.data ?? []).filter(o => { !(o.code ?? '').contains(':PATTERN') && o.inactive != true })) + ' active shell organizations' } %>"
                 },
                 {
                   "type": "card",

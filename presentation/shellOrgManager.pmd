@@ -153,12 +153,12 @@
               {
                 "type": "card",
                 "cardId": "QuickShellOrgManagerCard",
-                "parameters": "<% { 'mark': ((queryParams.quick ?? '') == 'active') ? 'y' : '', 'b_appCode': (queryParams.appCode ?? ''), 'b_appName': (queryParams.appName ?? ''), 'b_family': (queryParams.family ?? ''), 'b_orgType': (queryParams.orgType ?? ''), 'b_quick': ((queryParams.quick ?? '') == 'active' ? '' : 'active'), 'title': 'Active', 'subtitle': (empty(queryParams.appCode) ? 'All applications' : queryParams.appCode), 'countText': '' + size((allShellOrgs.data ?? []).filter(o => { (empty(queryParams.appCode) || (o.code ?? '').startsWith(queryParams.appCode + ':')) && !(o.code ?? '').contains(':PATTERN') }).filter(o => { o.cf_active1 == true })) + (size((allShellOrgs.data ?? []).filter(o => { (empty(queryParams.appCode) || (o.code ?? '').startsWith(queryParams.appCode + ':')) && !(o.code ?? '').contains(':PATTERN') }).filter(o => { o.cf_active1 == true })) == 1 ? ' shell organization' : ' shell organizations') } %>"
+                "parameters": "<% { 'mark': ((queryParams.quick ?? '') == 'active') ? 'y' : '', 'b_appCode': (queryParams.appCode ?? ''), 'b_appName': (queryParams.appName ?? ''), 'b_family': (queryParams.family ?? ''), 'b_orgType': (queryParams.orgType ?? ''), 'b_quick': ((queryParams.quick ?? '') == 'active' ? '' : 'active'), 'title': 'Active', 'subtitle': (empty(queryParams.appCode) ? 'All applications' : queryParams.appCode), 'countText': '' + size((allShellOrgs.data ?? []).filter(o => { (empty(queryParams.appCode) || (o.code ?? '').startsWith(queryParams.appCode + ':')) && !(o.code ?? '').contains(':PATTERN') }).filter(o => { o.inactive != true })) + (size((allShellOrgs.data ?? []).filter(o => { (empty(queryParams.appCode) || (o.code ?? '').startsWith(queryParams.appCode + ':')) && !(o.code ?? '').contains(':PATTERN') }).filter(o => { o.inactive != true })) == 1 ? ' shell organization' : ' shell organizations') } %>"
               },
               {
                 "type": "card",
                 "cardId": "QuickShellOrgManagerCard",
-                "parameters": "<% { 'mark': ((queryParams.quick ?? '') == 'inactive') ? 'y' : '', 'b_appCode': (queryParams.appCode ?? ''), 'b_appName': (queryParams.appName ?? ''), 'b_family': (queryParams.family ?? ''), 'b_orgType': (queryParams.orgType ?? ''), 'b_quick': ((queryParams.quick ?? '') == 'inactive' ? '' : 'inactive'), 'title': 'Inactive', 'subtitle': (empty(queryParams.appCode) ? 'All applications' : queryParams.appCode), 'countText': '' + size((allShellOrgs.data ?? []).filter(o => { (empty(queryParams.appCode) || (o.code ?? '').startsWith(queryParams.appCode + ':')) && !(o.code ?? '').contains(':PATTERN') }).filter(o => { o.cf_active1 != true })) + (size((allShellOrgs.data ?? []).filter(o => { (empty(queryParams.appCode) || (o.code ?? '').startsWith(queryParams.appCode + ':')) && !(o.code ?? '').contains(':PATTERN') }).filter(o => { o.cf_active1 != true })) == 1 ? ' shell organization' : ' shell organizations') } %>"
+                "parameters": "<% { 'mark': ((queryParams.quick ?? '') == 'inactive') ? 'y' : '', 'b_appCode': (queryParams.appCode ?? ''), 'b_appName': (queryParams.appName ?? ''), 'b_family': (queryParams.family ?? ''), 'b_orgType': (queryParams.orgType ?? ''), 'b_quick': ((queryParams.quick ?? '') == 'inactive' ? '' : 'inactive'), 'title': 'Inactive', 'subtitle': (empty(queryParams.appCode) ? 'All applications' : queryParams.appCode), 'countText': '' + size((allShellOrgs.data ?? []).filter(o => { (empty(queryParams.appCode) || (o.code ?? '').startsWith(queryParams.appCode + ':')) && !(o.code ?? '').contains(':PATTERN') }).filter(o => { o.inactive == true })) + (size((allShellOrgs.data ?? []).filter(o => { (empty(queryParams.appCode) || (o.code ?? '').startsWith(queryParams.appCode + ':')) && !(o.code ?? '').contains(':PATTERN') }).filter(o => { o.inactive == true })) == 1 ? ' shell organization' : ' shell organizations') } %>"
               },
               {
                 "type": "card",
@@ -172,7 +172,7 @@
               {
                 "type": "card",
                 "cardId": "ShellOrgStatusChart",
-                "parameters": "<% { 'activeCount': size((allShellOrgs.data ?? []).filter(o => { (empty(queryParams.appCode) || (o.code ?? '').startsWith(queryParams.appCode + ':')) && !(o.code ?? '').contains(':PATTERN') }).filter(o => { o.cf_active1 == true })), 'inactiveCount': size((allShellOrgs.data ?? []).filter(o => { (empty(queryParams.appCode) || (o.code ?? '').startsWith(queryParams.appCode + ':')) && !(o.code ?? '').contains(':PATTERN') }).filter(o => { o.cf_active1 != true })) } %>"
+                "parameters": "<% { 'activeCount': size((allShellOrgs.data ?? []).filter(o => { (empty(queryParams.appCode) || (o.code ?? '').startsWith(queryParams.appCode + ':')) && !(o.code ?? '').contains(':PATTERN') }).filter(o => { o.inactive != true })), 'inactiveCount': size((allShellOrgs.data ?? []).filter(o => { (empty(queryParams.appCode) || (o.code ?? '').startsWith(queryParams.appCode + ':')) && !(o.code ?? '').contains(':PATTERN') }).filter(o => { o.inactive == true })) } %>"
               }
             ]
           }
@@ -378,7 +378,7 @@
                     "sortableAndFilterable": "true",
                     "cellTemplate": {
                       "type": "richText",
-                      "value": "<% pattern.cf_active1 == true ? '<span style=\"color:#065f46;font-weight:600;font-size:12px\">✓ Active</span>' : '<span style=\"color:#6b7280;font-weight:600;font-size:12px\">○ Inactive</span>' %>"
+                      "value": "<% pattern.inactive != true ? '<span style=\"color:#065f46;font-weight:600;font-size:12px\">✓ Active</span>' : '<span style=\"color:#6b7280;font-weight:600;font-size:12px\">○ Inactive</span>' %>"
                     }
                   },
                   {
@@ -389,14 +389,14 @@
                     "cellTemplate": {
                       "type": "button",
                       "action": "AUXILIARY",
-                      "label": "<% pattern.cf_active1 == true ? 'Inactivate' : 'Activate' %>",
+                      "label": "<% pattern.inactive != true ? 'Inactivate' : 'Activate' %>",
                       "taskReference": {
                         "taskId": "manageShellOrgStatus",
                         "parameterBindings": {
                           "orgId": "<% pattern.workdayID ?? \"\" %>",
                           "orgCode": "<% pattern.code %>",
                           "orgName": "<% pattern.organizationByName.descriptor ?? pattern.code ?? \"\" %>",
-                          "currentStatus": "<% pattern.cf_active1 == true ? 'Active' : 'Inactive' %>",
+                          "currentStatus": "<% pattern.inactive != true ? 'Active' : 'Inactive' %>",
                           "effectiveDate": "<% date:now().format(\"yyyy-MM-dd\") %>",
                           "patternName": "<% pattern.code %>",
                           "orgType": "<% queryParams.orgType ?? '' %>",
@@ -481,7 +481,7 @@
                 "gridType": "LIST",
                 "multiViewStylingEnabled": true,
                 "id": "allShellOrgsGrid",
-                "rows": "<% (queryParams.quick ?? '') == 'patterns' ? (allShellOrgs.data ?? []).filter(o => { (o.code ?? '').contains(':PATTERN') && (empty(queryParams.appCode) || (o.code ?? '').startsWith(queryParams.appCode + ':PATTERN')) }) : (list:flatten([(allShellOrgs.data.filter(o => { !o.code.contains(':PATTERN') })).filter(o => { o.cf_active1 == true }), (allShellOrgs.data.filter(o => { !o.code.contains(':PATTERN') })).filter(o => { o.cf_active1 != true })])).filter(o => { (queryParams.quick ?? '') == 'active' ? o.cf_active1 == true : ((queryParams.quick ?? '') == 'inactive' ? o.cf_active1 != true : true) }) %>",
+                "rows": "<% (queryParams.quick ?? '') == 'patterns' ? (allShellOrgs.data ?? []).filter(o => { (o.code ?? '').contains(':PATTERN') && (empty(queryParams.appCode) || (o.code ?? '').startsWith(queryParams.appCode + ':PATTERN')) }) : (list:flatten([(allShellOrgs.data.filter(o => { !o.code.contains(':PATTERN') })).filter(o => { o.inactive != true }), (allShellOrgs.data.filter(o => { !o.code.contains(':PATTERN') })).filter(o => { o.inactive == true })])).filter(o => { (queryParams.quick ?? '') == 'active' ? o.inactive != true : ((queryParams.quick ?? '') == 'inactive' ? o.inactive == true : true) }) %>",
                 "rowVariableName": "org",
                 "enabled": false,
                 "label": "Shell Organizations",
@@ -514,7 +514,7 @@
                     "sortableAndFilterable": "true",
                     "cellTemplate": {
                       "type": "richText",
-                      "value": "<% org.cf_active1 == true ? '<span style=\"color:#065f46;font-weight:600;font-size:12px\">✓ Active</span>' : '<span style=\"color:#6b7280;font-weight:600;font-size:12px\">○ Inactive</span>' %>"
+                      "value": "<% org.inactive != true ? '<span style=\"color:#065f46;font-weight:600;font-size:12px\">✓ Active</span>' : '<span style=\"color:#6b7280;font-weight:600;font-size:12px\">○ Inactive</span>' %>"
                     }
                   },
                   {
@@ -556,7 +556,7 @@
                           "orgId": "<% org.workdayID ?? \"\" %>",
                           "orgCode": "<% org.code %>",
                           "orgName": "<% org.organizationByName.descriptor ?? org.code ?? \"\" %>",
-                          "currentStatus": "<% org.cf_active1 == true ? 'Active' : 'Inactive' %>",
+                          "currentStatus": "<% org.inactive != true ? 'Active' : 'Inactive' %>",
                           "effectiveDate": "<% date:now().format(\"yyyy-MM-dd\") %>",
                           "patternName": "<% org.code %>",
                           "orgType": "<% queryParams.orgType ?? '' %>",
@@ -592,7 +592,7 @@
                 "gridType": "LIST",
                 "multiViewStylingEnabled": true,
                 "id": "filteredShellOrgsGrid",
-                "rows": "<% (queryParams.quick ?? '') == 'patterns' ? (allShellOrgs.data ?? []).filter(o => { (o.code ?? '').contains(':PATTERN') && (empty(queryParams.appCode) || (o.code ?? '').startsWith(queryParams.appCode + ':PATTERN')) }) : (list:flatten([(empty(queryParams.appCode) ? [] : allShellOrgs.data.filter(o => { o.code.startsWith(queryParams.appCode + ':') && !o.code.contains(':PATTERN') })).filter(o => { o.cf_active1 == true }), (empty(queryParams.appCode) ? [] : allShellOrgs.data.filter(o => { o.code.startsWith(queryParams.appCode + ':') && !o.code.contains(':PATTERN') })).filter(o => { o.cf_active1 != true })])).filter(o => { (queryParams.quick ?? '') == 'active' ? o.cf_active1 == true : ((queryParams.quick ?? '') == 'inactive' ? o.cf_active1 != true : true) }) %>",
+                "rows": "<% (queryParams.quick ?? '') == 'patterns' ? (allShellOrgs.data ?? []).filter(o => { (o.code ?? '').contains(':PATTERN') && (empty(queryParams.appCode) || (o.code ?? '').startsWith(queryParams.appCode + ':PATTERN')) }) : (list:flatten([(empty(queryParams.appCode) ? [] : allShellOrgs.data.filter(o => { o.code.startsWith(queryParams.appCode + ':') && !o.code.contains(':PATTERN') })).filter(o => { o.inactive != true }), (empty(queryParams.appCode) ? [] : allShellOrgs.data.filter(o => { o.code.startsWith(queryParams.appCode + ':') && !o.code.contains(':PATTERN') })).filter(o => { o.inactive == true })])).filter(o => { (queryParams.quick ?? '') == 'active' ? o.inactive != true : ((queryParams.quick ?? '') == 'inactive' ? o.inactive == true : true) }) %>",
                 "rowVariableName": "org",
                 "enabled": false,
                 "label": "<% 'Shell Organizations for ' + (queryParams.appName ?? queryParams.appCode ?? '') %>",
@@ -625,7 +625,7 @@
                     "sortableAndFilterable": "true",
                     "cellTemplate": {
                       "type": "richText",
-                      "value": "<% org.cf_active1 == true ? '<span style=\"color:#065f46;font-weight:600;font-size:12px\">✓ Active</span>' : '<span style=\"color:#6b7280;font-weight:600;font-size:12px\">○ Inactive</span>' %>"
+                      "value": "<% org.inactive != true ? '<span style=\"color:#065f46;font-weight:600;font-size:12px\">✓ Active</span>' : '<span style=\"color:#6b7280;font-weight:600;font-size:12px\">○ Inactive</span>' %>"
                     }
                   },
                   {
@@ -667,7 +667,7 @@
                           "orgId": "<% org.workdayID ?? \"\" %>",
                           "orgCode": "<% org.code %>",
                           "orgName": "<% org.organizationByName.descriptor ?? org.code ?? \"\" %>",
-                          "currentStatus": "<% org.cf_active1 == true ? 'Active' : 'Inactive' %>",
+                          "currentStatus": "<% org.inactive != true ? 'Active' : 'Inactive' %>",
                           "effectiveDate": "<% date:now().format(\"yyyy-MM-dd\") %>",
                           "patternName": "<% org.code %>",
                           "orgType": "<% queryParams.orgType ?? '' %>",

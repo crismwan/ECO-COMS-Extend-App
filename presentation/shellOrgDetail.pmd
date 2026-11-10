@@ -184,7 +184,7 @@
                 {
                   "type": "card",
                   "cardId": "QuickManageShellOrgStatusCard",
-                  "parameters": "<% { 'mark': '', 'b_orgId': (queryParams.orgId ?? ''), 'b_orgCode': (queryParams.orgCode ?? ''), 'b_orgName': (queryParams.orgName ?? ''), 'b_currentStatus': ((size(((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))) > 0 && ((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))[0].cf_active1 == true) ? 'Active' : 'Inactive'), 'title': 'Status', 'subtitle': 'In Workday', 'countText': size(((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))) == 0 ? 'Not found' : ((size(((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))) > 0 && ((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))[0].cf_active1 == true) ? '✓ Active' : '○ Inactive') } %>"
+                  "parameters": "<% { 'mark': '', 'b_orgId': (queryParams.orgId ?? ''), 'b_orgCode': (queryParams.orgCode ?? ''), 'b_orgName': (queryParams.orgName ?? ''), 'b_currentStatus': ((size(((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))) > 0 && ((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))[0].inactive != true) ? 'Active' : 'Inactive'), 'title': 'Status', 'subtitle': 'In Workday', 'countText': size(((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))) == 0 ? 'Not found' : ((size(((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))) > 0 && ((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))[0].inactive != true) ? '✓ Active' : '○ Inactive') } %>"
                 },
                 {
                   "type": "card",
@@ -238,7 +238,7 @@
                   "type": "button",
                   "id": "changeStatusButton",
                   "visible": "<% size(((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))) > 0 %>",
-                  "label": "<% (size(((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))) > 0 && ((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))[0].cf_active1 == true) ? 'Inactivate Organization' : 'Reactivate Organization' %>",
+                  "label": "<% (size(((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))) > 0 && ((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))[0].inactive != true) ? 'Inactivate Organization' : 'Reactivate Organization' %>",
                   "action": "AUXILIARY",
                   "taskReference": {
                     "taskId": "manageShellOrgStatus",
@@ -246,7 +246,7 @@
                       "orgId": "<% queryParams.orgId ?? '' %>",
                       "orgCode": "<% (size(((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))) > 0 ? (((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))[0].code ?? '') : (queryParams.orgCode ?? '')) %>",
                       "orgName": "<% (size(((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))) > 0 ? (((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))[0].organizationByName.descriptor ?? ((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))[0].code) : (queryParams.orgName ?? '')) %>",
-                      "currentStatus": "<% (size(((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))) > 0 && ((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))[0].cf_active1 == true) ? 'Active' : 'Inactive' %>",
+                      "currentStatus": "<% (size(((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))) > 0 && ((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))[0].inactive != true) ? 'Active' : 'Inactive' %>",
                       "effectiveDate": "<% date:now().formatWithTimeZone('yyyy-MM-dd', userTimeZone) %>",
                       "patternName": "<% (size(((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))) > 0 ? (((allShellOrgs.data ?? []).filter(o => { (o.workdayID ?? '') == (queryParams.orgId ?? '') }))[0].code ?? '') : (queryParams.orgCode ?? '')) %>",
                       "orgType": "<% queryParams.orgType ?? '' %>",

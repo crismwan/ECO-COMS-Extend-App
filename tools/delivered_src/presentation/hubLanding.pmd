@@ -1,0 +1,314 @@
+{
+  "id": "hubLanding",
+  "securityDomains": [
+    "ManageCOMSShellOrgs"
+  ],
+  "include": [
+    "comsRequestStats.script",
+    "comsAuditFilters.script",
+    "comsPendingAge.script"
+  ],
+  "endPoints": [
+    {
+      "name": "orgSubtypes",
+      "baseUrlType": "workday-wql",
+      "url": "data",
+      "authType": "sso",
+      "bestEffort": "true",
+      "wqlQuery": {
+        "queryId": "orgSubtypes"
+      },
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "name": "selectedWorker",
+      "baseUrlType": "COMMON",
+      "url": "/workers/me",
+      "authType": "sso",
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 403
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "name": "bulkUploadCount",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "url": "/comsBulkUploads?limit=1",
+      "authType": "sso",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "name": "bulkUploadPage0",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "authType": "sso",
+      "isCollection": true,
+      "failOnStatusCodes": [
+        {
+          "code": 429
+        }
+      ],
+      "url": "<% let t = bulkUploadCount.total ?? 0; let start = (t - 100) < 0 ? 0 : (t - 100); let cnt = t - start; '/comsBulkUploads?limit=' + (cnt > 0 ? cnt : 1) + '&offset=' + (cnt > 0 ? start : t) %>"
+    },
+    {
+      "name": "bulkRunCount",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "url": "/comsBulkRuns?limit=1",
+      "authType": "sso",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "name": "bulkRunPage0",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "authType": "sso",
+      "isCollection": true,
+      "failOnStatusCodes": [
+        {
+          "code": 429
+        }
+      ],
+      "url": "<% let t = bulkRunCount.total ?? 0; let start = (t - 100) < 0 ? 0 : (t - 100); let cnt = t - start; '/comsBulkRuns?limit=' + (cnt > 0 ? cnt : 1) + '&offset=' + (cnt > 0 ? start : t) %>"
+    },
+    {
+      "name": "pendingRequestsCount",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "url": "/comsAssignableRoles?limit=1",
+      "authType": "sso",
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "baseUrlType": "BUSINESS-OBJECT",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 429
+        }
+      ],
+      "name": "pendingRequestsPage0",
+      "url": "/comsAssignableRoles?limit=100&offset=0"
+    },
+    {
+      "baseUrlType": "BUSINESS-OBJECT",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 429
+        }
+      ],
+      "name": "pendingRequestsPage1",
+      "url": "<% let t = pendingRequestsCount.total ?? 0; '/comsAssignableRoles?limit=100&offset=' + (t > 100 ? 100 : t) %>"
+    },
+    {
+      "baseUrlType": "BUSINESS-OBJECT",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 429
+        }
+      ],
+      "name": "pendingRequestsPage2",
+      "url": "<% let t = pendingRequestsCount.total ?? 0; '/comsAssignableRoles?limit=100&offset=' + (t > 200 ? 200 : t) %>"
+    },
+    {
+      "name": "allShellOrgs",
+      "baseUrlType": "workday-wql",
+      "url": "data",
+      "authType": "sso",
+      "bestEffort": "true",
+      "wqlQuery": {
+        "queryId": "allShellOrgs",
+        "parameters": {
+          "subtypes": "<% (orgSubtypes.data ?? []).filter(r => { empty(r.subtype) ? false : (r.subtype.descriptor == 'X:META' || r.subtype.descriptor == 'X:SHELL') }).map(r => { r.subtype.id }).join(',') %>"
+        }
+      },
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "name": "auditLogCount",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "url": "/comsAuditLogs?limit=1",
+      "authType": "sso",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 429
+        }
+      ],
+      "bestEffort": "true"
+    },
+    {
+      "name": "auditPage0",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "url": "<% let t = auditLogCount.total ?? 0; let start = (t - 100) < 0 ? 0 : (t - 100); let cnt = t - 0 - start; '/comsAuditLogs?limit=' + (cnt > 0 ? cnt : 1) + '&offset=' + (cnt > 0 ? start : t) %>",
+      "authType": "sso",
+      "isCollection": true,
+      "failOnStatusCodes": [
+        {
+          "code": 429
+        }
+      ],
+      "bestEffort": "true"
+    }
+  ],
+  "presentation": {
+    "headerSize": "HIDDEN",
+    "body": {
+      "type": "basicFormLayout",
+      "id": "hubLandingForm",
+      "sections": [
+        {
+          "type": "layoutSection",
+          "id": "titleBannerSection",
+          "children": [
+            {
+              "type": "richText",
+              "id": "titleBannerRichText",
+              "enabled": false,
+              "value": "<span style=\"color:#0055B3;font-size:24px\"><b>ECO-COMS: RBAC Hub</b></span>"
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "dashboardSection",
+          "children": [
+            {
+              "type": "cardContainer",
+              "id": "dashboardCardContainer",
+              "layout": "masonry",
+              "cards": [
+                {
+                  "type": "card",
+                  "cardId": "MyAttentionCard",
+                  "parameters": "<% { 'requestsText': comsRequestStats.myRequestsText(list:flatten([pendingRequestsPage0.data ?? [], pendingRequestsPage1.data ?? [], pendingRequestsPage2.data ?? []]), selectedWorker.id ?? ''), 'bulkText': (size(list:flatten([bulkUploadPage0.data ?? [], bulkRunPage0.data ?? []]).filter(u => { (u.uploadedByWid ?? '') == (selectedWorker.id ?? '') }).filter(u => { ['Uploaded', 'Queued', 'Running'].contains(u.status ?? '') })) > 0 ? ('' + size(list:flatten([bulkUploadPage0.data ?? [], bulkRunPage0.data ?? []]).filter(u => { (u.uploadedByWid ?? '') == (selectedWorker.id ?? '') }).filter(u => { ['Uploaded', 'Queued', 'Running'].contains(u.status ?? '') })) + ' bulk upload(s) still running') : 'No bulk uploads running') + (size(list:flatten([bulkUploadPage0.data ?? [], bulkRunPage0.data ?? []]).filter(u => { (u.uploadedByWid ?? '') == (selectedWorker.id ?? '') }).filter(u => { (u.status ?? '') == 'Rejected' })) > 0 ? (' · ' + size(list:flatten([bulkUploadPage0.data ?? [], bulkRunPage0.data ?? []]).filter(u => { (u.uploadedByWid ?? '') == (selectedWorker.id ?? '') }).filter(u => { (u.status ?? '') == 'Rejected' })) + ' rejected') : '') } %>"
+                },
+                {
+                  "type": "card",
+                  "cardId": "PendingIscCard",
+                  "parameters": "<% { 'countText': '' + comsRequestStats.countPending(list:flatten([pendingRequestsPage0.data ?? [], pendingRequestsPage1.data ?? [], pendingRequestsPage2.data ?? []]) ?? []) + ' pending · ' + comsRequestStats.countOverdue(list:flatten([pendingRequestsPage0.data ?? [], pendingRequestsPage1.data ?? [], pendingRequestsPage2.data ?? []]) ?? []) + ' overdue' } %>"
+                },
+                {
+                  "type": "card",
+                  "cardId": "ShellOrgCard",
+                  "parameters": "<% { 'countText': '' + size((allShellOrgs.data ?? []).filter(o => { !(o.code ?? '').contains(':PATTERN') && o.cf_active1 == true })) + ' active shell organizations' } %>"
+                },
+                {
+                  "type": "card",
+                  "cardId": "AuditLogCard",
+                  "parameters": "<% { 'countText': '' + size(comsAuditFilters.filterLogs(auditPage0.data ?? [], '24h', '')) + ' changes in the last 24 hours' } %>"
+                },
+                {
+                  "type": "card",
+                  "cardId": "InsightsCard"
+                },
+                {
+                  "type": "card",
+                  "cardId": "AccessReviewCard"
+                },
+                {
+                  "type": "card",
+                  "cardId": "AppActivityChart",
+                  "parameters": "<% { 'days': comsAuditFilters.activityByDay(auditPage0.data ?? []), 'totalText': '' + size(comsAuditFilters.filterLogs(auditPage0.data ?? [], '7d', '')) + ' changes in the last 7 days' } %>"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "actionsSection",
+          "children": [
+            {
+              "type": "cardContainer",
+              "id": "actionsCardContainer",
+              "layout": "masonry",
+              "cards": [
+                {
+                  "type": "card",
+                  "cardId": "HomeShellOrgActionsCard"
+                },
+                {
+                  "type": "card",
+                  "cardId": "HomeBulkActionsCard"
+                },
+                {
+                  "type": "card",
+                  "cardId": "HomeRoleRequestActionsCard"
+                },
+                {
+                  "type": "card",
+                  "cardId": "PendingAgeChart",
+                  "parameters": "<% { 'ages': comsPendingAge.buckets(list:flatten([pendingRequestsPage0.data ?? [], pendingRequestsPage1.data ?? [], pendingRequestsPage2.data ?? []])), 'totalText': comsPendingAge.totalText(list:flatten([pendingRequestsPage0.data ?? [], pendingRequestsPage1.data ?? [], pendingRequestsPage2.data ?? []])) } %>"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "footer": {
+      "type": "footer",
+      "children": [
+        {
+          "type": "pod",
+          "podId": "ecoComsFooter"
+        }
+      ]
+    },
+    "pageType": "VIEW"
+  }
+}

@@ -299,7 +299,7 @@
                 {
                   "type": "card",
                   "cardId": "ShellOrgStatusChart",
-                  "parameters": "<% { 'activeCount': size((allShellOrgs.data ?? []).filter(o => { !(o.code ?? '').contains(':PATTERN') && o.cf_active1 == true })), 'inactiveCount': size((allShellOrgs.data ?? []).filter(o => { !(o.code ?? '').contains(':PATTERN') && o.cf_active1 != true })) } %>"
+                  "parameters": "<% { 'activeCount': size((allShellOrgs.data ?? []).filter(o => { !(o.code ?? '').contains(':PATTERN') && o.inactive != true })), 'inactiveCount': size((allShellOrgs.data ?? []).filter(o => { !(o.code ?? '').contains(':PATTERN') && o.inactive == true })) } %>"
                 },
                 {
                   "type": "card",

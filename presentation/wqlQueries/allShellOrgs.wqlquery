@@ -3,5 +3,5 @@
   "parameters": [
     "subtypes"
   ],
-  "query": "SELECT workdayID, organizationByName, code, cf_active1, type1 FROM topLevelOrganizations WHERE subtype in (<% subtypes %>)"
+  "query": "SELECT workdayID, organizationByName, code, inactive, type1 FROM topLevelOrganizations WHERE subtype in (<% subtypes %>)"
 }

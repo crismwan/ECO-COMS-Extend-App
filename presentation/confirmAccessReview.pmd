@@ -91,7 +91,7 @@
       "authType": "sso",
       "isCollection": true,
       "bestEffort": "true",
-      "url": "<% 'data?limit=10000&query=' + string:pathEncode('SELECT cf_PositionID, cf_PositionIsFilled FROM allPositions WHERE supervisoryOrganization is not empty') %>",
+      "url": "<% 'data?limit=10000&query=' + string:pathEncode('SELECT positionID, worker FROM allPositions WHERE supervisoryOrganization is not empty') %>",
       "failOnStatusCodes": [
         {
           "code": 400

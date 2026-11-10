@@ -1,0 +1,415 @@
+{
+  "id": "confirmAccessReview",
+  "securityDomains": [
+    "ManageCOMSShellOrgs"
+  ],
+  "include": [
+    "comsAccessReview.script"
+  ],
+  "endPoints": [
+    {
+      "name": "orgSubtypes",
+      "baseUrlType": "workday-wql",
+      "url": "data",
+      "authType": "sso",
+      "bestEffort": "true",
+      "wqlQuery": {
+        "queryId": "orgSubtypes"
+      },
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "name": "selectedWorker",
+      "baseUrlType": "COMMON",
+      "url": "/workers/me",
+      "authType": "sso",
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 403
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "name": "appTypes",
+      "baseUrlType": "workday-wql",
+      "url": "data",
+      "authType": "sso",
+      "bestEffort": "true",
+      "wqlQuery": {
+        "queryId": "appTypes",
+        "parameters": {
+          "subtypes": "<% (orgSubtypes.data ?? []).filter(r => { empty(r.subtype) ? false : (r.subtype.descriptor == 'X:META' || r.subtype.descriptor == 'X:SHELL') }).map(r => { r.subtype.id }).join(',') %>"
+        }
+      },
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "name": "shellRoles",
+      "baseUrlType": "workday-wql",
+      "url": "data",
+      "authType": "sso",
+      "bestEffort": "true",
+      "wqlQuery": {
+        "queryId": "allShellAssignableRolesinTenant",
+        "parameters": {
+          "types": "<% let ts = (appTypes.data ?? []).map(o => { (o.type1 ?? []).size() > 0 ? o.type1[0].id : '' }).filter(t => { t != '' }).distinct(); ts.size() > 0 ? ts.join(',') : 'none' %>"
+        }
+      },
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "name": "positionFill",
+      "baseUrlType": "workday-wql",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "url": "<% 'data?limit=10000&query=' + string:pathEncode('SELECT cf_PositionID, cf_PositionIsFilled FROM allPositions WHERE supervisoryOrganization is not empty') %>",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "name": "auditPage0",
+      "baseUrlType": "workday-graph",
+      "httpMethod": "POST",
+      "authType": "sso",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 403
+        },
+        {
+          "code": 429
+        }
+      ],
+      "graphQuery": {
+        "queryId": "auditLogsNewest",
+        "parameters": {
+          "offset": 0
+        }
+      }
+    },
+    {
+      "name": "auditPage1",
+      "baseUrlType": "workday-graph",
+      "httpMethod": "POST",
+      "authType": "sso",
+      "failOnStatusCodes": [
+        {
+          "code": 429
+        }
+      ],
+      "graphQuery": {
+        "queryId": "auditLogsNewest",
+        "parameters": {
+          "offset": "<% ((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 100 ? 100 : 0 %>"
+        }
+      },
+      "exclude": "<% ((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) <= 100 %>"
+    }
+  ],
+  "outboundData": {
+    "outboundEndPoints": [
+      {
+        "name": "postReview",
+        "baseUrlType": "BUSINESS-OBJECT",
+        "url": "/comsAuditLogs",
+        "httpMethod": "POST",
+        "authType": "sso",
+        "exclude": "<% stillNeededCheckBox.value != true %>",
+        "failOnStatusCodes": [
+          {
+            "code": 400
+          },
+          {
+            "code": 403
+          },
+          {
+            "code": 429
+          },
+          {
+            "code": 500
+          }
+        ]
+      }
+    ]
+  },
+  "presentation": {
+    "pageType": "EDIT",
+    "headerSize": "HIDDEN",
+    "cancelOverride": {
+      "taskId": "accessReview"
+    },
+    "body": {
+      "type": "basicFormLayout",
+      "id": "confirmAccessReviewForm",
+      "sections": [
+        {
+          "type": "layoutSection",
+          "id": "titleBannerSection",
+          "children": [
+            {
+              "type": "richText",
+              "id": "titleBannerRichText",
+              "enabled": false,
+              "value": "<span style=\"color:#0055B3;font-size:24px\"><b>ECO-COMS: Review All Positions</b></span>"
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "aboutSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "aboutFieldSet",
+              "title": "About This Page",
+              "children": [
+                {
+                  "type": "richText",
+                  "id": "aboutRichText",
+                  "enabled": false,
+                  "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">Tick <b>Still Needed</b> on every position you checked and click <b>OK</b>: each tick is recorded in the Audit Log as a review, and nothing changes in Workday. Leave a row unticked to skip it. To take a role away, click <b>Cancel</b> and use <b>Manage</b> on the Access Review.</span>"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "reviewSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "reviewFieldSet",
+              "title": "Role Assignments",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "noRowsText",
+                  "label": "ⓘ Nothing to show",
+                  "enabled": false,
+                  "visible": "<% size(comsAccessReview.rowsFrom(shellRoles.data ?? [], comsAccessReview.vacantIds(positionFill.data ?? []))) == 0 %>",
+                  "value": "No vacant position holds an ECO-COMS shell role."
+                },
+                {
+                  "type": "grid",
+                  "id": "reviewChecklistGrid",
+                  "label": "Vacant Positions Holding Shell Roles",
+                  "rowVariableName": "rv",
+                  "rows": "<% comsAccessReview.rowsFrom(shellRoles.data ?? [], comsAccessReview.vacantIds(positionFill.data ?? [])) %>",
+                  "doNotAdd": true,
+                  "doNotRemove": true,
+                  "columns": [
+                    {
+                      "type": "column",
+                      "columnId": "colRole",
+                      "label": "Role",
+                      "sortableAndFilterable": "true",
+                      "cellTemplate": {
+                        "type": "text",
+                        "id": "colRoleText",
+                        "enabled": false,
+                        "value": "<% rv.role %>",
+                        "valuesOut": [
+                          {
+                            "value": "<% self.value %>",
+                            "valueOutBinding": "postReview.roleName"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colOrg",
+                      "label": "Organization",
+                      "sortableAndFilterable": "true",
+                      "cellTemplate": {
+                        "type": "text",
+                        "id": "colOrgText",
+                        "enabled": false,
+                        "value": "<% rv.org %>",
+                        "valuesOut": [
+                          {
+                            "value": "<% self.value %>",
+                            "valueOutBinding": "postReview.coName"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colPosition",
+                      "label": "Position",
+                      "cellTemplate": {
+                        "type": "fieldSet",
+                        "id": "positionFieldSet",
+                        "children": [
+                          {
+                            "type": "text",
+                            "id": "colPositionText",
+                            "enabled": false,
+                            "value": "<% rv.pos %>",
+                            "valuesOut": [
+                              {
+                                "value": "<% self.value %>",
+                                "valueOutBinding": "postReview.positionName"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "hidden",
+                            "id": "roleWidHidden",
+                            "value": "<% rv.roleWid %>",
+                            "valuesOut": [
+                              {
+                                "value": "<% self.value %>",
+                                "valueOutBinding": "postReview.roleWid"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "hidden",
+                            "id": "orgWidHidden",
+                            "value": "<% rv.orgWid %>",
+                            "valuesOut": [
+                              {
+                                "value": "<% self.value %>",
+                                "valueOutBinding": "postReview.orgWid"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "hidden",
+                            "id": "posWidHidden",
+                            "value": "<% rv.posWid %>",
+                            "valuesOut": [
+                              {
+                                "value": "<% self.value %>",
+                                "valueOutBinding": "postReview.positionWid"
+                              },
+                              {
+                                "value": "<% self.value %>",
+                                "valueOutBinding": "postReview.coReferenceId"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "hidden",
+                            "id": "detailsHidden",
+                            "value": "<% 'Access review: ' + rv.pos + ' still needs ' + rv.role + ' on ' + rv.org %>",
+                            "valuesOut": [
+                              {
+                                "value": "<% self.value %>",
+                                "valueOutBinding": "postReview.details"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colReviewed",
+                      "label": "Last Reviewed",
+                      "sortableAndFilterable": "true",
+                      "cellTemplate": {
+                        "type": "text",
+                        "id": "colReviewedText",
+                        "enabled": false,
+                        "value": "<% comsAccessReview.lastReviewed(list:flatten([((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.data ?? []) : []), ((((!empty(auditPage0.data) && !empty(auditPage0.data.r)) ? (auditPage0.data.r.total ?? 0) : 0) > 100 && !empty(auditPage1.data) && !empty(auditPage1.data.r)) ? (auditPage1.data.r.data ?? []) : [])]), rv.role, rv.posWid, rv.pos) %>"
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colStillNeeded",
+                      "label": "Still Needed",
+                      "cellTemplate": {
+                        "type": "checkBox",
+                        "id": "stillNeededCheckBox",
+                        "value": "<% false %>",
+                        "valuesOut": [
+                          {
+                            "value": "<% date:now().format(\"yyyy-MM-dd'T'HH:mm:ss'Z'\") %>",
+                            "valueOutBinding": "postReview.timestamp"
+                          },
+                          {
+                            "value": "Role Assignment",
+                            "valueOutBinding": "postReview.objectType"
+                          },
+                          {
+                            "value": "REVIEW",
+                            "valueOutBinding": "postReview.action"
+                          },
+                          {
+                            "value": "<% date:now().formatWithTimeZone('yyyy-MM-dd', userTimeZone) %>",
+                            "valueOutBinding": "postReview.effectiveDate"
+                          },
+                          {
+                            "value": "<% selectedWorker.descriptor ?? '' %>",
+                            "valueOutBinding": "postReview.triggeredBy"
+                          },
+                          {
+                            "value": "<% selectedWorker.id ?? '' %>",
+                            "valueOutBinding": "postReview.changedByWid"
+                          }
+                        ]
+                      },
+                      "sortableAndFilterable": "true"
+                    }
+                  ],
+                  "gridType": "LIST",
+                  "multiViewStylingEnabled": true
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "footer": {
+      "type": "footer",
+      "children": [
+        {
+          "type": "pod",
+          "podId": "ecoComsFooter"
+        }
+      ]
+    }
+  }
+}

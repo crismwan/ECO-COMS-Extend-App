@@ -1,0 +1,197 @@
+var plural = function(n, word) {
+  '' + n + ' ' + word + (n == 1 ? '' : 's');
+};
+
+var appOf = function(code) {
+  code.contains('(') ? (code.substringBefore(')') + ')') : (code.substringAfter(':').contains(':') ? (code.substringBefore(':') + ':' + code.substringAfter(':').substringBefore(':')) : code);
+};
+
+/* The application of an organization record: its organization type (subtype design, 2026-11-06), else its code. */
+var appOfOrg = function(o) {
+  (o.type1 ?? []).size() > 0 ? o.type1[0].descriptor : appOf(o.code ?? '');
+};
+
+var shortOf = function(app) {
+  app.contains('(') ? app.substringAfter('(').substringBefore(')') : (app.startsWith('X:') ? app.substringAfter('X:') : app);
+};
+
+var familyOf = function(app, ids) {
+  let base = app.contains('(') ? app.substringBefore('(') : app;
+  ids.filter(x => { x.startsWith(base + '(') }).size() > 0 ? (base.startsWith('X:') ? base.substringAfter('X:') : base) : 'Standalone';
+};
+
+var countOf = function(sorted, c) {
+  let i = sorted.indexOf(c);
+  i < 0 ? 0 : (sorted.lastIndexOf(c) - i + 1);
+};
+
+var recordOf = function(recs, app) {
+  let m = (recs ?? []).filter(r => { r.appId == app });
+  empty(m) ? null : m[0];
+};
+
+var nameOf = function(recs, app) {
+  let r = recordOf(recs, app);
+  empty(r) ? '' : (r.name ?? '');
+};
+
+var readyOf = function(recs, app) {
+  let r = recordOf(recs, app);
+  !empty(r) && r.active != false && !empty(r.patternSchema);
+};
+
+var rowsOf = function(orgs) {
+  (orgs ?? []).map(o => { { 'c': o.code, 'a': appOfOrg(o), 'on': o.cf_active1 == true } });
+};
+
+var idsOf = function(rows, recs) {
+  list:flatten([rows.map(r => { r.a }), (recs ?? []).map(r => { r.appId ?? '' }).filter(x => { x != '' })]).distinct().sort();
+};
+
+var index = function(orgs, recs) {
+  let rows = rowsOf(orgs);
+  let ids = idsOf(rows, recs);
+  let shellRows = rows.filter(r => { !r.c.contains(':PATTERN') && r.c != r.a });
+  let shell = shellRows.map(r => { r.a }).sort();
+  let act = shellRows.filter(r => { r.on }).map(r => { r.a }).sort();
+  let pats = rows.filter(r => { r.c.contains(':PATTERN') }).map(r => { r.a }).sort();
+  ids.map(a => { { 'id': a, 'short': shortOf(a), 'name': nameOf(recs, a), 'family': familyOf(a, ids), 'orgs': countOf(shell, a), 'active': countOf(act, a), 'patterns': countOf(pats, a), 'ready': readyOf(recs, a) } });
+};
+
+var familyNames = function(idx) {
+  let fams = idx.map(a => { a.family }).distinct();
+  list:flatten([fams.filter(f => { f != 'Standalone' }).sort(), fams.filter(f => { f == 'Standalone' })]);
+};
+
+var inFamily = function(idx, fam) {
+  idx.filter(a => { a.family == fam });
+};
+
+var find = function(idx, app) {
+  let m = idx.filter(a => { a.id == app });
+  empty(m) ? null : m[0];
+};
+
+var sumOrgs = function(apps) {
+  apps.size() == 0 ? 0 : apps.map(a => { a.orgs }).reduce((x, y) => { x + y });
+};
+
+var pill = function(label, app, fam) {
+  let m = { 'l': label, 'a': app, 'f': fam };
+  m;
+};
+
+var at = function(ps, i, k) {
+  i < ps.size() ? (ps.get(i)[k] ?? '') : '';
+};
+
+var pillCard = function(title, subtitle, ps) {
+  let m = { 'cardId': 'AppPickerPillCard' + ps.size(), 'params': { 'titleText': title, 'subtitleText': subtitle,
+    'p1Label': at(ps, 0, 'l'), 'p1App': at(ps, 0, 'a'), 'p1Fam': at(ps, 0, 'f'),
+    'p2Label': at(ps, 1, 'l'), 'p2App': at(ps, 1, 'a'), 'p2Fam': at(ps, 1, 'f'),
+    'p3Label': at(ps, 2, 'l'), 'p3App': at(ps, 2, 'a'), 'p3Fam': at(ps, 2, 'f'),
+    'p4Label': at(ps, 3, 'l'), 'p4App': at(ps, 3, 'a'), 'p4Fam': at(ps, 3, 'f'),
+    'p5Label': at(ps, 4, 'l'), 'p5App': at(ps, 4, 'a'), 'p5Fam': at(ps, 4, 'f'),
+    'p6Label': at(ps, 5, 'l'), 'p6App': at(ps, 5, 'a'), 'p6Fam': at(ps, 5, 'f'),
+    'p7Label': at(ps, 6, 'l'), 'p7App': at(ps, 6, 'a'), 'p7Fam': at(ps, 6, 'f'),
+    'p8Label': at(ps, 7, 'l'), 'p8App': at(ps, 7, 'a'), 'p8Fam': at(ps, 7, 'f'),
+    'p9Label': at(ps, 8, 'l'), 'p9App': at(ps, 8, 'a'), 'p9Fam': at(ps, 8, 'f'),
+    'p10Label': at(ps, 9, 'l'), 'p10App': at(ps, 9, 'a'), 'p10Fam': at(ps, 9, 'f') } };
+  m;
+};
+
+var familyLabel = function(f) {
+  f == 'Standalone' ? 'Standalone applications' : f + ' family';
+};
+
+var groupCard = function(part, fam, app, n) {
+  pillCard((n > 10 ? (fam == 'Standalone' ? 'Standalone' : fam) + ' · ' + part.get(0).short + '–' + part.get(part.size() - 1).short : familyLabel(fam)),
+    '● pattern ready · ○ no pattern yet',
+    part.map(a => { pill((a.id == app ? '✓ ' : (a.ready ? '● ' : '○ ')) + a.short, a.id, '') }));
+};
+
+var groupCards = function(idx, fam, app) {
+  let apps = inFamily(idx, fam);
+  let n = apps.size();
+  [0, 10, 20, 30, 40].filter(st => { st < n }).map(st => { groupCard(apps.subList(st, (st + 10 > n ? n : st + 10)), fam, app, n) });
+};
+
+var familiesCard = function(idx, orgs, fam) {
+  let xs = (orgs ?? []);
+  let pats = xs.filter(o => { (o.code ?? '').contains(':PATTERN') }).size();
+  let fams = familyNames(idx);
+  let fs = fams.size() > 9 ? fams.subList(0, 9) : fams;
+  let ps = fs.map(f => { pill((f == fam ? '✓ ' : '') + f + ' · ' + inFamily(idx, f).size(), '', (f == fam ? '' : f)) });
+  pillCard('All applications', plural(idx.size(), 'application') + ' · ' + plural(xs.size() - pats, 'shell org') + ' · ' + plural(pats, 'pattern'),
+    empty(fam) ? ps : list:flatten([ps, [pill('✕ Close', '', '')]]));
+};
+
+var todoCard = function(idx) {
+  let todo = idx.filter(a => { !a.ready });
+  let n = todo.size();
+  pillCard('No pattern format yet', (n > 10 ? 'First 10 of ' + n : plural(n, 'application')) + ' · pick one to set it up',
+    (n > 10 ? todo.subList(0, 10) : todo).map(a => { pill(idx.filter(x => { x.short == a.short }).size() > 1 ? a.id : a.short, a.id, '') }));
+};
+
+var navCard = function(idx, app, fam) {
+  let a = find(idx, app);
+  let f = empty(a) ? 'Standalone' : a.family;
+  let ids = empty(a) ? [app] : inFamily(idx, f).map(x => { x.id });
+  let i = ids.indexOf(app) < 0 ? 0 : ids.indexOf(app);
+  let n = ids.size();
+  let prev = i > 0 ? ids.get(i - 1) : ids.get(n - 1);
+  let next = i < n - 1 ? ids.get(i + 1) : ids.get(0);
+  let hop = [pill('‹ ' + shortOf(prev), prev, ''), pill(shortOf(next) + ' ›', next, '')];
+  let rest = [pill(empty(fam) ? 'Change application' : 'Hide applications', app, (empty(fam) ? f : '')), pill('✕ All applications', '', '')];
+  pillCard(app,
+    empty(a) ? 'Not found: no X: organization or pattern record has this ID' : ((empty(a.name) ? '' : a.name + ' · ') + (f == 'Standalone' ? 'Standalone' : familyLabel(f))),
+    n > 1 ? list:flatten([hop, rest]) : rest);
+};
+
+var formatCard = function(recs, app, fmt) {
+  let r = recordOf(recs, app);
+  empty(r) ? { 'cardId': 'AppFormatSetupCard', 'params': { 'appCode': app } }
+    : (r.active == false ? { 'cardId': 'AppFormatInactiveCard', 'params': { 'appCode': app, 'recordId': r.id ?? '' } }
+    : { 'cardId': 'AppFormatReadyCard', 'params': { 'appCode': app, 'recordId': r.id ?? '', 'summaryText': fmt ?? '' } });
+};
+
+var barCards = function(orgs, recs, app, fam, fmt) {
+  let idx = index(orgs, recs);
+  !empty(app)
+    ? list:flatten([[navCard(idx, app, fam)], (empty(find(idx, app)) ? [] : [formatCard(recs, app, fmt)]), (empty(fam) ? [] : groupCards(idx, fam, app))])
+    : list:flatten([[familiesCard(idx, orgs, fam)], (empty(fam) ? (idx.filter(a => { !a.ready }).size() == 0 ? [] : [todoCard(idx)]) : groupCards(idx, fam, app))]);
+};
+
+var appIds = function(orgs, recs) {
+  idsOf(rowsOf(orgs), recs);
+};
+
+{
+  "plural": plural,
+  "appOf": appOf,
+  "shortOf": shortOf,
+  "familyOf": familyOf,
+  "countOf": countOf,
+  "recordOf": recordOf,
+  "nameOf": nameOf,
+  "readyOf": readyOf,
+  "rowsOf": rowsOf,
+  "idsOf": idsOf,
+  "index": index,
+  "familyNames": familyNames,
+  "inFamily": inFamily,
+  "find": find,
+  "sumOrgs": sumOrgs,
+  "pill": pill,
+  "at": at,
+  "pillCard": pillCard,
+  "familyLabel": familyLabel,
+  "groupCard": groupCard,
+  "groupCards": groupCards,
+  "familiesCard": familiesCard,
+  "todoCard": todoCard,
+  "navCard": navCard,
+  "formatCard": formatCard,
+  "barCards": barCards,
+  "appIds": appIds
+}

@@ -1,7 +1,7 @@
 /* Access Review helpers (tools/build_access_review.py). logs come newest first. */
-/* IDs (P-00010) of positions with no incumbent (allPositions cf_PositionIsFilled = false). */
+/* IDs (P-00010) of positions with no incumbent (allPositions worker is empty). */
 var vacantIds = function(positions) {
-  positions.filter(p => { p.cf_PositionIsFilled == false }).map(p => { '' + (p.cf_PositionID ?? '') });
+  positions.filter(p => { empty(p.worker) }).map(p => { '' + (p.positionID ?? '') });
 };
 
 var allRows = function(roles) {

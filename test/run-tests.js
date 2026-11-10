@@ -482,6 +482,12 @@ function staticSuite() {
     }
     if (bad.length) fail('Static.tenantWids', `tenant-specific WIDs (look them up by name instead): ${[...new Set(bad)].slice(0, 8).join('; ')}`);
     else pass('Static.tenantWids', 'no tenant-specific WIDs in the app files');
+    // calculated fields are tenant setup too: only the two with no delivered equivalent may be read (tools/delivered_fields.py)
+    const CF_OK = new Set(['cf_PositionText', 'cf_ZCF_EE_RoleAssignedToAsPositionRestrictions']);
+    const cfs = new Set();
+    for (const dir of ['presentation', 'orchestration']) for (const f of listFiles(dir, true)) for (const m of fs.readFileSync(path.join(ROOT, f), 'utf8').matchAll(/\bcf_\w+/g)) if (!CF_OK.has(m[0])) cfs.add(`${f}: ${m[0]}`);
+    if (cfs.size) fail('Static.calculatedFields', `tenant calculated fields (use a delivered field, or add it to the prerequisites in docs/ECO-COMS-NOTES.md): ${[...cfs].slice(0, 8).join('; ')}`);
+    else pass('Static.calculatedFields', `only the prerequisite calculated fields: ${[...CF_OK].join(', ')}`);
   }
 
   // 7g3. Browse pickers (tools/pos_tree.py, tools/unit_tree.py; 2026-11-05). A multilevel instanceList must:
@@ -988,6 +994,17 @@ async function smoke(token, me) {
     });
   }
 
+  // Tenant prerequisites the app reads but can't carry (docs/ECO-COMS-NOTES.md "Tenant portability")
+  await test('Prereq.calculatedFields', async () => {
+    for (const [ds, f] of [['allPositions', 'cf_PositionText'], ['assignableRoles', 'roleAssignments{cf_ZCF_EE_RoleAssignedToAsPositionRestrictions} as ra']]) {
+      try { await wql(token, `SELECT ${f} FROM ${ds}`, 1); } catch (e) { throw new Error(`calculated field missing in this tenant (${ds}: ${f}): ${String(e.message).slice(0, 160)}`); }
+    }
+    const ids = await nameIds(token);
+    if (ids.subtypes.split(',').filter(Boolean).length !== SUBTYPE_NAMES.length) throw new Error(`organization subtypes ${SUBTYPE_NAMES.join(', ')} not all found (got ${ids.subtypes || 'none'})`);
+    if (!ids.fuhTypes) throw new Error(`organization type "${FUH_TYPE_NAME}" not found`);
+    pass('Prereq.calculatedFields', 'cf_PositionText, cf_ZCF_EE_RoleAssignedToAsPositionRestrictions, subtypes and the FUH type are present');
+  });
+
   await test('WQL.shellOrgsExist', async () => {
     const r = await wql(token, "SELECT workdayID, code FROM topLevelOrganizations WHERE subtype in (<% subtypes %>)", 1);
     if (!(r.total > 0 || (r.data || []).length > 0)) throw new Error('no X: shell organizations returned');
@@ -1000,7 +1017,7 @@ async function smoke(token, me) {
     const q = "SELECT workdayID, code FROM topLevelOrganizations WHERE subtype in (<% subtypes %>)";
     const r = await request('GET', `${WQL}?query=${encodeURIComponent(await fillNames(token, q))}`, token);
     const n = (r.data || []).length;
-    const p = await request('GET', `${WQL}?query=${encodeURIComponent('SELECT cf_PositionID FROM allPositions WHERE supervisoryOrganization is not empty')}`, token);
+    const p = await request('GET', `${WQL}?query=${encodeURIComponent('SELECT positionID FROM allPositions WHERE supervisoryOrganization is not empty')}`, token);
     const msg = `no limit: shell orgs ${n} of ${r.total}, positions ${(p.data || []).length} of ${p.total}`;
     if (n < (r.total ?? n) || (p.data || []).length < (p.total ?? 0)) throw new Error(`${msg}: pages that omit limit see only part of the data`);
     pass('WQL.noLimitReturnsAll', msg);
@@ -1145,15 +1162,15 @@ async function smoke(token, me) {
   // Access Review lists vacant positions that still hold a shell role (tools/build_access_review.py): the same two
   // queries the page makes, so a 0 on the page can be told apart from a broken filter.
   await test('AccessReview.vacant', async () => {
-    const pos = (await wql(token, 'SELECT cf_PositionID, cf_PositionIsFilled FROM allPositions WHERE supervisoryOrganization is not empty', 10000)).data || [];
-    const vacant = new Set(pos.filter((p) => p.cf_PositionIsFilled === false).map((p) => String(p.cf_PositionID || '')));
+    const pos = (await wql(token, 'SELECT positionID, worker FROM allPositions WHERE supervisoryOrganization is not empty', 10000)).data || [];
+    const vacant = new Set(pos.filter((p) => !p.worker).map((p) => String(p.positionID || '')));
     const q = await shellRolesQuery(token);
     const roles = (await wql(token, q, 1000)).data || [];
     const held = roles.flatMap((r) => (r.roleAssignments || []).flatMap((ra) => (ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions || []).map((p) => ({ role: r.role?.descriptor, pos: p.descriptor || '' }))));
     const rows = held.filter((h) => vacant.has(h.pos.split(' ')[0]));
     const sample = pos.slice(0, 2).map((p) => JSON.stringify(p)).join(' ');
     if (!pos.length) throw new Error('allPositions returned no positions');
-    if (!pos.some((p) => typeof p.cf_PositionIsFilled === 'boolean')) throw new Error(`cf_PositionIsFilled isn't a boolean: ${sample}`);
+    if (!pos.some((p) => p.worker && p.worker.id)) throw new Error(`no position has a worker: ${sample}`);
     pass('AccessReview.vacant', `${pos.length} positions, ${vacant.size} vacant; ${held.length} shell-role assignments, ${rows.length} on vacant positions` +
       (rows.length ? ` (e.g. ${rows[0].role} on ${rows[0].pos})` : '') + `; sample ${sample}`);
   });
@@ -1450,8 +1467,8 @@ async function full(token, me) {
   let testPos = null;
   const pickPosition = async () => {
     if (testPos) return testPos;
-    const p = ((await wql(token, 'SELECT cf_PositionID, workdayID, position_PositionManagement, cf_PositionText, cf_PositionIsFilled FROM allPositions WHERE supervisoryOrganization is not empty', 50)).data || [])
-      .find((x) => x.cf_PositionIsFilled !== false && (x.position_PositionManagement?.descriptor || x.cf_PositionText));
+    const p = ((await wql(token, 'SELECT positionID, workdayID, position_PositionManagement, cf_PositionText, worker FROM allPositions WHERE supervisoryOrganization is not empty', 50)).data || [])
+      .find((x) => !!x.worker && (x.position_PositionManagement?.descriptor || x.cf_PositionText));
     if (!p) throw new Error('no filled position found for the test requests');
     testPos = { wid: p.workdayID?.id || p.workdayID, name: p.position_PositionManagement?.descriptor || p.cf_PositionText };
     return testPos;
@@ -1533,9 +1550,9 @@ async function cleanup(token, me) {
   const ts = new Date().toISOString().replace(/\.\d+Z$/, 'Z');
 
   // 1. Active test orgs and patterns -> inactivate effective today (Workday orgs can't be deleted).
-  const orgs = (await wql(token, 'SELECT workdayID, organizationByName, code, cf_active1 FROM topLevelOrganizations WHERE code contains \'X:\'', 10000)).data || [];
+  const orgs = (await wql(token, 'SELECT workdayID, organizationByName, code, inactive FROM topLevelOrganizations WHERE code contains \'X:\'', 10000)).data || [];
   const testOrgs = orgs.filter((o) => isTestText(code(o)));
-  const activeTest = testOrgs.filter((o) => o.cf_active1 === true || o.cf_active1 === 'true' || o.cf_active1 === 1);
+  const activeTest = testOrgs.filter((o) => o.inactive === false || o.inactive === 'false');
   console.log(`\nOrgs: ${orgs.length} X: orgs, ${testOrgs.length} test orgs, ${activeTest.length} still active (to inactivate):`);
   activeTest.forEach((o) => console.log(`   inactivate  ${code(o)}`));
   testOrgs.filter((o) => !activeTest.includes(o)).forEach((o) => console.log(`   already inactive  ${code(o)}`));
@@ -1753,7 +1770,7 @@ async function repair(token, me) {
     for (const a of bulk) {
       const pid = (String(a.positionName || '').match(/^P-\d+/) || [])[0];
       if (!pid) continue;
-      const r = await wql(token, `SELECT workdayID, cf_PositionID, position_PositionManagement, cf_PositionText FROM allPositions WHERE cf_PositionID = '${pid}'`, 1);
+      const r = await wql(token, `SELECT workdayID, positionID, position_PositionManagement, cf_PositionText FROM allPositions WHERE positionID = '${pid}'`, 1);
       const pos = (r.data || [])[0];
       if (!pos) { warn('Repair.bulkAuditPosition', `${a.id}: ${pid} not found in allPositions; left as is`); continue; }
       const name = pos.position_PositionManagement?.descriptor || pos.cf_PositionText || a.positionName;
@@ -1806,14 +1823,14 @@ async function repair(token, me) {
     const source = (r) => String(r.positionNames || '').trim() || String(r.positionWids || r.positions || '').trim();
     const bad = roles.filter((r) => source(r) && source(r).split(SPLIT).some(isWid));
     if (!bad.length) return pass('Repair.positionNames', 'every request with positions has their names stored');
-    const all = (await wql(token, 'SELECT cf_PositionID, workdayID, position_PositionManagement, cf_PositionText FROM allPositions WHERE supervisoryOrganization is not empty', 10000)).data || [];
+    const all = (await wql(token, 'SELECT positionID, workdayID, position_PositionManagement, cf_PositionText FROM allPositions WHERE supervisoryOrganization is not empty', 10000)).data || [];
     const left = [];
     for (const r of bad) {
       const parts = source(r).split(SPLIT);
       const fixed = parts.map((p) => {
         if (!isWid(p)) return p;
         const pos = all.find((x) => idOf(x.workdayID) === p.trim());
-        return pos ? (pos.position_PositionManagement?.descriptor || pos.cf_PositionText || pos.cf_PositionID) : null;
+        return pos ? (pos.position_PositionManagement?.descriptor || pos.cf_PositionText || pos.positionID) : null;
       });
       if (fixed.includes(null)) { left.push(r.roleName); warn('Repair.positionNames', `${r.roleName}: a WID in "${source(r)}" is not in allPositions; left as is`); continue; }
       const name = fixed.join(', ');
@@ -2284,7 +2301,7 @@ async function promptsProbe(token) {
   const n = (r) => `${(r.data || []).length} rows`;
   await med('FUH search "X:B"', async () => n(await wql(token, "SELECT workdayID, organization1, code FROM customOrganizations WHERE type1 in (<% fuhTypes %>) AND code contains 'X:B'", 100)));
   await med('Academic Unit search "Math"', async () => n(await wql(token, "SELECT workdayID, academicUnit, academicUnitName FROM academicUnits WHERE inactive = false AND academicUnitName contains 'Math'", 100)));
-  await med('Position search "Manager"', async () => n(await wql(token, "SELECT cf_PositionID, workdayID, position_PositionManagement, cf_PositionIsFilled, cf_PositionText FROM allPositions WHERE supervisoryOrganization is not empty AND cf_PositionText contains 'Manager'", 100)));
+  await med('Position search "Manager"', async () => n(await wql(token, "SELECT positionID, workdayID, position_PositionManagement, worker, cf_PositionText FROM allPositions WHERE supervisoryOrganization is not empty AND cf_PositionText contains 'Manager'", 100)));
   await med('REST values supervisoryOrganization (no search; top level)', async () => { const r = await request('GET', `${API}/staffing/v6/values/jobChangesGroup/supervisoryOrganization/`, token); return `${(r.data || []).length} entries${(r.data || [])[0] ? ', first: ' + (r.data[0].descriptor || '') : ''}`; });
   pass('Prompts.probe', `${root.fields.length} mutations with prompts, ${hits.length} on the app's subjects, ${rel.length} matching ID fields`);
 }
@@ -2301,8 +2318,8 @@ async function posSearchTiming(token) {
     console.log(`   TIME ${label}: median ${m} ms (${ms.join(', ')}) · ${info}`);
     return m;
   };
-  const F5 = 'cf_PositionID, workdayID, position_PositionManagement, cf_PositionIsFilled, cf_PositionText';
-  const F4 = 'cf_PositionID, workdayID, position_PositionManagement, cf_PositionText';
+  const F5 = 'positionID, workdayID, position_PositionManagement, worker, cf_PositionText';
+  const F4 = 'positionID, workdayID, position_PositionManagement, cf_PositionText';
   const W = (t) => `supervisoryOrganization is not empty AND cf_PositionText contains '${t}'`;
   const rows = (r) => `${(r.data || []).length} rows (total ${r.total ?? '?'}), ${Math.round(JSON.stringify(r).length / 1024)} KB`;
   for (const t of ['a', 'Manager', 'Director', 'P-00', 'Advisor']) {
@@ -2320,7 +2337,7 @@ async function posSearchTiming(token) {
 async function posTreeProbe(token) {
   console.log('\n-- Position tree probe (read-only) --');
   const t0 = Date.now();
-  const all = (await wql(token, 'SELECT cf_PositionID, workdayID, supervisoryOrganization FROM allPositions WHERE supervisoryOrganization is not empty', 10000)).data || [];
+  const all = (await wql(token, 'SELECT positionID, workdayID, supervisoryOrganization FROM allPositions WHERE supervisoryOrganization is not empty', 10000)).data || [];
   console.log(`   positions with a supervisory org: ${all.length} (${Date.now() - t0} ms)`);
   const by = {};
   all.forEach((p) => { const o = p.supervisoryOrganization; const k = (o && (o.descriptor || (o[0] && o[0].descriptor))) || '?'; const id = (o && (o.id || (o[0] && o[0].id))) || ''; (by[k] = by[k] || { id, n: 0 }).n++; });
@@ -2331,7 +2348,7 @@ async function posTreeProbe(token) {
   const big = Object.entries(by).sort((a, b) => b[1].n - a[1].n)[0];
   if (big && big[1].id) {
     const ms = [];
-    for (let i = 0; i < 3; i++) { const s = Date.now(); await wql(token, `SELECT cf_PositionID, workdayID, position_PositionManagement, cf_PositionText FROM allPositions WHERE supervisoryOrganization in ('${big[1].id}')`, 200); ms.push(Date.now() - s); }
+    for (let i = 0; i < 3; i++) { const s = Date.now(); await wql(token, `SELECT positionID, workdayID, position_PositionManagement, cf_PositionText FROM allPositions WHERE supervisoryOrganization in ('${big[1].id}')`, 200); ms.push(Date.now() - s); }
     console.log(`   TIME positions in one org (largest, ${big[1].n}): ${ms.join(', ')} ms`);
   }
   // Workday's own supervisory-org tree (the Staffing "values" list from developer.workday.com "Concept: Multilevel Lists")
@@ -2371,7 +2388,7 @@ async function posTreeProbe(token) {
       for (const m of mlist.slice(0, 3)) {
         try { const s = Date.now(); const so = await request('GET', `${API}/common/v1/workers/${m.id}/supervisoryOrganizationsManaged`, token);
           const sd = so.data || []; console.log(`   MGR ${m.descriptor} (${m.id}) ${Date.now() - s} ms orgsManaged=${sd.length} first=${(sd[0] || {}).descriptor}|${(sd[0] || {}).id} withPositions=${sd.filter((x) => orgIds.has(x.id)).length}`);
-          if (sd[0]) { const s2 = Date.now(); const pq = await wql(token, `SELECT cf_PositionID, position_PositionManagement, cf_PositionText FROM allPositions WHERE supervisoryOrganization in ('${sd[0].id}')`, 200); console.log(`     positions in ${sd[0].descriptor}: ${(pq.data || []).length} (${Date.now() - s2} ms) e.g. ${((pq.data || [])[0] || {}).cf_PositionID}`); }
+          if (sd[0]) { const s2 = Date.now(); const pq = await wql(token, `SELECT positionID, position_PositionManagement, cf_PositionText FROM allPositions WHERE supervisoryOrganization in ('${sd[0].id}')`, 200); console.log(`     positions in ${sd[0].descriptor}: ${(pq.data || []).length} (${Date.now() - s2} ms) e.g. ${((pq.data || [])[0] || {}).positionID}`); }
         } catch (e) { console.log(`   MGR ${m.descriptor} error ${e.message.slice(0, 120)}`); }
       }
     }
@@ -2480,7 +2497,7 @@ async function appSummary(token) {
   const audits = await readAll(token, 'comsAuditLogs');
   const apps = {};
   const get = (a) => (apps[a] = apps[a] || { id: a, family: familyOf(a), name: '', orgs: 0, active: 0, patterns: 0, roles: 0, assignments: 0, positions: 0, pending: 0, lastChange: '', hasRecord: false, recordActive: null });
-  for (const o of orgs) { const a = get(appOf(o.code || '')); a.orgs++; if (o.cf_active1 !== false && o.cf_active1 !== 'false') a.active++; if ((o.code || '').includes('PATTERN')) a.patterns++; if ((o.code || '') === a.id) a.name = (o.organizationByName?.descriptor || o.organizationByName || '').toString(); }
+  for (const o of orgs) { const a = get(appOf(o.code || '')); a.orgs++; if (o.inactive !== true && o.inactive !== 'true') a.active++; if ((o.code || '').includes('PATTERN')) a.patterns++; if ((o.code || '') === a.id) a.name = (o.organizationByName?.descriptor || o.organizationByName || '').toString(); }
   for (const r of roles) { const rn = (r.role?.descriptor || '').toString(); const m = rn.match(/^(X:[^:]+(?:\([^)]*\))?(?::[^:(]+)?)/); const app = m ? appOf(rn.split(':ROLE')[0]) : null; if (!app) continue; const a = get(app); a.roles++; const ras = r.roleAssignments || []; a.assignments += ras.length; a.positions += ras.reduce((n, x) => n + ((x.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions || []).length || 0), 0); }
   for (const r of recs) { const a = get(r.appId || ''); a.hasRecord = true; a.recordActive = r.active; if (!a.name) a.name = r.name || ''; }
   for (const r of reqs) if (/Pending/i.test(r.status || '')) { const a = apps[r.application] || apps[appOf(r.shellOrgCode || '')]; if (a) a.pending++; }
@@ -2574,10 +2591,10 @@ async function bulkApply(token, me) {
     const cur = await readRole();
     if (!cur) return skip('Bulk.applyAddRemove', `test role ${TEST_ROLE} has no X: organization assignment`);
     const assigned = cur.positions.map((p) => String(p.descriptor || ''));
-    const pos = ((await wql(token, 'SELECT cf_PositionID, workdayID, position_PositionManagement, cf_PositionText, cf_PositionIsFilled FROM allPositions WHERE supervisoryOrganization is not empty', 300)).data || [])
-      .filter((p) => p.cf_PositionID && p.cf_PositionIsFilled !== false && !assigned.some((d) => d.includes(p.cf_PositionID)))[0];
+    const pos = ((await wql(token, 'SELECT positionID, workdayID, position_PositionManagement, cf_PositionText, worker FROM allPositions WHERE supervisoryOrganization is not empty', 300)).data || [])
+      .filter((p) => p.positionID && !!p.worker && !assigned.some((d) => d.includes(p.positionID)))[0];
     if (!pos) return skip('Bulk.applyAddRemove', `no unassigned position found for ${TEST_ROLE}`);
-    const posName = pos.position_PositionManagement?.descriptor || pos.cf_PositionText || pos.cf_PositionID;
+    const posName = pos.position_PositionManagement?.descriptor || pos.cf_PositionText || pos.positionID;
     const runOne = async (tag, row) => {
       const ref = 'TEST' + tag + new Date().toISOString().replace(/\D/g, '').slice(0, 14);
       const stamp = new Date().toISOString().replace(/\.\d+Z$/, 'Z');
@@ -2605,23 +2622,23 @@ async function bulkApply(token, me) {
       if (miss.length) throw new Error(`${action} audit record lacks ${miss.join(', ')}`);
       if (!/^Bulk edit /.test(a.details || '')) throw new Error(`${action} details don't start with "Bulk edit": ${a.details}`);
     };
-    const add = await runOne('BA', { rowAction: 'ADD', positionId: pos.cf_PositionID, positionName: posName, assigneeWid: '' });
+    const add = await runOne('BA', { rowAction: 'ADD', positionId: pos.positionID, positionName: posName, assigneeWid: '' });
     check(add.audit, 'ASSIGN POSITION');
     let added = null;
     for (let i = 0; i < 18 && !added; i++) {
       added = ((await readRole())?.positions || []).find((p) => !cur.positions.some((q) => q.id === p.id));
       if (!added) await sleep(5000);
     }
-    if (!added) throw new Error(`${pos.cf_PositionID} was audited as added by ${add.ref} but did not appear on ${TEST_ROLE} within 90 s; it is probably still assigned: remove it in Manage Role Assignments`);
-    const rem = await runOne('BR', { rowAction: 'REMOVE', positionId: pos.cf_PositionID, positionName: added.descriptor || posName, assigneeWid: added.id });
+    if (!added) throw new Error(`${pos.positionID} was audited as added by ${add.ref} but did not appear on ${TEST_ROLE} within 90 s; it is probably still assigned: remove it in Manage Role Assignments`);
+    const rem = await runOne('BR', { rowAction: 'REMOVE', positionId: pos.positionID, positionName: added.descriptor || posName, assigneeWid: added.id });
     check(rem.audit, 'REMOVE POSITION');
     let gone = false;
     for (let i = 0; i < 18 && !gone; i++) {
       gone = !((await readRole())?.positions || []).some((p) => p.id === added.id);
       if (!gone) await sleep(5000);
     }
-    if (!gone) throw new Error(`${pos.cf_PositionID} is still on ${TEST_ROLE} after ${rem.ref}: remove it in Manage Role Assignments`);
-    pass('Bulk.applyAddRemove', `${pos.cf_PositionID} added (${add.ref}) and removed (${rem.ref}) on ${TEST_ROLE}; both audit records written by IORC_0037_XFD_SEC_Sub_Write_Audit_Record inside IORC_0037_XFD_SEC_Sub_Process_Bulk_Role_Row ("${add.audit.details}")`);
+    if (!gone) throw new Error(`${pos.positionID} is still on ${TEST_ROLE} after ${rem.ref}: remove it in Manage Role Assignments`);
+    pass('Bulk.applyAddRemove', `${pos.positionID} added (${add.ref}) and removed (${rem.ref}) on ${TEST_ROLE}; both audit records written by IORC_0037_XFD_SEC_Sub_Write_Audit_Record inside IORC_0037_XFD_SEC_Sub_Process_Bulk_Role_Row ("${add.audit.details}")`);
   });
 }
 
@@ -2708,7 +2725,7 @@ async function probe(token) {
   console.log(`comsApplications: ${apps.length}`);
   apps.slice(0, 3).forEach((a) => console.log(`   APPREC id=${a.id} appId=${JSON.stringify(a.appId)} keys=${Object.keys(a).join(',')}`));
   apps.forEach((a) => console.log('   APP ' + JSON.stringify(a)));
-  const orgs = (await wql(token, "SELECT code, cf_active1 FROM topLevelOrganizations WHERE code contains 'X:'", 10000)).data || [];
+  const orgs = (await wql(token, "SELECT code, inactive FROM topLevelOrganizations WHERE code contains 'X:'", 10000)).data || [];
   const byApp = {};
   for (const o of orgs) {
     const c = String(o.code || ''); const parts = c.split(':');
@@ -2790,15 +2807,15 @@ async function roleAddRemove(token, me) {
   const cur = await readRole();
   if (!cur) return skip('RoleAssignment.addRemove', `test role ${roleName} has no X: organization assignment`);
   const assigned = cur.positions.map((p) => String(p.descriptor || ''));
-  const pos = ((await wql(token, 'SELECT cf_PositionID, workdayID, position_PositionManagement, cf_PositionText, cf_PositionIsFilled FROM allPositions WHERE supervisoryOrganization is not empty', 300)).data || [])
-    .filter((p) => p.cf_PositionID && p.cf_PositionIsFilled !== false && !assigned.some((d) => d.includes(p.cf_PositionID)))[0];
+  const pos = ((await wql(token, 'SELECT positionID, workdayID, position_PositionManagement, cf_PositionText, worker FROM allPositions WHERE supervisoryOrganization is not empty', 300)).data || [])
+    .filter((p) => p.positionID && !!p.worker && !assigned.some((d) => d.includes(p.positionID)))[0];
   if (!pos) return skip('RoleAssignment.addRemove', `no unassigned position found for ${roleName}`);
   const posWid = pos.workdayID?.id || pos.workdayID;
   // Same full name the Manage Role Assignment page sends (its search results' descriptor).
-  const posName = pos.position_PositionManagement?.descriptor || pos.cf_PositionText || pos.cf_PositionID;
+  const posName = pos.position_PositionManagement?.descriptor || pos.cf_PositionText || pos.positionID;
   const base = { roleId: cur.role.id, roleName, orgId: cur.org.id, orgName: cur.org.descriptor, effectiveDate: today };
   const add = await launchRole({
-    ...base, positionId: pos.cf_PositionID, positionIdType: 'Position_ID', positionName: posName,
+    ...base, positionId: pos.positionID, positionIdType: 'Position_ID', positionName: posName,
     mode: 'ADD', positionWid: posWid, ...who(),
   });
   expectAudit(add, 'Role Assignment', 'ASSIGN POSITION');
@@ -2810,9 +2827,9 @@ async function roleAddRemove(token, me) {
     added = (after?.positions || []).find((p) => !cur.positions.some((q) => q.id === p.id));
     if (!added) await sleep(5000);
   }
-  if (!added) throw new Error(`${pos.cf_PositionID} was audited as added to ${roleName} but did not appear on the role assignment within 90 s; it is probably still assigned: remove it in Manage Role Assignments`);
+  if (!added) throw new Error(`${pos.positionID} was audited as added to ${roleName} but did not appear on the role assignment within 90 s; it is probably still assigned: remove it in Manage Role Assignments`);
   const rem = await launchRole({
-    ...base, positionId: added.id, positionIdType: 'WID', positionName: added.descriptor || pos.cf_PositionID,
+    ...base, positionId: added.id, positionIdType: 'WID', positionName: added.descriptor || pos.positionID,
     mode: 'REMOVE', positionWid: added.id, ...who(),
   });
   expectAudit(rem, 'Role Assignment', 'REMOVE POSITION');
@@ -2821,7 +2838,7 @@ async function roleAddRemove(token, me) {
     if (/^P-\d+$/.test(String(a.positionName || '').trim())) throw new Error(`${a.action} audit shows only the position ID "${a.positionName}"`);
   }
   if (add.positionName !== rem.positionName) throw new Error(`position name differs: assign "${add.positionName}" vs remove "${rem.positionName}"`);
-  pass('RoleAssignment.addRemove', `${pos.cf_PositionID} added to and removed from ${roleName} on ${cur.org.descriptor}`);
+  pass('RoleAssignment.addRemove', `${pos.positionID} added to and removed from ${roleName} on ${cur.org.descriptor}`);
   return { add, rem, pos, roleName };
 }
 
@@ -2861,7 +2878,7 @@ async function timingSuite(token) {
   for (const id of ['allShellOrgs', 'allShellAssignableRolesinTenant', 'allAAArolesinTenant', 'allPositions', 'customOrganizations']) {
     await med(`WQL ${id}`, async () => { const r = await wql(token, id === 'allShellAssignableRolesinTenant' ? await shellRolesQuery(token) : wqlFile(id), 10000); return `${(r.data || []).length} rows, ${kb(r)}`; });
   }
-  await med('WQL positionFill (Access Review)', async () => { const r = await wql(token, 'SELECT cf_PositionID, cf_PositionIsFilled FROM allPositions WHERE supervisoryOrganization is not empty', 10000); return `${(r.data || []).length} rows, ${kb(r)}`; });
+  await med('WQL positionFill (Access Review)', async () => { const r = await wql(token, 'SELECT positionID, worker FROM allPositions WHERE supervisoryOrganization is not empty', 10000); return `${(r.data || []).length} rows, ${kb(r)}`; });
   await med('REST requests: count + 3 pages (today)', async () => { await request('GET', `${BO}/comsAssignableRoles?limit=1`, token); const r = await Promise.all([0, 100, 200].map((o) => request('GET', `${BO}/comsAssignableRoles?limit=100&offset=${o}`, token))); return `${r.reduce((n, x) => n + (x.data || []).length, 0)} rows, ${kb(r)}`; });
   const RQ = 'workdayID { id } referenceId roleName application status requestedBy { workdayID { id } descriptor } requestedDate approvedDate effectiveDate shellOrgCode positionNames reviewEventWid';
   const req = (where) => `query { r: ${APP_ID}_COMSAssignableRole(dataSource: {${APP_ID}_comsAssignableRoles: {}}${where ? ', where: ' + where : ''}, orderBy: {requestedDate: DESC}, limit: 100) { total data { ${RQ} } } }`;
@@ -3076,16 +3093,16 @@ async function demoSeed(token, me) {
     const ra = (row?.roleAssignments || []).find((x) => String(x.organization?.descriptor || '').startsWith('X:'));
     if (!row || !ra) throw new Error(`${roleName} has no X: organization assignment`);
     const assigned = (ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions || []).map((p) => String(p.descriptor || ''));
-    const pos = ((await wql(token, 'SELECT cf_PositionID, workdayID, position_PositionManagement, cf_PositionText, cf_PositionIsFilled FROM allPositions WHERE supervisoryOrganization is not empty', 300)).data || [])
-      .filter((p) => p.cf_PositionID && p.cf_PositionID !== 'P-00009' && p.cf_PositionIsFilled !== false && !assigned.some((d) => d.includes(p.cf_PositionID)))[0];
+    const pos = ((await wql(token, 'SELECT positionID, workdayID, position_PositionManagement, cf_PositionText, worker FROM allPositions WHERE supervisoryOrganization is not empty', 300)).data || [])
+      .filter((p) => p.positionID && p.positionID !== 'P-00009' && !!p.worker && !assigned.some((d) => d.includes(p.positionID)))[0];
     if (!pos) throw new Error(`no unassigned filled position for ${roleName}`);
     const a = await launchAndVerify(token, 'IORC_0037_XFD_SEC_Assign_Remove_Role_Positions', {
       roleId: row.role.id, roleName, orgId: ra.organization.id, orgName: ra.organization.descriptor, effectiveDate: EFF,
-      positionId: pos.cf_PositionID, positionIdType: 'Position_ID', mode: 'ADD', positionWid: pos.workdayID?.id || pos.workdayID,
-      positionName: pos.position_PositionManagement?.descriptor || pos.cf_PositionText || pos.cf_PositionID, ...who(),
+      positionId: pos.positionID, positionIdType: 'Position_ID', mode: 'ADD', positionWid: pos.workdayID?.id || pos.workdayID,
+      positionName: pos.position_PositionManagement?.descriptor || pos.cf_PositionText || pos.positionID, ...who(),
     });
     if (a.action !== 'ASSIGN POSITION') throw new Error(`audit is ${a.objectType}/${a.action}`);
-    pass('Demo.2 assign', `${pos.cf_PositionID} (${a.positionName}) added to ${roleName} on ${ra.organization.descriptor}, effective ${EFF}`);
+    pass('Demo.2 assign', `${pos.positionID} (${a.positionName}) added to ${roleName} on ${ra.organization.descriptor}, effective ${EFF}`);
   });
 
   await test('Demo.3 request', async () => {
@@ -3098,13 +3115,13 @@ async function demoSeed(token, me) {
     const auWid = au.workdayID?.id || au.workdayID;
     const auName = au.academicUnit?.descriptor || au.academicUnitName;
     // Positions: two filled positions, as the form's Positions picker stores them (WIDs + full names).
-    const allPos = ((await wql(token, 'SELECT cf_PositionID, workdayID, position_PositionManagement, cf_PositionText, cf_PositionIsFilled FROM allPositions WHERE supervisoryOrganization is not empty', 1000)).data || [])
-      .filter((p) => p.cf_PositionID && p.cf_PositionID !== 'P-00009' && p.cf_PositionIsFilled !== false);
+    const allPos = ((await wql(token, 'SELECT positionID, workdayID, position_PositionManagement, cf_PositionText, worker FROM allPositions WHERE supervisoryOrganization is not empty', 1000)).data || [])
+      .filter((p) => p.positionID && p.positionID !== 'P-00009' && !!p.worker);
     const pref = allPos.filter((p) => /instructor|lecturer|teaching|professor|academic/i.test(`${p.position_PositionManagement?.descriptor || ''} ${p.cf_PositionText || ''}`));
     const picks = [...pref, ...allPos.filter((p) => !pref.includes(p))].slice(0, 2);
     if (!picks.length) throw new Error('no filled positions found');
     const wids = picks.map((p) => p.workdayID?.id || p.workdayID);
-    const names = picks.map((p) => p.position_PositionManagement?.descriptor || p.cf_PositionText || p.cf_PositionID);
+    const names = picks.map((p) => p.position_PositionManagement?.descriptor || p.cf_PositionText || p.positionID);
     const fields = {
       shellOrgCode: PATTERN, shellOrgWid: patternWid || '',
       positions: wids.join(','), positionWids: wids.join(','), positionNames: names.join(', '),

@@ -1,0 +1,58 @@
+/* Access Review helpers (tools/build_access_review.py). logs come newest first. */
+/* IDs (P-00010) of positions with no incumbent (allPositions cf_PositionIsFilled = false). */
+var vacantIds = function(positions) {
+  positions.filter(p => { p.cf_PositionIsFilled == false }).map(p => { '' + (p.cf_PositionID ?? '') });
+};
+
+var allRows = function(roles) {
+  list:flatten(roles.map(r => { list:flatten((r.roleAssignments ?? []).filter(ra => { ra.organization != null && r.role != null }).map(ra => { (ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? []).map(p => { { 'role': r.role.descriptor ?? '', 'roleWid': r.role.id ?? '', 'org': ra.organization.descriptor ?? '', 'orgWid': ra.organization.id ?? '', 'pos': p.descriptor ?? '', 'posWid': p.id ?? '' } }) })) }));
+};
+
+/* One row per role, organization and position, kept only where the position is vacant (product owner 2026-11-04:
+   "only keep for vacant positions, so if role assignment incumbent has left"). */
+var rowsFrom = function(roles, vacant) {
+  allRows(roles).filter(r => { vacant.contains(r.pos.substringBefore(' ')) });
+};
+
+
+var lastWhen = function(logs, action, roleName, posWid, posName) {
+  let posId = (posName ?? '').substringBefore(' ');
+  let m = logs.filter(a => { (a.action ?? '') == action && (a.roleName ?? '') == roleName && ((!empty(posWid) && (a.positionWid ?? '').contains(posWid)) || (!empty(posId) && (a.positionName ?? '').contains(posId))) });
+  m.size() == 0 ? '' : ('' + (m[0].timestamp ?? '')).substring(0, 10);
+};
+
+var lastChanged = function(logs, roleName, posWid, posName) {
+  let d = lastWhen(logs, 'ASSIGN POSITION', roleName, posWid, posName);
+  empty(d) ? 'Not through ECO-COMS' : d;
+};
+
+var lastReviewed = function(logs, roleName, posWid, posName) {
+  let d = lastWhen(logs, 'REVIEW', roleName, posWid, posName);
+  empty(d) ? 'Never' : d;
+};
+
+var countNeverReviewed = function(rows, logs) {
+  rows.filter(r => { empty(lastWhen(logs, 'REVIEW', r.role, r.posWid, r.pos)) }).size();
+};
+
+var countOutside = function(rows, logs) {
+  rows.filter(r => { empty(lastWhen(logs, 'ASSIGN POSITION', r.role, r.posWid, r.pos)) }).size();
+};
+
+/* Quick filter from a clicked count card: 'never' (never reviewed), 'outside' (assigned outside ECO-COMS), else all. */
+var quick = function(rows, logs, q) {
+  q == 'never' ? rows.filter(r => { empty(lastWhen(logs, 'REVIEW', r.role, r.posWid, r.pos)) }) :
+    (q == 'outside' ? rows.filter(r => { empty(lastWhen(logs, 'ASSIGN POSITION', r.role, r.posWid, r.pos)) }) : rows);
+};
+
+{
+  "vacantIds": vacantIds,
+  "allRows": allRows,
+  "rowsFrom": rowsFrom,
+  "lastWhen": lastWhen,
+  "lastChanged": lastChanged,
+  "lastReviewed": lastReviewed,
+  "countNeverReviewed": countNeverReviewed,
+  "countOutside": countOutside,
+  "quick": quick
+}
