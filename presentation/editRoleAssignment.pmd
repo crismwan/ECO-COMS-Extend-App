@@ -5,6 +5,21 @@
   ],
   "endPoints": [
     {
+      "name": "posRestrictions",
+      "baseUrlType": "workday-wql",
+      "url": "<% 'data?limit=10000&query=' + string:pathEncode('SELECT positionRestriction FROM allPositions') %>",
+      "authType": "sso",
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
       "name": "orgSubtypes",
       "baseUrlType": "workday-wql",
       "url": "data",
@@ -200,7 +215,7 @@
                   "widKey": "id",
                   "values": "<% [] %>",
                   "multiSelect": true,
-                  "selectedValuesAndDescriptors": "<% let cur = list:flatten((shellRoles.data ?? []).filter(r => { r.role.id == (queryParams.roleId ?? '') }).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ra.organization.id == (queryParams.orgId ?? '') }).map(ra => { { 'role': r.role, 'org': ra.organization, 'positions': ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? [] } }) })); empty(cur) ? [] : (cur[0].role != null ? [cur[0].role] : []).map(i => { {'id': i.id, 'descriptor': i.descriptor} }) %>"
+                  "selectedValuesAndDescriptors": "<% let cur = list:flatten((shellRoles.data ?? []).filter(r => { r.role.id == (queryParams.roleId ?? '') }).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ra.organization.id == (queryParams.orgId ?? '') }).map(ra => { { 'role': r.role, 'org': ra.organization, 'positions': comsRoleAssignees.positionsOf(ra.roleAssignedTo, posRestrictions.data ?? []) ?? [] } }) })); empty(cur) ? [] : (cur[0].role != null ? [cur[0].role] : []).map(i => { {'id': i.id, 'descriptor': i.descriptor} }) %>"
                 },
                 {
                   "type": "instanceList",
@@ -212,7 +227,7 @@
                   "widKey": "id",
                   "values": "<% [] %>",
                   "multiSelect": true,
-                  "selectedValuesAndDescriptors": "<% let cur = list:flatten((shellRoles.data ?? []).filter(r => { r.role.id == (queryParams.roleId ?? '') }).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ra.organization.id == (queryParams.orgId ?? '') }).map(ra => { { 'role': r.role, 'org': ra.organization, 'positions': ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? [] } }) })); empty(cur) ? [] : (cur[0].org != null ? [cur[0].org] : []).map(i => { {'id': i.id, 'descriptor': i.descriptor} }) %>"
+                  "selectedValuesAndDescriptors": "<% let cur = list:flatten((shellRoles.data ?? []).filter(r => { r.role.id == (queryParams.roleId ?? '') }).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ra.organization.id == (queryParams.orgId ?? '') }).map(ra => { { 'role': r.role, 'org': ra.organization, 'positions': comsRoleAssignees.positionsOf(ra.roleAssignedTo, posRestrictions.data ?? []) ?? [] } }) })); empty(cur) ? [] : (cur[0].org != null ? [cur[0].org] : []).map(i => { {'id': i.id, 'descriptor': i.descriptor} }) %>"
                 },
                 {
                   "type": "instanceList",
@@ -224,7 +239,7 @@
                   "widKey": "id",
                   "values": "<% [] %>",
                   "multiSelect": true,
-                  "selectedValuesAndDescriptors": "<% let cur = list:flatten((shellRoles.data ?? []).filter(r => { r.role.id == (queryParams.roleId ?? '') }).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ra.organization.id == (queryParams.orgId ?? '') }).map(ra => { { 'role': r.role, 'org': ra.organization, 'positions': ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? [] } }) })); empty(cur) ? [] : (cur[0].positions).map(i => { {'id': i.id, 'descriptor': i.descriptor} }) %>"
+                  "selectedValuesAndDescriptors": "<% let cur = list:flatten((shellRoles.data ?? []).filter(r => { r.role.id == (queryParams.roleId ?? '') }).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ra.organization.id == (queryParams.orgId ?? '') }).map(ra => { { 'role': r.role, 'org': ra.organization, 'positions': comsRoleAssignees.positionsOf(ra.roleAssignedTo, posRestrictions.data ?? []) ?? [] } }) })); empty(cur) ? [] : (cur[0].positions).map(i => { {'id': i.id, 'descriptor': i.descriptor} }) %>"
                 }
               ]
             }
@@ -258,7 +273,7 @@
                   "label": "Positions to Remove",
                   "multiSelect": true,
                   "required": false,
-                  "values": "<% list:flatten(list:flatten((shellRoles.data ?? []).filter(r => { r.role.id == (queryParams.roleId ?? '') }).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ra.organization.id == (queryParams.orgId ?? '') }).map(ra => { ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? [] }) }))).map(p => { {'id': p.id, 'descriptor': p.descriptor} }) %>",
+                  "values": "<% list:flatten(list:flatten((shellRoles.data ?? []).filter(r => { r.role.id == (queryParams.roleId ?? '') }).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && ra.organization.id == (queryParams.orgId ?? '') }).map(ra => { comsRoleAssignees.positionsOf(ra.roleAssignedTo, posRestrictions.data ?? []) ?? [] }) }))).map(p => { {'id': p.id, 'descriptor': p.descriptor} }) %>",
                   "helpText": "Pick from the positions currently assigned.",
                   "onChange": "<% positionsToAddInstanceList.clearError(); %>"
                 },
@@ -340,5 +355,8 @@
         ]
       }
     ]
-  }
+  },
+  "include": [
+    "comsRoleAssignees.script"
+  ]
 }

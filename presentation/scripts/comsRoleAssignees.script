@@ -1,0 +1,10 @@
+/* The positions a role assignment holds: Role Assigned To kept to position restrictions, named as the restriction.
+   Same as the tenant calculated field zCF - EE - Role Assigned to as Position Restrictions (tools/delivered_fields.py). */
+var positionsOf = function(assignees, prs) {
+  let ids = (prs ?? []).map(p => { empty(p.positionRestriction) ? '' : p.positionRestriction.id });
+  (assignees ?? []).filter(a => { ids.contains(a.id) }).map(a => { {'id': a.id, 'descriptor': ((prs ?? []).get(ids.indexOf(a.id))).positionRestriction.descriptor} });
+};
+
+{
+  "positionsOf": positionsOf
+}

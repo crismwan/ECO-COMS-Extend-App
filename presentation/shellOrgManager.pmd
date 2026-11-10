@@ -5,6 +5,21 @@
   ],
   "endPoints": [
     {
+      "name": "posRestrictions",
+      "baseUrlType": "workday-wql",
+      "url": "<% 'data?limit=10000&query=' + string:pathEncode('SELECT positionRestriction FROM allPositions') %>",
+      "authType": "sso",
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
       "name": "orgSubtypes",
       "baseUrlType": "workday-wql",
       "url": "data",
@@ -727,7 +742,7 @@
                 "id": "rolesEmptyText",
                 "enabled": false,
                 "label": "ⓘ Nothing to show",
-                "visible": "<% size(list:flatten((shellRoles.data ?? []).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && (empty(queryParams.appCode) ? true : (ra.organization.descriptor == queryParams.appCode || ra.organization.descriptor.startsWith(queryParams.appCode + ':') || ra.organization.descriptor.startsWith(queryParams.appCode + ' '))) }).map(ra => { { 'role': r.role, 'org': ra.organization, 'positions': ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? [], 'workers': ra.workersAssigned ?? [] } }) }))) == 0 %>",
+                "visible": "<% size(list:flatten((shellRoles.data ?? []).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && (empty(queryParams.appCode) ? true : (ra.organization.descriptor == queryParams.appCode || ra.organization.descriptor.startsWith(queryParams.appCode + ':') || ra.organization.descriptor.startsWith(queryParams.appCode + ' '))) }).map(ra => { { 'role': r.role, 'org': ra.organization, 'positions': comsRoleAssignees.positionsOf(ra.roleAssignedTo, posRestrictions.data ?? []) ?? [], 'workers': ra.workersAssigned ?? [] } }) }))) == 0 %>",
                 "value": ""
               },
               {
@@ -735,11 +750,11 @@
                 "gridType": "LIST",
                 "multiViewStylingEnabled": true,
                 "id": "roleAssignmentsGrid",
-                "rows": "<% list:flatten((shellRoles.data ?? []).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && (empty(queryParams.appCode) ? true : (ra.organization.descriptor == queryParams.appCode || ra.organization.descriptor.startsWith(queryParams.appCode + ':') || ra.organization.descriptor.startsWith(queryParams.appCode + ' '))) }).map(ra => { { 'role': r.role, 'org': ra.organization, 'positions': ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? [], 'workers': ra.workersAssigned ?? [] } }) })) %>",
+                "rows": "<% list:flatten((shellRoles.data ?? []).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && (empty(queryParams.appCode) ? true : (ra.organization.descriptor == queryParams.appCode || ra.organization.descriptor.startsWith(queryParams.appCode + ':') || ra.organization.descriptor.startsWith(queryParams.appCode + ' '))) }).map(ra => { { 'role': r.role, 'org': ra.organization, 'positions': comsRoleAssignees.positionsOf(ra.roleAssignedTo, posRestrictions.data ?? []) ?? [], 'workers': ra.workersAssigned ?? [] } }) })) %>",
                 "rowVariableName": "ra",
                 "label": "Role Assignments",
                 "autoPaging": true,
-                "visible": "<% size(list:flatten((shellRoles.data ?? []).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && (empty(queryParams.appCode) ? true : (ra.organization.descriptor == queryParams.appCode || ra.organization.descriptor.startsWith(queryParams.appCode + ':') || ra.organization.descriptor.startsWith(queryParams.appCode + ' '))) }).map(ra => { { 'role': r.role, 'org': ra.organization, 'positions': ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? [], 'workers': ra.workersAssigned ?? [] } }) }))) > 0 %>",
+                "visible": "<% size(list:flatten((shellRoles.data ?? []).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && (empty(queryParams.appCode) ? true : (ra.organization.descriptor == queryParams.appCode || ra.organization.descriptor.startsWith(queryParams.appCode + ':') || ra.organization.descriptor.startsWith(queryParams.appCode + ' '))) }).map(ra => { { 'role': r.role, 'org': ra.organization, 'positions': comsRoleAssignees.positionsOf(ra.roleAssignedTo, posRestrictions.data ?? []) ?? [], 'workers': ra.workersAssigned ?? [] } }) }))) > 0 %>",
                 "columns": [
                   {
                     "type": "column",
@@ -853,6 +868,7 @@
   },
   "include": [
     "comsPatterns.script",
-    "comsAppIndex.script"
+    "comsAppIndex.script",
+    "comsRoleAssignees.script"
   ]
 }

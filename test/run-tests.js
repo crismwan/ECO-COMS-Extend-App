@@ -483,7 +483,7 @@ function staticSuite() {
     if (bad.length) fail('Static.tenantWids', `tenant-specific WIDs (look them up by name instead): ${[...new Set(bad)].slice(0, 8).join('; ')}`);
     else pass('Static.tenantWids', 'no tenant-specific WIDs in the app files');
     // calculated fields are tenant setup too: only the two with no delivered equivalent may be read (tools/delivered_fields.py)
-    const CF_OK = new Set(['cf_PositionText', 'cf_ZCF_EE_RoleAssignedToAsPositionRestrictions']);
+    const CF_OK = new Set(['cf_PositionText']);
     const cfs = new Set();
     for (const dir of ['presentation', 'orchestration']) for (const f of listFiles(dir, true)) for (const m of fs.readFileSync(path.join(ROOT, f), 'utf8').matchAll(/\bcf_\w+/g)) if (!CF_OK.has(m[0])) cfs.add(`${f}: ${m[0]}`);
     if (cfs.size) fail('Static.calculatedFields', `tenant calculated fields (use a delivered field, or add it to the prerequisites in docs/ECO-COMS-NOTES.md): ${[...cfs].slice(0, 8).join('; ')}`);
@@ -924,8 +924,27 @@ async function fillNames(token, query) {
   const ids = await nameIds(token);
   return query.replace(/<% subtypes %>/g, ids.subtypes).replace(/<% fuhTypes %>/g, ids.fuhTypes);
 }
-const wql = async (token, query, limit = 100) =>
-  request('GET', `${WQL}?limit=${limit}&query=${encodeURIComponent(await fillNames(token, query))}`, token);
+// Role assignments: the positions held are roleAssignedTo kept to position restrictions (what the tenant calculated field
+// zCF - EE - Role Assigned to as Position Restrictions did; tools/delivered_fields.py). wql() adds them as `positionsHeld`
+// to every role assignment that comes back with roleAssignedTo selected, named like the pages name them.
+let posRestrictionNames = null;
+async function addPositionsHeld(token, query, r) {
+  if (!/roleAssignedTo/.test(query) || !Array.isArray(r && r.data)) return r;
+  if (!posRestrictionNames) {
+    const pr = (await request('GET', `${WQL}?limit=10000&query=${encodeURIComponent('SELECT positionRestriction FROM allPositions')}`, token)).data || [];
+    posRestrictionNames = new Map(pr.filter((p) => p.positionRestriction).map((p) => [p.positionRestriction.id, p.positionRestriction.descriptor]));
+  }
+  for (const row of r.data) for (const k of Object.keys(row)) if (Array.isArray(row[k])) for (const ra of row[k]) {
+    if (ra && typeof ra === 'object' && ('organization' in ra || 'roleAssignedTo' in ra)) {
+      ra.positionsHeld = [].concat(ra.roleAssignedTo || []).filter((a) => posRestrictionNames.has(a.id)).map((a) => ({ id: a.id, descriptor: posRestrictionNames.get(a.id) }));
+    }
+  }
+  return r;
+}
+const wql = async (token, query, limit = 100) => {
+  const q = await fillNames(token, query);
+  return addPositionsHeld(token, q, await request('GET', `${WQL}?limit=${limit}&query=${encodeURIComponent(q)}`, token));
+};
 // IORC_0037_XFD_SEC_Change_Shell_Org_Status picks inactivate vs reactivate from includeInactive ("true" = inactivate),
 // not from action; action is only written to the audit record. Send both, as the page does.
 // Encode like the pages' .urlEncode() (Java URLEncoder: space as +, only A-Z a-z 0-9 . - * _ left as is).
@@ -996,13 +1015,13 @@ async function smoke(token, me) {
 
   // Tenant prerequisites the app reads but can't carry (docs/ECO-COMS-NOTES.md "Tenant portability")
   await test('Prereq.calculatedFields', async () => {
-    for (const [ds, f] of [['allPositions', 'cf_PositionText'], ['assignableRoles', 'roleAssignments{cf_ZCF_EE_RoleAssignedToAsPositionRestrictions} as ra']]) {
+    for (const [ds, f] of [['allPositions', 'cf_PositionText'], ['assignableRoles', 'roleAssignments{roleAssignedTo} as ra']]) {
       try { await wql(token, `SELECT ${f} FROM ${ds}`, 1); } catch (e) { throw new Error(`calculated field missing in this tenant (${ds}: ${f}): ${String(e.message).slice(0, 160)}`); }
     }
     const ids = await nameIds(token);
     if (ids.subtypes.split(',').filter(Boolean).length !== SUBTYPE_NAMES.length) throw new Error(`organization subtypes ${SUBTYPE_NAMES.join(', ')} not all found (got ${ids.subtypes || 'none'})`);
     if (!ids.fuhTypes) throw new Error(`organization type "${FUH_TYPE_NAME}" not found`);
-    pass('Prereq.calculatedFields', 'cf_PositionText, cf_ZCF_EE_RoleAssignedToAsPositionRestrictions, subtypes and the FUH type are present');
+    pass('Prereq.calculatedFields', 'cf_PositionText, subtypes and the FUH type are present');
   });
 
   await test('WQL.shellOrgsExist', async () => {
@@ -1166,7 +1185,7 @@ async function smoke(token, me) {
     const vacant = new Set(pos.filter((p) => !p.worker).map((p) => String(p.positionID || '')));
     const q = await shellRolesQuery(token);
     const roles = (await wql(token, q, 1000)).data || [];
-    const held = roles.flatMap((r) => (r.roleAssignments || []).flatMap((ra) => (ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions || []).map((p) => ({ role: r.role?.descriptor, pos: p.descriptor || '' }))));
+    const held = roles.flatMap((r) => (r.roleAssignments || []).flatMap((ra) => (ra.positionsHeld || []).map((p) => ({ role: r.role?.descriptor, pos: p.descriptor || '' }))));
     const rows = held.filter((h) => vacant.has(h.pos.split(' ')[0]));
     const sample = pos.slice(0, 2).map((p) => JSON.stringify(p)).join(' ');
     if (!pos.length) throw new Error('allPositions returned no positions');
@@ -1724,10 +1743,10 @@ async function repair(token, me) {
   const unassign = arg('--unassign');
   if (unassign) await test('Repair.unassign', async () => {
     const readRole = async () => {
-      const r = await wql(token, `SELECT role, roleAssignments{organization, cf_ZCF_EE_RoleAssignedToAsPositionRestrictions} as roleAssignments FROM assignableRoles WHERE roleName = '${TEST_ROLE}'`, 5);
+      const r = await wql(token, `SELECT role, roleAssignments{organization, roleAssignedTo} as roleAssignments FROM assignableRoles WHERE roleName = '${TEST_ROLE}'`, 5);
       const row = (r.data || [])[0];
       const ra = (row?.roleAssignments || []).find((x) => String(x.organization?.descriptor || '').startsWith('X:'));
-      return row && ra ? { role: row.role, org: ra.organization, positions: ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions || [] } : null;
+      return row && ra ? { role: row.role, org: ra.organization, positions: ra.positionsHeld || [] } : null;
     };
     const cur = await readRole();
     if (!cur) throw new Error(`${TEST_ROLE} has no X: organization assignment`);
@@ -2498,7 +2517,7 @@ async function appSummary(token) {
   const apps = {};
   const get = (a) => (apps[a] = apps[a] || { id: a, family: familyOf(a), name: '', orgs: 0, active: 0, patterns: 0, roles: 0, assignments: 0, positions: 0, pending: 0, lastChange: '', hasRecord: false, recordActive: null });
   for (const o of orgs) { const a = get(appOf(o.code || '')); a.orgs++; if (o.inactive !== true && o.inactive !== 'true') a.active++; if ((o.code || '').includes('PATTERN')) a.patterns++; if ((o.code || '') === a.id) a.name = (o.organizationByName?.descriptor || o.organizationByName || '').toString(); }
-  for (const r of roles) { const rn = (r.role?.descriptor || '').toString(); const m = rn.match(/^(X:[^:]+(?:\([^)]*\))?(?::[^:(]+)?)/); const app = m ? appOf(rn.split(':ROLE')[0]) : null; if (!app) continue; const a = get(app); a.roles++; const ras = r.roleAssignments || []; a.assignments += ras.length; a.positions += ras.reduce((n, x) => n + ((x.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions || []).length || 0), 0); }
+  for (const r of roles) { const rn = (r.role?.descriptor || '').toString(); const m = rn.match(/^(X:[^:]+(?:\([^)]*\))?(?::[^:(]+)?)/); const app = m ? appOf(rn.split(':ROLE')[0]) : null; if (!app) continue; const a = get(app); a.roles++; const ras = r.roleAssignments || []; a.assignments += ras.length; a.positions += ras.reduce((n, x) => n + ((x.positionsHeld || []).length || 0), 0); }
   for (const r of recs) { const a = get(r.appId || ''); a.hasRecord = true; a.recordActive = r.active; if (!a.name) a.name = r.name || ''; }
   for (const r of reqs) if (/Pending/i.test(r.status || '')) { const a = apps[r.application] || apps[appOf(r.shellOrgCode || '')]; if (a) a.pending++; }
   for (const x of audits) { const a = apps[x.application] || apps[appOf(x.coName || '')]; if (a && (x.timestamp || '') > a.lastChange) a.lastChange = x.timestamp || ''; }
@@ -2599,10 +2618,10 @@ async function bulkApply(token, me) {
   await test('Bulk.applyAddRemove', async () => {
     const today = tenantDate();
     const readRole = async () => {
-      const r = await wql(token, `SELECT role, roleAssignments{organization, cf_ZCF_EE_RoleAssignedToAsPositionRestrictions} as roleAssignments FROM assignableRoles WHERE roleName = '${TEST_ROLE}'`, 5);
+      const r = await wql(token, `SELECT role, roleAssignments{organization, roleAssignedTo} as roleAssignments FROM assignableRoles WHERE roleName = '${TEST_ROLE}'`, 5);
       const row = (r.data || [])[0];
       const ra = (row?.roleAssignments || []).find((x) => String(x.organization?.descriptor || '').startsWith('X:'));
-      return row && ra ? { role: row.role, org: ra.organization, positions: ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions || [] } : null;
+      return row && ra ? { role: row.role, org: ra.organization, positions: ra.positionsHeld || [] } : null;
     };
     const cur = await readRole();
     if (!cur) return skip('Bulk.applyAddRemove', `test role ${TEST_ROLE} has no X: organization assignment`);
@@ -2819,10 +2838,10 @@ async function roleAddRemove(token, me) {
   };
     const roleName = TEST_ROLE;
   const readRole = async () => {
-    const r = await wql(token, `SELECT role, roleAssignments{organization, cf_ZCF_EE_RoleAssignedToAsPositionRestrictions} as roleAssignments FROM assignableRoles WHERE roleName = '${roleName}'`, 5);
+    const r = await wql(token, `SELECT role, roleAssignments{organization, roleAssignedTo} as roleAssignments FROM assignableRoles WHERE roleName = '${roleName}'`, 5);
     const row = (r.data || [])[0];
     const ra = (row?.roleAssignments || []).find((x) => String(x.organization?.descriptor || '').startsWith('X:'));
-    return row && ra ? { role: row.role, org: ra.organization, positions: ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions || [] } : null;
+    return row && ra ? { role: row.role, org: ra.organization, positions: ra.positionsHeld || [] } : null;
   };
   const cur = await readRole();
   if (!cur) return skip('RoleAssignment.addRemove', `test role ${roleName} has no X: organization assignment`);
@@ -3108,11 +3127,11 @@ async function demoSeed(token, me) {
     const roleName = 'X:BPMS(ODMT):ROLE:DEPTSTAFF';
     const done = (await readAll(token, 'comsAuditLogs')).find((x) => x.action === 'ASSIGN POSITION' && x.roleName === roleName);
     if (done) return pass('Demo.2 assign', `already done: ${done.positionName} on ${roleName}`);
-    const r = await wql(token, `SELECT role, roleAssignments{organization, cf_ZCF_EE_RoleAssignedToAsPositionRestrictions} as roleAssignments FROM assignableRoles WHERE roleName = '${roleName}'`, 5);
+    const r = await wql(token, `SELECT role, roleAssignments{organization, roleAssignedTo} as roleAssignments FROM assignableRoles WHERE roleName = '${roleName}'`, 5);
     const row = (r.data || [])[0];
     const ra = (row?.roleAssignments || []).find((x) => String(x.organization?.descriptor || '').startsWith('X:'));
     if (!row || !ra) throw new Error(`${roleName} has no X: organization assignment`);
-    const assigned = (ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions || []).map((p) => String(p.descriptor || ''));
+    const assigned = (ra.positionsHeld || []).map((p) => String(p.descriptor || ''));
     const pos = ((await wql(token, 'SELECT positionID, workdayID, position_PositionManagement, cf_PositionText, worker FROM allPositions WHERE supervisoryOrganization is not empty', 300)).data || [])
       .filter((p) => p.positionID && p.positionID !== 'P-00009' && !!p.worker && !assigned.some((d) => d.includes(p.positionID)))[0];
     if (!pos) throw new Error(`no unassigned filled position for ${roleName}`);

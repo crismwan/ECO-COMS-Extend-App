@@ -8,6 +8,21 @@
   ],
   "endPoints": [
     {
+      "name": "posRestrictions",
+      "baseUrlType": "workday-wql",
+      "url": "<% 'data?limit=10000&query=' + string:pathEncode('SELECT positionRestriction FROM allPositions') %>",
+      "authType": "sso",
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
       "name": "orgSubtypes",
       "baseUrlType": "workday-wql",
       "url": "data",
@@ -224,7 +239,7 @@
                   "id": "noRowsText",
                   "label": "ⓘ Nothing to show",
                   "enabled": false,
-                  "visible": "<% size(comsAccessReview.rowsFrom(shellRoles.data ?? [], comsAccessReview.vacantIds(positionFill.data ?? []))) == 0 %>",
+                  "visible": "<% size(comsAccessReview.rowsFrom(shellRoles.data ?? [], comsAccessReview.vacantIds(positionFill.data ?? []), posRestrictions.data ?? [])) == 0 %>",
                   "value": "No vacant position holds an ECO-COMS shell role."
                 },
                 {
@@ -232,7 +247,7 @@
                   "id": "reviewChecklistGrid",
                   "label": "Vacant Positions Holding Shell Roles",
                   "rowVariableName": "rv",
-                  "rows": "<% comsAccessReview.rowsFrom(shellRoles.data ?? [], comsAccessReview.vacantIds(positionFill.data ?? [])) %>",
+                  "rows": "<% comsAccessReview.rowsFrom(shellRoles.data ?? [], comsAccessReview.vacantIds(positionFill.data ?? []), posRestrictions.data ?? []) %>",
                   "doNotAdd": true,
                   "doNotRemove": true,
                   "columns": [

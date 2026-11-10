@@ -1,0 +1,363 @@
+{
+  "id": "bulkRoleTemplate",
+  "securityDomains": [
+    "ManageCOMSShellOrgs"
+  ],
+  "endPoints": [
+    {
+      "name": "orgSubtypes",
+      "baseUrlType": "workday-wql",
+      "url": "data",
+      "authType": "sso",
+      "bestEffort": "true",
+      "wqlQuery": {
+        "queryId": "orgSubtypes"
+      },
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "name": "appTypes",
+      "baseUrlType": "workday-wql",
+      "url": "data",
+      "authType": "sso",
+      "bestEffort": "true",
+      "wqlQuery": {
+        "queryId": "appTypes",
+        "parameters": {
+          "subtypes": "<% (orgSubtypes.data ?? []).filter(r => { empty(r.subtype) ? false : (r.subtype.descriptor == 'X:META' || r.subtype.descriptor == 'X:SHELL') }).map(r => { r.subtype.id }).join(',') %>"
+        }
+      },
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "name": "shellRoles",
+      "baseUrlType": "workday-wql",
+      "url": "data",
+      "authType": "sso",
+      "bestEffort": "true",
+      "wqlQuery": {
+        "queryId": "allShellAssignableRolesinTenant",
+        "parameters": {
+          "types": "<% let ts = (appTypes.data ?? []).map(o => { (o.type1 ?? []).size() > 0 ? o.type1[0].id : '' }).filter(t => { t != '' }).distinct(); ts.size() > 0 ? ts.join(',') : 'none' %>"
+        }
+      },
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "name": "templateCount",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "url": "/comsBulkTemplates?limit=1",
+      "authType": "sso",
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "name": "latestTemplate",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 429
+        }
+      ],
+      "url": "<% let t = templateCount.total ?? 0; '/comsBulkTemplates?limit=100&offset=' + ((t - 100) > 0 ? (t - 100) : 0) %>"
+    }
+  ],
+  "presentation": {
+    "headerSize": "HIDDEN",
+    "body": {
+      "type": "basicFormLayout",
+      "id": "bulkTemplateForm",
+      "sections": [
+        {
+          "type": "layoutSection",
+          "id": "titleBannerSection",
+          "children": [
+            {
+              "type": "richText",
+              "id": "titleBannerRichText",
+              "enabled": false,
+              "value": "<span style=\"color:#0055B3;font-size:24px\"><b>ECO-COMS: Bulk Role Changes – Template</b></span><br><span style=\"color:#374151;font-size:13px\">Download the current template for bulk role changes.</span>"
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "aboutSection",
+          "children": [
+            {
+              "type": "button",
+              "id": "homeButton",
+              "label": "← Home",
+              "action": "LINK",
+              "taskReference": {
+                "taskId": "home"
+              }
+            },
+            {
+              "type": "fieldSet",
+              "id": "aboutFieldSet",
+              "title": "About This Page",
+              "children": [
+                {
+                  "type": "richText",
+                  "id": "aboutRichText",
+                  "enabled": false,
+                  "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\"><b>Easiest:</b> download the <b>Excel template</b> below. It already lists every current role assignment, checks each row as you type and tells you when the file is ready to save as CSV. Its <b>How to use</b> sheet has the steps.<br/><b>Or</b> export the grid below to Excel (the export icon on the grid); each row is one position that holds a role on a shell organization. Then:<br/>1. In <b>Action</b>, type <b>REMOVE</b> on the rows to take a position off a role.<br/>2. To add a position, copy a row of the same role, type <b>ADD</b> in Action and put the new <b>Position ID</b> (for example P-00123) in that column. Leave Assignee WID empty on ADD rows.<br/>3. Leave Action empty on rows you don't want to change. Keep the columns in this order and don't edit the WID columns.<br/>4. Save as <b>CSV</b> (Excel: File → Save As → CSV) and upload it on the Bulk Role Changes page. Up to 1,000 ADD or REMOVE rows per file.</span>"
+                }
+              ],
+              "collapsible": true,
+              "initializeCollapsed": true
+            },
+            {
+              "type": "cardContainer",
+              "id": "aboutCardContainer",
+              "layout": "grid",
+              "cards": [
+                {
+                  "type": "card",
+                  "cardId": "BulkNextStepCard"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "excelSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "excelFieldSet",
+              "title": "Excel Template",
+              "children": [
+                {
+                  "type": "fileUploader",
+                  "id": "templateFileUploader",
+                  "label": "Validated Excel template",
+                  "enabled": false,
+                  "children": [
+                    {
+                      "type": "loop",
+                      "on": "<% (size(latestTemplate.data ?? []) == 0 ? [] : list:sort(latestTemplate.data ?? [], 'asOf', false).subList(0, 1)) %>",
+                      "as": "tf",
+                      "children": [
+                        {
+                          "type": "fileUploaderRow",
+                          "id": "templateFileRow",
+                          "allowRemove": false,
+                          "fileName": "<% tf.fileName %>",
+                          "fileType": "<% fileType:getFileType(tf.fileName) %>",
+                          "contentArea": [
+                            {
+                              "type": "text",
+                              "id": "templateInfoText",
+                              "label": "Version",
+                              "enabled": false,
+                              "value": "<% (tf.version ?? '') + (empty(tf.asOf) ? '' : ' · assignments as of ' + tf.asOf) + (empty(tf.rowCount) ? '' : ' · ' + tf.rowCount + ' rows') %>"
+                            }
+                          ],
+                          "attachment": {
+                            "type": "attachmentList",
+                            "attachmentAuth": "sso",
+                            "attachmentUriTemplate": "[Target]",
+                            "attachmentURL": "<% 'https://api.workday.com/apps/ecocomsphase_xclw_cm_sync2_vmzvxm/v1/comsBulkTemplates/' + tf.id %>",
+                            "attachmentName": "<% tf.fileName %>",
+                            "instanceList": [
+                              {
+                                "action": "attachment",
+                                "descriptor": "<% tf.fileName %>",
+                                "mimeType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                                "iconId": "mime_msexcel"
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "noTemplateText",
+                  "enabled": false,
+                  "visible": "<% size(latestTemplate.data ?? []) == 0 %>",
+                  "value": "No Excel template has been published in this tenant yet. Use Upload New Template Version, or export the grid below."
+                }
+              ]
+            },
+            {
+              "type": "button",
+              "id": "uploadTemplateButton",
+              "label": "Upload New Template Version",
+              "action": "AUXILIARY",
+              "taskReference": {
+                "taskId": "bulkTemplateUpload"
+              }
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "gridSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "templateFieldSet",
+              "title": "Current Role Assignments",
+              "children": [
+                {
+                  "type": "grid",
+                  "id": "bulkTemplateGrid",
+                  "gridType": "LIST",
+                  "multiViewStylingEnabled": true,
+                  "autoPaging": true,
+                  "enabled": false,
+                  "excelExportEnabled": true,
+                  "rowVariableName": "tr",
+                  "rows": "<% list:flatten(list:flatten((shellRoles.data ?? []).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && (empty(queryParams.appCode) || ra.organization.descriptor.startsWith(queryParams.appCode)) }).map(ra => { (ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? []).map(p => { { 'role': r.role.descriptor ?? '', 'roleWid': r.role.id ?? '', 'org': ra.organization.descriptor ?? '', 'orgWid': ra.organization.id ?? '', 'position': p.descriptor ?? '', 'positionId': (p.descriptor ?? '').substringBefore(' '), 'assigneeWid': p.id ?? '' } }) }) }))) %>",
+                  "label": "Role Assignments",
+                  "columns": [
+                    {
+                      "type": "column",
+                      "columnId": "colAction",
+                      "label": "Action",
+                      "sortableAndFilterable": "true",
+                      "cellTemplate": {
+                        "type": "text",
+                        "id": "colActionText",
+                        "enabled": false,
+                        "value": ""
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colRole",
+                      "label": "Role",
+                      "sortableAndFilterable": "true",
+                      "cellTemplate": {
+                        "type": "text",
+                        "id": "colRoleText",
+                        "enabled": false,
+                        "value": "<% tr.role %>"
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colRoleWid",
+                      "label": "Role WID",
+                      "sortableAndFilterable": "true",
+                      "cellTemplate": {
+                        "type": "text",
+                        "id": "colRoleWidText",
+                        "enabled": false,
+                        "value": "<% tr.roleWid %>"
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colOrg",
+                      "label": "Organization",
+                      "sortableAndFilterable": "true",
+                      "cellTemplate": {
+                        "type": "text",
+                        "id": "colOrgText",
+                        "enabled": false,
+                        "value": "<% tr.org %>"
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colOrgWid",
+                      "label": "Organization WID",
+                      "sortableAndFilterable": "true",
+                      "cellTemplate": {
+                        "type": "text",
+                        "id": "colOrgWidText",
+                        "enabled": false,
+                        "value": "<% tr.orgWid %>"
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colPosition",
+                      "label": "Position",
+                      "sortableAndFilterable": "true",
+                      "cellTemplate": {
+                        "type": "text",
+                        "id": "colPositionText",
+                        "enabled": false,
+                        "value": "<% tr.position %>"
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colPositionId",
+                      "label": "Position ID",
+                      "sortableAndFilterable": "true",
+                      "cellTemplate": {
+                        "type": "text",
+                        "id": "colPositionIdText",
+                        "enabled": false,
+                        "value": "<% tr.positionId %>"
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colAssigneeWid",
+                      "label": "Assignee WID",
+                      "sortableAndFilterable": "true",
+                      "cellTemplate": {
+                        "type": "text",
+                        "id": "colAssigneeWidText",
+                        "enabled": false,
+                        "value": "<% tr.assigneeWid %>"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "footer": {
+      "type": "footer",
+      "children": [
+        {
+          "type": "pod",
+          "podId": "ecoComsFooter"
+        }
+      ]
+    },
+    "pageType": "VIEW"
+  }
+}

@@ -59,11 +59,15 @@ function pacificNow() {
   const types = [...new Set((apps.data || []).map((o) => ((o.type1 || [])[0] || {}).id).filter(Boolean))];
   const q = wq('allShellAssignableRolesinTenant').replace('<% types %>', types.length ? types.join(',') : 'none');
   const res = await call('GET', `${API}/wql/v1/data?limit=10000&query=${encodeURIComponent(q)}`, { headers: { Accept: 'application/json' } });
+  // positions held: roleAssignedTo kept to position restrictions, named as the restriction (was the tenant calculated field
+  // zCF - EE - Role Assigned to as Position Restrictions; tools/delivered_fields.py)
+  const prs = await call('GET', `${API}/wql/v1/data?limit=10000&query=${encodeURIComponent('SELECT positionRestriction FROM allPositions')}`, { headers: { Accept: 'application/json' } });
+  const prName = new Map((prs.data || []).filter((p) => p.positionRestriction).map((p) => [p.positionRestriction.id, p.positionRestriction.descriptor]));
   const rows = [];
   for (const r of res.data || []) {
     for (const ra of r.roleAssignments || []) {
       if (!ra.organization || !String(ra.organization.descriptor || '').startsWith('X:')) continue;
-      for (const p of ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions || []) {
+      for (const p of [].concat(ra.roleAssignedTo || []).filter((a) => prName.has(a.id)).map((a) => ({ id: a.id, descriptor: prName.get(a.id) }))) {
         rows.push({
           role: r.role?.descriptor || '', roleWid: r.role?.id || '',
           org: ra.organization.descriptor || '', orgWid: ra.organization.id || '',

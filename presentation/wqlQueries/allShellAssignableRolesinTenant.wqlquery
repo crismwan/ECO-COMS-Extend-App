@@ -3,5 +3,5 @@
   "parameters": [
     "types"
   ],
-  "query": "SELECT role, enabledForOrganizationTypes, roleAssignments{organization, workersAssigned, cf_ZCF_EE_RoleAssignedToAsPositionRestrictions} as roleAssignments FROM assignableRoles WHERE enabledForOrganizationTypes in (<% types %>) AND roleName not contains 'Organizations and Roles Assignment Administrator'"
+  "query": "SELECT role, enabledForOrganizationTypes, roleAssignments{organization, workersAssigned, roleAssignedTo} as roleAssignments FROM assignableRoles WHERE enabledForOrganizationTypes in (<% types %>) AND roleName not contains 'Organizations and Roles Assignment Administrator'"
 }

@@ -5,6 +5,21 @@
   ],
   "endPoints": [
     {
+      "name": "posRestrictions",
+      "baseUrlType": "workday-wql",
+      "url": "<% 'data?limit=10000&query=' + string:pathEncode('SELECT positionRestriction FROM allPositions') %>",
+      "authType": "sso",
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
       "name": "orgSubtypes",
       "baseUrlType": "workday-wql",
       "url": "data",
@@ -242,7 +257,7 @@
                   "enabled": false,
                   "excelExportEnabled": true,
                   "rowVariableName": "tr",
-                  "rows": "<% list:flatten(list:flatten((shellRoles.data ?? []).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && (empty(queryParams.appCode) || ra.organization.descriptor.startsWith(queryParams.appCode)) }).map(ra => { (ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions ?? []).map(p => { { 'role': r.role.descriptor ?? '', 'roleWid': r.role.id ?? '', 'org': ra.organization.descriptor ?? '', 'orgWid': ra.organization.id ?? '', 'position': p.descriptor ?? '', 'positionId': (p.descriptor ?? '').substringBefore(' '), 'assigneeWid': p.id ?? '' } }) }) }))) %>",
+                  "rows": "<% list:flatten(list:flatten((shellRoles.data ?? []).map(r => { (r.roleAssignments ?? []).filter(ra => { ra.organization != null && (empty(queryParams.appCode) || ra.organization.descriptor.startsWith(queryParams.appCode)) }).map(ra => { (comsRoleAssignees.positionsOf(ra.roleAssignedTo, posRestrictions.data ?? []) ?? []).map(p => { { 'role': r.role.descriptor ?? '', 'roleWid': r.role.id ?? '', 'org': ra.organization.descriptor ?? '', 'orgWid': ra.organization.id ?? '', 'position': p.descriptor ?? '', 'positionId': (p.descriptor ?? '').substringBefore(' '), 'assigneeWid': p.id ?? '' } }) }) }))) %>",
                   "label": "Role Assignments",
                   "columns": [
                     {
@@ -359,5 +374,8 @@
       ]
     },
     "pageType": "VIEW"
-  }
+  },
+  "include": [
+    "comsRoleAssignees.script"
+  ]
 }

@@ -9,16 +9,20 @@ it recreated under the same alias. Three have delivered fields that gave the sam
   allPositions          cf_PositionIsFilled  -> worker is not empty (829/829)
   topLevelOrganizations cf_active1           -> not inactive        (1704/1704)
 
-Two stay, because nothing delivered matches (they are tenant prerequisites, see docs/ECO-COMS-NOTES.md):
-  cf_PositionText (position search: the descriptor isn't searchable and positionTitle misses words, 22 vs 51 for
-  "analyst"), cf_ZCF_EE_RoleAssignedToAsPositionRestrictions (role assignments: the delivered roleAssignedTo also
-  lists workers and names positions by their worker, 2768/3459 equal).
+Role assignments: cf_ZCF_EE_RoleAssignedToAsPositionRestrictions is, by its definition in the tenant ("zCF - EE - Role
+Assigned to as Position Restrictions" -> "zCF - EMI - Restricted Postions"), Role Assigned To kept to the instances whose
+class is Position Restrictions. The pages now do the same with delivered fields: roleAssignedTo, kept to the ids that are
+an allPositions.positionRestriction, named by that field (3459/3459 assignments and 3637/3637 names equal, probe
+2026-11-10). Helper comsRoleAssignees.positionsOf; one eager list posRestrictions per page that needs it.
+
+One stays, because nothing delivered matches (a tenant prerequisite, see docs/ECO-COMS-NOTES.md): cf_PositionText
+(position search: the descriptor isn't searchable and positionTitle misses words, 22 vs 51 for "analyst").
 
 Runs near the end of rebuild_all, after every page builder and before the sub-orchestration extraction. Earlier steps
 patch files in place and look for their own text, so this step keeps each file as it found it in
 tools/delivered_src/, and `--restore` (first in rebuild_all) puts those back.
 """
-import glob, os, re, shutil, sys
+import glob, json, os, re, shutil, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.normpath(os.path.join(HERE, '..'))
@@ -43,6 +47,59 @@ def keep(p):
     if not os.path.exists(dst):
         shutil.copyfile(p, dst)
 
+
+# ---- role assignments: positions held, without the calculated field ---------------------------------------------------
+RA_CF = 'cf_ZCF_EE_RoleAssignedToAsPositionRestrictions'
+POS_FN = """/* The positions a role assignment holds: Role Assigned To kept to position restrictions, named as the restriction.
+   Same as the tenant calculated field zCF - EE - Role Assigned to as Position Restrictions (tools/delivered_fields.py). */
+var positionsOf = function(assignees, prs) {
+  let ids = (prs ?? []).map(p => { empty(p.positionRestriction) ? '' : p.positionRestriction.id });
+  (assignees ?? []).filter(a => { ids.contains(a.id) }).map(a => { {'id': a.id, 'descriptor': ((prs ?? []).get(ids.indexOf(a.id))).positionRestriction.descriptor} });
+};
+"""
+SCRIPT_FILE = os.path.join(ROOT, 'presentation', 'scripts', 'comsRoleAssignees.script')
+PR_EP = {"name": "posRestrictions", "baseUrlType": "workday-wql",
+         "url": "<% 'data?limit=10000&query=' + string:pathEncode('SELECT positionRestriction FROM allPositions') %>",
+         "authType": "sso", "bestEffort": "true", "failOnStatusCodes": [{"code": 400}, {"code": 429}]}
+PRS = 'posRestrictions.data ?? []'
+
+
+def add_arg(text, call, arg):
+    """Append an argument to every call of `call(` in a script string (parentheses balanced, quoted text skipped)."""
+    out, i = [], 0
+    while True:
+        j = text.find(call, i)
+        if j < 0:
+            out.append(text[i:]); return ''.join(out)
+        k = j + len(call); depth = 1; q = None
+        while depth:
+            c = text[k]
+            if q:
+                if c == '\\': k += 1
+                elif c == q: q = None
+            elif c in ('\'', '"'): q = c
+            elif c == '(': depth += 1
+            elif c == ')': depth -= 1
+            k += 1
+        seg = text[i:k - 1]
+        out.append(seg + (')' if seg.endswith(', ' + arg) else ', ' + arg + ')')); i = k
+
+
+def ra_page(d):
+    def fix(v):
+        if isinstance(v, str):
+            v = add_arg(v, 'comsAccessReview.rowsFrom(', PRS)
+            return v.replace('ra.' + RA_CF, f'comsRoleAssignees.positionsOf(ra.roleAssignedTo, {PRS})')
+        if isinstance(v, list): return [fix(x) for x in v]
+        if isinstance(v, dict): return {k: fix(x) for k, x in v.items()}
+        return v
+    d = fix(d)
+    body = json.dumps(d)
+    if 'comsRoleAssignees.' in body and 'comsRoleAssignees.script' not in (d.get('include') or []):
+        d['include'] = (d.get('include') or []) + ['comsRoleAssignees.script']
+    if 'posRestrictions.data' in body and not any(e.get('name') == 'posRestrictions' for e in d.get('endPoints', [])):
+        d.setdefault('endPoints', []).insert(0, dict(PR_EP))
+    return d
 
 # Workday Script (pages, scripts): read the delivered field the way the calculated one was read
 SCRIPT = [
@@ -80,15 +137,26 @@ for p in sorted(files):
             n = n.replace(*ORCH_UNFILLED)
     for rx, rep in SCRIPT + COMMON:
         n = rx.sub(rep, n)
+    if RA_CF in n or 'comsAccessReview.rowsFrom(' in n:
+        if p.endswith('.wqlquery'):
+            n = n.replace(RA_CF + '}', 'roleAssignedTo}')
+        elif p.endswith('comsAccessReview.script'):
+            n = n.replace('var allRows = function(roles) {', POS_FN + '\nvar allRows = function(roles, prs) {')
+            n = n.replace('(ra.' + RA_CF + ' ?? [])', 'positionsOf(ra.roleAssignedTo, prs)')
+            n = n.replace('var rowsFrom = function(roles, vacant) {', 'var rowsFrom = function(roles, vacant, prs) {')
+            n = n.replace('allRows(roles).filter', 'allRows(roles, prs).filter')
+        elif p.endswith('.pmd'):
+            n = json.dumps(ra_page(json.loads(n)), indent=2, ensure_ascii=False) + '\n'
     if n != t:
         keep(p)
         open(p, 'w', encoding='utf-8').write(n)
         changed.append(os.path.relpath(p, ROOT))
 
-left = [os.path.relpath(p, ROOT) for p in files if re.search(r'cf_(PositionID|PositionIsFilled|active1)\b', open(p, encoding='utf-8').read())]
+open(SCRIPT_FILE, 'w', encoding='utf-8').write(POS_FN + '\n{\n  "positionsOf": positionsOf\n}\n')
+left = [os.path.relpath(p, ROOT) for p in files if re.search(r'cf_(PositionID|PositionIsFilled|active1|ZCF_EE_RoleAssignedToAsPositionRestrictions)\b', open(p, encoding='utf-8').read())]
 if left:
     sys.exit('delivered_fields: calculated fields left in ' + ', '.join(left))
 dup = [os.path.relpath(p, ROOT) for p in files if re.search(r'\bworker, (\w+, )*worker\b', open(p, encoding='utf-8').read())]
 if dup:
     sys.exit('delivered_fields: worker selected twice in ' + ', '.join(dup))
-print(f'delivered_fields: positionID / worker / inactive instead of three calculated fields; {len(changed)} files')
+print(f'delivered_fields: positionID / worker / inactive / roleAssignedTo instead of four calculated fields; {len(changed)} files')
