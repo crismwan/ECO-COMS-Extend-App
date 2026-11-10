@@ -2638,16 +2638,16 @@ async function probe(token) {
         return d;
       } catch (e) { console.log(`   WQLP ${label}: ERROR ${String(e.message).slice(0, 220)}`); return null; }
     };
-    await tryQ('topAll', 'SELECT workdayID, subtype FROM topLevelOrganizations');
-    await tryQ('distinct', 'SELECT DISTINCT subtype FROM topLevelOrganizations');
-    await tryQ('groupBy', 'SELECT subtype, COUNT(workdayID) FROM topLevelOrganizations GROUP BY subtype');
-    for (const alias of ['organizationSubtypes', 'allOrganizationSubtypes', 'organizationSubtype', 'organizationTypes', 'allOrganizationTypes', 'organizationType', 'customOrganizationSubtypes', 'customOrganizationTypes']) {
-      try { const r = await request('GET', `${API}/wql/v1/dataSources?alias=${alias}`, token); console.log(`   WQLP alias ${alias}: ${(r.data || []).map((d) => d.alias + '=' + d.descriptor + ' ' + d.id).join(' | ') || 'none'}`); } catch (e) { console.log(`   WQLP alias ${alias} ERROR ${String(e.message).slice(0, 120)}`); }
-    }
-    for (const term of ['Organization Subtypes', 'Organization Types', 'Subtypes']) {
-      try { const r = await request('GET', `${API}/wql/v1/dataSources?searchString=${encodeURIComponent(term)}&limit=30`, token); console.log(`   WQLP ss "${term}": ${(r.data || []).map((d) => d.alias).join(' | ')}`); } catch (e) { console.log(`   WQLP ss ERROR ${String(e.message).slice(0, 150)}`); }
-    }
-    try { const r = await request('GET', `${API}/wql/v1/dataSources?limit=100`, token); console.log(`   WQLP dsTotal ${r.total}`); const all = []; for (let off = 0; off < (r.total || 0) && off < 3000; off += 100) { const pg = await request('GET', `${API}/wql/v1/dataSources?limit=100&offset=${off}`, token); all.push(...(pg.data || [])); } console.log('   WQLP dsOrg: ' + all.filter((d) => /organi[sz]ation/i.test(d.descriptor) && /type|sub/i.test(d.descriptor)).map((d) => d.alias + '=' + d.descriptor).join(' | ')); console.log('   WQLP dsOrgAll: ' + all.filter((d) => /organi[sz]ation/i.test(d.descriptor)).map((d) => d.alias).join(' | ').slice(0, 1500)); } catch (e) { console.log('   WQLP dsList ERROR ' + String(e.message).slice(0, 150)); }
+    const raw = async (label, q) => { try { const r = await wql(token, q, 10000); console.log(`   WQLP ${label}: total=${r.total} ` + JSON.stringify((r.data || []).slice(0, 3)).slice(0, 600)); return r.data || []; } catch (e) { console.log(`   WQLP ${label}: ERROR ${String(e.message).slice(0, 250)}`); return null; } };
+    const g = await raw('groupSub', 'SELECT subtype, COUNT(workdayID) FROM topLevelOrganizations GROUP BY subtype');
+    await raw('groupSubNoCount', 'SELECT subtype FROM topLevelOrganizations GROUP BY subtype');
+    await raw('groupSubWhere', 'SELECT subtype, COUNT(workdayID) FROM topLevelOrganizations WHERE subtype is not empty GROUP BY subtype');
+    const t = await raw('groupType', 'SELECT type1, COUNT(workdayID) FROM customOrganizations GROUP BY type1');
+    if (t) console.log('   WQLP groupTypeFUH: ' + JSON.stringify(t.filter((r) => JSON.stringify(r).includes('Functional Unit Hierarchy'))));
+    if (g) console.log('   WQLP groupSubX: ' + JSON.stringify(g.filter((r) => JSON.stringify(r).includes('X:'))));
+    await raw('zeroWid', 'SELECT workdayID FROM topLevelOrganizations WHERE subtype in (00000000000000000000000000000000)');
+    await raw('emptyIn', 'SELECT workdayID FROM topLevelOrganizations WHERE subtype in ()');
+    await raw('isEmptyFallback', 'SELECT workdayID FROM topLevelOrganizations WHERE subtype is empty');
     pass('Probe.wqlNames', 'see WQLP lines');
     return;
   }
