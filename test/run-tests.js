@@ -2626,47 +2626,34 @@ async function shellRolesQuery(token) {
 
 async function probe(token) {
   console.log('\n-- Probe (read-only) --');
-  // 2026-11-06: the subtype design's WQL, exactly as the pages send it (presentation/wqlQueries)
+  // 2026-11-10: can the subtype / type filters name the value instead of its tenant-specific WID?
   {
-    const q = (n) => JSON.parse(fs.readFileSync(path.join(ROOT, 'presentation', 'wqlQueries', n + '.wqlquery'), 'utf8')).query;
-    const orgs = (await wql(token, q('allShellOrgs'), 10000)).data || [];
-    const types = [...new Set(orgs.map((o) => ((o.type1 || [])[0] || {}).id).filter(Boolean))];
-    console.log(`   SUBTYPE orgs=${orgs.length} types=${types.length} noType=${orgs.filter((o) => !(o.type1 || []).length).length}`);
-    console.log(`   SUBTYPE customOrganizations=${((await wql(token, q('customOrganizations'), 10000)).data || []).length} appTypes=${((await wql(token, q('appTypes'), 10000)).data || []).length}`);
-    const roles = (await wql(token, q('allShellAssignableRolesinTenant').replace('<% types %>', types.join(',')), 10000)).data || [];
-    console.log(`   SUBTYPE roles=${roles.length}: ${roles.map((r) => (r.role || {}).descriptor).sort().join(' | ')}`);
-    console.log(`   SUBTYPE aaa=${((await wql(token, q('allAAArolesinTenant'), 10000)).data || []).length}`);
-    const typeOf = new Map(orgs.map((o) => [o.workdayID, ((o.type1 || [])[0] || {}).descriptor]));
-    // mis-named organizations: name not under its own type, or a pattern that fails its application's format
-    const apps = (await request('GET', `${BO}/comsApplications?limit=100`, token)).data || [];
-    const fmt = new Map(apps.map((a) => [a.appId, a]));
-    // every application's live format next to the shapes of its existing organizations (2026-11-06)
-    for (const a of apps.slice().sort((x, y) => String(x.appId).localeCompare(String(y.appId)))) {
-      const mine = orgs.filter((o) => (((o.type1 || [])[0] || {}).descriptor || '') === a.appId).map((o) => String(o.code || ''));
-      const shapes = {};
-      for (const c of mine) { if (c === a.appId) continue; const rest = c.startsWith(a.appId + ':') ? c.slice(a.appId.length + 1) : '(' + c + ')'; const k = rest.split(':').length; (shapes[k] = shapes[k] || []).push(rest); }
-      console.log(`   FMT ${a.appId} prefix=${a.namePrefix} active=${a.active} schema=${a.patternSchema || ''}`);
-      for (const [k, v] of Object.entries(shapes)) console.log(`   FMTORGS ${a.appId} parts=${k} n=${v.length} e.g. ${v.slice(0, 6).join(' , ')}`);
+    const W = 'e6ca8683b78d10017a5c108412fc0000, e6ca8683b78d10017a5c108412fc0001';
+    const FUH = 'b40d8b016367100175b147f364840000';
+    const tryQ = async (label, q) => {
+      try {
+        const r = await wql(token, q, 10000); const d = r.data || [];
+        const st = {}; for (const o of d) { const k = [].concat(o.subtype || o.type1 || []).map((x) => x.descriptor).join('+') || '-'; st[k] = (st[k] || 0) + 1; }
+        console.log(`   WQLP ${label}: rows=${d.length} total=${r.total} err=${String(r.error || (r.errors && JSON.stringify(r.errors)) || "").slice(0, 200)} ${JSON.stringify(st).slice(0, 300)}`);
+        return d;
+      } catch (e) { console.log(`   WQLP ${label}: ERROR ${String(e.message).slice(0, 220)}`); return null; }
+    };
+    const base = 'SELECT workdayID, code, subtype FROM topLevelOrganizations WHERE ';
+    await tryQ('wid', base + `subtype in (${W})`);
+    await tryQ('subtypeName', base + 'subtype in (Organization_Subtype_Name = "X:SHELL", Organization_Subtype_Name = "X:META")');
+    await tryQ('subtypeNameNoQuote', base + 'subtype in (Organization_Subtype_Name = X:SHELL)');
+    await tryQ('refId', base + 'subtype in (inst_refId = "ORGANIZATION_SUBTYPE-17-41", inst_refId = "ORGANIZATION_SUBTYPE-17-42")');
+    await tryQ('subtypeId', base + 'subtype in (Organization_Subtype_ID = "ORGANIZATION_SUBTYPE-17-41", Organization_Subtype_ID = "ORGANIZATION_SUBTYPE-17-42")');
+    await tryQ('codeX', base + 'code startswith "X:"');
+    await tryQ('fuhWid', `SELECT workdayID, code, type1 FROM customOrganizations WHERE type1 in (${FUH})`);
+    const t = await tryQ('fuhType1', `SELECT workdayID, type1 FROM customOrganizations WHERE type1 in (${FUH})`);
+    const fuhName = t && t[0] ? [].concat(t[0].type1)[0].descriptor : 'Functional Unit Hierarchy';
+    await tryQ('fuhTypeName', `SELECT workdayID, code, type1 FROM customOrganizations WHERE type1 in (Organization_Type_Name = "${fuhName}")`);
+    await tryQ('fuhTypeId', `SELECT workdayID, code, type1 FROM customOrganizations WHERE type1 in (Organization_Type_ID = "${fuhName}")`);
+    for (const term of ['subtype', 'organization type']) {
+      try { const r = await request('GET', `${API}/wql/v1/dataSources?search=${encodeURIComponent(term)}&limit=20`, token); console.log(`   WQLP ds "${term}": ${(r.data || []).map((d) => d.alias + '=' + d.descriptor).join(' | ')}`); } catch (e) { console.log(`   WQLP ds ${term} ERROR ${String(e.message).slice(0, 150)}`); }
     }
-    for (const o of orgs) {
-      const c = String(o.code || ''); const ty = ((o.type1 || [])[0] || {}).descriptor || '';
-      const why = [];
-      if (c !== ty && !c.startsWith(ty + ':') && !c.startsWith(ty + '(') && !(ty.includes('(') && c.startsWith(ty.split('(')[0] + '('))) why.push('not under its type');
-      const rest = c.startsWith(ty + ':') ? c.slice(ty.length + 1) : '';
-      const a = fmt.get(ty); let s = null; try { s = a && a.patternSchema ? JSON.parse(a.patternSchema) : null; } catch (e) { why.push('bad schema'); }
-      const pre = rest.split(':')[0];
-      const prefixes = s ? s.prefixes : String((a && a.namePrefix) || 'PATTERN').split(',');
-      if (rest && prefixes.includes(pre) && s) {
-        const parts = rest.split(':').slice(1);
-        const req = s.fields.filter((f) => !f.optionalField).length;
-        if (parts.length < req || parts.length > s.fields.length) why.push(`${parts.length} fields, format has ${req === s.fields.length ? req : req + '-' + s.fields.length}`);
-        else s.fields.slice(0, parts.length).forEach((f, i) => { if (!(f.blankIsWildcard && (parts[i] === '' || parts[i] === '*')) && !new RegExp('^(?:' + f.regex + ')$').test(parts[i])) why.push(`${f.fieldLabel} "${parts[i]}" !~ ${f.regex}`); });
-        if (c.toUpperCase() !== c) why.push('lower case');
-      }
-      if (c.includes(' ')) why.push('space');
-      if (/claude/i.test(c)) why.push('forbidden test text');
-      if (why.length) console.log(`   MISNAMED ${c} | type ${ty} | active ${o.cf_active1} | ${o.workdayID} | ${why.join('; ')}`);
-    }
+    pass('Probe.wqlNames', 'see WQLP lines');
     return;
   }
   // Sub-orchestration probe (tools/probe_subflow.py): ProbeSubflowCall calls ProbeEcho and returns {"echo": "echo:hello"}.
