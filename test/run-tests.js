@@ -2670,6 +2670,25 @@ async function probe(token) {
   {
     const ids = await nameIds(token);
     console.log(`   NAMES subtypes ${SUBTYPE_NAMES.join(', ')} -> ${ids.subtypes || '(none)'}; type ${FUH_TYPE_NAME} -> ${ids.fuhTypes || '(none)'}`);
+    // calculated fields the app reads: their descriptors, and delivered fields that might replace them
+    const fieldsOf = async (alias) => {
+      const ds = (await request('GET', `${API}/wql/v1/dataSources?alias=${alias}`, token)).data || [];
+      const all = []; for (let off = 0; off < 3000; off += 100) { const pg = (await request('GET', `${API}/wql/v1/dataSources/${ds[0].id}/fields?limit=100&offset=${off}`, token)).data || []; all.push(...pg); if (pg.length < 100) break; }
+      return all;
+    };
+    for (const [alias, re] of [['allPositions', /position|filled|vacan|worker|job|id$/i], ['topLevelOrganizations', /activ|inactive|status/i], ['assignableRoles', /role|assign|position|restrict|worker/i]]) {
+      try {
+        const f = await fieldsOf(alias);
+        console.log(`   CF ${alias} n=${f.length} cf: ` + f.filter((x) => x.alias.startsWith('cf_')).filter((x) => /PositionID|PositionIsFilled|PositionText|active1|RoleAssignedTo/.test(x.alias)).map((x) => JSON.stringify(x)).join(' || ').slice(0, 1500));
+        console.log(`   CF ${alias} delivered: ` + f.filter((x) => !x.alias.startsWith('cf_') && re.test(x.alias + ' ' + x.descriptor) && !/Numeric/.test(x.type)).map((x) => `${x.alias}(${x.type})`).join(', ').slice(0, 2500));
+      } catch (e) { console.log(`   CF ${alias} ERROR ${String(e.message).slice(0, 200)}`); }
+    }
+    const raw = async (label, q) => { try { const r = await wql(token, q, 3); console.log(`   CFQ ${label}: ` + JSON.stringify(r.data || []).slice(0, 900)); } catch (e) { console.log(`   CFQ ${label}: ERROR ${String(e.message).slice(0, 250)}`); } };
+    await raw('positions', 'SELECT workdayID, cf_PositionID, cf_PositionText, cf_PositionIsFilled, position, positionID, worker, positionIsFilled FROM allPositions');
+    await raw('positionsCf', 'SELECT workdayID, cf_PositionID, cf_PositionText, cf_PositionIsFilled FROM allPositions');
+    await raw('orgs', `SELECT workdayID, code, cf_active1, inactive, active FROM topLevelOrganizations WHERE subtype in (<% subtypes %>)`);
+    await raw('orgsCf', `SELECT workdayID, code, cf_active1 FROM topLevelOrganizations WHERE subtype in (<% subtypes %>)`);
+    await raw('roleAsg', "SELECT role, roleAssignments{organization, workersAssigned, cf_ZCF_EE_RoleAssignedToAsPositionRestrictions} as roleAssignments FROM assignableRoles WHERE roleName contains 'Organizations and Roles Assignment Administrator'");
     pass('Probe.wqlNames', 'see WQLP lines');
     return;
   }
