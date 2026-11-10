@@ -2676,16 +2676,27 @@ async function probe(token) {
       const all = []; for (let off = 0; off < 3000; off += 100) { const pg = (await request('GET', `${API}/wql/v1/dataSources/${ds[0].id}/fields?limit=100&offset=${off}`, token)).data || []; all.push(...pg); if (pg.length < 100) break; }
       return all;
     };
-    // Change Status guard after the by-name subtype lookup (validateOnly, and a date Workday refuses: nothing can change)
-    const me = await request('GET', `${API}/common/v1/workers/me`, token);
-    const shell = ((await wql(token, "SELECT workdayID, code FROM topLevelOrganizations WHERE code = 'X:ADM'", 1)).data || [])[0];
-    const fuh = ((await wql(token, 'SELECT workdayID FROM customOrganizations WHERE type1 in (<% fuhTypes %>)', 1)).data || [])[0];
-    const st = (orgId) => ({ orgId, action: 'INACTIVATE', orgCode: 'X:ADM', orgName: 'X:ADM', includeInactive: 'true', effectiveDate: 'NOTADATE',
-      patternName: 'X:ADM', orgType: 'X:ADM', comsAppId: 'X:ADM', validateOnly: 'true', changedBy: 'TEST:GUARD:PROBE', changedByWid: me.id, timestamp: new Date().toISOString() });
-    for (const [k, id] of [['notShell(FUH org)', fuh && fuh.workdayID], ['shell X:ADM', shell && shell.workdayID]]) {
-      try { const r = await launch(token, 'IORC_0037_XFD_SEC_Change_Shell_Org_Status', st(id)); console.log(`   GUARD ${k} ${id}: ${(typeof r === 'string' ? r : JSON.stringify(r)).slice(0, 400)}`); }
-      catch (e) { console.log(`   GUARD ${k}: ERROR ${String(e.message).slice(0, 400)}`); }
+    // delivered replacements for the calculated fields: shapes and search forms (2026-11-10)
+    const raw = async (label, q, lim = 3) => { try { const r = await wql(token, q, lim); console.log(`   DLV ${label}: total=${r.total} ` + JSON.stringify(r.data || []).slice(0, 700)); return r.data || []; } catch (e) { console.log(`   DLV ${label}: ERROR ${String(e.message).slice(0, 250)}`); return null; } };
+    await raw('unfilled', "SELECT workdayID, positionID, worker, positionAndJob_AllStaffingModels FROM allPositions WHERE positionID = 'P-00030'");
+    await raw('workerEmpty', 'SELECT workdayID, positionID FROM allPositions WHERE worker is empty', 2);
+    await raw('inactiveOrg', "SELECT workdayID, code, inactive FROM topLevelOrganizations WHERE code = 'X:ADM'");
+    await raw('instContains', "SELECT workdayID FROM allPositions WHERE positionAndJob_AllStaffingModels contains 'Director'");
+    const cfS = await raw('cfSearch', "SELECT workdayID FROM allPositions WHERE supervisoryOrganization is not empty AND cf_PositionText contains 'director'", 500);
+    const orS = await raw('orSearch', "SELECT workdayID FROM allPositions WHERE supervisoryOrganization is not empty AND (positionID contains 'director' OR positionTitle contains 'director' OR worker_Name contains 'director')", 500);
+    for (const w of ['beth', 'P-0001', 'unfilled', 'analyst', 'liu']) {
+      const a1 = ((await wql(token, `SELECT workdayID FROM allPositions WHERE supervisoryOrganization is not empty AND cf_PositionText contains '${w}'`, 1000)).data || []).length;
+      let a2 = 'ERR'; try { a2 = ((await wql(token, `SELECT workdayID FROM allPositions WHERE supervisoryOrganization is not empty AND (positionID contains '${w}' OR positionTitle contains '${w}' OR worker_Name contains '${w}')`, 1000)).data || []).length; } catch (e) { a2 = 'ERR ' + e.message.slice(0, 120); }
+      console.log(`   DLV search "${w}": cf=${a1} delivered=${a2}`);
     }
+    const r = await raw('roleAssignedTo', (await shellRolesQuery(token)).replace('cf_ZCF_EE_RoleAssignedToAsPositionRestrictions}', 'roleAssignedTo}'), 2);
+    // all assignable roles: compare cf vs delivered on every assignment
+    try {
+      const all = (await wql(token, 'SELECT role, roleAssignments{organization, cf_ZCF_EE_RoleAssignedToAsPositionRestrictions, roleAssignedTo} as ra FROM assignableRoles', 10000)).data || [];
+      let n = 0, same = 0; const ex = [];
+      for (const role of all) for (const x of role.ra || []) { n++; const k = (v) => [].concat(v || []).map((y) => y.id).sort().join(','); if (k(x.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions) === k(x.roleAssignedTo)) same++; else if (ex.length < 3) ex.push(x); }
+      console.log(`   DLV allRoles assignments ${same}/${n} same ${JSON.stringify(ex).slice(0, 800)}`);
+    } catch (e) { console.log('   DLV allRoles ERROR ' + e.message.slice(0, 200)); }
     pass('Probe.wqlNames', 'see WQLP lines');
     return;
   }
