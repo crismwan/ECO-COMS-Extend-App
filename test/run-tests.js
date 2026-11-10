@@ -2717,29 +2717,19 @@ async function probe(token) {
     };
     const ar = await fieldsOf2('assignableRoles');
     const raF = ar.all.find((x) => x.alias === 'roleAssignments');
-    for (const u of [`dataSources/${ar.id}/fields/${raF.id}`, `dataSources/${ar.id}/fields/${raF.id}/fields`, `businessObjects/${raF.relatedBusinessObject.id}/fields`, `businessObjects/${raF.relatedBusinessObject.id}`]) {
-      try { const r = await request('GET', `${API}/wql/v1/${u}?limit=100`, token); console.log(`   RAF ${u}: ` + JSON.stringify(r).slice(0, 1500)); } catch (e) { console.log(`   RAF ${u}: ERROR ${String(e.message).slice(0, 160)}`); }
+    const det = await request('GET', `${API}/wql/v1/dataSources/${ar.id}/fields/${raF.id}`, token);
+    const rf = det.relatedFields || [];
+    console.log(`   RAFIELDS n=${rf.length}: ` + rf.map((x) => `${x.alias}(${x.type}${x.relatedBusinessObject ? ':' + x.relatedBusinessObject.descriptor : ''})`).join(', '));
+    // try every multi/single-instance field whose related object is a position / restriction / assignee
+    const cand = rf.filter((x) => /Instance/.test(x.type) && !x.alias.startsWith('cf_') && /posit|restrict|assign|worker|person|role/i.test(x.alias + ' ' + x.descriptor + ' ' + ((x.relatedBusinessObject || {}).descriptor || '')));
+    const all = (await wql(token, `SELECT role, roleAssignments{organization, cf_ZCF_EE_RoleAssignedToAsPositionRestrictions, ${cand.map((x) => x.alias).join(', ')}} as ra FROM assignableRoles`, 10000)).data || [];
+    const k = (v) => [].concat(v || []).map((y) => y.id).sort().join(',');
+    const kd = (v) => [].concat(v || []).map((y) => y.descriptor).sort().join('|');
+    for (const c of cand) {
+      let n = 0, ids = 0, names = 0, ex = null;
+      for (const role of all) for (const x of role.ra || []) { n++; if (k(x.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions) === k(x[c.alias])) { ids++; if (kd(x.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions) === kd(x[c.alias])) names++; } else if (!ex && (x[c.alias] || x.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions)) ex = { cf: x.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions, v: x[c.alias] }; }
+      console.log(`   RACAND ${c.alias} (${c.descriptor}): ids ${ids}/${n}, names ${names}/${n} ${JSON.stringify(ex).slice(0, 300)}`);
     }
-    try {
-      const all = []; for (let off = 0; off < 2000; off += 100) { const pg = (await request('GET', `${API}/wql/v1/dataSources?limit=100&offset=${off}`, token)).data || []; all.push(...pg); if (pg.length < 100) break; }
-      console.log('   RADS ' + all.filter((d) => /role assign|assignable role|role/i.test(d.descriptor)).map((d) => d.alias + '=' + d.descriptor).join(' | ').slice(0, 2500));
-    } catch (e) { console.log('   RADS ERROR ' + e.message.slice(0, 150)); }
-    const ap = await fieldsOf2('allPositions');
-    console.log('   RAPOS ' + ap.all.filter((x) => /role|restrict/i.test(x.alias + ' ' + x.descriptor)).map((x) => `${x.alias}(${x.type})`).join(', ').slice(0, 2500));
-    // the combination: roleAssignedTo kept to positions, named from allPositions
-    const P = (await wql(token, 'SELECT workdayID, positionID, positionAndJob_AllStaffingModels FROM allPositions', 10000)).data || [];
-    const pos = new Map(P.map((p) => [p.workdayID, p]));
-    const all = (await wql(token, 'SELECT role, roleAssignments{organization, cf_ZCF_EE_RoleAssignedToAsPositionRestrictions, roleAssignedTo} as ra FROM assignableRoles', 10000)).data || [];
-    let n = 0, sameIds = 0, sameNames = 0; const ex = [];
-    for (const role of all) for (const x of role.ra || []) {
-      n++;
-      const cf = [].concat(x.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions || []);
-      const dl = [].concat(x.roleAssignedTo || []).filter((y) => pos.has(y.id));
-      const k = (v) => v.map((y) => y.id).sort().join(',');
-      if (k(cf) === k(dl)) { sameIds++; const names = (v) => v.map((y) => y.descriptor).sort().join('|'); if (names(cf) === names(dl.map((y) => ({ descriptor: (pos.get(y.id).positionAndJob_AllStaffingModels || {}).descriptor })))) sameNames++; else if (ex.length < 3) ex.push({ cf, del: dl.map((y) => pos.get(y.id).positionAndJob_AllStaffingModels) }); }
-      else if (ex.length < 3) ex.push({ org: x.organization, cf, roleAssignedTo: x.roleAssignedTo });
-    }
-    console.log(`   RACOMBO assignments=${n} sameIds=${sameIds} sameNames=${sameNames} positions=${P.length} ${JSON.stringify(ex).slice(0, 1500)}`);
     pass('Probe.wqlNames', 'see WQLP lines');
     return;
   }
