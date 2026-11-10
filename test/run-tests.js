@@ -2676,17 +2676,23 @@ async function probe(token) {
       const all = []; for (let off = 0; off < 3000; off += 100) { const pg = (await request('GET', `${API}/wql/v1/dataSources/${ds[0].id}/fields?limit=100&offset=${off}`, token)).data || []; all.push(...pg); if (pg.length < 100) break; }
       return all;
     };
-    try { const f = await fieldsOf('assignableRoles'); console.log('   CF roleAssignments field: ' + JSON.stringify(f.filter((x) => /roleAssignments|workers/.test(x.alias)))); } catch (e) { console.log('   CF ra ERROR ' + e.message.slice(0, 200)); }
-    const P = (await wql(token, 'SELECT workdayID, cf_PositionID, positionID, cf_PositionIsFilled, worker, position_Filled, cf_PositionText, positionTitle, worker_Name FROM allPositions', 10000)).data || [];
-    const eq = (f) => P.filter(f).length;
-    console.log(`   CFC positions n=${P.length} idSame=${eq((o) => o.cf_PositionID === o.positionID)} filledEqWorker=${eq((o) => !!o.cf_PositionIsFilled === !!o.worker)} filledEqPosFilled=${eq((o) => !!o.cf_PositionIsFilled === !!o.position_Filled)} textEq=${eq((o) => o.cf_PositionText === `${o.positionID} ${o.positionTitle} - ${o.worker_Name}-${o.positionID}`)}`);
-    console.log('   CFC sample ' + JSON.stringify(P.filter((o) => !o.cf_PositionIsFilled).slice(0, 2)).slice(0, 700));
-    console.log('   CFC textDiff ' + JSON.stringify(P.filter((o) => o.cf_PositionText !== `${o.positionID} ${o.positionTitle} - ${o.worker_Name}-${o.positionID}`).slice(0, 3)).slice(0, 900));
-    const O = (await wql(token, 'SELECT workdayID, cf_active1, inactive FROM topLevelOrganizations', 10000)).data || [];
-    console.log(`   CFC orgs n=${O.length} activeEqNotInactive=${O.filter((o) => !!o.cf_active1 === !o.inactive).length}`);
-    for (const sub of ['assignedTo', 'roleAssignees', 'positionRestrictions', 'rolesAssignedToPositions', 'roleAssignee', 'assignedPositions', 'positionsAssigned', 'roleAssignedTo']) {
-      try { const r = await wql(token, `SELECT role, roleAssignments{organization, cf_ZCF_EE_RoleAssignedToAsPositionRestrictions, ${sub}} as ra FROM assignableRoles WHERE roleName contains 'Organizations and Roles Assignment Administrator'`, 2); console.log(`   CFR ${sub}: ` + JSON.stringify(r.data || []).slice(0, 700)); } catch (e) { console.log(`   CFR ${sub}: ERROR ${String(e.message).slice(0, 160)}`); }
+    const P = (await wql(token, 'SELECT workdayID, positionID, cf_PositionText, position_Filled, positionAndJob_AllStaffingModels, position_PositionManagement FROM allPositions', 10000)).data || [];
+    const d = (x) => (x || {}).descriptor;
+    for (const [k, f] of [['filledDesc', (o) => d(o.position_Filled)], ['pajDesc', (o) => d(o.positionAndJob_AllStaffingModels)], ['pmDesc', (o) => d(o.position_PositionManagement)]]) {
+      const bad = P.filter((o) => o.cf_PositionText !== `${f(o)}-${o.positionID}`);
+      console.log(`   CFT ${k}: same ${P.length - bad.length}/${P.length} e.g. ${JSON.stringify(bad.slice(0, 2)).slice(0, 500)}`);
     }
+    const q = (await shellRolesQuery(token)).replace('cf_ZCF_EE_RoleAssignedToAsPositionRestrictions}', 'cf_ZCF_EE_RoleAssignedToAsPositionRestrictions, roleAssignedTo}');
+    try {
+      const r = (await wql(token, q, 10000)).data || [];
+      let n = 0, same = 0; const ex = [];
+      for (const role of r) for (const ra of role.roleAssignments || []) {
+        n++; const a = (ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions || []).map((x) => x.id).sort().join(','); const b = [].concat(ra.roleAssignedTo || []).map((x) => x.id).sort().join(',');
+        if (a === b) same++; else if (ex.length < 3) ex.push({ cf: ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions, del: ra.roleAssignedTo });
+      }
+      console.log(`   CFR roleAssignedTo vs cf: ${same}/${n} same; ${JSON.stringify(ex).slice(0, 900)}`);
+      console.log('   CFR sample ' + JSON.stringify((r.find((x) => (x.roleAssignments || []).length) || {}).roleAssignments?.slice(0, 2)).slice(0, 900));
+    } catch (e) { console.log('   CFR ERROR ' + String(e.message).slice(0, 300)); }
     pass('Probe.wqlNames', 'see WQLP lines');
     return;
   }
