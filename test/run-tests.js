@@ -2717,19 +2717,22 @@ async function probe(token) {
     };
     const ar = await fieldsOf2('assignableRoles');
     const raF = ar.all.find((x) => x.alias === 'roleAssignments');
-    const det = await request('GET', `${API}/wql/v1/dataSources/${ar.id}/fields/${raF.id}`, token);
-    const rf = det.relatedFields || [];
-    console.log(`   RAFIELDS n=${rf.length}: ` + rf.map((x) => `${x.alias}(${x.type}${x.relatedBusinessObject ? ':' + x.relatedBusinessObject.descriptor : ''})`).join(', '));
-    // try every multi/single-instance field whose related object is a position / restriction / assignee
-    const cand = rf.filter((x) => /Instance/.test(x.type) && !x.alias.startsWith('cf_') && /posit|restrict|assign|worker|person|role/i.test(x.alias + ' ' + x.descriptor + ' ' + ((x.relatedBusinessObject || {}).descriptor || '')));
-    const all = (await wql(token, `SELECT role, roleAssignments{organization, cf_ZCF_EE_RoleAssignedToAsPositionRestrictions, ${cand.map((x) => x.alias).join(', ')}} as ra FROM assignableRoles`, 10000)).data || [];
-    const k = (v) => [].concat(v || []).map((y) => y.id).sort().join(',');
-    const kd = (v) => [].concat(v || []).map((y) => y.descriptor).sort().join('|');
-    for (const c of cand) {
-      let n = 0, ids = 0, names = 0, ex = null;
-      for (const role of all) for (const x of role.ra || []) { n++; if (k(x.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions) === k(x[c.alias])) { ids++; if (kd(x.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions) === kd(x[c.alias])) names++; } else if (!ex && (x[c.alias] || x.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions)) ex = { cf: x.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions, v: x[c.alias] }; }
-      console.log(`   RACAND ${c.alias} (${c.descriptor}): ids ${ids}/${n}, names ${names}/${n} ${JSON.stringify(ex).slice(0, 300)}`);
+    const P = (await wql(token, 'SELECT workdayID, positionID, positionAndJob_AllStaffingModels FROM allPositions', 10000)).data || [];
+    const pos = new Map(P.map((p) => [p.workdayID, p]));
+    const all = (await wql(token, 'SELECT role, roleAssignments{organization, workersAssigned, cf_ZCF_EE_RoleAssignedToAsPositionRestrictions, roleAssignedTo} as ra FROM assignableRoles', 10000)).data || [];
+    const idsOf = (v) => [].concat(v || []).map((y) => y.id);
+    let n = 0, rule = 0, inPos = 0, cfTotal = 0, named = 0, shellN = 0, shellOk = 0; const ex = [];
+    for (const role of all) for (const x of role.ra || []) {
+      n++;
+      const cf = idsOf(x.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions).sort().join(',');
+      const w = new Set(idsOf(x.workersAssigned));
+      const d = idsOf(x.roleAssignedTo).filter((i) => !w.has(i)).sort().join(',');
+      const ok = cf === d; if (ok) rule++; else if (ex.length < 4) ex.push({ org: (x.organization || {}).descriptor, cf: x.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions, rat: x.roleAssignedTo, wa: x.workersAssigned });
+      for (const c of [].concat(x.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions || [])) { cfTotal++; if (pos.has(c.id)) { inPos++; if ((pos.get(c.id).positionAndJob_AllStaffingModels || {}).descriptor === c.descriptor) named++; } }
+      if (String((x.organization || {}).descriptor || '').startsWith('X:')) { shellN++; if (ok) shellOk++; }
     }
+    console.log(`   RARULE roleAssignedTo minus workersAssigned == cf: ${rule}/${n}; X: orgs ${shellOk}/${shellN}; cf positions found in allPositions ${inPos}/${cfTotal}, same name ${named}`);
+    console.log('   RARULE mismatches ' + JSON.stringify(ex).slice(0, 2500));
     pass('Probe.wqlNames', 'see WQLP lines');
     return;
   }
