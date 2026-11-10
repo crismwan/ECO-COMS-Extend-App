@@ -2639,15 +2639,13 @@ async function probe(token) {
       } catch (e) { console.log(`   WQLP ${label}: ERROR ${String(e.message).slice(0, 220)}`); return null; }
     };
     const raw = async (label, q) => { try { const r = await wql(token, q, 10000); console.log(`   WQLP ${label}: total=${r.total} ` + JSON.stringify((r.data || []).slice(0, 3)).slice(0, 600)); return r.data || []; } catch (e) { console.log(`   WQLP ${label}: ERROR ${String(e.message).slice(0, 250)}`); return null; } };
-    const g = await raw('groupSub', 'SELECT subtype, COUNT(workdayID) FROM topLevelOrganizations GROUP BY subtype');
-    await raw('groupSubNoCount', 'SELECT subtype FROM topLevelOrganizations GROUP BY subtype');
-    await raw('groupSubWhere', 'SELECT subtype, COUNT(workdayID) FROM topLevelOrganizations WHERE subtype is not empty GROUP BY subtype');
-    const t = await raw('groupType', 'SELECT type1, COUNT(workdayID) FROM customOrganizations GROUP BY type1');
-    if (t) console.log('   WQLP groupTypeFUH: ' + JSON.stringify(t.filter((r) => JSON.stringify(r).includes('Functional Unit Hierarchy'))));
-    if (g) console.log('   WQLP groupSubX: ' + JSON.stringify(g.filter((r) => JSON.stringify(r).includes('X:'))));
-    await raw('zeroWid', 'SELECT workdayID FROM topLevelOrganizations WHERE subtype in (00000000000000000000000000000000)');
-    await raw('emptyIn', 'SELECT workdayID FROM topLevelOrganizations WHERE subtype in ()');
-    await raw('isEmptyFallback', 'SELECT workdayID FROM topLevelOrganizations WHERE subtype is empty');
+    for (const alias of ['customOrganizations']) {
+      const ds = (await request('GET', `${API}/wql/v1/dataSources?alias=${alias}`, token)).data || [];
+      const all = []; for (let off = 0; off < 1000; off += 100) { const pg = (await request('GET', `${API}/wql/v1/dataSources/${ds[0].id}/fields?limit=100&offset=${off}`, token)).data || []; all.push(...pg); if (pg.length < 100) break; }
+      console.log(`   WQLP fields ${alias} n=${all.length}: ` + all.filter((x) => !/Numeric/.test(x.type) && /type/i.test(x.alias + ' ' + x.descriptor)).map((x) => `${x.alias}(${x.type})`).join(', '));
+    }
+    const r = await raw('fuhOne', 'SELECT workdayID, type1 FROM customOrganizations WHERE type1 in (b40d8b016367100175b147f364840000)');
+    await raw('customAllTypes', 'SELECT workdayID, type1 FROM customOrganizations');
     pass('Probe.wqlNames', 'see WQLP lines');
     return;
   }
