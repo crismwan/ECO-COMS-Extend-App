@@ -2717,8 +2717,9 @@ async function probe(token) {
     };
     const ar = await fieldsOf2('assignableRoles');
     const raF = ar.all.find((x) => x.alias === 'roleAssignments');
-    const P = (await wql(token, 'SELECT workdayID, positionID, positionAndJob_AllStaffingModels FROM allPositions', 10000)).data || [];
-    const pos = new Map(P.map((p) => [p.workdayID, p]));
+    const P = (await wql(token, 'SELECT workdayID, positionID, positionAndJob_AllStaffingModels, positionRestriction FROM allPositions', 10000)).data || [];
+    const pos = new Map(P.filter((p) => p.positionRestriction).map((p) => [p.positionRestriction.id, p]));
+    console.log(`   RARULE allPositions with positionRestriction ${pos.size}/${P.length}; sample ${JSON.stringify(P[0]).slice(0, 300)}`);
     const all = (await wql(token, 'SELECT role, roleAssignments{organization, workersAssigned, cf_ZCF_EE_RoleAssignedToAsPositionRestrictions, roleAssignedTo} as ra FROM assignableRoles', 10000)).data || [];
     const idsOf = (v) => [].concat(v || []).map((y) => y.id);
     let n = 0, rule = 0, inPos = 0, cfTotal = 0, named = 0, shellN = 0, shellOk = 0; const ex = [];
@@ -2726,12 +2727,12 @@ async function probe(token) {
       n++;
       const cf = idsOf(x.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions).sort().join(',');
       const w = new Set(idsOf(x.workersAssigned));
-      const d = idsOf(x.roleAssignedTo).filter((i) => !w.has(i)).sort().join(',');
+      const d = idsOf(x.roleAssignedTo).filter((i) => pos.has(i)).sort().join(',');
       const ok = cf === d; if (ok) rule++; else if (ex.length < 4) ex.push({ org: (x.organization || {}).descriptor, cf: x.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions, rat: x.roleAssignedTo, wa: x.workersAssigned });
-      for (const c of [].concat(x.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions || [])) { cfTotal++; if (pos.has(c.id)) { inPos++; if ((pos.get(c.id).positionAndJob_AllStaffingModels || {}).descriptor === c.descriptor) named++; } }
+      for (const c of [].concat(x.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions || [])) { cfTotal++; if (pos.has(c.id)) { inPos++; if ((pos.get(c.id).positionRestriction || {}).descriptor === c.descriptor) named++; else if (ex.length < 6) ex.push({ cfName: c.descriptor, restriction: pos.get(c.id).positionRestriction, paj: pos.get(c.id).positionAndJob_AllStaffingModels }); } }
       if (String((x.organization || {}).descriptor || '').startsWith('X:')) { shellN++; if (ok) shellOk++; }
     }
-    console.log(`   RARULE roleAssignedTo minus workersAssigned == cf: ${rule}/${n}; X: orgs ${shellOk}/${shellN}; cf positions found in allPositions ${inPos}/${cfTotal}, same name ${named}`);
+    console.log(`   RARULE roleAssignedTo kept to allPositions.positionRestriction == cf: ${rule}/${n}; X: orgs ${shellOk}/${shellN}; cf positions found in allPositions ${inPos}/${cfTotal}, same name ${named}`);
     console.log('   RARULE mismatches ' + JSON.stringify(ex).slice(0, 2500));
     pass('Probe.wqlNames', 'see WQLP lines');
     return;
