@@ -81,7 +81,7 @@ var at = function(ps, i, k) {
 };
 
 var pillCard = function(title, subtitle, ps) {
-  let m = { 'cardId': 'SomPills' + ps.size(), 'params': { 'titleText': title, 'subtitleText': subtitle,
+  let m = { 'cardId': 'AppPickerPillCard' + ps.size(), 'params': { 'titleText': title, 'subtitleText': subtitle,
     'p1Label': at(ps, 0, 'l'), 'p1App': at(ps, 0, 'a'), 'p1Fam': at(ps, 0, 'f'),
     'p2Label': at(ps, 1, 'l'), 'p2App': at(ps, 1, 'a'), 'p2Fam': at(ps, 1, 'f'),
     'p3Label': at(ps, 2, 'l'), 'p3App': at(ps, 2, 'a'), 'p3Fam': at(ps, 2, 'f'),

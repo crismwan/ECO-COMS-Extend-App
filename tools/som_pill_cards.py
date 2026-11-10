@@ -2,7 +2,7 @@
 """Shell Org Manager Application bar, Option E (2026-11-05): the cards the bar is built from.
 
 Workday pill cards have a fixed list of pills and a pill can't be hidden, so a bar card with n pills uses the card
-file SomPills<n> (n = 1..10, Workday's maximum per card), picked by a dynamic cardId in the page's dynamicCards.
+file AppPickerPillCard<n> (n = 1..10, Workday's maximum per card), picked by a dynamic cardId in the page's dynamicCards.
 Every pill reloads Shell Org Manager with its own appCode / family (empty = not set). comsAppIndex.barCards builds
 the list: All applications (family pills) + No pattern format yet, a family's applications (10 per card), or the
 narrowed application (previous, next, Change, All) + its pattern format card (Setup / Ready / Inactive).
@@ -25,7 +25,7 @@ def q(expr):
 def pills(n):
     params = ['titleText', 'subtitleText'] + [f'p{i}{k}' for i in range(1, n + 1) for k in ('Label', 'App', 'Fam')]
     return {
-        "id": f"SomPills{n}",
+        "id": f"AppPickerPillCard{n}",
         "parameters": params,
         "header": {"title": q('titleText ?? ""'), "subtitle": q('subtitleText ?? ""'), "icon": ICON},
         "body": {"type": "pillCard", "pills": [
@@ -45,7 +45,7 @@ def fmt(cid, params, indicator, color, subtitle, body, footer):
 
 MAINTAIN = {"label": "Maintain Application Pattern",
             "taskReference": {"taskId": "editAppPattern", "parameterBindings": {"recordId": q('recordId ?? ""')}}}
-GEN = {f"SomPills{n}": pills(n) for n in range(1, 11)}
+GEN = {f"AppPickerPillCard{n}": pills(n) for n in range(1, 11)}
 GEN["AppFormatSetupCard"] = fmt(
     "AppFormatSetupCard", ["appCode"], "No pattern yet", "orange", q('"Not set up for " + (appCode ?? "")'),
     "Patterns can be added once the format is set.",

@@ -1,5 +1,5 @@
 {
-  "id": "SomPills10",
+  "id": "AppPickerPillCard9",
   "parameters": [
     "titleText",
     "subtitleText",
@@ -29,10 +29,7 @@
     "p8Fam",
     "p9Label",
     "p9App",
-    "p9Fam",
-    "p10Label",
-    "p10App",
-    "p10Fam"
+    "p9Fam"
   ],
   "header": {
     "title": "<% titleText ?? \"\" %>",
@@ -138,17 +135,6 @@
             "appCode": "<% p9App ?? \"\" %>",
             "appName": "<% p9App ?? \"\" %>",
             "family": "<% p9Fam ?? \"\" %>"
-          }
-        }
-      },
-      {
-        "label": "<% p10Label ?? \"\" %>",
-        "taskReference": {
-          "taskId": "shellOrgManager",
-          "parameterBindings": {
-            "appCode": "<% p10App ?? \"\" %>",
-            "appName": "<% p10App ?? \"\" %>",
-            "family": "<% p10Fam ?? \"\" %>"
           }
         }
       }

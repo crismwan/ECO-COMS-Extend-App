@@ -54,7 +54,7 @@ SWAPS = [(OLD_EMPTY, NEW_EMPTY), (OLD_RA, NEW_RA), (OLD_ROWS, NEW_ROWS), (OLD_FM
 
 
 def containers():
-    """One container: comsAppIndex.barCards returns [{cardId, params}], the cardId picking SomPills<n> or a format card."""
+    """One container: comsAppIndex.barCards returns [{cardId, params}], the cardId picking AppPickerPillCard<n> or a format card."""
     return [{"type": "cardContainer", "id": "appBarCardContainer", "layout": "masonry",
              "dynamicCards": {"on": f"<% comsAppIndex.barCards({ARGS}, {APP}, {FAM}, {FMTX}) %>", "as": "barCard",
                               "template": {"cardId": "<% barCard.cardId %>", "parameters": "<% barCard.params %>"}}}]

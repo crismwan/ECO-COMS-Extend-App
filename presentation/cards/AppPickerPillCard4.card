@@ -1,5 +1,5 @@
 {
-  "id": "SomPills7",
+  "id": "AppPickerPillCard4",
   "parameters": [
     "titleText",
     "subtitleText",
@@ -14,16 +14,7 @@
     "p3Fam",
     "p4Label",
     "p4App",
-    "p4Fam",
-    "p5Label",
-    "p5App",
-    "p5Fam",
-    "p6Label",
-    "p6App",
-    "p6Fam",
-    "p7Label",
-    "p7App",
-    "p7Fam"
+    "p4Fam"
   ],
   "header": {
     "title": "<% titleText ?? \"\" %>",
@@ -74,39 +65,6 @@
             "appCode": "<% p4App ?? \"\" %>",
             "appName": "<% p4App ?? \"\" %>",
             "family": "<% p4Fam ?? \"\" %>"
-          }
-        }
-      },
-      {
-        "label": "<% p5Label ?? \"\" %>",
-        "taskReference": {
-          "taskId": "shellOrgManager",
-          "parameterBindings": {
-            "appCode": "<% p5App ?? \"\" %>",
-            "appName": "<% p5App ?? \"\" %>",
-            "family": "<% p5Fam ?? \"\" %>"
-          }
-        }
-      },
-      {
-        "label": "<% p6Label ?? \"\" %>",
-        "taskReference": {
-          "taskId": "shellOrgManager",
-          "parameterBindings": {
-            "appCode": "<% p6App ?? \"\" %>",
-            "appName": "<% p6App ?? \"\" %>",
-            "family": "<% p6Fam ?? \"\" %>"
-          }
-        }
-      },
-      {
-        "label": "<% p7Label ?? \"\" %>",
-        "taskReference": {
-          "taskId": "shellOrgManager",
-          "parameterBindings": {
-            "appCode": "<% p7App ?? \"\" %>",
-            "appName": "<% p7App ?? \"\" %>",
-            "family": "<% p7Fam ?? \"\" %>"
           }
         }
       }

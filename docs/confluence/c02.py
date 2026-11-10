@@ -90,7 +90,7 @@ set_rows(s, T(s, 'ID', 0), [
 # ---------------------------------------------------------------- 4. traceability
 TR = [
     ['FR-001', 'Every application listed, derived from Workday', 'comsAppIndex.script (appOfOrg: organization type); shellOrgManager bar; WQL allShellOrgs (subtype X:META / X:SHELL)', '§5.3, §6.7', 'TC-001'],
-    ['FR-002', 'Narrow Shell Org Manager to one application', 'shellOrgManager (UX-002), SomPills cards, exact role match', '§5.5, §7.1', 'TC-002'],
+    ['FR-002', 'Narrow Shell Org Manager to one application', 'shellOrgManager (UX-002), AppPickerPillCard cards, exact role match', '§5.5, §7.1', 'TC-002'],
     ['FR-003', 'Create shell organization (X:META / X:SHELL)', 'createShellOrgWizard/newShellOrg (UX-004); IORC_0037_XFD_SEC_Create_Application_Shell_Org → IORC_0037_XFD_SEC_Sub_Create_Shell_Organization', '§6.6 INT-01, §6.7', 'TC-003'],
     ['FR-004', 'Naming rules page + server', 'comsShellOrg.script; IORC_0037_XFD_SEC_Create_Application_Shell_Org guard', '§5.6', 'TC-004'],
     ['FR-005', 'Schema-driven pattern form with preview', 'newSchemaPattern (UX-006); comsPatterns.script; COMSApplication.patternSchema', '§5.6, §6.4', 'TC-005'],
@@ -210,7 +210,7 @@ set_rows(s, T(s, 'UX ID', 0), [
 # ---------------------------------------------------------------- 5.5 components
 set_rows(s, T(s, 'UX ID', 1), [
     ['UX-001', 'Body', 'Card containers (simple, pill and chart cards: stackedBarChart2)', 'Request, audit and bulk-run records; WQL shell orgs', 'Read-only; each card links to its page', 'Cards show zero counts and an action ("Nothing waiting")'],
-    ['UX-002', 'Body top', 'Card container with dynamic cards (pill cards SomPills1–10, format cards)', 'comsAppIndex.barCards over WQL allShellOrgs + COMS Application', 'Pills reload the page with appCode / family', 'n/a (always lists applications)'],
+    ['UX-002', 'Body top', 'Card container with dynamic cards (pill cards AppPickerPillCard1–10, format cards)', 'comsAppIndex.barCards over WQL allShellOrgs + COMS Application', 'Pills reload the page with appCode / family', 'n/a (always lists applications)'],
     ['UX-002', 'Body', 'Tabs with grids (LIST style), donut chart card', 'WQL shell orgs, patterns, role assignments; COMS Application', 'Read-only; Manage / Details / Inactivate buttons', '"Nothing to show" text per tab, with the next step (e.g. Set Up Pattern Format)'],
     ['UX-006', 'Body', 'Field set with up to 7 text fields, read-only preview, date', 'COMS Application.patternSchema (json:parse)', 'Labels, hints and visibility from the schema; checked on change', 'Inactive application: "Application Inactive", no OK'],
     ['UX-008', 'Body', 'Read-only fields, instanceList (multi-select, dynamicMonikerLevels), date', 'WQL positions; Staffing v6 supervisory organization values', 'Browse or type; picked position clears errors', 'Current Positions "None"'],
