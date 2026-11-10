@@ -2709,27 +2709,37 @@ async function probe(token) {
       const all = []; for (let off = 0; off < 3000; off += 100) { const pg = (await request('GET', `${API}/wql/v1/dataSources/${ds[0].id}/fields?limit=100&offset=${off}`, token)).data || []; all.push(...pg); if (pg.length < 100) break; }
       return all;
     };
-    // delivered replacements for the calculated fields: shapes and search forms (2026-11-10)
-    const raw = async (label, q, lim = 3) => { try { const r = await wql(token, q, lim); console.log(`   DLV ${label}: total=${r.total} ` + JSON.stringify(r.data || []).slice(0, 700)); return r.data || []; } catch (e) { console.log(`   DLV ${label}: ERROR ${String(e.message).slice(0, 250)}`); return null; } };
-    await raw('unfilled', "SELECT workdayID, positionID, worker, positionAndJob_AllStaffingModels FROM allPositions WHERE positionID = 'P-00030'");
-    await raw('workerEmpty', 'SELECT workdayID, positionID FROM allPositions WHERE worker is empty', 2);
-    await raw('inactiveOrg', "SELECT workdayID, code, inactive FROM topLevelOrganizations WHERE code = 'X:ADM'");
-    await raw('instContains', "SELECT workdayID FROM allPositions WHERE positionAndJob_AllStaffingModels contains 'Director'");
-    const cfS = await raw('cfSearch', "SELECT workdayID FROM allPositions WHERE supervisoryOrganization is not empty AND cf_PositionText contains 'director'", 500);
-    const orS = await raw('orSearch', "SELECT workdayID FROM allPositions WHERE supervisoryOrganization is not empty AND (positionID contains 'director' OR positionTitle contains 'director' OR worker_Name contains 'director')", 500);
-    for (const w of ['beth', 'P-0001', 'unfilled', 'analyst', 'liu']) {
-      const a1 = ((await wql(token, `SELECT workdayID FROM allPositions WHERE supervisoryOrganization is not empty AND cf_PositionText contains '${w}'`, 1000)).data || []).length;
-      let a2 = 'ERR'; try { a2 = ((await wql(token, `SELECT workdayID FROM allPositions WHERE supervisoryOrganization is not empty AND (positionID contains '${w}' OR positionTitle contains '${w}' OR worker_Name contains '${w}')`, 1000)).data || []).length; } catch (e) { a2 = 'ERR ' + e.message.slice(0, 120); }
-      console.log(`   DLV search "${w}": cf=${a1} delivered=${a2}`);
+    // role assignments without the calculated field (2026-11-10)
+    const fieldsOf2 = async (alias) => {
+      const ds = (await request('GET', `${API}/wql/v1/dataSources?alias=${alias}`, token)).data || [];
+      const all = []; for (let off = 0; off < 3000; off += 100) { const pg = (await request('GET', `${API}/wql/v1/dataSources/${ds[0].id}/fields?limit=100&offset=${off}`, token)).data || []; all.push(...pg); if (pg.length < 100) break; }
+      return { id: ds[0].id, all };
+    };
+    const ar = await fieldsOf2('assignableRoles');
+    const raF = ar.all.find((x) => x.alias === 'roleAssignments');
+    for (const u of [`dataSources/${ar.id}/fields/${raF.id}`, `dataSources/${ar.id}/fields/${raF.id}/fields`, `businessObjects/${raF.relatedBusinessObject.id}/fields`, `businessObjects/${raF.relatedBusinessObject.id}`]) {
+      try { const r = await request('GET', `${API}/wql/v1/${u}?limit=100`, token); console.log(`   RAF ${u}: ` + JSON.stringify(r).slice(0, 1500)); } catch (e) { console.log(`   RAF ${u}: ERROR ${String(e.message).slice(0, 160)}`); }
     }
-    const r = await raw('roleAssignedTo', (await shellRolesQuery(token)).replace('cf_ZCF_EE_RoleAssignedToAsPositionRestrictions}', 'roleAssignedTo}'), 2);
-    // all assignable roles: compare cf vs delivered on every assignment
     try {
-      const all = (await wql(token, 'SELECT role, roleAssignments{organization, cf_ZCF_EE_RoleAssignedToAsPositionRestrictions, roleAssignedTo} as ra FROM assignableRoles', 10000)).data || [];
-      let n = 0, same = 0; const ex = [];
-      for (const role of all) for (const x of role.ra || []) { n++; const k = (v) => [].concat(v || []).map((y) => y.id).sort().join(','); if (k(x.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions) === k(x.roleAssignedTo)) same++; else if (ex.length < 3) ex.push(x); }
-      console.log(`   DLV allRoles assignments ${same}/${n} same ${JSON.stringify(ex).slice(0, 800)}`);
-    } catch (e) { console.log('   DLV allRoles ERROR ' + e.message.slice(0, 200)); }
+      const all = []; for (let off = 0; off < 2000; off += 100) { const pg = (await request('GET', `${API}/wql/v1/dataSources?limit=100&offset=${off}`, token)).data || []; all.push(...pg); if (pg.length < 100) break; }
+      console.log('   RADS ' + all.filter((d) => /role assign|assignable role|role/i.test(d.descriptor)).map((d) => d.alias + '=' + d.descriptor).join(' | ').slice(0, 2500));
+    } catch (e) { console.log('   RADS ERROR ' + e.message.slice(0, 150)); }
+    const ap = await fieldsOf2('allPositions');
+    console.log('   RAPOS ' + ap.all.filter((x) => /role|restrict/i.test(x.alias + ' ' + x.descriptor)).map((x) => `${x.alias}(${x.type})`).join(', ').slice(0, 2500));
+    // the combination: roleAssignedTo kept to positions, named from allPositions
+    const P = (await wql(token, 'SELECT workdayID, positionID, positionAndJob_AllStaffingModels FROM allPositions', 10000)).data || [];
+    const pos = new Map(P.map((p) => [p.workdayID, p]));
+    const all = (await wql(token, 'SELECT role, roleAssignments{organization, cf_ZCF_EE_RoleAssignedToAsPositionRestrictions, roleAssignedTo} as ra FROM assignableRoles', 10000)).data || [];
+    let n = 0, sameIds = 0, sameNames = 0; const ex = [];
+    for (const role of all) for (const x of role.ra || []) {
+      n++;
+      const cf = [].concat(x.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions || []);
+      const dl = [].concat(x.roleAssignedTo || []).filter((y) => pos.has(y.id));
+      const k = (v) => v.map((y) => y.id).sort().join(',');
+      if (k(cf) === k(dl)) { sameIds++; const names = (v) => v.map((y) => y.descriptor).sort().join('|'); if (names(cf) === names(dl.map((y) => ({ descriptor: (pos.get(y.id).positionAndJob_AllStaffingModels || {}).descriptor })))) sameNames++; else if (ex.length < 3) ex.push({ cf, del: dl.map((y) => pos.get(y.id).positionAndJob_AllStaffingModels) }); }
+      else if (ex.length < 3) ex.push({ org: x.organization, cf, roleAssignedTo: x.roleAssignedTo });
+    }
+    console.log(`   RACOMBO assignments=${n} sameIds=${sameIds} sameNames=${sameNames} positions=${P.length} ${JSON.stringify(ex).slice(0, 1500)}`);
     pass('Probe.wqlNames', 'see WQLP lines');
     return;
   }
