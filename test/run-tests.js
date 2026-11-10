@@ -2728,31 +2728,27 @@ async function probe(token) {
       const all = []; for (let off = 0; off < 3000; off += 100) { const pg = (await request('GET', `${API}/wql/v1/dataSources/${ds[0].id}/fields?limit=100&offset=${off}`, token)).data || []; all.push(...pg); if (pg.length < 100) break; }
       return all;
     };
-    // role assignments without the calculated field (2026-11-10)
-    const fieldsOf2 = async (alias) => {
-      const ds = (await request('GET', `${API}/wql/v1/dataSources?alias=${alias}`, token)).data || [];
-      const all = []; for (let off = 0; off < 3000; off += 100) { const pg = (await request('GET', `${API}/wql/v1/dataSources/${ds[0].id}/fields?limit=100&offset=${off}`, token)).data || []; all.push(...pg); if (pg.length < 100) break; }
-      return { id: ds[0].id, all };
-    };
-    const ar = await fieldsOf2('assignableRoles');
-    const raF = ar.all.find((x) => x.alias === 'roleAssignments');
-    const P = (await wql(token, 'SELECT workdayID, positionID, positionAndJob_AllStaffingModels, positionRestriction FROM allPositions', 10000)).data || [];
-    const pos = new Map(P.filter((p) => p.positionRestriction).map((p) => [p.positionRestriction.id, p]));
-    console.log(`   RARULE allPositions with positionRestriction ${pos.size}/${P.length}; sample ${JSON.stringify(P[0]).slice(0, 300)}`);
-    const all = (await wql(token, 'SELECT role, roleAssignments{organization, workersAssigned, cf_ZCF_EE_RoleAssignedToAsPositionRestrictions, roleAssignedTo} as ra FROM assignableRoles', 10000)).data || [];
-    const idsOf = (v) => [].concat(v || []).map((y) => y.id);
-    let n = 0, rule = 0, inPos = 0, cfTotal = 0, named = 0, shellN = 0, shellOk = 0; const ex = [];
-    for (const role of all) for (const x of role.ra || []) {
-      n++;
-      const cf = idsOf(x.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions).sort().join(',');
-      const w = new Set(idsOf(x.workersAssigned));
-      const d = idsOf(x.roleAssignedTo).filter((i) => pos.has(i)).sort().join(',');
-      const ok = cf === d; if (ok) rule++; else if (ex.length < 4) ex.push({ org: (x.organization || {}).descriptor, cf: x.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions, rat: x.roleAssignedTo, wa: x.workersAssigned });
-      for (const c of [].concat(x.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions || [])) { cfTotal++; if (pos.has(c.id)) { inPos++; if ((pos.get(c.id).positionRestriction || {}).descriptor === c.descriptor) named++; else if (ex.length < 6) ex.push({ cfName: c.descriptor, restriction: pos.get(c.id).positionRestriction, paj: pos.get(c.id).positionAndJob_AllStaffingModels }); } }
-      if (String((x.organization || {}).descriptor || '').startsWith('X:')) { shellN++; if (ok) shellOk++; }
+    // a delivered TEXT field that holds the position's name (to replace cf_PositionText in searches), 2026-11-10
+    const ds = (await request('GET', `${API}/wql/v1/dataSources?alias=allPositions`, token)).data || [];
+    const flds = []; for (let off = 0; off < 3000; off += 100) { const pg = (await request('GET', `${API}/wql/v1/dataSources/${ds[0].id}/fields?limit=100&offset=${off}`, token)).data || []; flds.push(...pg); if (pg.length < 100) break; }
+    const texts = flds.filter((x) => x.type === 'Text' && !x.alias.startsWith('cf_')).map((x) => x.alias);
+    console.log(`   PTX ${texts.length} text fields: ${texts.join(', ').slice(0, 3000)}`);
+    const P = (await wql(token, 'SELECT workdayID, positionID, positionAndJob_AllStaffingModels, cf_PositionText FROM allPositions', 10000)).data || [];
+    const name = new Map(P.map((p) => [p.workdayID, (p.positionAndJob_AllStaffingModels || {}).descriptor || '']));
+    for (let i = 0; i < texts.length; i += 15) {
+      const chunk = texts.slice(i, i + 15);
+      let rows; try { rows = (await wql(token, `SELECT workdayID, ${chunk.join(', ')} FROM allPositions`, 10000)).data || []; } catch (e) { console.log(`   PTX chunk ${i} ERROR ${String(e.message).slice(0, 160)}`); continue; }
+      for (const f of chunk) {
+        let eq = 0, contains = 0, filled = 0; let ex = '';
+        for (const r of rows) { const v = r[f]; if (v == null || v === '') continue; filled++; const n = name.get(r.workdayID) || ''; if (v === n) eq++; if (n && (n.includes(v) || String(v).includes(n))) contains++; if (!ex) ex = String(v).slice(0, 80); }
+        if (filled && (eq || contains > P.length / 4)) console.log(`   PTX ${f}: equal ${eq}/${P.length}, overlaps ${contains}, filled ${filled}, e.g. "${ex}"`);
+      }
     }
-    console.log(`   RARULE roleAssignedTo kept to allPositions.positionRestriction == cf: ${rule}/${n}; X: orgs ${shellOk}/${shellN}; cf positions found in allPositions ${inPos}/${cfTotal}, same name ${named}`);
-    console.log('   RARULE mismatches ' + JSON.stringify(ex).slice(0, 2500));
+    // the parts of the name: is the title inside it a delivered field?
+    const T = (await wql(token, 'SELECT workdayID, positionID, positionTitle, jobProfileName, openPositionTitle, worker_Name, positionAndJob_AllStaffingModels FROM allPositions', 10000)).data || [];
+    const k = (f) => T.filter((r) => r[f] && ((r.positionAndJob_AllStaffingModels || {}).descriptor || '').includes(r[f])).length;
+    console.log(`   PTX name contains: positionTitle ${k('positionTitle')}, jobProfileName ${k('jobProfileName')}, openPositionTitle ${k('openPositionTitle')}, worker_Name ${k('worker_Name')} of ${T.length}`);
+    console.log('   PTX title mismatches ' + JSON.stringify(T.filter((r) => r.positionTitle && !((r.positionAndJob_AllStaffingModels || {}).descriptor || '').includes(r.positionTitle)).slice(0, 4).map((r) => [r.positionAndJob_AllStaffingModels && r.positionAndJob_AllStaffingModels.descriptor, r.positionTitle, r.jobProfileName])));
     pass('Probe.wqlNames', 'see WQLP lines');
     return;
   }
