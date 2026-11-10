@@ -2638,26 +2638,16 @@ async function probe(token) {
         return d;
       } catch (e) { console.log(`   WQLP ${label}: ERROR ${String(e.message).slice(0, 220)}`); return null; }
     };
-    const base = 'SELECT workdayID, code, subtype FROM topLevelOrganizations WHERE ';
-    await tryQ('refIdBare', base + 'subtype in (ORGANIZATION_SUBTYPE-17-41, ORGANIZATION_SUBTYPE-17-42)');
-    await tryQ('refIdOne', base + 'subtype in (inst_refId = ORGANIZATION_SUBTYPE-17-42)');
-    await tryQ('refIdOneQ', base + 'subtype in (inst_refId = "ORGANIZATION_SUBTYPE-17-42")');
-    await tryQ('dotDescriptor', base + 'subtype.descriptor = "X:SHELL"');
-    await tryQ('nameQuoted', base + 'subtype in ("X:SHELL")');
-    const x = await tryQ('codeX', base + 'code startswith "X:"');
-    const w = await tryQ('wid', base + `subtype in (${W})`);
-    if (x && w) { const xs = new Set(x.map((o) => o.workdayID)); console.log('   WQLP onlyWid: ' + w.filter((o) => !xs.has(o.workdayID)).map((o) => o.code).join(' | ')); const ws = new Set(w.map((o) => o.workdayID)); console.log('   WQLP onlyCode: ' + x.filter((o) => !ws.has(o.workdayID)).map((o) => o.code).join(' | ')); }
-    await tryQ('customAll', 'SELECT workdayID, type1 FROM customOrganizations');
-    await tryQ('fuhRefBare', `SELECT workdayID, type1 FROM customOrganizations WHERE type1 in (FUNCTIONAL_UNIT_HIERARCHY)`);
-    for (const alias of ['topLevelOrganizations', 'customOrganizations']) {
-      try {
-        const ds = (await request('GET', `${API}/wql/v1/dataSources?alias=${alias}`, token)).data || [];
-        const id = ds[0] && ds[0].id;
-        const f = (await request('GET', `${API}/wql/v1/dataSources/${id}/fields?limit=100`, token)).data || [];
-        const f2 = (await request('GET', `${API}/wql/v1/dataSources/${id}/fields?limit=100&offset=100`, token)).data || [];
-        console.log(`   WQLP fields ${alias}: ` + [...f, ...f2].filter((x) => /type|sub|kind|categ/i.test(x.alias + x.descriptor)).map((x) => `${x.alias}(${x.type})`).join(', '));
-      } catch (e) { console.log(`   WQLP fields ${alias} ERROR ${String(e.message).slice(0, 150)}`); }
+    await tryQ('topAll', 'SELECT workdayID, subtype FROM topLevelOrganizations');
+    await tryQ('distinct', 'SELECT DISTINCT subtype FROM topLevelOrganizations');
+    await tryQ('groupBy', 'SELECT subtype, COUNT(workdayID) FROM topLevelOrganizations GROUP BY subtype');
+    for (const alias of ['organizationSubtypes', 'allOrganizationSubtypes', 'organizationSubtype', 'organizationTypes', 'allOrganizationTypes', 'organizationType', 'customOrganizationSubtypes', 'customOrganizationTypes']) {
+      try { const r = await request('GET', `${API}/wql/v1/dataSources?alias=${alias}`, token); console.log(`   WQLP alias ${alias}: ${(r.data || []).map((d) => d.alias + '=' + d.descriptor + ' ' + d.id).join(' | ') || 'none'}`); } catch (e) { console.log(`   WQLP alias ${alias} ERROR ${String(e.message).slice(0, 120)}`); }
     }
+    for (const term of ['Organization Subtypes', 'Organization Types', 'Subtypes']) {
+      try { const r = await request('GET', `${API}/wql/v1/dataSources?searchString=${encodeURIComponent(term)}&limit=30`, token); console.log(`   WQLP ss "${term}": ${(r.data || []).map((d) => d.alias).join(' | ')}`); } catch (e) { console.log(`   WQLP ss ERROR ${String(e.message).slice(0, 150)}`); }
+    }
+    try { const r = await request('GET', `${API}/wql/v1/dataSources?limit=100`, token); console.log(`   WQLP dsTotal ${r.total}`); const all = []; for (let off = 0; off < (r.total || 0) && off < 3000; off += 100) { const pg = await request('GET', `${API}/wql/v1/dataSources?limit=100&offset=${off}`, token); all.push(...(pg.data || [])); } console.log('   WQLP dsOrg: ' + all.filter((d) => /organi[sz]ation/i.test(d.descriptor) && /type|sub/i.test(d.descriptor)).map((d) => d.alias + '=' + d.descriptor).join(' | ')); console.log('   WQLP dsOrgAll: ' + all.filter((d) => /organi[sz]ation/i.test(d.descriptor)).map((d) => d.alias).join(' | ').slice(0, 1500)); } catch (e) { console.log('   WQLP dsList ERROR ' + String(e.message).slice(0, 150)); }
     pass('Probe.wqlNames', 'see WQLP lines');
     return;
   }
