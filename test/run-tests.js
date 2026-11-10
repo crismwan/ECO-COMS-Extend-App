@@ -2676,23 +2676,16 @@ async function probe(token) {
       const all = []; for (let off = 0; off < 3000; off += 100) { const pg = (await request('GET', `${API}/wql/v1/dataSources/${ds[0].id}/fields?limit=100&offset=${off}`, token)).data || []; all.push(...pg); if (pg.length < 100) break; }
       return all;
     };
-    const P = (await wql(token, 'SELECT workdayID, positionID, cf_PositionText, position_Filled, positionAndJob_AllStaffingModels, position_PositionManagement FROM allPositions', 10000)).data || [];
-    const d = (x) => (x || {}).descriptor;
-    for (const [k, f] of [['filledDesc', (o) => d(o.position_Filled)], ['pajDesc', (o) => d(o.positionAndJob_AllStaffingModels)], ['pmDesc', (o) => d(o.position_PositionManagement)]]) {
-      const bad = P.filter((o) => o.cf_PositionText !== `${f(o)}-${o.positionID}`);
-      console.log(`   CFT ${k}: same ${P.length - bad.length}/${P.length} e.g. ${JSON.stringify(bad.slice(0, 2)).slice(0, 500)}`);
+    // Change Status guard after the by-name subtype lookup (validateOnly, and a date Workday refuses: nothing can change)
+    const me = await request('GET', `${API}/common/v1/workers/me`, token);
+    const shell = ((await wql(token, "SELECT workdayID, code FROM topLevelOrganizations WHERE code = 'X:ADM'", 1)).data || [])[0];
+    const fuh = ((await wql(token, 'SELECT workdayID FROM customOrganizations WHERE type1 in (<% fuhTypes %>)', 1)).data || [])[0];
+    const st = (orgId) => ({ orgId, action: 'INACTIVATE', orgCode: 'X:ADM', orgName: 'X:ADM', includeInactive: 'true', effectiveDate: 'NOTADATE',
+      patternName: 'X:ADM', orgType: 'X:ADM', comsAppId: 'X:ADM', validateOnly: 'true', changedBy: 'TEST:GUARD:PROBE', changedByWid: me.id, timestamp: new Date().toISOString() });
+    for (const [k, id] of [['notShell(FUH org)', fuh && fuh.workdayID], ['shell X:ADM', shell && shell.workdayID]]) {
+      try { const r = await launch(token, 'IORC_0037_XFD_SEC_Change_Shell_Org_Status', st(id)); console.log(`   GUARD ${k} ${id}: ${(typeof r === 'string' ? r : JSON.stringify(r)).slice(0, 400)}`); }
+      catch (e) { console.log(`   GUARD ${k}: ERROR ${String(e.message).slice(0, 400)}`); }
     }
-    const q = (await shellRolesQuery(token)).replace('cf_ZCF_EE_RoleAssignedToAsPositionRestrictions}', 'cf_ZCF_EE_RoleAssignedToAsPositionRestrictions, roleAssignedTo}');
-    try {
-      const r = (await wql(token, q, 10000)).data || [];
-      let n = 0, same = 0; const ex = [];
-      for (const role of r) for (const ra of role.roleAssignments || []) {
-        n++; const a = (ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions || []).map((x) => x.id).sort().join(','); const b = [].concat(ra.roleAssignedTo || []).map((x) => x.id).sort().join(',');
-        if (a === b) same++; else if (ex.length < 3) ex.push({ cf: ra.cf_ZCF_EE_RoleAssignedToAsPositionRestrictions, del: ra.roleAssignedTo });
-      }
-      console.log(`   CFR roleAssignedTo vs cf: ${same}/${n} same; ${JSON.stringify(ex).slice(0, 900)}`);
-      console.log('   CFR sample ' + JSON.stringify((r.find((x) => (x.roleAssignments || []).length) || {}).roleAssignments?.slice(0, 2)).slice(0, 900));
-    } catch (e) { console.log('   CFR ERROR ' + String(e.message).slice(0, 300)); }
     pass('Probe.wqlNames', 'see WQLP lines');
     return;
   }
