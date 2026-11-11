@@ -67,6 +67,13 @@ for e in d['endPoints']:
     if e['name'] == 'launchAddShellOrg':
         e['url'] = e['url'].replace("'/IORC_0037_XFD_SEC_Create_Application_Shell_Org/launch?comsAppId=' + ac + '&orgType=' + ot", "'/IORC_0037_XFD_SEC_Create_Application_Shell_Org/launch?orgType=' + ot")
 
+# one-code lookup for the duplicate and "was it created" checks (live 2026-11-10: the eager existingOrgs list didn't
+# catch X:ADM:AAP:ANY on OK, so the checks ask WQL for that one code instead of searching a page list)
+ORG_BY_CODE = {"name": "orgByCode", "baseUrlType": "workday-wql", "authType": "sso", "deferred": "true",
+               "url": "<% 'data?limit=5&query=' + string:pathEncode('SELECT workdayID, code, organizationByName FROM topLevelOrganizations WHERE code = \\'' + c + '\\'') %>"}
+if not any(e['name'] == 'orgByCode' for e in d['endPoints']):
+    d['endPoints'].append(dict(ORG_BY_CODE))
+
 # 1. subtype first
 kids = holder(d['presentation'], 'selectedApplicationId')
 ids = [k.get('id') for k in kids]
@@ -140,13 +147,13 @@ d['onSubmit'] = f"""<%
   }}
   let codeErr = comsShellOrg.codeError(ac, oc, meta);
   let orgName = comsShellOrg.orgName(ac, oc, meta);
-  let exOrgs = existingOrgs.data ?? [];
-  let di = exOrgs.map(o => {{ o.code ?? '' }}).indexOf(orgName);
+  let q = orgName.replace('\\'', '').replace('\\\\', '');
+  let found = (codeErr == '' && q != '') ? (orgByCode.invoke({{'c': q}}).data ?? []) : [];
   if (codeErr != '') {{
     organizationCode.setError(codeErr);
     valid = false;
-  }} else if (di >= 0) {{
-    let dupe = exOrgs.get(di);
+  }} else if (found.size() > 0) {{
+    let dupe = found[0];
     let dupeName = (!empty(dupe.organizationByName)) ? (dupe.organizationByName.descriptor ?? orgName) : orgName;
     organizationCode.setError('An organization with this code already exists: ' + dupeName);
     valid = false;
@@ -168,7 +175,7 @@ d['onSubmit'] = f"""<%
     let lot = comsShellOrg.orgType(ac, oc, meta);
     let lcode = comsShellOrg.orgCode(ac, oc, meta);
     launchAddShellOrg.invoke({{'cbw': selectedWorker.id ?? '', 'cb': (selectedWorker.descriptor ?? '').urlEncode(), 'ts': date:now().format("yyyy-MM-dd'T'HH:mm:ss'Z'").urlEncode(), 'ot': lot.urlEncode(), 'st': orgSubtypeDropdown.selectedEntries[0].id, 'on': lname.urlEncode(), 'oc': lcode.urlEncode(), 'wid': selectedWorker.id ?? '', 'ed': effectiveDate.value.format('yyyy-MM-dd')}});
-    let created = (verifyShellOrg.invoke({{'lim': '10000'}}).data ?? []).map(o => {{ o.code ?? '' }}).indexOf(lname) >= 0;
+    let created = (orgByCode.invoke({{'c': lname.replace('\\'', '').replace('\\\\', '')}}).data ?? []).map(o => {{ o.code ?? '' }}).indexOf(lname) >= 0;
     if (!created) {{
       organizationCode.setError(meta ? ('Workday rejected this request, so nothing was created. Check that the organization type ' + lot + ' exists in Workday.') : 'Workday rejected this request, so nothing was created. Check the values and try again.');
       valid = false;
