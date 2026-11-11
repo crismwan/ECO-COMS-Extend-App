@@ -1,0 +1,252 @@
+{
+  "id": "newShellOrg",
+  "securityDomains": [
+    "ManageCOMSShellOrgs"
+  ],
+  "include": [
+    "comsValidations.script",
+    "comsShellOrg.script"
+  ],
+  "endPoints": [
+    {
+      "name": "orgSubtypes",
+      "baseUrlType": "workday-wql",
+      "url": "data",
+      "authType": "sso",
+      "bestEffort": "true",
+      "wqlQuery": {
+        "queryId": "orgSubtypes"
+      },
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "name": "selectedWorker",
+      "baseUrlType": "COMMON",
+      "url": "/workers/me",
+      "authType": "sso",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 403
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "name": "comsApplications",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "url": "/comsApplications?limit=100",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 403
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "name": "existingOrgs",
+      "baseUrlType": "workday-wql",
+      "url": "data",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "wqlQuery": {
+        "queryId": "customOrganizations",
+        "parameters": {
+          "subtypes": "<% (orgSubtypes.data ?? []).filter(r => { empty(r.subtype) ? false : (r.subtype.descriptor == 'X:META' || r.subtype.descriptor == 'X:SHELL') }).map(r => { r.subtype.id }).join(',') %>"
+        }
+      },
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "name": "launchAddShellOrg",
+      "baseUrlType": "orchestration",
+      "authType": "sso",
+      "deferred": "true",
+      "url": "<% '/IORC_0037_XFD_SEC_Create_Application_Shell_Org/launch?orgType=' + ot + '&orgSubtype=' + st + '&organizationName=' + on + '&organizationCode=' + oc + '&workerId=' + wid + '&effectiveDate=' + ed + '&changedBy=' + cb + '&timestamp=' + ts + '&changedByWid=' + cbw %>"
+    },
+    {
+      "name": "verifyShellOrg",
+      "baseUrlType": "workday-wql",
+      "url": "<% 'data?limit=' + lim + '&query=SELECT%20workdayID%2C%20code%20FROM%20topLevelOrganizations%20WHERE%20subtype%20in%20(' + (orgSubtypes.data ?? []).filter(r => { empty(r.subtype) ? false : (r.subtype.descriptor == 'X:META' || r.subtype.descriptor == 'X:SHELL') }).map(r => { r.subtype.id }).join(',') + ')' %>",
+      "authType": "sso",
+      "deferred": "true"
+    }
+  ],
+  "onSubmit": "<%\n  effectiveDate.clearError();\n  orgSubtypeDropdown.clearError();\n  organizationCode.clearError();\n  selectedApplicationId.clearError();\n  let valid = true;\n  let meta = ((!empty(orgSubtypeDropdown.value)) ? (orgSubtypeDropdown.selectedEntries[0].id == 'X:META') : false);\n  let ac = ((!empty(selectedApplicationId.value)) ? (selectedApplicationId.selectedEntries[0].descriptor ?? '') : '');\n  let oc = (organizationCode.value ?? '').trim();\n  if (empty(orgSubtypeDropdown.value)) {\n    orgSubtypeDropdown.setError('Pick the organization subtype: X:META or X:SHELL.');\n    valid = false;\n  }\n  if (ac == '' && !meta) {\n    selectedApplicationId.setError('Please select an application. Only X:META can be added without one (a new application).');\n    valid = false;\n  }\n  let codeErr = comsShellOrg.codeError(ac, oc, meta);\n  let orgName = comsShellOrg.orgName(ac, oc, meta);\n  let exOrgs = existingOrgs.data ?? [];\n  let di = exOrgs.map(o => { o.code ?? '' }).indexOf(orgName);\n  if (codeErr != '') {\n    organizationCode.setError(codeErr);\n    valid = false;\n  } else if (di >= 0) {\n    let dupe = exOrgs.get(di);\n    let dupeName = (!empty(dupe.organizationByName)) ? (dupe.organizationByName.descriptor ?? orgName) : orgName;\n    organizationCode.setError('An organization with this code already exists: ' + dupeName);\n    valid = false;\n  }\n  if (empty(effectiveDate.value)) {\n    effectiveDate.setError('Effective Date is required.');\n    valid = false;\n  } else {\n    if (!comsValidations.isWeekday(effectiveDate.value)) {\n      effectiveDate.setError(comsValidations.errorWeekday());\n      valid = false;\n    } else if (!comsValidations.isCurrentOrFutureYear(effectiveDate.value)) {\n      effectiveDate.setError(comsValidations.errorYear());\n      valid = false;\n    }\n  }\n  if (valid) {\n    let lname = comsShellOrg.orgName(ac, oc, meta);\n    let lot = comsShellOrg.orgType(ac, oc, meta);\n    let lcode = comsShellOrg.orgCode(ac, oc, meta);\n    launchAddShellOrg.invoke({'cbw': selectedWorker.id ?? '', 'cb': (selectedWorker.descriptor ?? '').urlEncode(), 'ts': date:now().format(\"yyyy-MM-dd'T'HH:mm:ss'Z'\").urlEncode(), 'ot': lot.urlEncode(), 'st': orgSubtypeDropdown.selectedEntries[0].id, 'on': lname.urlEncode(), 'oc': lcode.urlEncode(), 'wid': selectedWorker.id ?? '', 'ed': effectiveDate.value.format('yyyy-MM-dd')});\n    let created = (verifyShellOrg.invoke({'lim': '10000'}).data ?? []).map(o => { o.code ?? '' }).indexOf(lname) >= 0;\n    if (!created) {\n      organizationCode.setError(meta ? ('Workday rejected this request, so nothing was created. Check that the organization type ' + lot + ' exists in Workday.') : 'Workday rejected this request, so nothing was created. Check the values and try again.');\n      valid = false;\n    }\n  }\n  valid;\n%>",
+  "presentation": {
+    "headerSize": "STANDARD",
+    "title": {
+      "type": "title",
+      "label": "ECO-COMS: Add New Shell Organization",
+      "enabled": true
+    },
+    "body": {
+      "type": "basicFormLayout",
+      "id": "newShellOrgForm",
+      "sections": [
+        {
+          "type": "layoutSection",
+          "id": "aboutSection",
+          "children": [
+            {
+              "type": "button",
+              "label": "← Shell Org Manager",
+              "taskReference": {
+                "taskId": "shellOrgManager"
+              },
+              "action": "LINK",
+              "suppressDiscardDialog": true
+            },
+            {
+              "type": "fieldSet",
+              "id": "aboutFieldSet",
+              "children": [
+                {
+                  "type": "richText",
+                  "id": "pageDescription",
+                  "enabled": false,
+                  "value": "<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">Add a new organization to Workday. Pick the subtype first. <b>X:SHELL</b>: pick the application; the name is <b>Application:Code</b> (e.g. X:CLW:ORG:ANY). <b>X:META</b> with an application: the name is <b>Application(Code)</b>, for example X:LLIS(CPE). <b>X:META</b> without an application (a new application): enter its code; it is used exactly as typed. For X:META, an organization type of the same name must already exist in Workday.</span>"
+                }
+              ],
+              "title": "About This Page"
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "liveOrgNoticeSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "liveOrgNoticeFieldSet",
+              "title": "Before You Submit",
+              "children": [
+                {
+                  "type": "richText",
+                  "id": "liveOrgNoticeRichText",
+                  "enabled": false,
+                  "value": "<span style=\"color:#B45309;font-size:12px;font-weight:700\">⚠ </span><span style=\"color:#374151;font-size:12px\">Submitting creates a live Custom Organization in Workday straight away. It can't be deleted afterwards, only inactivated from Shell Org Manager. Every create is recorded in the Audit Log.</span>"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "formSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "orgFields",
+              "children": [
+                {
+                  "type": "dropdown",
+                  "id": "orgSubtypeDropdown",
+                  "label": "Organization Subtype",
+                  "required": true,
+                  "instanceList": [
+                    {
+                      "id": "X:META",
+                      "descriptor": "X:META"
+                    },
+                    {
+                      "id": "X:SHELL",
+                      "descriptor": "X:SHELL"
+                    }
+                  ],
+                  "helpText": "X:META for an application-level organization: under an application it is APP(CODE), e.g. X:LLIS(CPE); without one, a new application named by its code. X:SHELL for a shell organization roles are assigned on (APP:CODE).",
+                  "onChange": "<%\n  self.clearError();\n  selectedApplicationId.setRequired(!((!empty(orgSubtypeDropdown.value)) ? (orgSubtypeDropdown.selectedEntries[0].id == 'X:META') : false));\n  if (((!empty(orgSubtypeDropdown.value)) ? (orgSubtypeDropdown.selectedEntries[0].id == 'X:META') : false)) { selectedApplicationId.clearError(); }\n  let ce = (organizationCode.value ?? '').trim() == '' ? '' : comsShellOrg.codeError(((!empty(selectedApplicationId.value)) ? (selectedApplicationId.selectedEntries[0].descriptor ?? '') : ''), organizationCode.value ?? '', ((!empty(orgSubtypeDropdown.value)) ? (orgSubtypeDropdown.selectedEntries[0].id == 'X:META') : false));\n  if (ce == '') { organizationCode.clearError(); } else { organizationCode.setError(ce); }\n  orgNamePreview.setValue(comsShellOrg.preview(((!empty(selectedApplicationId.value)) ? (selectedApplicationId.selectedEntries[0].descriptor ?? '') : ''), organizationCode.value ?? '', ((!empty(orgSubtypeDropdown.value)) ? (orgSubtypeDropdown.selectedEntries[0].id == 'X:META') : false)));\n%>"
+                },
+                {
+                  "type": "dropdown",
+                  "id": "selectedApplicationId",
+                  "label": "Application",
+                  "required": "<% !((!empty(orgSubtypeDropdown.value)) ? (orgSubtypeDropdown.selectedEntries[0].id == 'X:META') : false) %>",
+                  "values": "<%\n  let appCodes = [];\n  let result = [];\n  for (var org : (existingOrgs.data ?? [])) {\n    let code = org.code;\n    let appCode = ((org.type1 ?? []).size() > 0 ? org.type1[0].descriptor : org.code);\n    if (!empty(appCode) && !appCodes.contains(appCode)) {\n      appCodes.add(appCode);\n      result.add({'id': appCode, 'descriptor': appCode});\n    }\n  }\n  result;\n%>",
+                  "helpText": "Select the application this organization belongs to. For X:META, leave it blank to add a new application.",
+                  "onChange": "<%\n  selectedApplicationId.clearError();\n  let ce = (organizationCode.value ?? '').trim() == '' ? '' : comsShellOrg.codeError(((!empty(selectedApplicationId.value)) ? (selectedApplicationId.selectedEntries[0].descriptor ?? '') : ''), organizationCode.value ?? '', ((!empty(orgSubtypeDropdown.value)) ? (orgSubtypeDropdown.selectedEntries[0].id == 'X:META') : false));\n  if (ce == '') { organizationCode.clearError(); } else { organizationCode.setError(ce); }\n  orgNamePreview.setValue(comsShellOrg.preview(((!empty(selectedApplicationId.value)) ? (selectedApplicationId.selectedEntries[0].descriptor ?? '') : ''), organizationCode.value ?? '', ((!empty(orgSubtypeDropdown.value)) ? (orgSubtypeDropdown.selectedEntries[0].id == 'X:META') : false)));\n%>"
+                },
+                {
+                  "type": "text",
+                  "id": "organizationCode",
+                  "label": "Organization Code",
+                  "required": true,
+                  "helpText": "X:SHELL: the part after the application (ORG:ANY gives X:CLW:ORG:ANY). X:META with an application: the part in brackets, so NEW gives X:LLIS(NEW). X:META without one: the new application code, used as typed.",
+                  "guide": {
+                    "type": "guide",
+                    "id": "guideOrgCode",
+                    "title": "Organization Code Format",
+                    "text": "X:SHELL: enter the part after the application, or the full name (ORG:ANY or X:CLW:ORG:ANY both give X:CLW:ORG:ANY). X:META with an application: enter the part that goes in brackets, so NEW gives X:LLIS(NEW). X:META without an application: enter the new application code; it is used exactly as typed. For X:META the organization type of the same name must already exist in Workday. No spaces. Must be unique."
+                  },
+                  "onChange": "<%\n  let ce = (organizationCode.value ?? '').trim() == '' ? '' : comsShellOrg.codeError(((!empty(selectedApplicationId.value)) ? (selectedApplicationId.selectedEntries[0].descriptor ?? '') : ''), organizationCode.value ?? '', ((!empty(orgSubtypeDropdown.value)) ? (orgSubtypeDropdown.selectedEntries[0].id == 'X:META') : false));\n  if (ce == '') { organizationCode.clearError(); } else { organizationCode.setError(ce); }\n  orgNamePreview.setValue(comsShellOrg.preview(((!empty(selectedApplicationId.value)) ? (selectedApplicationId.selectedEntries[0].descriptor ?? '') : ''), organizationCode.value ?? '', ((!empty(orgSubtypeDropdown.value)) ? (orgSubtypeDropdown.selectedEntries[0].id == 'X:META') : false)));\n%>",
+                  "placeholder": "e.g. ORG:ANY, NEW, or NEWAPP"
+                },
+                {
+                  "type": "readOnlyText",
+                  "id": "orgNamePreview",
+                  "label": "Generated Organization Name",
+                  "value": "<% comsShellOrg.preview(((!empty(selectedApplicationId.value)) ? (selectedApplicationId.selectedEntries[0].descriptor ?? '') : ''), organizationCode.value ?? '', ((!empty(orgSubtypeDropdown.value)) ? (orgSubtypeDropdown.selectedEntries[0].id == 'X:META') : false)) %>"
+                },
+                {
+                  "type": "date",
+                  "id": "effectiveDate",
+                  "label": "Effective Date",
+                  "required": true,
+                  "guide": {
+                    "type": "guide",
+                    "id": "guideEffectiveDate",
+                    "title": "Effective Date Rules",
+                    "text": "Must be a weekday (Monday to Friday) in this year or next year. Weekends and other years are rejected when you click Next. The organization is available in Workday from this date."
+                  },
+                  "onChange": "<%\n            if (empty(self.value)) {\n              self.clearError();\n            } else if (!comsValidations.isWeekday(self.value)) {\n              self.setError(comsValidations.errorWeekday());\n            } else if (!comsValidations.isCurrentOrFutureYear(self.value)) {\n              self.setError(comsValidations.errorYear());\n            } else {\n              self.clearError();\n            }\n          %>",
+                  "helpText": "A weekday (Monday to Friday) this year or next."
+                }
+              ],
+              "title": "Organization Details"
+            }
+          ]
+        }
+      ]
+    },
+    "footer": {
+      "type": "footer",
+      "children": [
+        {
+          "type": "pod",
+          "podId": "ecoComsFooter"
+        }
+      ]
+    },
+    "pageType": "EDIT",
+    "cancelOverride": {
+      "taskId": "shellOrgManager"
+    }
+  }
+}

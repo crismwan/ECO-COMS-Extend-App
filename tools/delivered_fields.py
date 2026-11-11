@@ -85,6 +85,20 @@ def add_arg(text, call, arg):
         out.append(seg + (')' if seg.endswith(', ' + arg) else ', ' + arg + ')')); i = k
 
 
+FULL_LISTS = {'customOrganizations'}
+
+
+def full_wql_lists(d):
+    """Eager WQL lists that a page checks names against must hold every row. With isCollection the Add Shell Org page's
+    list missed X:ADM:AAP:ANY (one of 629 rows), so its duplicate check let the name through (live 2026-11-10); the pages
+    that read the same query without isCollection get all rows."""
+    n = 0
+    for e in d.get('endPoints', []):
+        if (e.get('wqlQuery') or {}).get('queryId') in FULL_LISTS and e.pop('isCollection', None) is not None:
+            n += 1
+    return n
+
+
 def ra_page(d):
     def fix(v):
         if isinstance(v, str):
@@ -94,6 +108,7 @@ def ra_page(d):
         if isinstance(v, dict): return {k: fix(x) for k, x in v.items()}
         return v
     d = fix(d)
+    full_wql_lists(d)
     body = json.dumps(d)
     if 'comsRoleAssignees.' in body and 'comsRoleAssignees.script' not in (d.get('include') or []):
         d['include'] = (d.get('include') or []) + ['comsRoleAssignees.script']
@@ -147,6 +162,10 @@ for p in sorted(files):
             n = n.replace('allRows(roles).filter', 'allRows(roles, prs).filter')
         elif p.endswith('.pmd'):
             n = json.dumps(ra_page(json.loads(n)), indent=2, ensure_ascii=False) + '\n'
+    elif p.endswith('.pmd') and '"isCollection"' in n:
+        d = json.loads(n)
+        if full_wql_lists(d):
+            n = json.dumps(d, indent=2, ensure_ascii=False) + '\n'
     if n != t:
         keep(p)
         open(p, 'w', encoding='utf-8').write(n)

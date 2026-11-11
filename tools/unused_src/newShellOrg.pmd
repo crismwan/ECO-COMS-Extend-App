@@ -67,7 +67,6 @@
       "baseUrlType": "workday-wql",
       "url": "data",
       "authType": "sso",
-      "isCollection": true,
       "bestEffort": "true",
       "wqlQuery": {
         "queryId": "customOrganizations",

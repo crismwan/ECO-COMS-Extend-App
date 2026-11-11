@@ -1,0 +1,486 @@
+{
+  "id": "iscRoleRequestsView",
+  "include": [
+    "comsValidations.script",
+    "comsRequestStats.script"
+  ],
+  "securityDomains": [
+    "MaintainCOMSAssignableRoles"
+  ],
+  "endPoints": [
+    {
+      "name": "orgSubtypes",
+      "baseUrlType": "workday-wql",
+      "url": "data",
+      "authType": "sso",
+      "bestEffort": "true",
+      "wqlQuery": {
+        "queryId": "orgSubtypes"
+      },
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "name": "selectedWorker",
+      "baseUrlType": "COMMON",
+      "url": "/workers/me",
+      "authType": "sso",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 403
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "name": "comsAssignableRolesCount",
+      "baseUrlType": "BUSINESS-OBJECT",
+      "url": "/comsAssignableRoles?limit=1",
+      "authType": "sso",
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 403
+        },
+        {
+          "code": 429
+        }
+      ]
+    },
+    {
+      "baseUrlType": "BUSINESS-OBJECT",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 403
+        },
+        {
+          "code": 429
+        }
+      ],
+      "name": "comsAssignableRolesPage0",
+      "url": "/comsAssignableRoles?limit=100&offset=0"
+    },
+    {
+      "baseUrlType": "BUSINESS-OBJECT",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 429
+        }
+      ],
+      "name": "comsAssignableRolesPage1",
+      "url": "<% let t = comsAssignableRolesCount.total ?? 0; '/comsAssignableRoles?limit=100&offset=' + (t > 100 ? 100 : t) %>"
+    },
+    {
+      "baseUrlType": "BUSINESS-OBJECT",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "failOnStatusCodes": [
+        {
+          "code": 429
+        }
+      ],
+      "name": "comsAssignableRolesPage2",
+      "url": "<% let t = comsAssignableRolesCount.total ?? 0; '/comsAssignableRoles?limit=100&offset=' + (t > 200 ? 200 : t) %>"
+    },
+    {
+      "name": "customOrganizations",
+      "baseUrlType": "workday-wql",
+      "url": "data",
+      "authType": "sso",
+      "isCollection": true,
+      "bestEffort": "true",
+      "wqlQuery": {
+        "queryId": "customOrganizations",
+        "parameters": {
+          "subtypes": "<% (orgSubtypes.data ?? []).filter(r => { empty(r.subtype) ? false : (r.subtype.descriptor == 'X:META' || r.subtype.descriptor == 'X:SHELL') }).map(r => { r.subtype.id }).join(',') %>"
+        }
+      },
+      "failOnStatusCodes": [
+        {
+          "code": 400
+        },
+        {
+          "code": 429
+        }
+      ]
+    }
+  ],
+  "outboundData": {
+    "outboundEndPoints": [],
+    "responseErrorDetail": {
+      "errorSummary": "<% error %>",
+      "errors": "<% empty errors ? [] : errors.map(err => { err.error }) %>"
+    }
+  },
+  "presentation": {
+    "pageType": "VIEW",
+    "headerSize": "HIDDEN",
+    "body": {
+      "type": "basicFormLayout",
+      "id": "iscRoleRequestsViewForm",
+      "sections": [
+        {
+          "type": "layoutSection",
+          "id": "titleBannerSection",
+          "children": [
+            {
+              "type": "richText",
+              "id": "titleBannerRichText",
+              "enabled": false,
+              "value": "<% '<span style=\"color:#0055B3;font-size:24px\"><b>' + ('ECO-COMS: ISC Queue – ' + comsRequestStats.statusLabel(queryParams.status ?? '') + ' ' + (queryParams.view == 'aaa' ? 'AAA Role Requests' : (queryParams.view == 'assignable' ? 'Assignable Role Requests' : 'Role Requests'))).replace('<', '&lt;') + '</b></span>' + '<br><span style=\"color:#374151;font-size:13px\">Role requests waiting for ISC review. Open a row&#39;s Review Process link to approve or deny it.</span>' %>"
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "actionsInfoSection",
+          "children": [
+            {
+              "type": "button",
+              "label": "← Home",
+              "taskReference": {
+                "taskId": "home"
+              },
+              "action": "LINK"
+            },
+            {
+              "type": "fieldSet",
+              "id": "actionsInfoFieldSet",
+              "title": "About This Page",
+              "children": [
+                {
+                  "type": "richText",
+                  "id": "maintainActionInfo",
+                  "enabled": false,
+                  "value": "<% '<span style=\"color:#0055B7;font-size:12px;font-weight:700\">ⓘ </span><span style=\"color:#374151;font-size:12px\">ISC Security: requests ' + (queryParams.view == 'aaa' ? 'for AAA (Organizations and Roles Assignment Administrator) roles' : (queryParams.view == 'assignable' ? 'for assignable roles' : 'for both assignable and AAA roles')) + '. Open a request\\'s <b>Review Process</b> to act on it in your Workday inbox.</span>' + '<br><br>' + '<span style=\"color:#374151;font-size:12px\"><b>AAA role</b>: an Organizations and Roles Assignment Administrator request (Submit AAA Role Request), for someone who will manage an application\\'s roles. <b>Assignable role</b>: a new delegated role for an application, requested with Submit Assignable Role Request. <b>Review</b>: opens the request\\'s Workday review process; approve or deny it from your Workday inbox, and the request here updates automatically. A pending request is <b>overdue</b> after 3 business days.</span>' %>"
+                }
+              ],
+              "collapsible": true,
+              "initializeCollapsed": true
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "summaryCardsSection",
+          "children": [
+            {
+              "type": "cardContainer",
+              "id": "iscSummaryCardContainer",
+              "layout": "grid",
+              "cards": [
+                {
+                  "type": "card",
+                  "cardId": "QuickIscRoleRequestsViewCard",
+                  "parameters": "<% { 'mark': (((queryParams.status ?? '') == '' || (queryParams.status ?? '') == 'Pending ISC Review')) ? 'y' : '', 'b_view': (queryParams.view ?? ''), 'b_status': (((queryParams.status ?? '') == '' || (queryParams.status ?? '') == 'Pending ISC Review') ? 'All' : 'Pending ISC Review'), 'title': 'Pending', 'subtitle': 'Everyone, assignable and AAA', 'countText': '' + comsRequestStats.countPending(comsRequestStats.filterRequests(list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? [], (queryParams.view ?? ''), 'All')) + ' pending' } %>"
+                },
+                {
+                  "type": "card",
+                  "cardId": "QuickIscRoleRequestsViewCard",
+                  "parameters": "<% { 'mark': ((queryParams.status ?? '') == 'Overdue') ? 'y' : '', 'b_view': (queryParams.view ?? ''), 'b_status': ((queryParams.status ?? '') == 'Overdue' ? 'All' : 'Overdue'), 'title': 'Overdue', 'subtitle': 'Pending more than 3 business days', 'countText': '' + comsRequestStats.countOverdue(comsRequestStats.filterRequests(list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? [], (queryParams.view ?? ''), 'All')) + ' overdue' } %>"
+                },
+                {
+                  "type": "card",
+                  "cardId": "QuickIscRoleRequestsViewCard",
+                  "parameters": "<% { 'mark': ((queryParams.status ?? '') == 'ApprovedThisMonth') ? 'y' : '', 'b_view': (queryParams.view ?? ''), 'b_status': ((queryParams.status ?? '') == 'ApprovedThisMonth' ? 'All' : 'ApprovedThisMonth'), 'title': 'Approved this month', 'subtitle': 'Approved since the 1st', 'countText': '' + comsRequestStats.countApprovedThisMonth(comsRequestStats.filterRequests(list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? [], (queryParams.view ?? ''), 'All')) + ' approved' } %>"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "statusFilterSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "statusFilterFieldSet",
+              "title": "Show",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "activeStatusText",
+                  "label": "Showing",
+                  "enabled": false,
+                  "value": "<% comsRequestStats.statusLabel(queryParams.status ?? '') + ' requests: ' + size(comsRequestStats.filterRequests(list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? [], (queryParams.view ?? ''), (queryParams.status ?? ''))) + ' of ' + size(comsRequestStats.filterRequests(list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? [], (queryParams.view ?? ''), 'All')) %>"
+                }
+              ]
+            },
+            {
+              "type": "cardContainer",
+              "id": "iscFilterCardContainer",
+              "layout": "grid",
+              "cards": [
+                {
+                  "type": "card",
+                  "cardId": "IscViewPillCard",
+                  "parameters": "<% { 'view': queryParams.view ?? '', 'status': queryParams.status ?? '' } %>"
+                },
+                {
+                  "type": "card",
+                  "cardId": "IscStatusPillCard",
+                  "parameters": "<% { 'view': queryParams.view ?? '', 'status': queryParams.status ?? '' } %>"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "layoutSection",
+          "id": "gridSection",
+          "children": [
+            {
+              "type": "fieldSet",
+              "id": "pendingGridFieldSet",
+              "title": "<% comsRequestStats.statusLabel(queryParams.status ?? '') + ' ' + (queryParams.view == 'aaa' ? 'AAA Role Requests' : (queryParams.view == 'assignable' ? 'Assignable Role Requests' : 'Role Requests')) %>",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "allPendingEmptyText",
+                  "enabled": false,
+                  "label": "ⓘ Nothing to show",
+                  "visible": "<% size(comsRequestStats.filterRequests(list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? [], (queryParams.view ?? ''), (queryParams.status ?? ''))) == 0 %>",
+                  "value": "No requests match this view and status. Choose All to see every request."
+                },
+                {
+                  "type": "grid",
+                  "gridType": "LIST",
+                  "multiViewStylingEnabled": true,
+                  "id": "allPendingGrid",
+                  "autoPaging": true,
+                  "rows": "<% let f = comsRequestStats.filterRequests(list:flatten([comsAssignableRolesPage0.data ?? [], comsAssignableRolesPage1.data ?? [], comsAssignableRolesPage2.data ?? []]) ?? [], (queryParams.view ?? ''), (queryParams.status ?? '')); /* oldest first */ comsRequestStats.statusOrDefault(queryParams.status ?? '') == 'Pending ISC Review' ? list:flatten([list:sort(f.filter(r => { !empty(r.requestedDate) }), 'requestedDate', true), f.filter(r => { empty(r.requestedDate) })]) : f %>",
+                  "rowVariableName": "role",
+                  "enabled": false,
+                  "label": "<% comsRequestStats.statusLabel(queryParams.status ?? '') + ' ' + (queryParams.view == 'aaa' ? 'AAA Role Requests' : (queryParams.view == 'assignable' ? 'Assignable Role Requests' : 'Role Requests')) %>",
+                  "columns": [
+                    {
+                      "type": "column",
+                      "id": "colOrgApp",
+                      "columnId": "colOrgApp",
+                      "label": "Organization / Application",
+                      "sortableAndFilterable": "true",
+                      "cellTemplate": {
+                        "type": "instanceList",
+                        "view": false,
+                        "instanceList": [
+                          {
+                            "descriptor": "<% role.shellOrgCode ?? role.application ?? '' %>",
+                            "wid": "<% role.shellOrgWid ?? '' %>"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "id": "colWdRoleName",
+                      "columnId": "colWdRoleName",
+                      "label": "Role",
+                      "cellTemplate": {
+                        "type": "instanceList",
+                        "view": false,
+                        "instanceList": [
+                          {
+                            "descriptor": "<% role.roleName ?? '' %>",
+                            "wid": "<% role.workdayAssignableRole ?? '' %>"
+                          }
+                        ]
+                      },
+                      "sortableAndFilterable": "true",
+                      "excel": {
+                        "value": "<% role.roleName ?? '' %>"
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "id": "colStatus",
+                      "columnId": "colStatus",
+                      "label": "Status",
+                      "sortableAndFilterable": "true",
+                      "cellTemplate": {
+                        "type": "richText",
+                        "value": "<% (role.status == 'Pending ISC Review' ? '<span style=\"color:#92400e;font-weight:600;font-size:12px\">⏳ Pending ISC Review</span>' : role.status == 'Approved' ? '<span style=\"color:#065f46;font-weight:600;font-size:12px\">✓ Approved</span>' : role.status == 'Denied' ? '<span style=\"color:#991b1b;font-weight:600;font-size:12px\">✗ Denied</span>' : role.status == 'Inactive' ? '<span style=\"color:#6b7280;font-weight:600;font-size:12px\">○ Inactive</span>' : role.status ?? '') + (comsRequestStats.isOverdue(role) ? '<span style=\"color:#B45309;font-weight:700;font-size:12px\"> · overdue</span>' : '') %>"
+                      }
+                    },
+                    {
+                      "type": "column",
+                      "id": "colEnabledFor",
+                      "columnId": "colEnabledFor",
+                      "label": "Enabled For",
+                      "cellTemplate": {
+                        "type": "instanceList",
+                        "view": false,
+                        "instanceList": [
+                          {
+                            "descriptor": "<% role.enabledForOrganizationTypes ?? 'Academic Unit - University of British Columbia' %>",
+                            "wid": "<% role.enabledForWid ?? '' %>"
+                          }
+                        ]
+                      },
+                      "sortableAndFilterable": "true"
+                    },
+                    {
+                      "type": "column",
+                      "id": "colEffDate",
+                      "columnId": "colEffDate",
+                      "label": "Effective Date",
+                      "cellTemplate": {
+                        "type": "text",
+                        "value": "<% role.effectiveDate ?? '' %>",
+                        "enabled": false
+                      },
+                      "sortableAndFilterable": "true"
+                    },
+                    {
+                      "type": "column",
+                      "id": "colPositions",
+                      "columnId": "colPositions",
+                      "label": "Positions / Delegated Roles",
+                      "cellTemplate": {
+                        "type": "instanceList",
+                        "id": "colPositionsList",
+                        "view": true,
+                        "relatedTask": true,
+                        "enabled": false,
+                        "values": "<% (empty(role.positions) && empty(role.positionWids)) ? [] : (!empty(role.positions) ? role.positions : (role.positionWids ?? '')).splitByRegex(',').map((pid, i) => { { 'id': pid.trim(), 'descriptor': (!empty(role.positionNames) && role.positionNames.splitByRegex(', (?=P-[0-9])').size() > i) ? role.positionNames.splitByRegex(', (?=P-[0-9])')[i] : pid.trim() } }) %>",
+                        "widKey": "id"
+                      },
+                      "sortableAndFilterable": "true"
+                    },
+                    {
+                      "type": "column",
+                      "id": "colRequestedBy",
+                      "columnId": "colRequestedBy",
+                      "label": "Requested By",
+                      "cellTemplate": {
+                        "type": "instanceList",
+                        "view": false,
+                        "instanceList": [
+                          {
+                            "descriptor": "<% role.requestedBy.descriptor ?? '' %>",
+                            "wid": "<% role.requestedBy.id ?? '' %>"
+                          }
+                        ]
+                      },
+                      "sortableAndFilterable": "true"
+                    },
+                    {
+                      "type": "column",
+                      "id": "colRequestedDate",
+                      "columnId": "colRequestedDate",
+                      "label": "Requested Date",
+                      "cellTemplate": {
+                        "type": "text",
+                        "value": "<% role.requestedDate ?? '' %>",
+                        "enabled": false
+                      },
+                      "sortableAndFilterable": "true"
+                    },
+                    {
+                      "type": "column",
+                      "columnId": "colWaiting",
+                      "label": "Waiting",
+                      "cellTemplate": {
+                        "type": "text",
+                        "id": "waitingText",
+                        "enabled": false,
+                        "value": "<% comsRequestStats.waitingText(role) %>"
+                      },
+                      "sortableAndFilterable": "true"
+                    },
+                    {
+                      "type": "column",
+                      "id": "colApprovedBy",
+                      "columnId": "colApprovedBy",
+                      "label": "Approved By",
+                      "cellTemplate": {
+                        "type": "instanceList",
+                        "view": false,
+                        "instanceList": [
+                          {
+                            "descriptor": "<% role.approvedBy.descriptor ?? '' %>",
+                            "wid": "<% role.approvedBy.id ?? '' %>"
+                          }
+                        ]
+                      },
+                      "sortableAndFilterable": "true"
+                    },
+                    {
+                      "type": "column",
+                      "id": "colApprovedDate",
+                      "columnId": "colApprovedDate",
+                      "label": "Approved Date",
+                      "cellTemplate": {
+                        "type": "text",
+                        "value": "<% role.approvedDate ?? '' %>",
+                        "enabled": false
+                      },
+                      "sortableAndFilterable": "true"
+                    },
+                    {
+                      "type": "column",
+                      "id": "colActions",
+                      "columnId": "colActions",
+                      "label": "Review",
+                      "cellTemplate": {
+                        "type": "fieldSet",
+                        "id": "reviewActionFieldSet",
+                        "children": [
+                          {
+                            "type": "instanceList",
+                            "id": "reviewEventInstanceList",
+                            "widKey": "id",
+                            "view": true,
+                            "relatedTask": true,
+                            "visible": "<% !empty(role.reviewEventWid) %>",
+                            "values": "<% !empty(role.reviewEventWid) ? [{'id': role.reviewEventWid, 'descriptor': 'Review Process: ' + (role.roleName ?? '')}] : [] %>"
+                          }
+                        ]
+                      },
+                      "excel": {
+                        "enabled": false
+                      }
+                    }
+                  ],
+                  "excelExportEnabled": true
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "footer": {
+      "type": "footer",
+      "children": [
+        {
+          "type": "pod",
+          "podId": "ecoComsFooter"
+        }
+      ]
+    }
+  }
+}
