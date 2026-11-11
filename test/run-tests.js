@@ -2544,12 +2544,12 @@ async function aaaNameCheck(token) {
   const page = JSON.parse(fs.readFileSync(path.join(ROOT, 'presentation/adminProvisioning.pmd'), 'utf8'));
   const find = (n, id) => { if (!n || typeof n !== 'object') return null; if (n.id === id) return n; for (const v of Object.values(n)) { const r = find(v, id); if (r) return r; } return null; };
   const script = find(page.presentation, 'applicationDropdown').values;
-  await check('AAA.listUsesFullId', async () => { if (!script.includes("code.substringBefore(')') + ')'") || script.includes("code.substringAfter('(').substringBefore(')')")) throw new Error('application list still reduces bracketed IDs'); return 'page script keeps X:APP(CODE)'; });
+  await check('AAA.listUsesFullId', async () => { if (!script.includes('org.type1[0].descriptor')) throw new Error('application list no longer named by the organization type'); return 'page names each application by its organization type (X:APP(CODE) kept whole)'; });
   const wqlFile = (id) => JSON.parse(fs.readFileSync(path.join(ROOT, 'presentation/wqlQueries', id + '.wqlquery'), 'utf8')).query;
   const orgs = (await wql(token, wqlFile('customOrganizations'), 10000)).data || [];
-  // the page's own rule, in JS
-  const appOf = (code) => code.includes('(') ? code.split(')')[0] + ')' : (code.split(':').slice(1).join(':').includes(':') ? code.split(':')[0] + ':' + code.split(':')[1] : code);
-  const apps = []; const seen = new Set(); orgs.forEach((o) => { const a = appOf(o.code || ''); if (!seen.has(a)) { seen.add(a); apps.push(a); } });
+  // the page's own rule, in JS: the organization type's name, else the code
+  const appOf = (o) => ((o.type1 || [])[0] || {}).descriptor || o.code || '';
+  const apps = []; const seen = new Set(); orgs.forEach((o) => { const a = appOf(o); if (!seen.has(a)) { seen.add(a); apps.push(a); } });
   console.log(`   ${orgs.length} orgs -> ${apps.length} applications; bracketed: ${apps.filter((a) => a.includes('(')).join(' | ')}`);
   const roles = ((await wql(token, wqlFile('allAAArolesinTenant'), 1000)).data || []).map((r) => r.role?.descriptor || '');
   await check('AAA.duplicateCheckSeesExistingRoles', async () => {
@@ -2740,7 +2740,7 @@ async function probe(token) {
     };
     // Add Shell Org duplicate check: what code / name does X:ADM:AAP:ANY have, and how many rows does customOrganizations return
     {
-      const r = await wql(token, "SELECT workdayID, code, organizationByName, organizationName, subtype FROM topLevelOrganizations WHERE organizationName contains 'AAP:ANY' OR code contains 'AAP:ANY'", 50);
+      const r = await wql(token, "SELECT workdayID, code, organizationByName, subtype FROM topLevelOrganizations WHERE code contains 'AAP:ANY'", 50);
       console.log('   DUP rows ' + JSON.stringify(r.data || r).slice(0, 900));
       const all = await wql(token, 'SELECT workdayID, organizationByName, code, type1 FROM topLevelOrganizations WHERE subtype in (<% subtypes %>)', 10000);
       const d = all.data || [];
