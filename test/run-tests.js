@@ -2711,9 +2711,10 @@ async function subflowsSuite(token, me) {
   await test('Subflow.createShellOrgPattern', async () => {
     const app = ((await request('GET', `${BO}/comsApplications?limit=100`, token)).data || []).find((a) => a.appId === 'X:CLW');
     if (!app) return skip('Subflow.createShellOrgPattern', 'no X:CLW record');
-    const pname = 'X:CLW:PATTERN:*:TEST:999:900:2026W1';
+    // real subject and period: the parent checks both in Workday first (since 2026-11-07); NOTADATE is what Workday rejects
+    const pname = 'X:CLW:PATTERN:*:MATH:999:900:2026W1';
     await expectRejected('IORC_0037_XFD_SEC_Create_Pattern_Shell_Org', 'Subflow.createShellOrgPattern', { comsAppId: app.id, patternName: pname, workerId: me.id,
-      attribute1: '*', attribute2: 'TEST', attribute3: '999', attribute4: '900', attribute5: '2026W1', effectiveDate: 'NOTADATE', ...who() },
+      attribute1: '*', attribute2: 'MATH', attribute3: '999', attribute4: '900', attribute5: '2026W1', effectiveDate: 'NOTADATE', ...who() },
       new RegExp('rejected the request for ' + pname.replace(/[()*]/g, '\\$&') + '[\\s\\S]*IORC_0037_XFD_SEC_Sub_Create_Shell_Organization'));
   });
   await test('Subflow.startReview', () => expectRejected('IORC_0037_XFD_SEC_Start_Role_Request_Review', 'Subflow.startReview', { ref: 'TEST-NO-SUCH-REQUEST' }, /IORC_0037_XFD_SEC_Sub_Start_Request_Review/));
