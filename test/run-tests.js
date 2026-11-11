@@ -2728,21 +2728,15 @@ async function probe(token) {
       const all = []; for (let off = 0; off < 3000; off += 100) { const pg = (await request('GET', `${API}/wql/v1/dataSources/${ds[0].id}/fields?limit=100&offset=${off}`, token)).data || []; all.push(...pg); if (pg.length < 100) break; }
       return all;
     };
-    // the two position data sources without positionID: their text fields, matched to allPositions by any P-id in the value
-    const T = (await wql(token, 'SELECT workdayID, positionID, positionAndJob_AllStaffingModels FROM allPositions', 10000)).data || [];
-    const nameByWid = new Map(T.map((r) => [r.workdayID, (r.positionAndJob_AllStaffingModels || {}).descriptor || '']));
-    const names = new Set(nameByWid.values());
-    for (const alias of ['indexedPositionsAndJobs_AllStaffingModels', 'allPositions1']) {
-      const ds = (await request('GET', `${API}/wql/v1/dataSources?alias=${alias}`, token)).data || [];
+    // cf_PositionText in WQL: which field (WID) and business object it is (2026-11-10)
+    {
+      const ds = (await request('GET', `${API}/wql/v1/dataSources?alias=allPositions`, token)).data || [];
+      console.log('   PTW dataSource ' + JSON.stringify(ds[0]).slice(0, 600));
       const flds = []; for (let off = 0; off < 3000; off += 100) { const pg = (await request('GET', `${API}/wql/v1/dataSources/${ds[0].id}/fields?limit=100&offset=${off}`, token)).data || []; flds.push(...pg); if (pg.length < 100) break; }
-      const texts = flds.filter((x) => x.type === 'Text' && !x.alias.startsWith('cf_') && x.alias !== 'workdayID');
-      console.log(`   PTH ${alias}: text ${texts.map((x) => x.alias + '="' + x.descriptor + '"').join(', ').slice(0, 1800)}`);
-      for (const f of texts.map((x) => x.alias)) {
-        let rows; try { rows = (await wql(token, `SELECT workdayID, ${f} FROM ${alias}`, 10000)).data || []; } catch (e) { console.log(`   PTH   ${f} ERROR ${String(e.message).slice(0, 100)}`); continue; }
-        let byWid = 0, inNames = 0, filled = 0, ex = '';
-        for (const r of rows) { const v = r[f]; if (!v || typeof v !== 'string') continue; filled++; if (v === nameByWid.get(r.workdayID)) byWid++; if (names.has(v)) inNames++; if (!ex) ex = v; }
-        console.log(`   PTH   ${f}: rows ${rows.length}, filled ${filled}, equal by WID ${byWid}, equal to some position name ${inNames}, e.g. "${ex.slice(0, 80)}"`);
-      }
+      for (const al of ['cf_PositionText', 'positionAndJob_AllStaffingModels', 'positionID']) console.log('   PTW field ' + JSON.stringify(flds.find((x) => x.alias === al)).slice(0, 600));
+      const f = flds.find((x) => x.alias === 'cf_PositionText');
+      if (f) { try { const det = await request('GET', `${API}/wql/v1/dataSources/${ds[0].id}/fields/${f.id}`, token); console.log('   PTW detail ' + JSON.stringify(det).slice(0, 800)); } catch (e) { console.log('   PTW detail ERROR ' + e.message.slice(0, 150)); } }
+      console.log('   PTW match 5a002d2890414974bdff7f51e1fff6dd: ' + JSON.stringify(flds.filter((x) => JSON.stringify(x).includes('5a002d2890414974bdff7f51e1fff6dd')).map((x) => x.alias)));
     }
     pass('Probe.wqlNames', 'see WQLP lines');
     return;
