@@ -2728,29 +2728,26 @@ async function probe(token) {
       const all = []; for (let off = 0; off < 3000; off += 100) { const pg = (await request('GET', `${API}/wql/v1/dataSources/${ds[0].id}/fields?limit=100&offset=${off}`, token)).data || []; all.push(...pg); if (pg.length < 100) break; }
       return all;
     };
-    // a delivered TEXT field that holds the position's name (to replace cf_PositionText in searches), 2026-11-10
-    const ds = (await request('GET', `${API}/wql/v1/dataSources?alias=allPositions`, token)).data || [];
-    const flds = []; for (let off = 0; off < 3000; off += 100) { const pg = (await request('GET', `${API}/wql/v1/dataSources/${ds[0].id}/fields?limit=100&offset=${off}`, token)).data || []; flds.push(...pg); if (pg.length < 100) break; }
-    const texts = flds.filter((x) => x.type === 'Text' && !x.alias.startsWith('cf_')).map((x) => x.alias);
-    console.log(`   PTX ${texts.length} text fields: ${texts.join(', ').slice(0, 3000)}`);
-    const P = (await wql(token, 'SELECT workdayID, positionID, positionAndJob_AllStaffingModels, cf_PositionText FROM allPositions', 10000)).data || [];
-    const name = new Map(P.map((p) => [p.workdayID, (p.positionAndJob_AllStaffingModels || {}).descriptor || '']));
-    const one = texts.filter((f) => f !== 'workdayID');
-    for (let i = 0; i < one.length; i += 1) {
-      const chunk = one.slice(i, i + 1);
-      if (i >= 14 && i < 58) continue;
-      let rows; try { rows = (await wql(token, `SELECT workdayID, ${chunk.join(', ')} FROM allPositions`, 10000)).data || []; } catch (e) { console.log(`   PTX ${chunk[0]} ERROR ${String(e.message).slice(0, 160)}`); continue; }
-      for (const f of chunk) {
-        let eq = 0, contains = 0, filled = 0, eqCf = 0; let ex = '';
-        for (const r of rows) { const v = r[f]; if (v == null || v === '') continue; filled++; const n = name.get(r.workdayID) || ''; if (v === n) eq++; if (v === (P.find((q) => q.workdayID === r.workdayID) || {}).cf_PositionText) eqCf++; if (n && (n.includes(v) || String(v).includes(n))) contains++; if (!ex) ex = String(v).slice(0, 80); }
-        if (filled && (eq || contains > P.length / 4 || /OrgStudio|Name|Title/.test(f))) console.log(`   PTX ${f}: equal ${eq}/${P.length}, equalCf ${eqCf}, overlaps ${contains}, filled ${filled}, e.g. "${ex}"`);
-      }
+    // can delivered text fields rebuild / search the position name (cf_PositionText), 2026-11-10
+    const T = (await wql(token, 'SELECT workdayID, positionID, positionTitle, openPositionTitle, jobProfileName, worker_Name, worker, positionAndJob_AllStaffingModels, cf_PositionText FROM allPositions', 10000)).data || [];
+    const nm = (r) => (r.positionAndJob_AllStaffingModels || {}).descriptor || '';
+    const build = (r, t) => `${r.positionID} ${t}${r.worker ? ' - ' + (r.worker.descriptor || '') : ' (Unfilled)'}`;
+    for (const [lab, f] of [['positionTitle|openPositionTitle', (r) => r.positionTitle || r.openPositionTitle || ''], ['openPositionTitle', (r) => r.openPositionTitle || ''], ['positionTitle|jobProfileName', (r) => r.positionTitle || r.jobProfileName || '']]) {
+      const bad = T.filter((r) => build(r, f(r)) !== nm(r));
+      console.log(`   PTB ${lab}: ${T.length - bad.length}/${T.length} rebuild exactly; e.g. ${JSON.stringify(bad.slice(0, 3).map((r) => [nm(r), build(r, f(r))]))}`);
     }
-    // the parts of the name: is the title inside it a delivered field?
-    const T = (await wql(token, 'SELECT workdayID, positionID, positionTitle, jobProfileName, openPositionTitle, worker_Name, positionAndJob_AllStaffingModels FROM allPositions', 10000)).data || [];
-    const k = (f) => T.filter((r) => r[f] && ((r.positionAndJob_AllStaffingModels || {}).descriptor || '').includes(r[f])).length;
-    console.log(`   PTX name contains: positionTitle ${k('positionTitle')}, jobProfileName ${k('jobProfileName')}, openPositionTitle ${k('openPositionTitle')}, worker_Name ${k('worker_Name')} of ${T.length}`);
-    console.log('   PTX title mismatches ' + JSON.stringify(T.filter((r) => r.positionTitle && !((r.positionAndJob_AllStaffingModels || {}).descriptor || '').includes(r.positionTitle)).slice(0, 4).map((r) => [r.positionAndJob_AllStaffingModels && r.positionAndJob_AllStaffingModels.descriptor, r.positionTitle, r.jobProfileName])));
+    console.log('   PTB vacant sample ' + JSON.stringify(T.filter((r) => !r.worker).slice(0, 3).map((r) => [nm(r), r.positionTitle, r.openPositionTitle, r.jobProfileName])));
+    // search: cf contains vs delivered OR (title fields + ID + worker; "unfilled" -> worker is empty)
+    for (const w of ['analyst', 'beth', 'P-0001', 'director', 'unfilled', 'senior it', 'controller']) {
+      const a1 = ((await wql(token, `SELECT workdayID FROM allPositions WHERE cf_PositionText contains '${w}'`, 10000)).data || []).map((r) => r.workdayID).sort().join();
+      const cond = /^unfill/i.test(w) ? 'worker is empty' : `(positionID contains '${w}' OR positionTitle contains '${w}' OR openPositionTitle contains '${w}' OR worker_Name contains '${w}')`;
+      let a2 = 'ERR'; try { a2 = ((await wql(token, `SELECT workdayID FROM allPositions WHERE ${cond}`, 10000)).data || []).map((r) => r.workdayID).sort().join(); } catch (e) { a2 = 'ERR ' + e.message.slice(0, 120); }
+      console.log(`   PTS "${w}": cf ${a1 ? a1.split(',').length : 0}, delivered ${a2.startsWith('ERR') ? a2 : (a2 ? a2.split(',').length : 0)}, same ${a1 === a2}`);
+    }
+    // other data sources about positions: any text field equal to the name?
+    const all = []; for (let off = 0; off < 3000; off += 100) { const pg = (await request('GET', `${API}/wql/v1/dataSources?limit=100&offset=${off}`, token)).data || []; all.push(...pg); if (pg.length < 100) break; }
+    const pds = all.filter((d) => /position/i.test(d.alias + ' ' + d.descriptor));
+    console.log('   PTD sources ' + pds.map((d) => d.alias).join(', ').slice(0, 1500));
     pass('Probe.wqlNames', 'see WQLP lines');
     return;
   }
