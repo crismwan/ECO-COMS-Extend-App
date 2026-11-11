@@ -286,7 +286,7 @@ Compare a Date against another **widget's** value, not a raw inbound string — 
 
 **An error on a widget the user can't edit never goes away** (live 2026-11-04). Workday refuses OK while any error shows, and doesn't run `onSubmit` until then, so clearing at the start of `onSubmit` doesn't help when OK put the error on a disabled text or a message line (e.g. 'Field 2: the example doesn't match'). Clear it from the `onChange` of every box it's about (grid cells and `onRowAdd`/`onRowRemove` too). Static check `stuckError` enforces it.
 
-**Testing an `onSubmit` check live:** Workday's own `required` checks run first and stop OK before `onSubmit` runs, so a scripted check is only reached with every required field filled, and if it then fails to stop OK the page really submits. Reach it safely by also tripping a check that can't pass (e.g. a duplicate-name check with a name you know exists), or leave it to static checks (live 2026-11-05).
+**Testing an `onSubmit` check live:** Workday's own `required` checks run first and stop OK before `onSubmit` runs, so a scripted check is only reached with every required field filled, and if it then fails to stop OK the page really submits. Reach it safely by also tripping a check that can't pass (e.g. a duplicate-name check with a name you know exists), or leave it to static checks (live 2026-11-05). **An `onChange` error blocks OK before `onSubmit` runs**, so a blocker set by `onChange` (e.g. a weekend date whose `onChange` sets the weekday error) means `onSubmit` never runs: a duplicate check there looked broken for three deploys (live 2026-11-10). Put lookups such as "already exists" in the `onChange` of every field the name is built from as well (a deferred one-value WQL lookup, e.g. `WHERE code = '<name>'` on topLevelOrganizations, invoked from the handler): the user sees it as they type, and it can be tested live without clicking OK.
 
 **The same applies to `onSubmit`.** An error it sets stays after the user fixes the cause, and OK keeps failing until a reload (confirmed live 2026-10-31). Clear every widget's error at the start of `onSubmit`, and give confirmation checkboxes `"onChange": "<% self.clearError() %>"`. Enforce it with a build pass that adds the missing `clearError()` calls for every widget an `onSubmit` flags, plus a static check (one app had 6 pages without them, 2026-11-04).
 
@@ -2755,6 +2755,7 @@ Source: the same colleague's skills (wdcli 1.9.x reference); the CI parts confir
 - **Plan test data you can't delete:** orgs can only be inactivated, BP-linked records can't be deleted, and a role assignment test changes a real role (add then remove). Use short, readable, clearly marked names (e.g. `...:TEST:CI:RUN<n>`), document what each run leaves, and give cleanup a dry-run mode that lists what it would touch next to what it keeps.
 - Check that records agree with their BP events (status vs event outcome) as a tamper check.
 - Run the write suite before sign-offs or after risky changes, not on every push: it is slow and leaves data.
+- **Run suites that count audit records one at a time.** Dispatched together, the guard and sub-orchestration suites saw audit records written by the full suite and failed their "nothing written" checks; one at a time all passed (2026-11-10).
 
 ## Working in the Workday UI with browser automation
 
