@@ -2712,9 +2712,17 @@ async function subflowsSuite(token, me) {
     const app = ((await request('GET', `${BO}/comsApplications?limit=100`, token)).data || []).find((a) => a.appId === 'X:CLW');
     if (!app) return skip('Subflow.createShellOrgPattern', 'no X:CLW record');
     // real subject and period: the parent checks both in Workday first (since 2026-11-07); NOTADATE is what Workday rejects
-    const pname = 'X:CLW:PATTERN:*:MATH:999:900:2026W1';
+    // an active period: the first of these the parent's own CheckPeriod accepts
+    let per = null;
+    for (const p of ['2025W1', '2025W2', '2026W1', '2024W1']) {
+      const r0 = txt(await launch(token, 'IORC_0037_XFD_SEC_Create_Pattern_Shell_Org', { comsAppId: app.id, patternName: `X:CLW:PATTERN:*:MATH:999:900:${p}`, workerId: me.id,
+        attribute1: '*', attribute2: 'MATH', attribute3: '999', attribute4: '900', attribute5: p, effectiveDate: 'NOTADATE', ...who() }));
+      if (!/CheckPeriod|CheckSubject|CheckUnitCode/.test(r0)) { per = p; break; }
+    }
+    if (!per) throw new Error('no active academic period among 2025W1, 2025W2, 2026W1, 2024W1');
+    const pname = `X:CLW:PATTERN:*:MATH:999:900:${per}`;
     await expectRejected('IORC_0037_XFD_SEC_Create_Pattern_Shell_Org', 'Subflow.createShellOrgPattern', { comsAppId: app.id, patternName: pname, workerId: me.id,
-      attribute1: '*', attribute2: 'MATH', attribute3: '999', attribute4: '900', attribute5: '2026W1', effectiveDate: 'NOTADATE', ...who() },
+      attribute1: '*', attribute2: 'MATH', attribute3: '999', attribute4: '900', attribute5: per, effectiveDate: 'NOTADATE', ...who() },
       new RegExp('rejected the request for ' + pname.replace(/[()*]/g, '\\$&') + '[\\s\\S]*IORC_0037_XFD_SEC_Sub_Create_Shell_Organization'));
   });
   await test('Subflow.startReview', () => expectRejected('IORC_0037_XFD_SEC_Start_Role_Request_Review', 'Subflow.startReview', { ref: 'TEST-NO-SUCH-REQUEST' }, /IORC_0037_XFD_SEC_Sub_Start_Request_Review/));
