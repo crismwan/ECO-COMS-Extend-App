@@ -1018,10 +1018,20 @@ async function smoke(token, me) {
     for (const [ds, f] of [['allPositions', 'cf_PositionText'], ['assignableRoles', 'roleAssignments{roleAssignedTo} as ra']]) {
       try { await wql(token, `SELECT ${f} FROM ${ds}`, 1); } catch (e) { throw new Error(`calculated field missing in this tenant (${ds}: ${f}): ${String(e.message).slice(0, 160)}`); }
     }
+    // cf_PositionText must be the Workday-delivered "Position Text" (Concatenate Text on Position and Job - All Staffing
+    // Models; WID 5a002d2890414974bdff7f51e1fff6dd in ubc_wcpdev2, 2026-11-10). A delivered field keeps its WID in every
+    // tenant, so another WID means a tenant-made field holds the alias: warn, since the position search then reads it.
+    const POSITION_TEXT_WID = '5a002d2890414974bdff7f51e1fff6dd';
+    const apDs = ((await request('GET', `${API}/wql/v1/dataSources?alias=allPositions`, token)).data || [])[0];
+    let pt = null;
+    for (let off = 0; apDs && off < 3000 && !pt; off += 100) { const pg = (await request('GET', `${API}/wql/v1/dataSources/${apDs.id}/fields?limit=100&offset=${off}`, token)).data || []; pt = pg.find((x) => x.alias === 'cf_PositionText') || null; if (pg.length < 100) break; }
+    if (!pt) throw new Error('cf_PositionText is not a field of allPositions in this tenant');
+    if (pt.descriptor !== 'Position Text' || pt.type !== 'Text') throw new Error(`cf_PositionText is "${pt.descriptor}" (${pt.type}), expected "Position Text" (Text)`);
+    if (pt.id !== POSITION_TEXT_WID) warn('Prereq.positionText', `cf_PositionText has WID ${pt.id}, not the delivered ${POSITION_TEXT_WID}: check it is Workday's "Position Text"`);
     const ids = await nameIds(token);
     if (ids.subtypes.split(',').filter(Boolean).length !== SUBTYPE_NAMES.length) throw new Error(`organization subtypes ${SUBTYPE_NAMES.join(', ')} not all found (got ${ids.subtypes || 'none'})`);
     if (!ids.fuhTypes) throw new Error(`organization type "${FUH_TYPE_NAME}" not found`);
-    pass('Prereq.calculatedFields', 'cf_PositionText, subtypes and the FUH type are present');
+    pass('Prereq.calculatedFields', `cf_PositionText = "Position Text" (${pt.id}), subtypes and the FUH type are present`);
   });
 
   await test('WQL.shellOrgsExist', async () => {
