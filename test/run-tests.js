@@ -2738,15 +2738,15 @@ async function probe(token) {
       const all = []; for (let off = 0; off < 3000; off += 100) { const pg = (await request('GET', `${API}/wql/v1/dataSources/${ds[0].id}/fields?limit=100&offset=${off}`, token)).data || []; all.push(...pg); if (pg.length < 100) break; }
       return all;
     };
-    // cf_PositionText in WQL: which field (WID) and business object it is (2026-11-10)
+    // Add Shell Org duplicate check: what code / name does X:ADM:AAP:ANY have, and how many rows does customOrganizations return
     {
-      const ds = (await request('GET', `${API}/wql/v1/dataSources?alias=allPositions`, token)).data || [];
-      console.log('   PTW dataSource ' + JSON.stringify(ds[0]).slice(0, 600));
-      const flds = []; for (let off = 0; off < 3000; off += 100) { const pg = (await request('GET', `${API}/wql/v1/dataSources/${ds[0].id}/fields?limit=100&offset=${off}`, token)).data || []; flds.push(...pg); if (pg.length < 100) break; }
-      for (const al of ['cf_PositionText', 'positionAndJob_AllStaffingModels', 'positionID']) console.log('   PTW field ' + JSON.stringify(flds.find((x) => x.alias === al)).slice(0, 600));
-      const f = flds.find((x) => x.alias === 'cf_PositionText');
-      if (f) { try { const det = await request('GET', `${API}/wql/v1/dataSources/${ds[0].id}/fields/${f.id}`, token); console.log('   PTW detail ' + JSON.stringify(det).slice(0, 800)); } catch (e) { console.log('   PTW detail ERROR ' + e.message.slice(0, 150)); } }
-      console.log('   PTW match 5a002d2890414974bdff7f51e1fff6dd: ' + JSON.stringify(flds.filter((x) => JSON.stringify(x).includes('5a002d2890414974bdff7f51e1fff6dd')).map((x) => x.alias)));
+      const r = await wql(token, "SELECT workdayID, code, organizationByName, organizationName, subtype FROM topLevelOrganizations WHERE organizationName contains 'AAP:ANY' OR code contains 'AAP:ANY'", 50);
+      console.log('   DUP rows ' + JSON.stringify(r.data || r).slice(0, 900));
+      const all = await wql(token, 'SELECT workdayID, organizationByName, code, type1 FROM topLevelOrganizations WHERE subtype in (<% subtypes %>)', 10000);
+      const d = all.data || [];
+      console.log(`   DUP customOrganizations total=${all.total} rows=${d.length}; code AAP:ANY present: ${d.filter((o) => String(o.code).includes('AAP:ANY')).map((o) => o.code + ' / ' + (o.organizationByName || {}).descriptor).join(' | ')}; no code: ${d.filter((o) => !o.code).length}`);
+      const def = await request('GET', `${WQL}?query=${encodeURIComponent(await fillNames(token, 'SELECT workdayID, code FROM topLevelOrganizations WHERE subtype in (<% subtypes %>)'))}`, token);
+      console.log(`   DUP no-limit rows=${(def.data || []).length} total=${def.total}`);
     }
     pass('Probe.wqlNames', 'see WQLP lines');
     return;
