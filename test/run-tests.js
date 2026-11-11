@@ -2735,13 +2735,15 @@ async function probe(token) {
     console.log(`   PTX ${texts.length} text fields: ${texts.join(', ').slice(0, 3000)}`);
     const P = (await wql(token, 'SELECT workdayID, positionID, positionAndJob_AllStaffingModels, cf_PositionText FROM allPositions', 10000)).data || [];
     const name = new Map(P.map((p) => [p.workdayID, (p.positionAndJob_AllStaffingModels || {}).descriptor || '']));
-    for (let i = 0; i < texts.length; i += 15) {
-      const chunk = texts.slice(i, i + 15);
-      let rows; try { rows = (await wql(token, `SELECT workdayID, ${chunk.join(', ')} FROM allPositions`, 10000)).data || []; } catch (e) { console.log(`   PTX chunk ${i} ERROR ${String(e.message).slice(0, 160)}`); continue; }
+    const one = texts.filter((f) => f !== 'workdayID');
+    for (let i = 0; i < one.length; i += 1) {
+      const chunk = one.slice(i, i + 1);
+      if (i >= 14 && i < 58) continue;
+      let rows; try { rows = (await wql(token, `SELECT workdayID, ${chunk.join(', ')} FROM allPositions`, 10000)).data || []; } catch (e) { console.log(`   PTX ${chunk[0]} ERROR ${String(e.message).slice(0, 160)}`); continue; }
       for (const f of chunk) {
-        let eq = 0, contains = 0, filled = 0; let ex = '';
-        for (const r of rows) { const v = r[f]; if (v == null || v === '') continue; filled++; const n = name.get(r.workdayID) || ''; if (v === n) eq++; if (n && (n.includes(v) || String(v).includes(n))) contains++; if (!ex) ex = String(v).slice(0, 80); }
-        if (filled && (eq || contains > P.length / 4)) console.log(`   PTX ${f}: equal ${eq}/${P.length}, overlaps ${contains}, filled ${filled}, e.g. "${ex}"`);
+        let eq = 0, contains = 0, filled = 0, eqCf = 0; let ex = '';
+        for (const r of rows) { const v = r[f]; if (v == null || v === '') continue; filled++; const n = name.get(r.workdayID) || ''; if (v === n) eq++; if (v === (P.find((q) => q.workdayID === r.workdayID) || {}).cf_PositionText) eqCf++; if (n && (n.includes(v) || String(v).includes(n))) contains++; if (!ex) ex = String(v).slice(0, 80); }
+        if (filled && (eq || contains > P.length / 4 || /OrgStudio|Name|Title/.test(f))) console.log(`   PTX ${f}: equal ${eq}/${P.length}, equalCf ${eqCf}, overlaps ${contains}, filled ${filled}, e.g. "${ex}"`);
       }
     }
     // the parts of the name: is the title inside it a delivered field?
