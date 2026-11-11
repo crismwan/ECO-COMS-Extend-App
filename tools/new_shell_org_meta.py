@@ -30,8 +30,14 @@ APP = "((!empty(selectedApplicationId.value)) ? (selectedApplicationId.selectedE
 PREVIEW = f"orgNamePreview.setValue(comsShellOrg.preview({APP}, organizationCode.value ?? '', {META}));"
 # the code's format is checked as it changes, and again when the subtype or application changes (2026-11-08: a lower-case
 # code under X:META only showed its error at OK on Review & Submit, a step after the field)
+# ... and whether the name already exists, with a one-code lookup (2026-11-10: on OK the check is only reached when no other
+# field shows an error, so a duplicate went unnoticed until every other field was right; here it shows as the code is typed)
 CODECHECK = (f"let ce = (organizationCode.value ?? '').trim() == '' ? '' : comsShellOrg.codeError({APP}, organizationCode.value ?? '', {META});\n"
-             "  if (ce == '') { organizationCode.clearError(); } else { organizationCode.setError(ce); }")
+             f"  let dn = (ce == '' && (organizationCode.value ?? '').trim() != '' && ({APP} != '' || {META})) ? comsShellOrg.orgName({APP}, organizationCode.value ?? '', {META}) : '';\n"
+             "  let df = (dn == '') ? [] : (orgByCode.invoke({'c': dn.replace('\\'', '').replace('\\\\', '')}).data ?? []);\n"
+             "  let de = (df.size() > 0) ? ('An organization with this code already exists: ' + ((!empty(df[0].organizationByName)) ? (df[0].organizationByName.descriptor ?? dn) : dn)) : '';\n"
+             "  let msg = (ce != '') ? ce : de;\n"
+             "  if (msg == '') { organizationCode.clearError(); } else { organizationCode.setError(msg); }")
 
 
 def find(n, wid):
