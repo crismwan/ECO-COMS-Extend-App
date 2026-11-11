@@ -140,12 +140,14 @@ d['onSubmit'] = f"""<%
   }}
   let codeErr = comsShellOrg.codeError(ac, oc, meta);
   let orgName = comsShellOrg.orgName(ac, oc, meta);
-  let dupes = (existingOrgs.data ?? []).filter(o => {{ o.code == orgName }});
+  let exOrgs = existingOrgs.data ?? [];
+  let di = exOrgs.map(o => {{ o.code ?? '' }}).indexOf(orgName);
   if (codeErr != '') {{
     organizationCode.setError(codeErr);
     valid = false;
-  }} else if (dupes.size() > 0) {{
-    let dupeName = (!empty(dupes[0].organizationByName)) ? (dupes[0].organizationByName.descriptor ?? orgName) : orgName;
+  }} else if (di >= 0) {{
+    let dupe = exOrgs.get(di);
+    let dupeName = (!empty(dupe.organizationByName)) ? (dupe.organizationByName.descriptor ?? orgName) : orgName;
     organizationCode.setError('An organization with this code already exists: ' + dupeName);
     valid = false;
   }}
@@ -166,7 +168,7 @@ d['onSubmit'] = f"""<%
     let lot = comsShellOrg.orgType(ac, oc, meta);
     let lcode = comsShellOrg.orgCode(ac, oc, meta);
     launchAddShellOrg.invoke({{'cbw': selectedWorker.id ?? '', 'cb': (selectedWorker.descriptor ?? '').urlEncode(), 'ts': date:now().format("yyyy-MM-dd'T'HH:mm:ss'Z'").urlEncode(), 'ot': lot.urlEncode(), 'st': orgSubtypeDropdown.selectedEntries[0].id, 'on': lname.urlEncode(), 'oc': lcode.urlEncode(), 'wid': selectedWorker.id ?? '', 'ed': effectiveDate.value.format('yyyy-MM-dd')}});
-    let created = (verifyShellOrg.invoke({{'lim': '10000'}}).data ?? []).filter(o => {{ o.code == lname }}).size() > 0;
+    let created = (verifyShellOrg.invoke({{'lim': '10000'}}).data ?? []).map(o => {{ o.code ?? '' }}).indexOf(lname) >= 0;
     if (!created) {{
       organizationCode.setError(meta ? ('Workday rejected this request, so nothing was created. Check that the organization type ' + lot + ' exists in Workday.') : 'Workday rejected this request, so nothing was created. Check the values and try again.');
       valid = false;
