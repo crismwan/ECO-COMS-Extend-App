@@ -2740,6 +2740,10 @@ async function probe(token) {
     };
     // Add Shell Org duplicate check: what code / name does X:ADM:AAP:ANY have, and how many rows does customOrganizations return
     {
+      for (const q of ["SELECT workdayID, code, organizationByName FROM topLevelOrganizations WHERE code = 'X:ADM:AAP:ANY'", "SELECT workdayID, code FROM topLevelOrganizations WHERE code = \"X:ADM:AAP:ANY\""]) {
+        const enc = `${WQL}?limit=5&query=${encodeURIComponent(q)}`; const rr = await request('GET', enc, token);
+        console.log('   DUPEQ ' + q.slice(-30) + ' -> ' + JSON.stringify(rr).slice(0, 400));
+      }
       const r = await wql(token, "SELECT workdayID, code, organizationByName, subtype FROM topLevelOrganizations WHERE code contains 'AAP:ANY'", 50);
       console.log('   DUP rows ' + JSON.stringify(r.data || r).slice(0, 900));
       const all = await wql(token, 'SELECT workdayID, organizationByName, code, type1 FROM topLevelOrganizations WHERE subtype in (<% subtypes %>)', 10000);
