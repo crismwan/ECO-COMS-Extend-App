@@ -482,7 +482,7 @@ function staticSuite() {
     }
     if (bad.length) fail('Static.tenantWids', `tenant-specific WIDs (look them up by name instead): ${[...new Set(bad)].slice(0, 8).join('; ')}`);
     else pass('Static.tenantWids', 'no tenant-specific WIDs in the app files');
-    // calculated fields are tenant setup too: only the two with no delivered equivalent may be read (tools/delivered_fields.py)
+    // tenant-made calculated fields don't move with the app: only Workday-delivered ones may be read (cf_PositionText = "Position Text", Workday-delivered; tools/delivered_fields.py)
     const CF_OK = new Set(['cf_PositionText']);
     const cfs = new Set();
     for (const dir of ['presentation', 'orchestration']) for (const f of listFiles(dir, true)) for (const m of fs.readFileSync(path.join(ROOT, f), 'utf8').matchAll(/\bcf_\w+/g)) if (!CF_OK.has(m[0])) cfs.add(`${f}: ${m[0]}`);
